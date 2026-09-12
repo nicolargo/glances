@@ -83,6 +83,14 @@ body {
   font-weight: var(--gl-weight-bold);
 }
 
+/* Bold with NO tier colour -- the TUI's curses.A_BOLD without a colour pair
+ * (glances/outputs/glances_colors.py:167). `folders` paints a folder it could
+ * not read this way: the model emits no `_levels` entry for it, so a tier
+ * class here would be one the payload never carried. */
+.gl-strong {
+  font-weight: var(--gl-weight-bold);
+}
+
 /* Loading/empty placeholder text ("loading…", "No alert").
  * Global, not component-scoped: `<style scoped>` compiles to
  * `.gl-muted[data-v-XXXX]`, which never matches across the different scope
@@ -184,8 +192,9 @@ body {
   min-width: 0;
 }
 
-/* Left-sidebar name (G9-6 D3): capped at the TUI's name width, which each
- * component sets as --gl-name-width (18ch, 19ch or 26ch). Put it on a block
+/* Left-sidebar name (G9-6 D3): capped at the TUI's name width. Each component
+ * sets its own --gl-name-width to match its TUI renderer's name column, so no
+ * list of values is kept here. Put it on a block
  * <span> inside the cell, never on the <td>: max-width on a table cell in
  * automatic table layout is not reliably honoured. Pair with .gl-truncate
  * and a `title` carrying the full name. */
@@ -202,6 +211,14 @@ body {
 .gl-truncate-start {
   direction: rtl;
   text-align: left;
+}
+
+/* A sub-line of a hierarchical block: `raid`'s tree lines and `smart`'s
+ * attribute names. `white-space: pre` keeps the TUI's leading spaces, which
+ * HTML would otherwise collapse into one -- the indent is what makes the tree
+ * readable, and the glyphs are the TUI's own (G9-7 D3). */
+.gl-subline {
+  white-space: pre;
 }
 
 /* Collection table. Global, like .gl-stat-grid: five components share it.

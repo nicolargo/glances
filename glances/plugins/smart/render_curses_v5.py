@@ -58,14 +58,14 @@ def _attr_value_text(attr: dict[str, Any]) -> str:
 
 
 def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]] | None = None, view=None) -> list[Row]:
+    # v4 parity (glances/plugins/smart/__init__.py, msg_curse's `if not
+    # self.stats`): no device -> no block, not a bare "SMART disks" line.
+    devices = payload.get("data") if isinstance(payload, dict) else None
+    if not isinstance(devices, list) or not devices:
+        return []
+
     header = Row(cells=[Cell(text="SMART disks".ljust(_NAME_COL_WIDTH), color=ColorRole.HEADER, bold=True)])
     rows: list[Row] = [header]
-
-    if not isinstance(payload, dict):
-        return rows
-    devices = payload.get("data")
-    if not isinstance(devices, list):
-        return rows
 
     for device in devices:
         if not isinstance(device, dict):

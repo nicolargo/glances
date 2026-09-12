@@ -1,21 +1,13 @@
 <template>
-	<article class="gl-plugin" aria-label="WIFI">
-		<!-- aria-label: once loaded the title is a <th>, not a heading. Keep this
-		comment INSIDE the root: the build keeps template comments, and one
-		before <article> would make a second root node and drop data-plugin. -->
-		<div v-if="error || !payload" class="gl-plugin-title">
-			<h2 class="gl-header">WIFI</h2>
-		</div>
-		<p v-if="error" class="gl-level-critical">{{ error }}</p>
-		<p v-else-if="!payload" class="gl-muted">loading…</p>
-		<table v-else class="gl-table">
-			<thead>
-				<!-- The TUI's header row: block title, then the schema's label. -->
-				<tr>
-					<th class="gl-header">WIFI</th>
-					<th class="gl-header gl-num">{{ labelFor(labels, "quality_level") }}</th>
-				</tr>
-			</thead>
+	<CollectionBlock :title="TITLE" :payload="payload" :error="error">
+		<template #head>
+			<!-- The TUI's header row: block title, then the schema's label. -->
+			<tr>
+				<th class="gl-header">{{ TITLE }}</th>
+				<th class="gl-header gl-num">{{ labelFor(labels, "quality_level") }}</th>
+			</tr>
+		</template>
+		<template #body>
 			<tbody>
 				<tr v-for="item in rows" :key="item.ssid">
 					<td>
@@ -26,8 +18,8 @@
 					</td>
 				</tr>
 			</tbody>
-		</table>
-	</article>
+		</template>
+	</CollectionBlock>
 </template>
 
 <script>
@@ -35,9 +27,13 @@ import { formatFixed0 } from "./format.js";
 import { labelFor } from "./labels.js";
 import { cellClassFor } from "./columns.js";
 import { byText } from "./rows.js";
+import CollectionBlock from "./CollectionBlock.vue";
+
+const TITLE = "WIFI";
 
 export default {
 	name: "PluginWifi",
+	components: { CollectionBlock },
 	props: {
 		payload: { type: Object, default: null },
 		error: { type: String, default: undefined },
@@ -51,6 +47,7 @@ export default {
 		degrade: { type: Object, default: () => ({}) },
 	},
 	computed: {
+		TITLE: () => TITLE,
 		// Mirrors wifi/render_curses_v5.py:82-94: sorted by ssid; skip an empty
 		// ssid (v4 #1151) and a signal that is not a number (#1973).
 		rows() {

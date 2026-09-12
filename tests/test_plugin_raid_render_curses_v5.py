@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 
+from glances.plugins.raid.model_v5 import PluginModel
 from glances.plugins.raid.render_curses_v5 import (
     _AVAIL_COL_WIDTH,
     _LEFT_SIDEBAR_MAX_WIDTH,
@@ -17,6 +18,11 @@ from glances.plugins.raid.render_curses_v5 import (
     _USED_COL_WIDTH,
     render,
 )
+
+# The REAL schema, as production passes it (curses_renderer_v5.py:1459). The
+# column labels come from it (field_label), so a hand-written subset without
+# `short_name` would test a header no user ever sees.
+_SCHEMA = PluginModel.fields_description
 
 
 def _payload(rows, levels=None):
@@ -39,21 +45,39 @@ def _array(name, type_="raid1", status="active", used=2, available=2, components
     }
 
 
-def test_empty_returns_header_only():
-    rows = render(_payload([]))
-    assert "RAID disks" in _flat(rows)
-    assert len(rows) == 1  # header only
+def test_an_empty_collection_renders_nothing():
+    """v4 parity (glances/plugins/raid/__init__.py:73-75): no stats, no block.
+
+    Before G9-7 this renderer returned its header row, and the painter drops
+    only a zero-row block -- so a box with `[raid] disable=False` and no array
+    painted a bare "RAID disks  Used  Avail" line. v4 paints nothing.
+    """
+    assert render(_payload([]), _SCHEMA) == []
+    assert render({}, _SCHEMA) == []
+    assert render(None, _SCHEMA) == []
 
 
 def test_header_labels():
-    flat = _flat(render(_payload([])))
+    flat = _flat(render(_payload([_array("md0", "raid1", "active", used=2, available=2)]), _SCHEMA))
     assert "RAID disks" in flat
     assert "Used" in flat
     assert "Avail" in flat
 
 
+def test_the_used_and_avail_headers_come_from_the_schema():
+    """G9-7 D5: the column labels live in the schema, so the TUI and the
+    WebUI (labelFor -> /api/5/all/info) cannot drift.
+    """
+    assert PluginModel.fields_description["used"]["short_name"] == "Used"
+    assert PluginModel.fields_description["available"]["short_name"] == "Avail"
+    rows = render(_payload([_array("md0", "raid1", "active", used=2, available=2)]), _SCHEMA)
+    flat = _flat(rows)
+    assert "Used" in flat
+    assert "Avail" in flat
+
+
 def test_active_row_shows_used_and_available():
-    rows = render(_payload([_array("md0", "raid1", "active", used=2, available=2)]))
+    rows = render(_payload([_array("md0", "raid1", "active", used=2, available=2)]), _SCHEMA)
     flat = _flat(rows)
     # Full name = "<TYPE> <name>".
     assert "RAID1 md0" in flat
@@ -65,7 +89,8 @@ def test_active_row_shows_used_and_available():
 
 def test_raid0_shows_component_count_and_dash():
     rows = render(
-        _payload([_array("md9", "raid0", "active", used=None, available=None, components={"sda1": "0", "sdb1": "1"})])
+        _payload([_array("md9", "raid0", "active", used=None, available=None, components={"sda1": "0", "sdb1": "1"})]),
+        _SCHEMA,
     )
     data = rows[1]
     assert data.cells[1].text.strip() == "2"  # len(components)
@@ -73,7 +98,7 @@ def test_raid0_shows_component_count_and_dash():
 
 
 def test_unknown_type_renders_uppercase_unknown():
-    rows = render(_payload([_array("md0", type_=None, status="active", used=2, available=2)]))
+    rows = render(_payload([_array("md0", type_=None, status="active", used=2, available=2)]), _SCHEMA)
     assert "UNKNOWN md0" in _flat(rows)
 
 
@@ -85,7 +110,7 @@ def test_width_budget():
 
 def test_level_colour_applied():
     levels = {"md0": {"status": {"level": "warning", "prominent": False}}}
-    rows = render(_payload([_array("md0", "raid5", "active", used=3, available=4)], levels))
+    rows = render(_payload([_array("md0", "raid5", "active", used=3, available=4)], levels), _SCHEMA)
     data = rows[1]
     assert data.cells[1].color.value == "warning"
     assert data.cells[2].color.value == "warning"
@@ -97,7 +122,8 @@ def test_inactive_emits_status_and_component_sub_lines():
         _payload(
             [_array("md0", "raid1", "inactive", used=2, available=2, components={"sda1": "0", "sdb1": "1"})],
             levels={"md0": {"status": {"level": "critical", "prominent": False}}},
-        )
+        ),
+        _SCHEMA,
     )
     flat = _flat(rows)
     assert "Status inactive" in flat
@@ -111,7 +137,8 @@ def test_inactive_status_line_coloured():
         _payload(
             [_array("md0", "raid1", "inactive", used=2, available=2, components={"sda1": "0"})],
             levels={"md0": {"status": {"level": "critical", "prominent": False}}},
-        )
+        ),
+        _SCHEMA,
     )
     status_cells = [c for r in rows for c in r.cells if "Status inactive" in c.text]
     assert status_cells and status_cells[0].color.value == "critical"
@@ -122,7 +149,8 @@ def test_degraded_emits_mode_and_layout_lines():
         _payload(
             [_array("md0", "raid5", "active", used=3, available=4, config="U_")],
             levels={"md0": {"status": {"level": "warning", "prominent": False}}},
-        )
+        ),
+        _SCHEMA,
     )
     flat = _flat(rows)
     assert "Degraded mode" in flat
@@ -135,7 +163,8 @@ def test_degraded_layout_omitted_when_config_too_long():
         _payload(
             [_array("md0", "raid5", "active", used=3, available=4, config="U" * 20)],
             levels={"md0": {"status": {"level": "warning", "prominent": False}}},
-        )
+        ),
+        _SCHEMA,
     )
     flat = _flat(rows)
     assert "Degraded mode" in flat
@@ -143,7 +172,7 @@ def test_degraded_layout_omitted_when_config_too_long():
 
 
 def test_healthy_array_has_no_sub_lines():
-    rows = render(_payload([_array("md0", "raid1", "active", used=2, available=2)]))
+    rows = render(_payload([_array("md0", "raid1", "active", used=2, available=2)]), _SCHEMA)
     flat = _flat(rows)
     assert "Degraded mode" not in flat
     assert "Status" not in flat
@@ -152,7 +181,7 @@ def test_healthy_array_has_no_sub_lines():
 def test_only_the_head_row_of_each_array_is_marked():
     """raid emits sub-lines per array; the counter must count ARRAYS."""
     degraded = _array("md0", used=1, available=2, config="U_")
-    rows = render(_payload([degraded, _array("md1")]))
+    rows = render(_payload([degraded, _array("md1")]), _SCHEMA)
     assert rows[0].item_start is False  # header
     assert sum(r.item_start for r in rows) == 2
     assert len(rows) > 3  # sub-lines are present but unmarked

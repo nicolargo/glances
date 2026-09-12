@@ -12,7 +12,13 @@
 from __future__ import annotations
 
 from glances.outputs.curses_renderer_v5 import ColorRole
+from glances.plugins.connections.model_v5 import PluginModel
 from glances.plugins.connections.render_curses_v5 import render
+
+# The REAL schema, as production passes it (curses_renderer_v5.py:1459). The
+# column labels come from it (field_label), so a hand-written subset without
+# `short_name` would test a header no user ever sees.
+_SCHEMA = PluginModel.fields_description
 
 
 def _payload(**over):
@@ -45,14 +51,14 @@ def test_both_sources_disabled_returns_nothing():
 
 
 def test_title_row_is_header_and_bold():
-    rows = render(_payload())
+    rows = render(_payload(), _SCHEMA)
     assert rows[0].cells[0].text == "TCP CONNECTIONS"
     assert rows[0].cells[0].color == ColorRole.HEADER
     assert rows[0].cells[0].bold is True
 
 
 def test_rows_in_fixed_order():
-    rows = render(_payload())
+    rows = render(_payload(), _SCHEMA)
     labels = [row.cells[0].text.strip() for row in rows[1:5]]
     assert labels == ["Listen", "Initiated", "Established", "Terminated"]
 
@@ -60,14 +66,14 @@ def test_rows_in_fixed_order():
 def test_missing_key_row_is_skipped():
     payload = _payload()
     del payload["terminated"]
-    rows = render(payload)
+    rows = render(payload, _SCHEMA)
     labels = [row.cells[0].text.strip() for row in rows]
     assert "Terminated" not in labels
 
 
 def test_net_connections_disabled_hides_state_rows():
     payload = _payload(net_connections_enabled=False)
-    flat = _flat(render(payload))
+    flat = _flat(render(payload, _SCHEMA))
     for label in ("Listen", "Initiated", "Established", "Terminated"):
         assert label not in flat
     assert "TCP CONNECTIONS" in flat
@@ -75,7 +81,7 @@ def test_net_connections_disabled_hides_state_rows():
 
 
 def test_tracked_row_shown_when_enabled_and_present():
-    rows = render(_payload())
+    rows = render(_payload(), _SCHEMA)
     tracked = [row for row in rows if row.cells[0].text.strip() == "Tracked"]
     assert len(tracked) == 1
     assert tracked[0].cells[1].text.strip() == "512/1024"
@@ -103,7 +109,7 @@ def test_tracked_row_renders_default_when_levels_key_absent():
     must fall back to the default, uncoloured, non-prominent cell."""
     payload = _payload()
     del payload["_levels"]
-    rows = render(payload)
+    rows = render(payload, _SCHEMA)
     tracked = [row for row in rows if row.cells[0].text.strip() == "Tracked"][0]
     assert tracked.cells[1].text.strip() == "512/1024"
     assert tracked.cells[1].color == ColorRole.DEFAULT
@@ -112,28 +118,28 @@ def test_tracked_row_renders_default_when_levels_key_absent():
 
 def test_tracked_row_colour_reflects_level():
     payload = _payload(_levels={"nf_conntrack_percent": {"level": "warning", "prominent": True}})
-    rows = render(payload)
+    rows = render(payload, _SCHEMA)
     tracked = [row for row in rows if row.cells[0].text.strip() == "Tracked"][0]
     assert tracked.cells[1].color == ColorRole.WARNING
 
 
 def test_tracked_row_prominent_forwarded_when_levels_carry_it():
     payload = _payload(_levels={"nf_conntrack_percent": {"level": "critical", "prominent": True}})
-    rows = render(payload)
+    rows = render(payload, _SCHEMA)
     tracked = [row for row in rows if row.cells[0].text.strip() == "Tracked"][0]
     assert tracked.cells[1].prominent is True
 
 
 def test_tracked_row_prominent_not_set_when_levels_lack_it():
     payload = _payload(_levels={"nf_conntrack_percent": {"level": "critical"}})
-    rows = render(payload)
+    rows = render(payload, _SCHEMA)
     tracked = [row for row in rows if row.cells[0].text.strip() == "Tracked"][0]
     assert tracked.cells[1].prominent is False
 
 
 def test_state_rows_never_coloured():
     payload = _payload(_levels={"nf_conntrack_percent": {"level": "critical", "prominent": True}})
-    rows = render(payload)
+    rows = render(payload, _SCHEMA)
     for row in rows:
         label = row.cells[0].text.strip()
         if label in ("TCP CONNECTIONS", "Tracked"):
@@ -143,7 +149,7 @@ def test_state_rows_never_coloured():
 
 
 def test_row_width_matches_34_char_budget():
-    rows = render(_payload())
+    rows = render(_payload(), _SCHEMA)
     for row in rows[1:]:
         assert len(row.cells[0].text) + len(row.cells[1].text) == 33
 
@@ -152,7 +158,7 @@ def test_value_cells_are_right_aligned():
     """Guard against a broken implementation that left-pads or centres the
     value: every data row's value cell must be right-flushed, i.e. its
     stripped text sits at the END of the raw cell text."""
-    rows = render(_payload())
+    rows = render(_payload(), _SCHEMA)
     for row in rows[1:]:
         value_cell_text = row.cells[1].text
         stripped = value_cell_text.strip()
@@ -161,10 +167,24 @@ def test_value_cells_are_right_aligned():
         assert value_cell_text == value_cell_text.lstrip().rjust(len(value_cell_text))
 
 
+def test_state_and_tracked_labels_come_from_the_schema():
+    """G9-7 D5: the row labels live in the schema, so the TUI and the WebUI
+    (labelFor -> /api/5/all/info) cannot drift.
+    """
+    assert PluginModel.fields_description["LISTEN"]["short_name"] == "Listen"
+    assert PluginModel.fields_description["initiated"]["short_name"] == "Initiated"
+    assert PluginModel.fields_description["ESTABLISHED"]["short_name"] == "Established"
+    assert PluginModel.fields_description["terminated"]["short_name"] == "Terminated"
+    assert PluginModel.fields_description["nf_conntrack_count"]["short_name"] == "Tracked"
+    rows = render(_payload(), _SCHEMA)
+    labels = [row.cells[0].text.strip() for row in rows[1:]]
+    assert labels == ["Listen", "Initiated", "Established", "Terminated", "Tracked"]
+
+
 def test_label_cells_are_left_aligned_not_right():
     """A label right-flushed instead of left-flushed would still pass a
     naive 'contains substring' check — assert the label starts at index 0."""
-    rows = render(_payload())
+    rows = render(_payload(), _SCHEMA)
     for row in rows[1:]:
         label_cell_text = row.cells[0].text
         stripped = label_cell_text.strip()

@@ -1,22 +1,14 @@
 <template>
-	<article class="gl-plugin" aria-label="SENSORS">
-		<!-- aria-label: once loaded the title is a <th>, not a heading. Keep this
-		comment INSIDE the root: the build keeps template comments, and one
-		before <article> would make a second root node and drop data-plugin. -->
-		<div v-if="error || !payload" class="gl-plugin-title">
-			<h2 class="gl-header">SENSORS</h2>
-		</div>
-		<p v-if="error" class="gl-level-critical">{{ error }}</p>
-		<p v-else-if="!payload" class="gl-muted">loading…</p>
-		<table v-else class="gl-table">
-			<thead>
-				<!-- The TUI's header row is ONE cell, the title. The empty <th> keeps
-				the header aligned column by column with the body. -->
-				<tr>
-					<th class="gl-header">SENSORS</th>
-					<th class="gl-header gl-num"></th>
-				</tr>
-			</thead>
+	<CollectionBlock :title="TITLE" :payload="payload" :error="error">
+		<template #head>
+			<!-- The TUI's header row is ONE cell, the title. The empty <th> keeps
+			the header aligned column by column with the body. -->
+			<tr>
+				<th class="gl-header">{{ TITLE }}</th>
+				<th class="gl-header gl-num"></th>
+			</tr>
+		</template>
+		<template #body>
 			<tbody>
 				<!-- Keyed by position, NOT by label: the payload repeats labels (v4 names
 				rows chip + " " + index per sub-type, so a chip's first temperature and
@@ -33,17 +25,20 @@
 					</td>
 				</tr>
 			</tbody>
-		</table>
-	</article>
+		</template>
+	</CollectionBlock>
 </template>
 
 <script>
 import { formatFixed0, toFahrenheit } from "./format.js";
 import { cellClassFor } from "./columns.js";
+import CollectionBlock from "./CollectionBlock.vue";
 
 // sensors/render_curses_v5.py:48-49.
 const SENTINELS = new Set(["ERR", "SLP", "UNK", "NOS"]);
 const NO_FAHRENHEIT_TYPES = new Set(["battery", "fan_speed"]);
+
+const TITLE = "SENSORS";
 
 // _battery_trend(). Always the unicode glyphs: v4 and the TUI both call
 // unicode_message() without args, so --disable-unicode never reaches them.
@@ -70,6 +65,7 @@ function valueText(item, fahrenheit) {
 
 export default {
 	name: "PluginSensors",
+	components: { CollectionBlock },
 	props: {
 		payload: { type: Object, default: null },
 		error: { type: String, default: undefined },
@@ -82,6 +78,7 @@ export default {
 		degrade: { type: Object, default: () => ({}) },
 	},
 	computed: {
+		TITLE: () => TITLE,
 		// Payload order: the server already sorts with natural keys
 		// (sensors/model_v5.py:198) and the renderer does not re-sort.
 		rows() {

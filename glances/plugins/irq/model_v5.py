@@ -101,6 +101,7 @@ class PluginModel(GlancesPluginBase[list]):
             "description": "Interrupts per second on this line.",
             "unit": "numberpersecond",
             "rate": True,
+            "short_name": "Rate/s",
         },
     }
 

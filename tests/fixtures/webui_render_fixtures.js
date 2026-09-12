@@ -99,6 +99,18 @@ const INFO_FIXTURES = {
 	// sensors declares none -- its value column has no header in the TUI.
 	wifi: { ssid: {}, quality_link: {}, quality_level: { short_name: "dBm" } },
 	sensors: { label: {}, type: {}, unit: {}, value: {}, warning: {}, critical: {}, status: {} },
+	connections: {
+		LISTEN: { short_name: "Listen" },
+		initiated: { short_name: "Initiated" },
+		ESTABLISHED: { short_name: "Established" },
+		terminated: { short_name: "Terminated" },
+		nf_conntrack_count: { short_name: "Tracked" },
+		nf_conntrack_max: {},
+		nf_conntrack_percent: {},
+	},
+	irq: { irq_line: {}, irq_rate: { short_name: "Rate/s" } },
+	// short_names copied from glances/plugins/raid/model_v5.py.
+	raid: { name: {}, used: { short_name: "Used" }, available: { short_name: "Avail" } },
 };
 
 // `/api/5/pluginslist` default answer: every plugin a v5 server instantiates
@@ -377,6 +389,151 @@ const CLOUD_FIXTURE = {
 	_levels: {},
 };
 
+// `ports` — one item per branch of _status_if_host / _status_if_url
+// (ports/render_curses_v5.py:57-78). `_levels` is keyed by `indice` and the
+// model publishes an entry for every SCANNABLE item, healthy ones included
+// (the "ok" tier is v4's green OK). The last item has neither `url` nor
+// `host`: it cannot be scanned and the renderer skips it.
+const PORTS_FIXTURE = {
+	_key: "indice",
+	data: [
+		{ indice: "port_0", description: "Home Box", host: "192.168.1.1", port: 0, status: 0.0123 },
+		{ indice: "port_1", description: "Internet ICMP", host: "8.8.8.8", port: 0, status: 0 },
+		{ indice: "port_2", description: "Mail relay", host: "mail", port: 25, status: false },
+		{ indice: "port_3", description: "SSH", host: "srv", port: 22, status: true },
+		{ indice: "port_4", description: "Still scanning", host: "srv", port: 80, status: null },
+		{ indice: "port_5", description: "No gateway", host: null, port: 0, status: null },
+		{ indice: "web_1", description: "My Blog", url: "https://blog.example", status: 200 },
+		{ indice: "web_2", description: "Broken site", url: "https://down.example", status: "Error" },
+		{ indice: "web_3", description: "Web scanning", url: "https://slow.example", status: null },
+		{ indice: "nope", description: "Neither url nor host" },
+	],
+	_levels: {
+		port_0: { status: { level: "ok", prominent: false } },
+		port_1: { status: { level: "critical", prominent: false } },
+		port_2: { status: { level: "critical", prominent: false } },
+		port_3: { status: { level: "ok", prominent: false } },
+		port_4: { status: { level: "careful", prominent: false } },
+		port_5: { status: { level: "careful", prominent: false } },
+		web_1: { status: { level: "ok", prominent: false } },
+		web_2: { status: { level: "critical", prominent: false } },
+		web_3: { status: { level: "careful", prominent: false } },
+	},
+};
+
+// `folders` — a healthy folder, one whose name is longer than the 24ch cap
+// (its ellipsis falls at the START: the TUI keeps the tail), and one the
+// plugin could not read. The unreadable one has NO `_levels` entry: the model
+// short-circuits its size ladder (folders/model_v5.py::_folder_level), v4
+// parity -- no alert, no history, no action.
+// The fourth item has no usable path (folders/render_curses_v5.py:93-94, 103
+// keeps every dict item and coalesces a missing/falsy path to "" rather than
+// dropping the row): it must still render, with an empty name cell.
+const FOLDERS_FIXTURE = {
+	_key: "path",
+	data: [
+		{ path: "/tmp", size: 131072000, errno: 0 },
+		{ path: "/home/nicolargo/media/library/Videos", size: 18253611008, errno: 0 },
+		{ path: "/nonexisting", size: null, errno: 13 },
+		{ path: "", size: 4096, errno: 0 },
+	],
+	_levels: {
+		"/tmp": { size: { level: "ok", prominent: false } },
+		"/home/nicolargo/media/library/Videos": { size: { level: "warning", prominent: false } },
+	},
+};
+
+// `connections` is a SCALAR payload: the four state counters, the conntrack
+// pair, and the two flags that decide which half renders
+// (connections/render_curses_v5.py:80-100). Only the Tracked row is coloured,
+// from nf_conntrack_percent.
+const CONNECTIONS_FIXTURE = {
+	net_connections_enabled: true,
+	nf_conntrack_enabled: true,
+	LISTEN: 3,
+	initiated: 0,
+	ESTABLISHED: 12,
+	terminated: 204,
+	nf_conntrack_count: 512,
+	nf_conntrack_max: 1024,
+	nf_conntrack_percent: 50.0,
+	_levels: { nf_conntrack_percent: { level: "careful", prominent: false } },
+};
+
+// Seven IRQ lines, one of them on its first cycle (a null rate). The model
+// publishes every line -- a documented v4 divergence, so exporters get the
+// whole series -- and the TUI ranks and cuts to five
+// (irq/render_curses_v5.py:38-58), which the component must reproduce.
+const IRQ_FIXTURE = {
+	_key: "irq_line",
+	data: [
+		{ irq_line: "0", irq_rate: 12.0 },
+		{ irq_line: "LOC", irq_rate: 340.0 },
+		{ irq_line: "NMI", irq_rate: 0.0 },
+		{ irq_line: "1_i8042", irq_rate: 95.0 },
+		{ irq_line: "RES", irq_rate: 501.0 },
+		{ irq_line: "CAL", irq_rate: 7.0 },
+		{ irq_line: "TLB", irq_rate: null },
+	],
+	_levels: {},
+};
+
+// `raid` -- one array per branch of the renderer, plus md12, which is BOTH
+// inactive and degraded: the two sub-line groups are not exclusive, and the
+// TUI emits them in this order (raid/render_curses_v5.py:126-140).
+const RAID_FIXTURE = {
+	_key: "name",
+	data: [
+		{ name: "md0", type: "raid1", status: "active", used: 2, available: 2, components: { sda1: "0", sdb1: "1" }, config: "UU" },
+		{ name: "md9", type: "raid0", status: "active", used: null, available: null, components: { sdc1: "0", sdd1: "1" }, config: "UU" },
+		{ name: "md12", type: "raid1", status: "inactive", used: 1, available: 2, components: { sde1: "0", sdf1: "1" }, config: "U_" },
+		{ name: "md4", type: "raid5", status: "active", used: 2, available: 3, components: {}, config: "UU_" },
+		// `type: null` -- exercises _format_name's UNKNOWN branch
+		// (raid/render_curses_v5.py:50) and nothing else: active, no sub-lines.
+		// Named so the string sort puts it last (md99 sorts after md9) and
+		// leaves every other row's position unchanged.
+		{ name: "md99", type: null, status: "active", used: 2, available: 2, components: { sdg1: "0", sdh1: "1" }, config: "UU" },
+	],
+	_levels: {
+		md0: { status: { level: "ok", prominent: false } },
+		md9: { status: { level: "ok", prominent: false } },
+		md12: { status: { level: "critical", prominent: false } },
+		md4: { status: { level: "warning", prominent: false } },
+		md99: { status: { level: "ok", prominent: false } },
+	},
+};
+
+// `smart` -- two devices, so the per-device grouping this fixture exists to
+// prove cannot be faked by a component that flattens everything into one
+// <tbody>. The first device covers one attribute per branch of
+// _attr_value_text: a plain integer, a zero, a LARGE_VALUE_KEYS raw formatted
+// with auto_unit(), and a null raw (rendered as an empty cell). The second
+// device carries its own, different attributes (a different LARGE_VALUE_KEYS
+// key at a different magnitude, and a plain integer) so its group is
+// distinguishable from the first rather than a copy of it.
+const SMART_FIXTURE = {
+	_key: "name",
+	data: [
+		{
+			name: "/dev/sda Samsung SSD 850",
+			attributes: [
+				{ name: "Power_On_Hours", key: "powerOnHours", raw: 12345 },
+				{ name: "Reallocated_Sector_Ct", key: "reallocatedSectorCt", raw: 0 },
+				{ name: "Data_Units_Written", key: "dataUnitsWritten", raw: 5307033647 },
+				{ name: "Unknown_Attribute", key: "unknown", raw: null },
+			],
+		},
+		{
+			name: "/dev/sdb Crucial MX500",
+			attributes: [
+				{ name: "Bytes_Read", key: "bytesRead", raw: 2202009087 },
+				{ name: "Power_Cycle_Count", key: "powerCycleCount", raw: 87 },
+			],
+		},
+	],
+	_levels: {},
+};
+
 const ALL_FIXTURES = {
 	default: {},
 	"gpu-disabled": {},
@@ -404,6 +561,29 @@ const ALL_FIXTURES = {
 	// Same payload as `sensors`; only ARGS_FIXTURES differs (--fahrenheit).
 	"sensors-fahrenheit": { sensors: SENSORS_FIXTURE },
 	"sensors-duplicate-labels": { sensors: SENSORS_DUPLICATE_LABELS },
+	ports: { ports: PORTS_FIXTURE },
+	"ports-empty": { ports: { _key: "indice", data: [], _levels: {} } },
+	folders: { folders: FOLDERS_FIXTURE },
+	"folders-empty": { folders: { _key: "path", data: [], _levels: {} } },
+	connections: { connections: CONNECTIONS_FIXTURE },
+	// Netfilter conntrack off: the four state rows, no Tracked row.
+	"connections-no-conntrack": {
+		connections: { ...CONNECTIONS_FIXTURE, nf_conntrack_enabled: false },
+	},
+	// psutil's net_connections() unavailable (the disabled-probe latch): only
+	// the Tracked row survives.
+	"connections-no-net": {
+		connections: { ...CONNECTIONS_FIXTURE, net_connections_enabled: false },
+	},
+	"connections-off": {
+		connections: { net_connections_enabled: false, nf_conntrack_enabled: false, _levels: {} },
+	},
+	irq: { irq: IRQ_FIXTURE },
+	"irq-empty": { irq: { _key: "irq_line", data: [], _levels: {} } },
+	raid: { raid: RAID_FIXTURE },
+	"raid-empty": { raid: { _key: "name", data: [], _levels: {} } },
+	smart: { smart: SMART_FIXTURE },
+	"smart-empty": { smart: { _key: "name", data: [], _levels: {} } },
 	// The first-card-levels cards WITHOUT --meangpu: the per-card table, where
 	// card 0's proc cell is critical.
 	"gpu-multi-levels": { gpu: GPU_FIRST_CARD_LEVELS },
@@ -499,16 +679,19 @@ const ALL_FIXTURES = {
 // Every plugin that renders the SCALAR grid (<dl> of <dt>/<dd> pairs),
 // populated in one run: `gl-num`'s 9ch floor is calibrated for a collection
 // TABLE, so a scalar <dd> carrying it renders that plugin at a different
-// width from its neighbours. Only a single scenario holding all five can
-// observe that they agree -- a per-plugin scenario leaves the other four
+// width from its neighbours. Only a single scenario holding all six can
+// observe that they agree -- a per-plugin scenario leaves the other five
 // showing "loading…", i.e. no <dd> at all. gpu is here with ONE card, the
-// card count that selects its summary grid.
+// card count that selects its summary grid. connections carries a real
+// Tracked row (nf_conntrack_percent) so its one coloured <dd> is exercised
+// here too.
 ALL_FIXTURES["scalar-grids"] = {
 	mem: MEM_FIXTURE_WITH_AVAILABLE,
 	load: ALL_FIXTURES.load.load,
 	memswap: ALL_FIXTURES.memswap.memswap,
 	cpu: ALL_FIXTURES.cpu.cpu,
 	gpu: GPU_ONE_CARD,
+	connections: CONNECTIONS_FIXTURE,
 };
 
 ALL_FIXTURES["degrade-header-location"] = ALL_FIXTURES.header;

@@ -1,22 +1,14 @@
 <template>
-	<article class="gl-plugin" aria-label="FILE SYS">
-		<!-- aria-label: once loaded the title is a <th>, not a heading. Keep this
-		comment INSIDE the root: the build keeps template comments, and one
-		before <article> would make a second root node and drop data-plugin. -->
-		<div v-if="error || !payload" class="gl-plugin-title">
-			<h2 class="gl-header">FILE SYS</h2>
-		</div>
-		<p v-if="error" class="gl-level-critical">{{ error }}</p>
-		<p v-else-if="!payload" class="gl-muted">loading…</p>
-		<table v-else class="gl-table">
-			<thead>
-				<!-- The TUI's header row: block title, then the schema's labels. -->
-				<tr>
-					<th class="gl-header">FILE SYS</th>
-					<th class="gl-header gl-num">{{ labelFor(labels, valueField) }}</th>
-					<th class="gl-header gl-num">{{ labelFor(labels, "size") }}</th>
-				</tr>
-			</thead>
+	<CollectionBlock :title="TITLE" :payload="payload" :error="error">
+		<template #head>
+			<!-- The TUI's header row: block title, then the schema's labels. -->
+			<tr>
+				<th class="gl-header">{{ TITLE }}</th>
+				<th class="gl-header gl-num">{{ labelFor(labels, valueField) }}</th>
+				<th class="gl-header gl-num">{{ labelFor(labels, "size") }}</th>
+			</tr>
+		</template>
+		<template #body>
 			<tbody>
 				<!-- Keyed and coloured by the RAW mnt_point: the alias is display only. -->
 				<tr v-for="item in rows" :key="item.mnt_point">
@@ -33,8 +25,8 @@
 					</td>
 				</tr>
 			</tbody>
-		</table>
-	</article>
+		</template>
+	</CollectionBlock>
 </template>
 
 <script>
@@ -42,9 +34,13 @@ import { formatBytes } from "./format.js";
 import { labelFor } from "./labels.js";
 import { cellClassFor } from "./columns.js";
 import { byText, displayName } from "./rows.js";
+import CollectionBlock from "./CollectionBlock.vue";
+
+const TITLE = "FILE SYS";
 
 export default {
 	name: "PluginFs",
+	components: { CollectionBlock },
 	props: {
 		payload: { type: Object, default: null },
 		error: { type: String, default: undefined },
@@ -58,6 +54,7 @@ export default {
 		degrade: { type: Object, default: () => ({}) },
 	},
 	computed: {
+		TITLE: () => TITLE,
 		// fs/render_curses_v5.py:75-76.
 		valueField() {
 			return this.payload?.free_space ? "free" : "used";

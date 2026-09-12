@@ -34,6 +34,48 @@ export function formatBytes(value) {
 	return autoUnit(value, UNITS[0], "");
 }
 
+// The prefixes of v4's auto_unit(), largest first -- its
+// `for symbol in reversed(symbols)` (glances/globals.py:450-471).
+const AUTO_UNIT_PREFIXES = [
+	["Y", 1208925819614629174706176],
+	["Z", 1180591620717411303424],
+	["E", 1152921504606846976],
+	["P", 1125899906842624],
+	["T", 1099511627776],
+	["G", 1073741824],
+	["M", 1048576],
+	["K", 1024],
+];
+
+// Mirrors glances.globals.auto_unit() -- v4's OTHER auto-unit, the one `smart`
+// uses for its LARGE_VALUE_KEYS raw values. Deliberately NOT formatBytes():
+// that function mirrors _auto_unit() in curses_formatters_v5.py, and the two
+// algorithms disagree on almost everything. auto_unit() takes the largest
+// prefix whose quotient is > 1 (so 1G prints "1024M"), varies its precision
+// with the quotient (2 decimals up to 9.995, 1 below 99.95, 0 above, and
+// always 0 for K), returns "0" for zero, and below 1K formats the number
+// itself with 0 decimals for an integer and 2 for a float.
+// `low_precision` and the non-default min_symbol/none_symbol arguments are not
+// ported: `smart` passes none of them.
+export function formatAutoUnit(value) {
+	if (!isNumber(value)) return MISSING;
+	if (value === 0) return "0";
+	// Python picks 2 decimals for a float and 0 for an int; JS has one number
+	// type, so an integral value takes the int branch.
+	const fallbackDecimals = Number.isInteger(value) ? 0 : 2;
+	for (const [symbol, prefix] of AUTO_UNIT_PREFIXES) {
+		const quotient = value / prefix;
+		if (quotient > 1) {
+			let decimals = 0;
+			if (quotient <= 9.995) decimals = 2;
+			else if (quotient < 99.95) decimals = 1;
+			if (symbol === "K") decimals = 0;
+			return `${toFixedHalfEven(quotient, decimals)}${symbol}`;
+		}
+	}
+	return toFixedHalfEven(value, fallbackDecimals);
+}
+
 // Mirrors network/render_curses_v5.py::_format_rate(). Bits by default --
 // bytes x 8, with a `b` on every magnitude ("800b", "8.0Mb") -- and the
 // plain byte count with no `b` suffix under --byte ("100", "1.0M").

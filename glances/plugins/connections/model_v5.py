@@ -107,24 +107,29 @@ class PluginModel(GlancesPluginBase[dict]):
         "LISTEN": {
             "description": "Number of TCP connections in LISTEN state.",
             "unit": "number",
+            "short_name": "Listen",
         },
         "ESTABLISHED": {
             "description": "Number of TCP connections in ESTABLISHED state.",
             "unit": "number",
+            "short_name": "Established",
         },
         "initiated": {
             "description": "Number of TCP connections initiated (SYN_SENT + SYN_RECV).",
             "unit": "number",
+            "short_name": "Initiated",
         },
         "terminated": {
             "description": (
                 "Number of TCP connections terminated (FIN_WAIT1, FIN_WAIT2, TIME_WAIT, CLOSE, CLOSE_WAIT, LAST_ACK)."
             ),
             "unit": "number",
+            "short_name": "Terminated",
         },
         "nf_conntrack_count": {
             "description": "Number of tracked connections.",
             "unit": "number",
+            "short_name": "Tracked",
         },
         "nf_conntrack_max": {
             "description": "Maximum number of tracked connections.",

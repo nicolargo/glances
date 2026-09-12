@@ -171,9 +171,15 @@ def test_the_registry_renders_every_registered_plugin():
         "memswap",
         "load",
         "network",
+        "ports",
         "wifi",
+        "connections",
         "diskio",
         "fs",
+        "irq",
+        "folders",
+        "raid",
+        "smart",
         "sensors",
     ], f"expected all registered plugins to render, got {payload['pluginNames']!r}"
 
@@ -217,6 +223,23 @@ def test_every_slot_orders_its_plugins_like_the_tui():
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_every_collection_block_keeps_its_root_attributes():
+    """G9-7 Task 0 moved the root <article> into CollectionBlock.vue, so
+    `data-plugin` and `aria-label` now reach it through TWO component roots.
+    Vue drops a fallthrough attribute without error when a template has more
+    than one root node -- a root-level comment is enough -- and the symptom is
+    a plugin that silently vanishes from the page.
+    """
+    payload = _run_render_probe("default")
+    attrs = payload["pluginAttrs"]
+    for name in ("network", "wifi", "diskio", "fs", "sensors"):
+        assert name in attrs, f"{name} did not render at all: {sorted(attrs)!r}"
+        assert "data-plugin" in attrs[name], f"{name} lost data-plugin: {attrs[name]!r}"
+        assert "aria-label" in attrs[name], f"{name} lost aria-label: {attrs[name]!r}"
+        assert "server-args" not in attrs[name], f"{name} leaked a prop as an attribute: {attrs[name]!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
 def test_a_plugin_the_server_did_not_instantiate_is_not_rendered():
     """A disabled plugin is never instantiated (glances/main_v5.py:372), so it
     is never in /api/5/all, and before G9-5 the WebUI showed it as "loading…"
@@ -245,9 +268,15 @@ def test_an_unreadable_pluginslist_renders_the_whole_registry():
         "memswap",
         "load",
         "network",
+        "ports",
         "wifi",
+        "connections",
         "diskio",
         "fs",
+        "irq",
+        "folders",
+        "raid",
+        "smart",
         "sensors",
     ], f"expected the whole registry, got {payload['pluginNames']!r}"
 
@@ -399,10 +428,10 @@ def test_cross_cutting_props_do_not_leak_into_the_dom_as_attributes():
     payload = _run_render_probe("mem-with-available")
     # Without this the loop below is vacuous: an empty `pluginAttrs` (a probe
     # that stopped collecting the attribute, a render that produced no
-    # article) would pass silently. Fifteen is the registry size asserted by
-    # test_the_registry_renders_every_registered_plugin.
-    assert len(payload["pluginAttrs"]) == 15, (
-        f"expected all fifteen plugins' attributes, got {payload['pluginAttrs']!r}"
+    # article) would pass silently. Twenty-one is the registry size asserted
+    # by test_the_registry_renders_every_registered_plugin.
+    assert len(payload["pluginAttrs"]) == 21, (
+        f"expected all twenty-one plugins' attributes, got {payload['pluginAttrs']!r}"
     )
     for name, attrs in payload["pluginAttrs"].items():
         assert "server-args" not in attrs, f"{name} leaked serverArgs as an attribute: {attrs!r}"
@@ -411,7 +440,7 @@ def test_cross_cutting_props_do_not_leak_into_the_dom_as_attributes():
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
 def test_every_scalar_grid_renders_its_values_with_the_same_classes():
-    """The five `.gl-stat-grid` plugins must dress their <dd>s identically.
+    """The six `.gl-stat-grid` plugins must dress their <dd>s identically.
 
     `.gl-num` is not only alignment: `css/v5.css` floors it at 9ch, a width
     sized for `formatRate()`'s worst case ("1023.9G/s") in a collection
@@ -423,7 +452,7 @@ def test_every_scalar_grid_renders_its_values_with_the_same_classes():
     `.gl-stat-grid dd`, which costs no width.
 
     So the only class a scalar value cell may carry is its tier
-    (`gl-level-*`), and every one of the five must agree. Observed through
+    (`gl-level-*`), and every one of the six must agree. Observed through
     the rendered class lists, not the component sources: a comment asking the
     next port to "keep these consistent" is not a test.
 
@@ -433,13 +462,13 @@ def test_every_scalar_grid_renders_its_values_with_the_same_classes():
     payload = _run_render_probe("scalar-grids")
 
     non_tier = {}
-    for name in ("mem", "load", "memswap", "cpu", "gpu"):
+    for name in ("mem", "load", "memswap", "cpu", "gpu", "connections"):
         classes = payload["pluginValueClasses"].get(name)
         assert classes, f"{name} rendered no value cells: {payload['pluginValueClasses']!r}"
         non_tier[name] = sorted({c for cls in classes for c in cls.split() if not c.startswith("gl-level-")})
 
     assert non_tier == dict.fromkeys(non_tier, []), (
-        f"a scalar value cell carries a non-tier class -- the five grids disagree: {non_tier!r}"
+        f"a scalar value cell carries a non-tier class -- the six grids disagree: {non_tier!r}"
     )
 
 
@@ -560,7 +589,13 @@ def test_a_scalar_plugin_keeps_its_title_while_loading():
     "loading…". Checked on the `default` scenario, which publishes nothing.
     """
     payload = _run_render_probe("default")
-    for name, title in (("mem", "MEM"), ("load", "LOAD"), ("memswap", "SWAP"), ("cpu", "CPU")):
+    for name, title in (
+        ("mem", "MEM"),
+        ("load", "LOAD"),
+        ("memswap", "SWAP"),
+        ("cpu", "CPU"),
+        ("connections", "TCP CONNECTIONS"),
+    ):
         text = payload["pluginText"].get(name, "")
         assert text.startswith(title) and "loading" in text, f"{name}: expected {title} then loading, got {text!r}"
         assert name not in payload["pluginGrid"], f"{name}: no grid before the first payload"
@@ -693,17 +728,34 @@ def test_an_empty_network_keeps_its_header_row_and_shows_no_line():
         pytest.param("fs", "fs", "FILE SYS", id="fs"),
         pytest.param("wifi", "wifi", "WIFI", id="wifi"),
         pytest.param("sensors", "sensors", "SENSORS", id="sensors"),
+        pytest.param("irq", "irq", "IRQ", id="irq"),
+        pytest.param("folders", "folders", "FOLDERS", id="folders"),
+        pytest.param("raid", "raid", "RAID disks", id="raid"),
+        pytest.param("smart", "smart", "SMART disks", id="smart"),
+        # `ports` is the deliberate exception (G9-7 D4, and
+        # ports/render_curses_v5.py's own test_no_title_row_deliberate_do_not_fix):
+        # it renders NO header row at all, so `title` is None here and the
+        # assertions below flip to proving the ABSENCE of a <th> instead of
+        # its presence -- a future change that gives ports a header row
+        # turns this test red rather than silently passing.
+        pytest.param("ports", "ports", None, id="ports-has-no-header-row"),
     ],
 )
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
 def test_a_loaded_collection_puts_its_title_in_the_header_row(scenario, name, title):
     """G9-6 D6: once loaded, the title is the first <th> and there is no <h2>;
-    the <article> keeps naming itself through aria-label.
+    the <article> keeps naming itself through aria-label. `ports` is the
+    deliberate exception covered above.
     """
     payload = _run_render_probe(scenario)
     index = payload["pluginNames"].index(name)
     assert payload["pluginHeaders"][index] is None, f"{name}: no <h2> once loaded"
-    assert payload["pluginColumnHeaders"][name][0] == title
+    if title is None:
+        assert name not in payload["pluginColumnHeaders"], (
+            f"{name}: must render no header row at all: {payload['pluginColumnHeaders']!r}"
+        )
+    else:
+        assert payload["pluginColumnHeaders"][name][0] == title
     assert "aria-label" in payload["pluginAttrs"][name]
 
 
@@ -715,6 +767,14 @@ def test_a_loaded_collection_puts_its_title_in_the_header_row(scenario, name, ti
         pytest.param("fs", "FILE SYS", id="fs"),
         pytest.param("wifi", "WIFI", id="wifi"),
         pytest.param("sensors", "SENSORS", id="sensors"),
+        pytest.param("irq", "IRQ", id="irq"),
+        pytest.param("folders", "FOLDERS", id="folders"),
+        pytest.param("raid", "RAID disks", id="raid"),
+        pytest.param("smart", "SMART disks", id="smart"),
+        # `ports` still shows its title WHILE loading -- only its LOADED state
+        # has no visible header row (G9-7 D4, see
+        # test_a_loaded_collection_puts_its_title_in_the_header_row above).
+        pytest.param("ports", "PORTS", id="ports"),
     ],
 )
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
@@ -1408,3 +1468,350 @@ def test_the_header_drops_the_os_string_but_keeps_the_hostname():
     text = payload["pluginText"]["system"]
     assert "test-host" in text, f"the hostname stays: {text!r}"
     assert "Ubuntu" not in text, f"the OS string goes: {text!r}"
+
+
+# ------------------------------------------------------ ports (G9-7 Task 4)
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_ports_renders_every_status_branch():
+    """ports/render_curses_v5.py:57-78 -- the eight status strings, in payload
+    order (the TUI does not sort), each next to its description.
+    """
+    payload = _run_render_probe("ports")
+    texts = [cell["text"] for cell in payload["pluginTableCells"]["ports"]]
+    assert texts == [
+        "Home Box",
+        "12ms",
+        "Internet ICMP",
+        "Timeout",
+        "Mail relay",
+        "Timeout",
+        "SSH",
+        "Open",
+        "Still scanning",
+        "Scanning",
+        "No gateway",
+        "None",
+        "My Blog",
+        "Code 200",
+        "Broken site",
+        "Error",
+        "Web scanning",
+        "Scanning",
+    ], f"got {texts!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_ports_skips_an_item_it_cannot_scan():
+    """An item with neither `url` nor `host` is skipped, not rendered with a
+    blank status (ports/render_curses_v5.py:107-114)."""
+    payload = _run_render_probe("ports")
+    assert "Neither url nor host" not in payload["pluginText"]["ports"]
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_ports_has_no_header_row():
+    """G9-7 D4, and ports/render_curses_v5.py's own
+    `test_no_title_row_deliberate_do_not_fix`: `ports` reads as one block with
+    `network` above it, so it paints no title and no column header. The block
+    is still named for assistive technology.
+    """
+    payload = _run_render_probe("ports")
+    assert "ports" not in payload["pluginColumnHeaders"], (
+        f"ports must render no <th>: {payload['pluginColumnHeaders']!r}"
+    )
+    assert "PORTS" not in payload["pluginText"]["ports"], "the title must not be visible"
+    assert "aria-label" in payload["pluginAttrs"]["ports"]
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_ports_colours_the_status_from_its_levels_entry():
+    """The tier reaches the DOM as a class on the value <span> and nowhere
+    else; a healthy port is green ("ok"), v4's OK decoration."""
+    payload = _run_render_probe("ports")
+    status_classes = [cell["value"] for cell in payload["pluginTableCells"]["ports"]][1::2]
+    assert status_classes[0] == "gl-level-ok", f"Home Box is healthy: {status_classes!r}"
+    assert status_classes[1] == "gl-level-critical", f"a timeout is critical: {status_classes!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_an_empty_ports_collection_is_hidden():
+    """The TUI returns [] for an empty list, so the block is not painted."""
+    payload = _run_render_probe("ports-empty")
+    assert payload["pluginHidden"].get("ports") is True, f"got {payload['pluginHidden']!r}"
+
+
+# ---------------------------------------------------- folders (G9-7 Task 4)
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_folders_renders_its_title_and_an_empty_size_header():
+    """G9-7 D4: the TUI's FOLDERS line has no size label, and the empty <th>
+    keeps the header aligned column by column with the body (the sensors
+    precedent)."""
+    payload = _run_render_probe("folders")
+    assert payload["pluginColumnHeaders"]["folders"] == ["FOLDERS", ""], f"got {payload['pluginColumnHeaders']!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_folders_renders_its_sizes():
+    payload = _run_render_probe("folders")
+    texts = [cell["text"] for cell in payload["pluginTableCells"]["folders"]]
+    assert texts[1] == "125.0M", f"got {texts!r}"
+    assert texts[3] == "17.0G", f"got {texts!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_folders_marks_an_unreadable_folder_bold_and_untiered():
+    """errno != 0 -> a "?" prefix and curses.A_BOLD with NO colour pair. The
+    model emits no _levels entry for it, so a tier class here would mean the
+    component invented one."""
+    payload = _run_render_probe("folders")
+    cells = payload["pluginTableCells"]["folders"]
+    assert cells[5]["text"].startswith("?"), f"got {cells[5]!r}"
+    assert cells[5]["value"] == "gl-strong", f"bold, no tier: {cells[5]!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_folders_renders_a_row_with_no_usable_path():
+    """folders/render_curses_v5.py:93-94,103 keeps every dict item and
+    coalesces a missing/falsy path to "" -- it never drops the row. A
+    component filtering rows on `item.path` would silently swallow this one,
+    so this asserts the row COUNT and the empty name cell, not text that
+    would also pass if the row were merely renamed.
+    """
+    payload = _run_render_probe("folders")
+    cells = payload["pluginTableCells"]["folders"]
+    assert len(cells) == 8, f"expected 4 rows x 2 cells, got {cells!r}"
+    assert cells[6]["text"] == "", f"the no-path row's name cell must be empty, not 'undefined': {cells[6]!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_folders_truncates_a_long_path_from_the_start():
+    """The TUI keeps the tail ("_" + path[-23:]), so the ellipsis falls at the
+    start; the <bdi> is load-bearing (without it the bidi algorithm moves the
+    leading "/" to the end)."""
+    payload = _run_render_probe("folders")
+    cells = payload["pluginNameCells"]["folders"]
+    assert all(cell["hasBdi"] for cell in cells), f"got {cells!r}"
+    assert all("gl-truncate-start" in cell["className"] for cell in cells), f"got {cells!r}"
+    assert cells[1]["title"] == "/home/nicolargo/media/library/Videos"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_an_empty_folders_collection_is_hidden():
+    payload = _run_render_probe("folders-empty")
+    assert payload["pluginHidden"].get("folders") is True, f"got {payload['pluginHidden']!r}"
+
+
+# ------------------------------------------------ connections (G9-7 Task 5)
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_connections_renders_the_tui_rows_in_order():
+    """connections/render_curses_v5.py:80-100 -- the title, then the four state
+    counters in the TUI's fixed order, then Tracked as `count/max`. The labels
+    come from the schema (G9-7 D5), so this also proves the component reads
+    /api/5/all/info rather than hardcoding them.
+    """
+    payload = _run_render_probe("connections")
+    grid = payload["pluginGrid"]["connections"]
+    assert grid == [
+        [
+            ["TCP CONNECTIONS", ""],
+            ["Listen", "3"],
+            ["Initiated", "0"],
+            ["Established", "12"],
+            ["Terminated", "204"],
+            ["Tracked", "512/1024"],
+        ]
+    ], f"got {grid!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_connections_colours_only_the_tracked_row():
+    """The Tracked row is the only coloured one, from nf_conntrack_percent."""
+    payload = _run_render_probe("connections")
+    classes = payload["pluginValueClasses"]["connections"]
+    assert classes[-1] == "gl-level-careful", f"got {classes!r}"
+    assert set(classes[:-1]) == {""}, f"no other row may be coloured: {classes!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_connections_without_conntrack_drops_the_tracked_row():
+    payload = _run_render_probe("connections-no-conntrack")
+    labels = [pair[0] for pair in payload["pluginGrid"]["connections"][0]]
+    assert labels == ["TCP CONNECTIONS", "Listen", "Initiated", "Established", "Terminated"], f"got {labels!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_connections_without_net_connections_keeps_only_tracked():
+    payload = _run_render_probe("connections-no-net")
+    labels = [pair[0] for pair in payload["pluginGrid"]["connections"][0]]
+    assert labels == ["TCP CONNECTIONS", "Tracked"], f"got {labels!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_connections_with_both_probes_off_is_hidden():
+    """The TUI returns [] when neither probe is enabled."""
+    payload = _run_render_probe("connections-off")
+    assert payload["pluginHidden"].get("connections") is True, f"got {payload['pluginHidden']!r}"
+
+
+# -------------------------------------------------------- irq (G9-7 Task 5)
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_irq_keeps_the_five_busiest_lines_ranked():
+    """Ranking lives in the renderer, not the model: model_v5 publishes every
+    line (a v4 divergence made for exporters), and the TUI sorts by rate
+    descending and keeps five (irq/render_curses_v5.py:48-58). A null rate
+    sorts last instead of throwing.
+    """
+    payload = _run_render_probe("irq")
+    texts = [cell["text"] for cell in payload["pluginTableCells"]["irq"]]
+    assert texts == [
+        "RES",
+        "501",
+        "LOC",
+        "340",
+        "1_i8042",
+        "95",
+        "0",
+        "12",
+        "CAL",
+        "7",
+    ], f"got {texts!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_irq_labels_its_rate_column_from_the_schema():
+    payload = _run_render_probe("irq")
+    assert payload["pluginColumnHeaders"]["irq"] == ["IRQ", "Rate/s"], f"got {payload['pluginColumnHeaders']!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_an_empty_irq_collection_is_hidden():
+    payload = _run_render_probe("irq-empty")
+    assert payload["pluginHidden"].get("irq") is True, f"got {payload['pluginHidden']!r}"
+
+
+# ------------------------------------------------------- raid (G9-7 Task 6)
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_raid_groups_each_array_with_its_sub_lines():
+    """G9-7 D3: one <tbody> per array, sub-lines inside it, the TUI's glyphs
+    kept. Arrays are sorted by name as strings (raid/render_curses_v5.py:96),
+    which puts md12 before md4.
+
+    md12 is inactive AND degraded: both sub-line groups are emitted, in that
+    order -- they are not exclusive, and a component that treated them as an
+    if/else would drop the second.
+    """
+    payload = _run_render_probe("raid")
+    groups = payload["pluginRowGroups"]["raid"]
+    assert groups == [
+        [["RAID1 md0", "2", "2"]],
+        [
+            ["RAID1 md12", "", ""],
+            ["└─ Status inactive"],
+            ["   ├─ disk 0: sde1"],
+            ["   └─ disk 1: sdf1"],
+            ["└─ Degraded mode"],
+            ["   └─ UA"],
+        ],
+        [["RAID5 md4", "2", "3"], ["└─ Degraded mode"], ["   └─ UUA"]],
+        [["RAID0 md9", "2", "-"]],
+        [["UNKNOWN md99", "2", "2"]],
+    ], f"got {groups!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_raid_renders_unknown_for_a_null_type():
+    """v4/raid/render_curses_v5.py:50: a null `type` renders the literal
+    "UNKNOWN" rather than an empty or missing type string. `md99` (type:
+    null) exercises exactly this branch and nothing else -- active, no
+    sub-lines -- so this test names the behaviour on its own instead of
+    leaving it buried in the long list above.
+    """
+    payload = _run_render_probe("raid")
+    groups = payload["pluginRowGroups"]["raid"]
+    titles = [group[0][0] for group in groups]
+    assert "UNKNOWN md99" in titles, f"got {titles!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_raid_labels_its_columns_from_the_schema():
+    payload = _run_render_probe("raid")
+    assert payload["pluginColumnHeaders"]["raid"] == ["RAID disks", "Used", "Avail"], (
+        f"got {payload['pluginColumnHeaders']!r}"
+    )
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_raid_colours_the_values_and_the_status_lines_from_levels():
+    """The tier reaches the DOM as a class on the value <span>, never on the
+    <td> -- a prominent badge's background would otherwise fill the whole cell.
+    `pluginTableCells[i]["value"]` is that span's class list;
+    `pluginValueClasses` would give the cell's ("gl-num") and prove nothing.
+    """
+    payload = _run_render_probe("raid")
+    spans = [cell["value"] for cell in payload["pluginTableCells"]["raid"]]
+    assert any("gl-level-critical" in (span or "") for span in spans), f"md12 must be critical: {spans!r}"
+    assert any("gl-level-warning" in (span or "") for span in spans), f"md4 must be warning: {spans!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_an_empty_raid_collection_is_hidden():
+    """v4 parity, and Task 3's TUI fix: no array, no block -- not a bare
+    "RAID disks  Used  Avail" header."""
+    payload = _run_render_probe("raid-empty")
+    assert payload["pluginHidden"].get("raid") is True, f"got {payload['pluginHidden']!r}"
+
+
+# ------------------------------------------------------ smart (G9-7 Task 6)
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_smart_groups_each_device_with_its_attributes():
+    """G9-7 D3 and smart/render_curses_v5.py: a device row, then one row per
+    attribute -- the name indented by the TUI's leading space, underscores
+    rendered as spaces, the raw value right-aligned. A LARGE_VALUE_KEYS raw
+    goes through auto_unit() (5307033647 -> "4.94G"); everything else is
+    printed as-is; a null raw renders an empty cell. The fixture carries a
+    second device with its own attributes, so this also proves the grouping
+    is per-device rather than one flat table.
+    """
+    payload = _run_render_probe("smart")
+    groups = payload["pluginRowGroups"]["smart"]
+    assert groups == [
+        [
+            ["/dev/sda Samsung SSD 850"],
+            [" Power On Hours", "12345"],
+            [" Reallocated Sector Ct", "0"],
+            [" Data Units Written", "4.94G"],
+            [" Unknown Attribute", ""],
+        ],
+        [
+            ["/dev/sdb Crucial MX500"],
+            [" Bytes Read", "2.05G"],
+            [" Power Cycle Count", "87"],
+        ],
+    ], f"got {groups!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_smart_never_colours_a_cell():
+    """v4 `smart` is display-only: EMITS_ALERTS is False and no field is
+    watched, so no cell may carry a tier class."""
+    payload = _run_render_probe("smart")
+    spans = [cell["value"] for cell in payload["pluginTableCells"]["smart"]]
+    assert not any("gl-level-" in (span or "") for span in spans), f"smart must not colour anything: {spans!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_an_empty_smart_collection_is_hidden():
+    payload = _run_render_probe("smart-empty")
+    assert payload["pluginHidden"].get("smart") is True, f"got {payload['pluginHidden']!r}"

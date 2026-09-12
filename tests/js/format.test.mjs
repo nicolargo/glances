@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { formatBytes, formatRate, formatPercent, formatCount, toFahrenheit, formatSeconds, toFixedHalfEven, formatNetworkRate, formatFixed0 } from "../../glances/outputs/static/js/v5/format.js";
+import { formatBytes, formatRate, formatPercent, formatCount, toFahrenheit, formatSeconds, toFixedHalfEven, formatNetworkRate, formatFixed0, formatAutoUnit } from "../../glances/outputs/static/js/v5/format.js";
 
 test("formatBytes uses binary units", () => {
 	assert.equal(formatBytes(0), "0B");
@@ -148,4 +148,32 @@ test("formatFixed0 is Python's :.0f, and the usual missing marker", () => {
 	assert.equal(formatFixed0(1200), "1200");
 	assert.equal(formatFixed0(null), "-");
 	assert.equal(formatFixed0("ERR"), "-");
+});
+
+// The cases are auto_unit()'s own docstring (glances/globals.py:431-447) --
+// the one place the v4 algorithm is specified by example.
+test("formatAutoUnit mirrors v4 auto_unit", () => {
+	assert.equal(formatAutoUnit(613421788), "585M");
+	assert.equal(formatAutoUnit(5307033647), "4.94G");
+	assert.equal(formatAutoUnit(44968414685), "41.9G");
+	assert.equal(formatAutoUnit(838471403472), "781G");
+	assert.equal(formatAutoUnit(9683209690677), "8.81T");
+	// A quotient of exactly 1024 stays in the smaller unit: the loop takes the
+	// largest prefix whose quotient is > 1, so 1G is "1024M", not "1.0G".
+	assert.equal(formatAutoUnit(1073741824), "1024M");
+	// The trailing zero is part of the contract: a fixed-decimal string, never
+	// a Number round-trip that would print "1.1G".
+	assert.equal(formatAutoUnit(1181116006), "1.10G");
+});
+
+test("formatAutoUnit below 1K, at zero and on a missing value", () => {
+	// Python: `if number == 0: return '0'` -- before any division.
+	assert.equal(formatAutoUnit(0), "0");
+	// No prefix quotient is > 1, so the fallthrough formats the number itself:
+	// 0 decimals for an integer, 2 for a float (Python's isinstance check).
+	assert.equal(formatAutoUnit(500), "500");
+	assert.equal(formatAutoUnit(500.5), "500.50");
+	assert.equal(formatAutoUnit(1024), "1024");
+	assert.equal(formatAutoUnit(null), "-");
+	assert.equal(formatAutoUnit(undefined), "-");
 });

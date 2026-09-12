@@ -29,7 +29,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from glances.outputs.curses_renderer_v5 import Cell, ColorRole, Row
+from glances.outputs.curses_renderer_v5 import Cell, ColorRole, Row, field_label
 
 _NAME_MAX_WIDTH = 24
 _RATE_WIDTH = 9
@@ -60,7 +60,13 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> l
         Row(
             cells=[
                 Cell(text="IRQ".ljust(_NAME_MAX_WIDTH), color=ColorRole.HEADER, bold=True),
-                Cell(text="{:>{w}}".format("Rate/s", w=_RATE_WIDTH), color=ColorRole.HEADER, bold=True),
+                Cell(
+                    text="{:>{w}}".format(
+                        field_label(fields_desc.get("irq_rate", {}), "irq_rate", prefer_short=True), w=_RATE_WIDTH
+                    ),
+                    color=ColorRole.HEADER,
+                    bold=True,
+                ),
             ]
         )
     ]

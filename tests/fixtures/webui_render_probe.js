@@ -413,6 +413,13 @@ function collect() {
 		// observe that the tier (and the prominent badge) sits on the value
 		// text, not on the whole cell.
 		pluginTableCells: {},
+		// Each <tbody> of a plugin as its rows' raw cell texts:
+		// [[[cell, cell], ...], ...], one inner list per row group. `raid` and
+		// `smart` emit one group per array/device (G9-7 D3), and this is the
+		// only way a test can see that grouping rather than a flat table. NOT
+		// trimmed, unlike pluginTableCells: `smart`'s attribute names carry the
+		// TUI's leading-space indent, and trimming would hide it.
+		pluginRowGroups: {},
 		// The name <span class~="gl-name"> of each row of a collection plugin,
 		// keyed by data-plugin: its text, classes, `title` and whether the text
 		// sits in a <bdi>. Lets a test observe the displayed name (alias or raw
@@ -480,6 +487,12 @@ function collect() {
 						const span = findDescendantTag(td, "SPAN");
 						return { cell: td.className, value: span ? span.className : null, text: td.textContent.trim() };
 					});
+				}
+				const groups = findAllByTag(article, "TBODY");
+				if (groups.length) {
+					result.pluginRowGroups[name] = groups.map((tbody) =>
+						findAllByTag(tbody, "TR").map((tr) => findAllByTag(tr, "TD").map((td) => td.textContent)),
+					);
 				}
 				const nameCells = findAllByTag(article, "SPAN").filter((span) => span.classList.contains("gl-name"));
 				if (nameCells.length) {

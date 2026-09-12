@@ -66,11 +66,13 @@ class PluginModel(GlancesPluginBase[list]):
             "description": "Number of used disks.",
             "unit": "number",
             "watched": False,
+            "short_name": "Used",
         },
         "available": {
             "description": "Number of available disks.",
             "unit": "number",
             "watched": False,
+            "short_name": "Avail",
         },
         "components": {
             "description": "Component disks (name -> role).",

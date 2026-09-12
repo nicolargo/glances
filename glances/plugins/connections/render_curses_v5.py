@@ -40,17 +40,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row
+from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row, field_label
 
 _LEFT_SIDEBAR_MAX_WIDTH = 34
 
-# Fixed v4 display order (glances/plugins/connections/__init__.py:205).
-_ROW_ORDER: tuple[tuple[str, str], ...] = (
-    ("LISTEN", "Listen"),
-    ("initiated", "Initiated"),
-    ("ESTABLISHED", "Established"),
-    ("terminated", "Terminated"),
-)
+# Fixed v4 display order (glances/plugins/connections/__init__.py:205). The
+# labels come from the schema (G9-7 D5), so the WebUI cannot drift from them.
+_ROW_ORDER: tuple[str, ...] = ("LISTEN", "initiated", "ESTABLISHED", "terminated")
 
 
 def _stat_row(label: str, value: Any, color: ColorRole = ColorRole.DEFAULT, prominent: bool = False) -> Row:
@@ -69,6 +65,7 @@ def render(
     if not isinstance(payload, dict) or not payload:
         return []
 
+    schema = fields_desc or {}
     net_enabled = bool(payload.get("net_connections_enabled"))
     nf_enabled = bool(payload.get("nf_conntrack_enabled"))
     if not net_enabled and not nf_enabled:
@@ -77,10 +74,10 @@ def render(
     rows: list[Row] = [Row(cells=[Cell(text="TCP CONNECTIONS", color=ColorRole.HEADER, bold=True)])]
 
     if net_enabled:
-        for key, label in _ROW_ORDER:
+        for key in _ROW_ORDER:
             if key not in payload:
                 continue
-            rows.append(_stat_row(label, payload[key]))
+            rows.append(_stat_row(field_label(schema.get(key, {}), key, prefer_short=True), payload[key]))
 
     if nf_enabled and payload.get("nf_conntrack_count") is not None and payload.get("nf_conntrack_max") is not None:
         levels = payload.get("_levels")
@@ -90,6 +87,7 @@ def render(
         role = _LEVEL_TO_ROLE.get(level, ColorRole.DEFAULT)
         prominent = bool(level_entry.get("prominent")) if isinstance(level_entry, dict) else False
         value_text = f"{payload['nf_conntrack_count']:.0f}/{payload['nf_conntrack_max']:.0f}"
-        rows.append(_stat_row("Tracked", value_text, color=role, prominent=prominent))
+        tracked_label = field_label(schema.get("nf_conntrack_count", {}), "nf_conntrack_count", prefer_short=True)
+        rows.append(_stat_row(tracked_label, value_text, color=role, prominent=prominent))
 
     return rows

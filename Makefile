@@ -362,6 +362,9 @@ run-v5-local-conf: ## Start Glances v5 in TUI mode with the system conf file
 run-v5-server: ## Start Glances v5 REST server (FastAPI on :61208, headless)
 	$(UV_RUN) run python -m glances.main_v5 -C $(CONF) -s
 
+run-v5-server-local-conf: ## Start Glances v5 REST server with the system conf file (FastAPI on :61208, headless)
+	$(UV_RUN) run python -m glances.main_v5 -s
+
 run-v5-server-debug: ## Start Glances v5 REST server in debug mode (headless)
 	$(UV_RUN) run python -m glances.main_v5 -C $(CONF) -s -d
 

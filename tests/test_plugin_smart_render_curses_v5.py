@@ -31,10 +31,13 @@ def _flat(rows):
     return "\n".join(" ".join(c.text for c in r.cells) for r in rows)
 
 
-def test_empty_returns_header_only():
-    rows = render(_payload([]))
-    assert "SMART disks" in _flat(rows)
-    assert len(rows) == 1  # header only
+def test_an_empty_collection_renders_nothing():
+    """v4 parity (glances/plugins/smart/__init__.py, msg_curse's `if not
+    self.stats`): no device, no block. v4 paints nothing.
+    """
+    assert render(_payload([])) == []
+    assert render({}) == []
+    assert render(None) == []
 
 
 def test_header_device_and_attributes():

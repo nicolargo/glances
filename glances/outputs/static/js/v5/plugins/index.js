@@ -35,8 +35,14 @@ import PluginIp from "../PluginIp.vue";
 import PluginCloud from "../PluginCloud.vue";
 import PluginDiskio from "../PluginDiskio.vue";
 import PluginFs from "../PluginFs.vue";
+import PluginFolders from "../PluginFolders.vue";
 import PluginWifi from "../PluginWifi.vue";
+import PluginConnections from "../PluginConnections.vue";
+import PluginIrq from "../PluginIrq.vue";
+import PluginRaid from "../PluginRaid.vue";
+import PluginSmart from "../PluginSmart.vue";
 import PluginSensors from "../PluginSensors.vue";
+import PluginPorts from "../PluginPorts.vue";
 
 export const PLUGINS = [
 	// The header plugins declare `required: []`: a missing guard field
@@ -109,10 +115,22 @@ export const PLUGINS = [
 		spec: { shape: "collection", required: ["interface_name"] },
 	},
 	{
+		name: "ports",
+		component: PluginPorts,
+		slot: "left",
+		spec: { shape: "collection", required: ["indice"] },
+	},
+	{
 		name: "wifi",
 		component: PluginWifi,
 		slot: "left",
 		spec: { shape: "collection", required: ["ssid"] },
+	},
+	{
+		name: "connections",
+		component: PluginConnections,
+		slot: "left",
+		spec: { shape: "scalar", required: [] },
 	},
 	{
 		name: "diskio",
@@ -125,6 +143,30 @@ export const PLUGINS = [
 		component: PluginFs,
 		slot: "left",
 		spec: { shape: "collection", required: ["mnt_point"] },
+	},
+	{
+		name: "irq",
+		component: PluginIrq,
+		slot: "left",
+		spec: { shape: "collection", required: ["irq_line"] },
+	},
+	{
+		name: "folders",
+		component: PluginFolders,
+		slot: "left",
+		spec: { shape: "collection", required: ["path"] },
+	},
+	{
+		name: "raid",
+		component: PluginRaid,
+		slot: "left",
+		spec: { shape: "collection", required: ["name"] },
+	},
+	{
+		name: "smart",
+		component: PluginSmart,
+		slot: "left",
+		spec: { shape: "collection", required: ["name"] },
 	},
 	{
 		name: "sensors",

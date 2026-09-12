@@ -34,7 +34,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row
+from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row, field_label
 
 _NAME_MAX_WIDTH = 18
 _USED_COL_WIDTH = 7
@@ -63,20 +63,31 @@ def _status_role(levels: dict[str, Any], name: str) -> tuple[ColorRole, bool]:
 
 
 def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]] | None = None, view=None) -> list[Row]:
+    # v4 parity (glances/plugins/raid/__init__.py:73-75): no stats -> no block.
+    # The header row is built only once there is an array to put under it;
+    # returning it unconditionally painted a bare "RAID disks  Used  Avail" on
+    # any box with the plugin enabled and no array (G9-7 spec §8).
+    items = payload.get("data") if isinstance(payload, dict) else None
+    if not isinstance(items, list) or not items:
+        return []
+
+    schema = fields_desc or {}
     header = Row(
         cells=[
             Cell(text="RAID disks".ljust(_NAME_MAX_WIDTH), color=ColorRole.HEADER, bold=True),
-            Cell(text="Used".rjust(_USED_COL_WIDTH), color=ColorRole.HEADER, bold=True),
-            Cell(text="Avail".rjust(_AVAIL_COL_WIDTH), color=ColorRole.HEADER, bold=True),
+            Cell(
+                text=field_label(schema.get("used", {}), "used", prefer_short=True).rjust(_USED_COL_WIDTH),
+                color=ColorRole.HEADER,
+                bold=True,
+            ),
+            Cell(
+                text=field_label(schema.get("available", {}), "available", prefer_short=True).rjust(_AVAIL_COL_WIDTH),
+                color=ColorRole.HEADER,
+                bold=True,
+            ),
         ]
     )
     rows: list[Row] = [header]
-
-    if not isinstance(payload, dict):
-        return rows
-    items = payload.get("data")
-    if not isinstance(items, list):
-        return rows
     levels = payload.get("_levels") if isinstance(payload.get("_levels"), dict) else {}
 
     # Sort by array name (v4: sorted(self.stats.keys())).

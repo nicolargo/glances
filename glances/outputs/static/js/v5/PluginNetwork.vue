@@ -1,25 +1,17 @@
 <template>
-	<article class="gl-plugin" aria-label="NETWORK">
-		<!-- aria-label: once loaded the title is a <th>, not a heading. Keep this
-		comment INSIDE the root: the build keeps template comments, and one
-		before <article> would make a second root node and drop data-plugin. -->
-		<div v-if="error || !payload" class="gl-plugin-title">
-			<h2 class="gl-header">NETWORK</h2>
-		</div>
-		<p v-if="error" class="gl-level-critical">{{ error }}</p>
-		<p v-else-if="!payload" class="gl-muted">loading…</p>
-		<table v-else class="gl-table">
-			<thead>
-				<!-- G9-6 D6: the TUI's header row -- the block title, then the rate
-				labels from the schema. An empty collection keeps this row and
-				shows no line, as the TUI paints its header. -->
-				<tr>
-					<th class="gl-header">NETWORK</th>
-					<th v-for="field in RATE_FIELDS" :key="field" class="gl-header gl-num">
-						{{ labelFor(labels, field) }}
-					</th>
-				</tr>
-			</thead>
+	<CollectionBlock :title="TITLE" :payload="payload" :error="error">
+		<template #head>
+			<!-- G9-6 D6: the TUI's header row -- the block title, then the rate
+			labels from the schema. An empty collection keeps this row and
+			shows no line, as the TUI paints its header. -->
+			<tr>
+				<th class="gl-header">{{ TITLE }}</th>
+				<th v-for="field in RATE_FIELDS" :key="field" class="gl-header gl-num">
+					{{ labelFor(labels, field) }}
+				</th>
+			</tr>
+		</template>
+		<template #body>
 			<tbody>
 				<!-- The row key hardcodes `interface_name` on purpose: deriving it
 				from `payload._key` yields `item[undefined]` against a server that
@@ -37,8 +29,8 @@
 					</td>
 				</tr>
 			</tbody>
-		</table>
-	</article>
+		</template>
+	</CollectionBlock>
 </template>
 
 <script>
@@ -46,11 +38,15 @@ import { formatNetworkRate } from "./format.js";
 import { labelFor } from "./labels.js";
 import { cellClassFor } from "./columns.js";
 import { displayName } from "./rows.js";
+import CollectionBlock from "./CollectionBlock.vue";
 
 const RATE_FIELDS = ["bytes_recv", "bytes_sent"];
 
+const TITLE = "NETWORK";
+
 export default {
 	name: "PluginNetwork",
+	components: { CollectionBlock },
 	props: {
 		payload: { type: Object, default: null },
 		error: { type: String, default: undefined },
@@ -62,6 +58,7 @@ export default {
 		degrade: { type: Object, default: () => ({}) },
 	},
 	computed: {
+		TITLE: () => TITLE,
 		// A computed, not data(): data() would hand the template a deeply
 		// reactive Proxy of the array.
 		RATE_FIELDS: () => RATE_FIELDS,
