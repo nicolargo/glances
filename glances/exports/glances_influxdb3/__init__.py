@@ -89,7 +89,6 @@ class Export(GlancesExport):
             try:
                 self.client.write(
                     record=self.normalize_for_influxdb(name, columns, points),
-                    time_precision="s",
                 )
             except Exception as e:
                 # Log level set to warning instead of error (see: issue #1561)
