@@ -278,6 +278,25 @@ class GlancesConfigV5:
             return float(default)
         return float(raw)
 
+    def get_bool_value(self, section: str, option: str, default: bool = True) -> bool:
+        """v4 compatibility accessor — mirrors `GlancesConfig.get_bool_value`.
+
+        Returns `bool(default)` when the option is ABSENT (v4 defaults to
+        True, not False), and the parsed value when it is present. A
+        present-but-non-boolean value therefore raises `ValueError`, exactly
+        like v4's `ConfigParser.getboolean`.
+
+        That exception is load-bearing, like `get_float_value`'s:
+        `GlancesWebList` (reused verbatim by `ports/model_v5.py`) catches it
+        so that `web_N_ssl_verify` can hold either a boolean or the path to a
+        CA bundle. Swallowing it and returning the default would silently
+        turn every custom bundle into `verify=True`.
+        """
+        raw = self._merged.get(section, {}).get(option)
+        if raw is None:
+            return bool(default)
+        return _coerce_bool(raw) if isinstance(raw, str) else bool(raw)
+
     @staticmethod
     def _coerce(raw: Any, target_type: type) -> Any:
         # Native types in DEFAULTS flow through unchanged.

@@ -619,6 +619,29 @@ def test_get_float_value_raises_on_non_numeric_value(env: Path) -> None:
         GlancesConfigV5().get_float_value("amp_foo", "regex")
 
 
+def test_get_bool_value_reads_a_boolean(env: Path) -> None:
+    write(xdg_path(env), "[ports]\nweb_1_ssl_verify = false\nweb_2_ssl_verify = true\n")
+    config = GlancesConfigV5()
+    assert config.get_bool_value("ports", "web_1_ssl_verify") is False
+    assert config.get_bool_value("ports", "web_2_ssl_verify") is True
+
+
+def test_get_bool_value_missing_option_returns_default(env: Path) -> None:
+    """v4 `GlancesConfig.get_bool_value` defaults to True, not False."""
+    config = GlancesConfigV5()
+    assert config.get_bool_value("ports", "web_1_ssl_verify") is True
+    assert config.get_bool_value("ports", "web_1_ssl_verify", False) is False
+
+
+def test_get_bool_value_raises_on_non_boolean_value(env: Path) -> None:
+    """Load-bearing: `GlancesWebList` (reused verbatim) catches ValueError to
+    let `web_N_ssl_verify` also hold the path to a CA bundle. Returning the
+    default instead would turn every custom bundle into `verify=True`."""
+    write(xdg_path(env), "[ports]\nweb_1_ssl_verify = /etc/ssl/certs/ca-bundle.crt\n")
+    with pytest.raises(ValueError):
+        GlancesConfigV5().get_bool_value("ports", "web_1_ssl_verify")
+
+
 # ============================================================================
 # Shipped conf/glances.conf — [alerts] section is documented (design §8.1)
 # ============================================================================

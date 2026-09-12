@@ -11,6 +11,7 @@
 
 from __future__ import annotations
 
+import logging
 from collections import namedtuple
 from unittest.mock import patch
 
@@ -301,3 +302,66 @@ async def test_get_export_strips_internals(tmp_path, monkeypatch, store):
     assert "_levels" not in exported
     assert "time_since_update" not in exported
     assert exported["LISTEN"] == 1
+
+
+# ---------------------------------------------------------- warn-once per probe
+
+LOGGER_NAME = "glances.plugins.connections.model_v5"
+
+
+def _records(caplog, level):
+    return [r for r in caplog.records if r.name == LOGGER_NAME and r.levelno == level]
+
+
+async def test_repeated_failure_warns_only_once(tmp_path, monkeypatch, store, caplog):
+    """A permanently failing probe is retried every cycle (design decision),
+    so the WARNING must be emitted once and demoted to DEBUG afterwards —
+    otherwise a host where the probe can never work logs a warning every
+    refresh forever (the nuisance v4 fixed by latching the probe instead)."""
+    config = _config_with(tmp_path, monkeypatch, "[connections]\ndisable=False\n")
+    plugin = PluginModel(store, config)
+    plugin.conntrack_paths = {}  # keep conntrack silent, only net_connections fails
+
+    with caplog.at_level(logging.DEBUG, logger=LOGGER_NAME):
+        with patch("glances.plugins.connections.model_v5.psutil.net_connections", side_effect=OSError("boom")):
+            await plugin._grab_stats()
+            await plugin._grab_stats()
+            await plugin._grab_stats()
+
+    assert len(_records(caplog, logging.WARNING)) == 1
+    assert len(_records(caplog, logging.DEBUG)) == 2
+
+
+async def test_recovery_rearms_the_warning(tmp_path, monkeypatch, store, caplog):
+    """A new failure after a success is news again — the one-shot state is
+    cleared on recovery so a flapping probe is not silenced forever."""
+    config = _config_with(tmp_path, monkeypatch, "[connections]\ndisable=False\n")
+    plugin = PluginModel(store, config)
+    plugin.conntrack_paths = {}
+
+    with caplog.at_level(logging.DEBUG, logger=LOGGER_NAME):
+        with patch("glances.plugins.connections.model_v5.psutil.net_connections", side_effect=OSError("boom")):
+            await plugin._grab_stats()
+        with patch("glances.plugins.connections.model_v5.psutil.net_connections", return_value=[]):
+            await plugin._grab_stats()
+        with patch("glances.plugins.connections.model_v5.psutil.net_connections", side_effect=OSError("boom")):
+            await plugin._grab_stats()
+
+    assert len(_records(caplog, logging.WARNING)) == 2
+
+
+async def test_each_probe_is_deduplicated_independently(tmp_path, monkeypatch, store, caplog):
+    """Both probes failing in the same cycle yield one warning EACH: silencing
+    net_connections must not silence conntrack (they fail for unrelated
+    reasons — permissions vs. a missing kernel module)."""
+    config = _config_with(tmp_path, monkeypatch, "[connections]\ndisable=False\n")
+    plugin = PluginModel(store, config)
+    plugin.conntrack_paths = {"nf_conntrack_count": str(tmp_path / "absent")}
+
+    with caplog.at_level(logging.DEBUG, logger=LOGGER_NAME):
+        with patch("glances.plugins.connections.model_v5.psutil.net_connections", side_effect=OSError("boom")):
+            await plugin._grab_stats()
+            await plugin._grab_stats()
+
+    assert len(_records(caplog, logging.WARNING)) == 2
+    assert len(_records(caplog, logging.DEBUG)) == 2

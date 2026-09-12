@@ -30,8 +30,15 @@ Two non-obvious points a future "cleanup" could otherwise undo:
 1. The `net_connections_enabled` / `nf_conntrack_enabled` flags are
    deliberately per-cycle locals, not instance state: a source that fails
    is retried on the next cycle so a transient failure self-heals (e.g.
-   the `nf_conntrack` kernel module being loaded after Glances starts,
-   which v4 picks up). Do not hoist them onto `self`.
+   the `nf_conntrack` kernel module being loaded after Glances starts).
+   Do not hoist them onto `self`.
+
+   v4 went the other way in `4591a6f5` ("Remember that a connections probe
+   was disabled"): it latches a failed probe onto the plugin for the rest
+   of the session. v5 keeps the retry — losing the self-healing is the
+   higher price — and addresses what that commit was actually fixing (the
+   warning replayed on every refresh) with the one-shot logging below, so
+   a probe that can never work costs exactly one WARNING line.
 2. `terminated` is computed from `terminated_states`, not
    `initiated_states`. v4 (`__init__.py:123`) iterates
    `self.initiated_states` where it must iterate `self.terminated_states`,
@@ -133,6 +140,26 @@ class PluginModel(GlancesPluginBase[dict]):
         },
     }
 
+    def __init__(self, store, config) -> None:
+        super().__init__(store, config)
+
+        # Names of the probes whose failure has already been reported. This is
+        # log-deduplication state only — NOT the enabled flags, which stay
+        # per-cycle locals (see the module docstring). Cleared for a probe as
+        # soon as it works again, so a flapping probe is not silenced forever.
+        self._probe_warned: set[str] = set()
+
+    def _log_probe_failure(self, probe: str, exc: Exception) -> None:
+        """WARNING the first time `probe` fails, DEBUG on every repeat."""
+        first = probe not in self._probe_warned
+        self._probe_warned.add(probe)
+        logger.log(
+            logging.WARNING if first else logging.DEBUG,
+            "connections: %s probe failed this cycle (%s)",
+            probe,
+            exc,
+        )
+
     def _collect_net_connections(self, stats: dict[str, Any]) -> bool:
         """Fill the connection-state counters. Return False if unavailable.
 
@@ -142,9 +169,10 @@ class PluginModel(GlancesPluginBase[dict]):
         try:
             connections = psutil.net_connections(kind="tcp")
         except Exception as exc:  # noqa: BLE001 — retried next cycle, never latched
-            logger.warning("connections: net_connections() failed this cycle (%s)", exc)
+            self._log_probe_failure("net_connections", exc)
             return False
 
+        self._probe_warned.discard("net_connections")
         for status in self.status_list:
             stats[status] = len([c for c in connections if c.status == status])
         stats["initiated"] = sum(1 for c in connections if c.status in self.initiated_states)
@@ -165,8 +193,10 @@ class PluginModel(GlancesPluginBase[dict]):
                 with open(path) as f:
                     stats[field_name] = float(f.readline().rstrip("\n"))
             except (OSError, FileNotFoundError) as exc:
-                logger.warning("connections: conntrack read failed this cycle (%s)", exc)
+                self._log_probe_failure("nf_conntrack", exc)
                 return False
+
+        self._probe_warned.discard("nf_conntrack")
         # Defensive: nf_conntrack_max == 0 would raise ZeroDivisionError and
         # lose the whole cycle. Skip the percent field only; the two raw
         # counters and nf_conntrack_enabled are unaffected.
