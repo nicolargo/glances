@@ -51,6 +51,8 @@ configuration file.
     # web_x_description is optional (if not set, define to URL)
     # web_x_timeout is optional and overwrite the default timeout value
     # web_x_rtt_warning is optional and defines the warning respond time in ms (approximately)
+    # web_x_ssl_verify is optional (default is True): False to skip the certificate check,
+    # or the path to a CA bundle file
     #
     web_1_url=https://blog.nicolargo.com
     web_1_description=My Blog

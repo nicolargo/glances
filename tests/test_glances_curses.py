@@ -213,3 +213,38 @@ class TestCursorDisable:
         glancescreen.args.arrow_keys_sort = False
         self._dispatch(glancescreen, curses.KEY_LEFT)
         assert glancescreen.args.cursor_process_name_position == 2  # nosec B101
+
+
+class TestLoadConfigPrecedence:
+    """docs/config.rst: options given on the command line override the file."""
+
+    @staticmethod
+    def load(outputs, **args):
+        from glances.config import Config
+
+        config = Config()
+        config.parser.read_dict({'outputs': outputs})
+        screen = _GlancesCurses.__new__(_GlancesCurses)
+        screen.args = SimpleNamespace(**args)
+        screen._left_sidebar = ['network']
+        screen.load_config(config)
+        return screen.args
+
+    def test_disable_separator_flag_beats_config(self):
+        # --disable-separator, or --disable-unicode via main.py, leaves it False.
+        args = self.load({'separator': 'True'}, enable_separator=False, disable_bg=False)
+        assert args.enable_separator is False
+
+    def test_disable_bg_flag_beats_config(self):
+        args = self.load({'disable_bg': 'False'}, enable_separator=True, disable_bg=True)
+        assert args.disable_bg is True
+
+    def test_config_applies_when_no_flag_is_given(self):
+        args = self.load({'separator': 'False', 'disable_bg': 'True'}, enable_separator=True, disable_bg=False)
+        assert args.enable_separator is False
+        assert args.disable_bg is True
+
+    def test_defaults_are_kept_when_the_keys_are_absent(self):
+        args = self.load({'left_menu': 'network'}, enable_separator=True, disable_bg=False)
+        assert args.enable_separator is True
+        assert args.disable_bg is False

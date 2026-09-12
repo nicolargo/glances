@@ -83,8 +83,15 @@ class GlancesWebList:
                 # Indice
                 new_web['indice'] = 'web_' + str(i)
 
-                # ssl_verify
-                new_web['ssl_verify'] = config.get_value(self._section, f'{postfix}ssl_verify', default=True)
+                # ssl_verify: a boolean, or the path to a CA bundle (both are valid
+                # values for Requests' verify argument). get_value returns the raw
+                # string, and Requests reads a string as a path, so 'false' and even
+                # 'true' were looked up as CA bundle file names and every scan of the
+                # URL failed with "Could not find a suitable TLS CA certificate bundle".
+                try:
+                    new_web['ssl_verify'] = config.get_bool_value(self._section, f'{postfix}ssl_verify')
+                except ValueError:
+                    new_web['ssl_verify'] = config.get_value(self._section, f'{postfix}ssl_verify')
                 # Proxy
                 http_proxy = config.get_value(self._section, f'{postfix}http_proxy', default=None)
 

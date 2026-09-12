@@ -211,14 +211,19 @@ class _GlancesCurses:
         """Load the outputs section of the configuration file."""
         if config is not None and config.has_section('outputs'):
             logger.debug('Read the outputs section in the configuration file')
+            # The command line overrides the configuration file (docs/config.rst).
+            # --disable-separator (and --disable-unicode, see main.py) can only turn
+            # the separator off, and --disable-bg can only turn the background off,
+            # so a flag that is set keeps its value and the file decides otherwise.
+            # Passing the flag in as the default let any value in the file win.
             # Separator
-            self.args.enable_separator = config.get_bool_value(
-                'outputs', 'separator', default=self.args.enable_separator
+            self.args.enable_separator = self.args.enable_separator and config.get_bool_value(
+                'outputs', 'separator', default=True
             )
             # Set the left sidebar list
             self._left_sidebar = config.get_list_value('outputs', 'left_menu', default=self._left_sidebar)
             # Background color
-            self.args.disable_bg = config.get_bool_value('outputs', 'disable_bg', default=self.args.disable_bg)
+            self.args.disable_bg = self.args.disable_bg or config.get_bool_value('outputs', 'disable_bg', default=False)
 
     def _right_sidebar(self):
         return [

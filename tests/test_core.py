@@ -1411,6 +1411,33 @@ class TestGlances(unittest.TestCase):
     #         # but not on my localLinux computer...
     #         # self.assertEqual(secure_popen('echo FOO | grep FOO'), 'FOO\n')
 
+    def test_708_conf_value_convert_bool(self):
+        """Test get_conf_value(convert_bool=True) reads False as False."""
+        print('INFO: [TEST_708] get_conf_value convert_bool')
+        from glances.config import Config
+
+        def disable_vms(raw):
+            config = Config()
+            config.parser.read_string(f'[processlist]\ndisable_virtual_memory={raw}\n')
+            plugin = GlancesPluginModel(config=config)
+            plugin.plugin_name = 'processlist'
+            plugin.load_limits(config)
+            return plugin.get_conf_value('disable_virtual_memory', convert_bool=True, default=False)
+
+        self.assertIs(disable_vms('True'), True)
+        self.assertIs(disable_vms('true'), True)
+        # load_limits keeps text as ['False'], and bool('False') is True: the
+        # documented off switch used to hide the VIRT column instead.
+        self.assertIs(disable_vms('False'), False)
+        # A value that parses as a number is stored as a float, which has no [0].
+        self.assertIs(disable_vms('1'), True)
+        self.assertIs(disable_vms('0'), False)
+
+        # Unset still falls back to the caller's default.
+        plugin = GlancesPluginModel(config=Config())
+        plugin.plugin_name = 'processlist'
+        self.assertIs(plugin.get_conf_value('disable_virtual_memory', convert_bool=True, default=False), False)
+
     def test_999_the_end(self):
         """Free all the stats"""
         print('INFO: [TEST_999] Free the stats')

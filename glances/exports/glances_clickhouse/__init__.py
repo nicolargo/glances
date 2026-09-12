@@ -15,6 +15,7 @@ from datetime import datetime, timezone
 from platform import node
 
 import clickhouse_connect
+from clickhouse_connect.driver.binding import quote_identifier
 
 from glances.exports.export import GlancesExport
 from glances.logger import logger
@@ -153,7 +154,7 @@ class Export(GlancesExport):
                 creation_list.append('`hostname_id` String')
                 for key, value in plugin_stats.items():
                     ch_type = _infer_ch_type([value])
-                    creation_list.append(f"`{key}` {ch_type}")
+                    creation_list.append(f"{quote_identifier(key)} {ch_type}")
                 values_list.append('NOW()')  # Add the current time (insertion time)
                 values_list.append(self.hostname)  # Add the hostname
                 values_list.extend([self.normalize(value) for value in plugin_stats.values()])
@@ -178,7 +179,7 @@ class Export(GlancesExport):
                 for col_key in all_keys:
                     col_values = [item.get(col_key) for item in plugin_stats]
                     ch_type = _infer_ch_type(col_values)
-                    creation_list.append(f"`{col_key}` {ch_type}")
+                    creation_list.append(f"{quote_identifier(col_key)} {ch_type}")
                 # Create the values list
                 for plugin_item in plugin_stats:
                     item_list = []
@@ -220,8 +221,9 @@ class Export(GlancesExport):
         # Serialize all ClickHouse operations to avoid concurrent session errors
         with self._lock:
             # Create the table if it does not exist
+            quoted_plugin = quote_identifier(plugin)
             create_query = f"""
-                CREATE TABLE IF NOT EXISTS `{plugin}`
+                CREATE TABLE IF NOT EXISTS {quoted_plugin}
                 ({', '.join(creation_list)})
                 ENGINE = MergeTree()
                 ORDER BY `time`
@@ -234,20 +236,25 @@ class Export(GlancesExport):
 
             # Schema evolution: add missing columns or fix type mismatches
             try:
-                existing_cols = {row[0]: row[1] for row in self.client.query(f"DESCRIBE TABLE `{plugin}`").result_rows}
+                existing_cols = {
+                    row[0]: row[1] for row in self.client.query(f"DESCRIBE TABLE {quoted_plugin}").result_rows
+                }
                 for col_def in creation_list:
                     parts = col_def.split(maxsplit=1)
                     col_name = parts[0].strip('`')
                     col_type = parts[1]
+                    quoted_col = quote_identifier(col_name)
                     if col_name not in existing_cols:
-                        self.client.command(f"ALTER TABLE `{plugin}` ADD COLUMN IF NOT EXISTS `{col_name}` {col_type}")
+                        self.client.command(
+                            f"ALTER TABLE {quoted_plugin} ADD COLUMN IF NOT EXISTS {quoted_col} {col_type}"
+                        )
                     elif existing_cols[col_name] != col_type and col_name not in ('time', 'hostname_id', 'key_id'):
                         # Type mismatch: modify the column type
                         logger.debug(
                             f"ClickHouse table {plugin}: changing column `{col_name}` "
                             f"from {existing_cols[col_name]} to {col_type}"
                         )
-                        self.client.command(f"ALTER TABLE `{plugin}` MODIFY COLUMN `{col_name}` {col_type}")
+                        self.client.command(f"ALTER TABLE {quoted_plugin} MODIFY COLUMN {quoted_col} {col_type}")
             except Exception as e:
                 logger.warning(f"Error checking/adding columns for {plugin} ({e})")
 

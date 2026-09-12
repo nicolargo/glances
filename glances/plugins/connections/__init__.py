@@ -102,12 +102,20 @@ class ConnectionsPlugin(GlancesPluginModel):
         # We want to display the stat in the curse interface
         self.display_curse = True
 
+        # A probe that fails is not tried again for the rest of the session. These
+        # have to live on the plugin: update() starts every refresh from a fresh copy
+        # of stats_init_value, so a flag written into stats was forgotten immediately
+        # and the call was made (and the warning logged) again on the next refresh.
+        self.net_connections_enabled = True
+        self.nf_conntrack_enabled = True
+
     def update_for_net_connections_method(self, stats):
         try:
             net_connections = psutil.net_connections(kind="tcp")
         except Exception as e:
             logger.warning(f'Can not get network connections stats ({e})')
             logger.info('Disable connections stats')
+            self.net_connections_enabled = False
             stats['net_connections_enabled'] = False
 
             return stats
@@ -136,12 +144,14 @@ class ConnectionsPlugin(GlancesPluginModel):
             except (OSError, FileNotFoundError) as e:
                 logger.warning(f'Can not get network connections track ({e})')
                 logger.info('Disable connections track')
+                self.nf_conntrack_enabled = False
                 stats['nf_conntrack_enabled'] = False
 
                 return stats
         if 'nf_conntrack_max' in stats and 'nf_conntrack_count' in stats:
             stats['nf_conntrack_percent'] = stats['nf_conntrack_count'] * 100 / stats['nf_conntrack_max']
         else:
+            self.nf_conntrack_enabled = False
             stats['nf_conntrack_enabled'] = False
 
         return stats
@@ -155,15 +165,17 @@ class ConnectionsPlugin(GlancesPluginModel):
         """
         # Init new stats
         stats = self.get_init_value()
+        stats['net_connections_enabled'] = self.net_connections_enabled
+        stats['nf_conntrack_enabled'] = self.nf_conntrack_enabled
 
         if self.input_method == 'local':
             # Update stats using the PSUtils lib
 
             # Grab network interface stat using the psutil net_connections method
-            if stats['net_connections_enabled']:
+            if self.net_connections_enabled:
                 stats = self.update_for_net_connections_method(stats)
 
-            if stats['nf_conntrack_enabled']:
+            if self.nf_conntrack_enabled:
                 stats = self.update_for_nf_conntrack_method(stats)
         elif self.input_method == 'snmp':
             # Update stats using SNMP

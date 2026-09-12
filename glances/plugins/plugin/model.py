@@ -1024,9 +1024,14 @@ class GlancesPluginModel:
 
         try:
             ret = self._limits[plugin_name + '_' + value]
-            return bool(ret[0]) if convert_bool else ret
         except KeyError:
             return default
+        if not convert_bool:
+            return ret
+        # load_limits stores a key as a one-item list of strings, or as a float when
+        # it parses as a number. bool('False') is True and a float has no [0], so
+        # read the text the way the *_log check above and the WebUI already do.
+        return ret[0].lower() == 'true' if isinstance(ret, list) else bool(ret)
 
     def is_show(self, value, header=""):
         """Return True if the value is in the show configuration list.
