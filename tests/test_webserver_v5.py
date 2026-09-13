@@ -27,6 +27,7 @@ Coverage:
 from __future__ import annotations
 
 import argparse
+import asyncio
 import base64
 import logging
 
@@ -301,6 +302,21 @@ def test_trusted_host_no_warning_when_bind_loopback(config_factory, store, caplo
     assert not any("webui_allowed_hosts" in rec.message for rec in caplog.records)
 
 
+def test_trusted_host_warning_follows_the_cli_bind(config_factory, store, caplog):
+    """`--bind` overrides `[outputs] bind_address` (main_v5.assemble): the
+    warning must follow the address actually bound, in both directions."""
+    exposed = argparse.Namespace(bind="0.0.0.0", disable_webui=True)
+    with caplog.at_level(logging.WARNING):
+        build_app(config=config_factory(), store=store, args=exposed)
+    assert any("webui_allowed_hosts" in rec.message for rec in caplog.records)
+
+    caplog.clear()
+    loopback = argparse.Namespace(bind="127.0.0.1", disable_webui=True)
+    with caplog.at_level(logging.WARNING):
+        build_app(config=config_factory(bind_address="0.0.0.0"), store=store, args=loopback)
+    assert not any("webui_allowed_hosts" in rec.message for rec in caplog.records)
+
+
 # ------------------------------------------------------------- docs
 
 
@@ -566,3 +582,45 @@ def test_the_v5_bundle_is_served(config_factory, store):
 
     assert response.status_code == 200
     assert len(response.content) > 0
+
+
+def _off_loop_spy(calls: list[bool], real):
+    """Wrap verify_password, recording whether it ran on the event loop thread."""
+
+    def spy(plaintext, stored):
+        try:
+            asyncio.get_running_loop()
+            calls.append(True)
+        except RuntimeError:
+            calls.append(False)
+        return real(plaintext, stored)
+
+    return spy
+
+
+def test_basic_auth_hashes_off_the_event_loop(config_factory, store, monkeypatch):
+    """PBKDF2 (100k iterations, ~50 ms) on the event loop stalls the API and
+    the scheduler, which share that loop — one wrong-password flood freezes
+    stats collection. v4 ran the check in a threadpool."""
+    import glances.webserver_v5 as webserver_v5
+
+    calls: list[bool] = []
+    monkeypatch.setattr(webserver_v5, "verify_password", _off_loop_spy(calls, webserver_v5.verify_password))
+    config = config_factory(password=hash_password("hunter2"))
+    app = build_app(config=config, store=store)
+    app.add_api_route("/secret", _ok_handler, methods=["GET"])
+    with TestClient(app) as client:
+        assert client.get("/secret", headers=_basic_header("glances", "hunter2")).status_code == 200
+        assert client.get("/secret", headers=_basic_header("glances", "wrong")).status_code == 401
+    assert calls == [False, False]
+
+
+def test_basic_auth_rejects_a_non_ascii_username_with_401(config_factory, store):
+    """`hmac.compare_digest` raises TypeError on a non-ASCII str: the request
+    used to end in a 500 instead of a plain 401."""
+    config = config_factory(password=hash_password("hunter2"))
+    app = build_app(config=config, store=store)
+    app.add_api_route("/secret", _ok_handler, methods=["GET"])
+    with TestClient(app, raise_server_exceptions=False) as client:
+        r = client.get("/secret", headers=_basic_header("glancés", "hunter2"))
+    assert r.status_code == 401

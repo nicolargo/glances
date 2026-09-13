@@ -47,7 +47,7 @@ def network_payload():
                 "errors_in": 0.0,
                 "errors_out": 0.0,
                 "is_up": True,
-                "bytes_speed_rate_per_sec": 62_500_000.0,
+                "bytes_speed_rate_per_sec": 125_000_000.0,
             },
             {
                 "interface_name": "wlp0s20f3",
@@ -384,3 +384,15 @@ def test_render_falls_back_to_interface_name_when_no_alias(network_fields):
     }
     rows = render(payload, network_fields)
     assert "eth0" in rows[1].cells[0].text
+
+
+@pytest.mark.parametrize("scaled", [999.96, 1000.0, 1023.9])
+@pytest.mark.parametrize("symbol, factor", [("K", 1024), ("M", 1024**2), ("G", 1024**3)])
+def test_rate_between_1000_and_1024_units_fits_the_column(scaled, symbol, factor):
+    """`1000.0Kb` is 8 characters in a 7-wide column, shifting Tx/s. The decimal
+    is dropped from 999.95 up (v4 auto_unit prints no decimal there)."""
+    from glances.plugins.network.render_curses_v5 import _RATE_COL_WIDTH, _format_rate
+
+    text = _format_rate(scaled * factor / 8)
+    assert len(text) <= _RATE_COL_WIDTH, text
+    assert text.endswith(f"{symbol}b"), text

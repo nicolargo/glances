@@ -4,7 +4,9 @@ const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const TerserWebpackPlugin = require("terser-webpack-plugin");
 const { VueLoaderPlugin } = require("vue-loader");
-const PORT = process.env.PORT || 61209;
+// Number(): the environment only holds strings, and `PORT + 1` below would
+// concatenate ("8080" + 1 -> "80801").
+const PORT = Number(process.env.PORT) || 61209;
 
 module.exports = (_, env) => {
 	const isProd = env.mode === "production";

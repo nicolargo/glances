@@ -178,6 +178,11 @@ class GlancesPluginBase(Generic[T], ABC):
     ``disable=True`` (``connections``, ``npu``, ``vms``). Read by
     ``is_disabled()``."""
 
+    FILTER_EXTRA_FIELDS: ClassVar[tuple[str, ...]] = ()
+    """Item fields matched by ``show`` / ``hide`` in addition to the primary key
+    and its alias (``fs``: ``device_name``, v4 ``is_display_any(mountpoint,
+    device)``). See ``_filter_collection()``."""
+
     HIDE_ZERO_FIELDS: ClassVar[list[str]] = []
     """Rate fields eligible for the sticky ``hide_zero`` display filter (design §5.1).
 
@@ -276,6 +281,7 @@ class GlancesPluginBase(Generic[T], ABC):
         self._metadata: dict[str, Any] = {}
         self._levels: dict[str, Any] = {}
         self._last_update_ts: float | None = None
+        self._cycle_ts: float | None = None
 
     def _warn_unknown_threshold_keys(self) -> None:
         """Warn once per unrecognised threshold key found in this plugin's config section.
@@ -457,6 +463,7 @@ class GlancesPluginBase(Generic[T], ABC):
             # Promote the snapshot only after a successful cycle so a failed
             # grab can't poison the next rate computation.
             self._raw_previous = new_raw
+            self._last_update_ts = self._cycle_ts
         except Exception as e:
             logger.warning("Plugin %s update failed: %s", self.plugin_name, e)
 
@@ -479,6 +486,7 @@ class GlancesPluginBase(Generic[T], ABC):
         A configured alias (design §5.5) is matched too — v4 parity,
         `plugin/model.py:1044,1059`. `_alias_map` is looked up directly
         rather than through the item's (not yet published) `alias` field.
+        The ``FILTER_EXTRA_FIELDS`` values are matched the same way.
         """
         pk = self._primary_key
         if pk is None:
@@ -486,16 +494,14 @@ class GlancesPluginBase(Generic[T], ABC):
         kept: list[dict[str, Any]] = []
         for item in items:
             pk_value = str(item.get(pk, ""))
+            candidates = [pk_value]
             alias_value = self._alias_map.get(pk_value.lower())
-            if self._show_patterns and not (
-                any(p.search(pk_value) for p in self._show_patterns)
-                or (alias_value is not None and any(p.search(alias_value) for p in self._show_patterns))
-            ):
+            if alias_value is not None:
+                candidates.append(alias_value)
+            candidates.extend(str(item[f]) for f in self.FILTER_EXTRA_FIELDS if item.get(f) is not None)
+            if self._show_patterns and not any(p.search(c) for p in self._show_patterns for c in candidates):
                 continue
-            if self._hide_patterns and (
-                any(p.search(pk_value) for p in self._hide_patterns)
-                or (alias_value is not None and any(p.search(alias_value) for p in self._hide_patterns))
-            ):
+            if self._hide_patterns and any(p.search(c) for p in self._hide_patterns for c in candidates):
                 continue
             kept.append(item)
         return kept
@@ -522,7 +528,10 @@ class GlancesPluginBase(Generic[T], ABC):
             self._metadata["time_since_update"] = 0.0
         else:
             self._metadata["time_since_update"] = max(0.0, now - self._last_update_ts)
-        self._last_update_ts = now
+        # Committed by `update()` with `_raw_previous`, only once the cycle has
+        # succeeded: the two must describe the same instant, or a failed cycle
+        # halves the elapsed time the next rate is divided by.
+        self._cycle_ts = now
 
     def _transform(self) -> None:
         """Run the transformation pipeline (architecture §3.1).

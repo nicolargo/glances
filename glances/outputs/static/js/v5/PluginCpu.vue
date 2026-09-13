@@ -62,13 +62,16 @@ export default {
 		// is why a browser can reproduce it without knowing the server's OS.
 		columns() {
 			const p = this.payload || {};
+			// 4th row of column 1, chosen on its own like the TUI and v4: iowait
+			// when reported, else dpc (Windows reports `user` too).
+			const col1Last = "iowait" in p ? "iowait" : "dpc";
 			const col1 = !("user" in p)
 				? // The TUI writes `core` here (cpu/render_curses_v5.py:183) but
 					// no such field exists -- the schema and v4 both call it
 					// `cpucore`. Ported against the real field on purpose; see §10
 					// of the G9-4 design spec, which owns fixing the TUI side.
-					["idle", "cpucore", "dpc"]
-				: ["user", "system", "iowait"];
+					["idle", "cpucore", col1Last]
+				: ["user", "system", col1Last];
 
 			// `idle` (maintainer-requested Task 6b move: first row of column 2,
 			// above `irq`). Same TUI condition as before

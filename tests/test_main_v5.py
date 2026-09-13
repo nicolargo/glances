@@ -523,6 +523,21 @@ def test_main_dispatches_to_set_password(monkeypatch):
     assert rc == 1
 
 
+def test_main_exits_2_on_unloadable_config(tmp_path, monkeypatch, caplog):
+    """An unparsable config file stops Glances before anything is assembled —
+    starting without it would drop `[outputs] password` and expose the API."""
+    bad = tmp_path / "bad.conf"
+    bad.write_text("[outputs]\npassword = secret\n[outputs]\n")
+    # setup_logging(force=True) would detach caplog's handler.
+    monkeypatch.setattr("glances.main_v5.setup_logging", lambda debug: None)
+    with patch("glances.main_v5.assemble") as assemble_mock, caplog.at_level(logging.CRITICAL):
+        with pytest.raises(SystemExit) as excinfo:
+            main(["-C", str(bad), "-s"])
+    assert excinfo.value.code == 2
+    assemble_mock.assert_not_called()
+    assert any(rec.levelno == logging.CRITICAL and "bad.conf" in rec.getMessage() for rec in caplog.records)
+
+
 # ---------------------------------------------------------------- TUI wiring
 
 

@@ -128,13 +128,16 @@ export const PLUGINS = [
 		name: "memswap",
 		component: PluginMemswap,
 		slot: "top",
-		spec: { shape: "scalar", required: ["total"] },
+		// No required field: a failed grab (no swap on OpenBSD/Illumos) publishes
+		// the metadata only, and the component renders dashes as the TUI does.
+		spec: { shape: "scalar", required: [] },
 	},
 	{
 		name: "load",
 		component: PluginLoad,
 		slot: "top",
-		spec: { shape: "scalar", required: ["min1"] },
+		// Same as memswap: getloadavg() can fail (OSError) and publish no field.
+		spec: { shape: "scalar", required: [] },
 	},
 	{
 		name: "network",

@@ -353,6 +353,9 @@ class GlancesMcpServer:
             processes: list = []
             if proc_plugin is not None:
                 all_procs = proc_plugin.get_raw() or []
+                # The v5 stats facade serves the collection envelope {"data": [...]}
+                if isinstance(all_procs, dict):
+                    all_procs = all_procs.get("data", [])
                 processes = sorted(
                     all_procs,
                     key=lambda p: p.get("cpu_percent", 0),

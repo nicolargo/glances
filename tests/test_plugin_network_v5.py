@@ -161,7 +161,10 @@ async def test_grab_stats_returns_one_dict_per_interface(store, config):
 
 
 async def test_bytes_speed_rate_per_sec_computed_from_speed(store, config):
-    """speed=1000 Mbit/s → bytes_speed_rate_per_sec = 1e9/8/2 = 62.5e6 B/s."""
+    """speed=1000 Mbit/s → bytes_speed_rate_per_sec = 1e9/8 = 125e6 B/s.
+
+    Full duplex gives each direction the whole link speed — no split (v4 parity).
+    """
     plugin = PluginModel(store, config)
     with _patch_psutil(
         io_counters={"eth0": _io(rx=0, tx=0)},
@@ -169,7 +172,7 @@ async def test_bytes_speed_rate_per_sec_computed_from_speed(store, config):
     ):
         await plugin.update()
     item = store.get("network")["data"][0]
-    assert item["bytes_speed_rate_per_sec"] == 62_500_000.0
+    assert item["bytes_speed_rate_per_sec"] == 125_000_000.0
 
 
 async def test_bytes_speed_rate_per_sec_is_zero_for_unknown_speed(store, config):
@@ -231,9 +234,9 @@ async def test_levels_indexed_by_interface_name(store, config, monkeypatch):
     plugin = PluginModel(store, config)
     now = _fake_now(monkeypatch)
 
-    # 1 Gbit interface ; per-direction capacity = 62_500_000 B/s.
+    # 1 Gbit interface ; per-direction capacity = 125_000_000 B/s.
     # Pick rx delta to land between warning (0.8) and critical (0.9) of capacity.
-    # 0.85 * 62_500_000 ≈ 53_125_000 B/s over 1 s.
+    # 0.85 * 125_000_000 = 106_250_000 B/s over 1 s.
     with _patch_psutil(
         io_counters={"eth0": _io(rx=0, tx=0)},
         if_stats={"eth0": _stats(speed=1000)},
@@ -242,7 +245,7 @@ async def test_levels_indexed_by_interface_name(store, config, monkeypatch):
 
     now[0] = 101.0
     with _patch_psutil(
-        io_counters={"eth0": _io(rx=53_125_000, tx=0)},
+        io_counters={"eth0": _io(rx=106_250_000, tx=0)},
         if_stats={"eth0": _stats(speed=1000)},
     ):
         await plugin.update()
@@ -250,6 +253,25 @@ async def test_levels_indexed_by_interface_name(store, config, monkeypatch):
     levels = store.get("network")["_levels"]
     assert "eth0" in levels
     assert levels["eth0"]["bytes_recv"] == {"level": "warning", "prominent": False}
+
+
+async def test_bandwidth_level_uses_full_link_speed_per_direction(store, config, monkeypatch):
+    """425 Mbit/s received on a 1 Gbit full-duplex link is 42.5 % of capacity:
+    OK, as in v4. Halving the capacity made it 0.85 → warning."""
+    plugin = PluginModel(store, config)
+    now = _fake_now(monkeypatch)
+
+    with _patch_psutil(io_counters={"eth0": _io(rx=0, tx=0)}, if_stats={"eth0": _stats(speed=1000)}):
+        await plugin.update()
+
+    now[0] = 101.0
+    with _patch_psutil(
+        io_counters={"eth0": _io(rx=425_000_000 // 8, tx=0)},
+        if_stats={"eth0": _stats(speed=1000)},
+    ):
+        await plugin.update()
+
+    assert store.get("network")["_levels"]["eth0"]["bytes_recv"]["level"] == "ok"
 
 
 async def test_levels_skip_bandwidth_for_unknown_speed(store, config, monkeypatch):
@@ -313,7 +335,7 @@ async def test_user_config_overrides_bandwidth_threshold(tmp_path, monkeypatch, 
     now[0] = 101.0
     # ratio = 0.85 — was warning by default (0.8) ; with override (0.95) → still careful (0.7).
     with _patch_psutil(
-        io_counters={"eth0": _io(rx=53_125_000)},
+        io_counters={"eth0": _io(rx=106_250_000)},
         if_stats={"eth0": _stats(speed=1000)},
     ):
         await plugin.update()
@@ -342,7 +364,7 @@ async def test_per_interface_threshold_overrides_field_wide(tmp_path, monkeypatc
     # Both interfaces hit ratio 0.75 in this cycle.
     # eth0: 0.75 ≥ careful (default 0.7), 0.75 < warning (0.80 from field-wide) → careful
     # wlan0: 0.75 ≥ warning (0.50 from pk-specific), 0.75 < critical (default 0.9) → warning
-    rate = int(0.75 * 62_500_000)
+    rate = int(0.75 * 125_000_000)
     with _patch_psutil(
         io_counters={"eth0": _io(rx=rate), "wlan0": _io(rx=rate)},
         if_stats={"eth0": _stats(speed=1000), "wlan0": _stats(speed=1000)},
@@ -533,7 +555,7 @@ async def test_alias_does_not_break_levels_or_per_item_override(tmp_path, monkey
         await plugin.update()
 
     now[0] = 101.0
-    rate = int(0.75 * 62_500_000)
+    rate = int(0.75 * 125_000_000)
     with _patch_psutil(
         io_counters={"eth0": _io(rx=rate), "wlan0": _io(rx=rate)},
         if_stats={"eth0": _stats(speed=1000), "wlan0": _stats(speed=1000)},

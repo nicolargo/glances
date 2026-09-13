@@ -120,5 +120,16 @@ use with caution:
     critical=5.0
     critical_action_repeat=/home/myhome/bin/bipper.sh
 
+An action is never started twice at the same time for the same stat: while
+a previous run of the same command is still in progress, the next trigger
+is skipped (a warning is logged once). Actions have no time limit by
+default. To kill a command that runs for too long, set a timeout, in
+seconds, in the ``[alerts]`` section:
+
+.. code-block:: ini
+
+    [alerts]
+    action_timeout=60
+
 .. _Mustache: https://mustache.github.io/
 .. _Chevron: https://github.com/noahmorrison/chevron

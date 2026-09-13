@@ -2966,3 +2966,45 @@ def test_paint_sidebar_skips_the_counter_on_a_block_with_no_header_row(fake_stor
 
     painted = [call.args[2] for call in fake_stdscr.addstr.call_args_list]
     assert painted[0] == "host0".ljust(18)
+
+
+@pytest.mark.parametrize("max_x", [100, 160, 240])
+def test_full_quicklook_leaves_room_for_load(make_tui_with_top, max_x):
+    """Full-quicklook mode used to size the bars at `max_x - 8`, a whole row on
+    its own: LOAD, meant to stay visible (v4 keeps it), was pushed off screen.
+    v4 sizes quicklook from the width its visible siblings leave."""
+    tui = make_tui_with_top()
+    tui._full_quicklook = True
+    frame = tui._build_fitted_frame(max_x=max_x)
+    names = [b.name for b in frame.top]
+    assert names == ["quicklook", "load"]
+    assert tui._top_fits(frame, max_x) is True
+    quicklook, load = frame.top
+    # Quicklook takes what the siblings leave, v4's 3-column spacing aside.
+    assert quicklook.width == max_x - load.width - tui._FULL_QUICKLOOK_GAP
+
+
+def test_paint_row_neutralises_control_characters(fake_store, fake_alerts, fake_config):
+    """A process started as `python3 -c $'import time\\ntime.sleep(999)'` put a
+    raw newline in its Command cell: curses moved to the next line and
+    overwrote the left sidebar (v4 strips it, #1692). Every C0 control
+    character and DEL is painted as one space, so widths stay exact."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+    from glances.outputs.curses_renderer_v5 import Cell, Row
+
+    tui = tui_mod.TuiV5(
+        store=fake_store,
+        alerts=fake_alerts,
+        config=fake_config,
+        registry=[("mem", False)],
+        fields_by_plugin={"mem": {}},
+        refresh_interval=0.01,
+    )
+    stdscr = MagicMock()
+    row = Row(cells=[Cell(text="python3"), Cell(text="-c import time\ntime.sleep(999)\t\x1b[2J\x7f")])
+
+    consumed = tui._paint_row(stdscr, row, 0, 0, 200)
+
+    painted = [call.args[2] for call in stdscr.addstr.call_args_list]
+    assert painted == ["python3", "-c import time time.sleep(999)  [2J "]
+    assert consumed == len("python3") + 1 + len(painted[1])

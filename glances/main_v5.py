@@ -53,7 +53,7 @@ import glances.exports as _exports_pkg
 import glances.plugins as _plugins_pkg
 from glances.actions_v5 import discover_actions
 from glances.alerts_v5 import GlancesAlerts
-from glances.config_v5 import GlancesConfigV5
+from glances.config_v5 import ConfigFileError, GlancesConfigV5
 from glances.exports.export_base_v5 import GlancesExportBase
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
 from glances.scheduler_v5 import AsyncScheduler
@@ -759,7 +759,11 @@ def main(argv: list[str] | None = None) -> int:
     if args.set_password:
         return cli_set_password()
 
-    config = GlancesConfigV5(cli_config_path=args.config_path)
+    try:
+        config = GlancesConfigV5(cli_config_path=args.config_path)
+    except ConfigFileError as e:
+        logger.critical("%s", e)
+        sys.exit(2)
     app, scheduler, host, port, tui = assemble(args, config)
 
     if args.server:

@@ -172,6 +172,43 @@ def test_alias_relabels(tmp_path, monkeypatch, store):
     assert out[0]["label"] == "CPU Package"
 
 
+def test_alias_matches_label_and_type(tmp_path, monkeypatch, store):
+    """v4 `__get_alias` falls back to `<label>_<type>` (docs/aoa/sensors.rst,
+    note 2): a fan and a temperature sharing one unit name get distinct
+    aliases. v5 only looked up the bare label."""
+    config = _cfg_with(
+        tmp_path,
+        monkeypatch,
+        "[sensors]\nalias=nct6798_temperature_core:Board temp,nct6798_fan_speed:Board fan\n",
+    )
+    p = PluginModel(store, config)
+    out = _expand(
+        p,
+        [
+            {
+                "label": "nct6798",
+                "unit": "C",
+                "value": 42,
+                "warning": None,
+                "critical": None,
+                "type": "temperature_core",
+            },
+            {"label": "nct6798", "unit": "R", "value": 900, "warning": None, "critical": None, "type": "fan_speed"},
+        ],
+    )
+    assert sorted(r["label"] for r in out) == ["Board fan", "Board temp"]
+
+
+def test_bare_label_alias_wins_over_label_and_type(tmp_path, monkeypatch, store):
+    config = _cfg_with(tmp_path, monkeypatch, "[sensors]\nalias=core 0:Bare,core 0_temperature_core:Typed\n")
+    p = PluginModel(store, config)
+    out = _expand(
+        p,
+        [{"label": "Core 0", "unit": "C", "value": 42, "warning": None, "critical": None, "type": "temperature_core"}],
+    )
+    assert out[0]["label"] == "Bare"
+
+
 def _rows_core(*values):
     return [
         {"label": f"Core {i}", "unit": "C", "value": v, "warning": 80, "critical": 90, "type": "temperature_core"}

@@ -170,11 +170,20 @@ class GlancesAlerts:
         # State per (plugin_name, key, field) — key is None for scalars,
         # the primary-key value (stringified) for collections.
         self._state: dict[tuple[str, str | None, str], _AlertState] = {}
+        # `_state` keys per plugin, so the keys a plugin no longer reports can
+        # be found without scanning every plugin's state each cycle.
+        self._plugin_state_keys: dict[str, set[tuple[str, str | None, str]]] = {}
 
         # Strong references to in-flight action tasks. Required: asyncio docs
         # warn that tasks scheduled via create_task() may be garbage-collected
         # before completion if no strong reference is held.
         self._action_tasks: set[asyncio.Task[None]] = set()
+        # Identities of the actions still running. An identical action is not
+        # relaunched until its previous run returns: a hanging
+        # `_action_repeat` command would otherwise pile up one more worker
+        # every cycle. v4 never overlapped (it ran actions synchronously).
+        self._action_in_flight: set[tuple[Any, ...]] = set()
+        self._action_skip_logged: set[tuple[Any, ...]] = set()
 
     # ---------------------------------------------------------------- public
 
@@ -198,9 +207,11 @@ class GlancesAlerts:
         Never called from the ingest path, and it writes nothing: the alert
         engine's observable behaviour is unchanged by its existence.
         """
+        # `list()` snapshots the items in one C-level call: this runs on the
+        # TUI thread while ingest adds and removes `_state` keys.
         return {
             state_key: state.committed_level
-            for state_key, state in self._state.items()
+            for state_key, state in list(self._state.items())
             if state.committed_level != "ok"
         }
 
@@ -220,7 +231,7 @@ class GlancesAlerts:
         """
         return {
             state_key: state.committed_since
-            for state_key, state in self._state.items()
+            for state_key, state in list(self._state.items())  # snapshot, see get_ongoing()
             if state.committed_level != "ok" and state.committed_since is not None
         }
 
@@ -269,7 +280,7 @@ class GlancesAlerts:
         safe today, but a future caller must not mutate it in place.
         """
         result: dict[tuple[str, str | None, str], dict[str, Any]] = {}
-        for state_key, state in self._state.items():
+        for state_key, state in list(self._state.items()):  # snapshot, see get_ongoing()
             event = state.top_event
             if state.committed_level == "ok" or event is None or state.top_sort is None:
                 continue
@@ -355,8 +366,12 @@ class GlancesAlerts:
         # lazily: no active alert on an annotated field means no sort at all.
         top_cache: dict[str, list[dict[str, Any]]] = {}
 
+        plugin_keys = self._plugin_state_keys.setdefault(plugin.plugin_name, set())
+        observed: set[tuple[str, str | None, str]] = set()
         for key, field_name, observed_level, value, prominent in self._observations(plugin, payload, levels):
             state_key = (plugin.plugin_name, key, field_name)
+            observed.add(state_key)
+            plugin_keys.add(state_key)
             state = self._state.setdefault(state_key, _AlertState())
             # Hot-path short-circuit: when the observation matches the
             # currently committed level AND no candidate transition is
@@ -411,6 +426,8 @@ class GlancesAlerts:
             if state.committed_level != "ok":
                 self._accumulate_top(state, top_cache)
                 self._fire_actions(plugin, key, field_name, state.committed_level, value, repeat=True)
+
+        self._resolve_unobserved(plugin.plugin_name, plugin_keys, observed)
 
         # Dynamic process auto-sort (v4 parity) — recomputed from the full
         # committed state after every ingest so recovery resets the key too.
@@ -605,6 +622,45 @@ class GlancesAlerts:
                 return fv
         return self._global_min_duration
 
+    def _resolve_unobserved(
+        self,
+        plugin_name: str,
+        plugin_keys: set[tuple[str, str | None, str]],
+        observed: set[tuple[str, str | None, str]],
+    ) -> None:
+        """Treat a `_levels` entry the plugin no longer reports as `ok`.
+
+        An item that vanished (fs unmounted, container removed) or a field
+        whose value turned None has no observation any more, so its alert was
+        never resolved and its state was kept forever. The `ok` observation
+        goes through the same hysteresis as a real one — a one-cycle absence
+        resolves nothing — and the state is forgotten once it is back to `ok`.
+        """
+        for state_key in plugin_keys - observed:
+            state = self._state[state_key]
+            _, key, field_name = state_key
+            if state.committed_level != "ok" or state.pending_level is not None:
+                min_duration = self._min_duration_for(plugin_name, key, field_name, "ok")
+                transition = self._reconcile(state, "ok", min_duration)
+                if transition is not None:
+                    self._history.append(
+                        self._build_event(
+                            plugin_name,
+                            key,
+                            field_name,
+                            previous_level=transition.previous,
+                            new_level="ok",
+                            value=None,
+                            prominent=False,
+                            is_initial=transition.is_initial,
+                        )
+                    )
+                    state.committed_since = None
+                    self._release_top(state)
+            if state.committed_level == "ok" and state.pending_level is None:
+                del self._state[state_key]
+                plugin_keys.discard(state_key)
+
     # --------------------------------------------------------- observation walk
 
     def _observations(
@@ -735,7 +791,7 @@ class GlancesAlerts:
             action_value = self._lookup_action_value(plugin.plugin_name, key, field_name, level, action_name, repeat)
             if not action_value:
                 continue
-            self._schedule_action(action, plugin.plugin_name, level, context, action_value, repeat)
+            self._schedule_action(action, plugin.plugin_name, key, field_name, level, context, action_value, repeat)
 
     def _build_context(self, plugin: GlancesPluginBase, key: str | None, level: str) -> dict[str, Any]:
         """Mustache rendering context: `plugin.get_export()` + built-in variables."""
@@ -792,6 +848,8 @@ class GlancesAlerts:
         self,
         action: GlancesActionBase,
         plugin_name: str,
+        key: str | None,
+        field_name: str,
         level: str,
         context: dict[str, Any],
         action_value: str,
@@ -799,11 +857,33 @@ class GlancesAlerts:
     ) -> None:
         """Fire-and-forget: never blocks the monitoring loop (§3.4).
 
-        Errors are logged with full context in `_execute_action`.
+        Skipped while an identical action is still in flight. Errors are
+        logged with full context in `_execute_action`.
         """
+        identity = (action.action_name, plugin_name, key, field_name, level, repeat, action_value)
+        if identity in self._action_in_flight:
+            if identity not in self._action_skip_logged:
+                logger.warning(
+                    "Action %r for plugin=%s key=%s field=%s level=%s is still running; "
+                    "not relaunched until it returns: %s",
+                    action.action_name,
+                    plugin_name,
+                    key,
+                    field_name,
+                    level,
+                    action_value,
+                )
+                self._action_skip_logged.add(identity)
+            return
+        self._action_in_flight.add(identity)
         task = asyncio.create_task(self._execute_action(action, plugin_name, level, context, action_value, repeat))
         self._action_tasks.add(task)
         task.add_done_callback(self._action_tasks.discard)
+        task.add_done_callback(lambda _: self._action_done(identity))
+
+    def _action_done(self, identity: tuple[Any, ...]) -> None:
+        self._action_in_flight.discard(identity)
+        self._action_skip_logged.discard(identity)
 
     async def _execute_action(
         self,

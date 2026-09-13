@@ -237,6 +237,7 @@ const document = {
 
 const {
 	ALERT_FIXTURES,
+	ALERT_SCENARIOS,
 	INFO_FIXTURES,
 	SERVER_PLUGINS,
 	PLUGINSLIST_FIXTURES,
@@ -252,7 +253,7 @@ const scenario = process.argv[3] || "default";
 async function fakeFetch(url) {
 	const path = String(url);
 	if (path.includes("api/5/alert")) {
-		return { ok: true, status: 200, json: async () => ALERT_FIXTURES };
+		return { ok: true, status: 200, json: async () => ALERT_SCENARIOS[scenario] || ALERT_FIXTURES };
 	}
 	// BEFORE the `api/5/all` check below: "api/5/all/info" contains
 	// "api/5/all", and would otherwise be answered with the stats payload.

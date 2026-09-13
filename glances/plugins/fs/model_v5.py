@@ -45,6 +45,8 @@ class PluginModel(GlancesPluginBase[list]):
 
     plugin_name: ClassVar[str] = "fs"
     IS_COLLECTION: ClassVar[bool] = True
+    # `[fs] show=/dev/sdb.*` filters on the device too (v4, docs/aoa/fs.rst).
+    FILTER_EXTRA_FIELDS: ClassVar[tuple[str, ...]] = ("device_name",)
     # Filesystem usage changes slowly, but not THAT slowly: a build filling a
     # disk must not sit on stale data for a minute. `statvfs` is cheap
     # (~0.003% of a core at this cadence), so 30s is the right trade.

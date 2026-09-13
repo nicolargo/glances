@@ -19,12 +19,15 @@ reason.
 from __future__ import annotations
 
 import logging
+import threading
+import time
 from unittest.mock import MagicMock, patch
 
 import chevron
 import pytest
 
 from glances.actions_v5.shell import ShellAction
+from glances.secure import secure_popen
 
 # ---------------------------------------------------------- helpers
 
@@ -341,3 +344,37 @@ def test_chevron_error_is_the_caught_template_error():
     for a tag left unclosed inside an argument."""
     with pytest.raises(chevron.ChevronError):
         chevron.render("{{#section}}{{.}}", {"section": ["x"]})
+
+
+# ------------------------------------------------- executor & timeout
+
+
+async def test_command_runs_in_the_dedicated_action_pool(shell_action):
+    """A hanging command must not hold a worker of the default executor, which
+    every plugin's `asyncio.to_thread` shares."""
+    threads = []
+
+    def fake_secure_popen(*args, **kwargs):
+        threads.append(threading.current_thread().name)
+        return ""
+
+    with patch("glances.actions_v5.shell.secure_popen", side_effect=fake_secure_popen):
+        await shell_action.execute("mem", "warning", {}, "echo hi")
+    assert len(threads) == 1
+    assert threads[0].startswith("glances-action")
+
+
+async def test_no_timeout_by_default(shell_action):
+    """Conservative default (v4 parity): a long action is never killed."""
+    with patch("glances.actions_v5.shell.secure_popen", return_value="") as popen:
+        await shell_action.execute("mem", "warning", {}, "echo hi")
+    assert popen.call_args.kwargs["timeout"] is None
+
+
+async def test_action_timeout_kills_a_hanging_command(config_with):
+    action = ShellAction(config_with({"alerts": {"action_timeout": "0.2"}}))
+    with patch("glances.actions_v5.shell.secure_popen", wraps=secure_popen) as popen:
+        start = time.monotonic()
+        await action.execute("mem", "warning", {}, "sleep 5")
+    assert popen.call_args.kwargs["timeout"] == 0.2
+    assert time.monotonic() - start < 2

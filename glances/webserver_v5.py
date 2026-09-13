@@ -46,6 +46,7 @@ from typing import TYPE_CHECKING, Any
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.concurrency import run_in_threadpool
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
@@ -137,7 +138,7 @@ def build_app(
     # Register from inner to outer — Starlette applies middlewares in reverse.
     _wire_auth(app, config)
     _wire_cors(app, config)
-    _wire_trusted_hosts(app, config)
+    _wire_trusted_hosts(app, config, args)
 
     _register_health_endpoints(app)
     app.include_router(build_router())
@@ -287,7 +288,7 @@ def _wire_webui(app: FastAPI) -> None:
 # ---------------------------------------------------------- middlewares
 
 
-def _wire_trusted_hosts(app: FastAPI, config: GlancesConfigV5) -> None:
+def _wire_trusted_hosts(app: FastAPI, config: GlancesConfigV5, args: argparse.Namespace | None = None) -> None:
     """Filter requests by ``Host`` header against an allowlist.
 
     Default: not wired (matches v4 behaviour). When the bind address is not
@@ -296,7 +297,8 @@ def _wire_trusted_hosts(app: FastAPI, config: GlancesConfigV5) -> None:
     """
     allowed = _csv_to_list(config.get("outputs", "webui_allowed_hosts", []))
     if not allowed:
-        bind = config.get("outputs", "bind_address", _DEFAULT_BIND_ADDRESS)
+        # `--bind` wins over the config key, as in main_v5.assemble.
+        bind = getattr(args, "bind", None) or config.get("outputs", "bind_address", _DEFAULT_BIND_ADDRESS)
         if not _is_loopback(bind):
             logger.warning(
                 "[outputs] webui_allowed_hosts is not set and bind_address=%s is not loopback. "
@@ -378,7 +380,13 @@ def _wire_auth(app: FastAPI, config: GlancesConfigV5) -> None:
             credentials = _decode_basic(auth[len("Basic ") :].strip())
             if credentials is not None:
                 user, password = credentials
-                if hmac.compare_digest(user, username) and verify_password(password, password_hash):
+                # PBKDF2 is ~50 ms of CPU: keep it off the event loop the
+                # scheduler shares, and out of the default executor its
+                # plugins use (anyio's threadpool, as v4's sync endpoints).
+                # Bytes: compare_digest raises TypeError on a non-ASCII str (-> 500).
+                if hmac.compare_digest(user.encode(), username.encode()) and await run_in_threadpool(
+                    verify_password, password, password_hash
+                ):
                     return await call_next(request)
 
         return _unauth_response(scheme="Basic")

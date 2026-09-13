@@ -34,7 +34,7 @@ from pathlib import Path
 
 import pytest
 
-from glances.config_v5 import GlancesConfigV5
+from glances.config_v5 import ConfigFileError, GlancesConfigV5
 
 
 @pytest.fixture
@@ -189,6 +189,59 @@ def test_missing_cli_path_falls_back_to_defaults_only(env: Path, caplog: pytest.
 def test_missing_files_silently_skipped(env: Path) -> None:
     """No XDG, no /etc → DEFAULTS only. No crash, no warning."""
     assert GlancesConfigV5().get("global", "refresh_time", 0) == 2
+
+
+# ============================================================================
+# Unloadable file — fail closed
+# ============================================================================
+#
+# A config file that exists but cannot be loaded must NOT be skipped: skipping
+# it silently drops security keys such as `[outputs] password` (the REST API
+# then starts unauthenticated) or `disable_config_exec`. v4 stops on the same
+# files; v5 raises ConfigFileError and lets the entry point exit.
+
+
+@pytest.mark.parametrize(
+    "content",
+    [
+        pytest.param("[outputs]\npassword = secret\n[outputs]\napi_doc = false\n", id="duplicate-section"),
+        pytest.param("[outputs]\npassword = secret\npassword = other\n", id="duplicate-option"),
+        pytest.param("password = secret\n", id="missing-section-header"),
+    ],
+)
+def test_unparsable_file_raises(env: Path, content: str) -> None:
+    write(xdg_path(env), content)
+    with pytest.raises(ConfigFileError, match="glances.conf"):
+        GlancesConfigV5()
+
+
+def test_unparsable_cli_file_raises(env: Path) -> None:
+    cli_file = env / "cli.conf"
+    write(cli_file, "[outputs]\npassword = secret\n[outputs]\n")
+    with pytest.raises(ConfigFileError, match="cli.conf"):
+        GlancesConfigV5(cli_config_path=str(cli_file))
+
+
+def test_non_utf8_file_raises(env: Path) -> None:
+    path = xdg_path(env)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(b"[outputs]\npassword = s\xe9cret\n")
+    with pytest.raises(ConfigFileError):
+        GlancesConfigV5()
+
+
+@pytest.mark.skipif(os.name != "posix" or os.geteuid() == 0, reason="needs a non-root POSIX user")
+def test_unreadable_file_raises(env: Path) -> None:
+    """``ConfigParser.read(path)`` silently skips a file it cannot open —
+    the permission error must surface instead."""
+    path = xdg_path(env)
+    write(path, "[outputs]\npassword = secret\n")
+    path.chmod(0)
+    try:
+        with pytest.raises(ConfigFileError):
+            GlancesConfigV5()
+    finally:
+        path.chmod(0o600)
 
 
 # ============================================================================

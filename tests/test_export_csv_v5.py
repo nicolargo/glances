@@ -679,3 +679,35 @@ async def test_csv_rotation_failure_does_not_exit_and_keeps_original_file_usable
     assert len(rows) == 3  # header + first row + this last row (the failed cycle wrote nothing)
     for row in rows[1:]:
         assert len(row) == len(rows[0])
+
+
+@pytest.mark.asyncio
+async def test_csv_reordered_items_keep_the_file_and_the_column_alignment(tmp_path, caplog):
+    """A collection whose items change ORDER only (processes re-sorted by CPU,
+    containers listed differently) has the same column set: it used to be
+    compared as a list, so every re-sort rolled over to a new file."""
+    from glances.exports.glances_csv.export_v5 import Export
+
+    store = StatsStoreV5()
+    config = make_config({})
+    plugin = FakeVariableCollectionPlugin(store, config)
+    plugin.items = [{"name": "eth0", "rx": 10}, {"name": "eth1", "rx": 20}]
+    await plugin.update()
+
+    path = tmp_path / "glances.csv"
+    exporter = Export(config, make_args(path))
+    exporter.update([plugin])  # warm-up deferral (FIX 2)
+    exporter.update([plugin])  # commits the header
+
+    plugin.items = [{"name": "eth1", "rx": 21}, {"name": "eth0", "rx": 11}]
+    await plugin.update()
+    with caplog.at_level("WARNING"):
+        exporter.update([plugin])
+    exporter.exit()
+
+    assert not [r for r in caplog.records if r.levelname == "WARNING"]
+    assert not (tmp_path / "glances-001.csv").exists()
+    rows = list(csv_module.reader(path.open()))
+    header = rows[0]
+    last = dict(zip(header, rows[-1]))
+    assert (last["fakevar.eth0.rx"], last["fakevar.eth1.rx"]) == ("11", "21")

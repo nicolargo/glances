@@ -1436,10 +1436,13 @@ def build_frame(
     # quicklook that has not published yet still exists, and keying off the
     # store would make percpu flip its columns for one cycle at startup. Same
     # notion the WebUI reads from /api/5/pluginslist + serverArgs.percpu.
+    # Nor is a quicklook the width cascade hid (`hide_quicklook`): it is not on
+    # screen, so nothing shows the per-core totals percpu would drop.
     quicklook_drawing_percore = bool((view or {}).get("percpu"))
+    quicklook_on_screen = "quicklook" in fields_by_plugin and not (view or {}).get("hide_quicklook")
     view = {
         **(view or {}),
-        "quicklook_enabled": "quicklook" in fields_by_plugin and quicklook_drawing_percore,
+        "quicklook_enabled": quicklook_on_screen and quicklook_drawing_percore,
     }
 
     frame = Frame()

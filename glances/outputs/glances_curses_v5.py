@@ -52,6 +52,10 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+# C0 control characters and DEL, each painted as one space: same length, so the
+# renderers' width arithmetic stays exact (see `_paint_row`).
+_CONTROL_CHARS_TO_SPACE = dict.fromkeys([*range(0x20), 0x7F], " ")
+
 
 # Ordered TOP-row degradation cascade (a→f). Each entry mutates the per-cycle
 # ``view`` dict by one notch; the loop in ``_build_fitted_frame`` applies them
@@ -614,6 +618,8 @@ class TuiV5(threading.Thread):
         """
         view = self._build_view(max_x)
         frame = self._frame_for_view(view)
+        if self._full_quicklook:
+            frame = self._fit_full_quicklook(view, frame, max_x)
         if self._full_quicklook or self._top_fits(frame, max_x):
             frame = self._fit_header(view, frame, max_x)
             frame = self._fit_right_width(view, frame, max_x)
@@ -626,6 +632,28 @@ class TuiV5(threading.Thread):
         frame = self._fit_header(view, frame, max_x)
         frame = self._fit_right_width(view, frame, max_x)
         return frame if max_y is None else self._fit_right_column(view, frame, max_y)
+
+    # v4 spacing between TOP plugins (`space_between_column`), kept around the
+    # siblings full-quicklook mode leaves on the row.
+    _FULL_QUICKLOOK_GAP = 3
+
+    def _fit_full_quicklook(self, view: dict[str, Any], frame: Frame, max_x: int) -> Frame:
+        """Size the full-quicklook bars from the room the visible TOP siblings leave.
+
+        v4 (`_handle_quicklook_for_display`) subtracts the siblings still shown
+        (LOAD, percpu) and their spacing from the screen width. `_build_view`'s
+        provisional `max_x - 8` fills the whole row and pushes LOAD off screen.
+        The block width is the bar width plus a fixed label/bracket overhead,
+        measured on the provisional frame, so one rebuild settles it.
+        """
+        quicklook = next((b for b in frame.top if b.name == "quicklook"), None)
+        if quicklook is None:
+            return frame
+        others = [b.width for b in frame.top if b is not quicklook]
+        overhead = quicklook.width - view["quicklook_width"]
+        bar_width = max_x - sum(others) - len(others) * self._FULL_QUICKLOOK_GAP - overhead
+        view["quicklook_width"] = max(20, bar_width)
+        return self._frame_for_view(view)
 
     def _fit_header(self, view: dict[str, Any], frame: Frame, max_x: int) -> Frame:
         """Degrade the header row (system … ip … uptime … now) until it fits ``max_x``.
@@ -1081,7 +1109,9 @@ class TuiV5(threading.Thread):
                 x += 1  # one-space separator before this cell
             if x >= limit:
                 break
-            text = cell.text[: limit - x]
+            # Cell text carries untrusted strings (cmdlines, container names,
+            # SSIDs): a raw "\n" makes curses jump to the next line (#1692).
+            text = cell.text[: limit - x].translate(_CONTROL_CHARS_TO_SPACE)
             attr = _attr_for(cell)
             try:
                 stdscr.addstr(y, x, text, attr)

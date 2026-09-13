@@ -32,8 +32,16 @@
 					the prominent badge, like the TUI's LEVEL cell. A badge on the
 					whole <li> would paint a full-width coloured band.
 				-->
-				<li v-for="(alert, i) in alerts" :key="i" :class="levelClass({ level: alert.level })">
-					{{ alertLabel(alert) }} — <span :class="levelClass(alert)">{{ alert.level }}</span>
+				<!-- A return to `ok` ends an incident: it reads as the resolution of
+				the level it leaves, muted, never as an alert of its own. -->
+				<li
+					v-for="(alert, i) in alerts"
+					:key="i"
+					:class="isResolution(alert) ? 'gl-muted' : levelClass({ level: alert.level })"
+				>
+					{{ alertLabel(alert) }} —
+					<span v-if="isResolution(alert)">{{ alert.previous_level }} → ok</span>
+					<span v-else :class="levelClass(alert)">{{ alert.level }}</span>
 				</li>
 			</ul>
 			<!-- G9-5 D5: moved here from the removed top bar. -->
@@ -251,6 +259,9 @@ export default {
 		// collection item key when there is one, and the field. The level word
 		// is rendered by the template on its own, so that it alone can carry
 		// the prominent badge.
+		isResolution(alert) {
+			return alert.level === "ok";
+		},
 		alertLabel(alert) {
 			const parts = [alert.plugin];
 			if (alert.key) parts.push(alert.key);
@@ -303,7 +314,13 @@ export default {
 			// render probe's FakeElement uses it to model scrollWidth shrinking
 			// by one CONTENT_PER_NOTCH per flag in the candidate just applied.
 			zone._notches = Object.keys(flags).length;
-			return { content: zone.scrollWidth, available: zone.clientWidth };
+			// Measure the text at its natural width (css/v5.css `.gl-measuring`):
+			// shrunk into its ellipsis it never overflows, and the cascade would
+			// never run. Added, read and removed synchronously -- never painted.
+			zone.classList.add("gl-measuring");
+			const reading = { content: zone.scrollWidth, available: zone.clientWidth };
+			zone.classList.remove("gl-measuring");
+			return reading;
 		},
 		// Re-run both cascades from scratch. Starting from no flag is what gives
 		// the stats back when the window widens (spec section 6). Guarded like

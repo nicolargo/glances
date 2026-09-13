@@ -372,7 +372,10 @@ class PluginModel(GlancesPluginBase[dict]):
         when no GPU is present or every card reports None, so the renderer
         draws no GPU bar (auto-show only when a GPU is detected).
         """
-        cards = self.store.get("gpu")
+        # gpu is a collection plugin: its store entry is the `{"data": [...]}`
+        # envelope, not the card list.
+        payload = self.store.get("gpu")
+        cards = payload.get("data") if isinstance(payload, dict) else None
         if not isinstance(cards, list) or not cards:
             return
         for src, dst in (("mem", "gpu_mem"), ("proc", "gpu_proc")):

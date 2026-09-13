@@ -25,16 +25,18 @@ attached only on the all-passed path (see Task 2 / Task 3).
 from __future__ import annotations
 
 import asyncio
+import base64
 import ipaddress
 import logging
 import socket
 import time
 from typing import Any, ClassVar
+from urllib.error import URLError
 from urllib.parse import urlparse
-from urllib.request import Request, urlopen
+from urllib.request import HTTPHandler, HTTPRedirectHandler, HTTPSHandler, Request, build_opener
 
 from glances.config_v5 import GlancesConfigV5
-from glances.globals import get_ip_address, json_loads, urlopen_auth
+from glances.globals import get_ip_address, json_loads
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
 from glances.stats_store_v5 import StatsStoreV5
 
@@ -55,18 +57,36 @@ def _ip_to_cidr(mask: str | None) -> int:
     return sum(bin(int(octet)).count("1") for octet in mask.split("."))
 
 
+def _address_allowed(raw_ip: str) -> bool:
+    """Address policy shared by the URL pre-check and the connect-time guard.
+
+    Allowlist, not denylist: only globally routable addresses pass. This
+    rejects loopback, link-local (169.254.169.254 metadata), RFC1918, the
+    RFC 6598 shared space (100.100.100.200 Alibaba metadata) and reserved.
+    """
+    try:
+        addr = ipaddress.ip_address(raw_ip)
+    except ValueError:
+        return False
+    return addr.is_global and not addr.is_reserved
+
+
 def _public_api_allowed(url: str, allow_internal: bool) -> bool:
-    """SSRF gate for the public-IP API URL (CVE-2026-35587).
+    """SSRF pre-check for the public-IP API URL (CVE-2026-35587).
 
     Three controls (§5 of the G4B design):
       1. Scheme allowlist — only http/https.
       2. DNS-resolved internal-IP rejection — resolve the host with
-         `socket.getaddrinfo` and reject if ANY resolved address is
-         loopback / link-local (covers 169.254.169.254 metadata) /
-         private (RFC1918) / reserved. `allow_internal=True` opts out.
+         `socket.getaddrinfo` and reject if ANY resolved address fails
+         `_address_allowed`. `allow_internal=True` opts out.
       3. Credential non-forwarding is enforced by the caller: a False
          return means no request is issued, so credentials never reach
          a blocked host.
+
+    This check alone is not sufficient — urllib resolves the host again and
+    follows redirects; `_guarded_create_connection` enforces the same policy
+    on the socket actually opened. It stays as the only gate of the target
+    when a proxy is in use, and gives the early, explicit warning.
 
     Pure (no logging, no I/O beyond getaddrinfo) so it is unit-testable in
     isolation. Fails closed on any resolution error.
@@ -86,15 +106,81 @@ def _public_api_allowed(url: str, allow_internal: bool) -> bool:
         infos = socket.getaddrinfo(host, port, proto=socket.IPPROTO_TCP)
     except socket.gaierror:
         return False  # cannot resolve -> fail closed
+    return all(_address_allowed(info[4][0]) for info in infos)
+
+
+class _ForbiddenAddressError(OSError):
+    """The connection target resolves to an address `_address_allowed` rejects."""
+
+
+def _guarded_create_connection(address, timeout, source_address=None):
+    """`socket.create_connection` replacement that validates, then pins.
+
+    The host is resolved once here; if ANY address is forbidden nothing is
+    opened, otherwise the socket connects to the validated address itself —
+    no second resolution for a DNS-rebinding answer to slip into. TLS is
+    unaffected: HTTPSConnection wraps this socket with `server_hostname`.
+    """
+    host, port = address
+    infos = socket.getaddrinfo(host, port, type=socket.SOCK_STREAM)
+    if not infos or not all(_address_allowed(info[4][0]) for info in infos):
+        raise _ForbiddenAddressError(f"{host} resolves to a forbidden address")
+    last_error: OSError | None = None
     for info in infos:
-        raw_ip = info[4][0]
         try:
-            addr = ipaddress.ip_address(raw_ip)
-        except ValueError:
-            return False
-        if addr.is_loopback or addr.is_link_local or addr.is_private or addr.is_reserved:
-            return False
-    return True
+            return socket.create_connection((info[4][0], port), timeout, source_address)
+        except OSError as e:
+            last_error = e
+    raise last_error  # type: ignore[misc]  # infos is non-empty
+
+
+class _GuardedConnectionMixin:
+    """Enforce `_guarded_create_connection` on direct connections.
+
+    A proxied request (`http_proxy` / `https_proxy`) connects to the
+    operator's proxy, which commonly sits on a private address: that
+    connection is trusted and left unguarded; the target URL is still
+    gated by `_public_api_allowed`.
+    """
+
+    def do_open(self, http_class, req, **http_conn_args):
+        if req.has_proxy() or req._tunnel_host:
+            return super().do_open(http_class, req, **http_conn_args)
+
+        def guarded_class(host, **kwargs):
+            conn = http_class(host, **kwargs)
+            conn._create_connection = _guarded_create_connection
+            return conn
+
+        return super().do_open(guarded_class, req, **http_conn_args)
+
+
+class _GuardedHTTPHandler(_GuardedConnectionMixin, HTTPHandler):
+    pass
+
+
+class _GuardedHTTPSHandler(_GuardedConnectionMixin, HTTPSHandler):
+    pass
+
+
+def _origin(url: str) -> tuple[str, str | None, int | None]:
+    parsed = urlparse(url)
+    return parsed.scheme, parsed.hostname, parsed.port or (443 if parsed.scheme == "https" else 80)
+
+
+class _StripAuthRedirectHandler(HTTPRedirectHandler):
+    """Drop `Authorization` when a redirect leaves the configured origin.
+
+    urllib copies every non-content header onto the redirected request, so
+    `public_username` / `public_password` would otherwise reach any host
+    the API redirects to.
+    """
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        new_req = super().redirect_request(req, fp, code, msg, headers, newurl)
+        if new_req is not None and _origin(new_req.full_url) != _origin(req.full_url):
+            new_req.remove_header("Authorization")
+        return new_req
 
 
 class PluginModel(GlancesPluginBase[dict]):
@@ -147,6 +233,13 @@ class PluginModel(GlancesPluginBase[dict]):
             )
             self.public_disabled = True
 
+        # Built once: ProxyHandler reads the proxy environment at construction.
+        # `allow_internal` opts out of the address policy, connect-time included.
+        if self.allow_internal:
+            self._opener = build_opener(_StripAuthRedirectHandler)
+        else:
+            self._opener = build_opener(_GuardedHTTPHandler, _GuardedHTTPSHandler, _StripAuthRedirectHandler)
+
         # In-model cadence state (replaces the v4 ThreadPublicIpAddress).
         self._last_public_fetch_ts: float | None = None
         self._public_cache: dict[str, Any] = {}
@@ -182,25 +275,35 @@ class PluginModel(GlancesPluginBase[dict]):
         network error keeps the last good cache (v4 parity).
         """
         if not _public_api_allowed(self.public_api, self.allow_internal):
-            if not self._blocked_logged:
-                logger.warning(
-                    "IP plugin - public_api %s resolves to a forbidden internal/loopback address; "
-                    "public IP disabled. Set [ip] public_api_allow_internal=true to override (see docs).",
-                    self.public_api,
-                )
-                self._blocked_logged = True
+            self._log_blocked()
             return {}
+        headers = {}
+        if self.public_username and self.public_password:
+            token = base64.b64encode(f"{self.public_username}:{self.public_password}".encode()).decode()
+            headers["Authorization"] = f"Basic {token}"
         try:
-            if self.public_username and self.public_password:
-                response = urlopen_auth(
-                    self.public_api, self.public_username, self.public_password, _FETCH_TIMEOUT
-                ).read()
-            else:
-                response = urlopen(Request(self.public_api), timeout=_FETCH_TIMEOUT).read()
+            response = self._opener.open(Request(self.public_api, headers=headers), timeout=_FETCH_TIMEOUT).read()
             return json_loads(response)
+        except URLError as e:
+            # A redirect or a re-resolution landed on a forbidden address.
+            if isinstance(e.reason, _ForbiddenAddressError):
+                self._log_blocked()
+                return {}
+            logger.debug("IP plugin - cannot get public IP info from %s (%s)", self.public_api, e)
+            return self._public_cache
         except Exception as e:  # noqa: BLE001 — network/parse failure must not crash the cycle
             logger.debug("IP plugin - cannot get public IP info from %s (%s)", self.public_api, e)
             return self._public_cache
+
+    def _log_blocked(self) -> None:
+        if self._blocked_logged:
+            return
+        logger.warning(
+            "IP plugin - public_api %s (or a redirect it issued) resolves to a forbidden internal/loopback "
+            "address; public IP disabled. Set [ip] public_api_allow_internal=true to override (see docs).",
+            self.public_api,
+        )
+        self._blocked_logged = True
 
     def _merge_public(self, stats: dict[str, Any], info: dict[str, Any]) -> None:
         """Merge the public-IP fields into the scalar stats dict.

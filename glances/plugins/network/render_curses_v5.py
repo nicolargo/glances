@@ -74,7 +74,11 @@ def _format_rate(bytes_per_sec: Any, byte: bool = False) -> str:
         ("K", 1024),
     ):
         if abs(value) >= threshold:
-            return f"{value / threshold:.1f}{symbol}{suffix}"
+            scaled = value / threshold
+            # 1000.0-1023.9 would be 8 wide in the 7-wide column: no decimal
+            # there (v4 auto_unit drops it from 99.95 up).
+            precision = 0 if abs(scaled) >= 999.95 else 1
+            return f"{scaled:.{precision}f}{symbol}{suffix}"
     return f"{int(value)}{suffix}"
 
 

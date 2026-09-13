@@ -787,3 +787,36 @@ def test_args_matches_the_real_v5_argument_set(config_factory, store):
     assert payload["set_password"] == "***"
     assert payload["config_path"] == "***"
     assert payload["server"] is True
+
+
+def test_token_hashes_off_the_event_loop(config_factory, store, monkeypatch):
+    """Same contract as the auth middleware: PBKDF2 must not run on the loop
+    the scheduler shares with the API."""
+    import glances.routes_v5 as routes_v5
+
+    calls: list[bool] = []
+    real = routes_v5.verify_password
+
+    def spy(plaintext, stored):
+        try:
+            asyncio.get_running_loop()
+            calls.append(True)
+        except RuntimeError:
+            calls.append(False)
+        return real(plaintext, stored)
+
+    monkeypatch.setattr(routes_v5, "verify_password", spy)
+    config = config_factory(password=hash_password("hunter2"))
+    app = _make_app_with_plugins(config, store)
+    with TestClient(app) as client:
+        assert client.post("/api/5/token", headers=_basic_header("glances", "hunter2")).status_code == 200
+        assert client.post("/api/5/token", headers=_basic_header("glances", "wrong")).status_code == 401
+    assert calls == [False, False]
+
+
+def test_token_rejects_a_non_ascii_username_with_401(config_factory, store):
+    config = config_factory(password=hash_password("hunter2"))
+    app = _make_app_with_plugins(config, store)
+    with TestClient(app, raise_server_exceptions=False) as client:
+        r = client.post("/api/5/token", headers=_basic_header("glancés", "hunter2"))
+    assert r.status_code == 401

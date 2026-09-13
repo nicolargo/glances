@@ -58,7 +58,7 @@ _W_VIRT = 5
 _W_RES = 5
 _W_USER = 10
 _W_THR = 3
-_W_NI = 2
+_W_NI = 3  # v4 `{:>3}`: nice -20 fits
 _W_STATUS = 1
 _W_TIME = 8
 _W_IO = 5
@@ -68,7 +68,7 @@ _MAX_ROWS = 20
 # Win32 priority classes, shown in the NI column under Windows (see
 # ``_format_nice``). Kept here rather than imported from the v4 plugin so the
 # v5 render layer stays independent of it; the labels are 2 chars, so they fit
-# ``_W_NI`` as is.
+# ``_W_NI``.
 _WINDOWS_NICE_LABELS = {
     256: "RT",  # REALTIME_PRIORITY_CLASS
     128: "Hi",  # HIGH_PRIORITY_CLASS
@@ -129,8 +129,9 @@ def _format_int(value: Any, width: int, *, signed: bool = False) -> str:
         ival = int(value)
     except (TypeError, ValueError):
         return "?".rjust(width)
-    formatted = f"{ival:>+{width}d}" if signed else f"{ival:>{width}d}"
-    return formatted[-width:].rjust(width)
+    # Never truncated: keeping the last `width` characters turned nice -20
+    # into "20". An oversized value overflows its column instead (v4 parity).
+    return f"{ival:>+{width}d}" if signed else f"{ival:>{width}d}"
 
 
 def _format_nice(value: Any) -> str:
@@ -139,7 +140,7 @@ def _format_nice(value: Any) -> str:
     Windows has no nice ladder: psutil reports the priority *class*, whose
     values are neither ordered nor small (32 is normal, 32768 is above
     normal), so the raw number is both meaningless as a nice value and too
-    wide for the column — it came out truncated to its last 2 digits. Show
+    wide for the column. Show
     the same short labels Windows itself uses (v4 ``display_nice``, #3672).
     An unmapped value falls through to the number, so a priority class
     Windows adds later stays visible.

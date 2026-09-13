@@ -2312,3 +2312,58 @@ def test_full_quicklook_hides_the_tui_s_six_blocks_and_spares_load():
     assert "load" in rendered, f"load is spared: {sorted(rendered)!r}"
     assert "percpu" in rendered, f"percpu is spared: {sorted(rendered)!r}"
     assert "quicklook" in rendered, f"vacuous: {sorted(rendered)!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+@pytest.mark.parametrize(
+    ("scenario", "name", "labels"),
+    [
+        ("memswap-unavailable", "memswap", ("SWAP", "total", "sin", "sout")),
+        ("load-unavailable", "load", ("LOAD", "1 min", "5 min", "15 min")),
+    ],
+)
+def test_a_scalar_published_without_stats_renders_dashes_not_a_shape_error(scenario, name, labels):
+    """memswap/load publish only their metadata when the grab fails (no swap
+    on OpenBSD/Illumos, getloadavg() OSError). The TUI shows dashes; the WebUI
+    showed a permanent red "unexpected shape: missing total/min1"."""
+    payload = _run_render_probe(scenario)
+    text = payload["pluginText"].get(name, "")
+    assert "unexpected shape" not in text, text
+    for label in labels:
+        assert label in text, f"expected {label!r} in {text!r}"
+    assert "-" in text, text
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_percpu_keeps_title_total_and_labels_when_the_cascade_hides_quicklook():
+    """Twin of the TUI fix in curses_renderer_v5.build_frame: a quicklook the
+    width cascade removed (`hide_quicklook`) is not on screen, so percpu must
+    not drop the per-core totals it would otherwise repeat."""
+    payload = _run_render_probe("percpu-quicklook-cascaded-out")
+    assert payload["degrade"]["top"].get("hide_quicklook") is True, f"guard: {payload['degrade']!r}"
+    assert "quicklook" not in payload["pluginNames"], f"got {payload['pluginNames']!r}"
+    headers = payload["pluginColumnHeaders"]["percpu"]
+    assert "CPU" in headers and "total" in headers, f"got {headers!r}"
+    assert payload["pluginNameCells"].get("percpu"), "row labels must survive"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_cpu_shows_dpc_in_place_of_iowait_on_a_windows_payload():
+    """Twin of test_render_windows_payload_shows_dpc_in_place_of_iowait (TUI)."""
+    text = _run_render_probe("cpu-windows")["pluginText"].get("cpu", "")
+    assert "user" in text, text
+    assert "dpc" in text, f"dpc takes the iowait row: {text!r}"
+    assert "iowait" not in text, text
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_a_resolution_event_reads_as_resolved_not_as_an_alert():
+    """The footer lists raw history events: a return to `ok` was rendered like
+    an alert ("fs /home percent — ok"). It now reads as the resolution of the
+    level it leaves, muted, with no tier colour."""
+    payload = _run_render_probe("alert-resolved")
+    resolved, opened = payload["footerAlerts"]  # newest first
+    assert resolved["level"] == "critical → ok", f"got {resolved!r}"
+    assert "gl-muted" in resolved["className"].split(), f"got {resolved!r}"
+    assert "gl-level-ok" not in (resolved["className"] + " " + (resolved["levelClass"] or "")), f"got {resolved!r}"
+    assert opened["level"] == "critical", f"a real alert is unchanged: {opened!r}"

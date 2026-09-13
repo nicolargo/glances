@@ -212,7 +212,9 @@ class PluginModel(GlancesPluginBase[list]):
             return
         for row in rows:
             label = str(row.get("label", ""))
-            alias = aliases.get(label.lower())
+            # v4 `__get_alias`: the bare label, then `<label>_<type>` so a fan
+            # and a temperature sharing one unit name can be told apart.
+            alias = aliases.get(label.lower()) or aliases.get(f"{label}_{row.get('type', '')}".lower())
             if alias:
                 row["label"] = alias
 

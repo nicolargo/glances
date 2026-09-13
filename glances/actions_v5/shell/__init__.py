@@ -47,6 +47,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from typing import Any, ClassVar
 
@@ -57,6 +58,12 @@ from glances.secure import secure_popen
 
 logger = logging.getLogger(__name__)
 
+# Commands run in their own bounded pool, never in the default executor that
+# every plugin's `asyncio.to_thread` shares: a command that hangs must not
+# starve stats collection. Extra commands queue; identical ones are not even
+# relaunched while in flight (see `GlancesAlerts._schedule_action`).
+_MAX_CONCURRENT_COMMANDS = 4
+
 
 class ShellAction(GlancesActionBase):
     """Run a command on alert."""
@@ -64,6 +71,21 @@ class ShellAction(GlancesActionBase):
     action_name: ClassVar[str] = "action"
     # chevron is a core Glances dependency — no extra requires.
     requires: ClassVar[list[str]] = []
+
+    def __init__(self, config: Any = None) -> None:
+        super().__init__(config)
+        self._executor = ThreadPoolExecutor(max_workers=_MAX_CONCURRENT_COMMANDS, thread_name_prefix="glances-action")
+
+    def timeout(self) -> float | None:
+        """`[alerts] action_timeout` in seconds; unset or <= 0 means no timeout.
+
+        No timeout by default (v4 parity): a long-running action script is
+        never killed unless the operator opts in.
+        """
+        if self.config is None:
+            return None
+        value = self.config.get("alerts", "action_timeout", 0.0)
+        return value if value > 0 else None
 
     def allow_operators(self) -> bool:
         """False when `--disable-config-exec` hardened config-driven execution.
@@ -90,11 +112,15 @@ class ShellAction(GlancesActionBase):
         # tokenizes it and only then expands each argument (see module
         # docstring). `secure_popen` is blocking, hence the thread handoff.
         try:
-            ret = await asyncio.to_thread(
-                secure_popen,
-                action_value,
-                allow_operators=self.allow_operators(),
-                render=partial(chevron.render, data=context),
+            ret = await asyncio.get_running_loop().run_in_executor(
+                self._executor,
+                partial(
+                    secure_popen,
+                    action_value,
+                    allow_operators=self.allow_operators(),
+                    timeout=self.timeout(),
+                    render=partial(chevron.render, data=context),
+                ),
             )
         except chevron.ChevronError as e:
             # A Mustache section spanning two arguments cannot be rendered per

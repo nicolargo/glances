@@ -192,6 +192,16 @@ body {
   background: var(--gl-border);
   height: 0.6em;
   overflow: hidden;
+  /* The `1fr` column has no width of its own: the block is sized to its
+   * content, so without a floor the bar collapses to 0 px. TUI `_MIN_BAR_TOTAL`
+   * leaves 8 inner columns. */
+  min-width: 8ch;
+}
+
+/* No CPU name/frequency line to stretch against (no current frequency): the
+ * TUI falls back to `_DEFAULT_BAR_WIDTH`. */
+.gl-quicklook-no-header .gl-bar-track {
+  min-width: 38ch;
 }
 
 /* `currentColor` is load-bearing: the tier class (.gl-level-*) sets `color`,
@@ -232,6 +242,17 @@ body {
   text-overflow: ellipsis;
   white-space: nowrap;
   min-width: 0;
+}
+
+/* Measurement pass of the degradation cascade (AppShell.measureZone): for one
+ * synchronous scrollWidth read, text keeps its natural width, so an overflow is
+ * seen as one and the cascade hides blocks BEFORE anything is ellipsized (spec
+ * D4: hide, then crop, then scroll). Never painted -- the class is removed
+ * before measureZone returns. `.gl-name` keeps its deliberate cap (G9-6 D3). */
+.gl-measuring .gl-inline,
+.gl-measuring .gl-truncate:not(.gl-name) {
+  min-width: max-content;
+  max-width: none;
 }
 
 /* Left-sidebar name (G9-6 D3): capped at the TUI's name width. Each component

@@ -16,6 +16,7 @@ from unittest.mock import mock_open
 import pytest
 
 from glances.config_v5 import GlancesConfigV5
+from glances.plugins.gpu.model_v5 import PluginModel as GpuPluginModel
 from glances.plugins.quicklook.model_v5 import PluginModel, _collect_sync, _cpu_name
 from glances.stats_store_v5 import StatsStoreV5
 
@@ -172,14 +173,37 @@ class _NoGpuSampler:
         return []
 
 
+class _FakeGpuBackend:
+    def __init__(self, cards):
+        self._cards = cards
+
+    def get_device_stats(self):
+        return self._cards
+
+    def exit(self):
+        pass
+
+
+async def _publish_gpu(store, config, cards):
+    """Publish `cards` through the gpu plugin's own update pipeline."""
+    gpu = GpuPluginModel(store, config)
+    gpu._backends = [_FakeGpuBackend(cards)]
+    await gpu.update()
+
+
 @pytest.mark.asyncio
 async def test_gpu_means_from_store(store, config, monkeypatch):
-    """quicklook computes gpu_mem/gpu_proc as the mean of the gpu plugin's cards."""
-    await store.set(
-        "gpu",
+    """quicklook computes gpu_mem/gpu_proc as the mean of the gpu plugin's cards.
+
+    The cards are published by the real gpu plugin: writing a bare list to the
+    store hid that a collection plugin publishes a `{"data": [...]}` envelope.
+    """
+    await _publish_gpu(
+        store,
+        config,
         [
-            {"gpu_id": "n0", "mem": 40, "proc": 20},
-            {"gpu_id": "n1", "mem": 60, "proc": 40},
+            {"key": "gpu_id", "gpu_id": "n0", "mem": 40, "proc": 20},
+            {"key": "gpu_id", "gpu_id": "n1", "mem": 60, "proc": 40},
         ],
     )
     p = PluginModel(store, config)
@@ -209,7 +233,7 @@ async def test_no_gpu_keys_when_store_empty(store, config, monkeypatch):
 
 @pytest.mark.asyncio
 async def test_no_gpu_keys_when_all_none(store, config, monkeypatch):
-    await store.set("gpu", [{"gpu_id": "n0", "mem": None, "proc": None}])
+    await _publish_gpu(store, config, [{"key": "gpu_id", "gpu_id": "n0", "mem": None, "proc": None}])
     p = PluginModel(store, config)
     import glances.plugins.quicklook.model_v5 as mod
 

@@ -276,3 +276,24 @@ def test_cpu_cols_1_keeps_only_first_column(cpu_payload_linux, cpu_fields):
 
 def test_cpu_default_is_three_columns(cpu_payload_linux, cpu_fields):
     assert render(cpu_payload_linux, cpu_fields) == render(cpu_payload_linux, cpu_fields, view={"cpu_cols": 3})
+
+
+def test_render_windows_payload_shows_dpc_in_place_of_iowait(cpu_fields):
+    """Windows psutil DOES report `user` (user/system/idle/interrupt/dpc), so
+    the idle-tag branch never runs there. v4 picks the 4th line of column 1 on
+    its own: `iowait` when present, else `dpc` — v5 tied dpc to idle-tag, so
+    dpc never showed on Windows."""
+    payload = {
+        "total": 5.0,
+        "user": 3.0,
+        "system": 2.0,
+        "idle": 95.0,
+        "dpc": 1.2,
+        "irq": 0.0,
+        "interrupts": 2000.0,
+        "_levels": {},
+    }
+    rows = render(payload, cpu_fields)
+    flat = " ".join(c.text for row in rows for c in row.cells)
+    assert "dpc" in flat
+    assert "iowait" not in flat

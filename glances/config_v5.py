@@ -21,6 +21,8 @@ Loading model (v4-aligned, **single config file**):
        a. ``$XDG_CONFIG_HOME/glances/glances.conf`` (or
           ``~/.config/glances/glances.conf``)
        b. ``/etc/glances/glances.conf``
+   - A chosen file that cannot be read or parsed raises
+     ``ConfigFileError`` (fail closed — never skipped).
 3. ``GLANCES_<SECTION>__<KEY>=<value>`` env vars overlay on top — kept
    because env-driven overrides are useful for containers / CI and are
    orthogonal to the config-file question.
@@ -74,6 +76,10 @@ def _coerce_bool(raw: str) -> bool:
 
 def _coerce_list(raw: str) -> list[str]:
     return [item.strip() for item in raw.split(",") if item.strip()]
+
+
+class ConfigFileError(Exception):
+    """The selected glances.conf exists but cannot be read or parsed."""
 
 
 class GlancesConfigV5:
@@ -207,11 +213,15 @@ class GlancesConfigV5:
         if not path.is_file():
             return
         parser = configparser.ConfigParser(interpolation=None)
+        # Fail closed: skipping a file that exists would silently drop keys
+        # such as `[outputs] password` (API exposed unauthenticated) — v4
+        # stops too. The open() is inside the try: ConfigParser.read(path)
+        # would swallow a permission error (Snap confinement included).
         try:
-            parser.read(path)
-        except configparser.Error as e:
-            logger.warning("Failed to parse config file %s: %s", path, e)
-            return
+            with open(path, encoding="utf-8") as f:
+                parser.read_file(f)
+        except (OSError, UnicodeDecodeError, configparser.Error) as e:
+            raise ConfigFileError(f"Cannot load config file {path}: {e}") from e
         for section in parser.sections():
             target = self._merged.setdefault(section, {})
             for key, value in parser.items(section):

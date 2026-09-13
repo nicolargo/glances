@@ -219,3 +219,11 @@ def test_without_row_budget_the_default_cap_still_applies(fields):
 def test_row_budget_zero_hides_the_block_entirely(fields):
     """Palier l de la cascade verticale : le bloc disparaît en-tête comprise."""
     assert render(_many_programs(50), fields, view={"row_budget": {"programlist": 0}}) == []
+
+
+def test_render_nice_shows_windows_priority_class_as_a_label(fields, monkeypatch):
+    """Same NI formatting as the processes view (#3672): the programs view
+    printed the raw Win32 priority class, overflowing the NI column."""
+    monkeypatch.setattr("glances.plugins.processlist.render_curses_v5.WINDOWS", True)
+    rows = render({"data": [_program(name="x", nice=32768)], "_levels": {}}, fields)
+    assert rows[1].cells[NICE_COL].text.strip() == "AN"

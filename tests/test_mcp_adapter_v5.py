@@ -18,6 +18,7 @@ itself remains untouched.
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 from typing import Any, ClassVar
 
@@ -355,3 +356,45 @@ def test_mcp_no_longer_reads_the_store(adapter):
     so no future edit can quietly reintroduce a raw read."""
     assert not hasattr(adapter, "_store")
     assert not hasattr(adapter.get_plugin("network"), "_store")
+
+
+# ------------------------------------------------- v4 MCP server on the v5 facade
+
+
+class _ProcStub(GlancesPluginBase[list]):
+    """Minimal processlist collection plugin (primary_key = pid)."""
+
+    plugin_name: ClassVar[str] = "processlist"
+    IS_COLLECTION: ClassVar[bool] = True
+
+    fields_description: ClassVar[dict[str, dict[str, Any]]] = {
+        "pid": {"unit": "number", "primary_key": True},
+        "name": {"unit": "string"},
+        "cpu_percent": {"unit": "percent"},
+    }
+
+    async def _grab_stats(self) -> list:
+        return [
+            {"pid": 1, "name": "idle", "cpu_percent": 0.5},
+            {"pid": 2, "name": "busy", "cpu_percent": 90.0},
+            {"pid": 3, "name": "mid", "cpu_percent": 40.0},
+        ]
+
+
+def test_top_processes_prompt_accepts_the_collection_envelope(config):
+    """`top_processes_report` sorts get_raw() as a process list; the v5 facade
+    serves the `{"data": [...]}` envelope, which crashed the prompt with
+    `'str' object has no attribute 'get'` once processlist had published."""
+    pytest.importorskip("mcp")
+    from glances.outputs.glances_mcp import GlancesMcpServer
+
+    store = StatsStoreV5()
+    proc = _ProcStub(store, config)
+    asyncio.run(proc.update())
+    server = GlancesMcpServer(stats=McpStatsAdapter(plugins=[proc]), args=None, config=config)
+
+    result = asyncio.run(server._mcp.get_prompt("top_processes_report", {"nb": "2"}))
+
+    text = result.messages[0].content.text
+    top = text[text.index("[") :]
+    assert [p["name"] for p in json.loads(top)] == ["busy", "mid"]

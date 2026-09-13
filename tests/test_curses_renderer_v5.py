@@ -2843,3 +2843,24 @@ def test_alert_grid_long_target_truncates_without_starving_top_below_its_floor()
     assert target_cell.text.endswith("…")
     assert len(top_cell.text) == _ALERT_MIN_TOP
     assert len(_line(rows[2])) == 66
+
+
+def test_percpu_keeps_its_labels_when_the_width_cascade_hides_quicklook():
+    """`--percpu` + `1` on a <=120-col terminal: the cascade hides quicklook
+    (`hide_quicklook`), so nothing on screen shows the per-core totals any
+    more. percpu used to strip its title, total column and labels anyway."""
+    percpu_payload = {"data": [{"cpu_number": 0, "total": 5.0}], "_levels": {}}
+    percpu_fields = {"cpu_number": {"unit": "number", "primary_key": True}}
+
+    frame = build_frame(
+        {"percpu": percpu_payload},
+        {"percpu": percpu_fields, "quicklook": {}},
+        registry=[("percpu", True), ("quicklook", False)],
+        alerts_history=[],
+        view={"percpu": True, "hide_quicklook": True},
+    )
+    assert "quicklook" not in [b.name for b in frame.top]
+    percpu_block = next(b for b in frame.top if b.name == "percpu")
+    flat = " ".join(c.text for c in percpu_block.rows[0].cells)
+    assert "CPU" in flat, f"title must survive: {flat!r}"
+    assert "total" in flat, f"total column must survive: {flat!r}"

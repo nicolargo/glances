@@ -176,6 +176,19 @@ class Export(GlancesExportBase):
                 self.old_header = None
             self.first_line = False
 
+        if (
+            self.committed_header is not None
+            and csv_header != self.committed_header
+            and len(set(csv_header)) == len(csv_header) == len(self.committed_header)
+            and set(csv_header) == set(self.committed_header)
+        ):
+            # Same columns in another order (a collection re-sorted, e.g. the
+            # processes by CPU): not a schema change. Align the values on the
+            # committed header instead of rolling over to a new file.
+            values = dict(zip(csv_header, csv_data))
+            csv_header = list(self.committed_header)
+            csv_data = [values[name] for name in csv_header]
+
         if self.committed_header is not None and csv_header != self.committed_header and not self._rotate(csv_header):
             # Rotation failed (see `_rotate()`) — the original file/header
             # are still active. Skip this cycle's row (its width no longer

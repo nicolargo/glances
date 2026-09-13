@@ -64,8 +64,8 @@ export default {
 		// carries no per-field alert (this plugin's model docstring), so no
 		// cell is ever tier-coloured.
 		serverArgs: { type: Object, default: () => ({}) },
-		// Declared but unused: this component is hidden as a whole rather than
-		// shrunk. An undeclared prop becomes a fallthrough attribute.
+		// Read for `hide_quicklook` only: this component is never shrunk, but a
+		// quicklook the cascade removed no longer shows the per-core totals.
 		degrade: { type: Object, default: () => ({}) },
 	},
 	computed: {
@@ -83,7 +83,10 @@ export default {
 			// `inject` auto-unwraps a Ref/ComputedRef onto `this` in the Options
 			// API (Vue's `resolveInjections`), so this is the plain array, not
 			// the ref -- no `.value` here, unlike inside AppShell's `provide()`.
-			return !(this.serverPlugins.includes("quicklook") && this.serverArgs.percpu);
+			// A quicklook the width cascade hid is not on screen either (TUI twin:
+			// curses_renderer_v5.build_frame `quicklook_on_screen`).
+			const quicklookOnScreen = this.serverPlugins.includes("quicklook") && !this.degrade.hide_quicklook;
+			return !(quicklookOnScreen && this.serverArgs.percpu);
 		},
 		rows() {
 			return (this.payload?.data || []).filter((item) => item && typeof item === "object");

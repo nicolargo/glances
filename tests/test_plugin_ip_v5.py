@@ -11,7 +11,12 @@
 
 from __future__ import annotations
 
+import contextlib
+import http.server
+import json
 import socket
+import sys
+import threading
 
 import pytest
 
@@ -142,6 +147,12 @@ def test_ssrf_mixed_resolution_rejected(monkeypatch):
     assert _public_api_allowed("http://example.com/json", False) is False
 
 
+def test_ssrf_shared_address_space_rejected(monkeypatch):
+    """100.64.0.0/10 (RFC 6598) hosts the Alibaba Cloud metadata service."""
+    monkeypatch.setattr(socket, "getaddrinfo", lambda *a, **k: _getaddrinfo("100.100.100.200"))
+    assert _public_api_allowed("http://100.100.100.200/latest/meta-data/", False) is False
+
+
 def test_ssrf_allow_internal_opt_in(monkeypatch):
     monkeypatch.setattr(socket, "getaddrinfo", lambda *a, **k: _getaddrinfo("127.0.0.1"))
     assert _public_api_allowed("http://127.0.0.1/json", True) is True
@@ -269,26 +280,13 @@ def test_credentials_never_sent_to_blocked_host(tmp_path, monkeypatch):
     p = PluginModel(store, config)
     monkeypatch.setattr(socket, "getaddrinfo", lambda *a, **k: _getaddrinfo("169.254.169.254"))
 
-    urlopen_called = False
-    urlopen_auth_called = False
+    def _open_spy(*a, **k):
+        raise AssertionError("no request may be issued for a blocked host")
 
-    def _urlopen_spy(*a, **k):
-        nonlocal urlopen_called
-        urlopen_called = True
-        raise AssertionError("urlopen must not be called for a blocked host")
-
-    def _urlopen_auth_spy(*a, **k):
-        nonlocal urlopen_auth_called
-        urlopen_auth_called = True
-        raise AssertionError("urlopen_auth must not be called for a blocked host")
-
-    monkeypatch.setattr("glances.plugins.ip.model_v5.urlopen", _urlopen_spy)
-    monkeypatch.setattr("glances.plugins.ip.model_v5.urlopen_auth", _urlopen_auth_spy)
+    monkeypatch.setattr(p._opener, "open", _open_spy)
 
     result = p._fetch_public_ip_info()
     assert result == {}
-    assert urlopen_called is False
-    assert urlopen_auth_called is False
 
 
 def test_fetch_uses_basic_auth_when_credentials_set(tmp_path, monkeypatch):
@@ -306,23 +304,19 @@ def test_fetch_uses_basic_auth_when_credentials_set(tmp_path, monkeypatch):
         def read(self):
             return b'{"ip":"1.2.3.4"}'
 
-    calls = {"auth": 0, "plain": 0}
+    requests = []
 
-    def _urlopen_auth_spy(*a, **k):
-        calls["auth"] += 1
+    def _open_spy(request, timeout=None):
+        requests.append(request)
         return _Response()
 
-    def _urlopen_spy(*a, **k):
-        calls["plain"] += 1
-        raise AssertionError("urlopen must not be called when credentials are set")
-
-    monkeypatch.setattr("glances.plugins.ip.model_v5.urlopen_auth", _urlopen_auth_spy)
-    monkeypatch.setattr("glances.plugins.ip.model_v5.urlopen", _urlopen_spy)
+    monkeypatch.setattr(p._opener, "open", _open_spy)
 
     result = p._fetch_public_ip_info()
     assert result == {"ip": "1.2.3.4"}
-    assert calls["auth"] == 1
-    assert calls["plain"] == 0
+    assert len(requests) == 1
+    # base64("alice:secret")
+    assert requests[0].get_header("Authorization") == "Basic YWxpY2U6c2VjcmV0"
 
 
 def test_hide_public_info_flag_parses():
@@ -345,7 +339,144 @@ def test_fetch_network_error_keeps_last_good(tmp_path, monkeypatch):
     def _raise(*a, **k):
         raise OSError("network down")
 
-    monkeypatch.setattr("glances.plugins.ip.model_v5.urlopen", _raise)
+    monkeypatch.setattr(p._opener, "open", _raise)
 
     result = p._fetch_public_ip_info()
     assert result == {"ip": "9.9.9.9"}
+
+
+# ------------------------------------------------- SSRF guard at connect time
+# The URL pre-check above resolves the host once; urllib then resolves it
+# again and follows 30x redirects. The address policy is therefore enforced
+# on the socket actually opened — these tests drive real loopback servers.
+# `_address_allowed` is patched to model "public" vs "internal" addresses.
+
+
+class _Recorder(http.server.BaseHTTPRequestHandler):
+    """Answers JSON, or a 302 when `redirect_to` is set; records requests."""
+
+    redirect_to: str | None = None
+
+    def do_GET(self):  # noqa: N802 — BaseHTTPRequestHandler API
+        self.server.seen.append({"path": self.path, "auth": self.headers.get("Authorization")})
+        if self.redirect_to and self.path == "/":
+            self.send_response(302)
+            self.send_header("Location", self.redirect_to)
+            self.end_headers()
+            return
+        body = json.dumps({"ip": "1.2.3.4"}).encode()
+        self.send_response(200)
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def log_message(self, *args):
+        pass
+
+
+@contextlib.contextmanager
+def _server(redirect_to=None, host="127.0.0.1"):
+    handler = type("_Handler", (_Recorder,), {"redirect_to": redirect_to})
+    srv = http.server.HTTPServer((host, 0), handler)
+    srv.seen = []
+    thread = threading.Thread(target=srv.serve_forever, daemon=True)
+    thread.start()
+    try:
+        yield srv
+    finally:
+        srv.shutdown()
+        srv.server_close()
+
+
+def _fetch_plugin(tmp_path, monkeypatch, url, credentials=True):
+    for var in ("http_proxy", "https_proxy", "HTTP_PROXY", "HTTPS_PROXY", "no_proxy", "NO_PROXY"):
+        monkeypatch.delenv(var, raising=False)
+    body = f"[ip]\npublic_disabled=False\npublic_api={url}\npublic_field=ip\n"
+    if credentials:
+        body += "public_username=alice\npublic_password=secret\n"
+    return PluginModel(StatsStoreV5(), _cfg_with(tmp_path, monkeypatch, body))
+
+
+@pytest.mark.skipif(sys.platform != "linux", reason="binds 127.0.0.2 (whole 127/8 routed on Linux only)")
+def test_ssrf_redirect_to_internal_address_not_followed(tmp_path, monkeypatch, caplog):
+    """A public API answering 302 -> metadata endpoint must not be fetched."""
+    with _server(host="127.0.0.2") as internal:
+        internal_port = internal.server_address[1]
+        with _server(redirect_to=f"http://127.0.0.2:{internal_port}/latest/meta-data") as public:
+            public_port = public.server_address[1]
+            # 127.0.0.1 plays the public address, 127.0.0.2 the internal one.
+            monkeypatch.setattr("glances.plugins.ip.model_v5._address_allowed", lambda ip: ip == "127.0.0.1")
+            monkeypatch.setattr("glances.plugins.ip.model_v5._public_api_allowed", lambda url, allow: True)
+            p = _fetch_plugin(tmp_path, monkeypatch, f"http://127.0.0.1:{public_port}/")
+            with caplog.at_level("WARNING"):
+                result = p._fetch_public_ip_info()
+    assert public.seen, "the allowed server must have been queried"
+    assert internal.seen == []
+    assert result == {}
+    assert any("forbidden" in r.getMessage() for r in caplog.records)
+
+
+def test_ssrf_dns_rebinding_blocked_at_connect(tmp_path, monkeypatch):
+    """The pre-check saw a public address; the connection resolves to an
+    internal one (DNS rebinding). The socket must never be opened."""
+    with _server() as internal:
+        port = internal.server_address[1]
+        monkeypatch.setattr("glances.plugins.ip.model_v5._public_api_allowed", lambda url, allow: True)
+        monkeypatch.setattr("glances.plugins.ip.model_v5._address_allowed", lambda ip: False)
+        p = _fetch_plugin(tmp_path, monkeypatch, f"http://127.0.0.1:{port}/")
+        result = p._fetch_public_ip_info()
+    assert internal.seen == []
+    assert result == {}
+
+
+def test_redirect_to_other_origin_strips_credentials(tmp_path, monkeypatch):
+    with _server() as other:
+        with _server(redirect_to=f"http://127.0.0.1:{other.server_address[1]}/json") as first:
+            monkeypatch.setattr("glances.plugins.ip.model_v5._public_api_allowed", lambda url, allow: True)
+            monkeypatch.setattr("glances.plugins.ip.model_v5._address_allowed", lambda ip: True)
+            p = _fetch_plugin(tmp_path, monkeypatch, f"http://127.0.0.1:{first.server_address[1]}/")
+            result = p._fetch_public_ip_info()
+    assert result == {"ip": "1.2.3.4"}
+    assert first.seen[0]["auth"] == "Basic YWxpY2U6c2VjcmV0"
+    assert other.seen == [{"path": "/json", "auth": None}]
+
+
+def test_redirect_same_origin_keeps_credentials(tmp_path, monkeypatch):
+    with _server(redirect_to="/json") as srv:
+        monkeypatch.setattr("glances.plugins.ip.model_v5._public_api_allowed", lambda url, allow: True)
+        monkeypatch.setattr("glances.plugins.ip.model_v5._address_allowed", lambda ip: True)
+        p = _fetch_plugin(tmp_path, monkeypatch, f"http://127.0.0.1:{srv.server_address[1]}/")
+        result = p._fetch_public_ip_info()
+    assert result == {"ip": "1.2.3.4"}
+    assert [s["auth"] for s in srv.seen] == ["Basic YWxpY2U6c2VjcmV0"] * 2
+
+
+def test_proxy_connection_is_exempt_from_address_policy(tmp_path, monkeypatch):
+    """An operator-configured proxy usually sits on a private address; the
+    connection to it is trusted (the URL pre-check still gates the target)."""
+    with _server() as proxy:
+        monkeypatch.setattr("glances.plugins.ip.model_v5._public_api_allowed", lambda url, allow: True)
+        monkeypatch.setattr("glances.plugins.ip.model_v5._address_allowed", lambda ip: False)
+        p_env = f"http://127.0.0.1:{proxy.server_address[1]}"
+        for var in ("no_proxy", "NO_PROXY", "https_proxy", "HTTPS_PROXY", "HTTP_PROXY"):
+            monkeypatch.delenv(var, raising=False)
+        body = "[ip]\npublic_disabled=False\npublic_api=http://example.com/json\npublic_field=ip\n"
+        monkeypatch.setenv("http_proxy", p_env)
+        p = PluginModel(StatsStoreV5(), _cfg_with(tmp_path, monkeypatch, body))
+        result = p._fetch_public_ip_info()
+    assert result == {"ip": "1.2.3.4"}
+    assert proxy.seen[0]["path"] == "http://example.com/json"
+
+
+def test_allow_internal_skips_connect_guard(tmp_path, monkeypatch):
+    with _server() as srv:
+        monkeypatch.setattr("glances.plugins.ip.model_v5._address_allowed", lambda ip: False)
+        for var in ("http_proxy", "https_proxy", "HTTP_PROXY", "HTTPS_PROXY", "no_proxy", "NO_PROXY"):
+            monkeypatch.delenv(var, raising=False)
+        body = (
+            f"[ip]\npublic_disabled=False\npublic_api=http://127.0.0.1:{srv.server_address[1]}/\n"
+            "public_field=ip\npublic_api_allow_internal=true\n"
+        )
+        p = PluginModel(StatsStoreV5(), _cfg_with(tmp_path, monkeypatch, body))
+        result = p._fetch_public_ip_info()
+    assert result == {"ip": "1.2.3.4"}

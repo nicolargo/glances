@@ -29,6 +29,16 @@ const ALERT_FIXTURES = Array.from({ length: 12 }, (_, i) => ({
 	hostname: "test-host",
 }));
 
+// Per-scenario `/api/5/alert` answers; any other scenario gets ALERT_FIXTURES.
+// `alert-resolved`: an incident that opened then resolved -- the resolution
+// event (`level: ok`) must not read as an alert.
+const ALERT_SCENARIOS = {
+	"alert-resolved": [
+		{ ...ALERT_FIXTURES[0], plugin: "fs", key: "/home", field: "percent", level: "critical", previous_level: "ok" },
+		{ ...ALERT_FIXTURES[1], plugin: "fs", key: "/home", field: "percent", level: "ok", previous_level: "critical", prominent: false },
+	],
+};
+
 // `/api/5/all/info` answer: plugin -> fields_description, as labels.js'
 // resolveAllLabels() expects it. Real enough that the short_name -> label ->
 // field name precedence has something to resolve, rather than degrading to
@@ -381,6 +391,7 @@ const ARGS_FIXTURES = {
 	// actually drawing per-core bars (--percpu set), so percpu correctly
 	// drops its title/total/labels (Critical 2).
 	"percpu-with-quicklook-percpu": { percpu: true },
+	"percpu-quicklook-cascaded-out": { percpu: true },
 	// --full-quicklook (G9-8 Task 6): server state, the only way it reaches
 	// the WebUI is this endpoint too. `percpu: true` isolates what
 	// full_quicklook itself hides from the shell's OWN cpu/percpu
@@ -768,6 +779,11 @@ const ALL_FIXTURES = {
 	memswap: {
 		memswap: { total: 17179869184, used: 4294967296, free: 12884901888, percent: 25.0, sin: 102400, sout: 0, _levels: {} },
 	},
+	// A failed grab (no swap on OpenBSD/Illumos, psutil.getloadavg() OSError):
+	// the model returns {} and the store still publishes the metadata. The TUI
+	// renders dashes; the WebUI must not report a shape error.
+	"memswap-unavailable": { memswap: { time_since_update: 2.0, _levels: {} } },
+	"load-unavailable": { load: { time_since_update: 2.0, _levels: {} } },
 	"memswap-no-rates": {
 		memswap: { total: 17179869184, used: 4294967296, free: 12884901888, percent: 25.0, sin: null, sout: null, _levels: {} },
 	},
@@ -786,6 +802,14 @@ const ALL_FIXTURES = {
 	// No `user` key -> column 1 becomes idle/cpucore/dpc. `soft_interrupts`
 	// is null-but-present (a rate before its baseline) so column 3 falls to
 	// ctx_switches; `guest` is absent as a KEY so it falls to syscalls.
+	// Windows psutil reports `user` AND `dpc` but no `iowait`: dpc takes the
+	// iowait row (v4 `'iowait' in stats` else dpc), outside the idle-tag branch.
+	"cpu-windows": {
+		cpu: {
+			total: 5.0, user: 3.0, system: 2.0, idle: 95.0, dpc: 1.2, irq: 0.0, cpucore: 8,
+			ctx_switches: 6860, interrupts: 3072, syscalls: 2048, _levels: {},
+		},
+	},
 	"cpu-idle-tag": {
 		cpu: {
 			total: 4.5, idle: 95.5, cpucore: 8, dpc: 1.2, irq: 0.0, nice: 0.0, steal: 0.0,
@@ -921,6 +945,10 @@ ALL_FIXTURES["cpu-percpu-off"] = ALL_FIXTURES["cpu-percpu-on"];
 // scenario where quicklook actually DRAWS per-core bars and percpu's
 // title/total/labels are correctly dropped.
 ALL_FIXTURES["percpu-with-quicklook-percpu"] = { percpu: PERCPU_FIXTURE };
+// Same --percpu + instantiated quicklook, but the top row is too narrow: the
+// cascade hides quicklook (step e), so nothing on screen shows the per-core
+// totals and percpu must render standalone again.
+ALL_FIXTURES["percpu-quicklook-cascaded-out"] = { percpu: PERCPU_FIXTURE, quicklook: QUICKLOOK_FIXTURE };
 
 // Zone widths per scenario, keyed by the `data-slot` the shell renders. The
 // numbers are what a browser would report: `available` is clientWidth,
@@ -950,6 +978,7 @@ const WIDTH_FIXTURES = {
 	// One step further: 1400 - 4*150 = 800 <= 850, and 3 notches alone leave
 	// 950 > 850 -- the cascade stops at step (e), hide_quicklook.
 	"top-narrowest-quicklook": { top: { available: 850, content: 1400 }, "header-left": { available: 1400, content: 300 } },
+	"percpu-quicklook-cascaded-out": { top: { available: 850, content: 1400 }, "header-left": { available: 1400, content: 300 } },
 };
 
 // One notch removes roughly one column or one block. The exact figure does not
@@ -958,6 +987,7 @@ const CONTENT_PER_NOTCH = 150;
 
 module.exports = {
 	ALERT_FIXTURES,
+	ALERT_SCENARIOS,
 	INFO_FIXTURES,
 	SERVER_PLUGINS,
 	PLUGINSLIST_FIXTURES,

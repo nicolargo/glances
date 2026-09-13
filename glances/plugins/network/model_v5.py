@@ -22,7 +22,7 @@ plugin in v5 — exercises:
 V4-aligned watched fields:
 - ``bytes_recv`` / ``bytes_sent`` — prominent True, thresholds expressed
   as a ratio against ``bytes_speed_rate_per_sec`` (per-direction
-  full-duplex split capacity). Default ratios 0.7 / 0.8 / 0.9 mirror v4's
+  capacity = full link speed). Default ratios 0.7 / 0.8 / 0.9 mirror v4's
   bandwidth-percentage alerts.
 - ``errors_in`` / ``errors_out`` — prominent True, absolute err/s
   thresholds. Any sustained error is anomalous.
@@ -126,9 +126,9 @@ class PluginModel(GlancesPluginBase[list]):
         },
         "bytes_speed_rate_per_sec": {
             "description": (
-                "Estimated per-direction bandwidth capacity in bytes/s. "
-                "Computed from net_if_stats().speed (Mbit/s) under a "
-                "full-duplex split assumption: speed_mbits * 1e6 / 8 / 2. "
+                "Per-direction bandwidth capacity in bytes/s. "
+                "Computed from net_if_stats().speed (Mbit/s), each "
+                "direction getting the full link speed: speed_mbits * 1e6 / 8. "
                 "Returns 0 when the OS does not report a link speed "
                 "(loopback, virtual interfaces) — in which case threshold "
                 "normalisation is skipped for bytes_recv / bytes_sent."
@@ -178,10 +178,11 @@ class PluginModel(GlancesPluginBase[list]):
                 if not any(a.family != psutil.AF_LINK for a in addrs):
                     continue
             speed_mbits = float(getattr(stats, "speed", 0) or 0) if stats is not None else 0.0
-            # Mbit/s → bytes/s, full-duplex per-direction split (see schema
-            # description). 0 stays 0 — the base class skips level
-            # computation when the divisor is 0.
-            bytes_speed_per_dir = (speed_mbits * 1_000_000.0 / 8.0) / 2.0 if speed_mbits else 0.0
+            # Mbit/s → bytes/s. Full duplex gives each direction the whole
+            # link speed, so no split (v4 compares each direction to the full
+            # speed too). 0 stays 0 — the base class skips level computation
+            # when the divisor is 0.
+            bytes_speed_per_dir = speed_mbits * 1_000_000.0 / 8.0
             out.append(
                 {
                     "interface_name": name,

@@ -45,6 +45,7 @@ from glances.plugins.processlist.render_curses_v5 import (
     _format_bytes,
     _format_cpu_time,
     _format_int,
+    _format_nice,
     _format_username,
     _io_cell,
     _io_rate,
@@ -120,7 +121,7 @@ def render(
         r_rate, r_unknown = _io_rate(item, read=True)
         w_rate, w_unknown = _io_rate(item, read=False)
         status_letter = str(item.get("status") or "?")[:1].rjust(_W_STATUS)
-        nice_text = _format_int(item.get("nice"), _W_NI, signed=False)
+        nice_text = _format_nice(item.get("nice"))
 
         fixed_cells = [
             _percent_cell(item.get("cpu_percent"), item_levels.get("cpu_percent"), _W_CPU),

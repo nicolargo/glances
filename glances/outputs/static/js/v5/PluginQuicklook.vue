@@ -1,5 +1,10 @@
 <template>
-	<article v-show="!isHidden" class="gl-plugin" :aria-label="TITLE">
+	<article
+		v-show="!isHidden"
+		class="gl-plugin"
+		:class="{ 'gl-quicklook-no-header': !header }"
+		:aria-label="TITLE"
+	>
 		<!-- aria-label: once loaded the CPU name/frequency line is a plain row,
 		not a heading, so the <article> keeps naming itself for assistive tech
 		the whole time (PluginLoad.vue's pattern) -- quicklook has no per-payload

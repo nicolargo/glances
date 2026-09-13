@@ -315,3 +315,32 @@ async def test_get_export_strips_levels_but_keeps_metadata(store, config):
     # user-facing fields present
     assert item["mnt_point"] == "/"
     assert item["percent"] == 25.0
+
+
+# ---------------------------------------------------------- show / hide on the device name
+# v4 `is_display_any(fs.mountpoint, fs.device)`; docs/aoa/fs.rst documents
+# `show=/dev/sdb.*`. The generic collection filter only matched mnt_point.
+
+
+async def test_show_matches_the_device_name(tmp_path, monkeypatch, store):
+    config = _config_with(tmp_path, monkeypatch, "[fs]\nshow=/dev/sda1\n")
+    plugin = PluginModel(store, config)
+    with _patch_psutil([_root(), _home()]):
+        await plugin.update()
+    assert [item["mnt_point"] for item in store.get("fs")["data"]] == ["/"]
+
+
+async def test_hide_matches_the_device_name(tmp_path, monkeypatch, store):
+    config = _config_with(tmp_path, monkeypatch, "[fs]\nhide=/dev/sda2\n")
+    plugin = PluginModel(store, config)
+    with _patch_psutil([_root(), _home()]):
+        await plugin.update()
+    assert [item["mnt_point"] for item in store.get("fs")["data"]] == ["/"]
+
+
+async def test_hide_still_matches_the_mount_point(tmp_path, monkeypatch, store):
+    config = _config_with(tmp_path, monkeypatch, "[fs]\nhide=/home\n")
+    plugin = PluginModel(store, config)
+    with _patch_psutil([_root(), _home()]):
+        await plugin.update()
+    assert [item["mnt_point"] for item in store.get("fs")["data"]] == ["/"]

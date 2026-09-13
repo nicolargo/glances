@@ -49,6 +49,7 @@ from typing import TYPE_CHECKING, Any
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from starlette.concurrency import run_in_threadpool
 
 from glances.config_v5 import GlancesConfigV5
 from glances.security_v5 import verify_password
@@ -108,9 +109,11 @@ def build_router() -> APIRouter:
             )
 
         expected_user = config.get("outputs", "username", "glances")
-        if not hmac.compare_digest(credentials.username, expected_user) or not verify_password(
-            credentials.password, password_hash
-        ):
+        # PBKDF2 off the event loop — see the auth middleware in webserver_v5.
+        # Bytes: compare_digest raises TypeError on a non-ASCII str (-> 500).
+        if not hmac.compare_digest(
+            credentials.username.encode(), expected_user.encode()
+        ) or not await run_in_threadpool(verify_password, credentials.password, password_hash):
             raise HTTPException(
                 status_code=401,
                 detail="Invalid credentials",

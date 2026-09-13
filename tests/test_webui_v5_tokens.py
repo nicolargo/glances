@@ -445,3 +445,39 @@ def test_the_header_and_top_zones_never_wrap():
         assert re.search(r"\bmin-width:\s*0\s*;", body), (
             f"{selector} must stay shrinkable or the cascade dies: {body!r}"
         )
+
+
+def test_a_quicklook_bar_track_keeps_a_width_without_the_cpu_header():
+    """Each bar sits in a `1fr` column of a block sized to its content, so the
+    CPU name/frequency line was the only thing giving the track a width. With
+    no current frequency (many VMs, FreeBSD) the bars rendered 0 px wide.
+    Mirrors the TUI: `_MIN_BAR_TOTAL` floor (8 inner columns) always, and
+    `_DEFAULT_BAR_WIDTH` (38) when there is no header to justify against.
+    CSS is not observable through the render probe, so this reads the file.
+    """
+    css = _strip_comments(_TOKENS.read_text())
+    assert re.search(r"\bmin-width:\s*8ch\s*;", _rule_body(css, ".gl-bar-track")), "the track has the TUI's floor"
+    assert re.search(r"\bmin-width:\s*38ch\s*;", _rule_body(css, ".gl-quicklook-no-header .gl-bar-track")), (
+        "without a header the track takes the TUI's default bar width"
+    )
+    template = (_V5_JS / "PluginQuicklook.vue").read_text()
+    assert "'gl-quicklook-no-header': !header" in template, "the block flags the missing header"
+
+
+def test_the_cascade_measures_header_text_at_its_natural_width():
+    """Maintainer spec D4 order is hide, then crop, then scroll. `.gl-truncate`
+    and `.gl-inline` shrink into their ellipsis, so the zone never overflowed
+    and the header cascade stayed idle while the OS name and IP location were
+    ellipsized (confirmed 1000-1300 px). During the synchronous measurement
+    (`gl-measuring`, AppShell.measureZone) they keep their natural width;
+    `.gl-name` keeps its deliberate cap (G9-6 D3).
+    """
+    css = _strip_comments(_TOKENS.read_text())
+    body = _rule_body(css, ".gl-measuring .gl-inline,\n.gl-measuring .gl-truncate:not(.gl-name)")
+    assert re.search(r"\bmin-width:\s*max-content\s*;", body), body
+    assert re.search(r"\bmax-width:\s*none\s*;", body), body
+    shell = (_V5_JS / "AppShell.vue").read_text()
+    add = shell.index('zone.classList.add("gl-measuring")')
+    read = shell.index("zone.scrollWidth", add)
+    remove = shell.index('zone.classList.remove("gl-measuring")', read)
+    assert add < read < remove

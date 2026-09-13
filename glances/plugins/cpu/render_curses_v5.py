@@ -177,10 +177,13 @@ def render(
         return (key, field_label(fields_desc.get(key, {}), key, prefer_short=True))
 
     # Lines 2–4: 3-column grid.
+    # 4th line of column 1 is chosen on its own (v4): iowait when reported,
+    # else dpc — Windows reports `user` too, so tying dpc to idle_tag hid it.
+    col1_last = _kl("iowait") if "iowait" in payload else _kl("dpc")
     if not idle_tag:
-        col1_keys_labels = [_kl("user"), _kl("system"), _kl("iowait")]
+        col1_keys_labels = [_kl("user"), _kl("system"), col1_last]
     else:
-        col1_keys_labels = [_kl("idle"), _kl("core"), _kl("dpc")]
+        col1_keys_labels = [_kl("idle"), _kl("core"), col1_last]
 
     col2_keys_labels = [_kl("irq"), _kl("nice"), _kl("steal")]
 

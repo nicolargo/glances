@@ -46,13 +46,24 @@ targets. To prevent Server-Side Request Forgery (CVE-2026-35587), Glances
 enforces, on **every** refresh:
 
 - **Scheme allowlist** — only ``http://`` and ``https://`` are accepted.
-- **Internal-IP rejection (with DNS resolution)** — the URL host is
-  resolved, and if **any** resolved address is loopback, link-local
-  (including the cloud-metadata address ``169.254.169.254``), private
-  (RFC1918) or reserved, the request is **skipped** — so credentials are
-  never sent to an internal host. Resolving on each refresh also defeats
-  DNS-alias / rebinding tricks that point a public hostname at an internal
-  address.
+- **Internal-IP rejection (with DNS resolution)** — only globally
+  routable addresses are accepted. If **any** address the host resolves to
+  is loopback, link-local (including the cloud-metadata address
+  ``169.254.169.254``), private (RFC1918), shared (RFC 6598, e.g.
+  ``100.100.100.200``) or reserved, the request is **skipped** — so
+  credentials are never sent to an internal host.
+- **Enforced on the connection itself** — the check is applied to the
+  address the socket actually connects to, for the configured URL and for
+  every HTTP redirect it issues. A redirect or a DNS-rebinding answer that
+  lands on an internal address is refused.
+- **Credentials stay on the configured origin** — ``Authorization`` is
+  dropped when a redirect changes scheme, host or port.
+
+When an HTTP proxy is configured (``http_proxy`` / ``https_proxy``), the
+connection to the proxy is not checked (proxies commonly sit on a private
+address). The configured URL is still checked before each request, but
+the proxy resolves names itself, so neither redirects nor DNS rebinding are
+covered behind a proxy.
 
 This protection is **on by default** and safe for the common case (public
 services such as ipleak). If you deliberately run your own public-IP

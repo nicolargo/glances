@@ -16,6 +16,7 @@ plugins, min_duration_seconds per-plugin override.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from collections import Counter
 from typing import Any
@@ -638,6 +639,75 @@ async def test_ctx_switches_critical_300s_end_to_end(tmp_path, monkeypatch, stor
     assert history[0]["level"] == "critical"
 
 
+# ---------------------------------------------------------- vanished observations
+
+
+async def test_alert_on_vanished_item_resolves_and_state_is_forgotten(tmp_path, monkeypatch, store):
+    """An unmounted fs / removed container used to stay critical forever in
+    get_ongoing(), and `_state` kept every key ever seen."""
+    config = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n")
+    alerts = GlancesAlerts(config)
+    plugin = _FakeCollectionPlugin(store, config)
+
+    await _run_with_levels(plugin, alerts, {"eth0": {"rx": {"level": "critical"}}, "lo": {"rx": {"level": "ok"}}})
+    assert alerts.get_ongoing() == {("fakecollection", "eth0", "rx"): "critical"}
+
+    plugin._payload = [{"name": "lo", "rx": 0}]
+    await _run_with_levels(plugin, alerts, {"lo": {"rx": {"level": "ok"}}})
+
+    assert alerts.get_ongoing() == {}
+    last = alerts.get_history()[-1]
+    assert (last["key"], last["field"], last["level"], last["previous_level"]) == ("eth0", "rx", "ok", "critical")
+    assert ("fakecollection", "eth0", "rx") not in alerts._state
+
+
+async def test_vanished_item_resolution_honours_min_duration(tmp_path, monkeypatch, store):
+    """A one-cycle absence is debounced like any other ok observation."""
+    config = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=10\n")
+    clock = _clock()
+    alerts = GlancesAlerts(config, now=clock)
+    plugin = _FakeCollectionPlugin(store, config)
+    critical = {"eth0": {"rx": {"level": "critical"}}}
+
+    await _run_with_levels(plugin, alerts, critical)
+    clock.tick(10)
+    await _run_with_levels(plugin, alerts, critical)
+    assert alerts.get_ongoing() == {("fakecollection", "eth0", "rx"): "critical"}
+
+    clock.tick(2)
+    await _run_with_levels(plugin, alerts, {})  # eth0 missing for one cycle
+    clock.tick(2)
+    await _run_with_levels(plugin, alerts, critical)  # back before min_duration
+    assert alerts.get_ongoing() == {("fakecollection", "eth0", "rx"): "critical"}
+
+    clock.tick(2)
+    await _run_with_levels(plugin, alerts, {})
+    clock.tick(10)
+    await _run_with_levels(plugin, alerts, {})
+    assert alerts.get_ongoing() == {}
+
+
+async def test_scalar_field_without_level_resolves(tmp_path, monkeypatch, store):
+    """A watched value turning None drops its `_levels` entry: same resolution."""
+    config = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n")
+    alerts = GlancesAlerts(config)
+    plugin = _FakeScalarPlugin(store, config)
+
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
+    assert alerts.get_ongoing() == {("fakescalar", None, "percent"): "warning"}
+    await _run_with_levels(plugin, alerts, {})
+    assert alerts.get_ongoing() == {}
+
+
+async def test_state_does_not_grow_with_churning_items(tmp_path, monkeypatch, store):
+    config = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n")
+    alerts = GlancesAlerts(config)
+    plugin = _FakeCollectionPlugin(store, config)
+    for i in range(50):
+        await _run_with_levels(plugin, alerts, {f"veth{i}": {"rx": {"level": "ok"}}})
+    assert len(alerts._state) == 1
+
+
 # ---------------------------------------------------------- action dispatch
 
 
@@ -673,6 +743,73 @@ async def test_repeat_action_fires_every_cycle_while_committed_non_ok(tmp_path, 
     # Third cycle, back to ok — no repeat fire.
     await _run_with_levels(plugin, alerts, {"percent": {"level": "ok", "prominent": True}})
     assert [c["repeat"] for c in action.calls] == [True, True]
+
+
+class _BlockingAction(GlancesActionBase):
+    """Test double whose execute() hangs until `release` is set."""
+
+    action_name = "action"
+    requires = []
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.calls: list[str | None] = []
+        self.release = asyncio.Event()
+
+    async def execute(self, plugin_name, level, context, action_value, repeat=False):
+        self.calls.append(context.get("name"))
+        await self.release.wait()
+
+
+async def _ingest(plugin, alerts, levels):
+    """`_run_with_levels` without drain(): in-flight actions are left running."""
+    plugin._fixed_levels = levels
+    await plugin.update()
+    await alerts.ingest_plugin(plugin)
+    await asyncio.sleep(0)  # let the scheduled action tasks start
+
+
+async def test_repeat_action_not_relaunched_while_previous_run_in_flight(tmp_path, monkeypatch, store, caplog):
+    """A hanging `_action_repeat` command used to take one more worker thread
+    every cycle until the executor shared with every plugin was exhausted.
+    An identical action is skipped while its previous run is still in flight
+    (v4 never ran two at once: it executed actions synchronously)."""
+    config = _config_with(
+        tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n[fakescalar]\nwarning_action_repeat=hang\n"
+    )
+    action = _BlockingAction()
+    alerts = GlancesAlerts(config, actions={"action": action})
+    plugin = _FakeScalarPlugin(store, config)
+    warning = {"percent": {"level": "warning", "prominent": True}}
+
+    with caplog.at_level(logging.WARNING):
+        for _ in range(3):
+            await _ingest(plugin, alerts, warning)
+    assert len(action.calls) == 1
+    assert len([r for r in caplog.records if "still running" in r.getMessage()]) == 1
+
+    action.release.set()
+    await alerts.drain()
+    await _ingest(plugin, alerts, warning)
+    assert len(action.calls) == 2
+    await alerts.drain()
+
+
+async def test_in_flight_guard_is_per_item(tmp_path, monkeypatch, store):
+    """Two collection items hanging on the same action template both run."""
+    config = _config_with(
+        tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n[fakecollection]\nwarning_action_repeat=hang\n"
+    )
+    action = _BlockingAction()
+    alerts = GlancesAlerts(config, actions={"action": action})
+    plugin = _FakeCollectionPlugin(store, config)
+    levels = {"eth0": {"rx": {"level": "warning"}}, "lo": {"rx": {"level": "warning"}}}
+
+    await _ingest(plugin, alerts, levels)
+    await _ingest(plugin, alerts, levels)
+    assert sorted(action.calls) == ["eth0", "lo"]
+    action.release.set()
+    await alerts.drain()
 
 
 async def test_both_repeat_and_non_repeat_fire_on_entry(tmp_path, monkeypatch, store):

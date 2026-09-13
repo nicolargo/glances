@@ -291,8 +291,8 @@ def test_render_nice_shows_the_raw_value_on_posix(fields):
 def test_render_nice_shows_windows_priority_class_as_a_label(fields, monkeypatch):
     """Windows reports the Win32 priority class, not a nice value (#3672)."""
     monkeypatch.setattr("glances.plugins.processlist.render_curses_v5.WINDOWS", True)
-    # 32768 = ABOVE_NORMAL_PRIORITY_CLASS. Rendered raw it does not fit the
-    # 2-char NI column and comes out truncated to a meaningless "68".
+    # 32768 = ABOVE_NORMAL_PRIORITY_CLASS. Rendered raw it is a meaningless
+    # number too wide for the NI column.
     rows = render({"data": [_proc(pid=1, nice=32768)], "_levels": {}}, fields)
     assert rows[1].cells[NICE_COL].text.strip() == "AN"
 
@@ -610,3 +610,19 @@ def test_row_budget_zero_hides_the_block_entirely(fields):
     """Palier l de la cascade verticale : une alerte active a besoin de la
     place, la processlist disparaît en-tête comprise (parité `containers`)."""
     assert render(_many_procs(50), fields, view={"row_budget": {"processlist": 0}}) == []
+
+
+@pytest.mark.parametrize("nice", [-20, -11, -5, 0, 19])
+def test_render_nice_keeps_the_sign_and_fits_the_column(fields, nice):
+    """NI used to keep only its last 2 characters: -20 read "20", making a
+    high-priority process look low-priority. v4 renders it on 3 columns."""
+    rows = render({"data": [_proc(pid=1, nice=nice)], "_levels": {}}, fields)
+    text = rows[1].cells[NICE_COL].text
+    assert text.strip() == str(nice)
+    assert len(text) == len(rows[0].cells[NICE_COL].text)  # aligned with its header
+
+
+def test_render_thread_count_is_never_truncated(fields):
+    """1234 threads used to read "234"; v4 lets the value overflow instead."""
+    rows = render({"data": [_proc(pid=1, num_threads=1234)], "_levels": {}}, fields)
+    assert "1234" in [c.text.strip() for c in rows[1].cells]

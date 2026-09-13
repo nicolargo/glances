@@ -509,6 +509,40 @@ async def test_rate_field_clamps_negative_delta_to_zero(store, config, monkeypat
     assert store.get("fakescalar")["ctx_switches"] == 0.0
 
 
+async def test_a_failed_cycle_does_not_double_the_next_rate(store, config, monkeypatch):
+    """The update timestamp used to advance in `_add_metadata` even when the
+    cycle then failed, while the raw snapshot was (rightly) not promoted: the
+    next rate divided a two-interval delta by a one-interval elapsed time."""
+
+    class Counter(FakeScalarPlugin):
+        fields_description = {
+            "ctx_switches": {"description": "ctx", "unit": "number", "rate": True},
+        }
+        fail_once = False
+
+        def _derived_parameters(self) -> None:
+            if self.fail_once:
+                self.fail_once = False
+                raise RuntimeError("transient")
+
+    plugin = Counter(store, config, payload={"ctx_switches": 0})
+    fake_now = [100.0]
+    import glances.plugins.plugin.base_v5 as base_module
+
+    monkeypatch.setattr(base_module.time, "monotonic", lambda: fake_now[0])
+
+    await plugin.update()  # t=100, baseline 0
+    fake_now[0] = 102.0
+    plugin._payload = {"ctx_switches": 2_000}
+    plugin.fail_once = True
+    await plugin.update()  # t=102, fails in _transform
+    fake_now[0] = 104.0
+    plugin._payload = {"ctx_switches": 4_000}
+    await plugin.update()  # t=104: 4000 over 4 s
+
+    assert store.get("fakescalar")["ctx_switches"] == 1000.0
+
+
 async def test_rate_field_with_normalize_by_uses_rate_then_normalises(store, config, monkeypatch):
     """Pipeline order: gauge converts to rate, then derived normalises rate / cpucore."""
 
