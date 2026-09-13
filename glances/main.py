@@ -729,12 +729,22 @@ Examples of use:
 
     def init_plugins(self, args):
         """Init Glances plugins"""
-        # Allow users to disable plugins from the glances.conf (issue #1378)
+        self._disable_plugins_from_config(args)
+        self._apply_plugin_args(args)
+        self._activate_exporters(args)
+        self._init_display_defaults(args)
+        self._sync_process_plugins(args)
+        self._init_export_process_filter(args)
+
+    def _disable_plugins_from_config(self, args):
+        """Allow users to disable plugins from the glances.conf (issue #1378)."""
         for s in self.config.sections():
             if self.config.has_section(s) and (self.config.get_bool_value(s, 'disable', False)):
                 disable(args, s)
                 logger.debug(f'{s} disabled by the configuration file')
-        # The configuration key can be overwrite from the command line
+
+    def _apply_plugin_args(self, args):
+        """The configuration key can be overwrite from the command line."""
         if args and args.disable_plugin and 'all' in args.disable_plugin.split(','):
             if not args.enable_plugin:
                 logger.critical("'all' key in --disable-plugin needs to be used with --enable-plugin")
@@ -750,11 +760,14 @@ Examples of use:
             for p in args.enable_plugin.split(','):
                 enable(args, p)
 
-        # Exporters activation
+    def _activate_exporters(self, args):
+        """Exporters activation."""
         if args.export is not None:
             for p in args.export.split(','):
                 setattr(args, 'export_' + p, True)
 
+    def _init_display_defaults(self, args):
+        """Set the default display options."""
         # By default help is hidden
         args.help_tag = False
 
@@ -762,14 +775,16 @@ Examples of use:
         args.network_sum = False
         args.network_cumul = False
 
-        # Processlist is updated in processcount
+    def _sync_process_plugins(self, args):
+        """Processlist is updated in processcount."""
         if getattr(args, 'disable_processcount', False):
             logger.warning('Processcount is disable, so processlist (updated by processcount) is also disable')
             disable(args, 'processlist')
         elif getattr(args, 'enable_processlist', False) or getattr(args, 'enable_programlist', False):
             enable(args, 'processcount')
 
-        # Set a default export_process_filter (with all process) when using the stdout mode
+    def _init_export_process_filter(self, args):
+        """Set a default export_process_filter (with all process) when using the stdout mode."""
         if getattr(args, 'stdout', True) and args.process_filter is None:
             setattr(args, 'export_process_filter', '.*')
 
