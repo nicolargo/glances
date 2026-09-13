@@ -27,8 +27,10 @@ class FakeClient3:
         self._database = kwargs.get("database")
         self.written: list[tuple] = []
 
-    def write(self, record=None, time_precision=None):
-        self.written.append((record, time_precision))
+    def write(self, record=None, database=None, **kwargs):
+        # Same signature as influxdb3-python; extra kwargs are recorded so a
+        # test can assert none is passed (the library rejects them, #3734).
+        self.written.append((record, kwargs))
 
 
 @pytest.fixture
@@ -129,8 +131,10 @@ async def test_influxdb3_writes_normalised_measurements(influxdb_client_3_module
     exporter = Export(config, args=None)
     exporter.update([plugin])
 
-    record, precision = influxdb_client_3_module.created[0].written[0]
-    assert precision == "s"
+    record, kwargs = influxdb_client_3_module.created[0].written[0]
+    # influxdb3-python >= 0.17.0 raises TypeError on unknown kwargs such as
+    # time_precision, which silently killed every write (#3734).
+    assert kwargs == {}
     assert record[0]["measurement"] == "fakecollection"
     assert record[0]["tags"]["name"] == "eth0"
     assert record[0]["fields"]["rx"] == 10.0
@@ -163,7 +167,7 @@ async def test_influxdb3_logs_a_warning_when_the_write_fails(influxdb_client_3_m
 
     exporter = Export(config, args=None)
 
-    def boom(record=None, time_precision=None):
+    def boom(record=None, database=None, **kwargs):
         raise RuntimeError("write refused")
 
     exporter.client.write = boom
