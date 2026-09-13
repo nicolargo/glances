@@ -106,9 +106,9 @@ export default {
 			const isMulti = cards.length > 1;
 			const rows = ["proc", "mem"].map((field) => ({
 				field,
-				// The schema holds ONE word per field; the colon and the " mean"
-				// suffix are composed here, exactly as _summary_rows() does.
-				label: `${labelFor(this.labels, field)}${isMulti ? " mean:" : ":"}`,
+				// The schema holds ONE word per field; the " mean" suffix is
+				// composed here, exactly as _summary_rows() does.
+				label: `${labelFor(this.labels, field)}${isMulti ? " mean" : ""}`,
 				value: gpuValue(mean(cards, field)),
 			}));
 
@@ -118,10 +118,10 @@ export default {
 			rows.push({
 				field: "temperature",
 				// Only the non-mean form comes from the schema. v4 shortens the
-				// word in the mean form ("temperature:" -> "temp mean:"), i.e.
+				// word in the mean form ("temperature" -> "temp mean"), i.e.
 				// the two forms use DIFFERENT words, and a schema holds one
 				// string per field -- so the mean form stays a literal.
-				label: isMulti ? "temp mean:" : `${labelFor(this.labels, "temperature")}:`,
+				label: isMulti ? "temp mean" : labelFor(this.labels, "temperature"),
 				value: gpuValue(temp, fahrenheit ? "F" : "C"),
 			});
 			return rows;

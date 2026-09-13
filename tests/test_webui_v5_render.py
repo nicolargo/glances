@@ -1178,8 +1178,9 @@ def test_gpu_one_card_renders_the_summary_block():
     text = payload["pluginText"].get("gpu", "")
 
     assert "GeForce RTX 3080" in text, f"the title is the card's name: {text!r}"
-    for expected in ("proc:", "30%", "mem:", "40%", "temperature:", "55C"):
+    for expected in ("proc", "30%", "mem", "40%", "temperature", "55C"):
         assert expected in text, f"expected {expected!r} in the GPU plugin text, got {text!r}"
+    assert ":" not in text, f"labels carry no trailing colon: {text!r}"
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
@@ -1207,7 +1208,8 @@ def test_gpu_meangpu_forces_the_summary_and_the_mean_labels():
     payload = _run_render_probe("gpu-three-cards-mean")
     text = payload["pluginText"].get("gpu", "")
 
-    assert "proc mean:" in text, f"meangpu switches the labels: {text!r}"
+    assert "proc mean" in text, f"meangpu switches the labels: {text!r}"
+    assert ":" not in text, f"labels carry no trailing colon: {text!r}"
     assert "29%" in text, f"the mean of 30/45/12 rounds to 29: {text!r}"
 
 
@@ -2000,8 +2002,9 @@ def test_npu_renders_the_first_device_only():
     text = _run_render_probe("npu")["pluginText"]["npu"]
     assert "Second NPU" not in text, f"only the first NPU may render: {text!r}"
     assert "45" in text and "1.0G/2.0GHz" in text, f"got {text!r}"
-    assert "mem:" in text and "N/A" in text, f"a null mem renders N/A: {text!r}"
-    assert "temperature:" in text and "55C" in text, f"got {text!r}"
+    assert "mem" in text and "N/A" in text, f"a null mem renders N/A: {text!r}"
+    assert "temperature" in text and "55C" in text, f"got {text!r}"
+    assert ":" not in text, f"labels carry no trailing colon: {text!r}"
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")

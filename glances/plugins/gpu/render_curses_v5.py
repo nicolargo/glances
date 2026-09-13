@@ -11,9 +11,9 @@
 Mirrors v4 `gpu.msg_curse()`:
 
     GeForce RTX 3080         <- header (name / "N NAME" / "N GPUs")
-    proc:              30%   <- summary mode (1 GPU or view["meangpu"])
-    mem:               40%
-    temperature:       55C
+    proc               30%   <- summary mode (1 GPU or view["meangpu"])
+    mem                40%
+    temperature        55C
 
 Multi mode (>1 GPU, not meangpu): one row per GPU — `name[:9]  proc  mem N`.
 The `mem` column is dropped when no card reports memory (narrower plugin).
@@ -69,10 +69,10 @@ def _summary_rows(
     first_id = cards[0].get("gpu_id")
     rows: list[Row] = []
     for key in ("proc", "mem"):
-        # The schema holds ONE word per field; the punctuation and the "mean"
-        # suffix are the renderer's, composed here.
+        # The schema holds ONE word per field; the "mean" suffix is the
+        # renderer's, composed here.
         word = field_label(fields_desc.get(key, {}), key, prefer_short=True)
-        label = f"{word} mean:" if is_multi else f"{word}:"
+        label = f"{word} mean" if is_multi else word
         rows.append(
             Row(
                 cells=[
@@ -86,11 +86,11 @@ def _summary_rows(
         temp = to_fahrenheit(temp)
     unit = "F" if fahrenheit else "C"
     # Only the non-mean form comes from the schema. v4 shortens the word in the
-    # mean form ("temperature:" -> "temp mean:"), i.e. the two forms use
+    # mean form ("temperature" -> "temp mean"), i.e. the two forms use
     # DIFFERENT words, and a schema holds one string per field — so the mean
     # form cannot be composed by suffixing and stays a literal here.
     temp_word = field_label(fields_desc.get("temperature", {}), "temperature", prefer_short=True)
-    temp_label = "temp mean:" if is_multi else f"{temp_word}:"
+    temp_label = "temp mean" if is_multi else temp_word
     rows.append(
         Row(
             cells=[

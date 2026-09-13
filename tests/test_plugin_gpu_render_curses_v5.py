@@ -45,9 +45,11 @@ def test_single_gpu_summary_three_metric_rows():
     flat = _flat(rows)
     # Header (name) + proc/mem/temperature labels.
     assert "GeForce RTX" in flat
-    assert "proc:" in flat
-    assert "mem:" in flat
-    assert "temperature:" in flat
+    assert "proc" in flat
+    assert "mem" in flat
+    assert "temperature" in flat
+    # Labels carry no trailing colon, like every other plugin.
+    assert ":" not in flat
     assert "30" in flat and "40" in flat and "55" in flat
 
 
@@ -74,7 +76,9 @@ def test_meangpu_forces_summary_for_multi():
     cards = [_card("nvidia0", "Tesla", proc=20), _card("nvidia1", "Tesla", proc=40)]
     rows = render(_payload(cards), FIELDS, view={"meangpu": True})
     flat = _flat(rows)
-    assert "proc mean:" in flat
+    assert "proc mean" in flat
+    assert "temp mean" in flat
+    assert ":" not in flat
     assert "30" in flat  # mean of 20 and 40
 
 

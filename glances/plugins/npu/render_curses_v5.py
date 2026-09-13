@@ -12,8 +12,8 @@ Mirrors v4 `npu.msg_curse()` — renders the FIRST NPU only:
 
     Intel NPU             <- header (name[:17])
     45%        1.0G/2.0GHz  <- load% (or freq% if load is None) + freq range
-    mem:              N/A%
-    temperature:       55C
+    mem               N/A%
+    temperature        55C
 """
 
 from __future__ import annotations
@@ -83,7 +83,7 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]] | Non
     rows.append(
         Row(
             cells=[
-                Cell(text="{:<12}".format("mem:")),
+                Cell(text="{:<12}".format("mem")),
                 Cell(text=_format_value(npu.get("mem"), "%"), color=_level_role(levels, npu_id, "mem")),
             ]
         )
@@ -97,7 +97,7 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]] | Non
     rows.append(
         Row(
             cells=[
-                Cell(text="{:<12}".format("temperature:")),
+                Cell(text="{:<12}".format("temperature")),
                 Cell(text=_format_value(temp, unit), color=_level_role(levels, npu_id, "temperature")),
             ]
         )

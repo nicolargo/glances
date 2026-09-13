@@ -24,10 +24,10 @@
 				<dt class="gl-header"></dt>
 				<dd>{{ freqRangeText }}</dd>
 
-				<dt class="gl-header">mem:</dt>
+				<dt class="gl-header">mem</dt>
 				<dd :class="memClass">{{ memText }}</dd>
 
-				<dt class="gl-header">temperature:</dt>
+				<dt class="gl-header">temperature</dt>
 				<dd :class="tempClass">{{ tempText }}</dd>
 			</dl>
 		</div>
@@ -46,7 +46,7 @@ export default {
 		payload: { type: Object, default: null },
 		error: { type: String, default: undefined },
 		// Declared but unused: none of the four rows has a schema-resolved
-		// label -- the TUI writes "mem:" and "temperature:" as literals.
+		// label -- the TUI writes "mem" and "temperature" as literals.
 		labels: { type: Object, default: () => ({}) },
 		// `fahrenheit` (--fahrenheit) converts the temperature row, as in the
 		// TUI's `view.get("fahrenheit")`.

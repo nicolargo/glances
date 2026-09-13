@@ -61,6 +61,8 @@ def test_mem_and_temperature_rows():
     flat = _flat(rows)
     assert "mem" in flat and "30" in flat
     assert "temperature" in flat and "55" in flat
+    # Labels carry no trailing colon, like every other plugin.
+    assert ":" not in flat
 
 
 def test_only_first_npu_rendered():
