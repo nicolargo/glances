@@ -167,6 +167,48 @@ body {
   min-width: 9ch;
 }
 
+/* A bar row: the TUI's `CPU  [||||      45.0%]` drawn with the browser's
+ * means (G9-8 D1 — not the terminal's characters, not a sparkline). Three
+ * parts on one line: the TUI's 4-char label, a track that takes the rest of
+ * the width, and the value. Global like .gl-table: any later bar block reuses
+ * this shape instead of inventing a second one. */
+.gl-bar {
+  display: grid;
+  grid-template-columns: 4ch 1fr auto;
+  align-items: center;
+  gap: var(--gl-gap);
+}
+
+/* Right-aligned, like the TUI's `f"{cid:>4}"` (percpu/quicklook render_curses_v5.py):
+ * a leading-space pad on the label text alone is inert in HTML (collapses),
+ * so without this a two-digit core id ("10") sits flush left in the 4ch
+ * column while a single-digit one ("CPU3") reads flush right -- this is what
+ * actually reproduces the terminal's fixed-width column. */
+.gl-bar-label {
+  text-align: right;
+}
+
+.gl-bar-track {
+  background: var(--gl-border);
+  height: 0.6em;
+  overflow: hidden;
+}
+
+/* `currentColor` is load-bearing: the tier class (.gl-level-*) sets `color`,
+ * so the fill takes the payload's tier with no second token and no colour
+ * literal. A fill with no tier class inherits the body colour, which is what
+ * an undecorated value should look like. */
+.gl-bar-fill {
+  background: currentColor;
+  height: 100%;
+}
+
+/* `.gl-bar-value` intentionally carries no rule of its own here: it also
+ * carries `.gl-num` (see the template), which already supplies its alignment
+ * and tabular digits. The class name is kept as a probe hook (the render
+ * probe's `bars[].valueClass`, an earlier round removed a class like this for
+ * lacking one and had to bring it back) -- do not delete it for that reason. */
+
 /* One-line header block (system, ip, uptime, cloud, now): its cells side by
  * side on a baseline. The gap stands in for the single space the TUI painter
  * inserts between cells. Global, like .gl-stat-grid: five components share

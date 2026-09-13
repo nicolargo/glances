@@ -26,7 +26,11 @@ import PluginMem from "../PluginMem.vue";
 import PluginNetwork from "../PluginNetwork.vue";
 import PluginLoad from "../PluginLoad.vue";
 import PluginMemswap from "../PluginMemswap.vue";
+import PluginQuicklook from "../PluginQuicklook.vue";
 import PluginCpu from "../PluginCpu.vue";
+import PluginPercpu from "../PluginPercpu.vue";
+import PluginNpu from "../PluginNpu.vue";
+import PluginMpp from "../PluginMpp.vue";
 import PluginGpu from "../PluginGpu.vue";
 import PluginSystem from "../PluginSystem.vue";
 import PluginUptime from "../PluginUptime.vue";
@@ -79,10 +83,34 @@ export const PLUGINS = [
 		spec: { shape: "scalar", required: [] },
 	},
 	{
+		name: "quicklook",
+		component: PluginQuicklook,
+		slot: "top",
+		spec: { shape: "scalar", required: [] },
+	},
+	{
 		name: "cpu",
 		component: PluginCpu,
 		slot: "top",
 		spec: { shape: "scalar", required: ["total"] },
+	},
+	{
+		name: "percpu",
+		component: PluginPercpu,
+		slot: "top",
+		spec: { shape: "collection", required: ["cpu_number"] },
+	},
+	{
+		name: "npu",
+		component: PluginNpu,
+		slot: "top",
+		spec: { shape: "collection", required: ["npu_id"] },
+	},
+	{
+		name: "mpp",
+		component: PluginMpp,
+		slot: "top",
+		spec: { shape: "collection", required: ["engine_id"] },
 	},
 	{
 		name: "gpu",

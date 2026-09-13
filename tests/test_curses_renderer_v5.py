@@ -1483,6 +1483,68 @@ def test_no_full_quicklook_keeps_all_top():
     assert [b.name for b in frame.left] == ["network"]
 
 
+def test_build_frame_tells_percpu_whether_quicklook_is_instantiated():
+    """The flag comes from `fields_by_plugin` — the plugins that EXIST — not
+    from the store, so percpu does not flip its columns for one cycle while
+    quicklook waits for its first payload. Also requires `view["percpu"]`
+    (`--percpu`): quicklook only actually DRAWS per-core bars under that flag
+    — see test_percpu_keeps_its_labels_when_quicklook_is_instantiated_but_not_drawing_percore
+    for the regression this final review fixed.
+    """
+    percpu_payload = {"data": [{"cpu_number": 0, "total": 5.0}], "_levels": {}}
+    percpu_fields = {"cpu_number": {"unit": "number", "primary_key": True}}
+
+    # quicklook instantiated but not yet published, AND drawing per-core bars:
+    frame = build_frame(
+        {"percpu": percpu_payload},
+        {"percpu": percpu_fields, "quicklook": {}},
+        registry=[("percpu", True), ("quicklook", False)],
+        alerts_history=[],
+        view={"percpu": True},
+    )
+    percpu_block = next(b for b in frame.top if b.name == "percpu")
+    assert "total" not in " ".join(c.text for c in percpu_block.rows[0].cells)
+
+    # quicklook not instantiated at all:
+    frame = build_frame(
+        {"percpu": percpu_payload},
+        {"percpu": percpu_fields},
+        registry=[("percpu", True)],
+        alerts_history=[],
+    )
+    percpu_block = next(b for b in frame.top if b.name == "percpu")
+    assert "total" in " ".join(c.text for c in percpu_block.rows[0].cells)
+
+
+def test_percpu_keeps_its_labels_when_quicklook_is_instantiated_but_not_drawing_percore():
+    """Final-review regression guard (Critical 2): quicklook merely being
+    instantiated is a state v4 can never reach on its own — v4 gates on ONE
+    flag (`args.percpu`) that governs both "percpu is on screen" and
+    "quicklook draws per-core bars" at once (`glances/plugins/percpu/__init__.py:158,183,210`).
+    v5 split that into `_view.show_percpu` and `_percpu`
+    (`glances_curses_v5.py:228-234`), so a quicklook block showing only the
+    aggregate `cpu` bar (no `--percpu`) must NOT strip percpu's title, its
+    `total` column or its `CPU0` row labels — before this fix it did, a
+    regression against pre-G9-8 v5, which always painted them.
+    """
+    percpu_payload = {"data": [{"cpu_number": 0, "total": 5.0}], "_levels": {}}
+    percpu_fields = {"cpu_number": {"unit": "number", "primary_key": True}}
+
+    frame = build_frame(
+        {"percpu": percpu_payload},
+        {"percpu": percpu_fields, "quicklook": {}},
+        registry=[("percpu", True), ("quicklook", False)],
+        alerts_history=[],
+        # No view["percpu"]: quicklook is instantiated but not drawing per-core bars.
+    )
+    percpu_block = next(b for b in frame.top if b.name == "percpu")
+    flat = " ".join(c.text for c in percpu_block.rows[0].cells)
+    assert "CPU" in flat, f"title must survive: {flat!r}"
+    assert "total" in flat, f"total column must survive: {flat!r}"
+    labels = [r.cells[0].text.strip() for r in percpu_block.rows[1:]]
+    assert labels and labels[0] == "CPU0", f"row labels must survive: {labels!r}"
+
+
 def test_build_frame_handles_missing_plugin_payload():
     """A plugin in the registry but absent from the store (cycle-0)."""
     frame = build_frame(

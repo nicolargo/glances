@@ -74,6 +74,36 @@ def test_level_colors_value_cell():
     assert crit, "expected at least one CRITICAL-coloured cell for cpu"
 
 
+def test_prominent_level_entry_marks_the_bar_value_cell():
+    """`_levels[key]["prominent"]` must reach the bar's VALUE cell (the
+    bracketed bar text) — the same entry `_role_for` already reads its level
+    from. Dormant in the shipped schema today (quicklook/model_v5.py sets
+    `prominent: False` on every bar field, G9-8 smoke fix 2), so this test
+    supplies its own `_levels` the way a future schema value would.
+    """
+    rows = render(
+        _payload(_levels={"cpu": {"level": "ok", "prominent": True}}),
+        FIELDS,
+    )
+    cpu_row = next(r for r in rows if r.cells[0].text.startswith("CPU "))
+    label, lbracket, bar, rbracket = cpu_row.cells[:4]
+    assert bar.prominent is True, f"got {cpu_row.cells!r}"
+    # Decoration cells (label, brackets) never carry it — only the value does.
+    assert label.prominent is False
+    assert lbracket.prominent is False
+    assert rbracket.prominent is False
+
+
+def test_non_prominent_level_entry_leaves_the_bar_value_cell_unmarked():
+    rows = render(
+        _payload(_levels={"cpu": {"level": "ok", "prominent": False}}),
+        FIELDS,
+    )
+    cpu_row = next(r for r in rows if r.cells[0].text.startswith("CPU "))
+    bar = cpu_row.cells[2]
+    assert bar.prominent is False, f"got {cpu_row.cells!r}"
+
+
 def test_header_shows_name_and_frequency():
     p = _payload(cpu_name="Test CPU", cpu_hz_current=2_000_000_000, cpu_hz=3_000_000_000)
     rows = render(p, FIELDS)

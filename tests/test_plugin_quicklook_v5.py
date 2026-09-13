@@ -397,3 +397,20 @@ class TestPercpuLevels:
         for key in ("percpu_other", "max_cpu_display"):
             assert fd[key].get("internal") is True
             assert fd[key].get("watched", False) is False
+
+
+def test_bar_fields_are_not_prominent_by_default():
+    """Pin `prominent: False` on the five bar-selectable fields (cpu, mem,
+    load, gpu_mem, gpu_proc; `swap` was already False).
+
+    A `True` here makes the Web UI paint a filled/reverse badge on that
+    quicklook bar value (`levelClass()` in PluginQuicklook.vue honours the
+    flag verbatim) -- the maintainer rejected that look after smoke-testing
+    the v5 Web UI (it now uses a subtler tier colour only, see G9-8 smoke
+    fix 2). Flipping any of these back to True re-introduces the filled
+    badge; that intentional a change should touch this test, not slip in
+    silently.
+    """
+    fd = PluginModel.fields_description
+    for key in ("cpu", "mem", "swap", "load", "gpu_mem", "gpu_proc"):
+        assert fd[key].get("prominent") is False, f"{key} must not be prominent: {fd[key]!r}"

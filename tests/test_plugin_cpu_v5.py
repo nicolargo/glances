@@ -132,11 +132,31 @@ def test_system_user_dpc_are_watched_non_prominent(store, config):
         assert fields[name]["prominent"] is False, name
 
 
-def test_iowait_is_watched_prominent(store, config):
-    """iowait surfaces as prominent — sustained I/O wait is worth highlighting."""
+def test_iowait_is_watched_non_prominent(store, config):
+    """iowait is watched (level-coloured) but not prominent — the maintainer
+    rejected the filled/reverse-video badge on iowait after smoke-testing the
+    v5 Web UI (G9-8 smoke fix 5; see `test_iowait_is_not_prominent_by_default`
+    for the pinned schema value)."""
     schema = PluginModel(store, config)._fields["iowait"]
     assert schema["watched"] is True
-    assert schema["prominent"] is True
+    assert schema["prominent"] is False
+
+
+def test_iowait_is_not_prominent_by_default():
+    """Pin `prominent: False` on `iowait`.
+
+    A `True` here makes both surfaces paint a filled badge on an alerting
+    `iowait` (the TUI's reverse-video cell and the Web UI's filled badge,
+    `levelClass()` in levels.js honours the `entry.prominent` flag verbatim)
+    -- the maintainer rejected that look after smoke-testing the v5 Web UI
+    (G9-8 smoke fix 5, the same call already made for quicklook's bar fields
+    in `test_bar_fields_are_not_prominent_by_default`, G9-8 smoke fix 2).
+    Only the tier colour remains, like every other cpu field except `total`.
+    Flipping this back to True re-introduces the badge; that intentional a
+    change should touch this test, not slip in silently.
+    """
+    fd = PluginModel.fields_description
+    assert fd["iowait"].get("prominent") is False, f"got {fd['iowait']!r}"
 
 
 def test_steal_is_watched_non_prominent_with_strict_thresholds(store, config):

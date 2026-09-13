@@ -1425,6 +1425,23 @@ def build_frame(
         - alerts (synthesized) → RIGHT slot.
         - Unknown plugins default to LEFT (same as v4's fallback).
     """
+    # `percpu` renders differently when quicklook is on screen AND actually
+    # drawing per-core bars (v4 parity). v4 gates this on ONE flag
+    # (`args.percpu`) that governs both facts at once; v5 split it into
+    # `_view.show_percpu` (TOP-row cpu/percpu toggle) and `_percpu`/`--percpu`
+    # (quicklook's per-core bars, `view["percpu"]`) — so "quicklook
+    # instantiated" alone is a state v4 can never reach and must not strip
+    # percpu's title/total/labels (final review, Critical 2). "Instantiated"
+    # is derived from the INSTANTIATED plugins, not from the store: a
+    # quicklook that has not published yet still exists, and keying off the
+    # store would make percpu flip its columns for one cycle at startup. Same
+    # notion the WebUI reads from /api/5/pluginslist + serverArgs.percpu.
+    quicklook_drawing_percore = bool((view or {}).get("percpu"))
+    view = {
+        **(view or {}),
+        "quicklook_enabled": "quicklook" in fields_by_plugin and quicklook_drawing_percore,
+    }
+
     frame = Frame()
     for plugin_name, is_collection in registry:
         if view and view.get("full_quicklook") and plugin_name in _FULL_QUICKLOOK_HIDDEN:

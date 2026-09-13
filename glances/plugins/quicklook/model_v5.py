@@ -141,7 +141,7 @@ class PluginModel(GlancesPluginBase[dict]):
             "unit": "percent",
             "watched": True,
             "watch_direction": "high",
-            "prominent": True,
+            "prominent": False,
             "default_thresholds": _PERCENT_THRESHOLDS,
         },
         "mem": {
@@ -149,7 +149,7 @@ class PluginModel(GlancesPluginBase[dict]):
             "unit": "percent",
             "watched": True,
             "watch_direction": "high",
-            "prominent": True,
+            "prominent": False,
             "default_thresholds": _PERCENT_THRESHOLDS,
         },
         "swap": {
@@ -165,7 +165,7 @@ class PluginModel(GlancesPluginBase[dict]):
             "unit": "percent",
             "watched": True,
             "watch_direction": "high",
-            "prominent": True,
+            "prominent": False,
             "default_thresholds": _PERCENT_THRESHOLDS,
         },
         "gpu_mem": {
@@ -173,7 +173,7 @@ class PluginModel(GlancesPluginBase[dict]):
             "unit": "percent",
             "watched": True,
             "watch_direction": "high",
-            "prominent": True,
+            "prominent": False,
             "default_thresholds": _PERCENT_THRESHOLDS,
         },
         "gpu_proc": {
@@ -181,7 +181,7 @@ class PluginModel(GlancesPluginBase[dict]):
             "unit": "percent",
             "watched": True,
             "watch_direction": "high",
-            "prominent": True,
+            "prominent": False,
             "default_thresholds": _PERCENT_THRESHOLDS,
         },
         "percpu": {

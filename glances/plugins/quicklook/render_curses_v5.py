@@ -76,14 +76,35 @@ def _role_for(payload: dict[str, Any], key: str) -> ColorRole:
     return _LEVEL_TO_ROLE.get(level, ColorRole.DEFAULT)
 
 
+def _prominent_for(payload: dict[str, Any], key: str) -> bool:
+    """Whether the field's `_levels` entry asks for the prominent
+    (reverse-video badge) treatment — same entry `_role_for` reads its level
+    from. Dormant today: every bar-selectable field ships `prominent: False`
+    in the schema (G9-8 smoke fix 2, the Web UI's filled badge was rejected
+    after a smoke test), but a payload is still free to set it, and ignoring
+    it here would silently stop honouring a future `True` — see `folders`
+    and `ports`, which read the same key the same way."""
+    entry = payload.get("_levels", {}).get(key)
+    return bool(entry.get("prominent")) if isinstance(entry, dict) else False
+
+
 def _bar_width(view: dict[str, Any] | None) -> int:
     if view and isinstance(view.get("quicklook_width"), int) and view["quicklook_width"] > 12:
         return view["quicklook_width"]
     return _DEFAULT_BAR_WIDTH
 
 
-def _bar_cells(label: str, percent: Any, role: ColorRole, width: int, bar_char: str = "|") -> list[Cell]:
-    """`LABEL [||||      45.0%]` as label + bracket + bar + bracket cells."""
+def _bar_cells(
+    label: str, percent: Any, role: ColorRole, width: int, bar_char: str = "|", prominent: bool = False
+) -> list[Cell]:
+    """`LABEL [||||      45.0%]` as label + bracket + bar + bracket cells.
+
+    `prominent` lands on the bar cell only (the graphic + percentage text
+    together) — that cell is quicklook's VALUE, the same role the size cell
+    plays in `folders` and the value cell in `ports`, both of which carry
+    `prominent` the same way. The label and bracket cells are decoration,
+    never alert-coloured, so they never carry it either.
+    """
     bar = Bar(width, bar_char=bar_char)
     try:
         bar.percent = float(percent)
@@ -94,7 +115,7 @@ def _bar_cells(label: str, percent: Any, role: ColorRole, width: int, bar_char: 
         # glue: the painter inserts a space before every non-glue cell; the
         # bracketed bar must paint flush ("CPU  [||||45.0%]") for v4 parity.
         Cell(text="[", bold=True, glue=True),
-        Cell(text=bar.get(), color=role, glue=True),
+        Cell(text=bar.get(), color=role, prominent=prominent, glue=True),
         Cell(text="]", bold=True, glue=True),
     ]
 
@@ -171,7 +192,18 @@ def render(
         if key not in payload or payload.get(key) is None:
             continue
         label = _BAR_LABEL.get(key, key.upper())
-        rows.append(Row(cells=_bar_cells(label, payload[key], _role_for(payload, key), width, bar_char)))
+        rows.append(
+            Row(
+                cells=_bar_cells(
+                    label,
+                    payload[key],
+                    _role_for(payload, key),
+                    width,
+                    bar_char,
+                    prominent=_prominent_for(payload, key),
+                )
+            )
+        )
 
     return rows or [Row(cells=[Cell(text="CPU", color=ColorRole.HEADER, bold=True)])]
 

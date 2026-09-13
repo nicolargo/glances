@@ -92,11 +92,11 @@ test("the cascades carry the TUI's steps, quicklook included", () => {
 			["hide_gpu", true],
 		],
 	);
-	// Declared, not omitted: quicklook is not ported, so these two change
-	// nothing today -- but the order and the count must match the TUI.
+	// quicklook is fully ported (G9-8): every step is live, none declared
+	// notApplicable any more.
 	assert.deepEqual(
 		TOP_CASCADE.filter((s) => s.notApplicable).map((s) => s.key),
-		["quicklook_freq_only", "hide_quicklook"],
+		[],
 	);
 	assert.deepEqual(
 		HEADER_CASCADE.map((s) => [s.key, s.value]),

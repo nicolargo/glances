@@ -7,21 +7,23 @@ import pytest
 from glances.outputs.curses_renderer_v5 import ColorRole
 from glances.plugins.percpu.render_curses_v5 import render
 
+_SCHEMA = {
+    "cpu_number": {"unit": "number", "primary_key": True},
+    "total": {"unit": "percent"},
+    "user": {"unit": "percent"},
+    "system": {"unit": "percent"},
+    "idle": {"unit": "percent"},
+    "iowait": {"unit": "percent"},
+    "irq": {"unit": "percent"},
+    "nice": {"unit": "percent"},
+    "steal": {"unit": "percent"},
+    "guest": {"unit": "percent"},
+}
+
 
 @pytest.fixture
 def percpu_fields():
-    return {
-        "cpu_number": {"unit": "number", "primary_key": True},
-        "total": {"unit": "percent"},
-        "user": {"unit": "percent"},
-        "system": {"unit": "percent"},
-        "idle": {"unit": "percent"},
-        "iowait": {"unit": "percent"},
-        "irq": {"unit": "percent"},
-        "nice": {"unit": "percent"},
-        "steal": {"unit": "percent"},
-        "guest": {"unit": "percent"},
-    }
+    return _SCHEMA
 
 
 def _core(n: int, **overrides):
@@ -50,6 +52,14 @@ def percpu_payload_4cores():
             _core(2, total=21.5, user=15.0, system=4.5, iowait=1.2, idle=79.3),
             _core(3, total=8.1, user=6.3, system=1.8, iowait=0.0, idle=91.9),
         ],
+        "_levels": {},
+    }
+
+
+def _payload_with_cores(n: int):
+    """`n` cores with descending `total` values (core `i` -> `90 - i * 10`)."""
+    return {
+        "data": [_core(i, total=float(90 - i * 10)) for i in range(n)],
         "_levels": {},
     }
 
@@ -162,6 +172,27 @@ def test_render_overflow_row_averages_the_hidden_cores(percpu_fields, monkeypatc
     assert overflow_row.cells[2].text.strip() == "0.5%"
 
 
+def test_the_core_cap_comes_from_the_payload():
+    """`[percpu] max_cpu_display` caps the listed cores; the rest collapse into
+    the CPU* mean row. Before this fix the renderer used its own constant and
+    the config key was inert for this plugin (its TODO(G2+) said so), while
+    `quicklook` honoured the same key — so two blocks disagreed on one setting.
+    """
+    payload = _payload_with_cores(6)
+    payload["max_cpu_display"] = 2
+    rows = render(payload, _SCHEMA)
+    labels = [r.cells[0].text.strip() for r in rows[1:]]
+    assert labels == ["CPU0", "CPU1", "CPU*"], f"got {labels!r}"
+
+
+def test_an_older_server_without_the_field_falls_back_to_four():
+    """A payload that predates the field must not raise: the renderer keeps its
+    own constant as the fallback (same contract as quicklook's renderer)."""
+    rows = render(_payload_with_cores(6), _SCHEMA)
+    labels = [r.cells[0].text.strip() for r in rows[1:]]
+    assert labels == ["CPU0", "CPU1", "CPU2", "CPU3", "CPU*"], f"got {labels!r}"
+
+
 def test_render_no_overflow_row_when_exact_max(percpu_payload_4cores, percpu_fields, monkeypatch):
     monkeypatch.setattr("sys.platform", "linux")
     rows = render(percpu_payload_4cores, percpu_fields)
@@ -253,3 +284,61 @@ def test_render_column_names_are_neither_bold_nor_header(percpu_payload_4cores, 
     for cell in rows[0].cells[1:]:
         assert cell.bold is False, f"column header {cell.text!r} is bold"
         assert cell.color == ColorRole.DEFAULT, f"column header {cell.text!r} has color {cell.color}"
+
+
+# ---------------------------------------------------------------- quicklook on screen
+
+
+def test_quicklook_shown_drops_the_title_the_total_column_and_the_labels():
+    """v4 parity (glances/plugins/percpu/__init__.py:158,183,210): with
+    quicklook on screen, percpu does not repeat what quicklook already shows.
+    """
+    rows = render(_payload_with_cores(2), _SCHEMA, view={"quicklook_enabled": True})
+    header = " ".join(c.text for c in rows[0].cells)
+    assert "CPU" not in header, f"no title cell: {header!r}"
+    assert "total" not in header, f"no total column: {header!r}"
+    assert not any(r.cells[0].text.strip().startswith("CPU") for r in rows[1:]), (
+        f"no row labels: {[r.cells[0].text for r in rows[1:]]!r}"
+    )
+
+
+# ---------------------------------------------------------------- stat_fields (server-resolved)
+
+
+def test_render_uses_the_payload_s_stat_fields_when_present(monkeypatch):
+    """Final review, Important 3: the model is the platform authority — its
+    published `stat_fields` (a Windows order here) must win over the
+    renderer's own `_os_headers()`, which the `sys.platform` patch below
+    would otherwise resolve to the Linux set.
+    """
+    monkeypatch.setattr("sys.platform", "linux")
+    payload = {
+        "data": [_core(0)],
+        "_levels": {},
+        "stat_fields": ["system", "user", "dpc", "interrupt"],
+    }
+    rows = render(payload, _SCHEMA)
+    flat = " ".join(c.text for c in rows[0].cells)
+    assert flat.split()[2:] == ["system", "user", "dpc", "interrupt"], f"got {flat!r}"
+
+
+def test_render_falls_back_to_os_headers_without_stat_fields(monkeypatch):
+    """A payload from an older server carries no `stat_fields` — the renderer
+    keeps resolving from `sys.platform` itself, same contract as
+    `max_cpu_display`."""
+    monkeypatch.setattr("sys.platform", "darwin")
+    payload = {"data": [_core(0)], "_levels": {}}
+    rows = render(payload, _SCHEMA)
+    flat = " ".join(c.text for c in rows[0].cells)
+    assert flat.split()[2:] == ["user", "system", "idle", "nice"], f"got {flat!r}"
+
+
+def test_quicklook_absent_keeps_the_title_the_total_column_and_the_labels():
+    """The other half of the same v4 branch — and the default for every
+    caller that passes no view at all."""
+    for view in ({"quicklook_enabled": False}, None):
+        rows = render(_payload_with_cores(2), _SCHEMA, view=view)
+        header = " ".join(c.text for c in rows[0].cells)
+        assert "CPU" in header, f"view={view!r}: {header!r}"
+        assert "total" in header, f"view={view!r}: {header!r}"
+        assert rows[1].cells[0].text.strip() == "CPU0", f"view={view!r}: {rows[1].cells[0].text!r}"

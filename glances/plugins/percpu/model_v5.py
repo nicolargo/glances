@@ -29,10 +29,32 @@ regardless.
 
 from __future__ import annotations
 
+import sys
 from typing import Any, ClassVar
 
 from glances.cpu_sampler_v5 import sampler
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
+
+
+def _os_headers() -> list[str]:
+    """Return the OS-specific stat columns, in TUI order (v4
+    ``define_headers_from_os``). Mirrors
+    ``glances.outputs.curses_renderer_v5``'s copy of the same logic — kept
+    here, not imported from there, so the model does not depend on the
+    presentation layer for a fact the model itself is the authority on.
+    """
+    base = ["user", "system"]
+    p = sys.platform
+    if p.startswith("linux"):
+        return base + ["iowait", "idle", "irq", "nice", "steal", "guest"]
+    if p == "darwin":
+        return base + ["idle", "nice"]
+    if "bsd" in p:
+        return base + ["idle", "irq", "nice"]
+    if p in ("win32", "cygwin"):
+        return base + ["dpc", "interrupt"]
+    # Unknown OS — fall back to the Linux column set.
+    return base + ["iowait", "idle", "irq", "nice", "steal", "guest"]
 
 
 class PluginModel(GlancesPluginBase[list]):
@@ -108,7 +130,40 @@ class PluginModel(GlancesPluginBase[list]):
             "description": "(Windows) Percent of time this core spent handling software interrupts.",
             "unit": "percent",
         },
+        # `[percpu] max_cpu_display` — the cap both this plugin and quicklook
+        # honour. Declared `internal`: it is configuration the renderers need,
+        # not a metric (the same shape quicklook uses for `stats_list`).
+        "max_cpu_display": {
+            "description": "Maximum number of CPU cores displayed before the mean row ([percpu] max_cpu_display).",
+            "unit": "number",
+            "internal": True,
+            "watched": False,
+        },
+        # OS-resolved column order (`_os_headers()`), published so the WebUI
+        # renders the SAME subset in the SAME order as the TUI: the browser
+        # cannot resolve `sys.platform`, but the server can — the same fix
+        # already applied to `max_cpu_display` (final review, Important 3).
+        "stat_fields": {
+            "description": "OS-specific stat columns, in the order the TUI renders them (define_headers_from_os).",
+            "unit": "string",
+            "internal": True,
+            "watched": False,
+        },
     }
+
+    def __init__(self, store: Any, config: Any) -> None:
+        super().__init__(store, config)
+        self.max_cpu_display = self._read_max_cpu_display()
+        self.stat_fields = _os_headers()
+
+    def _read_max_cpu_display(self) -> int:
+        """Parse `[percpu] max_cpu_display=4` (v4 `percpu/__init__.py:119`)."""
+        return self.config.get("percpu", "max_cpu_display", 4)
+
+    def _add_metadata(self) -> None:
+        super()._add_metadata()
+        self._metadata["max_cpu_display"] = self.max_cpu_display
+        self._metadata["stat_fields"] = self.stat_fields
 
     async def _grab_stats(self) -> list:
         # The shared sampler guards against psutil's "no baseline yet"

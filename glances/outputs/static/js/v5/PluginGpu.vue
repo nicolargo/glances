@@ -18,10 +18,17 @@
 		<table v-else-if="cards.length">
 			<tbody>
 				<tr v-for="card in cards" :key="card.gpu_id">
+					<!-- name: capped at the TUI's 9-character cut (render_curses_v5.py:114
+					`[0:9]`), full name on hover -- the established .gl-name/.gl-truncate
+					pair (npu's header uses the same shape). Never coloured: the TUI
+					never alert-colours the card name either. -->
+					<td>
+						<span class="gl-name gl-truncate" :title="card.name || ''">{{ card.name || "" }}</span>
+					</td>
 					<!-- The tier goes on the <span>, not the <td>: a prominent badge's
 					background would otherwise fill the whole cell, 9ch floor and
 					padding included, instead of the value's text. -->
-					<td v-for="column in columns" :key="column.field" :class="{ 'gl-num': column.numeric }">
+					<td v-for="column in valueColumns" :key="column.field" class="gl-num">
 						<span :class="cellClassFor(payload, card, column.field)">{{
 							column.format(card[column.field])
 						}}</span>
@@ -132,13 +139,13 @@ export default {
 		// memory cell -- both exactly as _multi_rows() does (it emits no
 		// header at all, and line 116 writes f" mem {value}"). A <thead> here
 		// would show `name` and `proc`, two labels the terminal never
-		// displays. The card-name column is NOT truncated to 9 characters
-		// (design spec §8.4).
-		columns() {
-			const cols = [
-				{ field: "name", format: (v) => v || "" },
-				{ field: "proc", format: (v) => gpuValue(v), numeric: true },
-			];
+		// displays. The card-name column IS capped at 9 characters in the
+		// template (G9-8 smoke fix 3) -- the TUI's own cut
+		// (render_curses_v5.py:114) -- reversing the earlier design-spec §8.4
+		// call after the maintainer's smoke test found the uncapped name
+		// pushed every value column to the far edge of its 9ch floor.
+		valueColumns() {
+			const cols = [{ field: "proc", format: (v) => gpuValue(v), numeric: true }];
 			if (this.cards.some((c) => c.mem != null)) {
 				cols.push({ field: "mem", format: (v) => `mem ${gpuValue(v)}`, numeric: true });
 			}
@@ -165,5 +172,27 @@ export default {
    `text-align: left` here would stop the numeric columns right-aligning. */
 .gl-plugin td:not(.gl-num) {
 	text-align: left;
+}
+/* G9-8 smoke fix 3: the TUI's name width (render_curses_v5.py:114 `[0:9]`). */
+.gl-plugin {
+	--gl-name-width: 9ch;
+}
+/* The global `.gl-num` 9ch floor is wrong for THIS table: it is wider than
+   any value gpu ever renders, and with the name column no longer eating the
+   row's width (G9-8 smoke fix 3) that slack pushed every value to the far
+   edge of a 9-character column. The previous round zeroed the floor
+   entirely, which overshot the other way -- with nothing to floor on, the
+   column resizes with the text every tick ("9%" -> "100%", or "mem 9%" ->
+   "mem 100%"), so the numbers jitter on refresh instead of the row growing
+   once and holding.
+   8ch is the actual worst case, not a guess: `valueColumns()` formats `proc`
+   as a bare `gpuValue()` ("100%", 4 characters -- matching the TUI's
+   `{:>3.0f}%` in render_curses_v5.py `_format_value()`), but `mem`'s format
+   function prepends the literal "mem " *inside* the same `.gl-num` cell
+   ("mem 100%", 8 characters) -- this selector floors both columns, so it
+   must fit the wider of the two. Right-alignment and tabular-nums are
+   unchanged: only the width floor moves. */
+.gl-plugin table td.gl-num {
+	min-width: 8ch;
 }
 </style>

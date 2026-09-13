@@ -64,6 +64,18 @@ def _patch_sampler(per_core: list[CpuTimesPercent]):
     )
 
 
+def _cfg_with(tmp_path, monkeypatch, body: str) -> GlancesConfigV5:
+    """Real config object built from a `[percpu]` section body (mirrors
+    `test_plugin_quicklook_v5.py::_cfg_with`)."""
+    monkeypatch.setattr(GlancesConfigV5, "SYSTEM_CONFIG_PATH", tmp_path / "etc" / "glances.conf")
+    xdg = tmp_path / "xdg"
+    cfg_dir = xdg / "glances"
+    cfg_dir.mkdir(parents=True)
+    (cfg_dir / "glances.conf").write_text(body)
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(xdg))
+    return GlancesConfigV5()
+
+
 # ---------------------------------------------------------- contract
 
 
@@ -151,6 +163,50 @@ async def test_get_export_returns_list(store, config):
     assert len(exported) == 2
     assert exported[0]["cpu_number"] == 0
     assert exported[0]["total"] == 30.0
+
+
+def test_the_model_publishes_the_configured_cap(tmp_path, monkeypatch, store):
+    """The key lives in the [percpu] section (v4 parity: v4 reads
+    `config.get_int_value('percpu', 'max_cpu_display', 4)`)."""
+    cfg = _cfg_with(tmp_path, monkeypatch, "[percpu]\nmax_cpu_display=2\n")
+    model = PluginModel(store, cfg)
+    assert model._read_max_cpu_display() == 2
+
+
+async def test_max_cpu_display_reaches_the_payload_and_the_api(tmp_path, monkeypatch, store):
+    """A collection plugin's `_grab_stats()` returns the bare item list, not a
+    dict `_build_store_payload()` can merge extra keys into directly — unlike
+    a scalar plugin (e.g. quicklook), which just adds the key to the dict
+    `_grab_stats()` returns. So `max_cpu_display` can only reach the envelope
+    through the `_add_metadata()` override, which `_build_store_payload()`
+    merges in via `**self._metadata` for both plugin shapes alike. This test
+    drives a real `update()` cycle to prove that path, not just the reader.
+    """
+    cfg = _cfg_with(tmp_path, monkeypatch, "[percpu]\nmax_cpu_display=2\n")
+    plugin = PluginModel(store, cfg)
+    with _patch_sampler([_core(), _core(), _core()]):
+        await plugin.update()
+    assert store.get("percpu")["max_cpu_display"] == 2
+    # Declared `internal: True` in fields_description (unlike fs's
+    # free_space), so it also survives into the REST/MCP view.
+    assert plugin.get_api_payload()["max_cpu_display"] == 2
+
+
+async def test_the_model_publishes_the_resolved_stat_fields(monkeypatch, store, config):
+    """Final review, Important 3: the browser cannot resolve `sys.platform`,
+    so the model — which can — publishes the resolved column order, the same
+    shape `max_cpu_display` already uses. Linux order, per
+    `render_curses_v5._os_headers()`: user, system, iowait, idle, irq, nice,
+    steal, guest.
+    """
+    monkeypatch.setattr("glances.plugins.percpu.model_v5.sys.platform", "linux")
+    plugin = PluginModel(store, config)
+    with _patch_sampler([_core()]):
+        await plugin.update()
+    expected = ["user", "system", "iowait", "idle", "irq", "nice", "steal", "guest"]
+    assert store.get("percpu")["stat_fields"] == expected
+    # Declared `internal: True`, so it also survives into the REST/MCP view.
+    assert plugin.get_api_payload()["stat_fields"] == expected
 
 
 async def test_get_export_strips_internals_per_item(store, config):

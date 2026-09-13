@@ -16,12 +16,8 @@ export const TOP_CASCADE = [
 	{ key: "mem_cols", value: 1 }, // (a) hide MEM's 2nd column
 	{ key: "cpu_cols", value: 2 }, // (b) hide CPU's 3rd column
 	{ key: "cpu_cols", value: 1 }, // (c) hide CPU's 2nd column
-	// (d) and (e) act on `quicklook`, which the v5 WebUI does not render yet.
-	// They are declared so the order and the count stay identical to the TUI's
-	// and applying them is a no-op today; the drift test fails if quicklook is
-	// ported without revisiting this file.
-	{ key: "quicklook_freq_only", value: true, notApplicable: true },
-	{ key: "hide_quicklook", value: true, notApplicable: true },
+	{ key: "quicklook_freq_only", value: true }, // (d) shrink quicklook to "Frequency"
+	{ key: "hide_quicklook", value: true }, // (e) hide the quicklook block
 	{ key: "hide_memswap", value: true }, // (f) hide the swap block
 	{ key: "hide_gpu", value: true }, // (g) hide the gpu block (last resort)
 ];

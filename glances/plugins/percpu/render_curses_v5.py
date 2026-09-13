@@ -24,17 +24,15 @@ When more than ``_DEFAULT_MAX_CPU_DISPLAY`` cores exist, the top-N by
 the stats of the cores that did NOT fit on screen (v4
 ``summarize_all_cpus_not_displayed``).
 
-For G1 we assume quicklook is disabled (no quicklook plugin in v5 yet),
-so the ``CPU`` title + ``total`` column are always present.
+When quicklook is on screen (``view["quicklook_enabled"]``), it already
+shows the per-core totals, so this block drops its ``CPU`` title, its
+``total`` column and its row labels (v4 parity,
+``glances/plugins/percpu/__init__.py:158,183,210``).
 
 V5 percpu carries no field-level alerts (see ``percpu/model_v5.py``
 docstring), so every value cell is DEFAULT-coloured — no
 warning/critical decoration here. The system-wide ``cpu`` plugin
 remains the source of CPU alerts.
-
-TODO(G2+): plumb args to honour quicklook=enabled (hide ``CPU`` title +
-``total`` column) and to read ``[percpu] max_cpu_display`` from the
-config.
 """
 
 from __future__ import annotations
@@ -56,7 +54,13 @@ _VALUE_WIDTH = 7
 
 
 def _os_headers() -> list[str]:
-    """Return the OS-specific stat columns (v4 ``define_headers_from_os``)."""
+    """Return the OS-specific stat columns (v4 ``define_headers_from_os``).
+
+    Fallback only — used when the payload predates ``stat_fields`` (an older
+    server): the model is now the authority (final review, Important 3), so
+    that the WebUI, which cannot resolve ``sys.platform`` itself, renders the
+    exact same subset in the exact same order.
+    """
     base = ["user", "system"]
     p = sys.platform
     if p.startswith("linux"):
@@ -69,6 +73,16 @@ def _os_headers() -> list[str]:
         return base + ["dpc", "interrupt"]
     # Unknown OS — fall back to the Linux column set.
     return base + ["iowait", "idle", "irq", "nice", "steal", "guest"]
+
+
+def _resolve_stat_fields(payload: dict[str, Any]) -> list[str]:
+    """Column order for this cycle: the model's published ``stat_fields``
+    when present (the contract `max_cpu_display` already uses), else the
+    ``_os_headers()`` fallback for a payload from an older server."""
+    fields = payload.get("stat_fields")
+    if isinstance(fields, list) and fields and all(isinstance(f, str) for f in fields):
+        return list(fields)
+    return _os_headers()
 
 
 def _cpu_label(cpu_id: Any) -> str:
@@ -109,21 +123,32 @@ def _header_cell(text: str) -> Cell:
     return Cell(text=text.rjust(_VALUE_WIDTH))
 
 
-def _build_data_row(label: str, stats: dict[str, Any], headers: list[str]) -> Row:
-    cells: list[Cell] = [_label_cell(label)]
+def _build_data_row(label: str | None, stats: dict[str, Any], headers: list[str], standalone: bool) -> Row:
+    cells: list[Cell] = [_label_cell(label)] if standalone else []
     for stat in headers:
         cells.append(_value_cell(stats.get(stat)))
     return Row(cells=cells)
 
 
-def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> list[Row]:
-    """Render the percpu plugin's TUI block — mirrors v4 ``percpu.msg_curse``."""
-    headers = ["total", *_os_headers()]
+def render(
+    payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]], view: dict[str, Any] | None = None
+) -> list[Row]:
+    """Render the percpu plugin's TUI block — mirrors v4 ``percpu.msg_curse``.
 
-    # Header row: "CPU" title + column labels.
-    header_cells: list[Cell] = [
-        Cell(text="CPU".ljust(_LABEL_WIDTH), color=ColorRole.HEADER, bold=True),
-    ]
+    When quicklook is on screen it already shows the per-core totals, so v4
+    drops this block's title, its ``total`` column and its row labels
+    (``glances/plugins/percpu/__init__.py:158,183,210``, all gated on
+    ``is_disabled('quicklook')``). ``view["quicklook_enabled"]`` carries that
+    state; a caller that passes no view gets the standalone shape.
+    """
+    standalone = not (view or {}).get("quicklook_enabled")
+    stat_fields = _resolve_stat_fields(payload) if isinstance(payload, dict) else _os_headers()
+    headers = ["total", *stat_fields] if standalone else list(stat_fields)
+
+    # Header row: "CPU" title (standalone only) + column labels.
+    header_cells: list[Cell] = []
+    if standalone:
+        header_cells.append(Cell(text="CPU".ljust(_LABEL_WIDTH), color=ColorRole.HEADER, bold=True))
     for stat in headers:
         header_cells.append(_header_cell(stat))
     rows: list[Row] = [Row(cells=header_cells)]
@@ -141,11 +166,19 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> l
         reverse=True,
     )
 
-    displayed = sorted_items[:_DEFAULT_MAX_CPU_DISPLAY]
-    overflow = sorted_items[_DEFAULT_MAX_CPU_DISPLAY:]
+    # `[percpu] max_cpu_display`, published by the model. The constant stays as
+    # the fallback for a payload that predates the field (a remote v5 server) —
+    # the contract quicklook's renderer already uses.
+    max_display = payload.get("max_cpu_display")
+    if not isinstance(max_display, int):
+        max_display = _DEFAULT_MAX_CPU_DISPLAY
+
+    displayed = sorted_items[:max_display]
+    overflow = sorted_items[max_display:]
 
     for item in displayed:
-        rows.append(_build_data_row(_cpu_label(item.get("cpu_number")), item, headers))
+        label = _cpu_label(item.get("cpu_number")) if standalone else None
+        rows.append(_build_data_row(label, item, headers, standalone))
 
     if overflow:
         # The "CPU*" row averages the cores that did NOT fit on screen — the
@@ -155,6 +188,6 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> l
         for stat in headers:
             vals = [float(it.get(stat) or 0.0) for it in overflow]
             means[stat] = sum(vals) / len(vals) if vals else 0.0
-        rows.append(_build_data_row("CPU*", means, headers))
+        rows.append(_build_data_row("CPU*" if standalone else None, means, headers, standalone))
 
     return rows

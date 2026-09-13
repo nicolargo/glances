@@ -132,6 +132,12 @@ const PLUGINSLIST_FIXTURES = {
 	"pluginslist-unreachable": null,
 	// The shipped default: `[cloud] disable` is true (cloud/model_v5.py:100).
 	"cloud-disabled": SERVER_PLUGINS.filter((name) => name !== "cloud"),
+	// quicklook absent -> percpu renders standalone (title, `total` column,
+	// row labels). `percpu-with-quicklook` is deliberately NOT overridden
+	// here: the SERVER_PLUGINS default already includes quicklook.
+	percpu: SERVER_PLUGINS.filter((name) => name !== "quicklook"),
+	"percpu-cap-2": SERVER_PLUGINS.filter((name) => name !== "quicklook"),
+	"percpu-empty": SERVER_PLUGINS.filter((name) => name !== "quicklook"),
 };
 
 // Scenarios whose `/api/5/all` answers with an HTTP 500, same shape as the
@@ -347,12 +353,45 @@ const GPU_FIRST_CARD_LEVELS = {
 // server-side CLI flags, so the ONLY way they reach the WebUI is this
 // endpoint; a scenario absent from here gets `{}`, i.e. no flag set.
 const ARGS_FIXTURES = {
+	// `percpu` never renders without `--percpu` (cpu/percpu exclusivity, final
+	// review Critical 1) -- this scenario needs `percpu` specifically visible
+	// (test_cross_cutting_props_do_not_leak_into_the_dom_as_attributes checks
+	// its `serverPlugins` inject does not leak as a DOM attribute).
+	"mem-with-available": { percpu: true },
 	"gpu-three-cards-mean": { meangpu: true },
 	"gpu-one-card-fahrenheit": { fahrenheit: true },
 	"gpu-first-card-colour": { meangpu: true },
 	"header-hide-public": { hide_public_info: true },
 	"network-byte": { byte: true },
 	"sensors-fahrenheit": { fahrenheit: true },
+	"npu-fahrenheit": { fahrenheit: true },
+	// The per-core replacement is gated on the server's --percpu.
+	"quicklook-percpu": { percpu: true },
+	// `percpu` never renders without `--percpu` (cpu/percpu exclusivity, final
+	// review Critical 1) -- every scenario exercising percpu's OWN rendering
+	// needs it set. `percpu-with-quicklook` is deliberately EXCLUDED here: it
+	// exists specifically to prove percpu stays hidden without --percpu even
+	// though quicklook is instantiated (see its test) -- the interaction
+	// between Critical 1 and Critical 2's fixes.
+	percpu: { percpu: true },
+	"percpu-cap-2": { percpu: true },
+	"percpu-empty": { percpu: true },
+	"percpu-loading": { percpu: true },
+	// The other half of `percpu-with-quicklook`: quicklook instantiated AND
+	// actually drawing per-core bars (--percpu set), so percpu correctly
+	// drops its title/total/labels (Critical 2).
+	"percpu-with-quicklook-percpu": { percpu: true },
+	// --full-quicklook (G9-8 Task 6): server state, the only way it reaches
+	// the WebUI is this endpoint too. `percpu: true` isolates what
+	// full_quicklook itself hides from the shell's OWN cpu/percpu
+	// exclusivity rule (final review, Minor 2 -- see the ALL_FIXTURES entry).
+	"quicklook-full": { full_quicklook: true, percpu: true },
+	// cpu/percpu mutual exclusion (final review, Critical 1):
+	// glances_curses_v5.py:565-567 shows exactly one of them in the TUI, and
+	// AppShell.vue now mirrors that off `serverArgs.percpu`.
+	"cpu-percpu-on": { percpu: true },
+	// "cpu-percpu-off" is deliberately absent here: a scenario absent from
+	// this map gets `{}`, i.e. no flag set -- exactly the state under test.
 };
 
 // Header plugin payloads, shaped like their model_v5.py `_collect()` output.
@@ -534,6 +573,102 @@ const SMART_FIXTURE = {
 	_levels: {},
 };
 
+// `mpp` — one engine per branch of mpp/render_curses_v5.py:32-57: a load with
+// sessions, a load with ZERO sessions (v4 omits the session cell entirely),
+// and a null load rendered "N/A". Only the load is coloured.
+const MPP_FIXTURE = {
+	_key: "engine_id",
+	data: [
+		{ engine_id: "rkvenc", name: "RKVENC", type: "enc", load: 24.8, sessions: 2 },
+		{ engine_id: "jpegd", name: "JPEGD", type: "jpeg", load: 0.0, sessions: 0 },
+		{ engine_id: "rkvdec", name: "RKVDEC", type: "dec", load: null, sessions: 0 },
+	],
+	_levels: {
+		rkvenc: { load: { level: "careful", prominent: false } },
+		jpegd: { load: { level: "ok", prominent: false } },
+	},
+};
+
+// `npu` — TWO devices on purpose: the renderer shows the FIRST only (v4
+// parity, npu/render_curses_v5.py:40-43), so a component that rendered both
+// must fail. The first has a load; the second would show the freq fallback,
+// which the dedicated scenario below exercises instead.
+const NPU_FIXTURE = {
+	_key: "npu_id",
+	data: [
+		{
+			npu_id: "npu0", name: "Intel NPU 3720 (very long name that gets cut)", load: 45.0,
+			freq: 80.0, mem: null, freq_current: 1000000000, freq_max: 2000000000, temperature: 55.0, power: null,
+		},
+		{ npu_id: "npu1", name: "Second NPU", load: 10.0, freq: 20.0, mem: 5.0, freq_current: 1, freq_max: 2, temperature: 30.0 },
+	],
+	_levels: { npu0: { load: { level: "careful", prominent: false }, temperature: { level: "ok", prominent: false } } },
+};
+
+// Load absent -> the percentage cell falls back to the FREQUENCY percentage
+// (npu/render_curses_v5.py:47-54), coloured from the `freq` level.
+const NPU_NO_LOAD = {
+	_key: "npu_id",
+	data: [{ ...NPU_FIXTURE.data[0], load: null, freq: 80.0 }],
+	_levels: { npu0: { freq: { level: "warning", prominent: false } } },
+};
+
+// `quicklook` — the scalar payload: the bars `stats_list` selects and in which
+// order, the CPU name/frequency header, and the per-core list with the mean of
+// the cores the cap hides (`percpu_other`, published by the model).
+const QUICKLOOK_FIXTURE = {
+	cpu: 45.0,
+	mem: 71.2,
+	swap: 12.0,
+	load: 18.0,
+	cpu_name: "Intel Core i7-9750H",
+	cpu_hz_current: 2600000000,
+	cpu_hz: 4500000000,
+	cpu_log_core: 12,
+	cpu_phys_core: 6,
+	stats_list: ["cpu", "mem", "load"],
+	bar_char: "|",
+	max_cpu_display: 2,
+	percpu: [
+		{ cpu_number: 0, total: 90.0, level: "critical" },
+		{ cpu_number: 1, total: 40.0, level: "careful" },
+		{ cpu_number: 2, total: 10.0, level: "ok" },
+		{ cpu_number: 3, total: 20.0, level: "ok" },
+	],
+	percpu_other: { total: 15.0, level: "ok" },
+	// `prominent: false` on every entry -- the real schema (quicklook/model_v5.py,
+	// G9-8 smoke fix 2) never sets it True for cpu/mem/load/gpu_mem/gpu_proc; the
+	// filled badge look was rejected after a smoke test. `quicklook-prominent`
+	// below overrides `cpu` to prove the component still honours a True it is
+	// given, rather than having hard-coded the flag away.
+	_levels: {
+		cpu: { level: "careful", prominent: false },
+		mem: { level: "warning", prominent: false },
+		load: { level: "ok", prominent: false },
+	},
+};
+
+// `percpu` — six cores so the cap bites, with DESCENDING totals so the
+// renderer's sort (by `total`, descending) is observable, plus the full set of
+// Linux columns the grid shows. `max_cpu_display` is the field Task 1 added.
+// `stat_fields` -- the Linux TUI order (`_os_headers()`, final review,
+// Important 3): a SUBSET of the raw core's numeric keys (`softirq` and
+// `guest_nice` are carried by the core but never in this list) and in a
+// DIFFERENT order than the raw payload -- exactly what pins the component
+// reading the published field instead of the first core's own key order.
+const PERCPU_FIXTURE = {
+	_key: "cpu_number",
+	max_cpu_display: 4,
+	stat_fields: ["user", "system", "iowait", "idle", "irq", "nice", "steal", "guest"],
+	data: [0, 1, 2, 3, 4, 5].map((n) => ({
+		cpu_number: n,
+		total: 90 - n * 10,
+		user: 50 - n * 5, system: 20 - n * 2, idle: 10 + n * 10, iowait: 1, irq: 0,
+		softirq: 0, nice: 0, steal: 0, guest: 0, guest_nice: 0,
+	})),
+	_levels: {},
+};
+
 const ALL_FIXTURES = {
 	default: {},
 	"gpu-disabled": {},
@@ -584,6 +719,46 @@ const ALL_FIXTURES = {
 	"raid-empty": { raid: { _key: "name", data: [], _levels: {} } },
 	smart: { smart: SMART_FIXTURE },
 	"smart-empty": { smart: { _key: "name", data: [], _levels: {} } },
+	mpp: { mpp: MPP_FIXTURE },
+	"mpp-empty": { mpp: { _key: "engine_id", data: [], _levels: {} } },
+	npu: { npu: NPU_FIXTURE },
+	"npu-no-load": { npu: NPU_NO_LOAD },
+	"npu-empty": { npu: { _key: "npu_id", data: [], _levels: {} } },
+	// Same payload as `npu`; only ARGS_FIXTURES differs (--fahrenheit).
+	"npu-fahrenheit": { npu: NPU_FIXTURE },
+	// Standalone (no quicklook instantiated -- see PLUGINSLIST_FIXTURES below):
+	// title, `total` column and row labels all render.
+	percpu: { percpu: PERCPU_FIXTURE },
+	// Same payload; quicklook IS instantiated (PLUGINSLIST_FIXTURES leaves this
+	// one at the SERVER_PLUGINS default, which already includes quicklook).
+	"percpu-with-quicklook": { percpu: PERCPU_FIXTURE },
+	"percpu-cap-2": { percpu: { ...PERCPU_FIXTURE, max_cpu_display: 2 } },
+	"percpu-empty": { percpu: { _key: "cpu_number", max_cpu_display: 4, data: [], _levels: {} } },
+	// quicklook (G9-8 Task 5): as-is, `stats_list` selects cpu/mem/load only --
+	// `swap` is in the payload and must NOT render.
+	quicklook: { quicklook: QUICKLOOK_FIXTURE },
+	// Same payload; only ARGS_FIXTURES differs (--percpu): the `cpu` bar is
+	// replaced by the per-core view, capped by `max_cpu_display` (2 here).
+	"quicklook-percpu": { quicklook: QUICKLOOK_FIXTURE },
+	// Same payload; `cpu`'s `_levels` entry asks for the prominent badge --
+	// dormant in the real schema (every field ships `prominent: false`, G9-8
+	// smoke fix 2), but the component must still honour a payload that sets
+	// it, the way `levelClass()` does for every other collection.
+	"quicklook-prominent": {
+		quicklook: { ...QUICKLOOK_FIXTURE, _levels: { ...QUICKLOOK_FIXTURE._levels, cpu: { level: "careful", prominent: true } } },
+	},
+	// `gpu_mem`/`gpu_proc` pin the two renamed labels (GMEM/GPU).
+	"quicklook-gpu": {
+		quicklook: {
+			...QUICKLOOK_FIXTURE,
+			stats_list: ["cpu", "mem", "gpu_mem", "gpu_proc"],
+			gpu_mem: 30.0,
+			gpu_proc: 55.0,
+		},
+	},
+	// `cpu_hz_current: null` -- the header disappears entirely.
+	"quicklook-no-freq": { quicklook: { ...QUICKLOOK_FIXTURE, cpu_hz_current: null } },
+	"quicklook-empty": { quicklook: {} },
 	// The first-card-levels cards WITHOUT --meangpu: the per-card table, where
 	// card 0's proc cell is critical.
 	"gpu-multi-levels": { gpu: GPU_FIRST_CARD_LEVELS },
@@ -706,6 +881,47 @@ ALL_FIXTURES["degrade-header-os"] = ALL_FIXTURES.header;
 ALL_FIXTURES["degrade-medium"] = { mem: MEM_FIXTURE_WITH_AVAILABLE };
 ALL_FIXTURES["degrade-narrow"] = { cpu: ALL_FIXTURES.cpu.cpu };
 
+// --full-quicklook (G9-8 Task 6): the six blocks the flag hides, plus `load`
+// and `percpu`, which must survive it (curses_renderer_v5.py:89
+// `_FULL_QUICKLOOK_HIDDEN`). `npu` and `mpp` are the two other TOP-slot
+// plugins the six-block list must also cover (final review, Minor 2).
+// `percpu: true` in ARGS_FIXTURES below keeps the shell's OWN cpu/percpu
+// exclusivity rule (Critical 1) from hiding `percpu` for an unrelated
+// reason, so this scenario observes ONLY what full_quicklook itself hides.
+ALL_FIXTURES["quicklook-full"] = {
+	quicklook: QUICKLOOK_FIXTURE,
+	cpu: ALL_FIXTURES.cpu.cpu,
+	mem: MEM_FIXTURE_WITH_AVAILABLE,
+	memswap: ALL_FIXTURES.memswap.memswap,
+	load: ALL_FIXTURES.load.load,
+	gpu: GPU_ONE_CARD,
+	npu: NPU_FIXTURE,
+	mpp: MPP_FIXTURE,
+	percpu: PERCPU_FIXTURE,
+};
+
+// TOP_CASCADE steps (d) and (e) (G9-8 Task 6): a `quicklook` payload is
+// enough, the same fixture the plain `quicklook` scenario uses, so the header
+// text is observable at every notch.
+ALL_FIXTURES["top-narrow-quicklook"] = { quicklook: QUICKLOOK_FIXTURE };
+ALL_FIXTURES["top-narrowest-quicklook"] = { quicklook: QUICKLOOK_FIXTURE };
+
+// cpu/percpu mutual exclusion (final review, Critical 1): both plugins carry
+// a payload here so a test observes which one the SHELL actually dropped
+// from the DOM (AppShell.vue's `slots()`), not merely which one has data.
+// PLUGINSLIST_FIXTURES is deliberately NOT overridden for either scenario:
+// the SERVER_PLUGINS default already instantiates both `cpu` and `percpu`,
+// so the exclusion under test can only be the shell's, never pluginslist's.
+ALL_FIXTURES["cpu-percpu-on"] = { cpu: ALL_FIXTURES.cpu.cpu, percpu: PERCPU_FIXTURE };
+ALL_FIXTURES["cpu-percpu-off"] = ALL_FIXTURES["cpu-percpu-on"];
+
+// percpu/quicklook label-drop regression (final review, Critical 2): same
+// payload and pluginslist as `percpu-with-quicklook` above (quicklook
+// instantiated) -- only ARGS_FIXTURES differs (--percpu), so this is the
+// scenario where quicklook actually DRAWS per-core bars and percpu's
+// title/total/labels are correctly dropped.
+ALL_FIXTURES["percpu-with-quicklook-percpu"] = { percpu: PERCPU_FIXTURE };
+
 // Zone widths per scenario, keyed by the `data-slot` the shell renders. The
 // numbers are what a browser would report: `available` is clientWidth,
 // `content` scrollWidth. `content` is what the cascade shrinks -- the harness
@@ -725,6 +941,15 @@ const WIDTH_FIXTURES = {
 	// 1400 - 3*150 = 950 <= 1000, and two notches leave 1100 > 1000: it stops at
 	// step (2), hide_os_info.
 	"degrade-header-os": { "header-left": { available: 1000, content: 1400 } },
+	// TOP_CASCADE steps (d)/(e) (G9-8 Task 6). `mem_cols` and both `cpu_cols`
+	// notches land first but add only 2 distinct keys (`cpu_cols` overwrites
+	// itself), so the cumulative key count after 3 steps is 3 (mem_cols,
+	// cpu_cols, quicklook_freq_only): 1400 - 3*150 = 950 <= 1000, and 2 notches
+	// alone leave 1100 > 1000 -- the cascade stops exactly at step (d).
+	"top-narrow-quicklook": { top: { available: 1000, content: 1400 }, "header-left": { available: 1400, content: 300 } },
+	// One step further: 1400 - 4*150 = 800 <= 850, and 3 notches alone leave
+	// 950 > 850 -- the cascade stops at step (e), hide_quicklook.
+	"top-narrowest-quicklook": { top: { available: 850, content: 1400 }, "header-left": { available: 1400, content: 300 } },
 };
 
 // One notch removes roughly one column or one block. The exact figure does not

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { formatBytes, formatRate, formatPercent, formatCount, toFahrenheit, formatSeconds, toFixedHalfEven, formatNetworkRate, formatFixed0, formatAutoUnit } from "../../glances/outputs/static/js/v5/format.js";
+import { formatBytes, formatRate, formatPercent, formatCount, toFahrenheit, formatSeconds, toFixedHalfEven, formatNetworkRate, formatFixed0, formatAutoUnit, formatAutoHz } from "../../glances/outputs/static/js/v5/format.js";
 
 test("formatBytes uses binary units", () => {
 	assert.equal(formatBytes(0), "0B");
@@ -176,4 +176,31 @@ test("formatAutoUnit below 1K, at zero and on a missing value", () => {
 	assert.equal(formatAutoUnit(1024), "1024");
 	assert.equal(formatAutoUnit(null), "-");
 	assert.equal(formatAutoUnit(undefined), "-");
+});
+
+// Mirrors npu/render_curses_v5.py::_auto_hz() -- base 1000, one decimal once
+// scaled, a plain truncated integer below 1K.
+test("formatAutoHz mirrors npu's _auto_hz: base 1000, one decimal", () => {
+	assert.equal(formatAutoHz(1000000000), "1.0G");
+	assert.equal(formatAutoHz(2000000000), "2.0G");
+	assert.equal(formatAutoHz(1500000000), "1.5G");
+	assert.equal(formatAutoHz(1000000), "1.0M");
+	assert.equal(formatAutoHz(1000), "1.0K");
+	assert.equal(formatAutoHz(999), "999");
+	assert.equal(formatAutoHz(0), "0");
+});
+
+test("formatAutoHz accepts a numeric string, like Python's float()", () => {
+	assert.equal(formatAutoHz("1"), "1");
+	assert.equal(formatAutoHz("2000000000"), "2.0G");
+});
+
+test('formatAutoHz returns "?" for whatever it cannot parse', () => {
+	// _auto_hz() catches TypeError/ValueError from float(hz) and returns "?" --
+	// NOT this module's usual "-" missing marker.
+	assert.equal(formatAutoHz(null), "?");
+	assert.equal(formatAutoHz(undefined), "?");
+	assert.equal(formatAutoHz("abc"), "?");
+	assert.equal(formatAutoHz(""), "?");
+	assert.equal(formatAutoHz(NaN), "?");
 });

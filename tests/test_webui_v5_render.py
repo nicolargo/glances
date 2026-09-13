@@ -159,13 +159,21 @@ def test_the_registry_renders_every_registered_plugin():
     assert result.stderr == "", f"render probe printed to stderr:\n{result.stderr}"
 
     payload = json.loads(result.stdout)
+    # `percpu` is absent on purpose: the `default` scenario carries no
+    # `--percpu`, and AppShell now shows exactly one of `cpu`/`percpu`
+    # (final review, Critical 1 -- glances_curses_v5.py:565-567 mirrors this
+    # in the TUI). `test_percpu_renders_and_cpu_does_not_when_the_server_ran_with_percpu`
+    # covers the other half.
     assert payload["pluginNames"] == [
         "system",
         "ip",
         "uptime",
         "cloud",
         "now",
+        "quicklook",
         "cpu",
+        "npu",
+        "mpp",
         "gpu",
         "mem",
         "memswap",
@@ -254,6 +262,10 @@ def test_a_plugin_the_server_did_not_instantiate_is_not_rendered():
 def test_an_unreadable_pluginslist_renders_the_whole_registry():
     """/api/5/pluginslist failing must degrade to the pre-G9-5 behaviour --
     every registered plugin rendered -- never to an empty page.
+
+    `percpu` is still absent: the cpu/percpu exclusivity rule (final review,
+    Critical 1) is unconditional on `serverArgs.percpu`, applied on top of
+    whichever plugin list `slots()` resolved to -- including this fallback.
     """
     payload = _run_render_probe("pluginslist-unreachable")
     assert payload["pluginNames"] == [
@@ -262,7 +274,10 @@ def test_an_unreadable_pluginslist_renders_the_whole_registry():
         "uptime",
         "cloud",
         "now",
+        "quicklook",
         "cpu",
+        "npu",
+        "mpp",
         "gpu",
         "mem",
         "memswap",
@@ -428,14 +443,22 @@ def test_cross_cutting_props_do_not_leak_into_the_dom_as_attributes():
     payload = _run_render_probe("mem-with-available")
     # Without this the loop below is vacuous: an empty `pluginAttrs` (a probe
     # that stopped collecting the attribute, a render that produced no
-    # article) would pass silently. Twenty-one is the registry size asserted
-    # by test_the_registry_renders_every_registered_plugin.
-    assert len(payload["pluginAttrs"]) == 21, (
-        f"expected all twenty-one plugins' attributes, got {payload['pluginAttrs']!r}"
+    # article) would pass silently. Twenty-four, not the registry's
+    # twenty-five: `cpu`/`percpu` are mutually exclusive (final review,
+    # Critical 1) -- this scenario's `percpu: true` (ARGS_FIXTURES) selects
+    # `percpu` over `cpu` so the loop below still covers percpu's
+    # `serverPlugins` inject specifically (G9-8 Task 4 review).
+    assert len(payload["pluginAttrs"]) == 24, (
+        f"expected all twenty-four rendered plugins' attributes, got {payload['pluginAttrs']!r}"
     )
     for name, attrs in payload["pluginAttrs"].items():
         assert "server-args" not in attrs, f"{name} leaked serverArgs as an attribute: {attrs!r}"
         assert "degrade" not in attrs, f"{name} leaked degrade as an attribute: {attrs!r}"
+        # G9-8 Task 4 review: `serverPlugins` is provide/inject (AppShell.vue's
+        # `provide()`, PluginPercpu.vue's `inject`), not a prop on this shared
+        # binding -- so it must never appear as a DOM attribute on ANY plugin,
+        # percpu included.
+        assert "server-plugins" not in attrs, f"{name} leaked serverPlugins as an attribute: {attrs!r}"
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
@@ -595,6 +618,7 @@ def test_a_scalar_plugin_keeps_its_title_while_loading():
         ("memswap", "SWAP"),
         ("cpu", "CPU"),
         ("connections", "TCP CONNECTIONS"),
+        ("quicklook", "QUICKLOOK"),
     ):
         text = payload["pluginText"].get(name, "")
         assert text.startswith(title) and "loading" in text, f"{name}: expected {title} then loading, got {text!r}"
@@ -739,6 +763,17 @@ def test_an_empty_network_keeps_its_header_row_and_shows_no_line():
         # its presence -- a future change that gives ports a header row
         # turns this test red rather than silently passing.
         pytest.param("ports", "ports", None, id="ports-has-no-header-row"),
+        # `mpp` is the same exception, for the same reason (G9-8 Task 3): its
+        # TUI line 1 is the title alone, no column labels, so it too carries
+        # no #head slot. `npu` is NOT here at all -- it does not use
+        # CollectionBlock (its "header" line is the device's own name, not a
+        # fixed label) and its <h2> never disappears once loaded, so the
+        # `pluginHeaders[index] is None` assertion below does not apply to it,
+        # exactly as it already does not apply to `gpu`.
+        pytest.param("mpp", "mpp", None, id="mpp-has-no-header-row"),
+        # `percpu` DOES keep a header row and a title cell, standalone (the
+        # `percpu` scenario's pluginslist has no quicklook) -- G9-8 Task 4.
+        pytest.param("percpu", "percpu", "CPU", id="percpu"),
     ],
 )
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
@@ -775,6 +810,12 @@ def test_a_loaded_collection_puts_its_title_in_the_header_row(scenario, name, ti
         # has no visible header row (G9-7 D4, see
         # test_a_loaded_collection_puts_its_title_in_the_header_row above).
         pytest.param("ports", "PORTS", id="ports"),
+        pytest.param("npu", "NPU", id="npu"),
+        pytest.param("mpp", "MPP", id="mpp"),
+        # `percpu` is NOT here: the `default` scenario carries no `--percpu`,
+        # and percpu never renders without it (final review, Critical 1) --
+        # see test_percpu_keeps_its_title_while_loading_when_visible below,
+        # which uses a scenario where percpu is actually on screen.
     ],
 )
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
@@ -784,6 +825,20 @@ def test_a_collection_keeps_its_title_heading_while_loading(name, title):
     index = payload["pluginNames"].index(name)
     assert payload["pluginHeaders"][index] == title
     assert "loading" in payload["pluginText"][name]
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_percpu_keeps_its_title_while_loading_when_visible():
+    """The `percpu` case moved out of the shared parametrize above (final
+    review, Critical 1): percpu needs `--percpu` to render at all, so it
+    cannot share the `default` scenario the other collections use. Same
+    assertion, a scenario where percpu is actually visible and has not
+    published its first payload.
+    """
+    payload = _run_render_probe("percpu-loading")
+    index = payload["pluginNames"].index("percpu")
+    assert payload["pluginHeaders"][index] == "CPU"
+    assert "loading" in payload["pluginText"]["percpu"]
 
 
 @pytest.mark.parametrize(
@@ -1209,6 +1264,64 @@ def test_gpu_with_no_card_renders_nothing_beyond_its_title():
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_gpu_multi_card_name_cell_is_capped_and_keeps_the_full_name_in_title():
+    """The multi-card table's name column must get the same `.gl-name
+    .gl-truncate` treatment the left sidebar (and npu's own header) use,
+    capped with `--gl-name-width: 9ch` -- the TUI's own `[0:9]` cut
+    (render_curses_v5.py:114). Like every other `.gl-truncate` cell the cap
+    is CSS-only: the DOM text stays the full name, and `title` repeats it
+    for hover (G9-8 smoke fix 3).
+    """
+    payload = _run_render_probe("gpu-three-cards")
+    names = payload["pluginNameCells"]["gpu"]
+    assert len(names) == 3, f"got {names!r}"
+    for cell in names:
+        assert "gl-name" in cell["className"] and "gl-truncate" in cell["className"], f"got {cell!r}"
+        assert cell["text"] == "GeForce RTX 3080", f"got {cell!r}"
+        assert cell["title"] == "GeForce RTX 3080", f"got {cell!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_gpu_multi_card_value_cells_still_carry_gl_num():
+    """Fix 3 (and G9-8 smoke fix 4, which replaced the global `.gl-num` 9ch
+    floor with a table-scoped 8ch one -- see `test_gpu_value_column_floor_is_
+    scoped_and_fits_its_widest_cell`) both rely on the value cells keeping
+    the class that drives right-alignment and tabular digits. The name cell
+    must NOT carry it (it is not a value).
+    """
+    payload = _run_render_probe("gpu-three-cards")
+    cells = payload["pluginTableCells"]["gpu"]
+    name_cells = [c for c in cells if "gl-name" in (c["value"] or "")]
+    num_cells = [c for c in cells if "gl-num" in c["cell"]]
+    assert len(name_cells) == 3, f"got {cells!r}"
+    assert len(num_cells) == 6, f"one proc + one mem cell per of 3 rows: {cells!r}"
+    assert all("gl-num" not in c["cell"] for c in name_cells), f"got {name_cells!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_gpu_value_column_floor_is_scoped_and_fits_its_widest_cell():
+    """G9-8 smoke fix 4: the previous round's `min-width: 0` let the value
+    column resize with the text on every tick ("9%" -> "100%"), which is the
+    jitter the maintainer's smoke test caught. The render probe reports cell
+    classes and text, not geometry, so this pins what it actually can:
+    the scoped rule text in the stylesheet the component ships, and that the
+    numeric cells it targets still carry `gl-num` (asserted for real payload
+    data by `test_gpu_multi_card_value_cells_still_carry_gl_num`).
+
+    8ch, not the TUI's 4-character `{:>3.0f}%`/`{:>4}` value width: the
+    `mem` column's `valueColumns()` format function prepends the literal
+    "mem " *inside* the `.gl-num` cell ("mem 100%" is 8 characters), and this
+    one selector floors both the `proc` and `mem` columns.
+    """
+    source = (
+        Path(__file__).resolve().parent.parent / "glances" / "outputs" / "static" / "js" / "v5" / "PluginGpu.vue"
+    ).read_text()
+    assert ".gl-plugin table td.gl-num" in source, "the scoped rule must still exist"
+    assert "min-width: 8ch;" in source, f"expected an 8ch floor, source did not contain it verbatim: {source!r}"
+    assert "min-width: 0;" not in source, "the previous round's zero floor (the jitter bug) must be gone"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
 def test_gpu_honours_fahrenheit():
     """`--fahrenheit` also arrives through /api/5/args. Same single card as
     `gpu-one-card`, which renders 55C: only the args fixture differs.
@@ -1420,6 +1533,30 @@ def test_an_exhausted_cascade_hides_the_last_resort_blocks():
     for name in ("memswap", "gpu", "cloud", "now", "ip", "uptime"):
         assert name not in payload["pluginNames"], f"{name} must be hidden: {payload['pluginNames']!r}"
     assert "system" in payload["pluginNames"], "the hostname block always survives"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_a_narrow_top_row_collapses_the_quicklook_header_to_the_frequency():
+    """Cascade step (d), `quicklook_freq_only`: the CPU name is replaced by the
+    literal "Frequency" — the TUI shrinks the block that way rather than
+    dropping the line."""
+    payload = _run_render_probe("top-narrow-quicklook")
+    text = payload["pluginText"]["quicklook"]
+    assert "Frequency" in text and "Intel Core" not in text, f"got {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_an_exhausted_cascade_hides_quicklook_last():
+    """Cascade step (e), `hide_quicklook`: the last notch before the top row
+    crops. `hide_quicklook` goes through `HIDDEN_BY`, the same shell-level
+    removal `hide_memswap`/`hide_gpu` use (test_an_exhausted_cascade_hides_the_
+    last_resort_blocks): the plugin is filtered out of `slots` and never
+    reaches the DOM at all, so it is absent from `pluginNames` -- there is no
+    `<article data-plugin="quicklook">` for `pluginHidden` to observe a
+    `v-show` on, unlike `quicklook-empty`'s own internal hide rule.
+    """
+    payload = _run_render_probe("top-narrowest-quicklook")
+    assert "quicklook" not in payload["pluginNames"], f"got {payload['pluginNames']!r}"
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
@@ -1815,3 +1952,360 @@ def test_smart_never_colours_a_cell():
 def test_an_empty_smart_collection_is_hidden():
     payload = _run_render_probe("smart-empty")
     assert payload["pluginHidden"].get("smart") is True, f"got {payload['pluginHidden']!r}"
+
+
+# -------------------------------------------------------- mpp (G9-8 Task 3)
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_mpp_renders_one_row_per_engine():
+    """mpp/render_curses_v5.py:38-57 — name + type, the load as a percentage
+    or N/A, and the session cell ONLY when the count is non-zero (v4 omits it
+    entirely at zero, it does not render "0 sess").
+    """
+    payload = _run_render_probe("mpp")
+    texts = [cell["text"] for cell in payload["pluginTableCells"]["mpp"]]
+    assert texts == [
+        "RKVENC enc",
+        "24.8%",
+        "2 sess",
+        "JPEGD jpeg",
+        "0.0%",
+        "RKVDEC dec",
+        "N/A",
+    ], f"got {texts!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_mpp_colours_only_the_load():
+    payload = _run_render_probe("mpp")
+    spans = [cell["value"] for cell in payload["pluginTableCells"]["mpp"]]
+    assert "gl-level-careful" in (spans[1] or ""), f"got {spans!r}"
+    assert not any("gl-level-" in (s or "") for s in (spans[0], spans[2])), f"only the load: {spans!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_an_empty_mpp_collection_is_hidden():
+    payload = _run_render_probe("mpp-empty")
+    assert payload["pluginHidden"].get("mpp") is True, f"got {payload['pluginHidden']!r}"
+
+
+# -------------------------------------------------------- npu (G9-8 Task 3)
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_npu_renders_the_first_device_only():
+    """v4 parity (npu/render_curses_v5.py:40-43): the block shows ONE NPU, the
+    first, whatever the payload carries. The fixture holds two."""
+    text = _run_render_probe("npu")["pluginText"]["npu"]
+    assert "Second NPU" not in text, f"only the first NPU may render: {text!r}"
+    assert "45" in text and "1.0G/2.0GHz" in text, f"got {text!r}"
+    assert "mem:" in text and "N/A" in text, f"a null mem renders N/A: {text!r}"
+    assert "temperature:" in text and "55C" in text, f"got {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_npu_truncates_the_name_to_the_tui_width():
+    """`name[:17]` in the TUI (_HEADER_MAX); the browser caps the cell and
+    keeps the full text in `title`."""
+    cells = _run_render_probe("npu")["pluginNameCells"]["npu"]
+    assert cells and cells[0]["title"].startswith("Intel NPU 3720"), f"got {cells!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_npu_without_a_load_shows_the_frequency_percentage():
+    """npu/render_curses_v5.py:47-54 — no load, so the cell shows the FREQ
+    percentage, coloured from the `freq` level rather than the `load` one.
+    """
+    payload = _run_render_probe("npu-no-load")
+    assert "80" in payload["pluginText"]["npu"], f"got {payload['pluginText']['npu']!r}"
+    assert any("gl-level-warning" in (c or "") for c in payload["pluginValueClasses"]["npu"]), (
+        f"the freq tier must colour the cell: {payload['pluginValueClasses']['npu']!r}"
+    )
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_npu_honours_fahrenheit():
+    """Same payload as `npu`, `--fahrenheit` on the server: 55C -> 131F."""
+    text = _run_render_probe("npu-fahrenheit")["pluginText"]["npu"]
+    assert "131F" in text, f"got {text!r}"
+    assert "55C" not in text, f"got {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_an_empty_npu_collection_is_hidden():
+    payload = _run_render_probe("npu-empty")
+    assert payload["pluginHidden"].get("npu") is True, f"got {payload['pluginHidden']!r}"
+
+
+# ----------------------------------------------------- percpu (G9-8 Task 4)
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_percpu_renders_the_transposed_grid_standalone():
+    """percpu/render_curses_v5.py -- columns are stats, rows are cores, sorted
+    by `total` descending. Standalone (no quicklook instantiated) the block
+    keeps its CPU title, its `total` column and its row labels.
+
+    Asserts the FULL header list, not just its first two cells (final
+    review, Important 3): the fixture's `stat_fields` is a SUBSET of the raw
+    core's numeric keys, in the TUI's order (`_os_headers()`), not the
+    payload's own key order -- the narrower assertion this replaces could not
+    have told the two apart, which is how the component reading the wrong
+    source went unnoticed.
+    """
+    payload = _run_render_probe("percpu")
+    assert payload["pluginColumnHeaders"]["percpu"] == [
+        "CPU",
+        "total",
+        "user",
+        "system",
+        "iowait",
+        "idle",
+        "irq",
+        "nice",
+        "steal",
+        "guest",
+    ], f"got {payload['pluginColumnHeaders']['percpu']!r}"
+    names = [cell["text"] for cell in payload["pluginNameCells"]["percpu"]]
+    assert names == ["CPU0", "CPU1", "CPU2", "CPU3", "CPU*"], f"got {names!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_percpu_stays_hidden_by_default_even_when_quicklook_is_instantiated():
+    """Interaction between the two Critical fixes of the final review:
+    quicklook being instantiated does NOT, by itself, bring percpu onto the
+    WebUI screen -- `AppShell.vue`'s cpu/percpu exclusivity gate (Critical 1)
+    hides `percpu` whenever `serverArgs.percpu` is falsy, REGARDLESS of
+    quicklook. `percpu-with-quicklook` has quicklook instantiated and no
+    `--percpu`; this is also why PluginPercpu.vue's own Critical 2 predicate
+    (`standalone` unless quicklook is instantiated AND `serverArgs.percpu` is
+    set) is not independently observable through the full AppShell-driven
+    stack: percpu can only ever be VISIBLE here when `serverArgs.percpu` is
+    already true, at which point Critical 2's AND-clause is trivially
+    satisfied. The genuine regression guard for Critical 2 lives at the TUI
+    level (test_curses_renderer_v5.py::
+    test_percpu_keeps_its_labels_when_quicklook_is_instantiated_but_not_drawing_percore),
+    where no such shell-level gate exists. See
+    test_percpu_drops_title_total_and_labels_when_quicklook_draws_percore for
+    the one combination that IS reachable here.
+    """
+    payload = _run_render_probe("percpu-with-quicklook")
+    assert "percpu" not in payload["pluginNames"], f"got {payload['pluginNames']!r}"
+    assert "cpu" in payload["pluginNames"], f"vacuous: {payload['pluginNames']!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_percpu_drops_title_total_and_labels_when_quicklook_draws_percore():
+    """v4 parity, mirrored from the TUI: quicklook, instantiated AND actually
+    drawing its per-core bars (--percpu), already shows the per-core totals,
+    so percpu stops repeating them. The WebUI learns "instantiated" from
+    /api/5/pluginslist (the same notion build_frame derives from the
+    instantiated plugins) and "drawing per-core bars" from
+    `serverArgs.percpu` (/api/5/args) -- both halves of the corrected
+    predicate (final review, Critical 2).
+    """
+    payload = _run_render_probe("percpu-with-quicklook-percpu")
+    headers = payload["pluginColumnHeaders"]["percpu"]
+    assert "CPU" not in headers and "total" not in headers, f"got {headers!r}"
+    assert "percpu" not in payload["pluginNameCells"], f"no row labels: {payload['pluginNameCells'].get('percpu')!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_percpu_honours_the_configured_core_cap():
+    """The test that makes `[percpu] max_cpu_display` non-inert in the browser:
+    with a cap of 2, four cores collapse into the mean row."""
+    payload = _run_render_probe("percpu-cap-2")
+    names = [cell["text"] for cell in payload["pluginNameCells"]["percpu"]]
+    assert names == ["CPU0", "CPU1", "CPU*"], f"got {names!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_percpu_never_colours_a_cell():
+    """v5 percpu publishes no field-level alert (its model docstring says so);
+    the system-wide `cpu` plugin is the source of CPU alerts."""
+    payload = _run_render_probe("percpu")
+    spans = [cell["value"] for cell in payload["pluginTableCells"]["percpu"]]
+    assert not any("gl-level-" in (s or "") for s in spans), f"got {spans!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_an_empty_percpu_collection_is_hidden():
+    payload = _run_render_probe("percpu-empty")
+    assert payload["pluginHidden"].get("percpu") is True, f"got {payload['pluginHidden']!r}"
+
+
+# ------------------------------------- cpu/percpu mutual exclusion (final review, Critical 1)
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_percpu_renders_and_cpu_does_not_when_the_server_ran_with_percpu():
+    """The v5 TUI shows exactly one of `cpu`/`percpu` in the TOP row
+    (glances_curses_v5.py:565-567: `hidden_top = "cpu" if
+    self._view.show_percpu else "percpu"`, applied on every frame). The
+    WebUI had no equivalent -- both rendered side by side, a duplicated CPU
+    surface. `AppShell.vue`'s `slots()` now hides `cpu` when the server ran
+    with `--percpu` (the best available server-side signal, since
+    `show_percpu` is a TUI-only runtime toggle with no wire representation).
+    Both plugins are instantiated and carry data in this scenario -- only
+    /api/5/args differs from the "off" scenario below.
+    """
+    payload = _run_render_probe("cpu-percpu-on")
+    top = payload["slots"].get("top", [])
+    assert "percpu" in top, f"got {top!r}"
+    assert "cpu" not in top, f"got {top!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_cpu_renders_and_percpu_does_not_without_percpu():
+    """The other half: no `--percpu`, so the aggregate `cpu` block renders
+    and `percpu` does not -- the default screen, and also the fix for the
+    "quicklook disappears at 1600px" observation from the group's
+    verification report (at that width the terminal has no `percpu` block
+    competing for the row at all, because the WebUI, unlike the TUI, was
+    rendering both).
+    """
+    payload = _run_render_probe("cpu-percpu-off")
+    top = payload["slots"].get("top", [])
+    assert "cpu" in top, f"got {top!r}"
+    assert "percpu" not in top, f"got {top!r}"
+
+
+# -------------------------------------------------- quicklook (G9-8 Task 5)
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_quicklook_renders_one_bar_per_stats_list_entry_in_order():
+    """`[quicklook] list` drives the selection AND the order
+    (quicklook/render_curses_v5.py:161-175). The fixture asks for cpu, mem,
+    load — `swap` is in the payload and must NOT render.
+    """
+    payload = _run_render_probe("quicklook")
+    labels = payload["barLabels"]["quicklook"]
+    assert labels == ["CPU", "MEM", "LOAD"], f"got {labels!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_a_bars_width_is_its_percentage_and_its_colour_is_its_tier():
+    """D1: the fill's width IS the value, and the tier reaches it as a class
+    (the CSS turns that into `background: currentColor`). A bar drawn at a
+    fixed width, or coloured from the aggregate instead of its own field,
+    would pass a text-only assertion.
+    """
+    payload = _run_render_probe("quicklook")
+    bars = payload["bars"]["quicklook"]
+    assert bars[0]["width"] == "45%", f"got {bars[0]!r}"
+    assert "gl-level-careful" in bars[0]["fillClass"], f"got {bars[0]!r}"
+    assert "gl-level-warning" in bars[1]["fillClass"], f"mem is warning: {bars[1]!r}"
+    assert bars[0]["role"] == "progressbar" and bars[0]["valuenow"] == "45", (
+        f"a bar is a progress indicator for assistive tech: {bars[0]!r}"
+    )
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_no_quicklook_bar_is_prominent_with_the_real_fixture():
+    """The real schema (quicklook/model_v5.py) ships `prominent: false` on
+    every bar-selectable field (G9-8 smoke fix 2: the filled badge was
+    rejected after a smoke test), and `QUICKLOOK_FIXTURE._levels` mirrors
+    that -- no bar value should carry the badge class.
+    """
+    payload = _run_render_probe("quicklook")
+    for bar in payload["bars"]["quicklook"]:
+        assert "gl-prominent" not in bar["valueClass"], f"got {bar!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_a_prominent_bar_value_still_renders_its_badge():
+    """`levelClass()` must still honour a `prominent: true` `_levels` entry
+    when given one -- the schema is the single source of truth, not a
+    hard-coded False in the component (G9-8 smoke fix 2). `cpu` is prominent
+    in the `quicklook-prominent` fixture only."""
+    payload = _run_render_probe("quicklook-prominent")
+    assert "gl-prominent" in payload["bars"]["quicklook"][0]["valueClass"], f"got {payload['bars']['quicklook'][0]!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_quicklook_renders_its_cpu_name_and_frequency_header():
+    text = _run_render_probe("quicklook")["pluginText"]["quicklook"]
+    assert "Intel Core i7-9750H" in text, f"got {text!r}"
+    assert "2.60/4.50GHz" in text, f"got {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_quicklook_header_is_not_a_paragraph():
+    """The CPU name/frequency header is quicklook's only NORMAL-state content
+    rendered outside a scalar `.gl-stat-grid` -- every other component's `<p>`
+    is a transient loading/error state, so `css/v5.css` never zeroes a `<p>`
+    margin. A `<p class="gl-inline">` here keeps the browser's default
+    `margin: 1em 0` and pushes the whole block one line down (G9-8 smoke fix
+    1); the header must be a plain `<div>` (or another margin-less tag)
+    instead.
+    """
+    tags = _run_render_probe("quicklook")["pluginInlineTags"]["quicklook"]
+    assert "P" not in tags, f"got {tags!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_quicklook_without_a_current_frequency_has_no_header():
+    """`cur is None -> return None` (render_curses_v5.py:115-117): no header
+    row at all, not an empty one."""
+    text = _run_render_probe("quicklook-no-freq")["pluginText"]["quicklook"]
+    assert "GHz" not in text, f"got {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_quicklook_per_core_replaces_the_cpu_bar_and_caps_with_a_mean_row():
+    """With the server's --percpu, the `cpu` bar is REPLACED by one bar per
+    core (render_curses_v5.py:168-170), capped by max_cpu_display (2 here),
+    sorted by total descending, plus the CPU* row whose value comes from
+    `percpu_other` — not from the displayed cores.
+    """
+    payload = _run_render_probe("quicklook-percpu")
+    labels = payload["barLabels"]["quicklook"]
+    assert labels == ["CPU0", "CPU1", "CPU*", "MEM", "LOAD"], f"got {labels!r}"
+    bars = {b["label"]: b for b in payload["bars"]["quicklook"]}
+    assert bars["CPU0"]["width"] == "90%", f"got {bars['CPU0']!r}"
+    assert "gl-level-critical" in bars["CPU0"]["fillClass"], (
+        f"each core takes ITS OWN level, not the aggregate: {bars['CPU0']!r}"
+    )
+    assert bars["CPU*"]["width"] == "15%", f"the mean of the HIDDEN cores: {bars['CPU*']!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_quicklook_renames_the_two_gpu_bar_labels():
+    """`gpu_mem` -> GMEM and `gpu_proc` -> GPU (_BAR_LABEL): the raw upper-cased
+    keys are 7 chars and break the TUI's grid, so both surfaces use the short
+    form."""
+    labels = _run_render_probe("quicklook-gpu")["barLabels"]["quicklook"]
+    assert labels == ["CPU", "MEM", "GMEM", "GPU"], f"got {labels!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_an_empty_quicklook_payload_is_hidden():
+    payload = _run_render_probe("quicklook-empty")
+    assert payload["pluginHidden"].get("quicklook") is True, f"got {payload['pluginHidden']!r}"
+
+
+# ------------------------------------------- full_quicklook (G9-8 Task 6)
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_full_quicklook_hides_the_tui_s_six_blocks_and_spares_load():
+    """--full-quicklook hides cpu/npu/mpp/gpu/mem/memswap and deliberately NOT
+    load or percpu (curses_renderer_v5.py:89, exact v4 parity). The WebUI reads
+    the flag from /api/5/args, the way mem reads --byte.
+
+    All six hidden plugins and both spared ones are covered here (final
+    review, Minor 2 -- the original test only checked four of the six hidden
+    plugins and neither spared one). The `cpu-percpu-on` scenario's fixtures
+    set `--percpu` too, so `percpu` is not ALSO hidden by the unrelated
+    cpu/percpu exclusivity rule (Critical 1) -- this test observes only what
+    full_quicklook itself hides.
+    """
+    payload = _run_render_probe("quicklook-full")
+    rendered = set(payload["pluginNames"])
+    for name in ("cpu", "npu", "mpp", "gpu", "mem", "memswap"):
+        assert name not in rendered, f"{name} must be hidden: {sorted(rendered)!r}"
+    assert "load" in rendered, f"load is spared: {sorted(rendered)!r}"
+    assert "percpu" in rendered, f"percpu is spared: {sorted(rendered)!r}"
+    assert "quicklook" in rendered, f"vacuous: {sorted(rendered)!r}"

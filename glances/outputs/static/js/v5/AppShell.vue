@@ -43,12 +43,14 @@
 </template>
 
 <script>
+import { computed } from "vue";
 import { fetchAll, resolveConfig, resolveArgs, resolvePluginNames, getJson } from "./api.js";
 import { levelClass } from "./levels.js";
 import { resolveAllLabels } from "./labels.js";
 import { visiblePlugins, groupBySlot } from "./layout.js";
 import { PLUGINS } from "./plugins/index.js";
 import { resolveDegrade, TOP_CASCADE, HEADER_CASCADE } from "./degrade.js";
+import { FULL_QUICKLOOK_HIDDEN } from "./full_quicklook.js";
 
 // The page's zones, top to bottom, and the registry slots each one holds.
 // `tag` is the element the zone renders as: the header zone stays a real
@@ -70,6 +72,7 @@ const HIDDEN_BY = {
 	hide_uptime: "uptime",
 	hide_memswap: "memswap",
 	hide_gpu: "gpu",
+	hide_quicklook: "quicklook",
 };
 
 // Both cascades resolve to a flat object of primitive values (booleans/
@@ -85,6 +88,22 @@ function sameFlags(a, b) {
 
 export default {
 	name: "AppShell",
+	// `percpu` is the only component that needs the instantiated-plugin list
+	// (it decides whether to render standalone or drop its title/total column
+	// once quicklook is instantiated). A prop on the shared `<component>`
+	// binding would fall through as a `server-plugins` DOM attribute on the
+	// other 23 plugins, which never declare it -- provide/inject reaches the
+	// one consumer without touching them (G9-8 Task 4 review). `computed()`
+	// keeps this reactive: `pluginNames` is null until /api/5/pluginslist
+	// resolves, and a plain `{ serverPlugins: this.pluginNames }` would
+	// capture that null forever -- the computed getter re-reads
+	// `this.pluginNames` on every access, so the injecting component sees the
+	// resolved list once `mounted()` sets it.
+	provide() {
+		return {
+			serverPlugins: computed(() => this.pluginNames || []),
+		};
+	},
 	data() {
 		return {
 			results: {},
@@ -126,6 +145,32 @@ export default {
 					.filter(([key, value]) => value && HIDDEN_BY[key])
 					.map(([key]) => HIDDEN_BY[key]),
 			);
+			// `--full-quicklook` gives the quicklook block the whole row: the TUI
+			// hides the same six siblings (curses_renderer_v5.py:89
+			// `_FULL_QUICKLOOK_HIDDEN`) and deliberately spares `load` and
+			// `percpu`. Server state, not a viewport response, so it is unioned
+			// with the cascade's own hidden set rather than being a cascade step.
+			if (this.serverArgs.full_quicklook) {
+				for (const name of FULL_QUICKLOOK_HIDDEN) hidden.add(name);
+			}
+			// `cpu` / `percpu` mutual exclusion (final review, Critical 1): the
+			// v5 TUI shows exactly one of them -- glances_curses_v5.py:565-567
+			// drops one from `frame.top` on EVERY frame:
+			// `hidden_top = "cpu" if self._view.show_percpu else "percpu"`.
+			// Without this the WebUI rendered both side by side, a duplicated
+			// CPU surface. `show_percpu` is a TUI-only runtime toggle (hotkey
+			// `1`) with no server-side representation, so the browser cannot
+			// mirror it exactly (browser hotkeys are out of scope for this
+			// group) -- the best available signal is `serverArgs.percpu`
+			// (`--percpu`), which is also what gates quicklook's own per-core
+			// view. This is NOT what the v4 WebUI does: its equivalent block is
+			// commented out (glances/outputs/static/js/App.vue:43-52), so v4's
+			// WebUI renders no `percpu` at all. The authority here is the v5 TUI.
+			if (this.serverArgs.percpu) {
+				hidden.add("cpu");
+			} else {
+				hidden.add("percpu");
+			}
 			return groupBySlot(this.plugins.filter((plugin) => !hidden.has(plugin.name)));
 		},
 		// Always all three: design spec section 8 stacks header, top, body

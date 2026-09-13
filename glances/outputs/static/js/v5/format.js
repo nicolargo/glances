@@ -117,6 +117,24 @@ export function formatCount(value) {
 	return i === 0 ? `${Math.trunc(n)}` : `${n.toFixed(1)}${COUNT_UNITS[i]}`;
 }
 
+// Mirrors npu/render_curses_v5.py::_auto_hz(): base 1000 (G/M/K), NOT
+// formatAutoUnit's binary prefixes, one decimal once scaled, a plain
+// truncated integer below 1K, and "?" -- not this module's usual "-" -- for
+// whatever `float(hz)` cannot parse. No unit suffix: the caller appends "Hz"
+// once, after joining the current/max pair.
+export function formatAutoHz(value) {
+	let v;
+	if (typeof value === "number") v = value;
+	else if (typeof value === "string" && value.trim() !== "") v = Number(value);
+	else return "?";
+	if (!Number.isFinite(v)) return "?";
+	const abs = Math.abs(v);
+	if (abs >= 1e9) return `${toFixedHalfEven(v / 1e9, 1)}G`;
+	if (abs >= 1e6) return `${toFixedHalfEven(v / 1e6, 1)}M`;
+	if (abs >= 1e3) return `${toFixedHalfEven(v / 1e3, 1)}K`;
+	return `${Math.trunc(v)}`;
+}
+
 export function toFahrenheit(celsius) {
 	// glances/globals.py:205 -- the conversion only. Rendering (rounding,
 	// unit letter, missing marker) belongs to the caller.

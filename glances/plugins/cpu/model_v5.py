@@ -103,7 +103,7 @@ class PluginModel(GlancesPluginBase[dict]):
             "unit": "percent",
             "watched": True,
             "watch_direction": "high",
-            "prominent": True,
+            "prominent": False,
             "default_thresholds": _DEFAULT_PERCENT_THRESHOLDS,
             "top_processes_sort": "io_counters",
         },

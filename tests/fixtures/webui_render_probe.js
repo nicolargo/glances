@@ -349,6 +349,29 @@ function findAllByTag(root, tagName, acc = []) {
 	return acc;
 }
 
+// Every element whose class list contains `cls` -- used for `.gl-bar` and its
+// sub-parts, which are <div>/<span> elements with no other distinguishing tag.
+function findAllByClass(root, cls, acc = []) {
+	for (const child of root.childNodes) {
+		if (child.nodeType === ELEMENT_NODE) {
+			if (child.classList.contains(cls)) acc.push(child);
+			findAllByClass(child, cls, acc);
+		}
+	}
+	return acc;
+}
+
+function findDescendantByClass(root, cls) {
+	for (const child of root.childNodes) {
+		if (child.nodeType === ELEMENT_NODE) {
+			if (child.classList.contains(cls)) return child;
+			const found = findDescendantByClass(child, cls);
+			if (found) return found;
+		}
+	}
+	return null;
+}
+
 function collect() {
 	const result = {
 		childCount: appDiv.childNodes.length,
@@ -413,6 +436,14 @@ function collect() {
 		// observe that the tier (and the prominent badge) sits on the value
 		// text, not on the whole cell.
 		pluginTableCells: {},
+		// Each `.gl-bar` row of a plugin: the label, the fill's inline width and
+		// class list, the value's class list, and the ARIA attributes. The fill's
+		// WIDTH is the only place a bar's value reaches the DOM, so a test cannot
+		// see a wrong bar any other way.
+		bars: {},
+		// The ordered bar labels, keyed by data-plugin -- `[quicklook] list`
+		// drives both the selection and the order, and this is what pins it.
+		barLabels: {},
 		// Each <tbody> of a plugin as its rows' raw cell texts:
 		// [[[cell, cell], ...], ...], one inner list per row group. `raid` and
 		// `smart` emit one group per array/device (G9-7 D3), and this is the
@@ -430,6 +461,14 @@ function collect() {
 		// classes of the <span> holding the level word. Lets a test observe
 		// WHERE the prominent badge lands (the level word, not the whole line).
 		footerAlerts: [],
+		// The tagName of each `.gl-inline` element in a plugin, keyed by
+		// data-plugin -- `.gl-inline` zeroes no margin of its own (css/v5.css),
+		// it only supplies the baseline/gap layout, so a `<p>` picking that
+		// class up still keeps the browser's default `margin: 1em 0` and
+		// drifts the block down (quicklook's CPU name/frequency header, G9-8
+		// smoke fix 1). Lets a test pin the tag directly instead of inferring
+		// it from a layout side effect the probe's fake DOM cannot measure.
+		pluginInlineTags: {},
 		// The flags AppShell resolved for each zone -- the cascade's decision,
 		// which the DOM alone cannot show (a hidden block looks like a disabled
 		// one).
@@ -493,6 +532,28 @@ function collect() {
 					result.pluginRowGroups[name] = groups.map((tbody) =>
 						findAllByTag(tbody, "TR").map((tr) => findAllByTag(tr, "TD").map((td) => td.textContent)),
 					);
+				}
+				const bars = findAllByClass(article, "gl-bar");
+				if (bars.length) {
+					result.bars[name] = bars.map((bar) => {
+						const label = findDescendantByClass(bar, "gl-bar-label");
+						const fill = findDescendantByClass(bar, "gl-bar-fill");
+						const value = findDescendantByClass(bar, "gl-bar-value");
+						const track = findDescendantByClass(bar, "gl-bar-track");
+						return {
+							label: label ? label.textContent.trim() : null,
+							width: fill ? fill.style.width : null,
+							fillClass: fill ? fill.className : null,
+							valueClass: value ? value.className : null,
+							role: track ? track.getAttribute("role") : null,
+							valuenow: track ? track.getAttribute("aria-valuenow") : null,
+						};
+					});
+					result.barLabels[name] = result.bars[name].map((bar) => bar.label);
+				}
+				const inlines = findAllByClass(article, "gl-inline");
+				if (inlines.length) {
+					result.pluginInlineTags[name] = inlines.map((el) => el.tagName);
 				}
 				const nameCells = findAllByTag(article, "SPAN").filter((span) => span.classList.contains("gl-name"));
 				if (nameCells.length) {
