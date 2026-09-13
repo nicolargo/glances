@@ -50,6 +50,18 @@ URL = f"http://localhost:{SERVER_PORT}"
 SERVER_STARTUP_TIMEOUT = 15
 
 
+@pytest.fixture(autouse=True)
+def _isolate_user_config(tmp_path: Path, monkeypatch):
+    """Never load the developer's ~/.config/glances/glances.conf.
+
+    Both config loaders search the user config first ($XDG_CONFIG_HOME, else
+    ~/.config), so a local conf silently overrides test defaults. Point
+    XDG_CONFIG_HOME at an empty directory; tests that need a user conf set
+    their own value, which wins over this one.
+    """
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "isolated-xdg"))
+
+
 @pytest.fixture(scope="session")
 def logger():
     return logging.getLogger(__name__)
