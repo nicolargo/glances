@@ -87,10 +87,7 @@ class Export(GlancesExport):
             logger.debug(f"Cannot export empty {name} stats to InfluxDB")
         else:
             try:
-                self.client.write(
-                    record=self.normalize_for_influxdb(name, columns, points),
-                    time_precision="s",
-                )
+                self.client.write(record=self.normalize_for_influxdb(name, columns, points))
             except Exception as e:
                 # Log level set to warning instead of error (see: issue #1561)
                 logger.warning(f"Cannot export {name} stats to InfluxDB ({e})")
