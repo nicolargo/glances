@@ -230,6 +230,12 @@ please rename it to "{plugin_path.capitalize()}Plugin"'
 
                 # Create and register the plugin instance.
                 self._plugins[plugin] = _mod_loaded.PluginModel(args=args, config=config)
+                # Mirror _load_plugin: set disable_<plugin> so is_enabled() returns correctly.
+                if args is not None:
+                    if getattr(args, 'disable_all', False):
+                        setattr(args, 'disable_' + plugin, not getattr(args, 'enable_' + plugin, False))
+                    else:
+                        setattr(args, 'disable_' + plugin, getattr(args, 'disable_' + plugin, False))
                 logger.debug(f"Plugin {plugin} started in {start_duration.get()} seconds")
             except Exception as e:
                 # If a plugin can not be loaded, display a critical message
