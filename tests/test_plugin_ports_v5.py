@@ -154,8 +154,10 @@ class _FakeScanner:
 
     instances: list[_FakeScanner] = []
 
-    def __init__(self, stats):
+    def __init__(self, stats, web_secrets):
         self.stats = stats
+        # The scan credentials are kept out of `stats` (GHSA-2jqf-3j6f-683p).
+        self.web_secrets = web_secrets
         self.started = False
         self.stopped = False
         self._alive = False
@@ -259,9 +261,10 @@ async def test_grab_returns_promptly_while_a_real_scan_is_in_flight(store_with, 
     release = threading.Event()
 
     class _SlowScanner(threading.Thread):
-        def __init__(self, stats):
+        def __init__(self, stats, web_secrets):
             super().__init__(daemon=True)
             self.stats = stats
+            self.web_secrets = web_secrets
 
         def run(self):
             release.wait(timeout=30)
@@ -292,7 +295,7 @@ async def test_grab_with_an_empty_scan_list_returns_empty_and_starts_nothing(sto
 def test_stop_stops_the_running_scanner(store_with, config_with, monkeypatch):
     scanner = _patch_scanner(monkeypatch)
     p = _mk(store_with, config_with)
-    p._thread = scanner([])
+    p._thread = scanner([], {})
     p._thread.start()
     p.stop()
     assert p._thread is None

@@ -95,9 +95,12 @@ class PluginModel(GlancesPluginBase[list]):
         # Stored for API parity. NOT used as a per-item timer — the whole list
         # is swept on the global `[ports] refresh` cadence (v4 behaviour, design §4).
         "refresh": {"description": "Refresh time (in seconds) for this host/port.", "unit": "second"},
-        # NOT declared on purpose: `proxies` (may embed credentials via
-        # web_x_http_proxy) and `ssl_verify`. The base `_remove_parameters()`
-        # strips every undeclared field, so they never reach the store/REST/export.
+        # NOT declared on purpose: `ssl_verify`. The base `_remove_parameters()`
+        # strips every undeclared field, so it never reaches the store/REST/export.
+        # `proxies` no longer reaches the scan list at all: since
+        # GHSA-2jqf-3j6f-683p it lives in `_web_secrets`, read by the scanner
+        # only. `url` is declared, and `GlancesWebList` redacts the credentials
+        # it may embed before publishing it.
     }
 
     def __init__(self, store, config) -> None:
@@ -109,9 +112,14 @@ class PluginModel(GlancesPluginBase[list]):
         # `GlancesConfigV5` since the shared fix that also unblocks `folders`
         # and (G6C) `amps`: `default` is optional and `default=None` returns
         # the raw uncoerced value, v4 `GlancesConfig.get_value` semantics.
+        web_list = GlancesWebList(config=config)
         self._scan_list: list[dict[str, Any]] = (
-            GlancesPortsList(config=config).get_ports_list() + GlancesWebList(config=config).get_web_list()
+            GlancesPortsList(config=config).get_ports_list() + web_list.get_web_list()
         )
+
+        # Scan credentials (URL userinfo and proxies), kept out of the scan
+        # list because that list IS the published payload (GHSA-2jqf-3j6f-683p).
+        self._web_secrets: dict[str, dict[str, Any]] = web_list.get_web_secrets()
 
         # The single background scanner sweeping the whole list. Relaunched by
         # `_grab_stats()` only when dead AND the scan timer has fired.
@@ -171,7 +179,7 @@ class PluginModel(GlancesPluginBase[list]):
             # list every cycle would be pure waste.
             return []
         if self._thread is None or (not self._thread.is_alive() and self._scan_timer.finished()):
-            self._thread = ThreadScanner(self._scan_list)
+            self._thread = ThreadScanner(self._scan_list, self._web_secrets)
             self._thread.start()
             self._scan_timer.reset(self._scan_interval)
         return [dict(item) for item in self._scan_list]
