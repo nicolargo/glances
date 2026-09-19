@@ -67,6 +67,6 @@ export default {
 <style scoped>
 /* The TUI's IRQ-line width (irq/render_curses_v5.py _NAME_MAX_WIDTH). */
 .gl-plugin {
-	--gl-name-width: 24ch;
+	--gl-name-width: calc(24 * var(--gl-col));
 }
 </style>

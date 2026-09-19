@@ -120,6 +120,6 @@ export default {
 <style scoped>
 /* The TUI's header width (npu/render_curses_v5.py _HEADER_MAX). */
 .gl-plugin {
-	--gl-name-width: 17ch;
+	--gl-name-width: calc(17 * var(--gl-col));
 }
 </style>

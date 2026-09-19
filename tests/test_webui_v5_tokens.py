@@ -188,11 +188,15 @@ _NAMED_ALTERNATION = "|".join(re.escape(name) for name in sorted(_CSS_NAMED_COLO
 # Hex colours, the colour-producing CSS functions, and the full CSS named
 # colour set. No anchor is needed here -- comments are stripped from the
 # text before this pattern ever sees it (see `_strip_comments`), so a bare
-# word match cannot land in prose.
+# word match cannot land in prose. The named-colour branch uses a
+# hyphen-aware guard, not `\b`: in regex `-` IS a word boundary, so a colour
+# NAME can appear inside a hyphenated PROPERTY name (`white-space`,
+# `-webkit-text-fill-color`) without being a colour VALUE -- `\bwhite\b`
+# matches inside `white-space`, `(?<![\w-])white(?![\w-])` does not.
 _COLOUR = re.compile(
     r"#[0-9a-fA-F]{3,8}\b"
     r"|\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\s*\("
-    rf"|\b(?:{_NAMED_ALTERNATION})\b",
+    rf"|(?<![\w-])(?:{_NAMED_ALTERNATION})(?![\w-])",
 )
 
 _BLOCK_COMMENT = re.compile(r"/\*.*?\*/", re.DOTALL)
@@ -473,7 +477,9 @@ def test_the_cascade_measures_header_text_at_its_natural_width():
     `.gl-name` keeps its deliberate cap (G9-6 D3).
     """
     css = _strip_comments(_TOKENS.read_text())
-    body = _rule_body(css, ".gl-measuring .gl-inline,\n.gl-measuring .gl-truncate:not(.gl-name)")
+    body = _rule_body(
+        css, ".gl-measuring .gl-inline,\n.gl-measuring .gl-truncate:not(.gl-name):not(.gl-command):not(.gl-ports)"
+    )
     assert re.search(r"\bmin-width:\s*max-content\s*;", body), body
     assert re.search(r"\bmax-width:\s*none\s*;", body), body
     shell = (_V5_JS / "AppShell.vue").read_text()
@@ -481,3 +487,130 @@ def test_the_cascade_measures_header_text_at_its_natural_width():
     read = shell.index("zone.scrollWidth", add)
     remove = shell.index('zone.classList.remove("gl-measuring")', read)
     assert add < read < remove
+
+
+def test_the_left_aligned_rate_column_outranks_the_gl_num_default():
+    """`IOW/s` and `Tx/s` are left-aligned so each rate pair hugs in the
+    middle, as the TUI paints it (containers/render_curses_v5.py:158-162).
+
+    The selector must qualify the cell element, not just the class: a bare
+    `.gl-num-left` (0,1,0) only TIES with the global `.gl-num` (0,1,0), and a
+    tie is settled by source order between a scoped component style and the
+    token file -- which nothing here guarantees. `.gl-table th.gl-num-left`
+    is (0,2,1) and wins outright. Same trap the `.gl-table th:not(.gl-num)`
+    comment in css/v5.css already documents.
+    """
+    source = _strip_comments((_V5_JS / "PluginContainers.vue").read_text())
+    body = _rule_body(source, ".gl-table th.gl-num-left,\n.gl-table td.gl-num-left")
+    assert re.search(r"\btext-align:\s*left\s*;", body), f"the pair's second column is left-aligned: {body!r}"
+
+
+def test_the_amps_count_column_drops_the_rate_width_floor():
+    """`.gl-num` floors a column at 9ch, a width sized for a rate cell's
+    worst case. The AMP count is one to four digits, so it must override that
+    floor with the TUI's own column width (amps/render_curses_v5.py
+    `_COUNT_COL_WIDTH` = 4). CSS is invisible to the render probe, so the
+    class reaching the DOM is asserted there and the width here.
+    """
+    source = _strip_comments((_V5_JS / "PluginAmps.vue").read_text())
+    body = _rule_body(source, ".gl-amp-count")
+    assert re.search(r"\bmin-width:\s*calc\(4 \* var\(--gl-col\)\)\s*;", body), (
+        f"the count column uses the TUI's 4 characters, in the column unit: {body!r}"
+    )
+
+
+# A width that means "N characters of the TUI" must NOT use `ch`. Measured in
+# Chrome on 2026-09-19 with the shipped stack: the rendered advance is 8.473px
+# while `1ch` resolves to 7.04px -- exactly 0.5em, the CSS spec's fallback for
+# "the measure of the 0 glyph cannot be determined". Every `Nch` therefore
+# shows 0.83*N characters. The trigger is the font stack, not a bad value:
+# two or more unavailable families before the generic break the resolution
+# (`Menlo, Consolas, monospace` measured 0.83; `X, monospace` measured 1.0).
+#
+# The deliberate exceptions, keyed by the exact declaration rather than by
+# file: `smart` carries BOTH a TUI-derived cap (its attribute name column,
+# converted) and a layout-budget one (its device line, kept). Each of these
+# is a width chosen in the browser, not a TUI character count.
+_LAYOUT_BUDGET_NAME_WIDTHS = {
+    # The left column's shared width budget (maintainer's call, 2026-09-12),
+    # which explicitly REPLACED these two blocks' TUI widths.
+    ("PluginSensors.vue", "calc(27ch + var(--gl-gap))"),
+    ("PluginWifi.vue", "calc(27ch + var(--gl-gap))"),
+    # The smart device line spans both columns: its cap is the block's own
+    # width, so it is set inline rather than from the component's variable.
+    ("PluginSmart.vue", "34ch"),
+}
+
+
+def _name_width_declarations() -> dict[str, list[str]]:
+    out: dict[str, list[str]] = {}
+    for path in sorted(_V5_JS.glob("*.vue")):
+        values = re.findall(r"--gl-name-width:\s*([^;\"]+)", _strip_comments(path.read_text()))
+        if values:
+            out[path.name] = [v.strip() for v in values]
+    return out
+
+
+def test_a_tui_character_width_uses_the_column_unit_not_ch():
+    """`ch` lies under the shipped font stack, so a cap meant to mirror a TUI
+    column must be written `calc(N * var(--gl-col))`.
+
+    This is a drift guard, not a style rule: the next plugin ported will copy
+    an existing block, and copying a bare `18ch` would silently truncate its
+    names 17% early again.
+    """
+    offenders = {
+        (name, value)
+        for name, values in _name_width_declarations().items()
+        for value in values
+        if (name, value) not in _LAYOUT_BUDGET_NAME_WIDTHS
+        and re.search(r"\d+(\.\d+)?ch", value)
+        and "--gl-col" not in value
+    }
+    assert not offenders, f"TUI widths still written in `ch`: {offenders}"
+
+
+def test_the_column_unit_is_defined_once_on_the_root():
+    """`--gl-col` is the real advance of a monospace glyph (~0.6em for
+    DejaVu Sans Mono, Menlo and SF Mono alike). Defining it anywhere but
+    `:root` would let one block drift from the rest.
+    """
+    css = _strip_comments(_TOKENS.read_text())
+    assert len(re.findall(r"--gl-col:", css)) == 1, "--gl-col is defined exactly once"
+    assert re.search(r":root\s*\{[^}]*--gl-col:\s*0\.6em", css, re.S), "--gl-col lives on :root and is 0.6em"
+
+
+def test_the_right_column_gives_its_slack_to_the_last_cell():
+    """Measured in Chrome at a 2560px viewport: the right slot is 2258px and
+    `.gl-table { width: 100% }` -- a rule introduced to equalise the LEFT
+    column -- spread that width across the columns, so `amps` (three short
+    columns) rendered its name cell 431px wide around a 136px cap: 295px of
+    empty space. The TUI gives its slack to the last, unbounded column
+    instead. `last-child` rather than a per-block class so a `containers`
+    row whose tail columns were dropped by the cascade still has one.
+    """
+    body = _rule_body(
+        _strip_comments(_TOKENS.read_text()),
+        '[data-slot="right"] .gl-table td:last-child,\n[data-slot="right"] .gl-table th:last-child',
+    )
+    assert re.search(r"\bwidth:\s*100%\s*;", body), f"the tail cell absorbs the slack: {body!r}"
+
+
+def test_the_ports_cell_is_bounded_like_the_command_cell():
+    """Measured in Chrome on 2026-09-19: the `ports` cell rendered 1540px wide
+    for "61208/tcp,61209/tcp" because its span is inline, so neither
+    `.gl-truncate`'s ellipsis nor any cap applies -- the exact defect
+    `.gl-command` had. The TUI budgets this column at 16 characters
+    (containers/render_curses_v5.py `_COL_GEOMETRY["ports"]`), so an
+    unbounded browser cell makes the width cascade over-fire on a host
+    publishing many ports: the block measures far wider than it needs and
+    drops columns that had room.
+
+    `display: block` is the load-bearing half -- a cap alone is inert on a
+    non-replaced inline element.
+    """
+    body = _rule_body(_strip_comments((_V5_JS / "PluginContainers.vue").read_text()), ".gl-ports")
+    assert re.search(r"\bdisplay:\s*block\s*;", body), f"the cap needs a block box to apply: {body!r}"
+    assert re.search(r"\bmax-width:\s*calc\(\d+ \* var\(--gl-col\)\)\s*;", body), (
+        f"the cap is a character count, in the column unit: {body!r}"
+    )

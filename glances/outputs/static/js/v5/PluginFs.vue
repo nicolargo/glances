@@ -79,6 +79,6 @@ export default {
 <style scoped>
 /* G9-6 D3: the TUI's name width (fs/render_curses_v5.py _NAME_MAX_WIDTH). */
 .gl-plugin {
-	--gl-name-width: 18ch;
+	--gl-name-width: calc(18 * var(--gl-col));
 }
 </style>

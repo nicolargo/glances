@@ -175,7 +175,7 @@ export default {
 }
 /* G9-8 smoke fix 3: the TUI's name width (render_curses_v5.py:114 `[0:9]`). */
 .gl-plugin {
-	--gl-name-width: 9ch;
+	--gl-name-width: calc(9 * var(--gl-col));
 }
 /* The global `.gl-num` 9ch floor is wrong for THIS table: it is wider than
    any value gpu ever renders, and with the name column no longer eating the

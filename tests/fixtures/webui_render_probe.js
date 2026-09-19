@@ -169,11 +169,18 @@ class FakeElement extends FakeNode {
 	addEventListener() {}
 	removeEventListener() {}
 
-	// AppShell.vue's measureZone() and its ResizeObserver setup both call
-	// `this.$el.querySelector('[data-slot="..."]')` -- the only selector shape
-	// this fake DOM needs to support. Searches descendants only, like the real
-	// Element.querySelector (never matches the element it is called on).
+	// AppShell.vue's measureZone() calls `this.$el.querySelector('[data-slot="..."]')`,
+	// and fit_block.js's measureBlock() calls `block.querySelector("table")` --
+	// the two selector shapes this fake DOM needs to support. Searches
+	// descendants only, like the real Element.querySelector (never matches the
+	// element it is called on).
 	querySelector(selector) {
+		const tagMatch = /^[a-z][a-z0-9]*$/.exec(selector);
+		if (tagMatch) {
+			// Depth-first, same order as the attribute-selector branch below --
+			// reuses findAllByTag() rather than a second walk implementation.
+			return findAllByTag(this, selector.toUpperCase())[0] ?? null;
+		}
 		const match = /^\[([\w-]+)="([^"]*)"\]$/.exec(selector);
 		if (!match) return null;
 		const [, attr, value] = match;
@@ -246,6 +253,7 @@ const {
 	ALL_FIXTURES,
 	WIDTH_FIXTURES,
 	CONTENT_PER_NOTCH,
+	BLOCK_WIDTH_FIXTURES,
 } = require("./webui_render_fixtures.js");
 
 const scenario = process.argv[3] || "default";
@@ -305,6 +313,9 @@ const sandbox = {
 		observe() {}
 		disconnect() {}
 	},
+	// The blocks (js/v5/fit_block.js) register each instance's own refit here,
+	// as the harness never fires their ResizeObserver -- see applyBlockWidths.
+	__glancesBlockRefits: [],
 };
 sandbox.window = sandbox;
 sandbox.globalThis = sandbox;
@@ -408,6 +419,16 @@ function collect() {
 		// reaches the DOM as a `gl-level-*` class and nowhere else, so an
 		// assertion on textContent cannot see it.
 		pluginValueClasses: {},
+		// Elements with a `title` attribute, keyed by data-plugin.
+		pluginTitles: {},
+		// The trimmed <th> texts of each plugin's <thead>, keyed by
+		// data-plugin -- [] when the plugin renders no <thead> at all (e.g.
+		// `amps`, `ports`: no title row and no column header, v4 parity).
+		// Lets a test assert the ABSENCE of a header row, which
+		// pluginColumnHeaders (only set when `ths.length` is truthy) cannot:
+		// it has no entry at all for a header-less plugin, indistinguishable
+		// from "not rendered yet".
+		pluginHeaderCells: {},
 		// The rendered attribute names of each plugin's root <article>, keyed
 		// by data-plugin -- lets a test assert that a prop like `serverArgs`
 		// never leaked through as a fallthrough attribute (Vue stringifies an
@@ -520,7 +541,18 @@ function collect() {
 				const values = [...findAllByTag(article, "DD"), ...findAllByTag(article, "TD")];
 				if (values.length) {
 					result.pluginValueClasses[name] = values.map((cell) => cell.className);
+					// Every element carrying a `title`, so a test can check that a
+					// capped cell still offers its full value on hover. `.gl-name`
+					// spans have their own richer field; this one is for the rest.
+					result.pluginTitles[name] = findAllByAttr(article, "title").map((el) => ({
+						text: el.textContent.trim(),
+						title: el.getAttribute("title"),
+					}));
 				}
+				const thead = findAllByTag(article, "THEAD");
+				result.pluginHeaderCells[name] = thead.length
+					? findAllByTag(thead[0], "TH").map((th) => th.textContent.trim())
+					: [];
 				const tds = findAllByTag(article, "TD");
 				if (tds.length) {
 					result.pluginTableCells[name] = tds.map((td) => {
@@ -605,6 +637,30 @@ function applyWidths() {
 	return true;
 }
 
+// Same as applyWidths(), one level down: blocks are addressed by their
+// `data-plugin` attribute rather than by `data-slot`, because a per-block
+// cascade (js/v5/fit_block.js) measures the component's own root.
+function applyBlockWidths() {
+	const widths = BLOCK_WIDTH_FIXTURES[scenario];
+	if (!widths) return false;
+	for (const [plugin, { available, content }] of Object.entries(widths)) {
+		for (const block of findAllByAttr(appDiv, "data-plugin")) {
+			if (block.getAttribute("data-plugin") !== plugin) continue;
+			// `available` (clientWidth) belongs to the block itself -- the
+			// shell's grid constrains ITS box. `content` (scrollWidth) belongs
+			// to whichever element fit_block.js's measureBlock() actually
+			// reads: the inner <table> when there is one (the real production
+			// target -- a table can overflow its container), falling back to
+			// the block's own scrollWidth otherwise, exactly mirroring
+			// measureBlock()'s own `table ? table.scrollWidth : block.scrollWidth`.
+			block._width = available;
+			const table = findAllByTag(block, "TABLE")[0];
+			(table || block)._content = content;
+		}
+	}
+	return true;
+}
+
 // AppShell's `mounted()` hook is async (resolveConfig, then tick(),
 // which itself awaits fetchAll() and the /api/5/alert call) -- none of
 // that has run yet the instant vm.runInContext() returns; only the initial,
@@ -615,5 +671,11 @@ function applyWidths() {
 // alert" placeholder from the first paint.
 setImmediate(async () => {
 	if (applyWidths() && sandbox.__glancesRefit) await sandbox.__glancesRefit();
+	// The blocks measure themselves (fit_block.js registers each instance's
+	// refit here); the harness never fires their ResizeObserver, so it calls
+	// them once, after the widths are in place.
+	if (applyBlockWidths() && Array.isArray(sandbox.__glancesBlockRefits)) {
+		for (const refit of sandbox.__glancesBlockRefits) await refit();
+	}
 	process.stdout.write(JSON.stringify(collect()));
 });

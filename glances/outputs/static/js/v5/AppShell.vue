@@ -371,8 +371,10 @@ export default {
 	border-bottom: 1px solid var(--gl-border);
 	padding-bottom: var(--gl-gap);
 }
-/* Header line. `3ch` is the TUI's _HEADER_GAP = 3 (glances_curses_v5.py): a
- * spacing, not a truncation, so the character unit is legitimate here. The
+/* Header line. The gap is the TUI's _HEADER_GAP = 3 (glances_curses_v5.py),
+ * so it is three CHARACTERS and uses --gl-col, not `ch`: `ch` resolves to
+ * 0.5em under the shipped font stack (see the token file), which made this
+ * gap 2.5 characters wide. The
  * right group is pushed to the right edge, like _paint_header() does; when the
  * line wraps it stays right-aligned on its own row. */
 /* The header never wraps: when it no longer fits, the cascade in this
@@ -383,14 +385,14 @@ export default {
 	display: flex;
 	flex-wrap: nowrap;
 	align-items: baseline;
-	column-gap: 3ch;
+	column-gap: calc(3 * var(--gl-col));
 	overflow-x: auto;
 }
 .gl-slot-header-left {
 	display: flex;
 	flex-wrap: nowrap;
 	align-items: baseline;
-	column-gap: 3ch;
+	column-gap: calc(3 * var(--gl-col));
 	/* Lets the header's long strings shrink into their ellipsis. */
 	min-width: 0;
 }
@@ -398,7 +400,7 @@ export default {
 	display: flex;
 	flex-wrap: nowrap;
 	align-items: baseline;
-	column-gap: 3ch;
+	column-gap: calc(3 * var(--gl-col));
 	min-width: 0;
 	margin-left: auto;
 }

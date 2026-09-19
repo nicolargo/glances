@@ -680,6 +680,168 @@ const PERCPU_FIXTURE = {
 	_levels: {},
 };
 
+// processcount is a scalar plugin: total/running/sleeping/thread/pid_max
+// (processcount/model_v5.py). 215 - 3 - 195 = 17 "oth", the value the
+// TUI computes rather than reads.
+const PROCESSCOUNT_FIXTURE = {
+	total: 215,
+	running: 3,
+	sleeping: 195,
+	thread: 1452,
+	pid_max: 32768,
+	_levels: {},
+};
+
+// amps: one row per AMP, `result` is the AMP's own output and may carry
+// newlines (amps/render_curses_v5.py:82). `Dropped` has result: null --
+// the AMP has not produced anything yet and v4 skips it. `Kernel` has no
+// regex, so its count is not displayed even though it is set.
+const AMPS_FIXTURE = {
+	_key: "name",
+	data: [
+		{ name: "Python", count: 2, regex: true, result: "CPU: 1.0% | MEM: 2.0%" },
+		{ name: "Systemd", count: 1, regex: true, result: "Services\nactive: 3" },
+		{ name: "Dropped", count: 4, regex: true, result: null },
+		{ name: "Kernel", count: 7, regex: false, result: "up" },
+	],
+	_levels: { Python: { count: { level: "warning", prominent: true } } },
+};
+
+// vms: two engines on purpose, so the Engine column is shown (the TUI
+// shows it only with >1 distinct engine, vms/render_curses_v5.py:157).
+// `load_1min` present -> the LOAD column is shown (:162).
+const VMS_FIXTURE = {
+	_key: "name",
+	data: [
+		{
+			name: "builder",
+			engine: "virsh",
+			status: "running",
+			cpu_count: 4,
+			cpu_time: 12.5,
+			memory_usage: 2147483648,
+			memory_total: 4294967296,
+			load_1min: 0.5,
+			load_5min: 0.7,
+			load_15min: 1.2,
+			release: "24.04",
+		},
+		{
+			name: "sandbox",
+			engine: "multipass",
+			status: "stopped",
+			cpu_count: 2,
+			cpu_time: null,
+			memory_usage: null,
+			memory_total: null,
+			load_1min: 0.0,
+			load_5min: 0.0,
+			load_15min: 0.0,
+			release: null,
+		},
+	],
+	max_name_size: 20,
+	_levels: { builder: { cpu_time: { level: "careful" }, memory_percent: { level: "warning" } } },
+};
+
+// One engine and no load: both conditional columns disappear.
+const VMS_ONE_ENGINE = {
+	_key: "name",
+	data: [
+		{
+			name: "builder",
+			engine: "virsh",
+			status: "running",
+			cpu_count: 4,
+			cpu_time: 12.5,
+			memory_usage: 2147483648,
+			memory_total: 4294967296,
+			load_1min: null,
+			release: "24.04",
+		},
+	],
+	max_name_size: 20,
+	_levels: {},
+};
+
+// containers: two engines (Engine column shown), one pod (Pod column
+// shown), a memory limit (the /MAX column shown). The second item has no
+// rates yet -- cycle 1 -- so every missing cell must read "-".
+const CONTAINERS_FIXTURE = {
+	_key: "name",
+	data: [
+		{
+			name: "web",
+			engine: "docker",
+			pod_name: "frontend",
+			pod_id: "pod-7f3a",
+			status: "running",
+			uptime: "2 days",
+			cpu_percent: 12.5,
+			memory_usage_no_cache: 536870912,
+			memory_limit: 2147483648,
+			io_rx: 1024,
+			io_wx: 2048,
+			network_rx: 100,
+			network_tx: 200,
+			ports: "0.0.0.0:80->80/tcp",
+			command: "nginx -g daemon off;",
+		},
+		{
+			name: "db",
+			engine: "podman",
+			pod_name: null,
+			status: "paused",
+			uptime: null,
+			cpu_percent: null,
+			memory_usage_no_cache: null,
+			memory_limit: null,
+			io_rx: null,
+			io_wx: null,
+			network_rx: null,
+			network_tx: null,
+			ports: null,
+			command: null,
+		},
+	],
+	max_name_size: 20,
+	disable_stats: [],
+	_levels: { web: { cpu_percent: { level: "careful" }, memory_percent: { level: "critical", prominent: true } } },
+};
+
+// `[containers] disable_stats=ports,command` -- config, not width: those
+// two columns are gone whatever the window size.
+const CONTAINERS_DISABLED_STATS = {
+	...CONTAINERS_FIXTURE,
+	disable_stats: ["ports", "command"],
+};
+
+// `[containers] disable_stats=mem` -- render_curses_v5.py:286-288 cascades
+// `mem` into `memory_max` too, so `/MAX` must disappear alongside `MEM`.
+const CONTAINERS_DISABLE_MEM = {
+	...CONTAINERS_FIXTURE,
+	disable_stats: ["mem"],
+};
+
+// No container on this host declares a limit. render_curses_v5.py's
+// `show_mem_max` (:298) reads only `hidden` (disable_stats + the `mem`
+// cascade + the width cascade) -- `memory_limit` never gates the column,
+// only what the cell PRINTS (`_cpu_mem_cells`: "/" + the limit, or "/_"
+// when absent). So `/MAX` must still be shown here, with the placeholder
+// in every row.
+const CONTAINERS_NO_LIMITS = {
+	...CONTAINERS_FIXTURE,
+	data: CONTAINERS_FIXTURE.data.map((item) => ({ ...item, memory_limit: null })),
+};
+
+// `removing` is not in containers's `_STATUS_ROLE` mirror (running/healthy/
+// dead/unhealthy/created/exited/paused/restarting only) -- G9-9A fix wave
+// item 1's "unmapped status gets no colour" test.
+const CONTAINERS_UNMAPPED_STATUS = {
+	...CONTAINERS_FIXTURE,
+	data: CONTAINERS_FIXTURE.data.map((item, i) => (i === 0 ? { ...item, status: "removing" } : item)),
+};
+
 const ALL_FIXTURES = {
 	default: {},
 	"gpu-disabled": {},
@@ -873,6 +1035,31 @@ const ALL_FIXTURES = {
 	// The TUI's guard (system/render_curses_v5.py:25): no hostname, no block --
 	// even with an OS name to show.
 	"system-no-hostname": { system: { ...SYSTEM_FIXTURE, hostname: "" } },
+	processcount: { processcount: PROCESSCOUNT_FIXTURE },
+	// psutil exposes no thread count on some systems (issue #1463): the
+	// "(N thr)" group disappears, the comma after the total stays.
+	"processcount-no-thread": {
+		processcount: { ...PROCESSCOUNT_FIXTURE, thread: null },
+	},
+	// Scheduler cycle 0: the plugin is registered and published an empty
+	// payload. Only the title, never "TASKS 0".
+	"processcount-empty": { processcount: {} },
+	amps: { amps: AMPS_FIXTURE },
+	"amps-empty": { amps: { _key: "name", data: [], _levels: {} } },
+	vms: { vms: VMS_FIXTURE },
+	"vms-one-engine": { vms: VMS_ONE_ENGINE },
+	"vms-empty": { vms: { _key: "name", data: [], _levels: {} } },
+	containers: { containers: CONTAINERS_FIXTURE },
+	"containers-disable-stats": { containers: CONTAINERS_DISABLED_STATS },
+	"containers-disable-mem": { containers: CONTAINERS_DISABLE_MEM },
+	"containers-no-limits": { containers: CONTAINERS_NO_LIMITS },
+	"containers-unmapped-status": { containers: CONTAINERS_UNMAPPED_STATUS },
+	"containers-empty": { containers: { _key: "name", data: [], _levels: {} } },
+	// G9-9A Task 6: the containers block's own width cascade (fit_block.js),
+	// reusing the Task 4 payload -- see BLOCK_WIDTH_FIXTURES below.
+	"containers-wide": { containers: CONTAINERS_FIXTURE },
+	"containers-one-notch": { containers: CONTAINERS_FIXTURE },
+	"containers-narrow": { containers: CONTAINERS_FIXTURE },
 };
 
 // Every plugin that renders the SCALAR grid (<dl> of <dt>/<dd> pairs),
@@ -985,6 +1172,20 @@ const WIDTH_FIXTURES = {
 // matter: what the tests assert is WHICH notches land, not the pixels.
 const CONTENT_PER_NOTCH = 150;
 
+// Per-BLOCK widths, keyed by the `data-plugin` attribute the shell puts on
+// each component's root. Same contract as WIDTH_FIXTURES: `available` is
+// clientWidth, `content` scrollWidth, and the harness shrinks `content` by
+// CONTENT_PER_NOTCH per applied flag (FakeElement.scrollWidth).
+const BLOCK_WIDTH_FIXTURES = {
+	// Fits as it is: every column survives.
+	"containers-wide": { containers: { available: 1400, content: 900 } },
+	// 1000 - 150 = 850 <= 900: exactly one notch, so `command` alone goes.
+	"containers-one-notch": { containers: { available: 900, content: 1000 } },
+	// 2000 - 9*150 = 650 > 300: the cascade runs to its last step, so all
+	// nine droppable columns go and only CONTAINER / CPU% / MEM survive.
+	"containers-narrow": { containers: { available: 300, content: 2000 } },
+};
+
 module.exports = {
 	ALERT_FIXTURES,
 	ALERT_SCENARIOS,
@@ -996,4 +1197,5 @@ module.exports = {
 	ALL_FIXTURES,
 	WIDTH_FIXTURES,
 	CONTENT_PER_NOTCH,
+	BLOCK_WIDTH_FIXTURES,
 };

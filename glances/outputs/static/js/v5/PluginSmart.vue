@@ -88,6 +88,6 @@ export default {
 /* The TUI's attribute-name width (smart/render_curses_v5.py _NAME_COL_WIDTH).
  * The device line overrides it inline: its own cap is the block's width. */
 .gl-plugin {
-	--gl-name-width: 25ch;
+	--gl-name-width: calc(25 * var(--gl-col));
 }
 </style>

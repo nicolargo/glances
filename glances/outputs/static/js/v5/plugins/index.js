@@ -47,6 +47,10 @@ import PluginRaid from "../PluginRaid.vue";
 import PluginSmart from "../PluginSmart.vue";
 import PluginSensors from "../PluginSensors.vue";
 import PluginPorts from "../PluginPorts.vue";
+import PluginVms from "../PluginVms.vue";
+import PluginContainers from "../PluginContainers.vue";
+import PluginProcesscount from "../PluginProcesscount.vue";
+import PluginAmps from "../PluginAmps.vue";
 
 export const PLUGINS = [
 	// The header plugins declare `required: []`: a missing guard field
@@ -204,5 +208,32 @@ export const PLUGINS = [
 		component: PluginSensors,
 		slot: "left",
 		spec: { shape: "collection", required: ["label"] },
+	},
+	{
+		name: "vms",
+		component: PluginVms,
+		slot: "right",
+		spec: { shape: "collection", required: ["name"] },
+	},
+	{
+		name: "containers",
+		component: PluginContainers,
+		slot: "right",
+		spec: { shape: "collection", required: ["name"] },
+	},
+	{
+		name: "processcount",
+		component: PluginProcesscount,
+		slot: "right",
+		// No required field: at scheduler cycle 0 the payload has no `total`,
+		// and the TUI's answer to that is "render the title only" -- a hide
+		// rule, not a shape error for validate() to display.
+		spec: { shape: "scalar", required: [] },
+	},
+	{
+		name: "amps",
+		component: PluginAmps,
+		slot: "right",
+		spec: { shape: "collection", required: ["name"] },
 	},
 ];

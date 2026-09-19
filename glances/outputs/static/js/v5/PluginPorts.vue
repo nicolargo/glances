@@ -86,6 +86,6 @@ export default {
 <style scoped>
 /* The TUI's description width (ports/render_curses_v5.py _NAME_MAX_WIDTH). */
 .gl-plugin {
-	--gl-name-width: 25ch;
+	--gl-name-width: calc(25 * var(--gl-col));
 }
 </style>

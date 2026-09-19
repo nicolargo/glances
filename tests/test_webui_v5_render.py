@@ -189,6 +189,10 @@ def test_the_registry_renders_every_registered_plugin():
         "raid",
         "smart",
         "sensors",
+        "vms",
+        "containers",
+        "processcount",
+        "amps",
     ], f"expected all registered plugins to render, got {payload['pluginNames']!r}"
 
 
@@ -293,6 +297,10 @@ def test_an_unreadable_pluginslist_renders_the_whole_registry():
         "raid",
         "smart",
         "sensors",
+        "vms",
+        "containers",
+        "processcount",
+        "amps",
     ], f"expected the whole registry, got {payload['pluginNames']!r}"
 
 
@@ -443,13 +451,13 @@ def test_cross_cutting_props_do_not_leak_into_the_dom_as_attributes():
     payload = _run_render_probe("mem-with-available")
     # Without this the loop below is vacuous: an empty `pluginAttrs` (a probe
     # that stopped collecting the attribute, a render that produced no
-    # article) would pass silently. Twenty-four, not the registry's
-    # twenty-five: `cpu`/`percpu` are mutually exclusive (final review,
+    # article) would pass silently. Twenty-eight, not the registry's
+    # twenty-nine: `cpu`/`percpu` are mutually exclusive (final review,
     # Critical 1) -- this scenario's `percpu: true` (ARGS_FIXTURES) selects
     # `percpu` over `cpu` so the loop below still covers percpu's
     # `serverPlugins` inject specifically (G9-8 Task 4 review).
-    assert len(payload["pluginAttrs"]) == 24, (
-        f"expected all twenty-four rendered plugins' attributes, got {payload['pluginAttrs']!r}"
+    assert len(payload["pluginAttrs"]) == 28, (
+        f"expected all twenty-eight rendered plugins' attributes, got {payload['pluginAttrs']!r}"
     )
     for name, attrs in payload["pluginAttrs"].items():
         assert "server-args" not in attrs, f"{name} leaked serverArgs as an attribute: {attrs!r}"
@@ -2367,3 +2375,452 @@ def test_a_resolution_event_reads_as_resolved_not_as_an_alert():
     assert "gl-muted" in resolved["className"].split(), f"got {resolved!r}"
     assert "gl-level-ok" not in (resolved["className"] + " " + (resolved["levelClass"] or "")), f"got {resolved!r}"
     assert opened["level"] == "critical", f"a real alert is unchanged: {opened!r}"
+
+
+# ------------------------------------------------- processcount TUI parity (G9-9A Task 1)
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_processcount_renders_the_tui_tasks_line():
+    """processcount/render_curses_v5.py:73-113 paints ONE line:
+    `TASKS 215 (1452 thr), 3 run, 195 slp, 17 oth`. `oth` is computed
+    (total - running - sleeping), so 17 proves the arithmetic and not a
+    field read.
+    """
+    payload = _run_render_probe("processcount")
+    text = " ".join((payload["pluginText"].get("processcount") or "").split())
+    assert text == "TASKS 215 (1452 thr), 3 run, 195 slp, 17 oth", f"got {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_processcount_drops_the_thread_group_when_psutil_has_no_count():
+    """`thread` is None on some systems (issue #1463): the TUI emits
+    `TASKS 215, 3 run, …` -- the comma moves onto the total."""
+    payload = _run_render_probe("processcount-no-thread")
+    text = " ".join((payload["pluginText"].get("processcount") or "").split())
+    assert text == "TASKS 215, 3 run, 195 slp, 17 oth", f"got {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_processcount_shows_only_its_title_before_the_first_aggregate():
+    """No `total` yet (scheduler cycle 0) -> the title alone. A component
+    that defaulted the aggregates to 0 would render `TASKS 0, 0 run…`,
+    which the TUI explicitly avoids."""
+    payload = _run_render_probe("processcount-empty")
+    text = " ".join((payload["pluginText"].get("processcount") or "").split())
+    assert text == "TASKS", f"got {text!r}"
+
+
+# ------------------------------------------------------- amps TUI parity (G9-9A Task 2)
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_amps_renders_name_count_and_result_without_a_header_row():
+    """amps/render_curses_v5.py has NO title row and NO column header
+    (module docstring, v4 parity), like `ports` in G9-7 -- so the block
+    renders no <thead> at all.
+    """
+    payload = _run_render_probe("amps")
+    rows = _table_rows(payload, "amps", 3)
+    assert rows == [
+        ["Python", "2", "CPU: 1.0% | MEM: 2.0%"],
+        ["Systemd", "1", "Services\nactive: 3"],
+        ["Kernel", "", "up"],
+    ], f"got {rows!r}"
+    assert not payload["pluginHeaderCells"].get("amps"), (
+        f"amps must render no header row, got {payload['pluginHeaderCells'].get('amps')!r}"
+    )
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_amps_skips_an_amp_that_has_produced_nothing():
+    """`result is None` -> v4 renders no row at all
+    (amps/render_curses_v5.py:70-73). `Dropped` must be absent, and its
+    count (4) must not appear anywhere in the block.
+    """
+    payload = _run_render_probe("amps")
+    text = payload["pluginText"].get("amps") or ""
+    assert "Dropped" not in text, f"got {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_amps_badges_the_count_tier_on_the_name():
+    """The TUI colours the NAME cell from `_levels[name].count`
+    (amps/render_curses_v5.py:78-79), not the count cell. Same convention as
+    test_a_table_value_carries_its_tier_on_the_text_not_the_cell (the tier
+    goes on the value span, never the <td>), but not folded into that
+    parametrization: unlike every case there, amps' badged column (NAME) is
+    text, not numeric, so its <td> carries no `gl-num` layout class to
+    assert on.
+    """
+    payload = _run_render_probe("amps")
+    cell = payload["pluginTableCells"]["amps"][0]  # Python's name cell
+    assert _tier_classes(cell["value"]) == {"gl-level-warning", "gl-prominent"}, f"got {cell!r}"
+    assert _tier_classes(cell["cell"]) == set(), f"the <td> itself carries no tier class: {cell!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_an_empty_amps_collection_is_hidden():
+    """The TUI returns [] for an empty collection, so the block is not
+    painted -- the G9-7 rule for ports/folders/irq/raid/smart."""
+    payload = _run_render_probe("amps-empty")
+    assert payload["pluginHidden"].get("amps") is True, f"got {payload['pluginHidden']!r}"
+
+
+# -------------------------------------------------------- vms TUI parity (G9-9A Task 3)
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_vms_renders_the_tui_columns_and_rows():
+    """vms/render_curses_v5.py:83-155. Engine shown (two engines), LOAD
+    shown (load_1min present), MEM and MAX in ONE cell, a missing value as
+    `-` (spec divergence 5, `format.js` MISSING) -- never `_`.
+    """
+    payload = _run_render_probe("vms")
+    assert payload["pluginHeaderCells"].get("vms") == [
+        "Engine",
+        "Name",
+        "Status",
+        "Core",
+        "CPU%",
+        "MEM/MAX",
+        "LOAD 1/5/15min",
+        "Release",
+    ], f"got {payload['pluginHeaderCells'].get('vms')!r}"
+    rows = _table_rows(payload, "vms", 8)
+    assert rows == [
+        ["virsh", "builder", "running", "4", "12.5%", "2.00G/4.00G", "0.5/0.7/1.2", "24.04"],
+        ["multipass", "sandbox", "stopped", "2", "-", "-/-", "0.0/0.0/0.0", "-"],
+    ], f"got {rows!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_vms_hides_engine_and_load_when_the_data_makes_them_irrelevant():
+    """One distinct engine -> no Engine column
+    (vms/render_curses_v5.py:157). No `load_1min` -> no LOAD column
+    (:162). Both are data-driven, never width-driven.
+    """
+    payload = _run_render_probe("vms-one-engine")
+    assert payload["pluginHeaderCells"].get("vms") == [
+        "Name",
+        "Status",
+        "Core",
+        "CPU%",
+        "MEM/MAX",
+        "Release",
+    ], f"got {payload['pluginHeaderCells'].get('vms')!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_vms_colours_cpu_and_memory_from_levels_and_never_the_status():
+    """CPU% takes `cpu_time`'s tier, MEM/MAX takes `memory_percent`'s, and
+    `status` keeps its own mapping -- the TUI never reads `_levels` for it
+    (vms/render_curses_v5.py `_status_role`). Tiers are observable only on
+    the value <span> inside each <td> (`pluginValueClasses` holds each
+    <td>'s OWN class -- see `_tier_classes` and
+    `test_a_table_value_carries_its_tier_on_the_text_not_the_cell`), so this
+    reads `pluginTableCells` like the fs/amps tier tests do. Row 0
+    (builder): engine=0, name=1, status=2, core=3, cpu%=4, mem/max=5,
+    load=6, release=7. `builder`'s `_levels` entry carries no `status`
+    field, so a `status` class here can only have come from the component's
+    OWN `_STATUS_ROLE` mirror (G9-9A fix wave item 1), never from `_levels`.
+    """
+    payload = _run_render_probe("vms")
+    cells = payload["pluginTableCells"]["vms"]
+    assert _tier_classes(cells[4]["value"]) == {"gl-level-careful"}, cells[4]
+    assert _tier_classes(cells[4]["cell"]) == set(), f"the <td> itself carries no tier class: {cells[4]!r}"
+    assert _tier_classes(cells[5]["value"]) == {"gl-level-warning"}, cells[5]
+    assert _tier_classes(cells[5]["cell"]) == set(), f"the <td> itself carries no tier class: {cells[5]!r}"
+    # "running" -> "ok" in vms's OWN status map, not from `_levels`.
+    assert _tier_classes(cells[2]["value"]) == {"gl-level-ok"}, cells[2]
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_vms_gives_an_unmapped_status_no_colour():
+    """`stopped` is not in vms's `_STATUS_ROLE` mirror (only running/
+    starting/restarting/delayed shutdown are), so row 1 (sandbox, cells[10])
+    must render with no tier class -- the TUI's `ColorRole.DEFAULT` paints
+    nothing for an unclassified status, and the WebUI must match."""
+    payload = _run_render_probe("vms")
+    cells = payload["pluginTableCells"]["vms"]
+    assert _tier_classes(cells[10]["value"]) == set(), cells[10]
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_an_empty_vms_collection_is_hidden():
+    """`CollectionBlock` hides an empty collection with `v-show`, not
+    `v-if`, so the <article> stays in the DOM and stays listed in
+    `slots["right"]` -- `payload["slots"]` cannot observe this (the G9-7
+    convention, see `test_an_empty_folders_collection_is_hidden`)."""
+    payload = _run_render_probe("vms-empty")
+    assert payload["pluginHidden"].get("vms") is True, f"got {payload['pluginHidden']!r}"
+
+
+# ------------------------------------------------- containers TUI parity (G9-9A Task 4)
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_containers_renders_the_tui_columns_and_rows():
+    """containers/render_curses_v5.py:124-215. `CONTAINER` IS the title (no
+    separate title row, G9-6 D6). Engine and Pod are shown because the data
+    makes them relevant (:264-265); /MAX is unconditional (:298 reads only
+    `hidden`, never `memory_limit` -- see
+    `test_containers_shows_max_even_when_no_container_has_a_limit`). Rates
+    follow `network`'s bit default: 100 B/s -> "800b".
+    """
+    payload = _run_render_probe("containers")
+    assert payload["pluginHeaderCells"].get("containers") == [
+        "Engine",
+        "Pod",
+        "CONTAINER",
+        "Status",
+        "Uptime",
+        "CPU%",
+        "MEM",
+        "/MAX",
+        "IOR/s",
+        "IOW/s",
+        "Rx/s",
+        "Tx/s",
+        "Ports",
+        "Command",
+    ], f"got {payload['pluginHeaderCells'].get('containers')!r}"
+    rows = _table_rows(payload, "containers", 14)
+    assert rows[0] == [
+        "docker",
+        "pod-7f3a",
+        "web",
+        "running",
+        "2 days",
+        "12.5%",
+        "512M",
+        "/2.00G",
+        "1024B",
+        "2KB",
+        "800b",
+        "1.6Kb",
+        "0.0.0.0:80->80/tcp",
+        "nginx -g daemon off;",
+    ], f"got {rows[0]!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_containers_colours_status_from_its_own_map():
+    """G9-9A fix wave item 1: `status` was rendered as plain text with no
+    class, silently dropping a signal both the TUI (`_STATUS_ROLE`) and the
+    old v4 WebUI (`getStatusClass`) carry. Row 0 (web) is "running" -> "ok",
+    row 1 (db) is "paused" -> "careful"; header order gives `status` index 3
+    of 14 (Engine=0, Pod=1, CONTAINER=2, Status=3), so row 1 is cells[17].
+    Neither status has a `_levels` entry for `status`, so a class here can
+    only come from the component's own map, never `_levels`.
+    """
+    payload = _run_render_probe("containers")
+    cells = payload["pluginTableCells"]["containers"]
+    assert _tier_classes(cells[3]["value"]) == {"gl-level-ok"}, cells[3]
+    assert _tier_classes(cells[3]["cell"]) == set(), f"the <td> itself carries no tier class: {cells[3]!r}"
+    assert _tier_classes(cells[17]["value"]) == {"gl-level-careful"}, cells[17]
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_containers_gives_an_unmapped_status_no_colour():
+    """`removing` is not in containers's `_STATUS_ROLE` mirror -- the TUI's
+    `ColorRole.DEFAULT` paints nothing for an unclassified status, and the
+    WebUI must match."""
+    payload = _run_render_probe("containers-unmapped-status")
+    cells = payload["pluginTableCells"]["containers"]
+    assert _tier_classes(cells[3]["value"]) == set(), cells[3]
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_containers_shows_the_placeholder_for_every_missing_value():
+    """Spec divergence 5: the WebUI's single placeholder is `-`
+    (`format.js` MISSING), not the `_` this TUI renderer prints. The `db`
+    row has no rate, no uptime and no command yet.
+    """
+    payload = _run_render_probe("containers")
+    row = _table_rows(payload, "containers", 14)[1]
+    assert "_" not in " ".join(row), f"got {row!r}"
+    assert row[4] == "-", f"uptime must be the placeholder, got {row!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_containers_honours_disable_stats_from_the_config():
+    """`[containers] disable_stats` reaches the browser as payload metadata
+    (containers/model_v5.py:220-221) and removes columns regardless of
+    width (spec §5.1)."""
+    payload = _run_render_probe("containers-disable-stats")
+    headers = payload["pluginHeaderCells"].get("containers") or []
+    assert "Ports" not in headers, f"got {headers!r}"
+    assert "Command" not in headers, f"got {headers!r}"
+    assert "CPU%" in headers, f"vacuous: the rest must survive: {headers!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_containers_disabling_mem_also_hides_the_max_column():
+    """containers/render_curses_v5.py:286-288: `disable_stats=mem` cascades
+    into `memory_max` too -- `/MAX` is meaningless without `MEM` next to it.
+    Config-driven, not the width cascade (out of scope for this task)."""
+    payload = _run_render_probe("containers-disable-mem")
+    headers = payload["pluginHeaderCells"].get("containers") or []
+    assert "MEM" not in headers, f"got {headers!r}"
+    assert "/MAX" not in headers, f"got {headers!r}"
+    assert "CPU%" in headers, f"vacuous: the rest must survive: {headers!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_containers_shows_max_even_when_no_container_has_a_limit():
+    """render_curses_v5.py `show_mem_max` (:298) reads only `hidden` -- the
+    config's `disable_stats`, the `mem` cascade (:287-288) and the width
+    cascade (:295, out of scope here). Nothing reads `memory_limit` to gate
+    the COLUMN; the data only decides what the cell PRINTS (`_cpu_mem_cells`:
+    "/" + the limit, or the placeholder when absent). So a host where no
+    container declares a limit still shows `/MAX`, with `-` in every row.
+    """
+    payload = _run_render_probe("containers-no-limits")
+    headers = payload["pluginHeaderCells"].get("containers") or []
+    assert "/MAX" in headers, f"got {headers!r}"
+    rows = _table_rows(payload, "containers", len(headers))
+    max_index = headers.index("/MAX")
+    # The cell is "/" + formatAutoUnit(limit); a missing limit renders
+    # formatAutoUnit's own placeholder ("-"), so the cell reads "/-", not
+    # a bare "-" -- the "/" prefix is unconditional (PluginContainers.vue).
+    for row in rows:
+        assert row[max_index] == "/-", f"got {row!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_an_empty_containers_collection_is_hidden():
+    """`CollectionBlock` hides an empty collection with `v-show`, not
+    `v-if`, so the <article> stays in the DOM and stays listed in
+    `slots["right"]` -- `payload["slots"]` cannot observe this (the G9-7
+    convention, see `test_an_empty_folders_collection_is_hidden`)."""
+    payload = _run_render_probe("containers-empty")
+    assert payload["pluginHidden"].get("containers") is True, f"got {payload['pluginHidden']!r}"
+
+
+# ------------------------------------- containers column cascade (G9-9A Task 6)
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_a_wide_containers_block_keeps_every_column():
+    """The cascade starts from NO flag on every pass (degrade.js
+    `resolveDegrade`), so a block that fits drops nothing -- this is also
+    what gives the columns back when the window widens."""
+    payload = _run_render_probe("containers-wide")
+    headers = payload["pluginHeaderCells"].get("containers") or []
+    assert "Command" in headers, f"got {headers!r}"
+    assert "Status" in headers, f"got {headers!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_one_notch_drops_the_command_column_first():
+    """`_DROP_ORDER`'s first entry (containers/render_curses_v5.py:60):
+    `command` goes before anything else -- the deliberate divergence from
+    processlist, where Command is the protected tail."""
+    payload = _run_render_probe("containers-one-notch")
+    headers = payload["pluginHeaderCells"].get("containers") or []
+    assert "Command" not in headers, f"got {headers!r}"
+    assert "Ports" in headers, f"only ONE notch was budgeted: {headers!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_a_narrow_containers_block_keeps_only_the_undroppable_columns():
+    """The cascade run to its last step: `name`, `cpu` and `mem` are absent
+    from `_DROP_ORDER`, so CONTAINER / CPU% / MEM always survive."""
+    payload = _run_render_probe("containers-narrow")
+    assert payload["pluginHeaderCells"].get("containers") == [
+        "CONTAINER",
+        "CPU%",
+        "MEM",
+    ], f"got {payload['pluginHeaderCells'].get('containers')!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_an_unmeasurable_containers_block_keeps_every_column():
+    """The `containers` scenario sets no block width, so clientWidth is 0 --
+    `fits()` reads that as "cannot measure" and must never degrade on it
+    (degrade.js). A hidden tab must not lose the user's columns."""
+    payload = _run_render_probe("containers")
+    headers = payload["pluginHeaderCells"].get("containers") or []
+    assert "Command" in headers, f"got {headers!r}"
+
+
+# ------------------------------- right-column alignment retouches (maintainer)
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_containers_glues_each_rate_pair_the_way_the_tui_does():
+    """containers/render_curses_v5.py:158-162 and :205-209 right-align
+    `IOR/s`/`Rx/s` and LEFT-align `IOW/s`/`Tx/s`, header and data cell alike,
+    so each pair reads as one group hugging in the middle instead of two
+    columns drifting apart. The WebUI marked all four `.gl-num`
+    (right-aligned), which split every pair.
+
+    Columns are located by label, not by index: the header set depends on the
+    payload (Engine, Pod and /MAX are data- or config-driven), so a hardcoded
+    index would break the day a fixture changes.
+    """
+    payload = _run_render_probe("containers")
+    headers = payload["pluginHeaderCells"]["containers"]
+    classes = payload["pluginColumnClasses"]["containers"]
+
+    for label in ("IOR/s", "Rx/s"):
+        cls = classes[headers.index(label)]
+        assert "gl-num" in cls, f"{label} stays numeric: {cls!r}"
+        assert "gl-num-left" not in cls, f"{label} keeps the TUI's right alignment: {cls!r}"
+    for label in ("IOW/s", "Tx/s"):
+        cls = classes[headers.index(label)]
+        assert "gl-num" in cls, f"{label} stays numeric: {cls!r}"
+        assert "gl-num-left" in cls, f"{label} is left-aligned like the TUI: {cls!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_containers_rate_data_cells_match_their_header_alignment():
+    """A header flipped without its data cell would misalign the column it
+    labels, so the same rule is asserted on the first row's <td>s. The value
+    class list is every <td> in document order, so the first row's cells are
+    the first `len(headers)` entries.
+    """
+    payload = _run_render_probe("containers")
+    headers = payload["pluginHeaderCells"]["containers"]
+    first_row = payload["pluginValueClasses"]["containers"][: len(headers)]
+
+    assert "gl-num-left" not in first_row[headers.index("IOR/s")], f"got {first_row!r}"
+    assert "gl-num-left" in first_row[headers.index("IOW/s")], f"got {first_row!r}"
+    assert "gl-num-left" not in first_row[headers.index("Rx/s")], f"got {first_row!r}"
+    assert "gl-num-left" in first_row[headers.index("Tx/s")], f"got {first_row!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_amps_count_cell_is_marked_as_its_own_narrow_column():
+    """`.gl-num` floors a column at 9ch -- a width sized for a rate cell's
+    worst case ("1023.9G/s"). The AMP count is one to four digits
+    (amps/render_curses_v5.py `_COUNT_COL_WIDTH` = 4), so it inherited a
+    floor it can never use and the column rendered far wider than the TUI's.
+
+    This observes the marker class reaching the DOM; the width itself is CSS,
+    which the probe's fake DOM cannot evaluate -- that half is pinned in
+    tests/test_webui_v5_tokens.py, the same split the `.gl-command` cap uses.
+    """
+    payload = _run_render_probe("amps")
+    classes = payload["pluginValueClasses"]["amps"]
+    # Three columns, three rendered rows: name, count, result.
+    count_cells = [classes[i] for i in range(1, len(classes), 3)]
+
+    assert count_cells, f"no amps cells rendered: {classes!r}"
+    for cls in count_cells:
+        assert "gl-num" in cls, f"the count stays numeric: {cls!r}"
+        assert "gl-amp-count" in cls, f"the count carries its own width class: {cls!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_containers_ports_cell_keeps_its_full_value_on_hover():
+    """The ports cell is now capped and ellipsized (see
+    tests/test_webui_v5_tokens.py), so the full published list must stay
+    reachable as a `title`, exactly as the command cell does. A cap without
+    a title would DELETE information from the page rather than fold it.
+    """
+    payload = _run_render_probe("containers")
+    titled = payload["pluginTitles"].get("containers") or []
+    titles = [c.get("title") for c in titled]
+    assert "0.0.0.0:80->80/tcp" in titles, f"the ports cell carries its full value: {titles!r}"

@@ -30,6 +30,21 @@
   --gl-prominent-fg: var(--gl-bg);
 
   --gl-font: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  /* The width of one monospace glyph. NOT `ch`: measured in Chrome on
+   * 2026-09-19 with the stack above, the rendered advance is 8.473px while
+   * `1ch` resolves to 7.04px -- exactly 0.5em, which is what the CSS spec
+   * mandates when "the measure of the 0 glyph cannot be determined". Every
+   * `Nch` therefore shows 0.83*N characters, and every cap meant to mirror a
+   * TUI column truncated 17% early. The trigger is the stack, not one bad
+   * family: `ui-monospace` alone resolves fine, and so does `X, monospace`,
+   * but two or more unavailable families before the generic break it
+   * (`Menlo, Consolas, monospace` measured 0.83).
+   *
+   * 0.6em is the advance of every monospace face this stack can land on
+   * (DejaVu Sans Mono 0.6017em measured here, Menlo and SF Mono 0.6em).
+   * Widths that are a LAYOUT budget rather than a character count keep their
+   * own unit -- see the sensors/wifi name caps. */
+  --gl-col: 0.6em;
   --gl-size-sm: 0.78rem;
   --gl-size-base: 0.88rem;
   --gl-size-lg: 1.05rem;
@@ -244,13 +259,19 @@ body {
   min-width: 0;
 }
 
-/* Measurement pass of the degradation cascade (AppShell.measureZone): for one
- * synchronous scrollWidth read, text keeps its natural width, so an overflow is
- * seen as one and the cascade hides blocks BEFORE anything is ellipsized (spec
- * D4: hide, then crop, then scroll). Never painted -- the class is removed
- * before measureZone returns. `.gl-name` keeps its deliberate cap (G9-6 D3). */
+/* Measurement pass of the degradation cascade (AppShell.measureZone,
+ * fit_block.js's measureBlock): for one synchronous scrollWidth read, text
+ * keeps its natural width, so an overflow is seen as one and the cascade
+ * hides blocks/columns BEFORE anything is ellipsized (spec D4: hide, then
+ * crop, then scroll). Never painted -- the class is removed before the
+ * measuring method returns. `.gl-name` keeps its deliberate cap (G9-6 D3).
+ * `.gl-command` and `.gl-ports` keep their caps too, for a stronger reason: the TUI budgets it
+ * at _MIN_COMMAND_WIDTH = 8 (containers/render_curses_v5.py:59) because the
+ * data is unbounded -- measured at natural width, one very long command line
+ * would push the row over the limit and drop every droppable column on a
+ * window that has plenty of room. */
 .gl-measuring .gl-inline,
-.gl-measuring .gl-truncate:not(.gl-name) {
+.gl-measuring .gl-truncate:not(.gl-name):not(.gl-command):not(.gl-ports) {
   min-width: max-content;
   max-width: none;
 }
@@ -308,6 +329,20 @@ body {
 .gl-table th:not(.gl-num),
 .gl-table td:not(.gl-num) {
   text-align: left;
+}
+
+/* `.gl-table { width: 100% }` above equalises the LEFT column's blocks, which
+ * is what it was introduced for. In the RIGHT column the slot is the body
+ * grid's `1fr`, so that same rule spread the width across whatever columns the
+ * block had: measured at a 2560px viewport, `amps` (three short columns)
+ * rendered its name cell 431px wide around a 136px cap -- 295px of empty
+ * space -- while `containers`, with eleven columns, drifted by only 76px.
+ * The TUI gives its slack to the last, unbounded column; so does this.
+ * `last-child` rather than a per-block class because `containers` can have
+ * its tail columns dropped by the width cascade and still needs one. */
+[data-slot="right"] .gl-table td:last-child,
+[data-slot="right"] .gl-table th:last-child {
+  width: 100%;
 }
 
 /* A block keeps its natural width inside a zone that no longer wraps: without

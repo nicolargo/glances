@@ -118,6 +118,6 @@ export default {
 <style scoped>
 /* The TUI's array-name width (raid/render_curses_v5.py _NAME_MAX_WIDTH). */
 .gl-plugin {
-	--gl-name-width: 18ch;
+	--gl-name-width: calc(18 * var(--gl-col));
 }
 </style>
