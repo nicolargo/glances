@@ -8,6 +8,7 @@
 
 """Manage the Glances web/url list (Ports plugin)."""
 
+from glances.config import secure_option
 from glances.globals import urlparse
 from glances.logger import logger
 
@@ -25,6 +26,12 @@ class GlancesWebList:
         #    'refresh': 30,
         #    'description': 'My blog',
         #    'status': 404} ... ]
+        # The web list is published as the ports plugin statistics, so it must
+        # not carry any credential (GHSA-2jqf-3j6f-683p): the URL is redacted
+        # and the proxies are not part of it at all.
+        # _web_secrets is the private counterpart, indexed by indice and read
+        # by the scanner only. It never leaves this process.
+        self._web_secrets = {}
         # Load the configuration file
         self._web_list = self.load(config)
 
@@ -48,20 +55,27 @@ class GlancesWebList:
                 postfix = f'web_{str(i)}_'
 
                 # Read mandatory configuration key: host
-                new_web['url'] = config.get_value(self._section, '{}{}'.format(postfix, 'url'))
-                if new_web['url'] is None:
+                url = config.get_value(self._section, '{}{}'.format(postfix, 'url'))
+                if url is None:
                     continue
-                url_parse = urlparse(new_web['url'])
+                url_parse = urlparse(url)
                 if not bool(url_parse.scheme) or not bool(url_parse.netloc):
                     logger.error(
-                        'Bad URL ({}) in the [{}] section of configuration file.'.format(new_web['url'], self._section)
+                        'Bad URL ({}) in the [{}] section of configuration file.'.format(
+                            secure_option('url', url), self._section
+                        )
                     )
                     continue
 
+                # The URL is published, so the userinfo (user:password@) it may
+                # embed goes through the same sanitiser as the configuration view.
+                new_web['url'] = secure_option('url', url)
+
                 # Read optionals configuration keys
-                # Default description is the URL without the http://
+                # Default description is the URL without the http:// and,
+                # because it is displayed, without the userinfo either.
                 new_web['description'] = config.get_value(
-                    self._section, f'{postfix}description', default=f"{url_parse.netloc}"
+                    self._section, f'{postfix}description', default=url_parse.netloc.rpartition('@')[2]
                 )
 
                 # Default status
@@ -98,9 +112,13 @@ class GlancesWebList:
                 https_proxy = config.get_value(self._section, f'{postfix}https_proxy', default=None)
 
                 if https_proxy is None and http_proxy is None:
-                    new_web['proxies'] = None
+                    proxies = None
                 else:
-                    new_web['proxies'] = {'http': http_proxy, 'https': https_proxy}
+                    proxies = {'http': http_proxy, 'https': https_proxy}
+
+                # The real URL and the proxies are needed to run the scan, and
+                # by nobody else: they are kept out of the published list.
+                self._web_secrets[new_web['indice']] = {'url': url, 'proxies': proxies}
 
                 # Add the server to the list
                 logger.debug("Add Web URL {} to the static list".format(new_web['url']))
@@ -114,6 +132,13 @@ class GlancesWebList:
     def get_web_list(self):
         """Return the current server list (dict of dict)."""
         return self._web_list
+
+    def get_web_secrets(self):
+        """Return the scan credentials, indexed by indice.
+
+        Never publish this: it holds the URL userinfo and the proxy credentials.
+        """
+        return self._web_secrets
 
     def set_server(self, pos, key, value):
         """Set the key to the value for the pos (position in the list)."""

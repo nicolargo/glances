@@ -44,6 +44,9 @@ fields_description = {
     'port': {
         'description': 'Measurement is be done on this port (0 for ICMP)',
     },
+    'url': {
+        'description': 'Measurement is be done on this URL (credentials are redacted)',
+    },
     'description': {
         'description': 'Human readable description for the host/port',
     },
@@ -80,10 +83,12 @@ class PortsPlugin(GlancesPluginModel):
         self.display_curse = True
 
         # Init stats
-        self.stats = (
-            GlancesPortsList(config=config, args=args).get_ports_list()
-            + GlancesWebList(config=config, args=args).get_web_list()
-        )
+        web_list = GlancesWebList(config=config, args=args)
+        self.stats = GlancesPortsList(config=config, args=args).get_ports_list() + web_list.get_web_list()
+
+        # Scan credentials, kept out of self.stats: the statistics are served
+        # unauthenticated by default (GHSA-2jqf-3j6f-683p)
+        self._web_secrets = web_list.get_web_secrets()
 
         # Global Thread running all the scans
         self._thread = None
@@ -113,7 +118,7 @@ class PortsPlugin(GlancesPluginModel):
                 thread_is_running = self._thread.is_alive()
             if not thread_is_running:
                 # Run ports scanner
-                self._thread = ThreadScanner(self.stats)
+                self._thread = ThreadScanner(self.stats, self._web_secrets)
                 self._thread.start()
         else:
             # Not available in SNMP mode
@@ -248,7 +253,7 @@ class ThreadScanner(threading.Thread):
     stats is a list of dict
     """
 
-    def __init__(self, stats):
+    def __init__(self, stats, web_secrets):
         """Init the class."""
         logger.debug(f"ports plugin - Create thread for scan list {stats}")
         super().__init__()
@@ -256,6 +261,9 @@ class ThreadScanner(threading.Thread):
         self._stopper = threading.Event()
         # The class return the stats as a list of dict
         self._stats = stats
+        # Scan credentials (URL userinfo and proxies), indexed by indice.
+        # They are deliberately not part of stats, which is published.
+        self._web_secrets = web_secrets
         # Is part of Ports plugin
         self.plugin_name = "ports"
 
@@ -305,12 +313,13 @@ class ThreadScanner(threading.Thread):
 
     def _web_scan(self, web):
         """Scan the  Web/URL (dict) and update the status key."""
+        secrets = self._web_secrets[web['indice']]
         try:
             req = requests.head(
-                web['url'],
+                secrets['url'],
                 allow_redirects=True,
                 verify=web['ssl_verify'],
-                proxies=web['proxies'],
+                proxies=secrets['proxies'],
                 timeout=web['timeout'],
             )
         except Exception as e:
