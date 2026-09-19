@@ -15,14 +15,25 @@ from glances.globals import json_dumps
 from glances.logger import logger
 
 try:
-    from mcp.server.fastmcp import FastMCP
-    from mcp.server.sse import TransportSecuritySettings
+    from mcp.server.transport_security import TransportSecuritySettings
+
+    try:
+        # MCP Python SDK >= 2: FastMCP was renamed to MCPServer
+        from mcp.server.mcpserver import MCPServer
+
+        MCP_V2 = True
+    except ImportError:
+        # MCP Python SDK 1.x
+        from mcp.server.fastmcp import FastMCP as MCPServer
+
+        MCP_V2 = False
 
     MCP_AVAILABLE = True
     logging.getLogger("mcp").setLevel(logging.WARNING)
 except ImportError:
     MCP_AVAILABLE = False
-    FastMCP = None
+    MCP_V2 = False
+    MCPServer = None
     TransportSecuritySettings = None
 
 
@@ -76,7 +87,9 @@ class GlancesMcpServer:
 
         self._load_config(config)
 
-        self._mcp = FastMCP(
+        # MCP SDK >= 2 takes transport_security in sse_app(), 1.x in the constructor
+        self._transport_security = self._build_transport_security()
+        self._mcp = MCPServer(
             "Glances",
             instructions=(
                 "Glances is a cross-platform system monitoring tool. "
@@ -84,7 +97,7 @@ class GlancesMcpServer:
                 "(CPU, memory, disk, network, processes, containers, sensors, …). "
                 "Use prompts to generate structured analyses of the current system state."
             ),
-            transport_security=self._build_transport_security(),
+            **({} if MCP_V2 else {"transport_security": self._transport_security}),
         )
 
         self._setup_resources()
@@ -109,7 +122,7 @@ class GlancesMcpServer:
         Args:
             mount_path: Informational only — the URL path where this app is mounted
                         in the parent FastAPI instance (used for the log message).
-                        Do NOT forward this to FastMCP.sse_app(): when Starlette
+                        Do NOT forward this to MCPServer.sse_app(): when Starlette
                         mounts a sub-application it sets scope['root_path'] to the
                         mount prefix automatically, and SseServerTransport uses that
                         value to build the correct endpoint URL for clients.
@@ -120,10 +133,12 @@ class GlancesMcpServer:
             A Starlette ASGI application.
         """
         logger.debug(f"MCP server (SSE transport) mounted at {mount_path} with allowed hosts: {self.mcp_allowed_hosts}")
-        # Call sse_app() without mount_path so FastMCP keeps its default '/'.
+        # Call sse_app() without mount_path so the server keeps its default '/'.
         # Starlette will prepend scope['root_path'] (= mount_path) at runtime,
         # producing the correct absolute endpoint URL for clients.
-        # transport_security is already configured on self._mcp at construction time.
+        if MCP_V2:
+            return self._mcp.sse_app(transport_security=self._transport_security)
+        # MCP SDK 1.x: transport_security is already configured on self._mcp at construction time.
         return self._mcp.sse_app()
 
     # ------------------------------------------------------------------
@@ -185,7 +200,7 @@ class GlancesMcpServer:
     # ------------------------------------------------------------------
 
     def _setup_resources(self):
-        """Declare all MCP resources on the FastMCP instance."""
+        """Declare all MCP resources on the MCP server instance."""
         mcp = self._mcp
         server = self  # captured by closures below
 
@@ -288,7 +303,7 @@ class GlancesMcpServer:
     # ------------------------------------------------------------------
 
     def _setup_prompts(self):
-        """Declare all MCP prompt templates on the FastMCP instance."""
+        """Declare all MCP prompt templates on the MCP server instance."""
         mcp = self._mcp
         server = self  # captured by closures below
 
