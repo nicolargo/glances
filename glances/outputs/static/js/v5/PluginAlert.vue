@@ -9,29 +9,30 @@
 		under it). It used to double as the grid's first <th>, which squeezed
 		the whole sentence into the 1-character GLYPH column's box: under
 		`table-layout: fixed` that cell cannot grow, so the counts spilled
-		across the TIME and DURATION headers. `headerText` keeps the bare
-		`ALERT` for every state that paints no grid. -->
-		<div class="gl-plugin-title">
+		across the TIME and DURATION headers. Only the states that PAINT a
+		grid get it: the ones that do not collapse to the single line below
+		instead, which already carries the bare `ALERT`. -->
+		<div v-if="hasGrid" class="gl-plugin-title">
 			<h2 class="gl-header">{{ headerText }}</h2>
 		</div>
-		<p v-if="error" class="gl-level-critical">{{ error }}</p>
-		<p v-else-if="!payload" class="gl-muted">loading…</p>
-		<!-- Warm-up is not an all-clear (an alert simply cannot have fired
-		yet), so it stays neutral rather than claiming a healthy system --
-		same rule and wording as the TUI's collapse
-		(curses_renderer_v5.py:738-745, `is_initializing`). Checked BEFORE
-		the empty-rows branch: with nothing ingested yet, `allRows` is also
-		empty, and initializing must win. -->
-		<p v-else-if="isInitializing" class="gl-muted">(initializing)</p>
-		<!-- `allRows`, not the budget-capped `rows`: a tight vertical row
-		budget can shrink `rows` to zero while incidents still exist
-		(row_budget.js's "header only" step) -- that state renders the table
-		with zero data rows, never this all-clear message. -->
-		<!-- OK-coloured, mirroring the TUI (curses_renderer_v5.py:745): this
-		was `gl-muted` before, which understated a genuine all-clear as if it
-		were merely neutral like "loading"/"(initializing)". -->
-		<p v-else-if="!allRows.length" class="gl-level-ok">(no alert detected)</p>
-		<table v-else class="gl-table gl-process-table">
+		<!-- Every grid-less state is ONE glued line, `ALERT <state>`, not a
+		title line above a separate paragraph: that is what
+		`render_alert_block` paints when it has no incident to show
+		(curses_renderer_v5.py:734-754), and it is the one row
+		`alertBlockHeight(0, ...)` budgets for this block (row_budget.js).
+		The two-element form this replaced cost 3.6 rows (title line +
+		paragraph + the browser's default <p> margins), so the right column
+		overran the body height the solver had planned and the state line
+		ended up UNDER the sticky, opaque `.gl-alerts` footer -- invisible,
+		leaving only the title on screen. `hasGrid` reads `allRows`, not the
+		budget-capped `rows`: a tight vertical budget can shrink `rows` to
+		zero while incidents still exist (row_budget.js's "header only"
+		step) -- that state renders the table with zero data rows, never
+		this collapse. -->
+		<p v-else class="gl-alert-collapse">
+			<span class="gl-header">{{ TITLE }}</span> <span :class="collapse.cls">{{ collapse.text }}</span>
+		</p>
+		<table v-if="hasGrid" class="gl-table gl-process-table">
 			<colgroup>
 				<col :style="colStyle('GLYPH')" />
 				<col :style="colStyle('TIME')" />
@@ -141,15 +142,30 @@ export default {
 		isInitializing() {
 			return !!(this.payload && this.payload.isInitializing);
 		},
-		// Exactly the states the template's <table v-else> paints, so
-		// `headerText` cannot disagree with what is rendered under it: every
-		// earlier branch of that v-if chain (error, no payload, warm-up,
-		// nothing to show) keeps the bare `ALERT` title instead of a count.
+		// Exactly the states the template's <table v-if> paints, so
+		// `headerText` cannot disagree with what is rendered under it, and
+		// so the collapse line below covers exactly the rest (error, no
+		// payload, warm-up, nothing to show).
 		hasGrid() {
 			return !this.error && !!this.payload && !this.isInitializing && this.allRows.length > 0;
 		},
 		headerText() {
 			return this.hasGrid ? this.titleText : TITLE;
+		},
+		// The state fragment glued after `ALERT` on the collapse line, and its
+		// colour. Mirrors `render_alert_block`'s own collapse
+		// (curses_renderer_v5.py:738-754): only the fragment is coloured,
+		// `ALERT` stays HEADER. Warm-up is not an all-clear (an alert simply
+		// cannot have fired yet), so it stays neutral rather than claiming a
+		// healthy system -- and it is checked BEFORE the empty-rows case:
+		// with nothing ingested yet `allRows` is also empty, and initializing
+		// must win. A genuine all-clear is OK-coloured, not muted: it is a
+		// finding, unlike "loading…"/"(initializing)".
+		collapse() {
+			if (this.error) return { text: this.error, cls: "gl-level-critical" };
+			if (!this.payload) return { text: "loading…", cls: "gl-muted" };
+			if (this.isInitializing) return { text: "(initializing)", cls: "gl-muted" };
+			return { text: "(no alert detected)", cls: "gl-level-ok" };
 		},
 		// Mirrors `_build_alert_title_cells`'s populated text
 		// (curses_renderer_v5.py:629-675), minus its own width shrink ladder --
@@ -342,5 +358,13 @@ export default {
 .gl-alert-resolved-prominent {
 	background: var(--gl-muted);
 	color: var(--gl-prominent-fg);
+}
+
+/* The collapse line costs exactly one row, like every other line of the
+ * right column -- the browser's default <p> margin would add two more,
+ * which is what `alertBlockHeight(0, ...)` (row_budget.js) does not budget
+ * for. Same `margin: 0` reason as `.gl-plugin-title h2` (css/v5.css). */
+.gl-alert-collapse {
+	margin: 0;
 }
 </style>

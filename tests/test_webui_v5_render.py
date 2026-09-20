@@ -3139,6 +3139,15 @@ def test_the_alert_block_never_claims_all_clear_during_warm_up():
     text = payload["pluginText"].get("alert", "")
     assert "initializing" in text, f"got {text!r}"
     assert "no alert detected" not in text, f"must not claim an all-clear during warm-up: {text!r}"
+    # One GLUED line, `ALERT (initializing)`, exactly as `render_alert_block`
+    # paints it (curses_renderer_v5.py:734-754 -- the same string
+    # test_curses_renderer_v5.py asserts on the TUI side). Not cosmetic: the
+    # block-title-plus-paragraph form this replaced cost three rows where
+    # `alertBlockHeight(0, ...)` (row_budget.js) budgets one, so the right
+    # column overran the planned body height and the state line was painted
+    # under the sticky, opaque `.gl-alerts` footer -- leaving only `ALERT`
+    # visible in the browser.
+    assert text == "ALERT (initializing)", f"the collapse is one line: {text!r}"
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
@@ -3151,6 +3160,9 @@ def test_the_alert_block_shows_no_alert_detected_once_warmed_up():
     assert "no alert detected" in text, f"got {text!r}"
     cells = payload["pluginTableCells"].get("alert", [])
     assert not cells, f"the empty state renders no incident grid: {cells!r}"
+    # Same single-line collapse as the warm-up test above, and for the same
+    # row-budget reason -- see its comment.
+    assert text == "ALERT (no alert detected)", f"the collapse is one line: {text!r}"
 
 
 # ------------------------------------------------- alert width cascade + row budget
