@@ -40,11 +40,20 @@
    * but two or more unavailable families before the generic break it
    * (`Menlo, Consolas, monospace` measured 0.83).
    *
-   * 0.6em is the advance of every monospace face this stack can land on
-   * (DejaVu Sans Mono 0.6017em measured here, Menlo and SF Mono 0.6em).
+   * 0.62em, not the 0.6em measured advance of the faces this stack can land
+   * on (DejaVu Sans Mono 0.6017em measured here, Menlo and SF Mono 0.6em):
+   * 0.6em left ZERO slack, so a cell whose value exactly FILLED its
+   * N-character column overflowed its content box by N * 0.0017em and
+   * `text-overflow: ellipsis` ate the last character. Every processlist and
+   * alert column whose widest possible value is exactly its declared width
+   * cropped because of it -- PID at `4194304`, TIME+ at `99h59:59`,
+   * VIRT/RES/R/s/W/s at `1023G`, NI at `-20`, USER at ten characters, alert's
+   * TIME at `--:--:--` and its DURATION header. 0.62em clears the widest such
+   * face by ~3%, so N characters always fit in an N-column box while every
+   * character-count arithmetic ported from the TUI stays untouched.
    * Widths that are a LAYOUT budget rather than a character count keep their
    * own unit -- see the sensors/wifi name caps. */
-  --gl-col: 0.6em;
+  --gl-col: 0.62em;
   /* One text row, as a unitless line-height. The vertical budget
    * (js/v5/row_budget.js) is an INTEGER row count ported from the TUI, whose
    * cost() charges one blank line between blocks; the browser's inter-block
@@ -410,14 +419,18 @@ body {
   white-space: nowrap;
   padding: 0;
 }
-/* One character BETWEEN cells, like the terminal's separator -- so the table is
- * `sum(widths) + (n - 1)` columns wide, exactly the TUI's formula and exactly
- * what `--gl-fixed-cols` computes. `:not(:last-child)` is load-bearing: padding
- * every cell would add one column the arithmetic does not account for, and the
- * cascade would fire one column early on every process table (design 5.3). */
+/* The gap BETWEEN cells. The terminal separates its columns with one space;
+ * two characters here, because a 0.88rem web grid reads as a wall of digits
+ * at one -- `COL_SEPARATOR` (js/v5/process_widths.js) is the single source of
+ * that number, and every `<col>` box and `--gl-fixed-cols` sum charges it, so
+ * the multiplier below must stay equal to it (test_webui_v5_tokens.py's
+ * `test_the_column_box_separator_multiplier_matches_colstyles_offset`).
+ * `:not(:last-child)` is load-bearing: padding every cell would add a column
+ * the arithmetic does not account for, and the cascade would fire early on
+ * every process table (design 5.3). */
 .gl-table.gl-process-table th:not(:last-child),
 .gl-table.gl-process-table td:not(:last-child) {
-  padding-right: var(--gl-col);
+  padding-right: calc(2 * var(--gl-col));
 }
 /* The right column's slack goes to the last cell -- but not here: under fixed
  * layout that rule would claim the whole width. The `auto` <col> already does

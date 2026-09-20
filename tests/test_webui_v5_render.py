@@ -2929,6 +2929,19 @@ def test_the_containers_ports_cell_keeps_its_full_value_on_hover():
 # ------------------------------------------------- alert TUI parity (G9-9B Task 6)
 
 
+def _alert_title(payload):
+    """The alert block's own title line -- its <h2>, NOT the grid's first <th>.
+
+    The title used to be the glyph column's header cell, which pinned the
+    whole `ALERTS N ongoing · M resolved` sentence inside a 1-character <col>
+    under `table-layout: fixed`; it is a full-width line above the grid now,
+    like the terminal's own title row (curses_renderer_v5.py:806-816).
+    """
+    text = payload["pluginTitleLine"].get("alert")
+    assert text is not None, "the alert block renders no title line at all"
+    return text
+
+
 def _alert_rows(payload):
     """The rendered alert grid's <td> cells, grouped by row (6 columns:
     glyph, TIME, DURATION, TARGET, TOP PROCESSES, LEVEL)."""
@@ -2945,12 +2958,14 @@ def test_the_alert_grid_renders_the_tui_columns():
     column survives -- see test_the_alert_grid_drops_top_processes_first and
     its siblings below for the width cascade itself."""
     payload = _run_render_probe("alert")
-    # The glyph column doubles as the title cell in the populated state (fix
-    # round 2, IMPORTANT 1) -- ALERT_INCIDENTS_FIXTURE has 3 ongoing (rows
-    # 0, 1, 4) and 2 resolved (rows 2, 3).
     header = payload["pluginHeaderCells"]["alert"]
     assert header[1:] == ["TIME", "DURATION", "TARGET", "TOP PROCESSES", "LEVEL"]
-    assert header[0] == "ALERTS  3 ongoing · 2 resolved", f"got {header[0]!r}"
+    # The glyph column's header is BLANK, like the terminal's
+    # (curses_renderer_v5.py:818): the title is a full-width line of its own
+    # above the grid, not the first <th>. ALERT_INCIDENTS_FIXTURE has 3
+    # ongoing (rows 0, 1, 4) and 2 resolved (rows 2, 3).
+    assert header[0] == "", f"got {header[0]!r}"
+    assert _alert_title(payload) == "ALERTS  3 ongoing · 2 resolved", f"got {_alert_title(payload)!r}"
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
@@ -3103,6 +3118,29 @@ def test_the_alert_block_shows_no_alert_detected_once_warmed_up():
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_alert_target_column_takes_its_natural_width():
+    """TARGET is sized to the LONGEST target on screen, floored at
+    `_ALERT_MIN_TARGET` -- what the terminal does whenever it is not
+    width-constrained (curses_renderer_v5.py:781-784).
+
+    The <col> used to be pinned to that floor instead, which cropped every
+    target past twelve characters although the block had room beside it:
+    ALERT_INCIDENTS_FIXTURE's own `Diskio sda read bytes` is 21, and rendered
+    as `Diskio sda r…`. The scenario carries no block-width fixture, so no
+    cascade fires and the natural width is what reaches the DOM.
+    """
+    payload = _run_render_probe("alert")
+    rows = _alert_rows(payload)
+    natural = max(len(row[3]["text"]) for row in rows)
+    assert natural > 12, f"the fixture no longer exercises a target past the floor: {natural}"
+    # GLYPH, TIME, DURATION, TARGET, TOP (width-less), LEVEL -- TARGET is the
+    # fourth <col>, and every <col> box carries COL_SEPARATOR on top of its
+    # content width.
+    widths = payload["pluginColWidths"]["alert"]
+    assert widths[3] == f"calc({natural + 2} * var(--gl-col))", f"got {widths!r} for a {natural}-character target"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
 def test_the_alert_grid_drops_top_processes_first():
     """The TUI sacrifices TOP to keep TARGET readable
     (curses_renderer_v5.py:538-540). The browser must not do the opposite."""
@@ -3141,13 +3179,12 @@ def test_the_alert_block_honours_its_row_budget():
     passed -- see task-10-report.md for the recorded revert/restore output.
     """
     payload = _run_render_probe("budget-short-with-alerts")
-    header = payload["pluginHeaderCells"]["alert"]
     rows = payload["pluginRowGroups"]["alert"][0]
     assert len(rows) == payload["rowBudget"]["alert"], (
         f"rendered {len(rows)} rows, budget was {payload['rowBudget']['alert']}"
     )
-    assert header[0] == "ALERTS  3 ongoing · 2 resolved", (
-        f"the title must count ALL incidents, not just the budgeted rows: got {header[0]!r}"
+    assert _alert_title(payload) == "ALERTS  3 ongoing · 2 resolved", (
+        f"the title must count ALL incidents, not just the budgeted rows: got {_alert_title(payload)!r}"
     )
 
 
@@ -3347,40 +3384,41 @@ def test_the_config_cap_still_wins_when_it_is_lower():
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
 def test_the_process_table_declares_the_terminal_column_widths():
-    """The <colgroup> carries the TUI's character counts
-    (process_widths.js's PROCESS_COL_WIDTHS/FIXED_COL_KEYS), so a wider PID
+    """The <colgroup> carries the character counts
+    (process_widths.js's WEBUI_COL_WIDTHS/FIXED_COL_KEYS), so a wider PID
     at the next refresh cannot re-lay the table out. `pluginColWidths`
     (Task 7) lets this be observed; nothing before this test asserts that a
     colgroup is rendered at all.
 
-    Each `<col>` is `PROCESS_COL_WIDTHS[key] + 1`, not the bare content
-    width: under `table-layout: fixed` the <col> is the column's WHOLE box,
-    and the `:not(:last-child)` separator's `padding-right` comes out of
-    that same box, so a <col> of exactly N characters would leave only N-1
-    for content -- every fixed column would crop one character early
+    Each `<col>` is `WEBUI_COL_WIDTHS[key] + COL_SEPARATOR`, not the bare
+    content width: under `table-layout: fixed` the <col> is the column's
+    WHOLE box, and the `:not(:last-child)` separator's `padding-right` comes
+    out of that same box, so a <col> of exactly N characters would leave only
+    N - COL_SEPARATOR for content -- every fixed column would crop early
     (invisibly so for `S`, N=1). CPU% is 7, not 5: a 5-wide field fits
     `100.0` but not `9999.9`, a value a process spread over many cores can
-    genuinely reach.
+    genuinely reach. MEM% is 6 where the terminal budgets 5, because
+    `formatPercent()` appends a `%` curses never prints and `100.0%` is six
+    characters -- see WEBUI_COL_WIDTHS' own comment.
     """
     payload = _run_render_probe("processlist-wide")
     assert payload["pluginColWidths"]["processlist"] == [
-        f"calc({n + 1} * var(--gl-col))" for n in (7, 5, 5, 5, 7, 10, 3, 3, 1, 8, 5, 5)
+        f"calc({n + 2} * var(--gl-col))" for n in (7, 6, 5, 5, 7, 10, 3, 3, 1, 8, 5, 5)
     ]
     assert "gl-process-table" in payload["pluginTableClasses"]["processlist"]
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
-def test_the_column_box_reserves_one_character_for_the_separator_inside_it():
-    """`colStyle()` used to return `PROCESS_COL_WIDTHS[key]` alone,
-    under-sizing every column's usable content space by one character --
-    under `table-layout: fixed` the <col> is the column's WHOLE box, and
-    `.gl-process-table td:not(:last-child)`'s `padding-right: var(--gl-col)`
-    separator comes out of that same box. A maintainer browser smoke test
-    caught it (every fixed column cropped one character early; invisibly so
-    for `S`, whose content width of 1 made the column disappear rather than
-    merely narrow); the PREVIOUS version of this test
-    (test_the_process_table_declares_the_terminal_column_widths) did not,
-    because its expected numbers were hand-copied from the same (buggy)
+def test_the_column_box_reserves_the_separator_inside_it():
+    """`colStyle()` used to return the content width alone, under-sizing every
+    column's usable content space by the separator -- under
+    `table-layout: fixed` the <col> is the column's WHOLE box, and
+    `.gl-process-table td:not(:last-child)`'s `padding-right` comes out of
+    that same box. A maintainer browser smoke test caught it (every fixed
+    column cropped early; invisibly so for `S`, whose content width of 1 made
+    the column disappear rather than merely narrow); the PREVIOUS version of
+    this test (test_the_process_table_declares_the_terminal_column_widths) did
+    not, because its expected numbers were hand-copied from the same (buggy)
     `colStyle()` output it was meant to check -- consistent with itself and
     wrong.
 
@@ -3389,29 +3427,32 @@ def test_the_column_box_reserves_one_character_for_the_separator_inside_it():
     that would need something like Playwright or headless Chrome measuring
     real pixel widths, which this test suite does not have. What it CAN do,
     and what the previous test did not, is pin the FORMULA independently of
-    `colStyle()`'s own source: `PROCESS_COL_WIDTHS`/`FIXED_COL_KEYS` are
-    re-extracted here straight from process_widths.js by regex (the same
-    technique test_webui_v5_width_drift.py uses), never by importing or
-    calling colStyle -- so a future edit that silently drops the `+ 1`
-    changes only production code, not this independently-sourced expectation,
-    and the two are compared instead of copied from one another.
+    `colStyle()`'s own source: `WEBUI_COL_WIDTHS`/`FIXED_COL_KEYS`/
+    `COL_SEPARATOR` are re-extracted here straight from process_widths.js by
+    regex (the same technique test_webui_v5_width_drift.py uses), never by
+    importing or calling colStyle -- so a future edit that silently drops the
+    offset changes only production code, not this independently-sourced
+    expectation, and the two are compared instead of copied from one another.
     """
     widths_path = _BUNDLE_PATH.parent.parent / "js" / "v5" / "process_widths.js"
     source = widths_path.read_text()
     order_match = re.search(r"export const FIXED_COL_KEYS\s*=\s*\[(.*?)\];", source, re.S)
     assert order_match, f"FIXED_COL_KEYS is not exported from {widths_path}"
     keys = re.findall(r'"([^"]+)"', order_match.group(1))
-    widths_match = re.search(r"export const PROCESS_COL_WIDTHS\s*=\s*\{(.*?)\};", source, re.S)
-    assert widths_match, f"PROCESS_COL_WIDTHS is not exported from {widths_path}"
+    widths_match = re.search(r"export const WEBUI_COL_WIDTHS\s*=\s*\{(.*?)\};", source, re.S)
+    assert widths_match, f"WEBUI_COL_WIDTHS is not exported from {widths_path}"
     content_widths = {k: int(v) for k, v in re.findall(r'"([^"]+)"\s*:\s*(\d+)', widths_match.group(1))}
+    separator_match = re.search(r"export const COL_SEPARATOR\s*=\s*(\d+)\s*;", source)
+    assert separator_match, f"COL_SEPARATOR is not exported from {widths_path}"
+    separator = int(separator_match.group(1))
 
     payload = _run_render_probe("processlist-wide")
     col_widths = payload["pluginColWidths"]["processlist"]
     assert len(col_widths) == len(keys), f"got {col_widths!r} for keys {keys!r}"
     for key, declared in zip(keys, col_widths):
-        expected = content_widths[key] + 1  # content chars + 1 separator inside the box
+        expected = content_widths[key] + separator  # content chars + the separator inside the box
         assert declared == f"calc({expected} * var(--gl-col))", (
-            f"{key}: got {declared!r}, expected content ({content_widths[key]}) + 1 separator = {expected}"
+            f"{key}: got {declared!r}, expected content ({content_widths[key]}) + {separator} separator = {expected}"
         )
 
 
@@ -3581,11 +3622,11 @@ def test_the_program_block_uses_nprocs_where_processes_use_pid():
     NPROCS (NPROCS_WIDTH=7) in PID's place -- same width as PID (both 7), so
     the expected tuple is numerically identical to processlist's own
     (test_the_process_table_declares_the_terminal_column_widths), column for
-    column. Each `<col>` is content width + 1 for the separator, same formula
-    as processlist's own `colStyle()`."""
+    column. Each `<col>` is content width + COL_SEPARATOR, same formula as
+    processlist's own `colStyle()`."""
     payload = _run_render_probe("programlist-wide")
     widths = payload["pluginColWidths"]["programlist"]
-    assert widths == [f"calc({n + 1} * var(--gl-col))" for n in (7, 5, 5, 5, 7, 10, 3, 3, 1, 8, 5, 5)]
+    assert widths == [f"calc({n + 2} * var(--gl-col))" for n in (7, 6, 5, 5, 7, 10, 3, 3, 1, 8, 5, 5)]
     assert "gl-process-table" in payload["pluginTableClasses"]["programlist"]
 
 

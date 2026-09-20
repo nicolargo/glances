@@ -3,8 +3,16 @@
 		<!-- Keep every comment INSIDE this root, like CollectionBlock.vue: one
 		before <article> would make a second root node and drop the
 		`data-plugin`/`aria-label` attributes AppShell passes down. -->
-		<div v-if="error || !payload || !allRows.length" class="gl-plugin-title">
-			<h2 class="gl-header">{{ TITLE }}</h2>
+		<!-- The title is a full-width line of its OWN, above the grid -- the
+		TUI's shape (curses_renderer_v5.py:806-816 emits the
+		`ALERTS N ongoing · M resolved` row first, then the column-header row
+		under it). It used to double as the grid's first <th>, which squeezed
+		the whole sentence into the 1-character GLYPH column's box: under
+		`table-layout: fixed` that cell cannot grow, so the counts spilled
+		across the TIME and DURATION headers. `headerText` keeps the bare
+		`ALERT` for every state that paints no grid. -->
+		<div class="gl-plugin-title">
+			<h2 class="gl-header">{{ headerText }}</h2>
 		</div>
 		<p v-if="error" class="gl-level-critical">{{ error }}</p>
 		<p v-else-if="!payload" class="gl-muted">loading…</p>
@@ -32,25 +40,22 @@
 				like TOP below: under table-layout:fixed, two width-less columns
 				split the remainder 50/50 (CSS 2.1 17.5.2.1) -- not by floor, not
 				by priority. The terminal gives TARGET its natural width and lets
-				TOP absorb the slack (curses_renderer_v5.py:534-536), but "natural
-				width" is content-dependent and fixed layout cannot measure that;
-				the closest defensible browser equivalent is the same floor the
-				terminal itself falls back to (_ALERT_MIN_TARGET, :529). TOP is
-				left as the sole auto column, so it is the one that grows. -->
+				TOP absorb the slack (curses_renderer_v5.py:534-536); fixed layout
+				cannot measure "natural", but `targetWidth` below computes it from
+				the rendered strings the same way the terminal does, so the two
+				agree. TOP is left as the sole auto column, so it is the one that
+				grows. -->
 				<col :style="colStyle('TARGET')" />
 				<col v-if="shows('TOP')" />
 				<col v-if="shows('LEVEL')" :style="colStyle('LEVEL')" />
 			</colgroup>
 			<thead>
 				<tr>
-					<!-- The glyph column doubles as the title cell here, the same
-					"title is the first <th>" convention CollectionBlock documents
-					(CollectionBlock.vue:14): the TUI's own title row (`ALERTS N
-					ongoing · M resolved`, curses_renderer_v5.py:806-807) is a
-					full-width line above the grid, not a real column, so this is
-					where it fits without an unconditional <h2> that would depart
-					from every sibling block. -->
-					<th class="gl-header">{{ titleText }}</th>
+					<!-- Blank, like the TUI's own glyph header
+					(curses_renderer_v5.py:818, `Cell(text=" " * _ALERT_W_GLYPH)`):
+					the ongoing/resolved dot has no label, and the block title now
+					has its own line above the grid. -->
+					<th class="gl-header"></th>
 					<th class="gl-header">TIME</th>
 					<th v-if="shows('DURATION')" class="gl-header">DURATION</th>
 					<th class="gl-header">TARGET</th>
@@ -82,7 +87,7 @@ import { fitBlockMixin } from "./fit_block.js";
 // The TUI's own character-column widths (curses_renderer_v5.py:525-540), so
 // the <colgroup> and CSS derive from the same numbers the terminal renderer
 // uses -- never a literal copied by hand.
-import { ALERT_COL_WIDTHS, ALERT_MIN_TARGET, ALERT_MIN_TOP } from "./process_widths.js";
+import { ALERT_COL_WIDTHS, ALERT_MIN_TARGET, ALERT_MIN_TOP, COL_SEPARATOR } from "./process_widths.js";
 
 const TITLE = "ALERT";
 
@@ -150,6 +155,16 @@ export default {
 		isInitializing() {
 			return !!(this.payload && this.payload.isInitializing);
 		},
+		// Exactly the states the template's <table v-else> paints, so
+		// `headerText` cannot disagree with what is rendered under it: every
+		// earlier branch of that v-if chain (error, no payload, warm-up,
+		// nothing to show) keeps the bare `ALERT` title instead of a count.
+		hasGrid() {
+			return !this.error && !!this.payload && !this.isInitializing && this.allRows.length > 0;
+		},
+		headerText() {
+			return this.hasGrid ? this.titleText : TITLE;
+		},
 		// Mirrors `_build_alert_title_cells`'s populated text
 		// (curses_renderer_v5.py:629-675), minus its own width shrink ladder --
 		// the browser has the width, so it never needs to drop the `resolved`
@@ -186,27 +201,43 @@ export default {
 		columnCount() {
 			return 3 + ["DURATION", "TOP", "LEVEL"].filter((key) => this.shows(key)).length;
 		},
+		// TARGET's width in characters: its NATURAL width -- the longest target
+		// text on screen -- floored at the terminal's own `_ALERT_MIN_TARGET`,
+		// which is exactly what the terminal does when it is not
+		// width-constrained (curses_renderer_v5.py:781-784). Pinning the <col>
+		// to that floor instead, as this block used to, cropped every target
+		// past twelve characters -- `Sensors Composite`, `Fs /home percent` --
+		// even with the whole right column free beside it.
+		//
+		// No ceiling, deliberately: when the natural width no longer fits, the
+		// cascade above drops TOP first and LEVEL next, which IS the terminal's
+		// priority (it sacrifices TOP to keep TARGET readable, :538-540).
+		// Measured over `rows`, the budgeted set actually painted, never
+		// `allRows` -- an incident scrolled off by the row budget must not widen
+		// a column it does not appear in.
+		targetWidth() {
+			const natural = this.rows.reduce((widest, incident) => Math.max(widest, this.targetOf(incident).length), 0);
+			return Math.max(ALERT_MIN_TARGET, natural);
+		},
 		// The integer the stylesheet turns into a width, same contract as
-		// PluginProcesslist.vue's own `fixedColsStyle`: TARGET and TOP
-		// contribute their FLOOR here, never a natural/content width -- CSS
-		// cannot measure that under table-layout:fixed. The sum this produces
-		// is INTENTIONALLY short of `ALERT_W_WITH_TOP`/`_LEVEL`/`_DURATION`
-		// (process_widths.js) by the one trailing pad column the terminal
-		// gives its TIME and DURATION cells to land the spec's curses
-		// offsets (curses_renderer_v5.py:814-829) -- CSS already reserves
-		// that same character as the `padding-right: var(--gl-col)`
-		// separator (colStyle()'s `+1`), so adding the terminal's own pad on
-		// top would double-count it. Do not "correct" either side to match
-		// the other: the cascade fires at the same RELATIVE points (the
-		// deltas between thresholds agree exactly), just anchored a few
-		// characters earlier in absolute terms than the exported constants.
+		// PluginProcesslist.vue's own `fixedColsStyle`: TARGET contributes the
+		// `targetWidth` above (its natural width, floored), TOP only its floor
+		// -- it is the auto column and takes whatever is left. The sum this
+		// produces does NOT match `ALERT_W_WITH_TOP`/`_LEVEL`/`_DURATION`
+		// (process_widths.js), and is not meant to: the terminal gives its TIME
+		// and DURATION cells one trailing pad column each to land the spec's
+		// curses offsets (curses_renderer_v5.py:814-829), which CSS already
+		// reserves inside `COL_SEPARATOR`, and TARGET is natural here rather
+		// than the floor those constants assume. Do not "correct" either side
+		// to match the other: the cascade fires at the same RELATIVE points
+		// (the deltas between thresholds agree exactly).
 		fixedColsStyle() {
-			let total = ALERT_COL_WIDTHS.GLYPH + ALERT_COL_WIDTHS.TIME + ALERT_MIN_TARGET;
+			let total = ALERT_COL_WIDTHS.GLYPH + ALERT_COL_WIDTHS.TIME + this.targetWidth;
 			if (this.shows("DURATION")) total += ALERT_COL_WIDTHS.DURATION;
 			if (this.shows("LEVEL")) total += ALERT_COL_WIDTHS.LEVEL;
 			if (this.shows("TOP")) total += ALERT_MIN_TOP;
 			// One separator between cells, never after the last.
-			return { "--gl-fixed-cols": String(total + this.columnCount - 1) };
+			return { "--gl-fixed-cols": String(total + COL_SEPARATOR * (this.columnCount - 1)) };
 		},
 	},
 	watch: {
@@ -298,16 +329,16 @@ export default {
 		topOf(incident) {
 			return (incident.top || []).map((name) => String(name)).join(", ");
 		},
-		// `N + 1`, not `N`: under table-layout:fixed the <col> width is the
-		// column's WHOLE box, and `.gl-process-table`'s
-		// `padding-right: var(--gl-col)` separator (css/v5.css) comes out of
-		// that same box -- a <col> of exactly N characters leaves only N-1 for
-		// content. Same `+1` as PluginProcesslist.vue's own colStyle(). TARGET
-		// has no entry in ALERT_COL_WIDTHS (the terminal gives it no fixed
-		// width, only a floor) -- ALERT_MIN_TARGET stands in for it here.
+		// `N + COL_SEPARATOR`, not `N`: under table-layout:fixed the <col> width
+		// is the column's WHOLE box, and `.gl-process-table`'s `padding-right`
+		// separator (css/v5.css) comes out of that same box -- a <col> of
+		// exactly N characters leaves only N - COL_SEPARATOR for content. Same
+		// offset as PluginProcesslist.vue's own colStyle(). TARGET has no entry
+		// in ALERT_COL_WIDTHS (the terminal gives it no fixed width, only a
+		// floor) -- `targetWidth` stands in for it here.
 		colStyle(key) {
-			const n = key === "TARGET" ? ALERT_MIN_TARGET : ALERT_COL_WIDTHS[key];
-			return { width: `calc(${n + 1} * var(--gl-col))` };
+			const n = key === "TARGET" ? this.targetWidth : ALERT_COL_WIDTHS[key];
+			return { width: `calc(${n + COL_SEPARATOR} * var(--gl-col))` };
 		},
 	},
 };

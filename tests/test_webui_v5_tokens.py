@@ -577,13 +577,26 @@ def test_a_tui_character_width_uses_the_column_unit_not_ch():
 
 
 def test_the_column_unit_is_defined_once_on_the_root():
-    """`--gl-col` is the real advance of a monospace glyph (~0.6em for
-    DejaVu Sans Mono, Menlo and SF Mono alike). Defining it anywhere but
-    `:root` would let one block drift from the rest.
+    """`--gl-col` is one monospace character's worth of width, with SLACK.
+
+    The measured advance is ~0.6em (DejaVu Sans Mono 0.6017em, Menlo and SF
+    Mono 0.6em), and `--gl-col: 0.6em` used to be exactly that -- zero slack.
+    A cell whose value exactly FILLED its N-character column then overflowed
+    its content box by N * 0.0017em and `text-overflow: ellipsis` ate the
+    last character: PID at `4194304`, TIME+ at `99h59:59`, VIRT/RES/R/s/W/s
+    at `1023G`, NI at `-20`, USER at ten characters, alert's TIME at
+    `--:--:--`. The unit has to sit ABOVE the widest face this stack can land
+    on, never at it.
+
+    Defining it anywhere but `:root` would let one block drift from the rest.
     """
     css = _strip_comments(_TOKENS.read_text())
     assert len(re.findall(r"--gl-col:", css)) == 1, "--gl-col is defined exactly once"
-    assert re.search(r":root\s*\{[^}]*--gl-col:\s*0\.6em", css, re.S), "--gl-col lives on :root and is 0.6em"
+    match = re.search(r":root\s*\{[^}]*--gl-col:\s*(\d*\.?\d+)em", css, re.S)
+    assert match, "--gl-col lives on :root and is declared in em"
+    # 0.6017em is the widest advance measured under the shipped stack; the
+    # token must clear it, or a full-width value crops again.
+    assert float(match.group(1)) > 0.6017, f"--gl-col leaves no slack for a full-width cell: {match.group(1)}em"
 
 
 def test_the_row_unit_is_defined_once_and_drives_the_right_column_gap():
@@ -637,14 +650,15 @@ def test_the_column_box_separator_multiplier_matches_colstyles_offset():
     is the column's WHOLE box, so the separator's padding comes out of the
     content space rather than adding to it.
 
-    Until now that `+ 1` and the CSS rule that makes it necessary were two
+    Until now that offset and the CSS rule that makes it necessary were two
     independent hardcoded literals that merely happened to agree -- nothing
-    parsed the CSS to require it. Widening the separator to
-    `calc(2 * var(--gl-col))` for visual breathing room, without touching
-    `colStyle()`, would silently reintroduce the exact bug the maintainer
-    found by eye, one character at a time, and no other test would catch it.
-    This one reads the separator's own multiplier out of the stylesheet and
-    requires it to equal the offset `colStyle()` adds.
+    parsed the CSS to require it. Widening the separator for visual breathing
+    room without touching `colStyle()` would silently reintroduce the exact
+    bug the maintainer found by eye, one character at a time, and no other
+    test would catch it. This one reads the separator's own multiplier out of
+    the stylesheet and requires it to equal `COL_SEPARATOR`
+    (js/v5/process_widths.js), the single constant every `colStyle()` and
+    every `--gl-fixed-cols` sum now offsets by.
     """
     css = _strip_comments(_TOKENS.read_text())
     body = _rule_body(
@@ -658,19 +672,24 @@ def test_the_column_box_separator_multiplier_matches_colstyles_offset():
     # length, so no test should demand the more verbose form.
     separator_chars = int(match.group(1)) if match.group(1) is not None else 1
 
-    script = (_V5_JS / "PluginProcesslist.vue").read_text()
-    offset_match = re.search(
-        r"colStyle\(key\)\s*\{\s*return\s*\{\s*width:\s*`calc\(\$\{PROCESS_COL_WIDTHS\[key\]\s*\+\s*(\d+)\}",
-        script,
-    )
-    assert offset_match, f"colStyle()'s offset literal was not found in {_V5_JS / 'PluginProcesslist.vue'}"
+    widths = (_V5_JS / "process_widths.js").read_text()
+    offset_match = re.search(r"export const COL_SEPARATOR\s*=\s*(\d+)\s*;", widths)
+    assert offset_match, f"COL_SEPARATOR is not exported from {_V5_JS / 'process_widths.js'}"
     colstyle_offset = int(offset_match.group(1))
 
     assert separator_chars == colstyle_offset, (
-        f"the separator reserves {separator_chars} character(s) but colStyle() only offsets "
+        f"the separator reserves {separator_chars} character(s) but COL_SEPARATOR is "
         f"{colstyle_offset} -- every fixed column would crop {separator_chars - colstyle_offset} "
         "character(s) early"
     )
+
+    # ...and every <colgroup> actually offsets by that constant rather than by
+    # a literal of its own, which is what makes reading one number enough.
+    for name in ("PluginProcesslist.vue", "PluginProgramlist.vue", "PluginAlert.vue"):
+        script = (_V5_JS / name).read_text()
+        assert re.search(r"\+\s*COL_SEPARATOR\}\s*\*\s*var\(--gl-col\)", script), (
+            f"{name}'s colStyle() does not offset by COL_SEPARATOR"
+        )
 
 
 def test_the_ports_cell_is_bounded_like_the_command_cell():

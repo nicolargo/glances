@@ -498,6 +498,13 @@ function collect() {
 		pluginValueClasses: {},
 		// Elements with a `title` attribute, keyed by data-plugin.
 		pluginTitles: {},
+		// Each plugin's own title LINE -- the trimmed text of its <h2> -- keyed
+		// by data-plugin, `null` for a block that renders none. `pluginHeaders`
+		// above carries the same text but positionally, which makes an
+		// assertion depend on the plugin ORDER; this one is addressable, and is
+		// how a test can tell a title that lives on its own line from one that
+		// was folded into the grid's first <th> (PluginAlert's used to be).
+		pluginTitleLine: {},
 		// The trimmed <th> texts of each plugin's <thead>, keyed by
 		// data-plugin -- [] when the plugin renders no <thead> at all (e.g.
 		// `amps`, `ports`: no title row and no column header, v4 parity).
@@ -627,6 +634,8 @@ function collect() {
 				const name = article.getAttribute("data-plugin");
 				if (!name) return;
 				result.pluginNames.push(name);
+				const title = findDescendantTag(article, "H2");
+				result.pluginTitleLine[name] = title ? title.textContent.trim() : null;
 				result.pluginText[name] = article.textContent;
 				result.pluginAttrs[name] = article.getAttributeNames();
 				result.pluginHidden[name] = article.style.display === "none";

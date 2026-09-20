@@ -99,15 +99,15 @@ import { HEADER_SORT_KEY, ioRate, commandText } from "./process_shared.js";
 // programlist/render_curses_v5.py:58), so the <colgroup> and CSS derive from
 // the same numbers the terminal renderer uses -- never a literal copied by
 // hand.
-import { MIN_COMMAND_WIDTH, NPROCS_WIDTH, PROCESS_COL_WIDTHS, PROGRAM_FIXED_COL_KEYS } from "./process_widths.js";
+import { COL_SEPARATOR, MIN_COMMAND_WIDTH, NPROCS_WIDTH, PROGRAM_FIXED_COL_KEYS, WEBUI_COL_WIDTHS } from "./process_widths.js";
 
 const TITLE = "PROGRAMS";
 
-// PROCESS_COL_WIDTHS has no NPROCS entry (it is processlist's own map, drift-
-// tested against the terminal 1:1) -- NPROCS_WIDTH is the one column this
-// block does not share with processlist's width map.
+// WEBUI_COL_WIDTHS has no NPROCS entry (it is processlist's own map) --
+// NPROCS_WIDTH is the one column this block does not share with processlist's
+// width map.
 function contentWidth(key) {
-	return key === "NPROCS" ? NPROCS_WIDTH : PROCESS_COL_WIDTHS[key];
+	return key === "NPROCS" ? NPROCS_WIDTH : WEBUI_COL_WIDTHS[key];
 }
 
 export default {
@@ -193,7 +193,8 @@ export default {
 		fixedColsStyle() {
 			const keys = this.visibleFixedColumns;
 			const fixed = keys.reduce((total, key) => total + contentWidth(key), 0);
-			const separators = keys.length; // one after each fixed column, before Command
+			// One separator after each fixed column, before Command.
+			const separators = COL_SEPARATOR * keys.length;
 			return { "--gl-fixed-cols": String(fixed + separators + MIN_COMMAND_WIDTH) };
 		},
 	},
@@ -215,14 +216,14 @@ export default {
 		fmt(value) {
 			return value === null || value === undefined || value === "" ? "-" : String(value);
 		},
-		// `contentWidth(key)` alone under-sizes every column by one character --
+		// `contentWidth(key)` alone under-sizes every column by the separator --
 		// same reasoning as processlist's own `colStyle()` (see its comment):
 		// under `table-layout: fixed` the <col> is the column's WHOLE box, and
-		// the separator's `padding-right: var(--gl-col)` comes out of that same
-		// box, so a <col> of exactly N characters leaves only N-1 for content.
-		// `+1` reserves the separator's own character inside the box.
+		// the separator's `padding-right` comes out of that same box, so a
+		// <col> of exactly N characters leaves only N - COL_SEPARATOR for
+		// content. Adding COL_SEPARATOR reserves it inside the box.
 		colStyle(key) {
-			return { width: `calc(${contentWidth(key) + 1} * var(--gl-col))` };
+			return { width: `calc(${contentWidth(key) + COL_SEPARATOR} * var(--gl-col))` };
 		},
 	},
 };

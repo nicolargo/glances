@@ -2,10 +2,13 @@
 //
 // Pure: no DOM, no fetch, no imports, so `node --test` can load it -- the
 // same contract degrade.js, processlist_columns.js and row_budget.js state
-// in their own headers. Every value is a copy of a terminal renderer's
-// constant, because the browser cannot import Python;
+// in their own headers. `PROCESS_COL_WIDTHS`, `ALERT_COL_WIDTHS` and the
+// constants beside them are copies of a terminal renderer's own constants,
+// because the browser cannot import Python;
 // tests/test_webui_v5_width_drift.py compares the two sides. Never edit one
-// side alone.
+// side alone. `WEBUI_COL_WIDTHS` and `COL_SEPARATOR` below are the browser's
+// OWN numbers -- what the DOM is actually sized with -- and are deliberately
+// outside that drift check; each carries its own justification.
 //
 // These are character counts, so the CSS derived from them uses
 // `calc(N * var(--gl-col))` and never `ch` -- `ch` resolves to 0.5em under the
@@ -32,6 +35,49 @@ export const PROCESS_COL_WIDTHS = {
 	"S": 1,
 	"TIME+": 8,
 	"R/s": 5,
+	"W/s": 5,
+};
+
+// Characters of separator BETWEEN two adjacent cells, reserved by
+// `.gl-table.gl-process-table th/td:not(:last-child)`'s `padding-right`
+// (css/v5.css). The terminal puts ONE space between its columns; the browser
+// puts two -- a maintainer readability call, not TUI drift: a 0.88rem
+// proportional-looking grid needs more air than a terminal cell does.
+//
+// Under `table-layout: fixed` the <col> is the column's WHOLE box and the
+// padding comes OUT of it, so every `<col>` is `contentWidth + COL_SEPARATOR`
+// and every `--gl-fixed-cols` sum charges one separator per inter-cell
+// boundary. This constant is the single place those two agree;
+// test_webui_v5_tokens.py reads it and requires the stylesheet's own
+// multiplier to match.
+export const COL_SEPARATOR = 2;
+
+// What the BROWSER needs per column, which is not always what the terminal
+// needs: `formatPercent()` (format.js) appends a `%` the curses renderer never
+// prints, so a WebUI percent cell is one character longer than its terminal
+// counterpart. `MEM%` is the only column that pushes past its terminal budget
+// because of it -- `100.0%` is 6 characters against `_W_MEM`'s 5. Every other
+// column renders the same string on both surfaces, `CPU%` included (7 already
+// fits `9999.9%`).
+//
+// A separate literal map rather than a spread of `PROCESS_COL_WIDTHS` so the
+// numbers a reader (and the regex-based tests) sees are the numbers the
+// <colgroup> gets. tests/js/process_widths.test.mjs keeps it honest from both
+// sides: every entry must cover the longest string its own formatter can
+// produce, AND must equal the terminal width unless this comment explains why
+// it does not.
+export const WEBUI_COL_WIDTHS = {
+	"CPU%": 7, // 9999.9%
+	"MEM%": 6, // 100.0% -- one more than `_W_MEM`, for the `%` the TUI omits
+	"VIRT": 5, // 1023G / 99.9T
+	"RES": 5,
+	"PID": 7, // 4194304, Linux's `pid_max` ceiling of 2**22
+	"USER": 10, // `formatUsername()` crops at 10
+	"THR": 3,
+	"NI": 3, // -20
+	"S": 1,
+	"TIME+": 8, // 99h59:59
+	"R/s": 5, // as VIRT/RES -- the same `formatProcessBytes()`
 	"W/s": 5,
 };
 
@@ -80,19 +126,19 @@ export const ALERT_MIN_TOP = 22; // :537
 // Block widths at or above which each column still fits without starving
 // TARGET below its floor (:532-533, :540). TOP drops FIRST, by construction.
 //
-// PluginAlert.vue's own `fixedColsStyle()` does NOT sum to these numbers --
-// its sums are INTENTIONALLY 2, 2 and 1 short of these three constants
-// respectively. The terminal gives its TIME and DURATION cells one trailing
-// pad column each so its painter lands the spec's curses offsets
+// PluginAlert.vue's own `fixedColsStyle()` does NOT sum to these numbers, and
+// never did: the terminal gives its TIME and DURATION cells one trailing pad
+// column each so its painter lands the spec's curses offsets
 // (curses_renderer_v5.py:814-829, `_fit_text(..., _ALERT_W_TIME + 1)` and
-// `... + " "`); CSS already reserves that same character as the
-// `padding-right: var(--gl-col)` separator (colStyle()'s `+1` in
-// PluginAlert.vue), so adding the terminal's own pad on top of it would
-// double-count a separator that is already there. Do not "correct" either
-// side to make the numbers match -- the cascade still fires at the same
-// RELATIVE points (the deltas between these three thresholds hold exactly
-// on the browser side too), just anchored a few characters earlier in
-// absolute terms than these constants.
+// `... + " "`); CSS already reserves that character as part of the
+// `padding-right` separator (`COL_SEPARATOR` above), so adding the terminal's
+// own pad on top of it would double-count a separator that is already there.
+// The browser sum also gives TARGET its NATURAL width rather than this floor,
+// exactly as the terminal does when it is not width-constrained
+// (curses_renderer_v5.py:781-784), so the two sums cannot agree in absolute
+// terms at all. Do not "correct" either side to make the numbers match -- the
+// cascade still fires at the same RELATIVE points (the deltas between these
+// three thresholds hold exactly on the browser side too).
 export const ALERT_W_WITH_TOP = 66;
 export const ALERT_W_WITH_LEVEL = 43;
 export const ALERT_W_WITH_DURATION = 34;

@@ -96,10 +96,12 @@ import { fitBlockMixin } from "./fit_block.js";
 // byte-identical duplicates of PluginProgramlist.vue's own copies -- both
 // blocks now import the single copy in process_shared.js.
 import { HEADER_SORT_KEY, ioRate, commandText } from "./process_shared.js";
-// The TUI's own character-column widths (render_curses_v5.py:55-65, :91), so
-// the <colgroup> and CSS derive from the same numbers the terminal renderer
-// uses -- never a literal copied by hand.
-import { FIXED_COL_KEYS, MIN_COMMAND_WIDTH, PROCESS_COL_WIDTHS } from "./process_widths.js";
+// The character-column widths (process_widths.js), so the <colgroup> and CSS
+// derive from the same numbers the terminal renderer uses -- never a literal
+// copied by hand. `WEBUI_COL_WIDTHS`, not `PROCESS_COL_WIDTHS`: the browser
+// renders one column (MEM%) one character wider than the terminal, because
+// `formatPercent()` appends a `%` curses never prints -- see that module.
+import { COL_SEPARATOR, FIXED_COL_KEYS, MIN_COMMAND_WIDTH, WEBUI_COL_WIDTHS } from "./process_widths.js";
 
 const TITLE = "PROCESSES";
 
@@ -218,8 +220,9 @@ export default {
 		// existing measure-driven cascade firing at the TUI's own threshold.
 		fixedColsStyle() {
 			const keys = this.visibleFixedColumns;
-			const fixed = keys.reduce((total, key) => total + PROCESS_COL_WIDTHS[key], 0);
-			const separators = keys.length; // one after each fixed column, before Command
+			const fixed = keys.reduce((total, key) => total + WEBUI_COL_WIDTHS[key], 0);
+			// One separator after each fixed column, before Command.
+			const separators = COL_SEPARATOR * keys.length;
 			return { "--gl-fixed-cols": String(fixed + separators + MIN_COMMAND_WIDTH) };
 		},
 	},
@@ -252,21 +255,20 @@ export default {
 		fmt(value) {
 			return value === null || value === undefined || value === "" ? "-" : String(value);
 		},
-		// `PROCESS_COL_WIDTHS[key]` alone under-sizes every column by one
-		// character. Under `table-layout: fixed` the <col> width is the
+		// `WEBUI_COL_WIDTHS[key]` alone under-sizes every column by the
+		// separator. Under `table-layout: fixed` the <col> width is the
 		// column's WHOLE box, and `.gl-process-table td:not(:last-child)`'s
-		// `padding-right: var(--gl-col)` separator comes out of that same box
-		// -- so a `<col>` of exactly N characters leaves only N-1 for content
-		// (every fixed column crops one character early; invisibly so for
-		// "S", whose N=1 makes it disappear rather than merely narrow). `+1`
-		// reserves the separator's own character inside the box, leaving the
-		// full N for content. `fixedColsStyle` does NOT need the same `+1`:
-		// it already adds one separator per visible fixed column via its own
-		// `separators` term, so Σ(N+1) there and Σ(N)+separators here already
-		// agree -- verified: Σ(N+1) over the 12 fixed columns is 76 (64 + 12),
-		// matching `fixedColsStyle`'s `fixed + separators` term exactly.
+		// `padding-right` separator comes out of that same box -- so a `<col>`
+		// of exactly N characters leaves only N - COL_SEPARATOR for content
+		// (every fixed column crops early; invisibly so for "S", whose N=1
+		// makes it disappear rather than merely narrow). Adding COL_SEPARATOR
+		// reserves the separator's own characters inside the box, leaving the
+		// full N for content. `fixedColsStyle` does NOT add it per column: it
+		// already charges one separator per visible fixed column via its own
+		// `separators` term, so Σ(N + COL_SEPARATOR) there and
+		// Σ(N) + separators here agree by construction.
 		colStyle(key) {
-			return { width: `calc(${PROCESS_COL_WIDTHS[key] + 1} * var(--gl-col))` };
+			return { width: `calc(${WEBUI_COL_WIDTHS[key] + COL_SEPARATOR} * var(--gl-col))` };
 		},
 	},
 };
