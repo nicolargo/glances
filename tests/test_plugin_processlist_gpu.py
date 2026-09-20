@@ -88,5 +88,21 @@ class TestProcesslistGpuColumn:
         ordered = [p['name'] for p in sort_stats(stats, 'gpu_percent')]
         assert ordered == ['render', 'video', 'idle']
 
+    def test_gpu_next_to_cpu_in_sort_loop(self):
+        # Shift+Left/Right cycles this list while the columns are shown in
+        # the same order -- GPU% must directly follow CPU%.
+        from glances.processes import sort_processes_stats_list
+
+        assert sort_processes_stats_list.index('gpu_percent') == (
+            sort_processes_stats_list.index('cpu_percent') + 1
+        )
+
+    def test_gpu_threshold_defaults(self, glances_stats):
+        plugin = glances_stats.get_plugin('processlist')
+        limits = plugin.get_limit(None)
+        assert int(limits['processlist_gpu_careful']) == 50
+        assert int(limits['processlist_gpu_warning']) == 70
+        assert int(limits['processlist_gpu_critical']) == 90
+
     def test_sort_hotkey_registered(self):
         assert _GlancesCurses._hotkeys['v'] == {'sort_key': 'gpu_percent'}
