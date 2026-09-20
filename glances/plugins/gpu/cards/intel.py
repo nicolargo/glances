@@ -41,6 +41,11 @@ import time
 from glances.globals import LINUX
 from glances.logger import logger
 
+# Memory denominator/% helpers shared with the ARM backend: on integrated
+# GPUs there is no dedicated VRAM, buffers live in system RAM, so the only
+# honest denominator is CmaTotal/MemTotal (never drm-total-memory, see #3611).
+from glances.plugins.gpu.cards.arm import compute_mem_percent, get_mem_capacity_bytes
+
 DRM_ROOT_FOLDER: str = '/sys/class/drm'
 PROC_ROOT_FOLDER: str = '/proc'
 DEVICE_FOLDER_PATTERN: str = 'card[0-9]'
@@ -52,6 +57,15 @@ PCI_MAX_FRQ_MHZ: str = 'gt_max_freq_mhz'
 
 # DRM drivers exposing the standardised drm-engine-* fdinfo counters.
 SUPPORTED_DRIVERS: set[str] = {'i915', 'xe'}
+
+MEM_UNITS: dict[str, int] = {
+    'KiB': 1024,
+    'KB': 1000,
+    'MiB': 1024 * 1024,
+    'MB': 1000 * 1000,
+    'GiB': 1024 * 1024 * 1024,
+    'GB': 1000 * 1000 * 1000,
+}
 
 
 class IntelGPU:
@@ -70,6 +84,9 @@ class IntelGPU:
             self.device_folders = get_device_list(drm_root_folder)
         # State for delta-based proc% computation
         self._last_sample: dict[str, tuple[int, int]] = {}
+        # Denominator for GPU mem% -- static system property, read once.
+        # Integrated GPUs allocate buffers from system RAM (see #3611).
+        self._mem_capacity_bytes = get_mem_capacity_bytes(os.path.join(proc_root_folder, 'meminfo'))
 
     def exit(self):
         """Close Intel GPU class."""
@@ -92,8 +109,10 @@ class IntelGPU:
             device_stats['gpu_id'] = f'intel{index}'
             # GPU name
             device_stats['name'] = get_device_name(device)
-            # Memory consumption in % (not available on all GPU)
-            device_stats['mem'] = get_mem(device)
+            # Memory consumption in %: GPU-resident buffers (shared system
+            # RAM on integrated GPUs) over CmaTotal/MemTotal. None when no
+            # client holds GPU buffers.
+            device_stats['mem'] = compute_mem_percent(snapshot, self._mem_capacity_bytes)
             # Processor consumption in %: real engine busy time,
             # frequency ratio as fallback (see module docstring)
             device_stats['proc'] = self._compute_proc_percent(device, snapshot)
@@ -208,11 +227,6 @@ def get_device_name(device_folder: str) -> str:
     return 'Intel GPU'
 
 
-def get_mem(device_folder: str) -> int | None:
-    """Return the memory consumption in %."""
-    return None
-
-
 def get_proc(device_folder: str) -> int | None:
     """Return the processor consumption in % (frequency ratio, fallback)."""
     act_freq = read_file(device_folder, PCI_ACT_FRQ_MHZ)
@@ -240,6 +254,11 @@ def parse_fdinfo(text: str) -> dict | None:
         - pdev:   str | None
         - engine_total_ns: int (sum of all drm-engine-* time counters,
           excluding drm-engine-capacity-* which is a count, not a time)
+        - mem_total_bytes: int (sum of all drm-total-* region counters)
+        - mem_used_bytes:  int (sum of all drm-resident-* region counters)
+
+    Only totals and resident memory are counted: shared/active/purgeable
+    are subsets and would double-count.
 
     Returns None if the text does not look like a DRM fdinfo entry.
     """
@@ -249,6 +268,8 @@ def parse_fdinfo(text: str) -> dict | None:
     driver: str | None = None
     pdev: str | None = None
     engine_total_ns = 0
+    mem_total_bytes = 0
+    mem_used_bytes = 0
 
     for raw_line in text.splitlines():
         if ':' not in raw_line:
@@ -273,6 +294,14 @@ def parse_fdinfo(text: str) -> dict | None:
             if len(parts) >= 2 and parts[1] != 'ns':
                 continue
             engine_total_ns += number
+        elif key.startswith('drm-total-'):
+            parsed = _parse_memory(value)
+            if parsed is not None:
+                mem_total_bytes += parsed
+        elif key.startswith('drm-resident-'):
+            parsed = _parse_memory(value)
+            if parsed is not None:
+                mem_used_bytes += parsed
 
     if driver is None:
         return None
@@ -281,7 +310,25 @@ def parse_fdinfo(text: str) -> dict | None:
         'driver': driver,
         'pdev': pdev,
         'engine_total_ns': engine_total_ns,
+        'mem_total_bytes': mem_total_bytes,
+        'mem_used_bytes': mem_used_bytes,
     }
+
+
+def _parse_memory(value: str) -> int | None:
+    """Parse '<number> <unit>' → bytes. Default unit: KiB (matches kernel doc)."""
+    parts = value.split()
+    if not parts:
+        return None
+    try:
+        number = int(parts[0])
+    except ValueError:
+        return None
+    unit = parts[1] if len(parts) >= 2 else 'KiB'
+    multiplier = MEM_UNITS.get(unit)
+    if multiplier is None:
+        return None
+    return number * multiplier
 
 
 def aggregate_fdinfo(
@@ -315,11 +362,39 @@ def aggregate_fdinfo(
 
     per_device: dict[str, dict] = {}
 
+    for _pid, record in _iter_fdinfo_records(proc_root):
+        if record['driver'] not in SUPPORTED_DRIVERS:
+            continue
+
+        target = None
+        if record['pdev'] and record['pdev'] in pdev_to_device:
+            target = pdev_to_device[record['pdev']]
+        elif record['driver'] in single_device_per_driver:
+            target = single_device_per_driver[record['driver']]
+        if target is None:
+            continue
+
+        bucket = per_device.setdefault(
+            target, {'engine_total_ns': 0, 'mem_total_bytes': 0, 'mem_used_bytes': 0}
+        )
+        bucket['engine_total_ns'] += record['engine_total_ns']
+        bucket['mem_total_bytes'] += record['mem_total_bytes']
+        bucket['mem_used_bytes'] += record['mem_used_bytes']
+
+    return per_device
+
+
+def _iter_fdinfo_records(proc_root: str):
+    """Yield (pid, record) for every DRM fdinfo entry below proc_root.
+
+    Only records of supported Intel drivers are returned; anything else
+    (non-DRM fds, other vendors, unreadable files) is skipped silently.
+    """
     try:
         pids = os.listdir(proc_root)
     except OSError as e:
         logger.debug(f'Intel GPU: cannot list {proc_root}: {e}')
-        return {}
+        return
 
     for pid in pids:
         if not pid.isdigit():
@@ -339,20 +414,56 @@ def aggregate_fdinfo(
             except (FileNotFoundError, PermissionError, OSError):
                 continue
             record = parse_fdinfo(text)
-            if record is None:
+            if record is None or record['driver'] not in SUPPORTED_DRIVERS:
                 continue
-            if record['driver'] not in SUPPORTED_DRIVERS:
-                continue
+            yield int(pid), record
 
-            target = None
-            if record['pdev'] and record['pdev'] in pdev_to_device:
-                target = pdev_to_device[record['pdev']]
-            elif record['driver'] in single_device_per_driver:
-                target = single_device_per_driver[record['driver']]
-            if target is None:
-                continue
 
-            bucket = per_device.setdefault(target, {'engine_total_ns': 0})
-            bucket['engine_total_ns'] += record['engine_total_ns']
+# Previous per-PID sample for delta-based percent computation:
+# {pid: (monotonic_ns, engine_total_ns)}
+_pid_last_sample: dict[int, tuple[int, int]] = {}
 
-    return per_device
+
+def intel_gpu_present(drm_root_folder: str = DRM_ROOT_FOLDER) -> bool:
+    """Return True if at least one Intel GPU card is detected.
+
+    Evaluated on every call (cheap sysfs glob) so a GPU bound away for
+    passthrough -- where /sys/class/drm/card* disappears -- hides the
+    per-process column instead of showing stale zeros.
+    """
+    if not LINUX or not os.path.isdir(drm_root_folder):
+        return False
+    return bool(get_device_list(drm_root_folder))
+
+
+def get_per_pid_gpu_percent(proc_root: str = PROC_ROOT_FOLDER) -> dict[int, int]:
+    """Return {pid: GPU busy %} for Intel GPU clients.
+
+    Computed from the delta of the summed drm-engine-* fdinfo counters
+    over the time since the previous call -- the same source nvtop uses.
+    PIDs without measurable activity (first sighting, idle, counter reset
+    after PID reuse) report 0. Stale PIDs are pruned on every call.
+    """
+    now_ns = time.monotonic_ns()
+    per_pid_ns: dict[int, int] = {}
+    for pid, record in _iter_fdinfo_records(proc_root):
+        per_pid_ns[pid] = per_pid_ns.get(pid, 0) + record['engine_total_ns']
+
+    result: dict[int, int] = {}
+    for pid, busy_ns in per_pid_ns.items():
+        prev = _pid_last_sample.get(pid)
+        _pid_last_sample[pid] = (now_ns, busy_ns)
+        if prev is None:
+            continue
+        delta_t = now_ns - prev[0]
+        delta_busy = busy_ns - prev[1]
+        if delta_t <= 0 or delta_busy < 0:
+            continue
+        # Engines can run in parallel -- clamp to 100.
+        result[pid] = max(0, min(100, round(delta_busy / delta_t * 100)))
+
+    # Prune PIDs that no longer hold GPU file descriptors.
+    for pid in [pid for pid in _pid_last_sample if pid not in per_pid_ns]:
+        _pid_last_sample.pop(pid, None)
+
+    return result

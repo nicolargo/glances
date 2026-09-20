@@ -17,7 +17,8 @@ refresh time. It displays:
 
 - GPU usage (NVidia, AMD, ARM and Intel) or frequency (Intel fallback when
   no per-client engine counters are available in ``/proc/*/fdinfo``)
-- memory consumption (NVidia, AMD, and ARM when exposed by fdinfo)
+- memory consumption (NVidia, AMD, ARM and Intel when exposed by fdinfo;
+  on integrated GPUs this is GPU-resident shared system memory)
 - temperature (if available)
 
 .. note::

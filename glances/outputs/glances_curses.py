@@ -87,6 +87,7 @@ class _GlancesCurses:
         'S': {'switch': 'sparkline'},
         't': {'sort_key': 'cpu_times'},
         'T': {'switch': 'network_sum'},
+        'v': {'sort_key': 'gpu_percent'},
         'u': {'sort_key': 'username'},
         'U': {'switch': 'network_cumul'},
         'V': {'switch': 'disable_vms'},

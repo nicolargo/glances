@@ -31,7 +31,7 @@ mandatory_processes_stats_list = ['pid', 'name']
 
 # This constant defines the list of available processes sort key
 sort_processes_stats_list = ['cpu_percent', 'memory_percent', 'username']
-sort_processes_stats_list += ['cpu_times', 'io_counters', 'name', 'cpu_num']
+sort_processes_stats_list += ['cpu_times', 'io_counters', 'name', 'cpu_num', 'gpu_percent']
 
 # Sort dictionary for human
 sort_for_human = {
@@ -42,6 +42,7 @@ sort_for_human = {
     'username': 'user name',
     'name': 'processs name',
     'cpu_num': 'CPU core number',
+    'gpu_percent': 'GPU consumption (Intel i915/xe only)',
     None: 'None',
 }
 
