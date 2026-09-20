@@ -107,7 +107,10 @@ class GpuPlugin(GlancesPluginModel):
             logger.debug(f'Intel GPU initialization error: {e}')
             self.intel = None
         # Just for test purpose (uncomment to test on computer without Intel GPU)
-        # self.intel = IntelGPU(drm_root_folder='./tests-data/plugins/gpu/intel/sys/class/drm')
+        # self.intel = IntelGPU(
+        #     drm_root_folder='./tests-data/plugins/gpu/intel/sys/class/drm',
+        #     proc_root_folder='./tests-data/plugins/gpu/intel/proc',
+        # )
 
         # Init the ARM GPU API (msm, panfrost, panthor, v3d, lima, etnaviv)
         try:

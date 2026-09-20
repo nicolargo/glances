@@ -12,6 +12,7 @@
 import pytest
 
 from glances.globals import LINUX
+from glances.plugins.gpu.cards import intel as intel_backend
 from glances.plugins.gpu.cards import tegra
 from glances.plugins.gpu.cards.arm import (
     ArmGPU,
@@ -22,10 +23,17 @@ from glances.plugins.gpu.cards.arm import (
     get_mem_capacity_bytes,
     parse_fdinfo,
 )
+from glances.plugins.gpu.cards.intel import IntelGPU
 
 ARM_TEST_DATA_ROOT = './tests-data/plugins/gpu/arm'
 ARM_DRM_ROOT = f'{ARM_TEST_DATA_ROOT}/sys/class/drm'
 ARM_PROC_ROOT = f'{ARM_TEST_DATA_ROOT}/proc'
+
+INTEL_TEST_DATA_ROOT = './tests-data/plugins/gpu/intel'
+INTEL_DRM_ROOT = f'{INTEL_TEST_DATA_ROOT}/sys/class/drm'
+INTEL_PROC_ROOT = f'{INTEL_TEST_DATA_ROOT}/proc'
+# Fixture frequencies: 300 / 1450 MHz -> frequency fallback is 21 %.
+INTEL_FREQ_FALLBACK = 21
 
 TEGRA_TEST_DATA_ROOT = './tests-data/plugins/gpu/tegra'
 TEGRA_GPU_FOLDER = f'{TEGRA_TEST_DATA_ROOT}/sys/devices/platform/gpu.0'
@@ -278,6 +286,132 @@ class TestTegraBackend:
 
     def test_temperature_missing_root(self):
         assert tegra.get_temperature(thermal_root='/this/does/not/exist') is None  # nosec B101
+
+
+@pytest.fixture
+def intel_gpu():
+    """Return an IntelGPU instance wired to the test fixtures."""
+    return IntelGPU(drm_root_folder=INTEL_DRM_ROOT, proc_root_folder=INTEL_PROC_ROOT)
+
+
+# Intel (i915/xe) fdinfo engine-busy tests against committed fixtures.
+class TestIntelFdinfoParser:
+    """Unit tests for the Intel fdinfo parser (pure, no I/O)."""
+
+    def test_valid_i915_record(self):
+        text = (
+            "pos:\t0\n"
+            "drm-driver:\ti915\n"
+            "drm-pdev:\t0000:00:02.0\n"
+            "drm-engine-render:\t5000000 ns\n"
+            "drm-engine-copy:\t3000000 ns\n"
+            "drm-engine-video:\t0 ns\n"
+            "drm-engine-capacity-video:\t2\n"
+            "drm-engine-video-enhance:\t0 ns\n"
+        )
+        record = intel_backend.parse_fdinfo(text)
+        assert record is not None
+        assert record['driver'] == 'i915'
+        assert record['pdev'] == '0000:00:02.0'
+        # Capacity entries are counts, not time -- must be excluded.
+        assert record['engine_total_ns'] == 8000000
+
+    def test_not_a_drm_fd(self):
+        assert intel_backend.parse_fdinfo("pos:\t0\nflags:\t02100002\n") is None
+
+    def test_empty_text(self):
+        assert intel_backend.parse_fdinfo("") is None
+
+    def test_missing_driver_line(self):
+        text = "pos:\t0\ndrm-pdev:\t0000:00:02.0\ndrm-engine-render:\t1 ns\n"
+        assert intel_backend.parse_fdinfo(text) is None
+
+    def test_malformed_lines_do_not_crash(self):
+        text = "drm-driver:\ti915\ndrm-engine-render:\tnotanumber ns\nno-colon-here\n"
+        record = intel_backend.parse_fdinfo(text)
+        assert record is not None
+        assert record['engine_total_ns'] == 0
+
+    def test_non_ns_unit_ignored(self):
+        text = "drm-driver:\ti915\ndrm-engine-render:\t100 ticks\n"
+        record = intel_backend.parse_fdinfo(text)
+        assert record is not None
+        assert record['engine_total_ns'] == 0
+
+
+@pytest.mark.skipif(not LINUX, reason="Intel GPU backend is Linux-only")
+class TestIntelBackendDiscovery:
+    """Discovery tests against the committed test fixtures."""
+
+    def test_device_enumeration(self, intel_gpu):
+        assert len(intel_gpu.device_folders) == 1
+        device, driver, _pdev = intel_gpu.device_folders[0]
+        assert driver == 'i915'
+        assert device.endswith('card0')
+
+    def test_stats_shape(self, intel_gpu):
+        stats = intel_gpu.get_device_stats()
+        assert isinstance(stats, list)
+        assert len(stats) == 1
+        entry = stats[0]
+        for key in ('key', 'gpu_id', 'name', 'mem', 'proc', 'temperature', 'fan_speed'):
+            assert key in entry
+        assert entry['key'] == 'gpu_id'
+        assert entry['gpu_id'] == 'intel0'
+
+    def test_mem_temp_fan_always_none(self, intel_gpu):
+        stats = intel_gpu.get_device_stats()
+        assert stats[0]['mem'] is None
+        assert stats[0]['temperature'] is None
+        assert stats[0]['fan_speed'] is None
+
+    def test_proc_first_call_uses_freq_fallback(self, intel_gpu):
+        # Delta-based engine load has no previous sample on first call,
+        # so the frequency ratio (300/1450 MHz) is reported.
+        stats = intel_gpu.get_device_stats()
+        assert stats[0]['proc'] == INTEL_FREQ_FALLBACK
+
+    def test_proc_second_call_is_engine_busy(self, intel_gpu):
+        intel_gpu.get_device_stats()
+        stats = intel_gpu.get_device_stats()
+        assert isinstance(stats[0]['proc'], int)
+        assert 0 <= stats[0]['proc'] <= 100
+
+
+class TestIntelBackendNoHardware:
+    """Backend must degrade gracefully with no hardware / no sysfs."""
+
+    def test_missing_drm_root(self):
+        backend = IntelGPU(
+            drm_root_folder='/this/path/does/not/exist',
+            proc_root_folder='/this/path/does/not/exist',
+        )
+        assert backend.device_folders == []
+        assert backend.get_device_stats() == []
+
+    def test_missing_proc_root_keeps_freq_fallback(self):
+        backend = IntelGPU(
+            drm_root_folder=INTEL_DRM_ROOT,
+            proc_root_folder='/this/path/does/not/exist',
+        )
+        stats = backend.get_device_stats() if LINUX else []
+        if LINUX:
+            assert len(stats) == 1
+            assert stats[0]['proc'] == INTEL_FREQ_FALLBACK
+
+
+@pytest.mark.skipif(not LINUX, reason="Intel GPU backend is Linux-only")
+class TestIntelAggregation:
+    """Aggregation layer tests."""
+
+    def test_aggregate_fdinfo_sums_engine_time(self):
+        devices = intel_backend.get_device_list(INTEL_DRM_ROOT)
+        per_device = intel_backend.aggregate_fdinfo(INTEL_PROC_ROOT, devices)
+        assert len(per_device) == 1
+        bucket = next(iter(per_device.values()))
+        # Client 1: 5_000_000 + 3_000_000 + 0 + 0 = 8_000_000 ns
+        # Client 2: 1_000_000 + 500_000 = 1_500_000 ns
+        assert bucket['engine_total_ns'] == 9_500_000
 
 
 class TestGpuPluginIntegration:
