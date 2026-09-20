@@ -68,6 +68,16 @@ const STATUS_TIER = {
 export default {
 	name: "PluginVms",
 	components: { CollectionBlock },
+	// The vertical row quota AppShell's refitVertical() pass allots this
+	// block (row_budget.js), handed down via provide()/inject -- same
+	// reasoning as PluginProcesslist.vue's own `rowBudget` inject
+	// (AppShell.vue:114-127): a prop on the shared `<component>` binding
+	// would leak a `row-budget` DOM attribute on the other 31 plugins. `{}`
+	// means no budget -- an environment without measurement must never hide
+	// stats (design 4.8).
+	inject: {
+		rowBudget: { default: () => ({}) },
+	},
 	props: {
 		payload: { type: Object, default: null },
 		error: { type: String, default: undefined },
@@ -82,18 +92,34 @@ export default {
 		TITLE: () => TITLE,
 		// Payload order: the sort is server-side (vms/model_v5.py
 		// `sort_vm_stats`, aligned on the process sort), and the renderer does
-		// not re-sort.
-		rows() {
+		// not re-sort. UNBUDGETED -- `showEngine`/`showLoad` below read this,
+		// not `rows`: vms/render_curses_v5.py:157-162 decides both from the
+		// full item list, BEFORE its own `items = items[:budget]` slice
+		// (:169), so a VM that a cramped viewport pushes past the quota must
+		// still count toward "is there more than one engine here".
+		allRows() {
 			return this.payload?.data || [];
+		},
+		// vms has no config cap to compose with (unlike processlist's
+		// `maxProcessesDisplay`) -- the row budget is its only ceiling, so its
+		// `0` legitimately means "hide the block entirely" (`>= 0`), the
+		// browser's counterpart of the TUI's own `budget <= 0` early return
+		// (vms/render_curses_v5.py:167-168).
+		rows() {
+			const budget = this.rowBudget?.vms;
+			if (Number.isInteger(budget) && budget >= 0) {
+				return this.allRows.slice(0, budget);
+			}
+			return this.allRows;
 		},
 		// vms/render_curses_v5.py:157 -- more than one DISTINCT engine.
 		showEngine() {
-			return new Set(this.rows.map((item) => String(item.engine ?? ""))).size > 1;
+			return new Set(this.allRows.map((item) => String(item.engine ?? ""))).size > 1;
 		},
 		// :162 -- the FIRST item decides, exactly as the TUI does: the engine
 		// either publishes load for all its VMs or for none.
 		showLoad() {
-			return this.rows.length > 0 && this.rows[0].load_1min !== null && this.rows[0].load_1min !== undefined;
+			return this.allRows.length > 0 && this.allRows[0].load_1min !== null && this.allRows[0].load_1min !== undefined;
 		},
 	},
 	methods: {

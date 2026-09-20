@@ -1,5 +1,26 @@
 <template>
-	<CollectionBlock :title="TITLE" :payload="payload" :error="error">
+	<CollectionBlock
+		:title="TITLE"
+		:payload="payload"
+		:error="error"
+		table-class="gl-process-table"
+		:style="fixedColsStyle"
+		:hidden="quotaHidden"
+	>
+		<template #cols>
+			<colgroup>
+				<!-- Command: no <col> at all, deliberately -- not a `<col />` with
+				no `:style`. The fixed table-layout algorithm (CSS 2.1 17.5.2.1)
+				gives any column past the <colgroup>'s specified count an equal
+				share of the remaining space once every other column is pinned;
+				with only the 12 fixed columns listed, Command (alone past that
+				count) gets the whole remainder -- the TUI's elastic last column.
+				A bare trailing `<col />` renders identically in a browser but adds
+				a 13th, width-less entry to `pluginColWidths` (Task 7's probe reads
+				every <col> in the table) that no consumer of this list wants. -->
+				<col v-for="key in visibleFixedColumns" :key="key" :style="colStyle(key)" />
+			</colgroup>
+		</template>
 		<template #head>
 			<tr>
 				<!-- The TUI's header literals (processlist/render_curses_v5.py:91,
@@ -16,7 +37,15 @@
 				<th v-if="shows('S')" class="gl-header gl-num" :class="{ 'gl-sorted': isSorted('S') }">S</th>
 				<th v-if="shows('TIME+')" class="gl-header gl-num" :class="{ 'gl-sorted': isSorted('TIME+') }">TIME+</th>
 				<th v-if="shows('R/s')" class="gl-header gl-num" :class="{ 'gl-sorted': isSorted('R/s') }">R/s</th>
-				<th v-if="shows('W/s')" class="gl-header gl-num" :class="{ 'gl-sorted': isSorted('W/s') }">W/s</th>
+				<!-- gl-num-left: a deliberate WebUI-only divergence, not TUI parity
+				(unlike `containers`' own use of this class, which mirrors its
+				renderer). The terminal right-aligns W/s exactly like every other
+				numeric column (render_curses_v5.py:435-445 gives every header
+				`ljust=False`; USER is the TUI's only `ljust=True` column). The
+				maintainer asked for W/s left-aligned in the browser anyway --
+				confirmed knowing the terminal disagrees. Do not "fix" this back to
+				match the TUI. -->
+				<th v-if="shows('W/s')" class="gl-header gl-num gl-num-left" :class="{ 'gl-sorted': isSorted('W/s') }">W/s</th>
 				<th class="gl-header" :class="{ 'gl-sorted': isSorted('Command') }">Command</th>
 			</tr>
 		</template>
@@ -31,10 +60,10 @@
 							formatPercent(item.memory_percent)
 						}}</span>
 					</td>
-					<td v-if="shows('VIRT')" class="gl-num"><span>{{ formatBytes(memField(item, 'vms')) }}</span></td>
-					<td v-if="shows('RES')" class="gl-num"><span>{{ formatBytes(memField(item, 'rss')) }}</span></td>
+					<td v-if="shows('VIRT')" class="gl-num"><span>{{ formatProcessBytes(memField(item, 'vms')) }}</span></td>
+					<td v-if="shows('RES')" class="gl-num"><span>{{ formatProcessBytes(memField(item, 'rss')) }}</span></td>
 					<td v-if="shows('PID')" class="gl-num"><span>{{ fmt(item.pid) }}</span></td>
-					<td v-if="shows('USER')"><span>{{ fmt(item.username) }}</span></td>
+					<td v-if="shows('USER')"><span>{{ formatUsername(item.username) }}</span></td>
 					<td v-if="shows('THR')" class="gl-num"><span>{{ fmt(item.num_threads) }}</span></td>
 					<td v-if="shows('NI')" class="gl-num">
 						<span :class="cellClassFor(payload, item, 'nice')">{{ fmt(item.nice) }}</span>
@@ -43,10 +72,10 @@
 						<span :class="cellClassFor(payload, item, 'status')">{{ fmt(item.status) }}</span>
 					</td>
 					<td v-if="shows('TIME+')" class="gl-num"><span>{{ formatCpuTime(item.cpu_times) }}</span></td>
-					<td v-if="shows('R/s')" class="gl-num"><span>{{ formatBytes(ioRate(item, true)) }}</span></td>
-					<td v-if="shows('W/s')" class="gl-num"><span>{{ formatBytes(ioRate(item, false)) }}</span></td>
+					<td v-if="shows('R/s')" class="gl-num"><span>{{ formatProcessBytes(ioRate(item, true)) }}</span></td>
+					<td v-if="shows('W/s')" class="gl-num gl-num-left"><span>{{ formatProcessBytes(ioRate(item, false)) }}</span></td>
 					<td>
-						<span class="gl-command gl-truncate" :title="fmt(commandText(item))">{{
+						<span class="gl-truncate" :title="fmt(commandText(item))">{{
 							fmt(commandText(item))
 						}}</span>
 					</td>
@@ -57,7 +86,7 @@
 </template>
 
 <script>
-import { formatBytes, formatCpuTime, formatPercent } from "./format.js";
+import { formatCpuTime, formatPercent, formatProcessBytes, formatUsername } from "./format.js";
 import { cellClassFor } from "./columns.js";
 import CollectionBlock from "./CollectionBlock.vue";
 import { PROCESSLIST_DROP_ORDER, hiddenColumns as resolveHiddenColumns } from "./processlist_columns.js";
@@ -67,6 +96,10 @@ import { fitBlockMixin } from "./fit_block.js";
 // byte-identical duplicates of PluginProgramlist.vue's own copies -- both
 // blocks now import the single copy in process_shared.js.
 import { HEADER_SORT_KEY, ioRate, commandText } from "./process_shared.js";
+// The TUI's own character-column widths (render_curses_v5.py:55-65, :91), so
+// the <colgroup> and CSS derive from the same numbers the terminal renderer
+// uses -- never a literal copied by hand.
+import { FIXED_COL_KEYS, MIN_COMMAND_WIDTH, PROCESS_COL_WIDTHS } from "./process_widths.js";
 
 const TITLE = "PROCESSES";
 
@@ -91,6 +124,14 @@ export default {
 	// matters for a future isolated unit test).
 	inject: {
 		maxProcessesDisplay: { default: null },
+		// The vertical row quota AppShell's refitVertical() pass allots this
+		// block (row_budget.js), handed down via provide() the same way
+		// as `maxProcessesDisplay` right above -- AppShell.vue never binds it as
+		// an attribute on the shared `<component>` (that would leak a
+		// `row-budget` DOM attribute on the other 31 plugins, the same
+		// reasoning documented at AppShell.vue:114-126). `{}` means no budget --
+		// an environment without measurement must never hide stats (design 4.8).
+		rowBudget: { default: () => ({}) },
 	},
 	props: {
 		payload: { type: Object, default: null },
@@ -115,12 +156,46 @@ export default {
 		allRows() {
 			return this.payload?.data || [];
 		},
-		// The cap applies to that same payload order: the first N rows, never
-		// the top N by any column value.
+		// Two ceilings, composed: the height-driven budget and the config key.
+		// `min()` because `[outputs] max_processes_display` is a hard cap that
+		// available height may never raise (design 4.7) -- the browser's
+		// counterpart of the TUI's row_budget(view, "processlist", _MAX_ROWS)
+		// fallback chain (processlist/render_curses_v5.py:414). The cap applies
+		// to the payload's own order: the first N rows, never the top N by any
+		// column value.
+		//
+		// The two ceilings do NOT share one predicate, deliberately: their `0`
+		// means opposite things. `maxProcessesDisplay` keeps `> 0` -- `[outputs]
+		// max_processes_display = 0` must keep meaning "no cap", not start
+		// hiding the block, which would be an unannounced change to what an
+		// explicit configuration value does. `rowBudget.processlist` uses
+		// `>= 0`: its `0` legitimately means "hide the block entirely", the
+		// browser's counterpart of the TUI's own `row_budget(...) <= 0` early
+		// return (processlist/render_curses_v5.py:413-416) -- step l of the
+		// vertical cascade, an active alert needing the room. Do not merge
+		// these back into one filter; a reader would otherwise assume one of
+		// the two comparisons is a typo.
 		rows() {
-			const rows = this.allRows;
-			const cap = this.maxProcessesDisplay;
-			return Number.isInteger(cap) && cap > 0 ? rows.slice(0, cap) : rows;
+			const caps = [];
+			if (Number.isInteger(this.maxProcessesDisplay) && this.maxProcessesDisplay > 0) {
+				caps.push(this.maxProcessesDisplay);
+			}
+			if (Number.isInteger(this.rowBudget?.processlist) && this.rowBudget.processlist >= 0) {
+				caps.push(this.rowBudget.processlist);
+			}
+			if (!caps.length) return this.allRows;
+			return this.allRows.slice(0, Math.min(...caps));
+		},
+		// Ladder steps g and l make a block vanish entirely, header included
+		// (curses_renderer_v5.py:1035-1044, row_budget.js's `cost()`) --
+		// `rows` above already renders nothing at a zero quota, but
+		// CollectionBlock still paints the loading/title header on an empty
+		// table (G9-6 D6) unless told to hide the whole block. Tied to the
+		// EXPLICIT quota, never to `rows.length === 0`: an environment
+		// without measurement (`rowBudget` = `{}`, design 4.8) must keep
+		// showing a host with zero running processes, not hide it.
+		quotaHidden() {
+			return Number.isInteger(this.rowBudget?.processlist) && this.rowBudget.processlist === 0;
 		},
 		// The cascade the mixin resolves: the TUI's drop order, as steps. A
 		// computed so the array reaching resolveDegrade() is not a reactive
@@ -128,6 +203,24 @@ export default {
 		dropCascadeSteps: () => dropCascade(PROCESSLIST_DROP_ORDER),
 		hiddenColumns() {
 			return resolveHiddenColumns(this.dropFlags);
+		},
+		// The fixed columns still on screen, in display order. Command is not
+		// one of them -- it is the elastic tail.
+		visibleFixedColumns() {
+			return FIXED_COL_KEYS.filter((key) => this.shows(key));
+		},
+		// The integer the stylesheet turns into a width. CSS does the
+		// character->pixel conversion, so no JS ever measures `--gl-col`
+		// (design D7): the sum is the visible fixed widths, plus one separator
+		// column between cells, plus Command's floor. The table's min-width is
+		// built from it, so the table overflows its container exactly when
+		// Command would fall below the floor -- which is what keeps the
+		// existing measure-driven cascade firing at the TUI's own threshold.
+		fixedColsStyle() {
+			const keys = this.visibleFixedColumns;
+			const fixed = keys.reduce((total, key) => total + PROCESS_COL_WIDTHS[key], 0);
+			const separators = keys.length; // one after each fixed column, before Command
+			return { "--gl-fixed-cols": String(fixed + separators + MIN_COMMAND_WIDTH) };
 		},
 	},
 	watch: {
@@ -140,9 +233,10 @@ export default {
 	},
 	methods: {
 		cellClassFor,
-		formatBytes,
 		formatCpuTime,
 		formatPercent,
+		formatProcessBytes,
+		formatUsername,
 		ioRate,
 		commandText,
 		shows(column) {
@@ -158,6 +252,22 @@ export default {
 		fmt(value) {
 			return value === null || value === undefined || value === "" ? "-" : String(value);
 		},
+		// `PROCESS_COL_WIDTHS[key]` alone under-sizes every column by one
+		// character. Under `table-layout: fixed` the <col> width is the
+		// column's WHOLE box, and `.gl-process-table td:not(:last-child)`'s
+		// `padding-right: var(--gl-col)` separator comes out of that same box
+		// -- so a `<col>` of exactly N characters leaves only N-1 for content
+		// (every fixed column crops one character early; invisibly so for
+		// "S", whose N=1 makes it disappear rather than merely narrow). `+1`
+		// reserves the separator's own character inside the box, leaving the
+		// full N for content. `fixedColsStyle` does NOT need the same `+1`:
+		// it already adds one separator per visible fixed column via its own
+		// `separators` term, so Σ(N+1) there and Σ(N)+separators here already
+		// agree -- verified: Σ(N+1) over the 12 fixed columns is 76 (64 + 12),
+		// matching `fixedColsStyle`'s `fixed + separators` term exactly.
+		colStyle(key) {
+			return { width: `calc(${PROCESS_COL_WIDTHS[key] + 1} * var(--gl-col))` };
+		},
 	},
 };
 </script>
@@ -170,5 +280,20 @@ export default {
  * consumer. */
 .gl-table th.gl-sorted {
 	text-decoration: underline;
+}
+/* W/s is left-aligned in the browser, a DELIBERATE divergence from the
+ * terminal, not parity -- the terminal right-aligns W/s like every other
+ * numeric column (render_curses_v5.py:435-445 gives every header
+ * `ljust=False`; USER is its only `ljust=True` column). Confirmed by the
+ * maintainer knowing the two disagree; do not "fix" this back to match the
+ * TUI. Same selector shape as `containers`'s
+ * own `.gl-num-left` (PluginContainers.vue), for the opposite reason there
+ * (that one IS TUI parity) -- the element is part of the selector on
+ * purpose: a bare `.gl-num-left` (0,1,0) only ties with the global
+ * `.gl-num` (0,1,0), and the winner would be decided by source order, which
+ * nothing guarantees between a scoped style and the token file. */
+.gl-table th.gl-num-left,
+.gl-table td.gl-num-left {
+	text-align: left;
 }
 </style>

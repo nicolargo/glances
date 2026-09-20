@@ -1,9 +1,9 @@
 <template>
-	<article class="gl-plugin" :aria-label="TITLE">
+	<article class="gl-plugin" :aria-label="TITLE" :style="fixedColsStyle">
 		<!-- Keep every comment INSIDE this root, like CollectionBlock.vue: one
 		before <article> would make a second root node and drop the
 		`data-plugin`/`aria-label` attributes AppShell passes down. -->
-		<div v-if="error || !payload || !rows.length" class="gl-plugin-title">
+		<div v-if="error || !payload || !allRows.length" class="gl-plugin-title">
 			<h2 class="gl-header">{{ TITLE }}</h2>
 		</div>
 		<p v-if="error" class="gl-level-critical">{{ error }}</p>
@@ -12,14 +12,35 @@
 		yet), so it stays neutral rather than claiming a healthy system --
 		same rule and wording as the TUI's collapse
 		(curses_renderer_v5.py:738-745, `is_initializing`). Checked BEFORE
-		the empty-rows branch: with nothing ingested yet, `rows` is also
+		the empty-rows branch: with nothing ingested yet, `allRows` is also
 		empty, and initializing must win. -->
 		<p v-else-if="isInitializing" class="gl-muted">(initializing)</p>
+		<!-- `allRows`, not the budget-capped `rows`: a tight vertical row
+		budget can shrink `rows` to zero while incidents still exist
+		(row_budget.js's "header only" step) -- that state renders the table
+		with zero data rows, never this all-clear message. -->
 		<!-- OK-coloured, mirroring the TUI (curses_renderer_v5.py:745): this
 		was `gl-muted` before, which understated a genuine all-clear as if it
 		were merely neutral like "loading"/"(initializing)". -->
-		<p v-else-if="!rows.length" class="gl-level-ok">(no alert detected)</p>
-		<table v-else class="gl-table">
+		<p v-else-if="!allRows.length" class="gl-level-ok">(no alert detected)</p>
+		<table v-else class="gl-table gl-process-table">
+			<colgroup>
+				<col :style="colStyle('GLYPH')" />
+				<col :style="colStyle('TIME')" />
+				<col v-if="shows('DURATION')" :style="colStyle('DURATION')" />
+				<!-- TARGET gets an explicit width rather than being left width-less
+				like TOP below: under table-layout:fixed, two width-less columns
+				split the remainder 50/50 (CSS 2.1 17.5.2.1) -- not by floor, not
+				by priority. The terminal gives TARGET its natural width and lets
+				TOP absorb the slack (curses_renderer_v5.py:534-536), but "natural
+				width" is content-dependent and fixed layout cannot measure that;
+				the closest defensible browser equivalent is the same floor the
+				terminal itself falls back to (_ALERT_MIN_TARGET, :529). TOP is
+				left as the sole auto column, so it is the one that grows. -->
+				<col :style="colStyle('TARGET')" />
+				<col v-if="shows('TOP')" />
+				<col v-if="shows('LEVEL')" :style="colStyle('LEVEL')" />
+			</colgroup>
 			<thead>
 				<tr>
 					<!-- The glyph column doubles as the title cell here, the same
@@ -31,23 +52,24 @@
 					from every sibling block. -->
 					<th class="gl-header">{{ titleText }}</th>
 					<th class="gl-header">TIME</th>
-					<th class="gl-header">DURATION</th>
+					<th v-if="shows('DURATION')" class="gl-header">DURATION</th>
 					<th class="gl-header">TARGET</th>
-					<th class="gl-header">TOP PROCESSES</th>
-					<th class="gl-header">LEVEL</th>
+					<th v-if="shows('TOP')" class="gl-header">TOP PROCESSES</th>
+					<th v-if="shows('LEVEL')" class="gl-header">LEVEL</th>
 				</tr>
 			</thead>
 			<tbody>
 				<!-- Payload order: incidents arrive already sorted ongoing-first,
 				newest-first within each group (derive_incidents(), design §5.3) --
-				this renderer never re-sorts, same rule as vms/containers. -->
+				this renderer never re-sorts, same rule as vms/containers. `rows`
+				is `allRows` capped to the row budget, never a re-sort of it. -->
 				<tr v-for="(incident, i) in rows" :key="i">
 					<td><span :class="glyphClass(incident)">{{ glyphOf(incident) }}</span></td>
 					<td>{{ timeOf(incident) }}</td>
-					<td>{{ incident.duration || "-" }}</td>
+					<td v-if="shows('DURATION')">{{ incident.duration || "-" }}</td>
 					<td>{{ targetOf(incident) }}</td>
-					<td>{{ topOf(incident) }}</td>
-					<td><span :class="levelClassOf(incident)">{{ levelTextOf(incident) }}</span></td>
+					<td v-if="shows('TOP')">{{ topOf(incident) }}</td>
+					<td v-if="shows('LEVEL')"><span :class="levelClassOf(incident)">{{ levelTextOf(incident) }}</span></td>
 				</tr>
 			</tbody>
 		</table>
@@ -56,6 +78,11 @@
 
 <script>
 import { levelClass } from "./levels.js";
+import { fitBlockMixin } from "./fit_block.js";
+// The TUI's own character-column widths (curses_renderer_v5.py:525-540), so
+// the <colgroup> and CSS derive from the same numbers the terminal renderer
+// uses -- never a literal copied by hand.
+import { ALERT_COL_WIDTHS, ALERT_MIN_TARGET, ALERT_MIN_TOP } from "./process_widths.js";
 
 const TITLE = "ALERT";
 
@@ -68,6 +95,15 @@ const GENERIC_FIELDS = new Set(["value", "percent"]);
 
 export default {
 	name: "PluginAlert",
+	mixins: [fitBlockMixin],
+	inject: {
+		// The vertical row quota AppShell's refitVertical() pass allots this
+		// block (row_budget.js's `budget.alert`), handed down via provide() the
+		// same way as PluginProcesslist.vue's own `rowBudget` inject. `{}`
+		// means no budget -- an environment without measurement must never
+		// hide stats (design 4.8).
+		rowBudget: { default: () => ({}) },
+	},
 	props: {
 		// Not `{ data: [...] }` like every other collection plugin: this block
 		// is fed by its own endpoint (/api/5/alert/incidents), which answers an
@@ -81,14 +117,35 @@ export default {
 		labels: { type: Object, default: () => ({}) },
 		// Declared but unused: no alert column depends on a CLI flag.
 		serverArgs: { type: Object, default: () => ({}) },
-		// Declared but unused: spec D5, this block has no width cascade --
-		// like `vms`, it scrolls instead (see the scoped style below).
+		// Declared but unused: the shell binds `degrade` to every component in
+		// a slot from one shared expression (AppShell.vue). This block owns its
+		// own width cascade via fitBlockMixin (`dropFlags` below), not the
+		// shell's zone-level one -- same reasoning as PluginProcesslist.vue's
+		// own `degrade` prop.
 		degrade: { type: Object, default: () => ({}) },
 	},
 	computed: {
 		TITLE: () => TITLE,
-		rows() {
+		// The full incident list, unbudgeted. titleText's ongoing/resolved
+		// counts and the empty/table branches above must read THIS, not the
+		// budget-capped `rows` below -- otherwise a tight vertical budget would
+		// make the header undercount incidents that are simply not all on
+		// screen, or claim "no alert detected" while incidents exist.
+		allRows() {
 			return (this.payload && this.payload.incidents) || [];
+		},
+		// The row budget caps the payload's own order -- the first N
+		// incidents, never a re-sort. No config key to compose with here,
+		// unlike processlist's `maxProcessesDisplay`: `rowBudget.alert` is the
+		// only ceiling. `>= 0`, exactly like `rowBudget.processlist`: its `0`
+		// legitimately means "header only" (row_budget.js's `alertBlockHeight`
+		// collapsing to the title + column-header rows alone), not "no
+		// budget".
+		rows() {
+			if (Number.isInteger(this.rowBudget?.alert) && this.rowBudget.alert >= 0) {
+				return this.allRows.slice(0, this.rowBudget.alert);
+			}
+			return this.allRows;
 		},
 		isInitializing() {
 			return !!(this.payload && this.payload.isInitializing);
@@ -96,15 +153,75 @@ export default {
 		// Mirrors `_build_alert_title_cells`'s populated text
 		// (curses_renderer_v5.py:629-675), minus its own width shrink ladder --
 		// the browser has the width, so it never needs to drop the `resolved`
-		// clause. Counts are derived from `rows`, not a server field: the
-		// incidents this block already has are the only source of truth.
+		// clause. Counts are derived from `allRows`, not a server field or the
+		// budget-capped `rows`: every incident the block has is the source of
+		// truth for this count, regardless of how many rows fit on screen.
 		titleText() {
-			const nOngoing = this.rows.filter((incident) => incident.ongoing).length;
-			const nResolved = this.rows.length - nOngoing;
+			const nOngoing = this.allRows.filter((incident) => incident.ongoing).length;
+			const nResolved = this.allRows.length - nOngoing;
 			return `ALERTS  ${nOngoing} ongoing · ${nResolved} resolved`;
+		},
+		// The TUI's own drop order: TOP first, then LEVEL, then DURATION
+		// (curses_renderer_v5.py:538-540). TARGET is never dropped -- it says
+		// WHAT the alert is about, and the terminal sacrifices TOP to keep it.
+		dropCascadeSteps: () => [
+			{ key: "drop_TOP", value: true },
+			{ key: "drop_LEVEL", value: true },
+			{ key: "drop_DURATION", value: true },
+		],
+		// `hiddenColumns`/`shows()` did not exist on this component before --
+		// it has never had a cascade. Same shape as processlist_columns.js's
+		// `hiddenColumns`: the mixin's cumulative `drop_<column>` flags,
+		// translated to column names -- no separate module to import it from,
+		// unlike processlist, since this cascade has only three steps.
+		hiddenColumns() {
+			const hidden = new Set();
+			for (const [key, value] of Object.entries(this.dropFlags || {})) {
+				if (value && key.startsWith("drop_")) hidden.add(key.slice("drop_".length));
+			}
+			return hidden;
+		},
+		// The <col> elements actually rendered: GLYPH, TIME and TARGET always,
+		// plus whichever of DURATION/TOP/LEVEL survive the cascade.
+		columnCount() {
+			return 3 + ["DURATION", "TOP", "LEVEL"].filter((key) => this.shows(key)).length;
+		},
+		// The integer the stylesheet turns into a width, same contract as
+		// PluginProcesslist.vue's own `fixedColsStyle`: TARGET and TOP
+		// contribute their FLOOR here, never a natural/content width -- CSS
+		// cannot measure that under table-layout:fixed. The sum this produces
+		// is INTENTIONALLY short of `ALERT_W_WITH_TOP`/`_LEVEL`/`_DURATION`
+		// (process_widths.js) by the one trailing pad column the terminal
+		// gives its TIME and DURATION cells to land the spec's curses
+		// offsets (curses_renderer_v5.py:814-829) -- CSS already reserves
+		// that same character as the `padding-right: var(--gl-col)`
+		// separator (colStyle()'s `+1`), so adding the terminal's own pad on
+		// top would double-count it. Do not "correct" either side to match
+		// the other: the cascade fires at the same RELATIVE points (the
+		// deltas between thresholds agree exactly), just anchored a few
+		// characters earlier in absolute terms than the exported constants.
+		fixedColsStyle() {
+			let total = ALERT_COL_WIDTHS.GLYPH + ALERT_COL_WIDTHS.TIME + ALERT_MIN_TARGET;
+			if (this.shows("DURATION")) total += ALERT_COL_WIDTHS.DURATION;
+			if (this.shows("LEVEL")) total += ALERT_COL_WIDTHS.LEVEL;
+			if (this.shows("TOP")) total += ALERT_MIN_TOP;
+			// One separator between cells, never after the last.
+			return { "--gl-fixed-cols": String(total + this.columnCount - 1) };
+		},
+	},
+	watch: {
+		// A new incident changes the natural width (a longer TARGET or TOP
+		// text), so the cascade must be re-resolved -- the ResizeObserver does
+		// not fire when only the CONTENT changes (fit_block.js's documented
+		// host contract).
+		payload() {
+			this.fitBlock().catch(() => {});
 		},
 	},
 	methods: {
+		shows(column) {
+			return !this.hiddenColumns.has(column);
+		},
 		glyphOf(incident) {
 			return incident.ongoing ? "●" : "○";
 		},
@@ -112,8 +229,8 @@ export default {
 		// the severity an incident reached always stays readable
 		// (curses_renderer_v5.py:840-843). Divergence from the TUI: there the
 		// glyph carries `prominent` only once LEVEL is width-dropped: the
-		// browser never drops LEVEL (it scrolls instead), so `prominent`
-		// belongs on LEVEL alone here -- see levelClassOf().
+		// browser drops LEVEL too now, but `prominent` still belongs on LEVEL
+		// alone here -- see levelClassOf().
 		glyphClass(incident) {
 			return levelClass({ level: incident.level });
 		},
@@ -181,22 +298,22 @@ export default {
 		topOf(incident) {
 			return (incident.top || []).map((name) => String(name)).join(", ");
 		},
+		// `N + 1`, not `N`: under table-layout:fixed the <col> width is the
+		// column's WHOLE box, and `.gl-process-table`'s
+		// `padding-right: var(--gl-col)` separator (css/v5.css) comes out of
+		// that same box -- a <col> of exactly N characters leaves only N-1 for
+		// content. Same `+1` as PluginProcesslist.vue's own colStyle(). TARGET
+		// has no entry in ALERT_COL_WIDTHS (the terminal gives it no fixed
+		// width, only a floor) -- ALERT_MIN_TARGET stands in for it here.
+		colStyle(key) {
+			const n = key === "TARGET" ? ALERT_MIN_TARGET : ALERT_COL_WIDTHS[key];
+			return { width: `calc(${n + 1} * var(--gl-col))` };
+		},
 	},
 };
 </script>
 
 <style scoped>
-/* Spec divergence: the TUI width-gates DURATION, TOP PROCESSES and LEVEL
- * (curses_renderer_v5.py:771-798) -- LEVEL and DURATION on width alone, TOP
- * PROCESSES on width AND data (`show_top`, :777: a host whose only alerts
- * come from fs or sensors incidents, which carry no `top`, gets no TOP
- * PROCESSES column at all in the TUI). The browser has the width -- it
- * renders every column unconditionally, including an empty TOP PROCESSES
- * one on such a host, and like `vms` scrolls horizontally within the block
- * rather than cropping columns or letting the whole page scroll. */
-.gl-plugin {
-	overflow-x: auto;
-}
 /* Resolved-but-was-prominent (fix round 1, IMPORTANT 2): the tier hue drops
  * (levelClassOf() above returns "" for the colour), but the badge does not
  * -- curses_renderer_v5.py:851-861 keeps `prominent` unconditional. Mirrors

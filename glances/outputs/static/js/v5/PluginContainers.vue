@@ -109,6 +109,16 @@ export default {
 	name: "PluginContainers",
 	components: { CollectionBlock },
 	mixins: [fitBlockMixin],
+	// The vertical row quota AppShell's refitVertical() pass allots this
+	// block (row_budget.js), handed down via provide()/inject -- same
+	// reasoning as PluginProcesslist.vue's own `rowBudget` inject
+	// (AppShell.vue:114-127): a prop on the shared `<component>` binding
+	// would leak a `row-budget` DOM attribute on the other 31 plugins. `{}`
+	// means no budget -- an environment without measurement must never hide
+	// stats (design 4.8).
+	inject: {
+		rowBudget: { default: () => ({}) },
+	},
 	props: {
 		payload: { type: Object, default: null },
 		error: { type: String, default: undefined },
@@ -126,18 +136,36 @@ export default {
 	computed: {
 		TITLE: () => TITLE,
 		// Payload order: the sort is server-side (containers/model_v5.py
-		// `_sort`, aligned on the process sort).
-		rows() {
+		// `_sort`, aligned on the process sort). UNBUDGETED -- `hiddenColumns`
+		// below reads this, not `rows`: containers/render_curses_v5.py:264-265
+		// decides `show_engine`/`show_pod` from the full item list, BEFORE its
+		// own `items[:budget]` slice (:273), so a container a cramped
+		// viewport pushes past the quota must still count toward "is there a
+		// pod here".
+		allRows() {
 			return this.payload?.data || [];
+		},
+		// containers has no config cap to compose with (unlike processlist's
+		// `maxProcessesDisplay`) -- the row budget is its only ceiling, so its
+		// `0` legitimately means "hide the block entirely" (`>= 0`), the
+		// browser's counterpart of the TUI's own `budget <= 0` early return
+		// (containers/render_curses_v5.py:269-270).
+		rows() {
+			const budget = this.rowBudget?.containers;
+			if (Number.isInteger(budget) && budget >= 0) {
+				return this.allRows.slice(0, budget);
+			}
+			return this.allRows;
 		},
 		// The cascade the mixin resolves: the TUI's drop order, as steps.
 		// A computed so the array reaching resolveDegrade() is not a reactive
 		// Proxy of component data.
 		dropCascadeSteps: () => dropCascade(CONTAINERS_DROP_ORDER),
 		// Both families, unioned (containers_columns.js): the data-driven set
-		// plus whatever the width cascade dropped this pass.
+		// plus whatever the width cascade dropped this pass. `allRows`, not
+		// `rows` -- see `allRows`' own comment above.
 		hiddenColumns() {
-			return resolveHiddenColumns(this.rows, this.payload?.disable_stats, this.dropFlags);
+			return resolveHiddenColumns(this.allRows, this.payload?.disable_stats, this.dropFlags);
 		},
 	},
 	watch: {

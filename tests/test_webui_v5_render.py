@@ -427,6 +427,17 @@ def test_cross_cutting_props_do_not_leak_into_the_dom_as_attributes():
     that forgets either line -- `degrade` in particular has no other test:
     the eleven declare-only components never read it, so no behaviour test
     would notice a dropped declaration on them.
+
+    `rowBudget` (Task 4, the vertical row budget) is checked here too, but
+    for a DIFFERENT reason than the two props above: it travels by
+    `provide`/`inject` (AppShell's `provide()`, fix round 1), not by a prop
+    on this shared binding, and no plugin declares it -- so today there is no
+    code path that could produce a `row-budget` attribute at all, and this
+    assertion is currently vacuous against the CURRENT source. It is kept as
+    a regression guard against a FUTURE change: if `rowBudget` is ever bound
+    back onto the shared `<component>` (the leak fix round 1 corrected), this
+    is what would catch it reappearing on the 26+ plugins that do not consume
+    it, without anyone having to remember why it must not be a prop.
     """
     payload = _run_render_probe("mem-with-available")
     # Without this the loop below is vacuous: an empty `pluginAttrs` (a probe
@@ -442,6 +453,11 @@ def test_cross_cutting_props_do_not_leak_into_the_dom_as_attributes():
     for name, attrs in payload["pluginAttrs"].items():
         assert "server-args" not in attrs, f"{name} leaked serverArgs as an attribute: {attrs!r}"
         assert "degrade" not in attrs, f"{name} leaked degrade as an attribute: {attrs!r}"
+        # Regression guard, not a check on current behaviour (see docstring):
+        # `rowBudget` is provide/inject, not a prop, so nothing today could
+        # leak it -- this only protects against someone reintroducing the
+        # `:row-budget` binding on the shared <component> later.
+        assert "row-budget" not in attrs, f"{name} leaked rowBudget as an attribute: {attrs!r}"
         # G9-8 Task 4 review: `serverPlugins` is provide/inject (AppShell.vue's
         # `provide()`, PluginPercpu.vue's `inject`), not a prop on this shared
         # binding -- so it must never appear as a DOM attribute on ANY plugin,
@@ -1572,6 +1588,19 @@ def test_the_header_drops_the_os_string_but_keeps_the_hostname():
     assert "Ubuntu" not in text, f"the OS string goes: {text!r}"
 
 
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_probe_models_vertical_geometry():
+    """The vertical budget reads viewport height, the right slot's top edge and
+    one row's height. The probe has no layout engine, so it models all three --
+    the same harness-hook pattern `_notches` already uses for scrollWidth.
+    """
+    payload = _run_render_probe("budget-tall")
+    geometry = payload["geometry"]
+    assert geometry["viewport"] > 0
+    assert geometry["rowPx"] > 0
+    assert geometry["slotTop"] >= 0
+
+
 # ------------------------------------------------------ ports (G9-7 Task 4)
 
 
@@ -2495,6 +2524,49 @@ def test_an_empty_amps_collection_is_hidden():
     assert payload["pluginHidden"].get("amps") is True, f"got {payload['pluginHidden']!r}"
 
 
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_amps_height_the_solver_sees_excludes_the_phantom_header_and_null_results():
+    """AppShell.vue's `ampsHeight()` used to read `1 + rows.reduce(...)` over
+    the RAW payload -- a phantom header row amps/render_curses_v5.py never
+    paints (module docstring: "NO TITLE ROW and no column header"), plus one
+    phantom row per AMP whose `result` is still `None`, which
+    amps/render_curses_v5.py:67-71 skips entirely rather than rendering
+    empty. AMPS_FIXTURE (scenario "amps") has one such null-result item
+    (`Dropped`) and one two-line item (`Systemd`): its correct height is 4
+    (Python 1 + Systemd 2 + Kernel 1), not the old buggy 6 (1 header +
+    Python 1 + Systemd 2 + Dropped 1 + Kernel 1) -- a difference this test
+    cannot observe directly (the solver's `ampsHeight` never reaches the
+    DOM), so it reads it off `rowBudget.processlist` instead: at this
+    scenario's bodyHeight (24 rows) the solver's growth branch gives
+    processlist 14 rows with the correct height and 12 with the buggy one,
+    confirmed by calling row_budget.js's `planRightColumn()` directly rather
+    than predicted (see task-11-report.md).
+    """
+    payload = _run_render_probe("budget-amps-height-defect")
+    assert "amps" not in payload["rowBudget"], f"the growth branch never sets an amps quota: {payload['rowBudget']!r}"
+    assert payload["rowBudget"]["processlist"] == 14, f"got {payload['rowBudget']!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_a_truncated_amps_block_keeps_a_marker_line():
+    """Ladder step j truncates amps to what is left and keeps at least the
+    `+N lines` marker (amps/render_curses_v5.py:98-105: "The marker consumes
+    the last budgeted line, so `budget` rows are emitted in total."). The
+    browser renders a multi-line result in ONE `pre-line` cell (G9-9A spec
+    D6), so PluginAmps.vue clamps LINES within a cell rather than dropping
+    whole rows -- "budget-amps-truncated" gives the solver a natural amps
+    height of 10 (five two-line AMPS) and a bodyHeight of 8, which
+    `planRightColumn()` truncates to `rowBudget.amps == 4` (confirmed by
+    calling it directly, not predicted): 3 content lines plus the marker.
+    """
+    payload = _run_render_probe("budget-amps-truncated")
+    assert payload["rowBudget"]["amps"] == 4, f"got {payload['rowBudget']!r}"
+    rows = payload["pluginRowGroups"]["amps"][0]
+    text = rows[-1][-1]
+    assert text.rstrip().endswith("lines"), f"got {text!r}"
+    assert text.strip() == "… +7 lines", f"got {text!r}"
+
+
 # -------------------------------------------------------- vms TUI parity (G9-9A Task 3)
 
 
@@ -2867,9 +2939,11 @@ def _alert_rows(payload):
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
 def test_the_alert_grid_renders_the_tui_columns():
     """curses_renderer_v5.py:1004-1062 -- glyph, TIME, DURATION, TARGET, TOP
-    PROCESSES, LEVEL, in that order. The browser drops none of them (unlike
-    the TUI, which width-gates DURATION/TOP PROCESSES/LEVEL): the block sits
-    in the wide right column and scrolls, like `vms`, rather than cropping."""
+    PROCESSES, LEVEL, in that order. This scenario carries no block-width
+    fixture, so the block is "unmeasurable" (degrade.js's `fits()` reads a
+    zero clientWidth as "cannot measure" and never degrades on it) and every
+    column survives -- see test_the_alert_grid_drops_top_processes_first and
+    its siblings below for the width cascade itself."""
     payload = _run_render_probe("alert")
     # The glyph column doubles as the title cell in the populated state (fix
     # round 2, IMPORTANT 1) -- ALERT_INCIDENTS_FIXTURE has 3 ongoing (rows
@@ -3025,6 +3099,58 @@ def test_the_alert_block_shows_no_alert_detected_once_warmed_up():
     assert not cells, f"the empty state renders no incident grid: {cells!r}"
 
 
+# ------------------------------------------------- alert width cascade + row budget
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_alert_grid_drops_top_processes_first():
+    """The TUI sacrifices TOP to keep TARGET readable
+    (curses_renderer_v5.py:538-540). The browser must not do the opposite."""
+    payload = _run_render_probe("alert-narrow-one-notch")
+    headers = payload["pluginHeaderCells"].get("alert") or []
+    assert "TOP PROCESSES" not in headers, f"got {headers!r}"
+    assert "TARGET" in headers, f"got {headers!r}"
+    assert "LEVEL" in headers, f"got {headers!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_alert_grid_drops_level_then_duration():
+    headers = _run_render_probe("alert-narrow-two-notches")["pluginHeaderCells"].get("alert") or []
+    assert "LEVEL" not in headers and "DURATION" in headers, f"got {headers!r}"
+    headers = _run_render_probe("alert-narrowest")["pluginHeaderCells"].get("alert") or []
+    assert "DURATION" not in headers and "TARGET" in headers, f"got {headers!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_alert_block_honours_its_row_budget():
+    """AppShell.refitVertical()'s row_budget.js solver (Task 4) hands this
+    block a quota through `rowBudget` (provide()/inject) -- `budget-short`'s
+    cramped viewport shrinks the alert ladder below ALERT_INCIDENTS_FIXTURE's
+    5 incidents, exactly as it does for processlist's own 30 rows
+    (test_the_row_budget_caps_the_process_block).
+
+    Also pins the title's ongoing/resolved counts to the UNBUDGETED incident
+    set: `rows` is capped to the quota, but `titleText()` must keep counting
+    every incident regardless -- a regression that points it at the capped
+    `rows` instead renders "3 ongoing (dot) 0 resolved" here (ALERT_INCIDENTS_
+    FIXTURE's 2 resolved incidents both sort after the 3 ongoing ones and
+    fall outside the 3-row cap), silently under-reporting resolved incidents
+    that still exist. Reverting the `allRows`/`rows` split in PluginAlert.vue
+    (pointing `titleText()` back at `rows`) was confirmed to make exactly
+    this assertion fail while every other assertion in this file still
+    passed -- see task-10-report.md for the recorded revert/restore output.
+    """
+    payload = _run_render_probe("budget-short-with-alerts")
+    header = payload["pluginHeaderCells"]["alert"]
+    rows = payload["pluginRowGroups"]["alert"][0]
+    assert len(rows) == payload["rowBudget"]["alert"], (
+        f"rendered {len(rows)} rows, budget was {payload['rowBudget']['alert']}"
+    )
+    assert header[0] == "ALERTS  3 ongoing · 2 resolved", (
+        f"the title must count ALL incidents, not just the budgeted rows: got {header[0]!r}"
+    )
+
+
 # ------------------------------------------------- processlist TUI parity (G9-9B Task 7)
 
 
@@ -3051,10 +3177,17 @@ def test_processlist_renders_the_tui_columns_and_rows():
         "Command",
     ], f"got {payload['pluginHeaderCells'].get('processlist')!r}"
     rows = _table_rows(payload, "processlist", 13)
+    # VIRT is "120M", not "120.0M": VIRT/RES/R/s/W/s render through
+    # `formatProcessBytes` (processlist/render_curses_v5.py's OWN
+    # `_format_bytes`, not the shared `formatBytes` every other byte column
+    # uses), which drops the decimal at >= 100 -- 125829120 bytes is exactly
+    # 120.0M, so this row is the one fixture value that tells the two
+    # formatters apart. RES (32.0M, < 100) keeps its decimal under either
+    # formatter, so it is not a distinguishing case.
     assert rows[0] == [
         "78.4%",
         "3.1%",
-        "120.0M",
+        "120M",
         "32.0M",
         "12345",
         "alice",
@@ -3071,20 +3204,31 @@ def test_processlist_renders_the_tui_columns_and_rows():
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
 def test_processlist_shows_the_placeholder_for_every_missing_value_and_the_kernel_thread_fallback():
     """Row 1 of the `processlist` fixture carries every optional field as
-    null -- every formatter must fall back to the WebUI's single placeholder
-    `-` (format.js `MISSING`), never the TUI's own per-column marker (`?`).
-    Its Command cell is the OTHER TUI fallback: no `cmdline` at all renders
-    the kernel-thread bracket form from the process `name`.
+    null. VIRT/RES/R/s/W/s (`formatProcessBytes`) and USER (`formatUsername`,
+    format.js) mirror the TUI's OWN per-column marker `?` for a missing
+    value -- `_memory_info_field`/`_io_rate`/`_format_username`
+    (processlist/render_curses_v5.py) all render `?`, not `-`, and
+    `formatProcessBytes`'s own docstring says why a null there is a live,
+    reachable case rather than a defensive guard. Every other column
+    (CPU%, MEM%, THR, NI, S, TIME+) keeps the WebUI's single
+    placeholder `-` (format.js `MISSING`). Its Command cell is the OTHER TUI
+    fallback: no `cmdline` at all renders the kernel-thread bracket form from
+    the process `name`.
     """
     payload = _run_render_probe("processlist")
     rows = _table_rows(payload, "processlist", 13)
     row = rows[1]
+    # VIRT, RES, USER, R/s, W/s -- the five columns that render through a
+    # formatter that answers "?" for a missing value.
+    question_mark_columns = {2, 3, 5, 10, 11}
     # PID (index 4) is the only non-null field among the first 12 columns.
     for i, cell in enumerate(row[:12]):
         if i == 4:
             assert cell == "999", f"PID must render, got {row!r}"
+        elif i in question_mark_columns:
+            assert cell == "?", f"column {i} must mirror the TUI's own marker, got {row!r}"
         else:
-            assert cell == "-", f"column {i} must be the placeholder, got {row!r}"
+            assert cell == "-", f"column {i} must be the WebUI placeholder, got {row!r}"
     assert row[12] == "[kthread0]", f"got {row!r}"
 
 
@@ -3177,6 +3321,137 @@ def test_command_survives_the_full_processlist_cascade():
         assert kept in headers, f"{kept} must never be dropped: {headers!r}"
 
 
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_row_budget_caps_the_process_block():
+    """AppShell.refitVertical()'s row_budget.js solver (Task 4) hands this
+    block a quota through `rowBudget` (provide()/inject, AppShell.vue:114-126)
+    -- `budget-short`'s cramped viewport shrinks the ladder below the
+    fixture's 30 rows."""
+    payload = _run_render_probe("budget-short")
+    rows = payload["pluginRowGroups"]["processlist"][0]
+    assert len(rows) == payload["rowBudget"]["processlist"], (
+        f"got {len(rows)} rows, budget was {payload['rowBudget']!r}"
+    )
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_config_cap_still_wins_when_it_is_lower():
+    """`[outputs] max_processes_display` is a hard ceiling that available
+    height may never raise (design 4.7). `budget-tall-with-config-cap` reuses
+    `budget-tall`'s generous height -- the solver would otherwise grow the
+    block to all 30 rows -- with a CONFIG_FIXTURES cap of 5."""
+    payload = _run_render_probe("budget-tall-with-config-cap")
+    rows = payload["pluginRowGroups"]["processlist"][0]
+    assert len(rows) == 5, f"got {len(rows)} rows: {rows!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_process_table_declares_the_terminal_column_widths():
+    """The <colgroup> carries the TUI's character counts
+    (process_widths.js's PROCESS_COL_WIDTHS/FIXED_COL_KEYS), so a wider PID
+    at the next refresh cannot re-lay the table out. `pluginColWidths`
+    (Task 7) lets this be observed; nothing before this test asserts that a
+    colgroup is rendered at all.
+
+    Each `<col>` is `PROCESS_COL_WIDTHS[key] + 1`, not the bare content
+    width: under `table-layout: fixed` the <col> is the column's WHOLE box,
+    and the `:not(:last-child)` separator's `padding-right` comes out of
+    that same box, so a <col> of exactly N characters would leave only N-1
+    for content -- every fixed column would crop one character early
+    (invisibly so for `S`, N=1). CPU% is 7, not 5: a 5-wide field fits
+    `100.0` but not `9999.9`, a value a process spread over many cores can
+    genuinely reach.
+    """
+    payload = _run_render_probe("processlist-wide")
+    assert payload["pluginColWidths"]["processlist"] == [
+        f"calc({n + 1} * var(--gl-col))" for n in (7, 5, 5, 5, 7, 10, 3, 3, 1, 8, 5, 5)
+    ]
+    assert "gl-process-table" in payload["pluginTableClasses"]["processlist"]
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_column_box_reserves_one_character_for_the_separator_inside_it():
+    """`colStyle()` used to return `PROCESS_COL_WIDTHS[key]` alone,
+    under-sizing every column's usable content space by one character --
+    under `table-layout: fixed` the <col> is the column's WHOLE box, and
+    `.gl-process-table td:not(:last-child)`'s `padding-right: var(--gl-col)`
+    separator comes out of that same box. A maintainer browser smoke test
+    caught it (every fixed column cropped one character early; invisibly so
+    for `S`, whose content width of 1 made the column disappear rather than
+    merely narrow); the PREVIOUS version of this test
+    (test_the_process_table_declares_the_terminal_column_widths) did not,
+    because its expected numbers were hand-copied from the same (buggy)
+    `colStyle()` output it was meant to check -- consistent with itself and
+    wrong.
+
+    This DOM-less probe has no CSS box model and no real layout engine, so it
+    cannot observe actual rendered content space the way a browser can --
+    that would need something like Playwright or headless Chrome measuring
+    real pixel widths, which this test suite does not have. What it CAN do,
+    and what the previous test did not, is pin the FORMULA independently of
+    `colStyle()`'s own source: `PROCESS_COL_WIDTHS`/`FIXED_COL_KEYS` are
+    re-extracted here straight from process_widths.js by regex (the same
+    technique test_webui_v5_width_drift.py uses), never by importing or
+    calling colStyle -- so a future edit that silently drops the `+ 1`
+    changes only production code, not this independently-sourced expectation,
+    and the two are compared instead of copied from one another.
+    """
+    widths_path = _BUNDLE_PATH.parent.parent / "js" / "v5" / "process_widths.js"
+    source = widths_path.read_text()
+    order_match = re.search(r"export const FIXED_COL_KEYS\s*=\s*\[(.*?)\];", source, re.S)
+    assert order_match, f"FIXED_COL_KEYS is not exported from {widths_path}"
+    keys = re.findall(r'"([^"]+)"', order_match.group(1))
+    widths_match = re.search(r"export const PROCESS_COL_WIDTHS\s*=\s*\{(.*?)\};", source, re.S)
+    assert widths_match, f"PROCESS_COL_WIDTHS is not exported from {widths_path}"
+    content_widths = {k: int(v) for k, v in re.findall(r'"([^"]+)"\s*:\s*(\d+)', widths_match.group(1))}
+
+    payload = _run_render_probe("processlist-wide")
+    col_widths = payload["pluginColWidths"]["processlist"]
+    assert len(col_widths) == len(keys), f"got {col_widths!r} for keys {keys!r}"
+    for key, declared in zip(keys, col_widths):
+        expected = content_widths[key] + 1  # content chars + 1 separator inside the box
+        assert declared == f"calc({expected} * var(--gl-col))", (
+            f"{key}: got {declared!r}, expected content ({content_widths[key]}) + 1 separator = {expected}"
+        )
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_a_long_user_name_is_cropped_not_wrapped():
+    """`formatUsername` (format.js) crops at PROCESS_COL_WIDTHS.USER=10 and
+    marks the crop with a trailing `+` -- the fixed-layout table no longer
+    wraps a long name onto a second line (defect P4)."""
+    payload = _run_render_probe("processlist-wide")
+    headers = payload["pluginColumnHeaders"]["processlist"]
+    idx = headers.index("USER")
+    rows = payload["pluginRowGroups"]["processlist"][0]
+    cells = [row[idx] for row in rows]
+    assert all(len(text) <= 10 for text in cells), cells
+    assert any(text.endswith("+") for text in cells), cells
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_command_column_carries_no_character_cap():
+    """Defect P2: Command takes whatever is left. Its floor is reserved by the
+    table's min-width (--gl-fixed-cols), not by a cap on the cell -- the cap
+    belongs to `containers`, which keeps the measure-driven `.gl-command`
+    cascade; here the column width truncates instead.
+
+    `gl-command` lives on the value <span> inside the <td>, never on the <td>
+    itself -- `pluginValueClasses` (webui_render_probe.js's `values.map((cell)
+    => cell.className)`) reads only `<td>`/`<dd>` classNames and would prove
+    nothing here: a mutation test confirmed it (re-adding `gl-command` to the
+    span left that assertion passing). `pluginTableCells[i]["value"]` is that
+    span's own class list -- the same accessor
+    test_raid_colours_the_values_and_the_status_lines_from_levels already uses
+    for the identical reason ("`pluginValueClasses` would give the cell's
+    ('gl-num') and prove nothing").
+    """
+    payload = _run_render_probe("processlist-wide")
+    spans = [cell["value"] for cell in payload["pluginTableCells"]["processlist"]]
+    assert spans, "the scenario must actually render process rows"
+    assert not any("gl-command" in (span or "") for span in spans), spans
+
+
 # ------------------------------------------------- programlist TUI parity (G9-9B Task 8)
 
 
@@ -3202,10 +3477,15 @@ def test_programlist_renders_the_tui_columns_and_rows():
         "Command",
     ], f"got {payload['pluginHeaderCells'].get('programlist')!r}"
     rows = _table_rows(payload, "programlist", 13)
+    # VIRT is "120M", not "120.0M": programlist/render_curses_v5.py imports
+    # processlist's OWN `_format_bytes` verbatim (its docstring says every
+    # cell builder but the identity column is shared), so VIRT/RES/R/s/W/s
+    # render through `formatProcessBytes` here too, the same formatter
+    # processlist's own parity test distinguishes on this exact value.
     assert rows[0] == [
         "78.4%",
         "3.1%",
-        "120.0M",
+        "120M",
         "32.0M",
         "3",
         "alice",
@@ -3222,14 +3502,24 @@ def test_programlist_renders_the_tui_columns_and_rows():
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
 def test_programlist_shows_the_placeholder_for_every_missing_value_and_the_kernel_thread_fallback():
     """Row 1 of the `programlist` fixture carries every optional field
-    (including `nprocs`) as null -- every formatter must fall back to `-`,
-    and the Command cell falls back to the kernel-thread bracket form from
-    `name`, exactly like processlist's own row 1."""
+    (including `nprocs`) as null. VIRT/RES/R/s/W/s (`formatProcessBytes`) and
+    USER (`formatUsername`) mirror the TUI's OWN per-column marker `?` for a
+    missing value, exactly like processlist's own row 1 -- `nprocs` (index 4)
+    is not one of them: it renders through the same plain `fmt()` as
+    processlist's PID column, so its placeholder is the WebUI's ordinary `-`.
+    The Command cell falls back to the kernel-thread bracket form from
+    `name`."""
     payload = _run_render_probe("programlist")
     rows = _table_rows(payload, "programlist", 13)
     row = rows[1]
+    # VIRT, RES, USER, R/s, W/s -- the five columns that render through a
+    # formatter that answers "?" for a missing value.
+    question_mark_columns = {2, 3, 5, 10, 11}
     for i, cell in enumerate(row[:12]):
-        assert cell == "-", f"column {i} must be the placeholder, got {row!r}"
+        if i in question_mark_columns:
+            assert cell == "?", f"column {i} must mirror the TUI's own marker, got {row!r}"
+        else:
+            assert cell == "-", f"column {i} must be the WebUI placeholder, got {row!r}"
     assert row[12] == "[kthread0]", f"got {row!r}"
 
 
@@ -3282,6 +3572,39 @@ def test_programlist_underlines_nothing_without_a_sort_key():
     assert not any("gl-sorted" in cls.split() for cls in classes), f"got {classes!r}"
 
 
+# --------------------------------------------------- programlist has no width cascade (Task 9)
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_program_block_uses_nprocs_where_processes_use_pid():
+    """process_widths.js's PROGRAM_FIXED_COL_KEYS is FIXED_COL_KEYS with
+    NPROCS (NPROCS_WIDTH=7) in PID's place -- same width as PID (both 7), so
+    the expected tuple is numerically identical to processlist's own
+    (test_the_process_table_declares_the_terminal_column_widths), column for
+    column. Each `<col>` is content width + 1 for the separator, same formula
+    as processlist's own `colStyle()`."""
+    payload = _run_render_probe("programlist-wide")
+    widths = payload["pluginColWidths"]["programlist"]
+    assert widths == [f"calc({n + 1} * var(--gl-col))" for n in (7, 5, 5, 5, 7, 10, 3, 3, 1, 8, 5, 5)]
+    assert "gl-process-table" in payload["pluginTableClasses"]["programlist"]
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_program_block_takes_the_same_row_budget_as_the_process_block():
+    """row_budget.js's `planRightColumn()` feeds `state.processes` into both
+    `rowBudget.processlist` and `rowBudget.programlist` unconditionally, so
+    the two numbers are always equal regardless of which block `slots()`
+    actually shows. The real assertion is the second one: the RENDERED row
+    count must track the budget the component was actually handed through
+    its own `rowBudget` inject, not just that the number exists."""
+    payload = _run_render_probe("budget-short-programs")
+    assert payload["rowBudget"]["programlist"] == payload["rowBudget"]["processlist"]
+    rows = payload["pluginRowGroups"]["programlist"][0]
+    assert len(rows) == payload["rowBudget"]["programlist"], (
+        f"got {len(rows)} rows, budget was {payload['rowBudget']!r}"
+    )
+
+
 # --------------------------------- processlist / programlist exclusivity (G9-9B Task 8)
 
 
@@ -3323,3 +3646,181 @@ def test_the_registry_holds_all_32_plugins():
     ).read_text()
     count = len(re.findall(r"component: Plugin", text))
     assert count == 32, f"expected 32 registered plugins, got {count}"
+
+
+# ------------------------------------------------------- right column vertical fit (Task 4)
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_a_tall_viewport_grows_the_process_block_past_its_nominal():
+    payload = _run_render_probe("budget-tall")
+    assert payload["rowBudget"]["processlist"] > 20, f"got {payload['rowBudget']!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_a_short_viewport_shrinks_it():
+    payload = _run_render_probe("budget-short")
+    assert payload["rowBudget"]["processlist"] < 20, f"got {payload['rowBudget']!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_an_unmeasurable_viewport_budgets_nothing():
+    """degrade.js's rule, applied on the vertical axis: a DOM without layout, a
+    hidden tab or a detached node must never hide the user's stats."""
+    assert _run_render_probe("budget-unmeasurable")["rowBudget"] == {}
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_a_second_tick_rebudgets_against_its_own_alert_state():
+    """Fix round 2, Important 1: `tick()` must read `this.results.alert`
+    AFTER that tick's own alert fetch resolves, not before -- otherwise
+    every periodic poll budgets against the PREVIOUS cycle's alert state,
+    forever (not just at startup, where `mounted()`'s own extra refit/
+    refitVertical pass after `tick()` papers over it).
+
+    The `budget-tick-shift` scenario (webui_render_fixtures.js) holds
+    viewport geometry (bodyHeight=14 rows, same as `budget-short`) and the
+    30-row processlist fixture CONSTANT, and varies only the alert payload
+    across two `api/5/alert/incidents` calls: tick 1 sees no incidents,
+    tick 2 sees five ONGOING ones. row_budget.js's `floorAlerts` reserves
+    rows for an ongoing incident out of the SAME shared pool `processlist`
+    draws from, so the two ticks' correct budgets are visibly different:
+    tick 1 -> `{processlist: 9, alert: 3}`, tick 2 -> `{processlist: 3,
+    alert: 5}` (both hand-verified by calling `planRightColumn()` directly
+    with the matching inputs).
+
+    The render probe fires tick 1 via AppShell's own `mounted()`, then a
+    SECOND tick via the `__glancesTick` hook (fix round 3) -- something no
+    other test in this file does; every other render-probe test drives the
+    vertical pass through `__glancesRefit()`, which calls `refit()` then
+    `refitVertical()` directly with no alert refetch in between, and could
+    never have caught this class of bug.
+
+    Before the round 2 fix, `refitVertical()` ran BEFORE the alert fetch
+    inside `tick()`, so tick 2 would read `this.results.alert` as it stood
+    at the END of tick 1 -- still tick 1's zero-incident envelope, since
+    tick 2's own fetch had not yet landed -- and produce tick 1's budget
+    again: `{processlist: 9, alert: 3}`. This test asserts the FIXED value;
+    it was run against the reverted ordering and confirmed to fail with
+    exactly that stale value (see the fix round 3 report for both outputs).
+    """
+    payload = _run_render_probe("budget-tick-shift")
+    assert payload["rowBudget"] == {
+        "vms": 0,
+        "containers": 0,
+        "processlist": 3,
+        "programlist": 3,
+        "alert": 5,
+    }, f"got {payload['rowBudget']!r} -- {{'processlist': 9, 'alert': 3, ...}} is tick 1's STALE value"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_a_block_with_neither_new_input_renders_its_table_unchanged():
+    """CollectionBlock's `#cols` slot and `tableClass` prop (Task 7) are both
+    optional and default to nothing. `processlist` is the first real
+    consumer (colgroup + `gl-process-table`; see
+    test_the_process_table_declares_the_terminal_column_widths for its exact
+    widths), so it is excluded from the loop below. `programlist` is not
+    checked here either way: it does not render in this scenario's default
+    process view (`ARGS_FIXTURES`' `programs: true` is what turns it on,
+    scenario `budget-short-programs`). `alert` is a THIRD fixed-layout
+    consumer (its own hand-rolled `<table>`, not CollectionBlock's)
+    -- unlike programlist it renders in every scenario (`ownEndpoint`), so it
+    is excluded from the loop below too, rather than silently never being
+    iterated over. Every OTHER plugin still shows no <colgroup>
+    (pluginColWidths == []) and carries only the base
+    `.gl-table` class (pluginTableClasses == ["gl-table"]), proving the two
+    new inputs are additive rather than a silent behaviour change for the
+    remaining consumers.
+    """
+    payload = _run_render_probe("processlist")
+    col_widths = payload["pluginColWidths"]
+    table_classes = payload["pluginTableClasses"]
+    assert "processlist" in col_widths and "processlist" in table_classes
+    assert len(col_widths["processlist"]) == 12, col_widths["processlist"]
+    assert table_classes["processlist"] == ["gl-table", "gl-process-table"], table_classes["processlist"]
+    assert table_classes["alert"] == ["gl-table", "gl-process-table"], table_classes["alert"]
+    for name in payload["pluginNames"]:
+        if name in ("processlist", "alert"):
+            continue
+        assert col_widths[name] == [], f"{name} rendered a <colgroup> with no consumer yet: {col_widths[name]!r}"
+        # [] for a plugin whose article has no <table> at all (a scalar-grid
+        # block, <dl>-based); ["gl-table"] -- the unconditional base class,
+        # nothing appended -- for every plugin that does.
+        assert table_classes[name] in ([], ["gl-table"]), f"{name} table class drifted: {table_classes[name]!r}"
+
+
+# ------------------------------------------------- workload blocks and the row budget solver
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_a_workload_block_honours_its_row_quota():
+    """The solver splits a shared pool between vms and containers
+    (`_split_workloads`, curses_renderer_v5.py:923-942). Nothing consumed that
+    split before this task, so the solver reserved rows the browser then
+    overspent."""
+    payload = _run_render_probe("budget-workloads-capped")
+    assert len(payload["pluginRowGroups"]["containers"][0]) == payload["rowBudget"]["containers"]
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_a_zero_quota_hides_the_block_header_included():
+    """Ladder steps g and l make a block VANISH, and `cost()` charges it zero
+    rows (curses_renderer_v5.py:1035-1044). A header row left on screen is one
+    row the solver did not budget."""
+    payload = _run_render_probe("budget-processlist-zeroed")
+    assert payload["rowBudget"]["processlist"] == 0
+    assert payload["pluginHidden"]["processlist"] is True
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_vms_block_honours_its_own_row_quota_alongside_containers():
+    """`test_a_workload_block_honours_its_row_quota` above only ever
+    populates `containers` -- a scenario that never gives `vms` any data
+    cannot tell "the block reads its own quota" apart from "the block was
+    never at risk of overflowing". `budget-workloads-both-capped` populates
+    BOTH blocks (10 vms, 30 containers) under the same cramped viewport, so
+    `_split_workloads`'s max-min fairness rule (curses_renderer_v5.py:923-942)
+    actually has two competing blocks to divide a pool between -- confirmed
+    against `planRightColumn()` directly: `{vms: 3, containers: 2, ...}`,
+    neither the full count nor an even half, which an even-split or
+    vms-ignored implementation could not produce by accident.
+    """
+    payload = _run_render_probe("budget-workloads-both-capped")
+    assert payload["rowBudget"]["vms"] == 3, f"got {payload['rowBudget']!r}"
+    assert payload["rowBudget"]["containers"] == 2, f"got {payload['rowBudget']!r}"
+    assert len(payload["pluginRowGroups"]["vms"][0]) == payload["rowBudget"]["vms"]
+    assert len(payload["pluginRowGroups"]["containers"][0]) == payload["rowBudget"]["containers"]
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_engine_column_reads_the_full_vms_list_not_the_budgeted_one():
+    """vms/render_curses_v5.py:157 decides `show_engine` from the FULL item
+    list, BEFORE its own `items[:budget]` slice (:169) -- a component that
+    decided the flag from the already-sliced rows instead would flip Engine
+    off whenever the budget crops the row carrying the second engine.
+    `budget-vms-column-parity`'s five VMs carry two distinct engines, but
+    only the first three (one engine) survive the scenario's 3-row quota
+    (confirmed against `planRightColumn()` directly): the Engine column must
+    still render.
+    """
+    payload = _run_render_probe("budget-vms-column-parity")
+    assert payload["rowBudget"]["vms"] == 3, f"got {payload['rowBudget']!r}"
+    headers = payload["pluginHeaderCells"].get("vms") or []
+    assert "Engine" in headers, f"got {headers!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_pod_column_reads_the_full_containers_list_not_the_budgeted_one():
+    """containers/render_curses_v5.py:265 decides `show_pod` from the FULL
+    item list, BEFORE its own `items[:budget]` slice (:273) -- the same class
+    of bug as vms' own Engine column above, on containers_columns.js's OTHER
+    data-driven flag family. `budget-containers-column-parity`'s five
+    containers have a pod on two of them, but both sit past the scenario's
+    3-row quota (confirmed against `planRightColumn()` directly): the Pod
+    column must still render.
+    """
+    payload = _run_render_probe("budget-containers-column-parity")
+    assert payload["rowBudget"]["containers"] == 3, f"got {payload['rowBudget']!r}"
+    headers = payload["pluginHeaderCells"].get("containers") or []
+    assert "Pod" in headers, f"got {headers!r}"

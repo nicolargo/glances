@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { formatBytes, formatRate, formatPercent, formatCount, toFahrenheit, formatSeconds, toFixedHalfEven, formatNetworkRate, formatFixed0, formatAutoUnit, formatAutoHz } from "../../glances/outputs/static/js/v5/format.js";
+import { formatBytes, formatRate, formatPercent, formatCount, toFahrenheit, formatSeconds, toFixedHalfEven, formatNetworkRate, formatFixed0, formatAutoUnit, formatAutoHz, formatProcessBytes, formatUsername } from "../../glances/outputs/static/js/v5/format.js";
 
 test("formatBytes uses binary units", () => {
 	assert.equal(formatBytes(0), "0B");
@@ -188,6 +188,63 @@ test("formatAutoHz mirrors npu's _auto_hz: base 1000, one decimal", () => {
 	assert.equal(formatAutoHz(1000), "1.0K");
 	assert.equal(formatAutoHz(999), "999");
 	assert.equal(formatAutoHz(0), "0");
+});
+
+// Mirrors processlist/render_curses_v5.py::_format_username() -- the boundary
+// is off by one from the obvious reading: the crop fires only when the name
+// is LONGER than the column, so a name AT the width is shown whole.
+test("a name at the width is shown whole; one past it crops", () => {
+	assert.equal(formatUsername("0123456789"), "0123456789");
+	assert.equal(formatUsername("01234567890"), "012345678+");
+	assert.equal(formatUsername(null), "?");
+});
+
+// Mirrors processlist/render_curses_v5.py::_format_bytes() -- the terminal's
+// OWN byte formatter (distinct from formatBytes/formatAutoUnit above).
+test("formatProcessBytes keeps the decimal below 100 and drops it at 100", () => {
+	assert.equal(formatProcessBytes(99.4 * 1024 ** 3), "99.4G");
+	assert.equal(formatProcessBytes(100 * 1024 ** 3), "100G");
+});
+
+test("formatProcessBytes: sub-kilobyte values are plain bytes, bad values are a question mark", () => {
+	assert.equal(formatProcessBytes(512), "512B");
+	assert.equal(formatProcessBytes(-1), "?");
+	assert.equal(formatProcessBytes("nope"), "?");
+});
+
+// _memory_info_field() (render_curses_v5.py:217-221) returns None whenever
+// memory_info is missing or not a dict -- an access-denied process, for one
+// -- and that None reaches _format_bytes directly. Python's float(None)
+// raises and is caught, returning "?"; Number(null) is 0, so an unguarded
+// port would render a false "0B" for an unreadable process instead of the
+// terminal's honest "unknown".
+test("formatProcessBytes treats null/undefined as unreadable, not zero", () => {
+	assert.equal(formatProcessBytes(null), "?");
+	assert.equal(formatProcessBytes(undefined), "?");
+});
+
+// v = n / scale with scale a power of two and n an integer byte count from
+// psutil, so an exact one-decimal tie (v * 4 an odd integer, i.e. v's
+// fractional part is exactly .25 or .75) is ordinary input. toFixed() breaks
+// such a tie away from zero; Python's f"{v:.1f}" breaks it to even -- see
+// toFixedHalfEven's own tests above for the general rule.
+//
+// Both values below were run through the real
+// processlist._format_bytes()/_memory_info_field() path, not derived by
+// reasoning: 1280 -> ' 1.2K' (a K-scale tie), and 8858370048 (= 8.25 *
+// 1024**3, confirmed exact via `int(8.25 * 1024**3) == 8.25 * 1024**3`) ->
+// ' 8.2G' (a G-scale tie, chosen at a different magnitude than the K case).
+// Node's `(1280/1024).toFixed(1)` gives "1.3" and
+// `(8858370048/1024**3).toFixed(1)` gives "8.3" -- both wrong without the
+// half-even fix.
+test("formatProcessBytes breaks an exact one-decimal tie to even, like the terminal", () => {
+	assert.equal(formatProcessBytes(1280), "1.2K");
+	assert.equal(formatProcessBytes(8858370048), "8.2G");
+});
+
+test("neither formatter pads -- the colgroup does that job", () => {
+	assert.equal(formatProcessBytes(512), formatProcessBytes(512).trim());
+	assert.equal(formatUsername("ab"), "ab");
 });
 
 test("formatAutoHz accepts a numeric string, like Python's float()", () => {

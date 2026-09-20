@@ -524,8 +524,10 @@ def test_no_width_keeps_all_columns(payload, fields):
 
 
 def test_narrow_drops_in_order_virt_first(payload, fields):
-    # Width chosen so VIRT (a) must go but RES (c) is still present.
-    rows = render(payload, fields, view={"right_width": 64})
+    # Width chosen so VIRT (a) must go but RES (c) is still present. `_W_CPU`
+    # (7 characters) is part of every column's `used` total, so this width
+    # was found by sweeping the actual renderer rather than derived by hand.
+    rows = render(payload, fields, view={"right_width": 77})
     assert not _has_col(rows, "VIRT")  # (a) dropped first
     assert _has_col(rows, "RES")  # (c) still present at this width
     assert _has_col(rows, "Command")
@@ -568,18 +570,23 @@ def test_header_and_rows_drop_consistently(fields):
 @pytest.mark.parametrize(
     ("cpu_percent", "expected"),
     [
-        (12.3, " 12.3"),  # < 1000 → one decimal, as before
-        (999.9, "999.9"),  # last value that still fits with a decimal
-        (1384.7, " 1385"),  # >= 1000 → integer form (rounded, as v4), column stays 5 wide
-        (12345.6, "12346"),
+        (12.3, "   12.3"),  # < 1000 → one decimal, as before
+        (999.9, "  999.9"),  # last value that still fits with a decimal
+        (1384.7, "   1385"),  # >= 1000 → integer form (rounded, as v4), column stays 7 wide
+        (12345.6, "  12346"),
     ],
 )
 def test_cpu_percent_drops_decimal_above_1000(fields, cpu_percent, expected):
-    """A process spread over many cores must not widen the CPU% column."""
+    """A process spread over many cores must not widen the CPU% column.
+
+    The 1000 threshold is independent of `_W_CPU`'s own width: dropping the
+    decimal above 1000 keeps every value inside the column regardless -- see
+    `_format_percent`'s own docstring.
+    """
     payload = {"data": [_proc(pid=1, cpu_percent=cpu_percent)], "_levels": {}}
     cell = render(payload, fields)[1].cells[CPU_COL]
     assert cell.text == expected
-    assert len(cell.text) == 5  # never overflows the 5-wide column
+    assert len(cell.text) == 7  # never overflows the 7-wide column
 
 
 # ---------------------------------------------------------- row_budget (vertical fit)

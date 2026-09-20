@@ -52,7 +52,12 @@ from glances.globals import WINDOWS
 from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row, row_budget
 
 # Column widths (v4 parity — see ``processlist.layout_header``/``layout_stat``).
-_W_CPU = 5
+# `_W_CPU` is 7: a 5-wide field fits ``100.0`` but not ``9999.9``, and a
+# process spread over many cores can genuinely exceed 1000% CPU, overflowing
+# a narrower column past 999.9%. Kept equal, on purpose, to the WebUI's
+# `PROCESS_COL_WIDTHS["CPU%"]` (process_widths.js), which
+# test_webui_v5_width_drift.py compares against this constant.
+_W_CPU = 7
 _W_MEM = 5
 _W_VIRT = 5
 _W_RES = 5
@@ -111,10 +116,14 @@ _HEADER_SORT_KEY: dict[str, str] = {
 def _format_percent(value: Any, width: int) -> str:
     """Percent with one decimal, dropped at >= 1000 so the column stays ``width``.
 
-    A process spread over many cores reads e.g. ``1384.7`` — 6 characters in a
-    5-wide column, which shifts every column to its right. Above 1000 the
-    decimal carries no useful signal, so it is dropped: ``1384``. Mirrors v4
-    ``layout_stat['cpu_no_digit']`` (v4 switches at 100 for its 6-wide column).
+    A process spread over many cores can report e.g. ``1384.7``; above 1000
+    the decimal carries no useful signal, so it is dropped: ``1384``. The
+    1000 threshold is not tied to ``_W_CPU``'s own 7-character width (wide
+    enough that a value in the thousands still fits with its decimal, e.g.
+    ``9999.9``): dropping the decimal above 1000 keeps every value inside the
+    column regardless, simply with more room to spare than a narrower field
+    would need. Mirrors v4 ``layout_stat['cpu_no_digit']`` (v4 switches at
+    100 for its 6-wide column).
     """
     try:
         fvalue = float(value)

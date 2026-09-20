@@ -44,7 +44,6 @@ install-uv: ## Install UV tool in a specific virtualenv
 	.venv-uv/bin/pip install uv
 
 upgrade-uv: ## Upgrade the UV tool
-	.venv-uv/bin/pip install --upgrade pip
 	.venv-uv/bin/pip install --upgrade uv
 
 venv: ## Create the virtualenv with all dependencies
@@ -60,7 +59,7 @@ venv-upgrade-min venv-switch-to-min: ## Upgrade the virtualenv with minimal depe
 	$(UV_RUN) sync --upgrade
 
 venv-clean: ## Remove the virtualenv
-	rm -rf .venv
+	rm -rf .venv .venv-uv
 
 venv-dev: ## Create the virtualenv with dev dependencies
 	$(UV_RUN) sync --dev --all-extras

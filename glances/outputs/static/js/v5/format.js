@@ -1,15 +1,26 @@
 // Glances v5 WebUI — value formatting.
 //
 // Shared by every plugin component, so the same number reads the same way
-// everywhere. Pure: no DOM, no fetch, no imports.
+// everywhere. Pure: no DOM, no fetch, no imports (except PROCESS_COL_WIDTHS
+// below, itself pure).
 //
 // Every function accepts null/undefined and returns "-". This is not
 // defensive padding: a v5 `rate` field is genuinely null until its second
 // cycle (the plugin base keeps the field present rather than dropping it),
 // so null IS a value the API sends.
+//
+// This module holds THREE byte formatters, deliberately: `formatBytes`
+// mirrors the WebUI's own rule (_auto_unit() in curses_formatters_v5.py),
+// `formatAutoUnit` mirrors glances.globals.auto_unit() (what `smart` uses),
+// and `formatProcessBytes` below mirrors one plugin's local renderer
+// (processlist/render_curses_v5.py::_format_bytes()). Say which surface you
+// mean before reaching for one.
+
+import { PROCESS_COL_WIDTHS } from "./process_widths.js";
 
 const UNITS = ["B", "K", "M", "G", "T", "P"];
 const MISSING = "-";
+const USER_WIDTH = PROCESS_COL_WIDTHS.USER;
 
 function isNumber(value) {
 	return typeof value === "number" && Number.isFinite(value);
@@ -226,4 +237,57 @@ export function formatCpuTime(cpuTimes) {
 	if (hours > 99) return `${hours}h`;
 	if (hours > 0) return `${hours}h${pad2(minutes)}:${pad2(seconds)}`;
 	return `${minutes}:${pad2(seconds)}`;
+}
+
+// The processlist renderer's OWN byte formatter
+// (glances/plugins/processlist/render_curses_v5.py:199-212), not the shared
+// `formatBytes` above. It drops the decimal at 100 and over, which is what
+// lets VIRT/RES fit the terminal's 5-column budget -- and this WebUI now uses
+// that same budget, so it needs the same string. This is the THIRD byte
+// formatter in this module: `formatBytes` mirrors the WebUI's own rule,
+// `formatAutoUnit` mirrors globals.auto_unit, and this one mirrors one
+// plugin's local renderer. Say which surface you mean before reaching for one.
+//
+// The terminal's `rjust(width)` is deliberately NOT ported: the <colgroup> and
+// `text-align` do that job here, and copied padding would ship trailing spaces
+// into the DOM and defeat the ellipsis.
+//
+// `null`/`undefined` must be checked explicitly, before `Number()`: Python's
+// `float(None)` raises and is caught, returning "?" -- but `Number(null)` is
+// `0`, a finite non-negative number that would silently render "0B". This
+// formatter serves `_memory_info_field()` (render_curses_v5.py:217-221),
+// which returns `None` whenever `memory_info` is missing or not a dict (an
+// access-denied process, for one), so a false "0B" is a live, reachable case,
+// not a defensive guard against input that cannot occur.
+export function formatProcessBytes(value) {
+	if (value === null || value === undefined) return "?";
+	const n = Number(value);
+	if (!Number.isFinite(n) || n < 0) return "?";
+	for (const [suffix, scale] of [
+		["T", 1024 ** 4],
+		["G", 1024 ** 3],
+		["M", 1024 ** 2],
+		["K", 1024],
+	]) {
+		if (n >= scale) {
+			const v = n / scale;
+			// toFixedHalfEven, not toFixed: v = n / scale with scale a power of
+			// two and n an integer byte count from psutil, so exact binary ties
+			// (every multiple of scale / 4) are ordinary input, not an edge
+			// case -- and toFixed() breaks a tie away from zero where Python's
+			// f"{v:.1f}" breaks it to even.
+			return v < 100 ? `${toFixedHalfEven(v, 1)}${suffix}` : `${Math.trunc(v)}${suffix}`;
+		}
+	}
+	return `${Math.trunc(n)}B`;
+}
+
+// `_format_username` (processlist/render_curses_v5.py:158-162). The boundary is
+// off by one from the obvious reading: the crop fires only when the name is
+// LONGER than the column, so a 10-character name is shown whole and an
+// 11-character one becomes its first 9 plus `+`. The terminal's trailing
+// `ljust` is not ported, for the same reason as above.
+export function formatUsername(value) {
+	const text = value === null || value === undefined ? "?" : String(value);
+	return text.length > USER_WIDTH ? `${text.slice(0, USER_WIDTH - 1)}+` : text;
 }

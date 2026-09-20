@@ -58,6 +58,31 @@ from glances.plugins.processlist.render_curses_v5 import (
 _W_NPROCS = 7
 _MAX_ROWS = 20
 
+# The fixed columns, in DISPLAY order — the single source of truth for the
+# header row built below AND for the WebUI's own copy
+# (glances/outputs/static/js/v5/process_widths.js's ``PROGRAM_FIXED_COL_KEYS``,
+# pinned against this list by tests/test_webui_v5_width_drift.py). A
+# <colgroup> is positional, so a silently transposed pair here would mis-size
+# every column with no width assertion catching it — ``render()`` builds its
+# header cells FROM this list rather than repeating the order by hand, so the
+# two cannot drift apart.
+_FIXED_COL_KEYS = ["CPU%", "MEM%", "VIRT", "RES", "NPROCS", "USER", "THR", "NI", "S", "TIME+", "R/s", "W/s"]
+
+_FIXED_COL_WIDTHS: dict[str, int] = {
+    "CPU%": _W_CPU,
+    "MEM%": _W_MEM,
+    "VIRT": _W_VIRT,
+    "RES": _W_RES,
+    "NPROCS": _W_NPROCS,
+    "USER": _W_USER,
+    "THR": _W_THR,
+    "NI": _W_NI,
+    "S": _W_STATUS,
+    "TIME+": _W_TIME,
+    "R/s": _W_IO,
+    "W/s": _W_IO,
+}
+
 
 def render(
     payload: dict[str, Any],
@@ -96,19 +121,7 @@ def render(
     raw_levels = payload.get("_levels") if isinstance(payload, dict) else None
     levels_index = raw_levels if isinstance(raw_levels, dict) else {}
 
-    header_cells = [
-        _header("CPU%", _W_CPU),
-        _header("MEM%", _W_MEM),
-        _header("VIRT", _W_VIRT),
-        _header("RES", _W_RES),
-        _header("NPROCS", _W_NPROCS),
-        _header("USER", _W_USER, ljust=True),
-        _header("THR", _W_THR),
-        _header("NI", _W_NI),
-        _header("S", _W_STATUS),
-        _header("TIME+", _W_TIME),
-        _header("R/s", _W_IO),
-        _header("W/s", _W_IO),
+    header_cells = [_header(key, _FIXED_COL_WIDTHS[key], ljust=(key == "USER")) for key in _FIXED_COL_KEYS] + [
         _header("Command", len("Command")),
     ]
     rows: list[Row] = [Row(cells=header_cells)]

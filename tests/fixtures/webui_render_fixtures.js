@@ -528,6 +528,14 @@ const ARGS_FIXTURES = {
 	programlist: { programs: true },
 	"programlist-sorted": { programs: true, sort_processes_key: "cpu_percent" },
 	"programlist-cap": { programs: true },
+	"programlist-wide": { programs: true },
+	// `budget-short`'s own heights (HEIGHT_FIXTURES below) with `programs` set,
+	// so `slots()` shows `programlist` in the right slot instead of
+	// `processlist` -- the row-budget solver computes both keys off the same
+	// `state.processes` regardless (row_budget.js), so this scenario proves
+	// the BLOCK actually consumes the budget it is handed, not just that the
+	// number exists.
+	"budget-short-programs": { programs: true },
 	// processcount's truncation counter (`_count_text`) and sort indicator
 	// (`_sort_indicator_cell`) scenarios below. "processcount-cut" is
 	// deliberately absent here -- a scenario absent from ARGS_FIXTURES gets
@@ -549,6 +557,10 @@ const CONFIG_FIXTURES = {
 	// :37-55) must render `30/215`.
 	"processcount-cut": { outputs: { max_processes_display: 30 } },
 	"processcount-cut-programs": { outputs: { max_processes_display: 30 } },
+	// Task 8: lower than `budget-tall`'s height-driven budget (which would
+	// otherwise grow to all 30 rows) -- the two ceilings compose with `min()`,
+	// so this one must win (design 4.7).
+	"budget-tall-with-config-cap": { outputs: { max_processes_display: 5 } },
 };
 
 // Header plugin payloads, shaped like their model_v5.py `_collect()` output.
@@ -1401,7 +1413,51 @@ ALL_FIXTURES["processlist"] = { processlist: PROCESSLIST_FIXTURE };
 ALL_FIXTURES["processlist-sorted"] = { processlist: PROCESSLIST_FIXTURE };
 ALL_FIXTURES["processlist-cap"] = { processlist: PROCESSLIST_ORDER_FIXTURE };
 ALL_FIXTURES["processlist-narrow"] = { processlist: PROCESSLIST_FIXTURE };
-ALL_FIXTURES["processlist-wide"] = { processlist: PROCESSLIST_FIXTURE };
+
+// Task 8: `PROCESSLIST_FIXTURE`'s own usernames ("alice", null) are both
+// <= 10 characters formatted, so neither exercises `formatUsername`'s crop --
+// this fixture adds a 13-character one ("administrator" -> "administr+",
+// `_format_username`, render_curses_v5.py:158-162) so
+// test_a_long_user_name_is_cropped_not_wrapped has something to crop. Two
+// rows (not one) so test_the_command_column_carries_no_character_cap's
+// `pluginValueClasses` assertion has more than a single value to read.
+const PROCESSLIST_WIDE_FIXTURE = {
+	_key: "pid",
+	data: [
+		{
+			pid: 12345,
+			name: "python3",
+			username: "administrator",
+			status: "S",
+			nice: 0,
+			num_threads: 4,
+			cpu_percent: 78.4,
+			memory_percent: 3.1,
+			cmdline: ["/usr/bin/python3", "myscript.py", "--verbose"],
+			memory_info: { vms: 125829120, rss: 33554432 },
+			cpu_times: { user: 10, system: 2 },
+			io_counters: [2048, 1024, 1024, 0, 1],
+			time_since_update: 2,
+		},
+		{
+			pid: 999,
+			name: "sshd",
+			username: "root",
+			status: "S",
+			nice: 0,
+			num_threads: 2,
+			cpu_percent: 0.5,
+			memory_percent: 0.2,
+			cmdline: ["sshd"],
+			memory_info: { vms: 2516582, rss: 1048576 },
+			cpu_times: { user: 200, system: 22 },
+			io_counters: [0, 0, 0, 0, 1],
+			time_since_update: 2,
+		},
+	],
+	_levels: {},
+};
+ALL_FIXTURES["processlist-wide"] = { processlist: PROCESSLIST_WIDE_FIXTURE };
 
 // programlist (task 8): the per-program aggregation. Same shape as
 // PROCESSLIST_FIXTURE above with `pid` replaced by `nprocs` (no single pid --
@@ -1468,6 +1524,10 @@ const PROGRAMLIST_ORDER_FIXTURE = {
 ALL_FIXTURES["programlist"] = { programlist: PROGRAMLIST_FIXTURE };
 ALL_FIXTURES["programlist-sorted"] = { programlist: PROGRAMLIST_FIXTURE };
 ALL_FIXTURES["programlist-cap"] = { programlist: PROGRAMLIST_ORDER_FIXTURE };
+// The programlist twin of `processlist-wide` -- same 2-row fixture reused
+// (its widths do not depend on row content, only on the <colgroup> being
+// rendered at all).
+ALL_FIXTURES["programlist-wide"] = { programlist: PROGRAMLIST_FIXTURE };
 
 // processcount's truncation counter and sort indicator (task 8). Both reuse
 // PROCESSCOUNT_FIXTURE (total 215); what differs per scenario is
@@ -1531,13 +1591,339 @@ const BLOCK_WIDTH_FIXTURES = {
 	// and only CPU% / MEM% / R/s / W/s / Command survive -- Command being the
 	// protected tail is exactly what this scenario is for.
 	"processlist-narrow": { processlist: { available: 200, content: 2000 } },
+	// PluginAlert.vue's own width cascade: TOP, then LEVEL, then DURATION
+	// (curses_renderer_v5.py:538-540) -- TARGET is never dropped. Three
+	// fixtures, one per notch count, sharing `content: 1000` and differing
+	// only in `available` so each stops the cascade at a distinct step.
+	// 1000 - 150 = 850 <= 900: exactly one notch, so `drop_TOP` alone lands.
+	"alert-narrow-one-notch": { alert: { available: 900, content: 1000 } },
+	// 1000 - 150 = 850 > 750, 1000 - 2*150 = 700 <= 750: two notches, so
+	// `drop_TOP` + `drop_LEVEL` land and DURATION survives.
+	"alert-narrow-two-notches": { alert: { available: 750, content: 1000 } },
+	// 1000 - 2*150 = 700 > 600, 1000 - 3*150 = 550 <= 600: all three notches
+	// land -- TOP, LEVEL and DURATION all drop, TARGET is all that is left.
+	"alert-narrowest": { alert: { available: 600, content: 1000 } },
 };
+
+// Vertical geometry per scenario. Same contract as WIDTH_FIXTURES: these are
+// the numbers a browser would report. `rowPx` is one text row; `top` is the
+// slot's distance from the viewport's top edge. The budget is computed from
+// viewport - top - footer, never from the slot's own height (design 4.4).
+const HEIGHT_FIXTURES = {
+	// 900 - 100 - 20 = 780 px of body, 20 px rows -> 39 rows: everything fits
+	// and the solver takes its growth branch.
+	"budget-tall": {
+		viewport: 900,
+		rowPx: 20,
+		slots: { right: { top: 100, height: 0 }, footer: { top: 880, height: 20 } },
+	},
+	// 400 - 100 - 20 = 280 px -> 14 rows: the shrink ladder runs.
+	"budget-short": {
+		viewport: 400,
+		rowPx: 20,
+		slots: { right: { top: 100, height: 0 }, footer: { top: 380, height: 20 } },
+	},
+	// No viewport: "cannot measure" -> no budget at all.
+	"budget-unmeasurable": {
+		viewport: 0,
+		rowPx: 0,
+		slots: { right: { top: 0, height: 0 }, footer: { top: 0, height: 0 } },
+	},
+};
+
+// `budget-tall` / `budget-short` (Task 4): 30 processlist rows, more than
+// NOMINAL_PROCESSES (20, row_budget.js), so growing past and shrinking below
+// the nominal is actually observable -- with no data at all `nProcesses` is
+// 0 and the solver never touches `state.processes` either way.
+const BUDGET_PROCESSLIST_FIXTURE = {
+	_key: "pid",
+	data: Array.from({ length: 30 }, (_, i) => ({
+		pid: i,
+		name: `proc${i}`,
+		username: "root",
+		status: "S",
+		nice: 0,
+		num_threads: 1,
+		cpu_percent: 1,
+		memory_percent: 1,
+		cmdline: [`proc${i}`],
+	})),
+	_levels: {},
+};
+ALL_FIXTURES["budget-tall"] = { processlist: BUDGET_PROCESSLIST_FIXTURE };
+ALL_FIXTURES["budget-short"] = { processlist: BUDGET_PROCESSLIST_FIXTURE };
+// Isolate the process block's growth/shrink from the alert floor
+// (row_budget.js's `floorAlerts`): the default ALERT_INCIDENTS_FIXTURE has
+// ongoing incidents, which would otherwise compete with the process block
+// for rows in the short-viewport scenario.
+ALERT_INCIDENTS_SCENARIOS["budget-tall"] = { is_initializing: false, incidents: [] };
+ALERT_INCIDENTS_SCENARIOS["budget-short"] = { is_initializing: false, incidents: [] };
+
+// `budget-short`'s own geometry and 30-row data, under `programlist` instead
+// of `processlist` (ARGS_FIXTURES' `programs: true` above makes `slots()`
+// show the program block). The solver's `state.processes` feeds both
+// `rowBudget.processlist` and `rowBudget.programlist` unconditionally
+// (row_budget.js), so this scenario's own point is that the RENDERED row
+// count actually tracks the budget the component was handed.
+HEIGHT_FIXTURES["budget-short-programs"] = HEIGHT_FIXTURES["budget-short"];
+ALL_FIXTURES["budget-short-programs"] = { programlist: BUDGET_PROCESSLIST_FIXTURE };
+ALERT_INCIDENTS_SCENARIOS["budget-short-programs"] = { is_initializing: false, incidents: [] };
+
+// `budget-short`'s own cramped geometry (14 rows of body height)
+// AND its 30-row processlist data, but WITHOUT the isolating override above
+// -- this scenario deliberately keeps the default `/api/5/alert/incidents`
+// answer (ALERT_INCIDENTS_FIXTURE, via ALERT_INCIDENTS_SCENARIOS' own
+// fallback in webui_render_probe.js: 5 incidents, 3 ongoing). Without a
+// competitor for rows, `bodyHeight=14` alone never forces the shrink ladder
+// -- `alertBlockHeight(5, 10)` is only 7 rows, well under 14, so
+// `rowBudget.alert` would come back at the untouched nominal 10 (verified by
+// calling `planRightColumn()` directly) and the block would just show all 5
+// incidents regardless of the cap. The 30-row processlist is what makes the
+// ladder actually run and shrink `alert` below its 5 incidents (to 3,
+// hand-verified the same way) -- the same competing dynamic
+// `budget-tick-shift` already exercises for processlist's OWN count, here
+// checked from the alert side instead.
+HEIGHT_FIXTURES["budget-short-with-alerts"] = HEIGHT_FIXTURES["budget-short"];
+ALL_FIXTURES["budget-short-with-alerts"] = { processlist: BUDGET_PROCESSLIST_FIXTURE };
+
+// Task 8: `budget-tall`'s own geometry/data (plenty of body height, so the
+// solver's `growProcesses()` would otherwise let `processlist` grow past the
+// `max_processes_display` value below) plus a CONFIG_FIXTURES cap of 5 --
+// proves the config key still wins even though the height-driven budget
+// would allow more (design 4.7:
+// test_the_config_cap_still_wins_when_it_is_lower).
+HEIGHT_FIXTURES["budget-tall-with-config-cap"] = HEIGHT_FIXTURES["budget-tall"];
+ALL_FIXTURES["budget-tall-with-config-cap"] = { processlist: BUDGET_PROCESSLIST_FIXTURE };
+ALERT_INCIDENTS_SCENARIOS["budget-tall-with-config-cap"] = { is_initializing: false, incidents: [] };
+
+// `budget-tick-shift` (fix round 3): pins that AppShell.refitVertical(),
+// inside tick(), reads the ALERT DATA THAT TICK JUST FETCHED, not the
+// previous tick's -- see tests/test_webui_v5_render.py's
+// test_a_second_tick_rebudgets_against_its_own_alert_state. Same
+// bodyHeight as `budget-short` (14 rows) and the same 30-row
+// BUDGET_PROCESSLIST_FIXTURE, held constant across both ticks so the
+// process count cannot explain any difference in the observed budget --
+// only the alert payload changes between the two `tick()` calls.
+HEIGHT_FIXTURES["budget-tick-shift"] = HEIGHT_FIXTURES["budget-short"];
+ALL_FIXTURES["budget-tick-shift"] = { processlist: BUDGET_PROCESSLIST_FIXTURE };
+// Opt-in only: consumed one envelope per `api/5/alert/incidents` call
+// (webui_render_probe.js), by scenario -- absent scenarios keep today's
+// single-static-envelope behaviour via ALERT_INCIDENTS_SCENARIOS
+// unchanged. First call (tick 1): no incidents -- `floorAlerts` is 0, the
+// nominal budget applies. Second call (tick 2): five ONGOING incidents,
+// which `floorAlerts` (row_budget.js) reserves out of the SAME shared pool
+// `processlist` draws from, visibly shrinking it.
+const ALERT_INCIDENTS_SEQUENCES = {
+	"budget-tick-shift": [
+		{ is_initializing: false, incidents: [] },
+		{
+			is_initializing: false,
+			incidents: Array.from({ length: 5 }, (_, i) => ({
+				plugin: "cpu",
+				key: null,
+				field: "total",
+				level: "critical",
+				begin: "2026-01-01T00:00:00Z",
+				end: null,
+				ongoing: true,
+				partial: false,
+				prominent: false,
+				top: [],
+				top_sort: null,
+				duration: `${i + 1}m00s`,
+			})),
+		},
+	],
+};
+
+// AppShell.vue's `ampsHeight()` defect (task 11 step 0): it used to add a
+// phantom `1 +` header row (amps/render_curses_v5.py paints none, module
+// docstring) and count a null-result AMP that PluginAmps.vue's own `rows`
+// filter drops (amps/render_curses_v5.py:67-71). AMPS_FIXTURE already has
+// one null-result item (`Dropped`) and one two-line item (`Systemd`), so its
+// correct height is 4 (Python 1 + Systemd 2 + Kernel 1) against the old
+// buggy 6 (1 header + Python 1 + Systemd 2 + Dropped 1 + Kernel 1). At this
+// scenario's bodyHeight (24 rows: viewport 600, top 100, footer 20, rowPx
+// 20), the solver's growth branch gives `rowBudget.processlist` 14 with the
+// correct height and 12 with the buggy one -- verified against
+// row_budget.js's `planRightColumn()` directly, not predicted.
+HEIGHT_FIXTURES["budget-amps-height-defect"] = {
+	viewport: 600,
+	rowPx: 20,
+	slots: { right: { top: 100, height: 0 }, footer: { top: 580, height: 20 } },
+};
+ALL_FIXTURES["budget-amps-height-defect"] = { processlist: BUDGET_PROCESSLIST_FIXTURE, amps: AMPS_FIXTURE };
+ALERT_INCIDENTS_SCENARIOS["budget-amps-height-defect"] = { is_initializing: false, incidents: [] };
+
+// Ladder step j (row_budget.js SHRINK_STEPS, curses_renderer_v5.py:957):
+// five AMPS, two result lines each, so the natural height is 10 -- no vms,
+// containers, processlist or alert data, so every OTHER step of the ladder
+// is a no-op (their cost terms are gated on `nVms`/`nContainers`/
+// `nProcesses`/`nAlerts` being nonzero) and only amps can absorb the
+// deficit. At this scenario's bodyHeight (8 rows: viewport 280, top 100,
+// footer 20, rowPx 20) the solver truncates `state.amps` from 10 to 4 --
+// verified against `planRightColumn()` directly.
+const AMPS_TRUNCATED_FIXTURE = {
+	_key: "name",
+	data: Array.from({ length: 5 }, (_, i) => ({
+		name: `amp${i}`,
+		count: i,
+		regex: true,
+		result: `line${i}a\nline${i}b`,
+	})),
+	_levels: {},
+};
+HEIGHT_FIXTURES["budget-amps-truncated"] = {
+	viewport: 280,
+	rowPx: 20,
+	slots: { right: { top: 100, height: 0 }, footer: { top: 260, height: 20 } },
+};
+ALL_FIXTURES["budget-amps-truncated"] = { amps: AMPS_TRUNCATED_FIXTURE };
+ALERT_INCIDENTS_SCENARIOS["budget-amps-truncated"] = { is_initializing: false, incidents: [] };
+
+// `_split_workloads` divides the solver's shared workload pool between vms
+// and containers (curses_renderer_v5.py:923-942); `containers` alone (no vms)
+// exercises the cap without the max-min fairness split muddying the
+// expected number. 30 containers, `budget-short`'s own cramped geometry (14
+// rows of body height, aliased by reference, not copied) -- verified against
+// `planRightColumn()` directly: `{ vms: 0, containers: 5, ... }`.
+const BUDGET_CONTAINERS_FIXTURE = {
+	_key: "name",
+	data: Array.from({ length: 30 }, (_, i) => ({
+		name: `container${i}`,
+		engine: "docker",
+		status: "running",
+		cpu_percent: 1,
+		memory_usage_no_cache: 1024,
+		memory_limit: null,
+	})),
+	max_name_size: 20,
+	disable_stats: [],
+	_levels: {},
+};
+HEIGHT_FIXTURES["budget-workloads-capped"] = HEIGHT_FIXTURES["budget-short"];
+ALL_FIXTURES["budget-workloads-capped"] = { containers: BUDGET_CONTAINERS_FIXTURE };
+ALERT_INCIDENTS_SCENARIOS["budget-workloads-capped"] = { is_initializing: false, incidents: [] };
+
+// Step l (row_budget.js's emergency floor branch): ten ONGOING incidents
+// (`floorAlerts` reserves a row for each, out of the SAME shared pool
+// `processlist` draws from) plus `budget-short`'s cramped 14-row body and the
+// existing 30-row BUDGET_PROCESSLIST_FIXTURE (both aliased by reference) push
+// the solver past every ladder step down to `state.processes = 0` --
+// verified against `planRightColumn()` directly: `{ processlist: 0, alert:
+// 10, ... }`.
+const BUDGET_PROCESSLIST_ZEROED_INCIDENTS = Array.from({ length: 10 }, (_, i) => ({
+	plugin: "cpu",
+	key: null,
+	field: "total",
+	level: "critical",
+	begin: "2026-01-01T00:00:00Z",
+	end: null,
+	ongoing: true,
+	partial: false,
+	prominent: false,
+	top: [],
+	top_sort: null,
+	duration: `${i + 1}m00s`,
+}));
+HEIGHT_FIXTURES["budget-processlist-zeroed"] = HEIGHT_FIXTURES["budget-short"];
+ALL_FIXTURES["budget-processlist-zeroed"] = { processlist: BUDGET_PROCESSLIST_FIXTURE };
+ALERT_INCIDENTS_SCENARIOS["budget-processlist-zeroed"] = {
+	is_initializing: false,
+	incidents: BUDGET_PROCESSLIST_ZEROED_INCIDENTS,
+};
+
+// `_split_workloads` divides ONE shared pool between vms and containers with
+// max-min fairness (curses_renderer_v5.py:923-942) -- a `containers`-only
+// scenario exercises the per-block SLICE but not the SPLIT itself. Ten vms
+// alongside the existing 30-row BUDGET_CONTAINERS_FIXTURE (aliased by
+// reference), `budget-short`'s own cramped geometry (aliased by reference) --
+// verified against `planRightColumn()` directly: `{ vms: 3, containers: 2,
+// ... }`, neither number the full data count nor an even split, proving the
+// fairness rule actually ran.
+const BUDGET_VMS_FIXTURE = {
+	_key: "name",
+	data: Array.from({ length: 10 }, (_, i) => ({
+		name: `vm${i}`,
+		engine: "virsh",
+		status: "running",
+		cpu_count: 1,
+		cpu_time: 1,
+		memory_usage: 1024,
+		memory_total: 2048,
+		load_1min: null,
+		release: "1.0",
+	})),
+	max_name_size: 20,
+	_levels: {},
+};
+HEIGHT_FIXTURES["budget-workloads-both-capped"] = HEIGHT_FIXTURES["budget-short"];
+ALL_FIXTURES["budget-workloads-both-capped"] = { vms: BUDGET_VMS_FIXTURE, containers: BUDGET_CONTAINERS_FIXTURE };
+ALERT_INCIDENTS_SCENARIOS["budget-workloads-both-capped"] = { is_initializing: false, incidents: [] };
+
+// Column-parity geometry: 300 - 100 - 20 = 180px / 20px rows -> 9 rows of
+// body height, shared by the two scenarios below. With only ONE workload
+// block populated (nVms=5 xor nContainers=5) the shrink ladder's workloads
+// step ("d", target 3) lands on a 3-row quota for that block -- confirmed
+// against `planRightColumn()` directly, not predicted.
+HEIGHT_FIXTURES["budget-workload-column-parity"] = {
+	viewport: 300,
+	rowPx: 20,
+	slots: { right: { top: 100, height: 0 }, footer: { top: 280, height: 20 } },
+};
+
+// vms/render_curses_v5.py:157 decides `show_engine` from the FULL item list,
+// BEFORE its own `items[:budget]` slice (:169) -- five VMs, two distinct
+// engines, but the SECOND engine sits at index 3, past the 3-row quota this
+// scenario's geometry produces. A component that decided the Engine column
+// from the already-sliced rows would see only the first engine and hide it;
+// the TUI (and the correct port) must still show it.
+const VMS_COLUMN_PARITY_FIXTURE = {
+	_key: "name",
+	data: [
+		{ name: "vm0", engine: "alpha", status: "running", cpu_count: 1, cpu_time: 1, memory_usage: 1024, memory_total: 2048, load_1min: 0.1, release: "1.0" },
+		{ name: "vm1", engine: "alpha", status: "running", cpu_count: 1, cpu_time: 1, memory_usage: 1024, memory_total: 2048, load_1min: null, release: "1.0" },
+		{ name: "vm2", engine: "alpha", status: "running", cpu_count: 1, cpu_time: 1, memory_usage: 1024, memory_total: 2048, load_1min: null, release: "1.0" },
+		{ name: "vm3", engine: "beta", status: "running", cpu_count: 1, cpu_time: 1, memory_usage: 1024, memory_total: 2048, load_1min: null, release: "1.0" },
+		{ name: "vm4", engine: "beta", status: "running", cpu_count: 1, cpu_time: 1, memory_usage: 1024, memory_total: 2048, load_1min: null, release: "1.0" },
+	],
+	max_name_size: 20,
+	_levels: {},
+};
+HEIGHT_FIXTURES["budget-vms-column-parity"] = HEIGHT_FIXTURES["budget-workload-column-parity"];
+ALL_FIXTURES["budget-vms-column-parity"] = { vms: VMS_COLUMN_PARITY_FIXTURE };
+ALERT_INCIDENTS_SCENARIOS["budget-vms-column-parity"] = { is_initializing: false, incidents: [] };
+
+// containers/render_curses_v5.py:265 decides `show_pod` from the FULL item
+// list, BEFORE its own `items[:budget]` slice (:273) -- the same class of
+// bug as vms' Engine column above, on containers_columns.js's OTHER
+// data-driven flag. Five containers, a pod on two of them, but both sit past
+// the 3-row quota this scenario's geometry produces (same shared geometry as
+// the vms case, since nVms=0 here routes the whole shared pool to
+// containers, giving it the identical quota by construction).
+const CONTAINERS_COLUMN_PARITY_FIXTURE = {
+	_key: "name",
+	data: [
+		{ name: "container0", engine: "docker", pod_name: null, status: "running", cpu_percent: 1, memory_usage_no_cache: 1024, memory_limit: null },
+		{ name: "container1", engine: "docker", pod_name: null, status: "running", cpu_percent: 1, memory_usage_no_cache: 1024, memory_limit: null },
+		{ name: "container2", engine: "docker", pod_name: null, status: "running", cpu_percent: 1, memory_usage_no_cache: 1024, memory_limit: null },
+		{ name: "container3", engine: "docker", pod_name: "frontend", status: "running", cpu_percent: 1, memory_usage_no_cache: 1024, memory_limit: null },
+		{ name: "container4", engine: "docker", pod_name: "frontend", status: "running", cpu_percent: 1, memory_usage_no_cache: 1024, memory_limit: null },
+	],
+	max_name_size: 20,
+	disable_stats: [],
+	_levels: {},
+};
+HEIGHT_FIXTURES["budget-containers-column-parity"] = HEIGHT_FIXTURES["budget-workload-column-parity"];
+ALL_FIXTURES["budget-containers-column-parity"] = { containers: CONTAINERS_COLUMN_PARITY_FIXTURE };
+ALERT_INCIDENTS_SCENARIOS["budget-containers-column-parity"] = { is_initializing: false, incidents: [] };
 
 module.exports = {
 	ALERT_FIXTURES,
 	ALERT_SCENARIOS,
 	ALERT_INCIDENTS_FIXTURE,
 	ALERT_INCIDENTS_SCENARIOS,
+	ALERT_INCIDENTS_SEQUENCES,
 	INFO_FIXTURES,
 	SERVER_PLUGINS,
 	PLUGINSLIST_FIXTURES,
@@ -1549,4 +1935,5 @@ module.exports = {
 	WIDTH_FIXTURES,
 	CONTENT_PER_NOTCH,
 	BLOCK_WIDTH_FIXTURES,
+	HEIGHT_FIXTURES,
 };

@@ -12,7 +12,7 @@
 		error anywhere. Keep every comment INSIDE this root. -->
 		<template #body>
 			<tbody>
-				<tr v-for="item in rows" :key="item.name">
+				<tr v-for="item in displayRows" :key="item.name">
 					<td>
 						<!-- The tier comes from the item's `count` level and lands on the
 						NAME, as the TUI does (amps/render_curses_v5.py:78-79). -->
@@ -35,6 +35,7 @@
 
 <script>
 import { cellClassFor } from "./columns.js";
+import { ampsVisibleRows } from "./amps.js";
 import CollectionBlock from "./CollectionBlock.vue";
 
 const TITLE = "AMPS";
@@ -42,6 +43,13 @@ const TITLE = "AMPS";
 export default {
 	name: "PluginAmps",
 	components: { CollectionBlock },
+	// `rowBudget` reaches every consumer via provide/inject, never a prop --
+	// same reasoning as PluginProcesslist.vue's own `rowBudget` inject
+	// (AppShell.vue's provide()). `{}` means no budget, which must never
+	// truncate anything (design 4.8).
+	inject: {
+		rowBudget: { default: () => ({}) },
+	},
 	props: {
 		payload: { type: Object, default: null },
 		error: { type: String, default: undefined },
@@ -55,9 +63,45 @@ export default {
 		TITLE: () => TITLE,
 		// amps/render_curses_v5.py:70-73: an AMP that has produced nothing yet
 		// renders no row at all -- v4 skips it rather than painting an empty
-		// one. Payload order: the TUI does not sort this block.
+		// one. Payload order: the TUI does not sort this block. Shared with
+		// AppShell.vue's ampsHeight() (amps.js) so the two agree on which
+		// items exist by construction, not by coincidence.
 		rows() {
-			return (this.payload?.data || []).filter((item) => item.result !== null && item.result !== undefined);
+			return ampsVisibleRows(this.payload?.data);
+		},
+		// Ladder step j (row_budget.js SHRINK_STEPS, curses_renderer_v5.py:957):
+		// `rowBudget.amps` is present only once the ladder has truncated this
+		// block, and is the total LINE budget, truncation marker included
+		// (row_budget() docstring, curses_renderer_v5.py:1008-1010 -- amps has
+		// no header row, unlike every other elastic block, so its budget counts
+		// ALL of its rows). amps/render_curses_v5.py:98-105 truncates a flat
+		// per-LINE row list and keeps the marker as the LAST budgeted line:
+		// "The marker consumes the last budgeted line, so `budget` rows are
+		// emitted in total." This WebUI puts each AMP's whole multi-line result
+		// in ONE `pre-line` cell instead of one row per line (spec D6), so
+		// clamping means trimming LINES out of a cell -- and, once a cell has
+		// nothing left, dropping its row -- rather than dropping whole rows.
+		displayRows() {
+			const budget = this.rowBudget?.amps;
+			const items = this.rows;
+			if (!Number.isInteger(budget)) return items;
+			const totalLines = items.reduce((total, item) => total + String(item.result).split("\n").length, 0);
+			// Same guard as row_budget(): `0 < budget < len(rows)` (amps/render_curses_v5.py:99).
+			if (budget <= 0 || budget >= totalLines) return items;
+			const contentLines = budget - 1;
+			let remaining = contentLines;
+			const out = [];
+			for (const item of items) {
+				if (remaining <= 0) break;
+				const lines = String(item.result).split("\n");
+				const take = Math.min(remaining, lines.length);
+				out.push({ ...item, result: lines.slice(0, take).join("\n") });
+				remaining -= take;
+			}
+			const hidden = totalLines - contentLines;
+			// Exact marker text amps/render_curses_v5.py:105 emits.
+			out.push({ name: "", count: null, regex: false, result: `… +${hidden} lines` });
+			return out;
 		},
 	},
 	methods: {

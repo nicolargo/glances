@@ -118,6 +118,14 @@ class FakeElement extends FakeNode {
 		this._width = 0;
 		this._content = 0;
 		this._notches = 0;
+		// Vertical layout, faked, exactly as `_width`/`_content` fake the
+		// horizontal axis. Unset -> 0, which AppShell reads as "cannot
+		// measure" and never budgets on (design section 4.8).
+		this._top = 0;
+		this._height = 0;
+		// One text row, in px. A real browser resolves this from the computed
+		// line-height; there is none here, so the harness supplies it.
+		this._rowPx = 0;
 	}
 
 	get id() {
@@ -149,6 +157,23 @@ class FakeElement extends FakeNode {
 		return Math.max(0, this._content - CONTENT_PER_NOTCH * this._notches);
 	}
 
+	get clientHeight() {
+		return this._height;
+	}
+
+	// AppShell.measureBodyRows() reads the right slot's top edge to work out
+	// how much of the viewport is left below it. A real Element computes this
+	// from layout; the harness supplies `_top`/`_height` per scenario.
+	getBoundingClientRect() {
+		return {
+			top: this._top,
+			left: 0,
+			width: this._width,
+			height: this._height,
+			bottom: this._top + this._height,
+		};
+	}
+
 	setAttribute(name, value) {
 		this._attrs.set(name, String(value));
 		if (name === "class") this.className = value;
@@ -170,8 +195,9 @@ class FakeElement extends FakeNode {
 	removeEventListener() {}
 
 	// AppShell.vue's measureZone() calls `this.$el.querySelector('[data-slot="..."]')`,
-	// and fit_block.js's measureBlock() calls `block.querySelector("table")` --
-	// the two selector shapes this fake DOM needs to support. Searches
+	// fit_block.js's measureBlock() calls `block.querySelector("table")`, and
+	// AppShell.vue's measureBodyRows() calls `this.$el.querySelector(".gl-alerts")`
+	// -- the three selector shapes this fake DOM needs to support. Searches
 	// descendants only, like the real Element.querySelector (never matches the
 	// element it is called on).
 	querySelector(selector) {
@@ -180,6 +206,12 @@ class FakeElement extends FakeNode {
 			// Depth-first, same order as the attribute-selector branch below --
 			// reuses findAllByTag() rather than a second walk implementation.
 			return findAllByTag(this, selector.toUpperCase())[0] ?? null;
+		}
+		const classMatch = /^\.([\w-]+)$/.exec(selector);
+		if (classMatch) {
+			// Reuses findAllByClass() rather than a third walk implementation --
+			// same depth-first order as the other two branches.
+			return findAllByClass(this, classMatch[1])[0] ?? null;
 		}
 		const match = /^\[([\w-]+)="([^"]*)"\]$/.exec(selector);
 		if (!match) return null;
@@ -247,6 +279,7 @@ const {
 	ALERT_SCENARIOS,
 	ALERT_INCIDENTS_FIXTURE,
 	ALERT_INCIDENTS_SCENARIOS,
+	ALERT_INCIDENTS_SEQUENCES,
 	ALERT_INCIDENTS_UNREACHABLE_SCENARIOS,
 	INFO_FIXTURES,
 	SERVER_PLUGINS,
@@ -258,9 +291,17 @@ const {
 	WIDTH_FIXTURES,
 	CONTENT_PER_NOTCH,
 	BLOCK_WIDTH_FIXTURES,
+	HEIGHT_FIXTURES,
 } = require("./webui_render_fixtures.js");
 
 const scenario = process.argv[3] || "default";
+
+// Fix round 3: opt-in, per-call sequence for the tick-ordering test --
+// consumed one envelope per `api/5/alert/incidents` call, holding on the
+// last entry once exhausted. A scenario absent from ALERT_INCIDENTS_SEQUENCES
+// (every scenario but one, today) is completely unaffected: fakeFetch falls
+// through to the existing single-static-envelope lookup below, unchanged.
+let alertIncidentsSequenceIndex = 0;
 
 async function fakeFetch(url) {
 	const path = String(url);
@@ -270,6 +311,12 @@ async function fakeFetch(url) {
 	if (path.includes("api/5/alert/incidents")) {
 		if (ALERT_INCIDENTS_UNREACHABLE_SCENARIOS.has(scenario)) {
 			return { ok: false, status: 500, json: async () => ({ detail: "boom" }) };
+		}
+		const sequence = ALERT_INCIDENTS_SEQUENCES[scenario];
+		if (sequence) {
+			const envelope = sequence[Math.min(alertIncidentsSequenceIndex, sequence.length - 1)];
+			alertIncidentsSequenceIndex += 1;
+			return { ok: true, status: 200, json: async () => envelope };
 		}
 		// Envelope, not a bare array (fix round 2, IMPORTANT 2) -- default is
 		// the populated, warmed-up fixture; a handful of scenarios override it
@@ -343,6 +390,9 @@ const sandbox = {
 	// The blocks (js/v5/fit_block.js) register each instance's own refit here,
 	// as the harness never fires their ResizeObserver -- see applyBlockWidths.
 	__glancesBlockRefits: [],
+	// AppShell.measureBodyRows() reads window.innerHeight. 0 means "cannot
+	// measure", which is the safe answer (design section 4.8).
+	innerHeight: 0,
 };
 sandbox.window = sandbox;
 sandbox.globalThis = sandbox;
@@ -456,6 +506,18 @@ function collect() {
 		// it has no entry at all for a header-less plugin, indistinguishable
 		// from "not rendered yet".
 		pluginHeaderCells: {},
+		// Each rendered <col>'s inline width, in document order, keyed by
+		// data-plugin -- [] when the table renders no <colgroup> at all (most
+		// of them: Task 7 makes the slot optional). Same "absence is
+		// observable" distinction as pluginHeaderCells above: an entry missing
+		// entirely would be indistinguishable from "not rendered yet", so
+		// every table gets a key, empty or not.
+		pluginColWidths: {},
+		// The <table>'s own class list, keyed by data-plugin -- lets a test
+		// observe the optional `table-class` prop (e.g. `gl-process-table`,
+		// carrying `table-layout: fixed`) alongside the base `.gl-table`
+		// every block renders.
+		pluginTableClasses: {},
 		// The rendered attribute names of each plugin's root <article>, keyed
 		// by data-plugin -- lets a test assert that a prop like `serverArgs`
 		// never leaked through as a fallthrough attribute (Vue stringifies an
@@ -522,6 +584,14 @@ function collect() {
 		// which the DOM alone cannot show (a hidden block looks like a disabled
 		// one).
 		degrade: sandbox.__glancesDegrade ? { ...sandbox.__glancesDegrade } : {},
+		// The row quota AppShell.refitVertical() settled on -- the vertical
+		// twin of `degrade` above, same "absent/unmeasurable -> {}" default.
+		rowBudget: sandbox.__glancesRowBudget ? { ...sandbox.__glancesRowBudget } : {},
+		// The vertical budget inputs AppShell.measureBodyRows() reads: the
+		// viewport height, the right slot's own row height, and its distance
+		// from the viewport's top edge. Defaults to "unmeasurable" (0/0/0),
+		// same convention as `degrade`, until the right slot is found below.
+		geometry: { viewport: sandbox.window.innerHeight, rowPx: 0, slotTop: 0 },
 	};
 	const first = appDiv.childNodes[0];
 	if (first) {
@@ -579,6 +649,15 @@ function collect() {
 				const thead = findAllByTag(article, "THEAD");
 				result.pluginHeaderCells[name] = thead.length
 					? findAllByTag(thead[0], "TH").map((th) => th.textContent.trim())
+					: [];
+				// Only the <table> CollectionBlock itself renders can carry a
+				// <colgroup> or the tableClass prop -- reads the first (no plugin
+				// renders more than one today).
+				const tables = findAllByTag(article, "TABLE");
+				const cols = tables.length ? findAllByTag(tables[0], "COL") : [];
+				result.pluginColWidths[name] = cols.map((col) => col.style.width);
+				result.pluginTableClasses[name] = tables.length
+					? tables[0].className.split(" ").filter(Boolean)
 					: [];
 				const tds = findAllByTag(article, "TD");
 				if (tds.length) {
@@ -638,11 +717,22 @@ function collect() {
 					result.pluginGridClasses[name] = dls.map((dl) => dl.className);
 				}
 			});
-			for (const section of findAllByAttr(first, "data-slot")) {
+			const slotSections = findAllByAttr(first, "data-slot");
+			for (const section of slotSections) {
 				result.slots[section.getAttribute("data-slot")] = findAllByAttr(section, "data-plugin").map((el) =>
 					el.getAttribute("data-plugin"),
 				);
 			}
+			// AppShell.measureBodyRows() reads the right slot's top edge to work
+			// out how much of the viewport is left below it -- the reading a real
+			// browser would produce, here taken straight off the fake element the
+			// scenario's HEIGHT_FIXTURES drove (applyHeights() below).
+			const rightSlot = slotSections.find((zone) => zone.getAttribute("data-slot") === "right") || null;
+			result.geometry = {
+				viewport: sandbox.window.innerHeight,
+				rowPx: rightSlot ? rightSlot._rowPx : 0,
+				slotTop: rightSlot ? rightSlot.getBoundingClientRect().top : 0,
+			};
 		}
 	}
 	return result;
@@ -688,6 +778,27 @@ function applyBlockWidths() {
 	return true;
 }
 
+// Same contract as applyWidths(), for the vertical axis: window.innerHeight
+// plus each slot's top/height. The "footer" key is not a `data-slot` --
+// AppShell renders the alert block as `<footer class="gl-alerts">` -- so it
+// is matched by class instead, same as `collect()` does for the footer.
+function applyHeights() {
+	const heights = HEIGHT_FIXTURES[scenario];
+	if (!heights) return false;
+	sandbox.window.innerHeight = heights.viewport;
+	for (const [slot, { top, height }] of Object.entries(heights.slots)) {
+		const el =
+			slot === "footer"
+				? findDescendantByClass(appDiv, "gl-alerts")
+				: findAllByAttr(appDiv, "data-slot").find((zone) => zone.getAttribute("data-slot") === slot);
+		if (!el) continue;
+		el._top = top;
+		el._height = height;
+		if (slot === "right") el._rowPx = heights.rowPx;
+	}
+	return true;
+}
+
 // AppShell's `mounted()` hook is async (resolveConfig, then tick(),
 // which itself awaits fetchAll() and the /api/5/alert call) -- none of
 // that has run yet the instant vm.runInContext() returns; only the initial,
@@ -704,5 +815,19 @@ setImmediate(async () => {
 	if (applyBlockWidths() && Array.isArray(sandbox.__glancesBlockRefits)) {
 		for (const refit of sandbox.__glancesBlockRefits) await refit();
 	}
+	// Drives the raw geometry inputs collect() reads back under `geometry`,
+	// AND -- like the applyWidths() branch above -- re-runs the shell's own
+	// hook so AppShell.refitVertical() sees the scenario's real numbers
+	// rather than the all-zero ("cannot measure") state it read at mount
+	// time, before this scenario's heights existed.
+	if (applyHeights() && sandbox.__glancesRefit) await sandbox.__glancesRefit();
+	// Fix round 3: a scenario opted into ALERT_INCIDENTS_SEQUENCES needs a
+	// SECOND poll cycle to consume its second envelope -- mounted()'s own
+	// tick() (before this setImmediate ever runs) already consumed the
+	// first. `tick()` itself calls fetchAll(), the alert endpoint, and
+	// refit()/refitVertical() in AppShell's real order, so this is what
+	// exercises the tick-ordering fix rather than the `__glancesRefit`
+	// shortcut every other test above uses.
+	if (ALERT_INCIDENTS_SEQUENCES[scenario] && sandbox.__glancesTick) await sandbox.__glancesTick();
 	process.stdout.write(JSON.stringify(collect()));
 });

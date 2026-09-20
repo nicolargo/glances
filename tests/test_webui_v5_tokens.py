@@ -586,6 +586,19 @@ def test_the_column_unit_is_defined_once_on_the_root():
     assert re.search(r":root\s*\{[^}]*--gl-col:\s*0\.6em", css, re.S), "--gl-col lives on :root and is 0.6em"
 
 
+def test_the_row_unit_is_defined_once_and_drives_the_right_column_gap():
+    """`plan_right_column.cost()` charges exactly one blank line between blocks
+    (curses_renderer_v5.py:1051). For that integer arithmetic to hold in the
+    browser, the right column's inter-block gap must be exactly one row -- so
+    the line-height has to be a known number, not the font-dependent `normal`
+    it was before this batch (design 4.5).
+    """
+    css = _strip_comments(_TOKENS.read_text())
+    assert len(re.findall(r"--gl-row:", css)) == 1, "--gl-row is defined exactly once"
+    assert re.search(r":root\s*\{[^}]*--gl-row:\s*1\.25\b", css, re.S), "--gl-row lives on :root"
+    assert re.search(r"line-height:\s*var\(--gl-row\)", css), "the token is actually applied"
+
+
 def test_the_right_column_gives_its_slack_to_the_last_cell():
     """Measured in Chrome at a 2560px viewport: the right slot is 2258px and
     `.gl-table { width: 100% }` -- a rule introduced to equalise the LEFT
@@ -600,6 +613,64 @@ def test_the_right_column_gives_its_slack_to_the_last_cell():
         '[data-slot="right"] .gl-table td:last-child,\n[data-slot="right"] .gl-table th:last-child',
     )
     assert re.search(r"\bwidth:\s*100%\s*;", body), f"the tail cell absorbs the slack: {body!r}"
+    # `processlist`'s fixed-layout table excludes itself from the rule
+    # above -- under `table-layout: fixed`, `width: 100%` on the last cell
+    # would claim the WHOLE table width for Command, leaving nothing for the
+    # fixed columns. The `<col>` element (auto width) already does the job
+    # this rule exists for, so the higher-specificity `.gl-process-table`
+    # selector overrides it back to `auto`. This narrows the rule the test
+    # above pins; it does not replace it -- `amps`/`containers` (automatic
+    # layout) must still get their slack from the general rule.
+    excluded = _rule_body(
+        _strip_comments(_TOKENS.read_text()),
+        '[data-slot="right"] .gl-table.gl-process-table td:last-child,\n'
+        '[data-slot="right"] .gl-table.gl-process-table th:last-child',
+    )
+    assert re.search(r"\bwidth:\s*auto\s*;", excluded), f"the fixed-layout table keeps its <col>'s width: {excluded!r}"
+
+
+def test_the_column_box_separator_multiplier_matches_colstyles_offset():
+    """`colStyle()` (PluginProcesslist.vue) adds `+ 1` to every fixed column's
+    content width, to reserve room for the separator that
+    `.gl-table.gl-process-table th/td:not(:last-child)`'s `padding-right`
+    carves out of that same <col> box: under `table-layout: fixed` the <col>
+    is the column's WHOLE box, so the separator's padding comes out of the
+    content space rather than adding to it.
+
+    Until now that `+ 1` and the CSS rule that makes it necessary were two
+    independent hardcoded literals that merely happened to agree -- nothing
+    parsed the CSS to require it. Widening the separator to
+    `calc(2 * var(--gl-col))` for visual breathing room, without touching
+    `colStyle()`, would silently reintroduce the exact bug the maintainer
+    found by eye, one character at a time, and no other test would catch it.
+    This one reads the separator's own multiplier out of the stylesheet and
+    requires it to equal the offset `colStyle()` adds.
+    """
+    css = _strip_comments(_TOKENS.read_text())
+    body = _rule_body(
+        css,
+        ".gl-table.gl-process-table th:not(:last-child),\n.gl-table.gl-process-table td:not(:last-child)",
+    )
+    match = re.search(r"padding-right:\s*(?:calc\((\d+)\s*\*\s*var\(--gl-col\)\)|var\(--gl-col\))\s*;", body)
+    assert match, f"no padding-right declaration found: {body!r}"
+    # A bare `var(--gl-col)` -- the form actually in the file today -- is an
+    # implicit multiplier of 1; `calc(1 * var(--gl-col))` would be the same
+    # length, so no test should demand the more verbose form.
+    separator_chars = int(match.group(1)) if match.group(1) is not None else 1
+
+    script = (_V5_JS / "PluginProcesslist.vue").read_text()
+    offset_match = re.search(
+        r"colStyle\(key\)\s*\{\s*return\s*\{\s*width:\s*`calc\(\$\{PROCESS_COL_WIDTHS\[key\]\s*\+\s*(\d+)\}",
+        script,
+    )
+    assert offset_match, f"colStyle()'s offset literal was not found in {_V5_JS / 'PluginProcesslist.vue'}"
+    colstyle_offset = int(offset_match.group(1))
+
+    assert separator_chars == colstyle_offset, (
+        f"the separator reserves {separator_chars} character(s) but colStyle() only offsets "
+        f"{colstyle_offset} -- every fixed column would crop {separator_chars - colstyle_offset} "
+        "character(s) early"
+    )
 
 
 def test_the_ports_cell_is_bounded_like_the_command_cell():
@@ -625,3 +696,13 @@ def test_the_ports_cell_is_bounded_like_the_command_cell():
     assert re.search(r"\bmax-width:\s*calc\(\d+ \* var\(--gl-col\)\)\s*;", body), (
         f"the cap is a character count, in the column unit: {body!r}"
     )
+
+
+def test_the_stacking_breakpoint_matches_the_stylesheet():
+    """AppShell reads the breakpoint to disable the vertical budget in the
+    stacked layout (design 4.9). Two copies of `48rem` that can drift silently
+    would leave the budget active while the columns are stacked.
+    """
+    shell = (_V5_JS / "AppShell.vue").read_text()
+    assert 'STACK_BREAKPOINT = "48rem"' in shell
+    assert re.search(r"@media\s*\(max-width:\s*48rem\)", shell)

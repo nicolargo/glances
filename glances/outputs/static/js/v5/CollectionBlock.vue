@@ -10,7 +10,11 @@
 		</div>
 		<p v-if="error" class="gl-level-critical">{{ error }}</p>
 		<p v-else-if="!payload" class="gl-muted">loading…</p>
-		<table v-else class="gl-table">
+		<table v-else class="gl-table" :class="tableClass">
+			<!-- Optional <colgroup>, rendered before <thead> as the HTML
+			grammar requires. Only the fixed-layout blocks pass it; a block that
+			does not renders exactly as before. -->
+			<slot name="cols"></slot>
 			<!-- G9-6 D6: a loaded collection's title is its first <th>, so the
 			<h2> above renders only while loading or erroring. G9-7 D4: a block
 			with no header row in the TUI (`ports`) passes no #head slot and gets
@@ -38,6 +42,10 @@ export default {
 		// renderers still paint a header row for an empty collection, so the
 		// shell's default `false` keeps the WebUI matching them.
 		hidden: { type: Boolean, default: false },
+		// Extra class on the <table>, for blocks that need `table-layout:
+		// fixed`. A prop rather than a fallthrough attribute: fallthrough
+		// lands on the <article> root, and the rule has to reach the table.
+		tableClass: { type: String, default: "" },
 	},
 };
 </script>

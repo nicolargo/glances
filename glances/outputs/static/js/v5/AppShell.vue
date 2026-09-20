@@ -42,6 +42,8 @@ import { visiblePlugins, groupBySlot } from "./layout.js";
 import { PLUGINS } from "./plugins/index.js";
 import { resolveDegrade, TOP_CASCADE, HEADER_CASCADE } from "./degrade.js";
 import { FULL_QUICKLOOK_HIDDEN } from "./full_quicklook.js";
+import { planRightColumn } from "./row_budget.js";
+import { ampsLineCount } from "./amps.js";
 
 // The page's zones, top to bottom, and the registry slots each one holds.
 // `tag` is the element the zone renders as: the header zone stays a real
@@ -65,6 +67,11 @@ const HIDDEN_BY = {
 	hide_gpu: "gpu",
 	hide_quicklook: "quicklook",
 };
+
+// The browser's own stacking threshold, not a TUI rule (G9-5 D3). Kept next to
+// the media query that owns it -- test_webui_v5_tokens.py pins the two
+// together so the constant cannot drift from the stylesheet.
+const STACK_BREAKPOINT = "48rem";
 
 // Both cascades resolve to a flat object of primitive values (booleans/
 // numbers), never nested -- a plain key-by-key comparison is enough. Used by
@@ -106,6 +113,18 @@ export default {
 			// injecting component sees the resolved value once mounted() below
 			// sets it, not the `null` it was created with.
 			maxProcessesDisplay: computed(() => this.maxProcessesDisplay),
+			// The vertical row budget (Task 4, row_budget.js): six consumers out
+			// of thirty-two (vms, containers, processlist, programlist, alert,
+			// amps), the same "small number of plugins" case `maxProcessesDisplay`
+			// above describes -- a prop on the shared `<component>` binding would
+			// fall through as a `row-budget` DOM attribute on the other
+			// twenty-six, which never declare it (fix round 1, Important 1;
+			// same reasoning as `serverPlugins`, G9-8 Task 4 review). `computed()`
+			// for the same reason as the two entries above: `refitVertical()`
+			// reassigns `this.rowBudget` on every vertical pass, and a plain
+			// `{ rowBudget: this.rowBudget }` would capture whatever it was at
+			// provide()-time forever.
+			rowBudget: computed(() => this.rowBudget),
 		};
 	},
 	data() {
@@ -135,6 +154,13 @@ export default {
 			// therefore the DOM) once per candidate notch -- a second call must
 			// not interleave with one already mid-cascade (spec section 6).
 			refitting: false,
+			// The row quota each elastic right-column block may use. {} = no
+			// budget, which is what an environment without measurement keeps --
+			// degrade.js's rule on the vertical axis (design 4.8).
+			rowBudget: {},
+			// Same guard shape as `refitting`: the vertical pass mutates
+			// rowBudget and therefore the DOM.
+			refittingVertical: false,
 		};
 	},
 	computed: {
@@ -235,15 +261,18 @@ export default {
 		this.pluginNames = pluginNames;
 		await this.tick();
 		await this.refit();
+		await this.refitVertical();
 		if (typeof ResizeObserver === "function") {
-			for (const slotName of ["header-left", "top"]) {
+			for (const slotName of ["header-left", "top", "right"]) {
 				const zone = this.$el?.querySelector?.(`[data-slot="${slotName}"]`);
 				if (!zone) continue;
 				const observer = new ResizeObserver(() => {
 					// Not awaited: a rejection here would surface as an unhandled promise
 					// rejection. The in-flight guard is cleared by refit()'s own `finally`,
 					// so a failed pass simply retries on the next tick or resize.
-					this.refit().catch(() => {});
+					this.refit()
+						.then(() => this.refitVertical())
+						.catch(() => {});
 				});
 				observer.observe(zone);
 				this.observers.push(observer);
@@ -257,9 +286,22 @@ export default {
 		if (typeof window !== "undefined") {
 			window.__glancesRefit = async () => {
 				await this.refit();
+				await this.refitVertical();
 				window.__glancesDegrade = this.degrade;
+				window.__glancesRowBudget = this.rowBudget;
 			};
 			window.__glancesDegrade = this.degrade;
+			window.__glancesRowBudget = this.rowBudget;
+			// Same shape as `__glancesRefit` above: the render probe has no
+			// timer (`setInterval` is stubbed to a no-op below) and no other way
+			// to fire a SECOND poll cycle, which is what the tick-ordering test
+			// (fix round 3) needs -- `tick()` itself calls refit()/refitVertical()
+			// internally, so this hook only needs to republish afterwards.
+			window.__glancesTick = async () => {
+				await this.tick();
+				window.__glancesDegrade = this.degrade;
+				window.__glancesRowBudget = this.rowBudget;
+			};
 		}
 		this.timer = setInterval(() => this.tick(), this.refresh * 1000);
 	},
@@ -345,6 +387,16 @@ export default {
 				} catch (e) {
 					this.errors = { ...this.errors, alert: e.message };
 				}
+				// Runs AFTER the alert fetch above, not right after refit(): it
+				// reads `this.results.alert` for `nAlerts`/`nOngoing` (`floorAlerts`),
+				// and those feed the same shared row pool `vms`/`containers`/
+				// `processlist`/`programlist` draw from -- reading it before the
+				// fetch above resolves would budget every periodic tick against the
+				// PREVIOUS cycle's alert state, forever, not just at startup (fix
+				// round 2, Important 1). `refit()` stays where it is: the horizontal
+				// cascades operate on the header/top zones and never read alert
+				// state.
+				await this.refitVertical();
 			} finally {
 				this.ticking = false;
 			}
@@ -393,6 +445,97 @@ export default {
 			} finally {
 				this.refitting = false;
 			}
+		},
+		// Rows available below the right slot's top edge.
+		//
+		// Derived from the VIEWPORT, never from the slot's own height: the
+		// slot's height is this pass's own output, so reading it would close a
+		// feedback loop immediately. This is fit_block.js's documented
+		// horizontal reasoning -- the right slot is the body grid's `1fr`
+		// track, so its width never comes from its content -- transposed to the
+		// vertical axis, where it is not free and has to be engineered
+		// (design 4.4).
+		//
+		// `null` means "cannot measure", and the caller must then budget
+		// nothing.
+		measureBodyRows() {
+			if (typeof window === "undefined") return null;
+			const slot = this.$el?.querySelector?.('[data-slot="right"]');
+			if (!slot || typeof slot.getBoundingClientRect !== "function") return null;
+			const viewport = window.innerHeight || 0;
+			// Harness hook, like `_notches`: a real element ignores this
+			// expando and the computed line-height answers instead.
+			const rowPx = slot._rowPx || this.computedRowPx(slot);
+			if (!(viewport > 0) || !(rowPx > 0)) return null;
+			const footer = this.$el?.querySelector?.(".gl-alerts");
+			const footerHeight = footer?.getBoundingClientRect ? footer.getBoundingClientRect().height : 0;
+			const top = slot.getBoundingClientRect().top;
+			const rows = Math.floor((viewport - top - footerHeight) / rowPx);
+			return rows > 0 ? rows : null;
+		},
+		computedRowPx(element) {
+			if (typeof window.getComputedStyle !== "function") return 0;
+			const value = parseFloat(window.getComputedStyle(element).lineHeight);
+			return Number.isFinite(value) ? value : 0;
+		},
+		// The vertical pass. Runs LAST, after both horizontal cascades: the
+		// TUI orders it the same way and says why -- the body height it budgets
+		// against depends on the TOP row height, which the horizontal cascade
+		// above is free to change (glances_curses_v5.py:617-619).
+		async refitVertical() {
+			if (this.refittingVertical) return;
+			this.refittingVertical = true;
+			try {
+				// Stacked layout (css `@media (max-width: 48rem)`): the right
+				// column sits BELOW the left one rather than beside it, so
+				// budgeting it to viewport height would hide processes for no
+				// reason. The TUI has no equivalent case (design 4.9).
+				if (this.isStacked()) {
+					this.rowBudget = {};
+					return;
+				}
+				const bodyHeight = this.measureBodyRows();
+				if (bodyHeight === null) {
+					this.rowBudget = {};
+					return;
+				}
+				const count = (name) => (this.results[name]?.data || []).length;
+				// `tick()` fetches `this.plugins`, NOT the `slots()`-filtered
+				// list (AppShell.vue:283), so BOTH process payloads are always
+				// present even though only one is rendered. Summing them would
+				// tell the solver there are twice as many processes as exist.
+				// The visible one is chosen by the same flag `slots()` uses.
+				const processes = this.serverArgs.programs ? count("programlist") : count("processlist");
+				const alert = this.results.alert || {};
+				const incidents = Array.isArray(alert.incidents) ? alert.incidents : [];
+				const next = planRightColumn({
+					bodyHeight,
+					staticHeights: { processcount: 1 },
+					ampsHeight: this.ampsHeight(),
+					nVms: count("vms"),
+					nContainers: count("containers"),
+					nProcesses: processes,
+					nAlerts: incidents.length,
+					nOngoing: incidents.filter((incident) => incident.ongoing).length,
+				});
+				if (!sameFlags(next, this.rowBudget)) this.rowBudget = next;
+			} finally {
+				this.refittingVertical = false;
+			}
+		},
+		isStacked() {
+			if (typeof window.matchMedia !== "function") return false;
+			return window.matchMedia(`(max-width: ${STACK_BREAKPOINT})`).matches;
+		},
+		// The TUI emits one row per result LINE, blanking the name and count
+		// after the first, and paints no header row (amps/render_curses_v5.py
+		// module docstring) -- this WebUI puts the whole multi-line result in
+		// one `pre-line` cell instead (G9-9A spec D6), but the LINE cost is the
+		// same either way. `ampsLineCount` also drops an AMP whose result is
+		// still `None`, the same predicate PluginAmps.vue's own `rows` filters
+		// by (amps.js) -- so the two agree by construction, not by coincidence.
+		ampsHeight() {
+			return ampsLineCount(this.results.amps?.data);
 		},
 	},
 };
@@ -475,12 +618,18 @@ export default {
 .gl-slot-right {
 	display: flex;
 	flex-direction: column;
-	gap: calc(var(--gl-gap) * 2);
 	min-width: 0;
 }
-/* Pinned to the second column so it does not slide left when no plugin is in
- * the left slot. */
+.gl-slot-left {
+	gap: calc(var(--gl-gap) * 2);
+}
+/* Exactly one text row, because the vertical budget's cost() charges one
+ * blank line between blocks (row_budget.js). Any other value makes the
+ * ported arithmetic wrong by a fraction of a row per block boundary.
+ * `grid-column: 2` pins the slot to the second column so it does not slide
+ * left when no plugin is in the left slot. */
 .gl-slot-right {
+	gap: calc(var(--gl-row) * var(--gl-size-base));
 	grid-column: 2;
 }
 /* 48rem matches no TUI rule: it is the browser's own threshold (G9-5 D3),

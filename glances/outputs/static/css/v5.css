@@ -45,6 +45,15 @@
    * Widths that are a LAYOUT budget rather than a character count keep their
    * own unit -- see the sensors/wifi name caps. */
   --gl-col: 0.6em;
+  /* One text row, as a unitless line-height. The vertical budget
+   * (js/v5/row_budget.js) is an INTEGER row count ported from the TUI, whose
+   * cost() charges one blank line between blocks; the browser's inter-block
+   * gap therefore has to be exactly one row, and a row has to be a known
+   * number. Before this batch line-height was `normal` -- font-dependent, and
+   * measured at roughly 1.056rem against a 1rem gap: six percent, invisible
+   * across one block, a full row of drift across sixteen. Unitless so nested
+   * elements inherit the RATIO, not a fixed px value. */
+  --gl-row: 1.25;
   --gl-size-sm: 0.78rem;
   --gl-size-base: 0.88rem;
   --gl-size-lg: 1.05rem;
@@ -72,6 +81,7 @@ body {
   color: var(--gl-fg);
   font-family: var(--gl-font);
   font-size: var(--gl-size-base);
+  line-height: var(--gl-row);
 }
 
 /* Tier classes. `prominent` turns the value into a filled BADGE -- the tier
@@ -375,6 +385,46 @@ body {
 [data-slot="right"] .gl-table td:last-child,
 [data-slot="right"] .gl-table th:last-child {
   width: 100%;
+}
+
+/* Fixed-layout collection tables (processlist, programlist, alert). Their
+ * columns come from a <colgroup> in TUI character widths, so they no longer
+ * depend on their content: a wider PID at the next refresh cannot re-lay the
+ * table out. `min-width` is what keeps the existing width cascade working --
+ * under fixed layout a table never overflows, so `scrollWidth > clientWidth`
+ * would stop being true and the cascade would never fire. The component sets
+ * `--gl-fixed-cols` to the sum of the visible fixed widths plus separators
+ * plus the elastic column's floor, so the table overflows its container
+ * exactly at the terminal's own threshold (design 5.1). */
+.gl-table.gl-process-table {
+  table-layout: fixed;
+  min-width: calc(var(--gl-fixed-cols) * var(--gl-col));
+}
+/* Cells stop wrapping and crop instead -- defects P4 and A1. The crop the
+ * DATA needs (USER's `+` marker) is done by the formatter; this is the
+ * layout's own floor for everything else. */
+.gl-table.gl-process-table th,
+.gl-table.gl-process-table td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0;
+}
+/* One character BETWEEN cells, like the terminal's separator -- so the table is
+ * `sum(widths) + (n - 1)` columns wide, exactly the TUI's formula and exactly
+ * what `--gl-fixed-cols` computes. `:not(:last-child)` is load-bearing: padding
+ * every cell would add one column the arithmetic does not account for, and the
+ * cascade would fire one column early on every process table (design 5.3). */
+.gl-table.gl-process-table th:not(:last-child),
+.gl-table.gl-process-table td:not(:last-child) {
+  padding-right: var(--gl-col);
+}
+/* The right column's slack goes to the last cell -- but not here: under fixed
+ * layout that rule would claim the whole width. The `auto` <col> already does
+ * the job the rule was written for. */
+[data-slot="right"] .gl-table.gl-process-table td:last-child,
+[data-slot="right"] .gl-table.gl-process-table th:last-child {
+  width: auto;
 }
 
 /* A block keeps its natural width inside a zone that no longer wraps: without
