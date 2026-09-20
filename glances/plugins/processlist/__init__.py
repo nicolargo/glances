@@ -90,6 +90,10 @@ fields_description = {
         'description': 'Process GPU memory consumption in % of system memory (Intel i915/xe only)',
         'unit': 'percent',
     },
+    'gpu_mem_bytes': {
+        'description': 'Process GPU-resident memory in bytes (Intel i915/xe only)',
+        'unit': 'byte',
+    },
     'memory_percent': {
         'description': 'Process memory consumption',
         'unit': 'percent',
@@ -187,6 +191,7 @@ class ProcesslistPlugin(GlancesPluginModel):
         'gpu': '{:<6} ',
         'gmem': '{:<6} ',
         'mem': '{:<5} ',
+        'gmem_bytes': '{:<5} ',
         'virt': '{:<5} ',
         'res': '{:<5} ',
         'pid': '{:>{width}} ',
@@ -207,6 +212,7 @@ class ProcesslistPlugin(GlancesPluginModel):
         'cpu_no_digit': '{:<6.0f}',
         'gpu': '{:<6.1f}',
         'gmem': '{:<6.1f}',
+        'gmem_bytes': '{:<5} ',
         'mem': '{:<5.1f} ',
         'virt': '{:<5} ',
         'res': '{:<5} ',
@@ -301,10 +307,22 @@ class ProcesslistPlugin(GlancesPluginModel):
         self.max_values = copy.deepcopy(glances_processes.max_values())
 
         # Per-process GPU stats (Intel i915/xe only, same source as nvtop).
-        # Shown as GPU%/GMEM columns next to CPU%; hidden when no Intel GPU
-        # is present or the user disabled the stat.
-        self.enable_stats = [s for s in type(self).enable_stats if s not in ('gpu_percent', 'gpu_mem')]
+        # Shown as GPU%/GMEM% columns next to CPU% plus a GMEM bytes column
+        # after MEM%; hidden when no Intel GPU is present or the user
+        # disabled the stat.
+        self.enable_stats = [
+            s for s in type(self).enable_stats if s not in ('gpu_percent', 'gpu_mem', 'gpu_mem_bytes')
+        ]
+        gpu_mem_map = None
+        gpu_mem_capacity = None
         if intel_gpu_present():
+            try:
+                gpu_mem_map = get_per_pid_gpu_mem_bytes()
+                gpu_mem_capacity = get_mem_capacity_bytes('/proc/meminfo')
+            except Exception as e:
+                logger.debug(f'Per-process GPU memory unavailable: {e}')
+                gpu_mem_map = None
+                gpu_mem_capacity = None
             if 'gpu_percent' not in glances_processes.disable_stats:
                 try:
                     gpu_map = get_per_pid_gpu_percent()
@@ -320,15 +338,8 @@ class ProcesslistPlugin(GlancesPluginModel):
                     self.max_values['gpu_percent'] = max(
                         (p['gpu_percent'] for p in stats), default=0
                     )
-            if 'gpu_mem' not in glances_processes.disable_stats:
-                try:
-                    gpu_mem_map = get_per_pid_gpu_mem_bytes()
-                    gpu_mem_capacity = get_mem_capacity_bytes('/proc/meminfo')
-                except Exception as e:
-                    logger.debug(f'Per-process GPU memory unavailable: {e}')
-                    gpu_mem_map = None
-                    gpu_mem_capacity = None
-                if gpu_mem_map is not None and gpu_mem_capacity:
+            if gpu_mem_map is not None and gpu_mem_capacity:
+                if 'gpu_mem' not in glances_processes.disable_stats:
                     for proc in stats:
                         proc['gpu_mem'] = round(
                             gpu_mem_map.get(proc['pid'], 0) / gpu_mem_capacity * 100, 1
@@ -344,6 +355,13 @@ class ProcesslistPlugin(GlancesPluginModel):
                     self.max_values['gpu_mem'] = max(
                         (p['gpu_mem'] for p in stats), default=0
                     )
+                if 'gpu_mem_bytes' not in glances_processes.disable_stats:
+                    for proc in stats:
+                        proc['gpu_mem_bytes'] = gpu_mem_map.get(proc['pid'], 0)
+                    if 'memory_percent' in self.enable_stats:
+                        self.enable_stats.insert(
+                            self.enable_stats.index('memory_percent') + 1, 'gpu_mem_bytes'
+                        )
 
         # Update the stats
         self.stats = stats
@@ -482,6 +500,16 @@ class ProcesslistPlugin(GlancesPluginModel):
             ret = self.curse_add_line(msg, alert)
         else:
             msg = self.layout_header['gmem'].format('?')
+            ret = self.curse_add_line(msg)
+        return ret
+
+    def _get_process_curses_gpu_mem_bytes(self, p, selected, args):
+        """Return process GPU memory (bytes) curses"""
+        if key_exist_value_not_none_not_v('gpu_mem_bytes', p, ''):
+            msg = self.layout_stat['gmem_bytes'].format(self.auto_unit(p['gpu_mem_bytes'], low_precision=False))
+            ret = self.curse_add_line(msg, optional=True)
+        else:
+            msg = self.layout_header['gmem_bytes'].format('?')
             ret = self.curse_add_line(msg)
         return ret
 
@@ -951,6 +979,9 @@ class ProcesslistPlugin(GlancesPluginModel):
         )
         self.msg_curse_header_common(
             ret, process_sort_key, 'memory_percent', display_stats, 'mem', 'MEM%', sort_style=sort_style
+        )
+        self.msg_curse_header_common(
+            ret, process_sort_key, 'gpu_mem_bytes', display_stats, 'gmem_bytes', 'GMEM', sort_style=sort_style
         )
         if 'memory_info' in display_stats:
             if not self.get_conf_value('disable_virtual_memory', convert_bool=True, default=False):

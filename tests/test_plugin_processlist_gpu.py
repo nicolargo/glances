@@ -71,6 +71,7 @@ class TestProcesslistGpuColumn:
         process_plugin.update()
         assert 'gpu_percent' not in process_plugin.enable_stats
         assert 'gpu_mem' not in process_plugin.enable_stats
+        assert 'gpu_mem_bytes' not in process_plugin.enable_stats
 
     def test_mem_column_merged_by_pid(self, process_plugin, monkeypatch):
         monkeypatch.setattr(processlist_module, 'intel_gpu_present', lambda: True)
@@ -123,6 +124,33 @@ class TestProcesslistGpuColumn:
 
     def test_mem_sort_hotkey_registered(self):
         assert _GlancesCurses._hotkeys['y'] == {'sort_key': 'gpu_mem'}
+
+    def test_bytes_column_after_mem(self, process_plugin, monkeypatch):
+        monkeypatch.setattr(processlist_module, 'intel_gpu_present', lambda: True)
+        monkeypatch.setattr(
+            processlist_module, 'get_per_pid_gpu_percent', lambda *a, **k: {}
+        )
+        monkeypatch.setattr(
+            processlist_module, 'get_mem_capacity_bytes', lambda *a, **k: 2000
+        )
+        monkeypatch.setattr(
+            processlist_module,
+            'get_per_pid_gpu_mem_bytes',
+            lambda *a, **k: {},
+        )
+        process_plugin.update()
+        order = process_plugin.enable_stats
+        assert 'gpu_mem_bytes' in order
+        assert order.index('gpu_mem_bytes') == order.index('memory_percent') + 1
+        assert all(p['gpu_mem_bytes'] == 0 for p in process_plugin.stats)
+
+    def test_bytes_column_hidden_when_disabled(self, process_plugin, monkeypatch):
+        monkeypatch.setattr(processlist_module, 'intel_gpu_present', lambda: True)
+        monkeypatch.setattr(
+            glances_processes, 'disable_stats', ['gpu_mem_bytes'], raising=False
+        )
+        process_plugin.update()
+        assert 'gpu_mem_bytes' not in process_plugin.enable_stats
 
     def test_gmem_threshold_defaults(self, glances_stats):
         plugin = glances_stats.get_plugin('processlist')
