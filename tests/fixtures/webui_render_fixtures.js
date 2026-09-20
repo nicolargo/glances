@@ -561,6 +561,11 @@ const CONFIG_FIXTURES = {
 	// otherwise grow to all 30 rows) -- the two ceilings compose with `min()`,
 	// so this one must win (design 4.7).
 	"budget-tall-with-config-cap": { outputs: { max_processes_display: 5 } },
+	// `[outputs] api_doc=false` -- the gate webserver_v5.build_app() reads to
+	// decide whether FastAPI mounts /docs at all. A STRING, which is how a
+	// value read from glances.conf reaches /api/5/config (the DEFAULTS layer
+	// and the CLI overlay hold a real boolean instead).
+	"api-doc-off": { outputs: { api_doc: "false" } },
 };
 
 // Header plugin payloads, shaped like their model_v5.py `_collect()` output.

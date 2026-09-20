@@ -1,4 +1,4 @@
-// Glances v5 WebUI — the only module that talks to /api/5.
+// Glances v5 WebUI — the only module that talks to the v5 REST API.
 //
 // Three things components must not each reinvent:
 //
@@ -12,7 +12,10 @@
 
 export const DEFAULT_REFRESH_SECONDS = 2;
 export const DEFAULT_THEME = "dark";
+export const DEFAULT_API_DOC = true;
 const VALID_THEMES = new Set(["dark", "light"]);
+const TRUE_STRINGS = new Set(["1", "true", "yes", "on"]);
+const FALSE_STRINGS = new Set(["0", "false", "no", "off"]);
 
 export async function getJson(path) {
 	const response = await fetch(path);
@@ -66,7 +69,12 @@ export async function resolveConfig() {
 		// all, and stays on the default theme rather than going unstyled.
 		// Anything thrown by the extraction below is a programming error and
 		// must surface, not be disguised as an unreachable server.
-		return { refreshSeconds: DEFAULT_REFRESH_SECONDS, theme: DEFAULT_THEME, maxProcessesDisplay: null };
+		return {
+			refreshSeconds: DEFAULT_REFRESH_SECONDS,
+			theme: DEFAULT_THEME,
+			maxProcessesDisplay: null,
+			apiDoc: DEFAULT_API_DOC,
+		};
 	}
 	const refresh = config && config.global && config.global.refresh;
 	const seconds = Number(refresh);
@@ -91,7 +99,43 @@ export async function resolveConfig() {
 	const maxProcessesN = Number(rawMaxProcesses);
 	const maxProcessesDisplay = Number.isFinite(maxProcessesN) && maxProcessesN > 0 ? Math.trunc(maxProcessesN) : null;
 
-	return { refreshSeconds, theme, maxProcessesDisplay };
+	// `[outputs] api_doc` -- the SAME gate webserver_v5.build_app() uses to
+	// decide whether FastAPI mounts /docs at all. Read here so the footer can
+	// link the Swagger UI only when it exists: a link to a 404 is worse than
+	// no link. Defaults to true, as GlancesConfigV5.DEFAULTS does.
+	const apiDoc = coerceBool(config && config.outputs && config.outputs.api_doc, DEFAULT_API_DOC);
+
+	return { refreshSeconds, theme, maxProcessesDisplay, apiDoc };
+}
+
+function coerceBool(raw, fallback) {
+	// /api/5/config serves the MERGED config, whose layers disagree on type:
+	// GlancesConfigV5.DEFAULTS holds a real boolean, the CLI overlay writes
+	// one too, but a value read from glances.conf arrives as the raw string
+	// "false". The accepted spellings are GlancesConfigV5._coerce_bool()'s.
+	if (typeof raw === "boolean") return raw;
+	if (typeof raw === "string") {
+		const value = raw.trim().toLowerCase();
+		if (TRUE_STRINGS.has(value)) return true;
+		if (FALSE_STRINGS.has(value)) return false;
+	}
+	return fallback;
+}
+
+export async function resolveVersion() {
+	// /status, not /api/5/... -- the health probe is where v4 already serves
+	// the release (`/api/4/status`), and v5's carries it as `glances_version`
+	// next to the API version. Read once per page load, like the schema and
+	// the arguments.
+	//
+	// null on any failure: the footer then names no version rather than
+	// showing an error. Nothing else on the page depends on it.
+	try {
+		const status = await getJson("status");
+		return status && typeof status.glances_version === "string" ? status.glances_version : null;
+	} catch {
+		return null;
+	}
 }
 
 let argsCache = null;

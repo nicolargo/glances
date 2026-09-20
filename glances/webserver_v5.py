@@ -50,6 +50,7 @@ from starlette.concurrency import run_in_threadpool
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
+from glances import __version__
 from glances.alerts_v5 import GlancesAlerts
 from glances.config_v5 import GlancesConfigV5
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
@@ -419,7 +420,11 @@ def _register_health_endpoints(app: FastAPI) -> None:
     """
 
     async def status_handler():
-        return {"status": "ok", "version": "5"}
+        # `version` is the API version, as v4's /api/4/status reports it;
+        # `glances_version` is the release the server runs, which the WebUI
+        # footer shows. Kept on the probe rather than on a route of its own:
+        # v4 already serves the release from its own /status.
+        return {"status": "ok", "version": "5", "glances_version": __version__}
 
     app.add_api_route("/status", status_handler, methods=["GET"], tags=["health"])
     app.add_api_route("/healthz", status_handler, methods=["GET"], tags=["health"])

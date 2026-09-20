@@ -363,6 +363,33 @@ def test_the_footer_sticks_to_the_bottom_of_the_viewport():
         assert re.search(rf"\b{declaration}\s*;", footer), f"footer lacks `{declaration}`: {footer!r}"
 
 
+def test_the_footer_controls_stay_out_of_the_way():
+    """The footer is chrome: the server's identity at one end, the cadence and
+    its two steppers at the other. Neither end may compete with a plugin for
+    attention -- the brief asked for buttons that do not draw the eye. So: no
+    button border or background, no browser-blue link, and the whole line one
+    notch below the body text. CSS is not observable through the render probe,
+    so this reads the component.
+
+    The value box is pinned too: without a width floor, stepping 2s -> 10s
+    widens the text and slides the "+" out from under the pointer.
+    """
+    shell = _strip_comments((_V5_JS / "AppShell.vue").read_text())
+    assert re.search(r"justify-content:\s*space-between\s*;", _rule_body(shell, ".gl-alerts")), (
+        "the footer's two ends sit at the two edges of the line"
+    )
+    ends = _rule_body(shell, ".gl-about,\n.gl-refresh")
+    assert re.search(r"font-size:\s*var\(--gl-size-sm\)\s*;", ends), f"the footer is one notch down: {ends!r}"
+    step = _rule_body(shell, ".gl-step")
+    for declaration in (r"background:\s*none", r"border:\s*none", r"color:\s*inherit", r"font:\s*inherit"):
+        assert re.search(rf"\b{declaration}\s*;", step), f"a stepper still looks like a button: {step!r}"
+    link = _rule_body(shell, ".gl-about a")
+    assert re.search(r"color:\s*inherit\s*;", link), f"a footer link keeps the muted colour: {link!r}"
+    assert re.search(r"text-decoration:\s*none\s*;", link), f"a footer link drops the solid underline: {link!r}"
+    value = _rule_body(shell, ".gl-refresh-value")
+    assert re.search(r"min-width:", value), f"the cadence box has no width floor: {value!r}"
+
+
 def test_a_name_cell_is_capped_and_can_keep_its_tail():
     """G9-6 D3: a left-sidebar name is capped at the TUI's name width, which
     each component sets as --gl-name-width, on a BLOCK span (max-width on a

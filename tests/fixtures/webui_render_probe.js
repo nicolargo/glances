@@ -126,6 +126,15 @@ class FakeElement extends FakeNode {
 		// One text row, in px. A real browser resolves this from the computed
 		// line-height; there is none here, so the harness supplies it.
 		this._rowPx = 0;
+		// Vue's shouldSetAsProp() tests `key in el`: a real HTMLButtonElement
+		// HAS a `disabled` property, so `:disabled` is set as a DOM property
+		// and a falsy value genuinely enables the button. Without the property
+		// here, Vue fell back to setAttribute("disabled", "false") -- an
+		// attribute whose mere presence disables the button in a real browser,
+		// so the footer's steppers read as permanently disabled through the
+		// probe while working fine in the page. Only <button> gets it: that is
+		// the only tag this UI binds `disabled` on.
+		if (this.tagName === "BUTTON") this.disabled = false;
 	}
 
 	get id() {
@@ -357,6 +366,12 @@ async function fakeFetch(url) {
 	// CONFIG_FIXTURES gets `{}`, i.e. no cap.
 	if (path.includes("api/5/config")) {
 		return { ok: true, status: 200, json: async () => CONFIG_FIXTURES[scenario] || {} };
+	}
+	// The health probe, which carries the release the footer names. NOT under
+	// /api/5 -- api.js's resolveVersion() reads "status" at the root, the way
+	// webserver_v5._register_health_endpoints() serves it.
+	if (path === "status") {
+		return { ok: true, status: 200, json: async () => ({ status: "ok", version: "5", glances_version: "5.0.0" }) };
 	}
 	return { ok: true, status: 200, json: async () => ({}) };
 }
@@ -620,6 +635,20 @@ function collect() {
 						levelClass: level ? level.className : null,
 					};
 				});
+				// The footer's left end: the project and API-doc links, in
+				// document order.
+				result.footerLinks = findAllByTag(footer, "A").map((a) => ({
+					text: a.textContent,
+					href: a.getAttribute("href"),
+				}));
+				// The cadence steppers. `disabled` lands as an attribute here:
+				// FakeElement has no such property for Vue to prefer over one.
+				result.footerButtons = findAllByTag(footer, "BUTTON").map((button) => ({
+					text: button.textContent.trim(),
+					// A DOM property, not an attribute -- see FakeElement's
+					// constructor for why the distinction matters here.
+					disabled: button.disabled,
+				}));
 			}
 			const articles = findAllByAttr(first, "data-plugin");
 			result.pluginHeaders = articles.map((article) => {

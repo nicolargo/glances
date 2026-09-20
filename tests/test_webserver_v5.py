@@ -34,6 +34,7 @@ import logging
 import pytest
 from fastapi.testclient import TestClient
 
+from glances import __version__
 from glances.config_v5 import GlancesConfigV5
 from glances.security_v5 import hash_password
 from glances.stats_store_v5 import StatsStoreV5
@@ -96,7 +97,9 @@ def test_status_endpoint(config_factory, store):
     with TestClient(app) as client:
         r = client.get("/status")
     assert r.status_code == 200
-    assert r.json() == {"status": "ok", "version": "5"}
+    # `version` is the API version; `glances_version` is the release, which the
+    # WebUI footer reads from here (v4 serves it from its own /status too).
+    assert r.json() == {"status": "ok", "version": "5", "glances_version": __version__}
 
 
 def test_healthz_alias_returns_same_payload(config_factory, store):

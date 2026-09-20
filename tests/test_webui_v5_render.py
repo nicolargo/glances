@@ -288,10 +288,49 @@ def test_an_unreadable_pluginslist_renders_the_whole_registry():
 def test_the_refresh_cadence_renders_in_the_footer():
     """G9-5 decision D5: the top bar is gone and the cadence moved to the
     footer. The probe answers /api/5/config with `{}`, so the cadence is
-    api.js' DEFAULT_REFRESH_SECONDS (2).
+    api.js' DEFAULT_REFRESH_SECONDS (2), and it is now flanked by the two
+    stepper buttons that change it.
     """
     payload = _run_render_probe("default")
-    assert "refresh 2s" in (payload["footerText"] or ""), f"got {payload['footerText']!r}"
+    assert "2s" in (payload["footerText"] or ""), f"got {payload['footerText']!r}"
+    assert "Refresh:" in (payload["footerText"] or ""), f"got {payload['footerText']!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_cadence_is_flanked_by_two_stepper_buttons():
+    """The whole point of the footer's cadence control: a viewer can change
+    the poll rate without editing glances.conf. Two real <button>s, not
+    decorative spans -- a span carries no click target and no keyboard focus.
+    """
+    buttons = _run_render_probe("default")["footerButtons"]
+    assert [b["text"] for b in buttons] == ["\u2212", "+"], f"got {buttons!r}"
+    # The default cadence (2 s) sits inside the ladder, so neither end is
+    # reached and both buttons are live.
+    assert [b["disabled"] for b in buttons] == [False, False], f"got {buttons!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_footer_names_the_release_and_links_github_and_the_api_docs():
+    """The left end of the footer is the server's identity: the release the
+    probe's /status answers with, then the project and the Swagger UI.
+    """
+    payload = _run_render_probe("default")
+    assert "Glances v5.0.0" in (payload["footerText"] or ""), f"got {payload['footerText']!r}"
+    assert payload["footerLinks"] == [
+        {"text": "GitHub", "href": "https://github.com/nicolargo/glances"},
+        {"text": "API", "href": "/docs"},
+    ], f"got {payload['footerLinks']!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_api_docs_link_is_dropped_when_the_server_mounts_no_docs():
+    """`[outputs] api_doc=false` makes webserver_v5.build_app() pass
+    `docs_url=None`, so /docs 404s. The footer reads the same key and offers
+    no link rather than a dead one. The `api-doc-off` scenario answers
+    /api/5/config with the string form a glances.conf value arrives as.
+    """
+    payload = _run_render_probe("api-doc-off")
+    assert [link["text"] for link in payload["footerLinks"]] == ["GitHub"], f"got {payload['footerLinks']!r}"
 
 
 # --------------------------------------------------------- mem TUI parity (G9-3 Task 5)
@@ -3072,7 +3111,7 @@ def test_the_footer_keeps_the_cadence_and_drops_the_alert_list():
     and its result now feeds PluginAlert.vue, not the footer -- the footer
     keeps only the refresh cadence."""
     payload = _run_render_probe("alert")
-    assert "refresh" in (payload["footerText"] or ""), f"got {payload['footerText']!r}"
+    assert "Refresh:" in (payload["footerText"] or ""), f"got {payload['footerText']!r}"
     assert "No alert" not in (payload["footerText"] or ""), f"got {payload['footerText']!r}"
 
 
@@ -3086,7 +3125,7 @@ def test_a_failing_alert_endpoint_does_not_disturb_the_plugins_above_it():
     payload = _run_render_probe("alert-incidents-unreachable")
     assert "mem" in payload["pluginNames"], f"other plugins must still render: {payload['pluginNames']!r}"
     assert "alert" in payload["pluginNames"], f"the alert block itself must still render: {payload['pluginNames']!r}"
-    assert "refresh" in (payload["footerText"] or ""), f"the footer must still render: {payload['footerText']!r}"
+    assert "Refresh:" in (payload["footerText"] or ""), f"the footer must still render: {payload['footerText']!r}"
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")

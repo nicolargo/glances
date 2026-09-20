@@ -6,9 +6,11 @@ import {
 	resolveConfig,
 	resolveArgs,
 	resolvePluginNames,
+	resolveVersion,
 	fetchAll,
 	DEFAULT_REFRESH_SECONDS,
 	DEFAULT_THEME,
+	DEFAULT_API_DOC,
 } from "../../glances/outputs/static/js/v5/api.js";
 
 function stubFetch(routes) {
@@ -78,7 +80,12 @@ test("validate passes a cycle-0 null through untouched", () => {
 
 test("resolveConfig reads [global] refresh and [outputs] theme from one fetch", async () => {
 	stubFetch({ "api/5/config": { body: { global: { refresh: 5 }, outputs: { theme: "light" } } } });
-	assert.deepEqual(await resolveConfig(), { refreshSeconds: 5, theme: "light", maxProcessesDisplay: null });
+	assert.deepEqual(await resolveConfig(), {
+		refreshSeconds: 5,
+		theme: "light",
+		maxProcessesDisplay: null,
+		apiDoc: DEFAULT_API_DOC,
+	});
 });
 
 test("resolveConfig falls back to defaults when config is unreachable", async () => {
@@ -87,6 +94,7 @@ test("resolveConfig falls back to defaults when config is unreachable", async ()
 		refreshSeconds: DEFAULT_REFRESH_SECONDS,
 		theme: DEFAULT_THEME,
 		maxProcessesDisplay: null,
+		apiDoc: DEFAULT_API_DOC,
 	});
 });
 
@@ -226,4 +234,38 @@ test("resolvePluginNames returns null when the list cannot be read", async () =>
 	// Network failure: stubFetch throws for an unknown route.
 	stubFetch({});
 	assert.equal(await resolvePluginNames(), null);
+});
+
+// The footer links /docs only when the server mounts it -- the same
+// `[outputs] api_doc` gate webserver_v5.build_app() reads.
+test("resolveConfig reads [outputs] api_doc, in either of the types the merged config serves", async () => {
+	// GlancesConfigV5.DEFAULTS and the CLI overlay hold a real boolean ...
+	stubFetch({ "api/5/config": { body: { outputs: { api_doc: false } } } });
+	assert.equal((await resolveConfig()).apiDoc, false);
+	// ... while a value read from glances.conf arrives as a raw string.
+	stubFetch({ "api/5/config": { body: { outputs: { api_doc: "False" } } } });
+	assert.equal((await resolveConfig()).apiDoc, false);
+	stubFetch({ "api/5/config": { body: { outputs: { api_doc: "on" } } } });
+	assert.equal((await resolveConfig()).apiDoc, true);
+});
+
+test("resolveConfig keeps the default api_doc when the key is absent or unreadable", async () => {
+	stubFetch({ "api/5/config": { body: { outputs: {} } } });
+	assert.equal((await resolveConfig()).apiDoc, DEFAULT_API_DOC);
+	stubFetch({ "api/5/config": { body: { outputs: { api_doc: "maybe" } } } });
+	assert.equal((await resolveConfig()).apiDoc, DEFAULT_API_DOC);
+});
+
+test("resolveVersion reads the release from the health probe", async () => {
+	stubFetch({ status: { body: { status: "ok", version: "5", glances_version: "5.0.0" } } });
+	assert.equal(await resolveVersion(), "5.0.0");
+});
+
+test("resolveVersion returns null rather than failing the page", async () => {
+	// The footer then names no version. Nothing else depends on it.
+	stubFetch({});
+	assert.equal(await resolveVersion(), null);
+	// A 200 whose body does not carry the key is the same non-answer.
+	stubFetch({ status: { body: { status: "ok", version: "5" } } });
+	assert.equal(await resolveVersion(), null);
 });

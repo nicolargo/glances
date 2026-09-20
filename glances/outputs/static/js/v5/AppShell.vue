@@ -28,15 +28,53 @@
 			<!-- G9-5 D5: moved here from the removed top bar. The alert list that
 			used to share this footer (raw history, newest-first) moved into
 			PluginAlert.vue (G9-9B), fed by the collapsed /api/5/alert/incidents
-			grid -- this footer keeps only the cadence. -->
-			<span class="gl-muted gl-refresh">{{ refreshLabel }}</span>
+			grid -- this footer carries the server's identity on the left and the
+			cadence on the right. The class name is the one the vertical budget
+			and the render probe already look for; it outlived the alerts. -->
+			<div class="gl-muted gl-about">
+				<span>{{ versionLabel }}</span>
+				<span class="gl-about-sep" aria-hidden="true">·</span>
+				<a href="https://github.com/nicolargo/glances" target="_blank" rel="noopener noreferrer">GitHub</a>
+				<!-- /docs only when [outputs] api_doc is on: that same key decides
+				whether FastAPI mounts Swagger UI at all (webserver_v5.build_app),
+				so linking it unconditionally would offer a 404. Absolute, not
+				relative: the v5 server has no url_prefix and mounts /docs at the
+				root, next to the page itself. -->
+				<template v-if="apiDoc">
+					<span class="gl-about-sep" aria-hidden="true">·</span>
+					<a href="/docs" target="_blank" rel="noopener noreferrer">API</a>
+				</template>
+			</div>
+			<div class="gl-muted gl-refresh">
+				<span>Refresh:</span>
+				<button
+					type="button"
+					class="gl-step"
+					:disabled="!canSpeedUp"
+					aria-label="Refresh faster"
+					@click="changeRefresh(-1)"
+				>
+					−
+				</button>
+				<span class="gl-refresh-value">{{ refreshLabel }}</span>
+				<button
+					type="button"
+					class="gl-step"
+					:disabled="!canSlowDown"
+					aria-label="Refresh slower"
+					@click="changeRefresh(1)"
+				>
+					+
+				</button>
+			</div>
 		</footer>
 	</main>
 </template>
 
 <script>
 import { computed } from "vue";
-import { fetchAll, resolveConfig, resolveArgs, resolvePluginNames, getJson } from "./api.js";
+import { fetchAll, resolveConfig, resolveArgs, resolvePluginNames, resolveVersion, getJson } from "./api.js";
+import { REFRESH_STEPS, stepRefresh, loadRefresh, saveRefresh } from "./refresh.js";
 import { resolveAllLabels } from "./labels.js";
 import { visiblePlugins, groupBySlot } from "./layout.js";
 import { PLUGINS } from "./plugins/index.js";
@@ -142,6 +180,13 @@ export default {
 			// absent/unparsable.
 			maxProcessesDisplay: null,
 			refresh: null,
+			// The release the server runs, read once from /status. null until
+			// read, and null if it cannot be read -- the footer then names no
+			// version rather than an error.
+			version: null,
+			// `[outputs] api_doc`: whether the server mounts /docs at all.
+			// Starts true, as the config default does.
+			apiDoc: true,
 			timer: null,
 			ticking: false,
 			// The flags each zone resolved. {} = nothing degraded, which is also
@@ -230,12 +275,26 @@ export default {
 			return ZONES;
 		},
 		refreshLabel() {
-			return this.refresh === null ? "…" : `refresh ${this.refresh}s`;
+			return this.refresh === null ? "…" : `${this.refresh}s`;
+		},
+		versionLabel() {
+			return this.version === null ? "Glances" : `Glances v${this.version}`;
+		},
+		// Both false while `refresh` is still null (before /api/5/config
+		// resolves): there is no cadence to step yet.
+		canSpeedUp() {
+			return this.refresh !== null && this.refresh > REFRESH_STEPS[0];
+		},
+		canSlowDown() {
+			return this.refresh !== null && this.refresh < REFRESH_STEPS[REFRESH_STEPS.length - 1];
 		},
 	},
 	async mounted() {
-		const { refreshSeconds, theme, maxProcessesDisplay } = await resolveConfig();
-		this.refresh = refreshSeconds;
+		const { refreshSeconds, theme, maxProcessesDisplay, apiDoc } = await resolveConfig();
+		// A cadence the viewer picked with the footer's -/+ buttons wins over
+		// `[global] refresh`, which stays the value a first visit starts at.
+		this.refresh = loadRefresh() ?? refreshSeconds;
+		this.apiDoc = apiDoc;
 		// [outputs] theme, mapped straight to data-theme -- see the G9-2 design
 		// spec, section 5. The static template hardcodes "dark" so the page
 		// has a theme before this fetch resolves.
@@ -251,14 +310,16 @@ export default {
 		// whatever the number of plugins. The plugin list specifically is read
 		// once per page load: a plugin enabled at runtime (#3548) only appears
 		// after a reload -- see resolvePluginNames() in api.js.
-		const [labels, serverArgs, pluginNames] = await Promise.all([
+		const [labels, serverArgs, pluginNames, version] = await Promise.all([
 			resolveAllLabels(),
 			resolveArgs(),
 			resolvePluginNames(),
+			resolveVersion(),
 		]);
 		this.labels = labels;
 		this.serverArgs = serverArgs;
 		this.pluginNames = pluginNames;
+		this.version = version;
 		await this.tick();
 		await this.refit();
 		await this.refitVertical();
@@ -303,7 +364,7 @@ export default {
 				window.__glancesRowBudget = this.rowBudget;
 			};
 		}
-		this.timer = setInterval(() => this.tick(), this.refresh * 1000);
+		this.startTimer();
 	},
 	unmounted() {
 		// The poll must stop with the component, or a hot reload leaves timers
@@ -312,6 +373,22 @@ export default {
 		for (const observer of this.observers) observer.disconnect();
 	},
 	methods: {
+		startTimer() {
+			// Always replaces the running interval: changeRefresh() calls this to
+			// re-arm at the new cadence, and a second interval left behind would
+			// double the request rate for the life of the page.
+			if (this.timer) clearInterval(this.timer);
+			this.timer = setInterval(() => this.tick(), this.refresh * 1000);
+		},
+		changeRefresh(direction) {
+			const next = stepRefresh(this.refresh, direction);
+			// Already at either end of the ladder: the button is disabled, but a
+			// keyboard repeat can still fire the handler.
+			if (next === this.refresh) return;
+			this.refresh = next;
+			saveRefresh(next);
+			this.startTimer();
+		},
 		async tick() {
 			// The interval fires unconditionally every `refresh` seconds
 			// regardless of whether the previous tick's awaits have settled.
@@ -648,18 +725,68 @@ export default {
  * content passes under it rather than showing through. */
 .gl-alerts {
 	display: flex;
-	/* G9-9B: the alert list that used to share this footer moved into
-	 * PluginAlert.vue -- the cadence is the footer's only child now, so
-	 * `space-between` (which needs two) would leave it flush left instead of
-	 * at the right edge it always occupied. */
-	justify-content: flex-end;
-	align-items: flex-start;
+	/* Server identity left, cadence right -- the two ends of one line. */
+	justify-content: space-between;
+	align-items: baseline;
 	gap: var(--gl-gap);
+	flex-wrap: wrap;
 	margin-top: auto;
 	position: sticky;
 	bottom: 0;
 	background: var(--gl-bg);
 	border-top: 1px solid var(--gl-border);
 	padding-block: var(--gl-gap);
+}
+/* The whole footer is chrome, not data: one notch below the body text and
+ * muted, so neither end competes with a plugin for attention. */
+.gl-about,
+.gl-refresh {
+	display: flex;
+	align-items: baseline;
+	gap: calc(2 * var(--gl-col));
+	font-size: var(--gl-size-sm);
+}
+.gl-about-sep {
+	/* The separators are quieter still than the items they part. */
+	opacity: 0.5;
+}
+/* Links inherit the muted colour and carry a dotted underline instead of the
+ * browser's solid blue: visibly a link on inspection, invisible at a glance.
+ * They resolve on hover and on keyboard focus. */
+.gl-about a {
+	color: inherit;
+	text-decoration: none;
+	border-bottom: 1px dotted currentcolor;
+}
+.gl-about a:hover,
+.gl-about a:focus-visible {
+	color: var(--gl-fg);
+}
+/* The -/+ steppers: text, not chrome. No border, no background, the same
+ * muted colour and size as the cadence they change -- the footer must not
+ * grow a control bar. */
+.gl-step {
+	appearance: none;
+	background: none;
+	border: none;
+	color: inherit;
+	font: inherit;
+	line-height: inherit;
+	padding: 0;
+	cursor: pointer;
+}
+.gl-step:hover:not(:disabled) {
+	color: var(--gl-fg);
+}
+.gl-step:disabled {
+	opacity: 0.4;
+	cursor: default;
+}
+/* Three characters wide, centred: "1s" and "60s" then occupy the same box, so
+ * stepping the cadence does not shift the "+" out from under the pointer. */
+.gl-refresh-value {
+	display: inline-block;
+	min-width: calc(3 * var(--gl-col));
+	text-align: center;
 }
 </style>
