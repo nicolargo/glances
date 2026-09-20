@@ -16,6 +16,7 @@ test_webserver_v5.py unchanged (G9-6 Task 0).
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -54,18 +55,9 @@ def test_the_v5_bundle_actually_renders_an_element():
     page cannot satisfy: the `gl-app` class and both a HEADER and a FOOTER
     descendant.
 
-    The fixture's `fetch` stub answers `api/5/alert` with twelve events in the
-    real `_build_event()` shape (glances/alerts_v5.py:706-716), oldest first
-    -- matching get_history()'s documented most-recent-LAST contract
-    (glances/alerts_v5.py:181). Assert the footer actually renders them --
-    identified by plugin AND field, not just the bare level, so a fallback to
-    a field that does not exist cannot pass unnoticed -- AND that it keeps the
-    ten MOST RECENT, newest first: a single-alert stub could not catch
-    AppShell using `history.slice(0, 10)` (the ten OLDEST) instead of the
-    correct `history.slice(-10).reverse()`, which is exactly the bug that
-    shipped in the previous fix round. This is exactly the shape the G9-1
-    blank page took: an untested corner of an otherwise-green test suite --
-    and the corner turned out deeper than the first probe fix realised.
+    G9-9B moved the alert list out of the footer into PluginAlert.vue (fed by
+    /api/5/alert/incidents); see test_the_alert_grid_renders_the_tui_columns
+    and its siblings for that coverage now.
     """
     if not _BUNDLE_PATH.exists():
         pytest.fail(f"{_BUNDLE_PATH} is missing -- run `npm run build` in glances/outputs/static/")
@@ -96,30 +88,14 @@ def test_the_v5_bundle_actually_renders_an_element():
     assert payload["hasClass"], "expected the root <main> to carry class 'gl-app'"
     assert payload["hasHeader"], "expected a <header> descendant of the app shell"
     assert payload["hasFooter"], "expected a <footer> descendant of the app shell"
-    # The stub's api/5/alert fixture carries plugin="pluginN", field="total"
-    # for N in 0..11, oldest (0) first -- get_history()'s documented order.
-    # A footer that renders only the level (e.g. a fallback to a
-    # non-existent `description` field) would show "critical" with no
-    # plugin/field at all -- assert both are present for the regression
-    # from fix round 1.
+    # G9-9B: the raw alert list moved out of the footer entirely, into
+    # PluginAlert.vue (fed by /api/5/alert/incidents, itself the collapsed
+    # incident grid -- not the raw transition log this test used to pin).
+    # The footer now carries only the refresh cadence
+    # (test_the_refresh_cadence_renders_in_the_footer); assert the old
+    # per-event markers are gone rather than restating that coverage here.
     footer_text = payload["footerText"] or ""
-    assert "plugin11" in footer_text and "total" in footer_text, (
-        f"expected the footer to identify the alert by plugin and field, got {footer_text!r}"
-    )
-    # The two OLDEST alerts must have been dropped (only 10 of 12 shown) --
-    # `history.slice(0, 10)` would keep these and drop the newest two
-    # instead, which is the regression from fix round 2. Match "pluginN "
-    # (with the trailing space before " total"), not a bare substring:
-    # "plugin1" is also a substring of "plugin10" and "plugin11".
-    assert "plugin0 " not in footer_text and "plugin1 " not in footer_text, (
-        f"expected the two oldest alerts dropped, got {footer_text!r}"
-    )
-    # Newest first: plugin11 (most recent) must render before plugin2
-    # (oldest of the ten kept) -- a `slice(-10)` without `.reverse()` would
-    # still keep the right ten alerts but in oldest-first order.
-    assert footer_text.index("plugin11") < footer_text.index("plugin2"), (
-        f"expected newest-first order, got {footer_text!r}"
-    )
+    assert "plugin11" not in footer_text, f"expected the alert list gone from the footer, got {footer_text!r}"
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
@@ -193,6 +169,8 @@ def test_the_registry_renders_every_registered_plugin():
         "containers",
         "processcount",
         "amps",
+        "processlist",
+        "alert",
     ], f"expected all registered plugins to render, got {payload['pluginNames']!r}"
 
 
@@ -301,6 +279,8 @@ def test_an_unreadable_pluginslist_renders_the_whole_registry():
         "containers",
         "processcount",
         "amps",
+        "processlist",
+        "alert",
     ], f"expected the whole registry, got {payload['pluginNames']!r}"
 
 
@@ -451,13 +431,13 @@ def test_cross_cutting_props_do_not_leak_into_the_dom_as_attributes():
     payload = _run_render_probe("mem-with-available")
     # Without this the loop below is vacuous: an empty `pluginAttrs` (a probe
     # that stopped collecting the attribute, a render that produced no
-    # article) would pass silently. Twenty-eight, not the registry's
-    # twenty-nine: `cpu`/`percpu` are mutually exclusive (final review,
+    # article) would pass silently. Thirty, not the registry's
+    # thirty-one: `cpu`/`percpu` are mutually exclusive (final review,
     # Critical 1) -- this scenario's `percpu: true` (ARGS_FIXTURES) selects
     # `percpu` over `cpu` so the loop below still covers percpu's
     # `serverPlugins` inject specifically (G9-8 Task 4 review).
-    assert len(payload["pluginAttrs"]) == 28, (
-        f"expected all twenty-eight rendered plugins' attributes, got {payload['pluginAttrs']!r}"
+    assert len(payload["pluginAttrs"]) == 30, (
+        f"expected all thirty rendered plugins' attributes, got {payload['pluginAttrs']!r}"
     )
     for name, attrs in payload["pluginAttrs"].items():
         assert "server-args" not in attrs, f"{name} leaked serverArgs as an attribute: {attrs!r}"
@@ -631,31 +611,6 @@ def test_a_scalar_plugin_keeps_its_title_while_loading():
         text = payload["pluginText"].get(name, "")
         assert text.startswith(title) and "loading" in text, f"{name}: expected {title} then loading, got {text!r}"
         assert name not in payload["pluginGrid"], f"{name}: no grid before the first payload"
-
-
-@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
-def test_a_prominent_alert_badges_its_level_word_only():
-    """TUI parity (curses_renderer_v5.py alert grid): a prominent incident
-    paints the badge on its LEVEL cell only. Now that `gl-prominent` fills
-    the tier colour as a background, putting it on the whole footer <li>
-    would turn every prominent alert into a full-width coloured band.
-
-    Every alert in the probe fixture is critical AND prominent, so the line
-    keeps the tier text colour without the badge, and the level word alone
-    carries both classes.
-    """
-    payload = _run_render_probe("default")
-    alerts = payload["footerAlerts"]
-    assert len(alerts) == 10, f"vacuous: expected the ten most recent alerts, got {alerts!r}"
-    for alert in alerts:
-        item_classes = alert["className"].split()
-        assert "gl-level-critical" in item_classes and "gl-prominent" not in item_classes, (
-            f"the line keeps the tier colour but never the badge: {alert!r}"
-        )
-        assert alert["level"] == "critical", f"the level word renders on its own: {alert!r}"
-        assert set((alert["levelClass"] or "").split()) == {"gl-level-critical", "gl-prominent"}, (
-            f"the level word carries the badge: {alert!r}"
-        )
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
@@ -2365,16 +2320,15 @@ def test_cpu_shows_dpc_in_place_of_iowait_on_a_windows_payload():
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
-def test_a_resolution_event_reads_as_resolved_not_as_an_alert():
-    """The footer lists raw history events: a return to `ok` was rendered like
-    an alert ("fs /home percent — ok"). It now reads as the resolution of the
-    level it leaves, muted, with no tier colour."""
+def test_the_footer_no_longer_renders_a_raw_alert_list():
+    """G9-9B: the footer's raw event list (this test used to pin a resolution
+    event reading as "fs /home percent — ok" rather than an alert) moved into
+    PluginAlert.vue, fed by the already-collapsed /api/5/alert/incidents --
+    the footer keeps only the refresh cadence. The resolved-vs-ongoing
+    distinction this test guarded is now
+    test_only_an_ongoing_incident_colours_its_level's job."""
     payload = _run_render_probe("alert-resolved")
-    resolved, opened = payload["footerAlerts"]  # newest first
-    assert resolved["level"] == "critical → ok", f"got {resolved!r}"
-    assert "gl-muted" in resolved["className"].split(), f"got {resolved!r}"
-    assert "gl-level-ok" not in (resolved["className"] + " " + (resolved["levelClass"] or "")), f"got {resolved!r}"
-    assert opened["level"] == "critical", f"a real alert is unchanged: {opened!r}"
+    assert payload["footerAlerts"] == [], f"expected no <li> in the footer, got {payload['footerAlerts']!r}"
 
 
 # ------------------------------------------------- processcount TUI parity (G9-9A Task 1)
@@ -2409,6 +2363,80 @@ def test_processcount_shows_only_its_title_before_the_first_aggregate():
     payload = _run_render_probe("processcount-empty")
     text = " ".join((payload["pluginText"].get("processcount") or "").split())
     assert text == "TASKS", f"got {text!r}"
+
+
+# ------------------------- processcount TASKS counter + sort indicator (G9-9B Task 8)
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_processcount_shows_the_truncation_counter_when_the_cap_cuts_the_list():
+    """`_count_text` (processcount/render_curses_v5.py:37-55), browser
+    equivalent: `[outputs] max_processes_display=30` (CONFIG_FIXTURES) is
+    below PROCESSCOUNT_FIXTURE's total (215), so the cap actually cuts the
+    list and the TASKS line must show `30/215`, not the bare total."""
+    payload = _run_render_probe("processcount-cut")
+    text = " ".join((payload["pluginText"].get("processcount") or "").split())
+    assert text == "TASKS 30/215 (1452 thr), 3 run, 195 slp, 17 oth", f"got {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_processcount_shows_the_bare_total_when_the_cap_does_not_cut_the_list():
+    """No CONFIG_FIXTURES entry for "processcount" -> no cap -> "215" alone,
+    exactly test_processcount_renders_the_tui_tasks_line's existing
+    assertion -- this test names the "not cut" half explicitly."""
+    payload = _run_render_probe("processcount")
+    text = " ".join((payload["pluginText"].get("processcount") or "").split())
+    assert "30/215" not in text, f"got {text!r}"
+    assert "215" in text, f"got {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_processcount_omits_the_counter_in_the_programs_view_even_when_cut():
+    """`_count_text`'s own guard: never applied in the programs view, because
+    `total` counts PROCESSES while the list below shows PROGRAMS -- the
+    ratio would compare two different things. Same cap (30) as the cut
+    scenario above, only `serverArgs.programs` differs."""
+    payload = _run_render_probe("processcount-cut-programs")
+    text = " ".join((payload["pluginText"].get("processcount") or "").split())
+    assert "30/215" not in text, f"got {text!r}"
+    assert "215" in text, f"got {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_processcount_sort_indicator_reads_threads_in_the_default_view():
+    """`_sort_indicator_cell` (processcount/render_curses_v5.py:58-70):
+    `serverArgs.sort_processes_key` is the only half of its input the
+    browser can honestly read (see PluginProcesscount.vue's
+    `sortIndicatorText` comment for why `auto_sort` is not reproduced) --
+    when a key WAS passed on the CLI, main_v5.py:423-424 always applies it
+    with `auto=False`, so "sorted by X", never "automatically", is always
+    correct in that case."""
+    payload = _run_render_probe("processcount-sorted-threads")
+    text = " ".join((payload["pluginText"].get("processcount") or "").split())
+    assert "Threads sorted by CPU consumption" in text, f"got {text!r}"
+    assert "automatically" not in text, f"got {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_processcount_sort_indicator_reads_programs_in_the_programs_view():
+    """Same indicator, `serverArgs.programs` true: the prefix switches from
+    `Threads` to `Programs` (processcount/render_curses_v5.py:64), and the
+    sort key's human label follows `sort_for_human` (glances/processes.py)
+    -- `memory_percent` -> "memory consumption"."""
+    payload = _run_render_probe("processcount-sorted-programs")
+    text = " ".join((payload["pluginText"].get("processcount") or "").split())
+    assert "Programs sorted by memory consumption" in text, f"got {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_processcount_shows_no_sort_indicator_without_a_sort_key():
+    """No `sort_processes_key` in ARGS_FIXTURES for "processcount" -- absent
+    means `{}` -- so the engine's sort key is unknown to the browser (it may
+    be auto-sorting) and the indicator must be entirely absent, matching the
+    TUI's own "no view supplied" branch (render_curses_v5.py:61-62)."""
+    payload = _run_render_probe("processcount")
+    text = " ".join((payload["pluginText"].get("processcount") or "").split())
+    assert "sorted" not in text, f"got {text!r}"
 
 
 # ------------------------------------------------------- amps TUI parity (G9-9A Task 2)
@@ -2824,3 +2852,474 @@ def test_the_containers_ports_cell_keeps_its_full_value_on_hover():
     titled = payload["pluginTitles"].get("containers") or []
     titles = [c.get("title") for c in titled]
     assert "0.0.0.0:80->80/tcp" in titles, f"the ports cell carries its full value: {titles!r}"
+
+
+# ------------------------------------------------- alert TUI parity (G9-9B Task 6)
+
+
+def _alert_rows(payload):
+    """The rendered alert grid's <td> cells, grouped by row (6 columns:
+    glyph, TIME, DURATION, TARGET, TOP PROCESSES, LEVEL)."""
+    cells = payload["pluginTableCells"].get("alert", [])
+    return [cells[i : i + 6] for i in range(0, len(cells), 6)]
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_alert_grid_renders_the_tui_columns():
+    """curses_renderer_v5.py:1004-1062 -- glyph, TIME, DURATION, TARGET, TOP
+    PROCESSES, LEVEL, in that order. The browser drops none of them (unlike
+    the TUI, which width-gates DURATION/TOP PROCESSES/LEVEL): the block sits
+    in the wide right column and scrolls, like `vms`, rather than cropping."""
+    payload = _run_render_probe("alert")
+    # The glyph column doubles as the title cell in the populated state (fix
+    # round 2, IMPORTANT 1) -- ALERT_INCIDENTS_FIXTURE has 3 ongoing (rows
+    # 0, 1, 4) and 2 resolved (rows 2, 3).
+    header = payload["pluginHeaderCells"]["alert"]
+    assert header[1:] == ["TIME", "DURATION", "TARGET", "TOP PROCESSES", "LEVEL"]
+    assert header[0] == "ALERTS  3 ongoing · 2 resolved", f"got {header[0]!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_only_an_ongoing_incident_colours_its_level():
+    """curses_renderer_v5.py:1056 -- a resolved incident's LEVEL goes neutral
+    so colour there means "still happening"; the glyph keeps the level
+    colour regardless, so the severity reached stays readable either way.
+    Fixture row 0 is ongoing+prominent+critical, row 2 is resolved+warning,
+    row 3 is resolved+prominent, row 4 carries an unknown duration.
+    """
+    payload = _run_render_probe("alert")
+    rows = _alert_rows(payload)
+    assert len(rows) == 5, f"expected the five fixture incidents, got {rows!r}"
+
+    ongoing_level = rows[0][5]
+    assert "gl-level-critical" in (ongoing_level["value"] or ""), f"got {ongoing_level!r}"
+    assert "gl-prominent" in (ongoing_level["value"] or ""), (
+        f"the prominent badge belongs on LEVEL in the browser: {ongoing_level!r}"
+    )
+    # Fix round 1, restored: the badge (and the tier colour) sit on the LEVEL
+    # <span>, never on the <td> itself -- a prominent cell's fill must not
+    # spread to the whole cell. `test_a_table_value_carries_its_tier_on_the_text_not_the_cell`
+    # guards this for the six CollectionBlock-routed plugins; PluginAlert is a
+    # hand-rolled <table> on its own code path, so it needs its own check.
+    assert _tier_classes(ongoing_level["cell"]) == set(), f"got {ongoing_level!r}"
+
+    resolved_level = rows[2][5]
+    assert "gl-level" not in (resolved_level["value"] or ""), (
+        f"a resolved incident's LEVEL must go neutral: {resolved_level!r}"
+    )
+
+    ongoing_glyph = rows[0][0]
+    assert "gl-level-critical" in (ongoing_glyph["value"] or ""), f"the glyph keeps the level colour: {ongoing_glyph!r}"
+    resolved_glyph = rows[2][0]
+    assert "gl-level-warning" in (resolved_glyph["value"] or ""), (
+        f"the glyph keeps the level colour even once resolved: {resolved_glyph!r}"
+    )
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_a_resolved_incident_keeps_its_prominent_badge_without_colour():
+    """Fix round 1, IMPORTANT 2: curses_renderer_v5.py:851-861 passes
+    `color=role if is_ongoing else DEFAULT, prominent=prominent` -- the
+    COLOUR drops once resolved, the BADGE does not. The shared `levelClass()`
+    token helper cannot express "badge, no tier hue" (a lone `.gl-prominent`
+    has no CSS rule at all, css/v5.css:77-91, precisely so a badge can never
+    appear without some tier colour behind it) -- PluginAlert.vue therefore
+    carries a small, alert-local `.gl-alert-resolved-prominent` class for
+    this one case, matching the TUI rather than silently dropping the badge.
+    Fixture row 3 is resolved + prominent + critical.
+    """
+    payload = _run_render_probe("alert")
+    rows = _alert_rows(payload)
+    resolved_prominent = rows[3][5]
+    classes = (resolved_prominent["value"] or "").split()
+    assert "gl-alert-resolved-prominent" in classes, f"got {resolved_prominent!r}"
+    assert "gl-level-critical" not in classes, f"resolved drops the tier hue: {resolved_prominent!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_an_unknown_duration_renders_the_placeholder():
+    """Fix round 1, MINOR 5: `incident_duration()` is typed `str | None` --
+    render the WebUI's "-" placeholder, never blank or a computed value.
+    Fixture row 4 carries `duration: null`."""
+    payload = _run_render_probe("alert")
+    rows = _alert_rows(payload)
+    assert rows[4][2]["text"] == "-", f"got {rows[4][2]!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_an_all_outage_does_not_blank_the_alert_block():
+    """Fix round 1, IMPORTANT 1: `alert` is `ownEndpoint` -- it must never be
+    part of fetchAll()'s spec list, or fetchAll()'s catch branch
+    (`errors[s.name] = e.message` for EVERY requested spec, api.js:134-138)
+    hands the alert block an error that belongs to a dead /api/5/all, an
+    endpoint it never reads from. `all-unreachable` fails only /api/5/all;
+    /api/5/alert/incidents keeps answering normally -- today this scenario
+    (test_header_blocks_show_their_error_when_all_fails) only asserted the
+    header plugins, so nothing pinned alert's side of this."""
+    payload = _run_render_probe("all-unreachable")
+    rows = _alert_rows(payload)
+    assert rows, (
+        "expected the alert grid to render its incidents despite the /all outage: "
+        f"{payload['pluginText'].get('alert')!r}"
+    )
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_a_partial_incident_marks_its_duration_as_a_lower_bound():
+    """`partial` means the opening event aged out of the history, so the
+    duration `/api/5/alert/incidents` sends is already a lower bound,
+    prefixed ">" server-side (incident_duration()) -- a bare number here
+    would be a lie. The component must render the string as it arrives,
+    never recompute it."""
+    payload = _run_render_probe("alert")
+    rows = _alert_rows(payload)
+    durations = [row[2]["text"] for row in rows]
+    assert any(d.startswith(">") for d in durations), f"got {durations!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_footer_keeps_the_cadence_and_drops_the_alert_list():
+    """AppShell.tick()'s alert fetch is repointed at /api/5/alert/incidents
+    and its result now feeds PluginAlert.vue, not the footer -- the footer
+    keeps only the refresh cadence."""
+    payload = _run_render_probe("alert")
+    assert "refresh" in (payload["footerText"] or ""), f"got {payload['footerText']!r}"
+    assert "No alert" not in (payload["footerText"] or ""), f"got {payload['footerText']!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_a_failing_alert_endpoint_does_not_disturb_the_plugins_above_it():
+    """The alert fetch stays in its own try/catch (AppShell.vue tick()),
+    separate from the one guarding /api/5/all: a 500 from
+    /api/5/alert/incidents must not blank the plugins fetchAll() already
+    resolved. `alert-incidents-unreachable` fails only that endpoint --
+    /api/5/all and /api/5/pluginslist answer normally."""
+    payload = _run_render_probe("alert-incidents-unreachable")
+    assert "mem" in payload["pluginNames"], f"other plugins must still render: {payload['pluginNames']!r}"
+    assert "alert" in payload["pluginNames"], f"the alert block itself must still render: {payload['pluginNames']!r}"
+    assert "refresh" in (payload["footerText"] or ""), f"the footer must still render: {payload['footerText']!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_alert_block_never_claims_all_clear_during_warm_up():
+    """Fix round 2, IMPORTANT 2: `/api/5/alert/incidents` now answers an
+    envelope (`{is_initializing, incidents}`), and the browser may not claim
+    health it cannot know -- the same rule `render_alert_block` already
+    follows (curses_renderer_v5.py:738-745). `alert-initializing` answers
+    `is_initializing: true` with no incidents."""
+    payload = _run_render_probe("alert-initializing")
+    text = payload["pluginText"].get("alert", "")
+    assert "initializing" in text, f"got {text!r}"
+    assert "no alert detected" not in text, f"must not claim an all-clear during warm-up: {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_alert_block_shows_no_alert_detected_once_warmed_up():
+    """Control for the test above: once warmed up (`is_initializing: false`)
+    with genuinely nothing having ever fired, the block may say so -- in its
+    OK colour, matching the TUI (curses_renderer_v5.py:745), not muted."""
+    payload = _run_render_probe("alert-empty")
+    text = payload["pluginText"].get("alert", "")
+    assert "no alert detected" in text, f"got {text!r}"
+    cells = payload["pluginTableCells"].get("alert", [])
+    assert not cells, f"the empty state renders no incident grid: {cells!r}"
+
+
+# ------------------------------------------------- processlist TUI parity (G9-9B Task 7)
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_processlist_renders_the_tui_columns_and_rows():
+    """processlist/render_curses_v5.py `_FIXED_COL_KEYS` (:91) plus `Command`.
+    No title cell (unlike `containers`): the renderer never puts one in its
+    header row, so every one of the 13 headers below is a field label.
+    """
+    payload = _run_render_probe("processlist")
+    assert payload["pluginHeaderCells"].get("processlist") == [
+        "CPU%",
+        "MEM%",
+        "VIRT",
+        "RES",
+        "PID",
+        "USER",
+        "THR",
+        "NI",
+        "S",
+        "TIME+",
+        "R/s",
+        "W/s",
+        "Command",
+    ], f"got {payload['pluginHeaderCells'].get('processlist')!r}"
+    rows = _table_rows(payload, "processlist", 13)
+    assert rows[0] == [
+        "78.4%",
+        "3.1%",
+        "120.0M",
+        "32.0M",
+        "12345",
+        "alice",
+        "4",
+        "0",
+        "S",
+        "0:12",
+        "512B",
+        "512B",
+        "python3 myscript.py --verbose",
+    ], f"got {rows[0]!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_processlist_shows_the_placeholder_for_every_missing_value_and_the_kernel_thread_fallback():
+    """Row 1 of the `processlist` fixture carries every optional field as
+    null -- every formatter must fall back to the WebUI's single placeholder
+    `-` (format.js `MISSING`), never the TUI's own per-column marker (`?`).
+    Its Command cell is the OTHER TUI fallback: no `cmdline` at all renders
+    the kernel-thread bracket form from the process `name`.
+    """
+    payload = _run_render_probe("processlist")
+    rows = _table_rows(payload, "processlist", 13)
+    row = rows[1]
+    # PID (index 4) is the only non-null field among the first 12 columns.
+    for i, cell in enumerate(row[:12]):
+        if i == 4:
+            assert cell == "999", f"PID must render, got {row!r}"
+        else:
+            assert cell == "-", f"column {i} must be the placeholder, got {row!r}"
+    assert row[12] == "[kthread0]", f"got {row!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_processlist_colours_cpu_and_mem_from_levels():
+    """`_levels` is keyed by `pid` (processlist/render_curses_v5.py
+    `levels_index.get(pid)`); row 0's pid (12345) carries a warning CPU%
+    and an ok MEM% in the fixture."""
+    payload = _run_render_probe("processlist")
+    cells = payload["pluginTableCells"]["processlist"]
+    assert _tier_classes(cells[0]["value"]) == {"gl-level-warning"}, cells[0]
+    assert _tier_classes(cells[0]["cell"]) == set(), f"the <td> itself carries no tier class: {cells[0]!r}"
+    assert _tier_classes(cells[1]["value"]) == {"gl-level-ok"}, cells[1]
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_processlist_caps_at_max_processes_display_in_payload_order():
+    """`[outputs] max_processes_display=2` (CONFIG_FIXTURES) slices the
+    FIRST two of the `processlist-cap` fixture's three payload-order rows,
+    never the top two by `cpu_percent` (pid 10, in the middle, is the
+    highest at 50 and must NOT be pulled to the front, nor kept over pid 20
+    just because it is bigger) -- the engine sorts, this component must not.
+    """
+    payload = _run_render_probe("processlist-cap")
+    headers = payload["pluginHeaderCells"]["processlist"]
+    rows = _table_rows(payload, "processlist", len(headers))
+    assert len(rows) == 2, f"expected exactly 2 rows (the cap), got {len(rows)}: {rows!r}"
+    pid_index = headers.index("PID")
+    command_index = headers.index("Command")
+    assert [r[pid_index] for r in rows] == ["30", "10"], f"got {rows!r}"
+    assert [r[command_index] for r in rows] == ["third", "first"], f"got {rows!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_a_processlist_block_with_no_config_cap_shows_every_row():
+    """A scenario absent from CONFIG_FIXTURES gets `{}` -- no `outputs` key
+    at all -- which must read as "no cap", not as a cap of zero/undefined
+    that hides everything. "processlist" (2 rows) has no CONFIG_FIXTURES
+    entry, unlike "processlist-cap"."""
+    payload = _run_render_probe("processlist")
+    headers = payload["pluginHeaderCells"]["processlist"]
+    rows = _table_rows(payload, "processlist", len(headers))
+    assert len(rows) == 2, f"expected both fixture rows with no configured cap, got {len(rows)}: {rows!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_processlist_underlines_the_active_sort_column_and_no_other():
+    """`serverArgs.sort_processes_key` (task 5) names the column the engine
+    really sorts by; `_HEADER_SORT_KEY` (:97) says CPU% <-> `cpu_percent`.
+    Exactly that header gets the underline class, no other."""
+    payload = _run_render_probe("processlist-sorted")
+    headers = payload["pluginColumnHeaders"]["processlist"]
+    classes = payload["pluginColumnClasses"]["processlist"]
+    sorted_indices = [i for i, cls in enumerate(classes) if "gl-sorted" in cls.split()]
+    assert sorted_indices == [headers.index("CPU%")], f"got headers={headers!r} classes={classes!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_processlist_underlines_nothing_without_a_sort_key():
+    """The `processlist` scenario carries no `sort_processes_key` in
+    ARGS_FIXTURES -- absent means `{}`, i.e. no flag -- so no header may be
+    underlined."""
+    payload = _run_render_probe("processlist")
+    classes = payload["pluginColumnClasses"]["processlist"]
+    assert not any("gl-sorted" in cls.split() for cls in classes), f"got {classes!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_a_wide_processlist_block_keeps_every_column():
+    """The cascade starts from NO flag on every pass (degrade.js
+    resolveDegrade), so a block that fits drops nothing."""
+    payload = _run_render_probe("processlist-wide")
+    headers = payload["pluginHeaderCells"].get("processlist") or []
+    assert "Command" in headers, f"got {headers!r}"
+    assert "VIRT" in headers, f"got {headers!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_command_survives_the_full_processlist_cascade():
+    """`_DROP_ORDER`'s eight columns (processlist/render_curses_v5.py:89)
+    all go on a sufficiently narrow block, but `Command` is the protected
+    TAIL here -- the deliberate opposite of `containers`, where `command` is
+    the FIRST column dropped."""
+    payload = _run_render_probe("processlist-narrow")
+    headers = payload["pluginHeaderCells"].get("processlist") or []
+    assert "Command" in headers, f"got {headers!r}"
+    for dropped in ("VIRT", "TIME+", "RES", "USER", "PID", "THR", "S", "NI"):
+        assert dropped not in headers, f"{dropped} must be gone on the narrowest pass: {headers!r}"
+    for kept in ("CPU%", "MEM%", "R/s", "W/s"):
+        assert kept in headers, f"{kept} must never be dropped: {headers!r}"
+
+
+# ------------------------------------------------- programlist TUI parity (G9-9B Task 8)
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_programlist_renders_the_tui_columns_and_rows():
+    """programlist/render_curses_v5.py :99-113 -- identical to processlist's
+    13 headers except `PID` (index 4) is replaced by `NPROCS` (no single pid
+    on an aggregated program row)."""
+    payload = _run_render_probe("programlist")
+    assert payload["pluginHeaderCells"].get("programlist") == [
+        "CPU%",
+        "MEM%",
+        "VIRT",
+        "RES",
+        "NPROCS",
+        "USER",
+        "THR",
+        "NI",
+        "S",
+        "TIME+",
+        "R/s",
+        "W/s",
+        "Command",
+    ], f"got {payload['pluginHeaderCells'].get('programlist')!r}"
+    rows = _table_rows(payload, "programlist", 13)
+    assert rows[0] == [
+        "78.4%",
+        "3.1%",
+        "120.0M",
+        "32.0M",
+        "3",
+        "alice",
+        "4",
+        "0",
+        "S",
+        "0:12",
+        "512B",
+        "512B",
+        "python3 myscript.py --verbose",
+    ], f"got {rows[0]!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_programlist_shows_the_placeholder_for_every_missing_value_and_the_kernel_thread_fallback():
+    """Row 1 of the `programlist` fixture carries every optional field
+    (including `nprocs`) as null -- every formatter must fall back to `-`,
+    and the Command cell falls back to the kernel-thread bracket form from
+    `name`, exactly like processlist's own row 1."""
+    payload = _run_render_probe("programlist")
+    rows = _table_rows(payload, "programlist", 13)
+    row = rows[1]
+    for i, cell in enumerate(row[:12]):
+        assert cell == "-", f"column {i} must be the placeholder, got {row!r}"
+    assert row[12] == "[kthread0]", f"got {row!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_programlist_colours_cpu_and_mem_from_levels():
+    """`_levels` is keyed by `name` (programlist/render_curses_v5.py
+    `levels_index.get(name)`) -- the fixture's "python3" row carries a
+    warning CPU% and an ok MEM%."""
+    payload = _run_render_probe("programlist")
+    cells = payload["pluginTableCells"]["programlist"]
+    assert _tier_classes(cells[0]["value"]) == {"gl-level-warning"}, cells[0]
+    assert _tier_classes(cells[0]["cell"]) == set(), f"the <td> itself carries no tier class: {cells[0]!r}"
+    assert _tier_classes(cells[1]["value"]) == {"gl-level-ok"}, cells[1]
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_programlist_caps_at_max_processes_display_in_payload_order():
+    """Same config key and the same AppShell provide() as processlist's own
+    cap (task 8): `[outputs] max_processes_display=2` slices the FIRST two
+    of three payload-order rows, never the top two by `cpu_percent` (the
+    highest, "first" at 50, sits in the middle and must not be pulled to
+    the front)."""
+    payload = _run_render_probe("programlist-cap")
+    headers = payload["pluginHeaderCells"]["programlist"]
+    rows = _table_rows(payload, "programlist", len(headers))
+    assert len(rows) == 2, f"expected exactly 2 rows (the cap), got {len(rows)}: {rows!r}"
+    command_index = headers.index("Command")
+    assert [r[command_index] for r in rows] == ["third", "first"], f"got {rows!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_programlist_underlines_the_active_sort_column_and_no_other():
+    """`serverArgs.sort_processes_key` names the column the engine sorts by,
+    shared with processlist's `_HEADER_SORT_KEY` mapping -- `NPROCS` has no
+    entry (programlist/render_curses_v5.py's own docstring, :22) and must
+    never be underlined."""
+    payload = _run_render_probe("programlist-sorted")
+    headers = payload["pluginColumnHeaders"]["programlist"]
+    classes = payload["pluginColumnClasses"]["programlist"]
+    sorted_indices = [i for i, cls in enumerate(classes) if "gl-sorted" in cls.split()]
+    assert sorted_indices == [headers.index("CPU%")], f"got headers={headers!r} classes={classes!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_programlist_underlines_nothing_without_a_sort_key():
+    """The `programlist` scenario carries `--programs` but no
+    `sort_processes_key` -- no header may be underlined."""
+    payload = _run_render_probe("programlist")
+    classes = payload["pluginColumnClasses"]["programlist"]
+    assert not any("gl-sorted" in cls.split() for cls in classes), f"got {classes!r}"
+
+
+# --------------------------------- processlist / programlist exclusivity (G9-9B Task 8)
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_programlist_renders_and_processlist_does_not_with_programs():
+    """AppShell.vue `slots()`, the same shape as the `cpu`/`percpu`
+    exclusion: `serverArgs.programs` true (the "programlist" scenario) hides
+    `processlist` from the `right` slot even though the shell never sees
+    processlist's own payload absent -- it is the flag alone that decides."""
+    payload = _run_render_probe("programlist")
+    right = payload["slots"].get("right", [])
+    assert "programlist" in right, f"got {right!r}"
+    assert "processlist" not in right, f"got {right!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_processlist_renders_and_programlist_does_not_without_programs():
+    """The other half: no `--programs` (the "processlist" scenario, whose
+    ARGS_FIXTURES entry is absent -> `{}`), so the default thread view
+    renders and `programlist` does not -- the terminal's own default (v4
+    parity, `programs: bool = False`)."""
+    payload = _run_render_probe("processlist")
+    right = payload["slots"].get("right", [])
+    assert "processlist" in right, f"got {right!r}"
+    assert "programlist" not in right, f"got {right!r}"
+
+
+# ------------------------------------------------ plugin registry count (G9-9B Task 8)
+
+
+def test_the_registry_holds_all_32_plugins():
+    """G9 closes here: programlist was the last of the 32 v5 plugins to reach
+    the WebUI. A file-level count (rather than a render-probe one) because
+    the registry's total membership is independent of any one scenario's
+    exclusivity outcome (processlist XOR programlist, cpu XOR percpu) --
+    exactly the `grep -c 'component: Plugin'` check the task brief names."""
+    text = (
+        Path(__file__).parent.parent / "glances" / "outputs" / "static" / "js" / "v5" / "plugins" / "index.js"
+    ).read_text()
+    count = len(re.findall(r"component: Plugin", text))
+    assert count == 32, f"expected 32 registered plugins, got {count}"

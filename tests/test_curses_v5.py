@@ -568,6 +568,41 @@ def test_tui_v5_cli_flags_seed_quicklook_state(fake_store, fake_alerts, fake_con
     assert default_tui._percpu is False
 
 
+def test_tui_v5_cli_flag_seeds_programs_view(fake_store, fake_alerts, fake_config):
+    """`--programs` reaches the TUI's ``ViewState`` via the constructor param
+    (wired in main_v5.assemble) instead of being parsed-but-dropped dead code
+    — same pattern as full_quicklook/percpu above. The `j` hotkey still flips
+    it live from whatever it started at."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = tui_mod.TuiV5(
+        store=fake_store,
+        alerts=fake_alerts,
+        config=fake_config,
+        registry=[("mem", False)],
+        fields_by_plugin={"mem": {}},
+        refresh_interval=0.01,
+        programs=True,
+    )
+    assert tui._view.programs is True
+
+
+def test_tui_v5_default_programs_view_is_false(fake_store, fake_alerts, fake_config):
+    """No `--programs` on the CLI keeps the default v4-parity view (threads,
+    not per-program aggregation)."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    default_tui = tui_mod.TuiV5(
+        store=fake_store,
+        alerts=fake_alerts,
+        config=fake_config,
+        registry=[("mem", False)],
+        fields_by_plugin={"mem": {}},
+        refresh_interval=0.01,
+    )
+    assert default_tui._view.programs is False
+
+
 def test_tui_v5_build_view_carries_quicklook_flags(fake_store, fake_alerts, fake_config):
     """The assembled view dict carries `full_quicklook`, `percpu`, and an int
     `quicklook_width` for the renderer / build_frame to consume."""

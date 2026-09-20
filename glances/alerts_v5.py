@@ -274,10 +274,12 @@ class GlancesAlerts:
         omitted rather than reported with an empty list.
 
         Read-only, never called from the ingest path. Allocates a fresh
-        result dict, but the ``top`` list inside each value is the SAME
-        list object stored on the history event (not a copy) — the current
-        consumer (``_derive_incidents``) copies it before use, so this is
-        safe today, but a future caller must not mutate it in place.
+        result dict, and the ``top`` list inside each value is a COPY of
+        the one stored on the history event — a snapshot safe to hand to
+        any caller, including one that serializes it (the
+        ``/api/5/alert/incidents`` route) while ``_accumulate_top`` may
+        concurrently assign a new list to the same event on the asyncio
+        side.
         """
         result: dict[tuple[str, str | None, str], dict[str, Any]] = {}
         for state_key, state in list(self._state.items()):  # snapshot, see get_ongoing()
@@ -287,7 +289,7 @@ class GlancesAlerts:
             names = event.get("top")
             if not names:
                 continue
-            result[state_key] = {"top": names, "top_sort": state.top_sort}
+            result[state_key] = {"top": list(names), "top_sort": state.top_sort}
         return result
 
     def is_initializing(self) -> bool:

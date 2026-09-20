@@ -56,6 +56,7 @@ from glances.alerts_v5 import GlancesAlerts
 from glances.config_v5 import ConfigFileError, GlancesConfigV5
 from glances.exports.export_base_v5 import GlancesExportBase
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
+from glances.processes import glances_processes, sort_processes_stats_list
 from glances.scheduler_v5 import AsyncScheduler
 from glances.security_v5 import hash_password, verify_password
 from glances.stats_store_v5 import StatsStoreV5
@@ -217,6 +218,20 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         default=False,
         help="Show a single mean GPU summary instead of per-GPU lines.",
+    )
+    parser.add_argument(
+        "--sort-processes",
+        dest="sort_processes_key",
+        choices=sort_processes_stats_list,
+        help='Sort processes by: {}'.format(', '.join(sort_processes_stats_list)),
+    )
+    parser.add_argument(
+        "--programs",
+        "--program",
+        action="store_true",
+        default=False,
+        dest="programs",
+        help="Accumulate processes by program",
     )
     parser.add_argument(
         "--fahrenheit",
@@ -390,6 +405,23 @@ def discover_plugins(store: StatsStoreV5, config: GlancesConfigV5) -> list[Glanc
         plugins.append(instance)
 
     return plugins
+
+
+def apply_process_flags(args: argparse.Namespace) -> None:
+    """Apply ``--sort-processes`` to the ``glances_processes`` engine singleton.
+
+    v4 parity (`glances/plugins/processlist/__init__.py:235-236`): v4 applies
+    this on every plugin `update()` call; v5 applies it once here, at startup,
+    since the engine singleton retains the setting across cycles (the TUI's
+    `j`/sort hotkeys are the only thing that can change it afterwards).
+
+    ``auto=False`` is deliberate (v4 parity): an explicit CLI key turns OFF
+    the auto-sort that would otherwise re-pick the key from the dominant
+    active alert each cycle (see ``GlancesAlerts._auto_sort_key``, which
+    calls ``set_sort_key(key, auto=True)``).
+    """
+    if getattr(args, "sort_processes_key", None) is not None:
+        glances_processes.set_sort_key(args.sort_processes_key, False)
 
 
 def apply_export_flags(args: argparse.Namespace) -> None:
@@ -584,11 +616,11 @@ def assemble(
     # Wire the process engine so the alert pipeline can drive the dynamic
     # process auto-sort (v4 parity) — the sort key follows the dominant
     # active alert (MEM → memory_percent, CPU iowait → io_counters).
-    from glances.processes import glances_processes
-
+    # `glances_processes` is the same singleton imported at module level.
     alerts = GlancesAlerts(config, actions=actions, process_engine=glances_processes)
 
     apply_plugin_flags(args, config)
+    apply_process_flags(args)
     plugins = discover_plugins(store, config)
     if not plugins:
         # Empty registry is a valid state — see project memory note about
@@ -677,6 +709,7 @@ def assemble(
             hide_public_info=getattr(args, "hide_public_info", False),
             byte=getattr(args, "byte", False),
             disable_unicode=getattr(args, "disable_unicode", False),
+            programs=getattr(args, "programs", False),
         )
 
     return app, scheduler, host, int(port), tui

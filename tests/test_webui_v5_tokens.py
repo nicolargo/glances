@@ -363,18 +363,6 @@ def test_the_footer_sticks_to_the_bottom_of_the_viewport():
         assert re.search(rf"\b{declaration}\s*;", footer), f"footer lacks `{declaration}`: {footer!r}"
 
 
-def test_the_sticky_footer_caps_its_alert_list():
-    """Review finding: a sticky footer taller than the viewport slides off its
-    TOP edge, and the alert list is newest-first -- so ten alerts on a short or
-    phone window lost the newest ones while covering the page. The list is
-    capped and scrolls inside the footer.
-    """
-    shell = _strip_comments((_V5_JS / "AppShell.vue").read_text())
-    alerts = _rule_body(shell, ".gl-alerts ul")
-    assert re.search(r"\bmax-height:\s*40vh\s*;", alerts), f"the alert list is height-capped: {alerts!r}"
-    assert re.search(r"\boverflow-y:\s*auto\s*;", alerts), f"the capped list scrolls: {alerts!r}"
-
-
 def test_a_name_cell_is_capped_and_can_keep_its_tail():
     """G9-6 D3: a left-sidebar name is capped at the TUI's name width, which
     each component sets as --gl-name-width, on a BLOCK span (max-width on a
@@ -389,6 +377,24 @@ def test_a_name_cell_is_capped_and_can_keep_its_tail():
     start = _rule_body(css, ".gl-truncate-start")
     assert re.search(r"\bdirection:\s*rtl\s*;", start), f"the ellipsis moves to the start: {start!r}"
     assert re.search(r"\btext-align:\s*left\s*;", start), f"a short name stays left-aligned: {start!r}"
+
+
+def test_a_measuring_exclusion_has_its_cap_in_the_token_file():
+    """`.gl-measuring` excludes `.gl-name`, `.gl-command` and `.gl-ports` so
+    their caps survive the measurement. `.gl-name`'s cap is global; the
+    other two were scoped to PluginContainers.vue, so a SECOND component
+    using either class would inherit the exclusion with no cap and its
+    cascade would under-fire -- silently, because an uncapped span simply
+    measures narrower than it should.
+
+    Reads the token file only: a cap defined in a component cannot serve a
+    class the token file exempts globally.
+    """
+    css = _strip_comments(_TOKENS.read_text())
+    for cls in (".gl-name", ".gl-command", ".gl-ports"):
+        body = _rule_body(css, cls)
+        assert re.search(r"\bdisplay:\s*block\s*;", body), f"{cls} needs a block box for its cap: {body!r}"
+        assert re.search(r"\bmax-width:", body), f"{cls} has no cap in the token file: {body!r}"
 
 
 def test_every_collection_table_fills_the_left_column():
@@ -608,8 +614,13 @@ def test_the_ports_cell_is_bounded_like_the_command_cell():
 
     `display: block` is the load-bearing half -- a cap alone is inert on a
     non-replaced inline element.
+
+    The rule lives in the token file, not PluginContainers.vue: `.gl-measuring`
+    exempts `.gl-ports` globally (css/v5.css), so its cap has to be global too,
+    or a second component using the class would inherit the exclusion with
+    no cap.
     """
-    body = _rule_body(_strip_comments((_V5_JS / "PluginContainers.vue").read_text()), ".gl-ports")
+    body = _rule_body(_strip_comments(_TOKENS.read_text()), ".gl-ports")
     assert re.search(r"\bdisplay:\s*block\s*;", body), f"the cap needs a block box to apply: {body!r}"
     assert re.search(r"\bmax-width:\s*calc\(\d+ \* var\(--gl-col\)\)\s*;", body), (
         f"the cap is a character count, in the column unit: {body!r}"

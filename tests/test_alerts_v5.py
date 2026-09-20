@@ -1461,6 +1461,33 @@ async def test_get_ongoing_top_reports_active_incidents_only(tmp_path, monkeypat
 
 
 @pytest.mark.asyncio
+async def test_get_ongoing_top_does_not_alias_engine_state(tmp_path, monkeypatch, store):
+    """The accessor returned the list stored on the history event, so a
+    caller holding the result saw it change under them -- and a caller
+    SERIALIZING it (the /api/5/alert/incidents route) can hit a list
+    mutated mid-iteration, which raises. The TUI reads the same accessor
+    from its own thread, where a raise kills the thread for good.
+    """
+    cfg = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n")
+    engine = _FakeTopProcessEngine(_procs("a", "b", "c"))
+    alerts = GlancesAlerts(cfg, process_engine=engine)
+    plugin = _FakeTopPlugin(store, cfg)
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
+
+    returned = alerts.get_ongoing_top()
+    key = next(iter(returned))
+    before = list(returned[key]["top"])
+
+    # Mutate the list the ENGINE still holds for that key -- not the
+    # returned object, which would prove nothing.
+    alerts._state[key].top_event["top"].append("intruder")
+
+    assert returned[key]["top"] == before, (
+        f"the accessor handed out a live reference: {returned[key]['top']!r} != {before!r}"
+    )
+
+
+@pytest.mark.asyncio
 async def test_get_ongoing_top_is_read_only_and_returns_a_fresh_dict(tmp_path, monkeypatch, store):
     cfg = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n")
     engine = _FakeTopProcessEngine(_procs("a", "b", "c"))
@@ -1495,8 +1522,8 @@ async def test_get_ongoing_top_reads_the_event_not_the_live_counter(tmp_path, mo
     `get_ongoing_top()` must read the list `_accumulate_top` already wrote
     to `top_event["top"]` instead. Prove it directly: replace
     `top_counter` with a sentinel that raises on any access, and show
-    `get_ongoing_top()` neither touches it nor raises, and returns exactly
-    the opening event's frozen `top` list.
+    `get_ongoing_top()` neither touches it nor raises, and returns a copy
+    of the opening event's frozen `top` list with the same contents.
     """
     cfg = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n")
     engine = _FakeTopProcessEngine(_procs("a", "b", "c"))
@@ -1523,7 +1550,7 @@ async def test_get_ongoing_top_reads_the_event_not_the_live_counter(tmp_path, mo
     result = alerts.get_ongoing_top()
 
     assert result == {state_key: {"top": opening_event["top"], "top_sort": "cpu_percent"}}
-    assert result[state_key]["top"] is opening_event["top"]
+    assert result[state_key]["top"] is not opening_event["top"]  # snapshot, not a live reference
 
 
 class _FakeMultiTopPlugin(_FakeScalarPlugin):

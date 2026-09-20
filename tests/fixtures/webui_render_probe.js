@@ -245,11 +245,15 @@ const document = {
 const {
 	ALERT_FIXTURES,
 	ALERT_SCENARIOS,
+	ALERT_INCIDENTS_FIXTURE,
+	ALERT_INCIDENTS_SCENARIOS,
+	ALERT_INCIDENTS_UNREACHABLE_SCENARIOS,
 	INFO_FIXTURES,
 	SERVER_PLUGINS,
 	PLUGINSLIST_FIXTURES,
 	ALL_UNREACHABLE_SCENARIOS,
 	ARGS_FIXTURES,
+	CONFIG_FIXTURES,
 	ALL_FIXTURES,
 	WIDTH_FIXTURES,
 	CONTENT_PER_NOTCH,
@@ -260,6 +264,22 @@ const scenario = process.argv[3] || "default";
 
 async function fakeFetch(url) {
 	const path = String(url);
+	// BEFORE the `api/5/alert` check below: "api/5/alert/incidents" contains
+	// "api/5/alert", and would otherwise be answered with the raw history
+	// fixture -- the same trap "api/5/all/info" documents against "api/5/all".
+	if (path.includes("api/5/alert/incidents")) {
+		if (ALERT_INCIDENTS_UNREACHABLE_SCENARIOS.has(scenario)) {
+			return { ok: false, status: 500, json: async () => ({ detail: "boom" }) };
+		}
+		// Envelope, not a bare array (fix round 2, IMPORTANT 2) -- default is
+		// the populated, warmed-up fixture; a handful of scenarios override it
+		// to exercise the initializing/empty states.
+		const envelope = ALERT_INCIDENTS_SCENARIOS[scenario] || {
+			is_initializing: false,
+			incidents: ALERT_INCIDENTS_FIXTURE,
+		};
+		return { ok: true, status: 200, json: async () => envelope };
+	}
 	if (path.includes("api/5/alert")) {
 		return { ok: true, status: 200, json: async () => ALERT_SCENARIOS[scenario] || ALERT_FIXTURES };
 	}
@@ -283,6 +303,13 @@ async function fakeFetch(url) {
 	}
 	if (path.includes("api/5/args")) {
 		return { ok: true, status: 200, json: async () => ARGS_FIXTURES[scenario] || {} };
+	}
+	// PluginProcesslist.vue (task 7) reads `[outputs] max_processes_display`
+	// straight from this endpoint, same as AppShell's resolveConfig() does for
+	// `[global] refresh` / `[outputs] theme` -- a scenario absent from
+	// CONFIG_FIXTURES gets `{}`, i.e. no cap.
+	if (path.includes("api/5/config")) {
+		return { ok: true, status: 200, json: async () => CONFIG_FIXTURES[scenario] || {} };
 	}
 	return { ok: true, status: 200, json: async () => ({}) };
 }

@@ -66,7 +66,7 @@ export async function resolveConfig() {
 		// all, and stays on the default theme rather than going unstyled.
 		// Anything thrown by the extraction below is a programming error and
 		// must surface, not be disguised as an unreachable server.
-		return { refreshSeconds: DEFAULT_REFRESH_SECONDS, theme: DEFAULT_THEME };
+		return { refreshSeconds: DEFAULT_REFRESH_SECONDS, theme: DEFAULT_THEME, maxProcessesDisplay: null };
 	}
 	const refresh = config && config.global && config.global.refresh;
 	const seconds = Number(refresh);
@@ -78,7 +78,20 @@ export async function resolveConfig() {
 	const rawTheme = config && config.outputs && config.outputs.theme;
 	const theme = VALID_THEMES.has(rawTheme) ? rawTheme : DEFAULT_THEME;
 
-	return { refreshSeconds, theme };
+	// `[outputs] max_processes_display` -- v4 parity (plugin-processlist.vue:590
+	// reads it and slices IN THE BROWSER; the server-side read in
+	// glances_restful_api.py assigns a local and only logs it, dead code not
+	// reproduced here). Resolved once, here, alongside refresh/theme -- not
+	// fetched a second time by PluginProcesslist.vue itself (fix round 1,
+	// IMPORTANT 1) -- and handed down through AppShell's `provide()`, the same
+	// mechanism `serverPlugins` already uses for a value only ONE plugin reads.
+	// `null` means "no cap": absent key, or a value that does not parse to a
+	// positive integer.
+	const rawMaxProcesses = config && config.outputs && config.outputs.max_processes_display;
+	const maxProcessesN = Number(rawMaxProcesses);
+	const maxProcessesDisplay = Number.isFinite(maxProcessesN) && maxProcessesN > 0 ? Math.trunc(maxProcessesN) : null;
+
+	return { refreshSeconds, theme, maxProcessesDisplay };
 }
 
 let argsCache = null;

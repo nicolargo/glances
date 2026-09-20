@@ -78,7 +78,7 @@ test("validate passes a cycle-0 null through untouched", () => {
 
 test("resolveConfig reads [global] refresh and [outputs] theme from one fetch", async () => {
 	stubFetch({ "api/5/config": { body: { global: { refresh: 5 }, outputs: { theme: "light" } } } });
-	assert.deepEqual(await resolveConfig(), { refreshSeconds: 5, theme: "light" });
+	assert.deepEqual(await resolveConfig(), { refreshSeconds: 5, theme: "light", maxProcessesDisplay: null });
 });
 
 test("resolveConfig falls back to defaults when config is unreachable", async () => {
@@ -86,7 +86,33 @@ test("resolveConfig falls back to defaults when config is unreachable", async ()
 	assert.deepEqual(await resolveConfig(), {
 		refreshSeconds: DEFAULT_REFRESH_SECONDS,
 		theme: DEFAULT_THEME,
+		maxProcessesDisplay: null,
 	});
+});
+
+// Fix round 1, IMPORTANT 1: `[outputs] max_processes_display` is resolved
+// from this SAME /api/5/config fetch (not a second one from
+// PluginProcesslist.vue), the same way refresh/theme already are, and
+// handed down through AppShell's provide()/inject.
+test("resolveConfig reads [outputs] max_processes_display", async () => {
+	stubFetch({ "api/5/config": { body: { outputs: { max_processes_display: 25 } } } });
+	assert.equal((await resolveConfig()).maxProcessesDisplay, 25);
+});
+
+test("resolveConfig truncates a non-integer max_processes_display", async () => {
+	stubFetch({ "api/5/config": { body: { outputs: { max_processes_display: "25.9" } } } });
+	assert.equal((await resolveConfig()).maxProcessesDisplay, 25);
+});
+
+test("resolveConfig treats an absent, zero or negative max_processes_display as no cap", async () => {
+	stubFetch({ "api/5/config": { body: {} } });
+	assert.equal((await resolveConfig()).maxProcessesDisplay, null);
+	stubFetch({ "api/5/config": { body: { outputs: { max_processes_display: 0 } } } });
+	assert.equal((await resolveConfig()).maxProcessesDisplay, null);
+	stubFetch({ "api/5/config": { body: { outputs: { max_processes_display: -5 } } } });
+	assert.equal((await resolveConfig()).maxProcessesDisplay, null);
+	stubFetch({ "api/5/config": { body: { outputs: { max_processes_display: "not-a-number" } } } });
+	assert.equal((await resolveConfig()).maxProcessesDisplay, null);
 });
 
 test("resolveConfig falls back to the default theme when config has no theme key", async () => {

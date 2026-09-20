@@ -18,6 +18,9 @@ Coverage:
 - /api/5/<plugin>/info: 200 + fields_description; 404 unknown
 - /api/5/all/info: every registered schema, published or not; {} when empty
 - /api/5/alert: 200 + history; 404 when alerts is None
+- /api/5/alert/incidents: 200 + derive_incidents() synthesis; partial flag
+  preserved; every incident carries a `duration` (`>`-prefixed when partial);
+  404 when alerts is None
 - /api/5/config: 200 + redacted via as_dict_secure()
 - /api/5/token: Basic round-trip → JWT usable on other routes; wrong creds → 401;
   missing creds → 401; auth not configured → 404; token is exempt from global auth
@@ -36,7 +39,7 @@ from typing import Any, ClassVar
 import pytest
 from fastapi.testclient import TestClient
 
-from glances.alerts_v5 import GlancesAlerts
+from glances.alerts_v5 import GlancesAlerts, _AlertState
 from glances.config_v5 import GlancesConfigV5
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
 from glances.security_v5 import hash_password
@@ -346,6 +349,261 @@ def test_alert_empty_history(config_factory, store):
         r = client.get("/api/5/alert")
     assert r.status_code == 200
     assert r.json() == []
+
+
+# ------------------------------------------------------- /alert/incidents
+
+
+def test_alert_incidents_serves_the_synthesis(config_factory, store):
+    """Same function the TUI calls (glances/alerts_incidents_v5.py), so the
+    browser cannot drift from the terminal."""
+    config = config_factory()
+    alerts = GlancesAlerts(config)
+    # A resolved incident: opening and closing transitions both in history.
+    alerts._history.append(
+        {
+            "ts": "2026-05-12T09:00:00+00:00",
+            "plugin": "cpu",
+            "key": None,
+            "field": "total",
+            "level": "warning",
+            "previous_level": "ok",
+            "value": 90.0,
+            "prominent": True,
+            "hostname": "test-host",
+        }
+    )
+    alerts._history.append(
+        {
+            "ts": "2026-05-12T09:05:00+00:00",
+            "plugin": "cpu",
+            "key": None,
+            "field": "total",
+            "level": "ok",
+            "previous_level": "warning",
+            "value": 10.0,
+            "prominent": False,
+            "hostname": "test-host",
+        }
+    )
+    # An ongoing incident: opening transition in history, engine still active.
+    alerts._history.append(
+        {
+            "ts": "2026-05-12T10:00:00+00:00",
+            "plugin": "mem",
+            "key": None,
+            "field": "percent",
+            "level": "warning",
+            "previous_level": "ok",
+            "value": 75.0,
+            "prominent": True,
+            "hostname": "test-host",
+        }
+    )
+    alerts._state[("mem", None, "percent")] = _AlertState(
+        committed_level="warning", committed_since="2026-05-12T10:00:00+00:00", has_committed=True
+    )
+    app = _make_app_with_plugins(config, store, alerts=alerts)
+    with TestClient(app) as client:
+        r = client.get("/api/5/alert/incidents")
+    assert r.status_code == 200
+    incidents = r.json()["incidents"]
+    # Ongoing first (newest first within each group) — derive_incidents' own
+    # sort contract (design §5.3), unchanged by the route.
+    assert [i["ongoing"] for i in incidents] == [True, False]
+    assert incidents[0]["plugin"] == "mem"
+    assert incidents[1]["plugin"] == "cpu"
+
+
+def test_alert_incidents_exposes_is_initializing(config_factory, store):
+    """Fix round 2, IMPORTANT 2: the route answers an envelope, not a bare
+    array, so the browser can tell "warm-up" from "no alert detected" —
+    the same distinction `render_alert_block` already makes
+    (curses_renderer_v5.py:738-745). A fresh `GlancesAlerts` that never
+    ingested anything is still initializing."""
+    config = config_factory()
+    alerts = GlancesAlerts(config)
+    app = _make_app_with_plugins(config, store, alerts=alerts)
+    with TestClient(app) as client:
+        r = client.get("/api/5/alert/incidents")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["is_initializing"] is True
+    assert body["incidents"] == []
+
+
+def test_alert_incidents_marks_a_partial_incident(config_factory, store):
+    """`partial` says the opening event aged out of the bounded history, so
+    the duration is a LOWER BOUND. A client that lost the flag would print
+    a lower bound as if it were exact.
+
+    The engine reports the tuple active (`get_ongoing()`), but neither its
+    opening transition (evicted from the ring buffer) nor its start time
+    (`get_ongoing_since()` — nothing was ever committed here) survive
+    anywhere: exactly what a long-running alert does to a bounded history.
+    """
+    config = config_factory()
+    alerts = GlancesAlerts(config)
+    alerts._state[("cpu", None, "total")] = _AlertState(committed_level="critical", has_committed=True)
+    app = _make_app_with_plugins(config, store, alerts=alerts)
+    with TestClient(app) as client:
+        r = client.get("/api/5/alert/incidents")
+    assert r.status_code == 200
+    incidents = r.json()["incidents"]
+    assert len(incidents) == 1
+    assert incidents[0]["ongoing"] is True
+    assert incidents[0]["partial"] is True
+
+
+def test_alert_incidents_404_when_disabled(config_factory, store):
+    """Same contract as /api/5/alert."""
+    app = _make_app_with_plugins(config_factory(), store, alerts=None)
+    with TestClient(app) as client:
+        r = client.get("/api/5/alert/incidents")
+    assert r.status_code == 404
+
+
+def test_alert_incidents_every_incident_has_a_duration_key(config_factory, store):
+    """`duration` is always present in the response, `null` or not, so a
+    consumer can rely on the key existing rather than guarding for it."""
+    config = config_factory()
+    alerts = GlancesAlerts(config)
+    alerts._history.append(
+        {
+            "ts": "2026-05-12T09:00:00+00:00",
+            "plugin": "cpu",
+            "key": None,
+            "field": "total",
+            "level": "warning",
+            "previous_level": "ok",
+            "value": 90.0,
+            "prominent": True,
+            "hostname": "test-host",
+        }
+    )
+    alerts._history.append(
+        {
+            "ts": "2026-05-12T09:05:00+00:00",
+            "plugin": "cpu",
+            "key": None,
+            "field": "total",
+            "level": "ok",
+            "previous_level": "warning",
+            "value": 10.0,
+            "prominent": False,
+            "hostname": "test-host",
+        }
+    )
+    alerts._history.append(
+        {
+            "ts": "2026-05-12T10:00:00+00:00",
+            "plugin": "mem",
+            "key": None,
+            "field": "percent",
+            "level": "warning",
+            "previous_level": "ok",
+            "value": 75.0,
+            "prominent": True,
+            "hostname": "test-host",
+        }
+    )
+    alerts._state[("mem", None, "percent")] = _AlertState(
+        committed_level="warning", committed_since="2026-05-12T10:00:00+00:00", has_committed=True
+    )
+    app = _make_app_with_plugins(config, store, alerts=alerts)
+    with TestClient(app) as client:
+        r = client.get("/api/5/alert/incidents")
+    assert r.status_code == 200
+    incidents = r.json()["incidents"]
+    assert len(incidents) == 2
+    assert all("duration" in incident for incident in incidents)
+
+
+def test_alert_incidents_partial_duration_has_lower_bound_prefix(config_factory, store):
+    """The whole reason `duration` is computed server-side: a `partial`
+    incident's opening event aged out of the bounded history, so its
+    duration is a LOWER BOUND and must be `>`-prefixed. A client that
+    recomputed this in JS and dropped the prefix would print a lower bound
+    as if it were exact.
+
+    Seeded like the existing partial test — a tuple present in
+    `get_ongoing()` but absent from `get_ongoing_since()` (`committed_since`
+    left `None`) — except here the surviving history event is an
+    ESCALATION (`previous_level` != "ok"), which gives the incident a real
+    `begin` so `incident_duration()` has something to format instead of
+    returning `None` outright (the fully-evicted-with-no-history case used
+    by the earlier partial test has `begin=None`, which formats to no
+    duration at all, not a `>`-prefixed one).
+    """
+    config = config_factory()
+    alerts = GlancesAlerts(config)
+    alerts._history.append(
+        {
+            "ts": "2026-05-12T08:00:00+00:00",
+            "plugin": "cpu",
+            "key": None,
+            "field": "total",
+            "level": "critical",
+            "previous_level": "warning",
+            "value": 97.0,
+            "prominent": True,
+            "hostname": "test-host",
+        }
+    )
+    alerts._state[("cpu", None, "total")] = _AlertState(committed_level="critical", has_committed=True)
+    app = _make_app_with_plugins(config, store, alerts=alerts)
+    with TestClient(app) as client:
+        r = client.get("/api/5/alert/incidents")
+    assert r.status_code == 200
+    incidents = r.json()["incidents"]
+    assert len(incidents) == 1
+    assert incidents[0]["partial"] is True
+    assert incidents[0]["duration"] is not None
+    assert incidents[0]["duration"].startswith(">")
+
+
+def test_alert_incidents_resolved_duration_has_no_prefix(config_factory, store):
+    """Control for the test above: a resolved (non-partial) incident's
+    duration must NOT carry the `>` prefix, so the prefix assertion above
+    cannot pass by accident (e.g. a route that always prepends `>`)."""
+    config = config_factory()
+    alerts = GlancesAlerts(config)
+    alerts._history.append(
+        {
+            "ts": "2026-05-12T09:00:00+00:00",
+            "plugin": "cpu",
+            "key": None,
+            "field": "total",
+            "level": "warning",
+            "previous_level": "ok",
+            "value": 90.0,
+            "prominent": True,
+            "hostname": "test-host",
+        }
+    )
+    alerts._history.append(
+        {
+            "ts": "2026-05-12T09:05:00+00:00",
+            "plugin": "cpu",
+            "key": None,
+            "field": "total",
+            "level": "ok",
+            "previous_level": "warning",
+            "value": 10.0,
+            "prominent": False,
+            "hostname": "test-host",
+        }
+    )
+    app = _make_app_with_plugins(config, store, alerts=alerts)
+    with TestClient(app) as client:
+        r = client.get("/api/5/alert/incidents")
+    assert r.status_code == 200
+    incidents = r.json()["incidents"]
+    assert len(incidents) == 1
+    assert incidents[0]["ongoing"] is False
+    assert incidents[0]["duration"] is not None
+    assert not incidents[0]["duration"].startswith(">")
+    assert incidents[0]["duration"] == "5m00s"
 
 
 # ------------------------------------------------------- /config
@@ -781,8 +1039,10 @@ def test_args_matches_the_real_v5_argument_set(config_factory, store):
         "no_tui",
         "percpu",
         "port",
+        "programs",
         "server",
         "set_password",
+        "sort_processes_key",
     }
     assert payload["set_password"] == "***"
     assert payload["config_path"] == "***"

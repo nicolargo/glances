@@ -25,26 +25,10 @@
 		</component>
 
 		<footer class="gl-alerts">
-			<span v-if="!alerts.length" class="gl-muted">No alert</span>
-			<ul v-else>
-				<!--
-					The line keeps the tier text colour; only the level word carries
-					the prominent badge, like the TUI's LEVEL cell. A badge on the
-					whole <li> would paint a full-width coloured band.
-				-->
-				<!-- A return to `ok` ends an incident: it reads as the resolution of
-				the level it leaves, muted, never as an alert of its own. -->
-				<li
-					v-for="(alert, i) in alerts"
-					:key="i"
-					:class="isResolution(alert) ? 'gl-muted' : levelClass({ level: alert.level })"
-				>
-					{{ alertLabel(alert) }} —
-					<span v-if="isResolution(alert)">{{ alert.previous_level }} → ok</span>
-					<span v-else :class="levelClass(alert)">{{ alert.level }}</span>
-				</li>
-			</ul>
-			<!-- G9-5 D5: moved here from the removed top bar. -->
+			<!-- G9-5 D5: moved here from the removed top bar. The alert list that
+			used to share this footer (raw history, newest-first) moved into
+			PluginAlert.vue (G9-9B), fed by the collapsed /api/5/alert/incidents
+			grid -- this footer keeps only the cadence. -->
 			<span class="gl-muted gl-refresh">{{ refreshLabel }}</span>
 		</footer>
 	</main>
@@ -53,7 +37,6 @@
 <script>
 import { computed } from "vue";
 import { fetchAll, resolveConfig, resolveArgs, resolvePluginNames, getJson } from "./api.js";
-import { levelClass } from "./levels.js";
 import { resolveAllLabels } from "./labels.js";
 import { visiblePlugins, groupBySlot } from "./layout.js";
 import { PLUGINS } from "./plugins/index.js";
@@ -110,6 +93,19 @@ export default {
 	provide() {
 		return {
 			serverPlugins: computed(() => this.pluginNames || []),
+			// `[outputs] max_processes_display` (resolveConfig(), api.js), for
+			// PluginProcesslist.vue (and, next task, programlist): the same
+			// reasoning as `serverPlugins` above applies verbatim -- a value read
+			// by a small number of plugins, provided once here rather than each
+			// one fetching `/api/5/config` itself (fix round 1, IMPORTANT 1: that
+			// was a genuine second round-trip per page load to a
+			// credentials-bearing endpoint, and it broke the "AppShell resolves
+			// shared endpoints once" layering every other cross-cutting value
+			// follows). `computed()` for the same reason as `pluginNames` above:
+			// it re-reads `this.maxProcessesDisplay` on every access, so the
+			// injecting component sees the resolved value once mounted() below
+			// sets it, not the `null` it was created with.
+			maxProcessesDisplay: computed(() => this.maxProcessesDisplay),
 		};
 	},
 	data() {
@@ -121,7 +117,11 @@ export default {
 			// /api/5/pluginslist. null until read, and null if it cannot be read:
 			// visiblePlugins() then renders the whole registry.
 			pluginNames: null,
-			alerts: [],
+			// `[outputs] max_processes_display`, resolved alongside refresh/theme
+			// in mounted() below and handed down via provide() above. `null` means
+			// "no cap", both before resolveConfig() resolves and when the key is
+			// absent/unparsable.
+			maxProcessesDisplay: null,
 			refresh: null,
 			timer: null,
 			ticking: false,
@@ -179,6 +179,19 @@ export default {
 			} else {
 				hidden.add("percpu");
 			}
+			// `processlist` / `programlist` mutual exclusion (task 8, same shape as
+			// cpu/percpu above): the v5 TUI shows exactly one --
+			// glances_curses_v5.py:578 `hidden_right = "processlist" if
+			// self._view.programs else "programlist"`. `--programs` (Task 5) is
+			// wired into both the TUI's own `_view.programs` (main_v5.assemble)
+			// and `serverArgs.programs`, so the two agree -- unlike the TUI-only
+			// `show_percpu` hotkey above, there is no browser/TUI gap to paper
+			// over here.
+			if (this.serverArgs.programs) {
+				hidden.add("processlist");
+			} else {
+				hidden.add("programlist");
+			}
 			return groupBySlot(this.plugins.filter((plugin) => !hidden.has(plugin.name)));
 		},
 		// Always all three: design spec section 8 stacks header, top, body
@@ -195,12 +208,18 @@ export default {
 		},
 	},
 	async mounted() {
-		const { refreshSeconds, theme } = await resolveConfig();
+		const { refreshSeconds, theme, maxProcessesDisplay } = await resolveConfig();
 		this.refresh = refreshSeconds;
 		// [outputs] theme, mapped straight to data-theme -- see the G9-2 design
 		// spec, section 5. The static template hardcodes "dark" so the page
 		// has a theme before this fetch resolves.
 		document.documentElement.dataset.theme = theme;
+		// Resolved from the SAME /api/5/config fetch as refresh/theme above --
+		// no second round-trip. Provided to `processlist`/`programlist`
+		// (provide() above) before the first tick(), so their very first paint
+		// is already capped (fix round 1, IMPORTANT 1's third consequence: the
+		// cap used to arrive after mount, one refresh tick too late).
+		this.maxProcessesDisplay = maxProcessesDisplay;
 		// The schema and the server's CLI arguments never change while the
 		// server runs, so all three are resolved once here: three requests
 		// whatever the number of plugins. The plugin list specifically is read
@@ -251,52 +270,80 @@ export default {
 		for (const observer of this.observers) observer.disconnect();
 	},
 	methods: {
-		levelClass,
-		// `_build_event()` (glances/alerts_v5.py:706-716) is the only source of
-		// this shape: {ts, plugin, key, field, level, previous_level, value,
-		// prominent, is_initial, hostname}. There is no `description` field --
-		// identify the alert from what actually exists: the plugin, the
-		// collection item key when there is one, and the field. The level word
-		// is rendered by the template on its own, so that it alone can carry
-		// the prominent badge.
-		isResolution(alert) {
-			return alert.level === "ok";
-		},
-		alertLabel(alert) {
-			const parts = [alert.plugin];
-			if (alert.key) parts.push(alert.key);
-			parts.push(alert.field);
-			return parts.join(" ");
-		},
 		async tick() {
 			// The interval fires unconditionally every `refresh` seconds
 			// regardless of whether the previous tick's awaits have settled.
 			// Without this guard, two overlapping ticks against a slow/loaded
 			// server can resolve out of order and an older response clobbers
-			// `results`/`errors`/`alerts` with stale data.
+			// `results`/`errors` with stale data.
 			if (this.ticking) return;
 			this.ticking = true;
 			try {
 				// Visible plugins only: a disabled plugin is absent from /all by
-				// construction, and asking for it would only produce a
-				// permanent loading state nobody renders.
-				const { results, errors } = await fetchAll(this.plugins);
+				// construction, and asking for it would only produce a permanent
+				// loading state nobody renders. `ownEndpoint` plugins (alert) are
+				// excluded too -- they are never a key of the /api/5/all envelope
+				// fetchAll() reads, so passing one through made fetchAll() write
+				// results[name] = null (its "absent from /all" branch) on EVERY
+				// tick, and errors[name] on every /all failure (api.js:134-138 sets
+				// an error for EVERY requested spec) -- an unrelated /all outage
+				// blanking a block fed by its own healthy endpoint, exactly the
+				// coupling the brief forbade, just in the direction nobody thought
+				// to look (fix round 1, IMPORTANT 1).
+				const ownEndpointPlugins = this.plugins.filter((plugin) => plugin.ownEndpoint);
+				const { results, errors } = await fetchAll(this.plugins.filter((plugin) => !plugin.ownEndpoint));
+				// fetchAll() only ever returns entries for what it was asked for, so
+				// the reassignment below would otherwise blank every ownEndpoint
+				// slot for the length of the refit() await (the same "flashes back
+				// to loading on every tick" bug excluding them from fetchAll() was
+				// meant to remove) -- carry each one over from the previous tick,
+				// generalised over the registry's `ownEndpoint` entries rather than
+				// hardcoded to `alert` (fix round 2). A `{...this.results, ...results}`
+				// spread over the WHOLE object looks simpler and was proposed in
+				// review, but is wrong: spread only ADDS/overwrites keys, it can
+				// never delete one merely absent from the newer object, so a
+				// fetchAll()-covered plugin whose error clears next tick (present in
+				// the new `results`, absent from the new `errors`) would keep
+				// showing its stale error FOREVER under a blind spread -- a real
+				// regression for every ordinary plugin's recovery path, not just
+				// alert's. (A stale PAYLOAD under the same spread is harmless: every
+				// component checks `error` before `payload`, so it never reaches the
+				// DOM -- verified across every Plugin*.vue template and
+				// CollectionBlock.vue -- but the error side is not harmless, hence
+				// this loop instead of the spread.) Every fetchAll()-covered plugin
+				// therefore still goes through fetchAll()'s fresh, complete
+				// `results`/`errors` via a plain reassignment below; only the
+				// own-endpoint slots are hand-carried here.
+				for (const plugin of ownEndpointPlugins) {
+					results[plugin.name] = this.results[plugin.name];
+					errors[plugin.name] = this.errors[plugin.name];
+				}
 				this.results = results;
 				this.errors = errors;
 				await this.refit();
 				if (typeof window !== "undefined") window.__glancesDegrade = this.degrade;
-				// The footer alert list is its own endpoint; its failure must not
-				// disturb the plugins above it.
+				// PluginAlert.vue's data comes from its own endpoint -- the already
+				// collapsed incident grid, not a raw plugin stat block -- so it
+				// cannot go through fetchAll()'s /api/5/all envelope. Kept in its
+				// own try/catch, like the block it replaced: a failing alert
+				// endpoint must not disturb the plugins fetchAll() just resolved.
 				try {
-					const history = await getJson("api/5/alert");
-					// get_history() (glances/alerts_v5.py:181) documents its return
-					// as most-recent-LAST. `slice(0, 10)` would take the ten OLDEST
-					// entries once history exceeds ten -- the footer would freeze on
-					// stale alerts and never show a new one. Take the last ten, then
-					// reverse so the newest alert reads first in the vertical list.
-					this.alerts = Array.isArray(history) ? history.slice(-10).reverse() : [];
-				} catch {
-					this.alerts = [];
+					// Envelope, not a bare array (fix round 2, IMPORTANT 2):
+					// `is_initializing` lets PluginAlert.vue tell "warm-up" from
+					// "no alert detected" apart, the same distinction
+					// `render_alert_block` makes (curses_renderer_v5.py:738-745).
+					const envelope = await getJson("api/5/alert/incidents");
+					const incidents = Array.isArray(envelope && envelope.incidents) ? envelope.incidents : [];
+					const isInitializing = !!(envelope && envelope.is_initializing);
+					// Clear a stale error from a previous failed round-trip now that
+					// this one succeeded -- carried-over `errors.alert` above would
+					// otherwise linger forever once the endpoint recovers.
+					const nextErrors = { ...this.errors };
+					delete nextErrors.alert;
+					this.errors = nextErrors;
+					this.results = { ...this.results, alert: { isInitializing, incidents } };
+				} catch (e) {
+					this.errors = { ...this.errors, alert: e.message };
 				}
 			} finally {
 				this.ticking = false;
@@ -452,7 +499,11 @@ export default {
  * content passes under it rather than showing through. */
 .gl-alerts {
 	display: flex;
-	justify-content: space-between;
+	/* G9-9B: the alert list that used to share this footer moved into
+	 * PluginAlert.vue -- the cadence is the footer's only child now, so
+	 * `space-between` (which needs two) would leave it flush left instead of
+	 * at the right edge it always occupied. */
+	justify-content: flex-end;
 	align-items: flex-start;
 	gap: var(--gl-gap);
 	margin-top: auto;
@@ -461,15 +512,5 @@ export default {
 	background: var(--gl-bg);
 	border-top: 1px solid var(--gl-border);
 	padding-block: var(--gl-gap);
-}
-.gl-alerts ul {
-	margin: 0;
-	padding-left: 1rem;
-	/* A sticky footer taller than the viewport would slide off its TOP edge,
-	 * and the list is newest-first, so the newest alerts would be the ones
-	 * lost -- while the footer covered the page. Capped, the list scrolls
-	 * inside the footer and its first (newest) line stays visible. */
-	max-height: 40vh;
-	overflow-y: auto;
 }
 </style>

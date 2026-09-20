@@ -15,7 +15,8 @@ import argparse
 
 import pytest
 
-from glances.main_v5 import build_parser, validate_args
+from glances.main_v5 import apply_process_flags, build_parser, validate_args
+from glances.processes import glances_processes
 
 # ---------------------------------------------------------------- parser
 
@@ -125,3 +126,70 @@ def test_validate_accepts_server_with_quiet(capsys, caplog):
 
 def test_parser_is_argument_parser():
     assert isinstance(build_parser(), argparse.ArgumentParser)
+
+
+# ---------------------------------------------------------------- processes
+
+
+def test_the_programs_option_parses():
+    args = build_parser().parse_args(["--programs"])
+    assert args.programs is True
+
+
+def test_the_default_is_the_process_list():
+    args = build_parser().parse_args([])
+    assert args.programs is False
+
+
+def test_the_sort_option_uses_v4s_dest_and_choices():
+    """A script written against v4 must keep working against v5, so the
+    dest name is v4's (`sort_processes_key`), not a v5 invention."""
+    args = build_parser().parse_args(["--sort-processes", "memory_percent"])
+    assert args.sort_processes_key == "memory_percent"
+
+
+def test_the_sort_option_rejects_a_value_outside_the_shared_list():
+    from glances.processes import sort_processes_stats_list
+
+    assert "nonsense" not in sort_processes_stats_list
+    with pytest.raises(SystemExit):
+        build_parser().parse_args(["--sort-processes", "nonsense"])
+
+
+def test_the_sort_option_is_applied_to_the_process_engine():
+    """A parsed-but-unwired flag would have the WebUI underline a column
+    the engine never actually sorts by — ``apply_process_flags`` must push
+    ``args.sort_processes_key`` onto the ``glances_processes`` singleton.
+
+    ``glances_processes`` is a module-level singleton shared with every
+    other test in the suite, so its pre-existing sort state is saved and
+    restored directly (bypassing ``set_sort_key``'s ``'auto'`` special-case)
+    to avoid leaking into other tests.
+    """
+    saved_key, saved_auto = glances_processes._sort_key, glances_processes.auto_sort
+    try:
+        args = build_parser().parse_args(["--sort-processes", "memory_percent"])
+        apply_process_flags(args)
+        assert glances_processes.sort_key == "memory_percent"
+        # v4 parity: an explicit CLI key turns OFF auto-sort.
+        assert glances_processes.auto_sort is False
+    finally:
+        glances_processes._sort_key = saved_key
+        glances_processes.auto_sort = saved_auto
+
+
+def test_the_default_leaves_the_process_engine_untouched():
+    """No ``--sort-processes`` on the CLI must not touch the engine's sort
+    state at all (not even to reset it) — ``args.sort_processes_key`` is
+    ``None`` by default and ``apply_process_flags`` must no-op."""
+    saved_key, saved_auto = glances_processes._sort_key, glances_processes.auto_sort
+    try:
+        glances_processes._sort_key = "username"
+        glances_processes.auto_sort = False
+        args = build_parser().parse_args([])
+        apply_process_flags(args)
+        assert glances_processes.sort_key == "username"
+        assert glances_processes.auto_sort is False
+    finally:
+        glances_processes._sort_key = saved_key
+        glances_processes.auto_sort = saved_auto

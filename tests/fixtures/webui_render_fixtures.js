@@ -39,6 +39,99 @@ const ALERT_SCENARIOS = {
 	],
 };
 
+// `/api/5/alert/incidents` answer -- the collapsed shape `derive_incidents()`
+// + `incident_duration()` produce (glances/alerts_incidents_v5.py), exactly
+// as `/api/5/alert/incidents` serves it (glances/routes_v5.py:178-215). Used
+// for every scenario (PluginAlert.vue is fetched independently of the
+// scenario's /api/5/all payload), so it carries the rules the component
+// must get right rather than one per scenario:
+//   - incident 0: ongoing + prominent + critical -- LEVEL stays tier-coloured
+//     (colour there means "still happening") and carries the prominent badge.
+//   - incident 1: ongoing + partial -- its opening event aged out of the
+//     history, so `duration` is a server-computed LOWER BOUND, already
+//     prefixed ">"; the component must print it as-is.
+//   - incident 2: resolved -- LEVEL goes neutral even though the incident
+//     reached `warning`.
+//   - incident 3 (fix round 1, IMPORTANT 2): resolved + prominent --
+//     curses_renderer_v5.py:851-861 drops the COLOUR once resolved but keeps
+//     the BADGE (`prominent` is passed to the Cell unconditionally); nothing
+//     in incidents 0-2 could catch a component that drops both.
+//   - incident 4 (fix round 1, MINOR 5): `duration: null` -- incident_duration()
+//     is typed `str | None`; the component must fall back to the WebUI's "-"
+//     placeholder, never blank or a computed value.
+const ALERT_INCIDENTS_FIXTURE = [
+	{
+		plugin: "cpu",
+		key: null,
+		field: "total",
+		level: "critical",
+		begin: "2026-01-01T00:00:00Z",
+		end: null,
+		ongoing: true,
+		partial: false,
+		prominent: true,
+		top: ["python3", "node"],
+		top_sort: null,
+		duration: "5m00s",
+	},
+	{
+		plugin: "sensors",
+		key: "CPU",
+		field: "value",
+		level: "warning",
+		begin: "2026-01-01T00:00:00Z",
+		end: null,
+		ongoing: true,
+		partial: true,
+		prominent: false,
+		top: [],
+		top_sort: null,
+		duration: ">2h04m",
+	},
+	{
+		plugin: "fs",
+		key: "/home",
+		field: "percent",
+		level: "warning",
+		begin: "2026-01-01T00:00:00Z",
+		end: "2026-01-01T00:10:00Z",
+		ongoing: false,
+		partial: false,
+		prominent: false,
+		top: [],
+		top_sort: null,
+		duration: "10m00s",
+	},
+	{
+		plugin: "mem",
+		key: null,
+		field: "percent",
+		level: "critical",
+		begin: "2026-01-01T00:00:00Z",
+		end: "2026-01-01T00:05:00Z",
+		ongoing: false,
+		partial: false,
+		prominent: true,
+		top: [],
+		top_sort: null,
+		duration: "5m00s",
+	},
+	{
+		plugin: "diskio",
+		key: "sda",
+		field: "read_bytes",
+		level: "warning",
+		begin: null,
+		end: null,
+		ongoing: true,
+		partial: true,
+		prominent: false,
+		top: [],
+		top_sort: null,
+		duration: null,
+	},
+];
+
 // `/api/5/all/info` answer: plugin -> fields_description, as labels.js'
 // resolveAllLabels() expects it. Real enough that the short_name -> label ->
 // field name precedence has something to resolve, rather than degrading to
@@ -154,6 +247,27 @@ const PLUGINSLIST_FIXTURES = {
 // `pluginslist-unreachable` handling above -- spec §9: "`/api/5/all` fails ->
 // every visible block shows its error, header included."
 const ALL_UNREACHABLE_SCENARIOS = new Set(["all-unreachable"]);
+
+// Scenarios whose `/api/5/alert/incidents` answers with an HTTP 500. The
+// alert fetch stays in its OWN try/catch (AppShell.vue tick()), separate
+// from the one guarding `/api/5/all` above: a failing alert endpoint must
+// not blank the plugins fetchAll() already resolved.
+const ALERT_INCIDENTS_UNREACHABLE_SCENARIOS = new Set(["alert-incidents-unreachable"]);
+
+// Per-scenario `/api/5/alert/incidents` envelopes (fix round 2, IMPORTANT 2:
+// the route now answers `{is_initializing, incidents}`, not a bare array).
+// Any scenario not listed here gets the populated, warmed-up default built
+// below (`is_initializing: false` + `ALERT_INCIDENTS_FIXTURE`).
+//   - `alert-initializing`: nothing has ever fired AND the engine cannot
+//     have produced an event yet -- the component must render "(initializing)",
+//     never "(no alert detected)" (a claim of health it cannot make).
+//   - `alert-empty`: warmed up, genuinely nothing has ever fired -- the
+//     component may claim "(no alert detected)", in its OK colour (matching
+//     the TUI, curses_renderer_v5.py:745).
+const ALERT_INCIDENTS_SCENARIOS = {
+	"alert-initializing": { is_initializing: true, incidents: [] },
+	"alert-empty": { is_initializing: false, incidents: [] },
+};
 
 // `/api/5/all` fixtures for the `mem` render-parity tests
 // (test_mem_renders_all_eight_statistics_with_avail /
@@ -403,6 +517,38 @@ const ARGS_FIXTURES = {
 	"cpu-percpu-on": { percpu: true },
 	// "cpu-percpu-off" is deliberately absent here: a scenario absent from
 	// this map gets `{}`, i.e. no flag set -- exactly the state under test.
+	// processlist/render_curses_v5.py `_HEADER_SORT_KEY`: the WebUI reflects
+	// the key the server was STARTED with (no live re-sort, unlike the TUI).
+	"processlist-sorted": { sort_processes_key: "cpu_percent" },
+	// Task 8: processlist/programlist exclusivity (AppShell.vue `slots()`,
+	// mirroring `cpu`/`percpu`) and the programlist block's own rendering are
+	// both gated on `serverArgs.programs` -- the same CLI flag
+	// (`--programs`/`--program`, main_v5.py:228-235) the v5 TUI's `j` hotkey
+	// starts from.
+	programlist: { programs: true },
+	"programlist-sorted": { programs: true, sort_processes_key: "cpu_percent" },
+	"programlist-cap": { programs: true },
+	// processcount's truncation counter (`_count_text`) and sort indicator
+	// (`_sort_indicator_cell`) scenarios below. "processcount-cut" is
+	// deliberately absent here -- a scenario absent from ARGS_FIXTURES gets
+	// `{}`, i.e. no `--programs`, which is exactly what that scenario tests.
+	"processcount-cut-programs": { programs: true },
+	"processcount-sorted-threads": { sort_processes_key: "cpu_percent" },
+	"processcount-sorted-programs": { sort_processes_key: "memory_percent", programs: true },
+};
+
+// Per-scenario `/api/5/config` answers -- `[outputs] max_processes_display`,
+// read the way `plugin-processlist.vue:590` (v4) reads it, but in v5's own
+// component (task 7). A scenario absent from here gets `{}`, i.e. no
+// `outputs` key at all, which PluginProcesslist.vue must read as "no cap".
+const CONFIG_FIXTURES = {
+	"processlist-cap": { outputs: { max_processes_display: 2 } },
+	"programlist-cap": { outputs: { max_processes_display: 2 } },
+	// PROCESSCOUNT_FIXTURE.total is 215 -- 30 is comfortably below it, so the
+	// list is actually cut and `_count_text` (processcount/render_curses_v5.py
+	// :37-55) must render `30/215`.
+	"processcount-cut": { outputs: { max_processes_display: 30 } },
+	"processcount-cut-programs": { outputs: { max_processes_display: 30 } },
 };
 
 // Header plugin payloads, shaped like their model_v5.py `_collect()` output.
@@ -1137,6 +1283,200 @@ ALL_FIXTURES["percpu-with-quicklook-percpu"] = { percpu: PERCPU_FIXTURE };
 // totals and percpu must render standalone again.
 ALL_FIXTURES["percpu-quicklook-cascaded-out"] = { percpu: PERCPU_FIXTURE, quicklook: QUICKLOOK_FIXTURE };
 
+// A collection payload shaped like `/api/5/all`'s processlist envelope
+// (processlist/model_v5.py, `_key: "pid"`). Row 0 carries every fixed-column
+// field with values chosen so each formatter's output is unambiguous:
+// - VIRT 125829120 B == 120*1024*1024 -> formatBytes() "120.0M" (JS's
+//   `_auto_unit` mirror always keeps one decimal -- unlike the TUI's OWN
+//   local `_format_bytes`, which drops the decimal at >= 100 to stay inside
+//   its 5-char column budget; that budget is a terminal-only constraint the
+//   WebUI has no reason to reproduce, so this component reuses the SAME
+//   `formatBytes` every other byte column already uses, `fs`/`folders`
+//   included).
+// - `cpu_times` {user:10, system:2} -> 12s total -> "0:12".
+// - `io_counters` [r_new, w_new, r_old, w_old, io_tag] = [2048, 1024, 1024,
+//   0, 1] over `time_since_update` 2s -> read (2048-1024)/2 = 512 B/s, write
+//   (1024-0)/2 = 512 B/s.
+// - `cmdline` ["/usr/bin/python3", "myscript.py", "--verbose"] with `name`
+//   "python3": the TUI's `split_cmdline` strips the `/usr/bin/` path
+//   (`cmdline[0]` does NOT start with the bare `name`) -> "python3
+//   myscript.py --verbose".
+// Row 1 has every optional field null/absent -- the "every missing value
+// renders '-'" case -- except `name`, so its Command cell exercises the
+// OTHER TUI fallback: no cmdline at all -> the kernel-thread bracket form
+// "[kthread0]", not the placeholder.
+const PROCESSLIST_FIXTURE = {
+	_key: "pid",
+	data: [
+		{
+			pid: 12345,
+			name: "python3",
+			username: "alice",
+			status: "S",
+			nice: 0,
+			num_threads: 4,
+			cpu_percent: 78.4,
+			memory_percent: 3.1,
+			cmdline: ["/usr/bin/python3", "myscript.py", "--verbose"],
+			memory_info: { vms: 125829120, rss: 33554432 },
+			cpu_times: { user: 10, system: 2 },
+			io_counters: [2048, 1024, 1024, 0, 1],
+			time_since_update: 2,
+		},
+		{
+			pid: 999,
+			name: "kthread0",
+			username: null,
+			status: null,
+			nice: null,
+			num_threads: null,
+			cpu_percent: null,
+			memory_percent: null,
+			cmdline: null,
+			memory_info: null,
+			cpu_times: null,
+			io_counters: null,
+			time_since_update: null,
+		},
+	],
+	_levels: {
+		12345: {
+			cpu_percent: { level: "warning", prominent: false },
+			memory_percent: { level: "ok", prominent: false },
+		},
+	},
+};
+
+// Three rows, payload order DELIBERATELY not sorted by any column -- the
+// highest `cpu_percent` (pid 10, 50%) sits in the MIDDLE. Proves two things
+// at once (test_webui_v5_render.py): the component renders payload order,
+// never re-sorting (the engine already did that server-side), and the
+// `max_processes_display` cap (CONFIG_FIXTURES above, set to 2 for this
+// scenario) slices the first N of THAT order, not the top N by value --
+// cutting pid 20 even though its cpu_percent (20) beats pid 30's (5).
+// `cmdline: [name]` with no args -- `split_cmdline`'s "cmdline[0] starts
+// with name" branch -- makes each Command cell equal to the process name,
+// the simplest possible row identity check.
+const PROCESSLIST_ORDER_FIXTURE = {
+	_key: "pid",
+	data: [
+		{
+			pid: 30,
+			name: "third",
+			username: "u3",
+			status: "S",
+			nice: 0,
+			num_threads: 1,
+			cpu_percent: 5,
+			memory_percent: 1,
+			cmdline: ["third"],
+		},
+		{
+			pid: 10,
+			name: "first",
+			username: "u1",
+			status: "S",
+			nice: 0,
+			num_threads: 1,
+			cpu_percent: 50,
+			memory_percent: 9,
+			cmdline: ["first"],
+		},
+		{
+			pid: 20,
+			name: "second",
+			username: "u2",
+			status: "S",
+			nice: 0,
+			num_threads: 1,
+			cpu_percent: 20,
+			memory_percent: 5,
+			cmdline: ["second"],
+		},
+	],
+	_levels: {},
+};
+
+ALL_FIXTURES["processlist"] = { processlist: PROCESSLIST_FIXTURE };
+ALL_FIXTURES["processlist-sorted"] = { processlist: PROCESSLIST_FIXTURE };
+ALL_FIXTURES["processlist-cap"] = { processlist: PROCESSLIST_ORDER_FIXTURE };
+ALL_FIXTURES["processlist-narrow"] = { processlist: PROCESSLIST_FIXTURE };
+ALL_FIXTURES["processlist-wide"] = { processlist: PROCESSLIST_FIXTURE };
+
+// programlist (task 8): the per-program aggregation. Same shape as
+// PROCESSLIST_FIXTURE above with `pid` replaced by `nprocs` (no single pid --
+// programlist/model_v5.py: the engine sets `pid='_'` on the aggregated row)
+// and keyed on `name` (the primary key) instead. Values reused unchanged
+// where the column is identical (CPU%/MEM%/VIRT/RES/USER/THR/NI/S/TIME+/R-W
+// per-s/Command), so the same formatted strings apply.
+const PROGRAMLIST_FIXTURE = {
+	_key: "name",
+	data: [
+		{
+			name: "python3",
+			username: "alice",
+			status: "S",
+			nice: 0,
+			num_threads: 4,
+			nprocs: 3,
+			cpu_percent: 78.4,
+			memory_percent: 3.1,
+			cmdline: ["/usr/bin/python3", "myscript.py", "--verbose"],
+			memory_info: { vms: 125829120, rss: 33554432 },
+			cpu_times: { user: 10, system: 2 },
+			io_counters: [2048, 1024, 1024, 0, 1],
+			time_since_update: 2,
+		},
+		{
+			name: "kthread0",
+			username: null,
+			status: null,
+			nice: null,
+			num_threads: null,
+			nprocs: null,
+			cpu_percent: null,
+			memory_percent: null,
+			cmdline: null,
+			memory_info: null,
+			cpu_times: null,
+			io_counters: null,
+			time_since_update: null,
+		},
+	],
+	_levels: {
+		python3: {
+			cpu_percent: { level: "warning", prominent: false },
+			memory_percent: { level: "ok", prominent: false },
+		},
+	},
+};
+
+// Payload-order cap proof, the programlist twin of PROCESSLIST_ORDER_FIXTURE:
+// the highest `cpu_percent` (50, "first") sits in the middle of three rows,
+// so a component that sorted before slicing would keep it; one that slices
+// payload order must not.
+const PROGRAMLIST_ORDER_FIXTURE = {
+	_key: "name",
+	data: [
+		{ name: "third", username: "u3", status: "S", nice: 0, num_threads: 1, nprocs: 1, cpu_percent: 5, memory_percent: 1, cmdline: ["third"] },
+		{ name: "first", username: "u1", status: "S", nice: 0, num_threads: 1, nprocs: 1, cpu_percent: 50, memory_percent: 9, cmdline: ["first"] },
+		{ name: "second", username: "u2", status: "S", nice: 0, num_threads: 1, nprocs: 1, cpu_percent: 20, memory_percent: 5, cmdline: ["second"] },
+	],
+	_levels: {},
+};
+
+ALL_FIXTURES["programlist"] = { programlist: PROGRAMLIST_FIXTURE };
+ALL_FIXTURES["programlist-sorted"] = { programlist: PROGRAMLIST_FIXTURE };
+ALL_FIXTURES["programlist-cap"] = { programlist: PROGRAMLIST_ORDER_FIXTURE };
+
+// processcount's truncation counter and sort indicator (task 8). Both reuse
+// PROCESSCOUNT_FIXTURE (total 215); what differs per scenario is
+// ARGS_FIXTURES/CONFIG_FIXTURES above.
+ALL_FIXTURES["processcount-cut"] = { processcount: PROCESSCOUNT_FIXTURE };
+ALL_FIXTURES["processcount-cut-programs"] = { processcount: PROCESSCOUNT_FIXTURE };
+ALL_FIXTURES["processcount-sorted-threads"] = { processcount: PROCESSCOUNT_FIXTURE };
+ALL_FIXTURES["processcount-sorted-programs"] = { processcount: PROCESSCOUNT_FIXTURE };
+
 // Zone widths per scenario, keyed by the `data-slot` the shell renders. The
 // numbers are what a browser would report: `available` is clientWidth,
 // `content` scrollWidth. `content` is what the cascade shrinks -- the harness
@@ -1184,16 +1524,27 @@ const BLOCK_WIDTH_FIXTURES = {
 	// 2000 - 9*150 = 650 > 300: the cascade runs to its last step, so all
 	// nine droppable columns go and only CONTAINER / CPU% / MEM survive.
 	"containers-narrow": { containers: { available: 300, content: 2000 } },
+	// Fits as it is: every column survives (processlist_columns.js).
+	"processlist-wide": { processlist: { available: 1400, content: 900 } },
+	// 2000 - 8*150 = 800 > 200: the cascade runs to its last step (only 8
+	// droppable columns here, one fewer than containers' 9), so all eight go
+	// and only CPU% / MEM% / R/s / W/s / Command survive -- Command being the
+	// protected tail is exactly what this scenario is for.
+	"processlist-narrow": { processlist: { available: 200, content: 2000 } },
 };
 
 module.exports = {
 	ALERT_FIXTURES,
 	ALERT_SCENARIOS,
+	ALERT_INCIDENTS_FIXTURE,
+	ALERT_INCIDENTS_SCENARIOS,
 	INFO_FIXTURES,
 	SERVER_PLUGINS,
 	PLUGINSLIST_FIXTURES,
 	ALL_UNREACHABLE_SCENARIOS,
+	ALERT_INCIDENTS_UNREACHABLE_SCENARIOS,
 	ARGS_FIXTURES,
+	CONFIG_FIXTURES,
 	ALL_FIXTURES,
 	WIDTH_FIXTURES,
 	CONTENT_PER_NOTCH,

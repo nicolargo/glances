@@ -193,26 +193,4 @@ export default {
 .gl-table td.gl-num-left {
 	text-align: left;
 }
-/* The unbounded column: the TUI budgets it at _MIN_COMMAND_WIDTH = 8
- * (containers/render_curses_v5.py:59), and Task 6's measuring pass depends
- * on this cap holding. `display: block` is load-bearing, not decorative:
- * `max-width` (and `.gl-truncate`'s overflow/text-overflow) do not apply to
- * a non-replaced INLINE element, so without it this span would measure at
- * its natural, unbounded width during `.gl-measuring` -- the same reason
- * `.gl-name` (css/v5.css) carries it. */
-.gl-command {
-	display: block;
-	max-width: 24ch;
-}
-/* Same defect, same fix as `.gl-command` above, found by measuring the live
- * page on 2026-09-19: this span is inline, so its ellipsis and any cap were
- * inert and the cell rendered 1540px wide for "61208/tcp,61209/tcp". The TUI
- * budgets the column at 16 characters (`_COL_GEOMETRY["ports"]`), so an
- * unbounded cell makes the width cascade over-fire on a host publishing many
- * ports. 24 rather than 16 for the same readability reason as the command
- * cap, and the full list stays on the `title`. */
-.gl-ports {
-	display: block;
-	max-width: calc(24 * var(--gl-col));
-}
 </style>

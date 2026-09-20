@@ -16,7 +16,13 @@ export function visiblePlugins(registry, names) {
 	const enabled = new Set(names);
 	// Filter the REGISTRY, not the names: pluginslist is sorted server-side,
 	// and the registry order is the layout order.
-	return registry.filter((entry) => enabled.has(entry.name));
+	//
+	// `ownEndpoint` marks an entry that is not backed by a real GlancesPlugin
+	// instance (`alert`: fed by its own endpoint, /api/5/alert/incidents,
+	// never by /api/5/all). pluginslist is `app.state.plugins` keys, so such
+	// an entry never appears there and would otherwise be filtered out on
+	// every real server, always -- it stays visible unconditionally instead.
+	return registry.filter((entry) => entry.ownEndpoint || enabled.has(entry.name));
 }
 
 export function groupBySlot(entries) {

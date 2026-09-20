@@ -205,6 +205,7 @@ class TuiV5(threading.Thread):
         hide_public_info: bool = False,
         byte: bool = False,
         disable_unicode: bool = False,
+        programs: bool = False,
     ) -> None:
         super().__init__(name="glances-tui-v5", daemon=True)
         self.store = store
@@ -225,9 +226,12 @@ class TuiV5(threading.Thread):
         self._theme = str(self.config.get("outputs", "theme", "dark")).strip().lower()
         self._stop_event = threading.Event()
         # User-toggled view options (percpu / short-name / programs),
-        # driven by the hotkey dispatch table. The process sort key is
-        # held by the ``glances_processes`` engine, not here.
-        self._view = ViewState()
+        # driven by the hotkey dispatch table. ``programs`` starts from the
+        # CLI flag --programs (wired in main_v5.assemble) — the ``j`` hotkey
+        # flips it live from there, same pattern as full_quicklook/percpu
+        # below. The process sort key is held by the ``glances_processes``
+        # engine, not here.
+        self._view = ViewState(programs=bool(programs))
         # Quicklook view options. ``_full_quicklook`` is also toggled live by
         # the ``4`` hotkey; ``_percpu`` selects per-core bars inside the
         # quicklook block (distinct from ``_view.show_percpu``, which swaps the

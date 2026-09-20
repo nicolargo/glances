@@ -287,6 +287,38 @@ body {
   max-width: var(--gl-name-width);
 }
 
+/* The unbounded column: the TUI budgets it at _MIN_COMMAND_WIDTH = 8
+ * (containers/render_curses_v5.py:59), and the measuring pass depends
+ * on this cap holding. `display: block` is load-bearing, not decorative:
+ * `max-width` (and `.gl-truncate`'s overflow/text-overflow) do not apply to
+ * a non-replaced INLINE element, so without it this span would measure at
+ * its natural, unbounded width during `.gl-measuring` -- the same reason
+ * `.gl-name` above carries it. Global, not scoped to one component: the
+ * `.gl-measuring` exclusion above exempts `.gl-command` for every consumer
+ * of the class, so the cap that makes the exclusion safe has to live where
+ * the exclusion does, not in a single component's scoped style. 24 is an
+ * arbitrary readability choice (wider than the TUI's _MIN_COMMAND_WIDTH = 8),
+ * never a measured value, so it is written in the column unit like every
+ * other unmeasured character count -- `ch` lies under the shipped font
+ * stack (0.5em vs `--gl-col`'s real 0.6em glyph advance). */
+.gl-command {
+  display: block;
+  max-width: calc(24 * var(--gl-col));
+}
+/* Same defect, same fix as `.gl-command` above, found by measuring the live
+ * page on 2026-09-19: this span is inline, so its ellipsis and any cap were
+ * inert and the cell rendered 1540px wide for "61208/tcp,61209/tcp". The TUI
+ * budgets the column at 16 characters (`_COL_GEOMETRY["ports"]`), so an
+ * unbounded cell makes the width cascade over-fire on a host publishing many
+ * ports. 24 rather than 16 for the same readability reason as the command
+ * cap, and the full list stays on the `title`. Global for the same reason
+ * as `.gl-command` above: `.gl-measuring` exempts `.gl-ports` globally, so
+ * its cap cannot live in only one component's scoped style. */
+.gl-ports {
+  display: block;
+  max-width: calc(24 * var(--gl-col));
+}
+
 /* Ellipsis at the START, keeping the tail -- the TUI's "_" + name[-17:] for
  * interfaces, disks and mount points. The text MUST sit in a <bdi>: without
  * it the bidi algorithm moves a leading "/" to the end, and "/boot/efi"

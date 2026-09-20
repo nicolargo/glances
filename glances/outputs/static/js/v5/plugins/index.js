@@ -51,6 +51,9 @@ import PluginVms from "../PluginVms.vue";
 import PluginContainers from "../PluginContainers.vue";
 import PluginProcesscount from "../PluginProcesscount.vue";
 import PluginAmps from "../PluginAmps.vue";
+import PluginProcesslist from "../PluginProcesslist.vue";
+import PluginProgramlist from "../PluginProgramlist.vue";
+import PluginAlert from "../PluginAlert.vue";
 
 export const PLUGINS = [
 	// The header plugins declare `required: []`: a missing guard field
@@ -235,5 +238,37 @@ export const PLUGINS = [
 		component: PluginAmps,
 		slot: "right",
 		spec: { shape: "collection", required: ["name"] },
+	},
+	{
+		name: "processlist",
+		component: PluginProcesslist,
+		slot: "right",
+		spec: { shape: "collection", required: ["pid"] },
+	},
+	{
+		name: "programlist",
+		component: PluginProgramlist,
+		slot: "right",
+		// `name` is the primary key (programlist/model_v5.py) -- a program has
+		// no single pid, the engine sets `pid='_'` on the aggregated row.
+		spec: { shape: "collection", required: ["name"] },
+	},
+	{
+		name: "alert",
+		component: PluginAlert,
+		slot: "right",
+		// Fed by its own endpoint (/api/5/alert/incidents), never by
+		// /api/5/all, so it declares no payload `shape` to validate against.
+		// `ownEndpoint` also tells visiblePlugins() (layout.js) to keep it
+		// visible even though it is never a key of /api/5/pluginslist (that
+		// list is `app.state.plugins` keys -- `alert` is not a GlancesPlugin).
+		// This marker alone does not fetch anything: AppShell.tick() has a
+		// hand-written fetch for the `alert` name specifically
+		// (api/5/alert/incidents). A second `ownEndpoint` entry would be
+		// excluded from fetchAll() by this flag, same as `alert`, but with
+		// nothing fetching it -- it would stay visible, carried over
+		// unchanged every tick (the `ownEndpointPlugins` carry-over loop),
+		// and render "loading…" forever with nothing failing.
+		ownEndpoint: true,
 	},
 ];

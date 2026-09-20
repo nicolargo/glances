@@ -199,3 +199,31 @@ function parseSeconds(value) {
 function pad2(n) {
 	return String(n).padStart(2, "0");
 }
+
+// Mirrors processlist/render_curses_v5.py::_format_cpu_time() -- the TIME+
+// column: `cpu_times.user + cpu_times.system`, NOT format_seconds() above
+// (a different algorithm: MM:SS below an hour, Hh{MM:SS} between 1h and
+// 99h, a bare `{hours}h` past that, and this module's own "-" for a missing
+// value rather than format_seconds()'s ""). Added here, not kept private to
+// PluginProcesslist.vue, because `programlist` (G9-9B task 8) reuses this
+// renderer's cell builders VERBATIM in Python
+// (glances/plugins/programlist/render_curses_v5.py imports `_format_cpu_time`
+// from processlist rather than redefining it) -- its WebUI component needs
+// the identical formatter, and format.js is where every cross-plugin
+// formatter already lives.
+export function formatCpuTime(cpuTimes) {
+	if (!cpuTimes || typeof cpuTimes !== "object") return MISSING;
+	const user = Number(cpuTimes.user);
+	const system = Number(cpuTimes.system);
+	if (!Number.isFinite(user) || !Number.isFinite(system)) return MISSING;
+	const total = user + system;
+	if (total < 0) return MISSING;
+	const totalInt = Math.trunc(total);
+	const seconds = totalInt % 60;
+	const totalMinutes = Math.floor(totalInt / 60);
+	const minutes = totalMinutes % 60;
+	const hours = Math.floor(totalMinutes / 60);
+	if (hours > 99) return `${hours}h`;
+	if (hours > 0) return `${hours}h${pad2(minutes)}:${pad2(seconds)}`;
+	return `${minutes}:${pad2(seconds)}`;
+}

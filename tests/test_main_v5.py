@@ -618,6 +618,65 @@ def test_assemble_forwards_disable_unicode_to_the_tui(config, monkeypatch):
     assert captured["disable_unicode"] is True
 
 
+def test_assemble_forwards_programs_to_the_tui(config, monkeypatch):
+    """`--programs` reaches the TUI constructor, otherwise the terminal would
+    start in the threads view while the browser (reading `/api/5/args`)
+    starts in the programs view — same defect class as the sort key, other
+    surface. See ``test_tui_v5_cli_flag_seeds_programs_view`` in
+    test_curses_v5.py for the ``ViewState`` seeding this kwarg feeds."""
+    captured = {}
+
+    class _FakeTui:
+        def __init__(self, **kwargs):
+            captured.update(kwargs)
+
+    monkeypatch.setattr("glances.outputs.glances_curses_v5.TuiV5", _FakeTui)
+    args = build_parser().parse_args(["--programs"])
+    assemble(args, config)
+    assert captured["programs"] is True
+
+
+def test_assemble_forwards_programs_default_false_to_the_tui(config, monkeypatch):
+    captured = {}
+
+    class _FakeTui:
+        def __init__(self, **kwargs):
+            captured.update(kwargs)
+
+    monkeypatch.setattr("glances.outputs.glances_curses_v5.TuiV5", _FakeTui)
+    args = build_parser().parse_args([])
+    assemble(args, config)
+    assert captured["programs"] is False
+
+
+@pytest.mark.parametrize("programs_flag", [[], ["--programs"]])
+def test_tui_programs_kwarg_matches_the_rest_args_endpoint(config, monkeypatch, programs_flag):
+    """`--programs` is pinned on each side separately: the TUI's ``ViewState``
+    seeding (this kwarg) and the WebUI's exclusivity logic (`serverArgs.programs`,
+    read from `/api/5/args`). Nothing fails if one side is wired and the other
+    is not -- exactly the defect that had to be caught by hand during G9-9B.
+    Two `assemble()` calls (server mode has no TUI; TUI mode has no `app`,
+    see its docstring) built from CLI args that agree on everything but
+    `-s`, so both sides trace back to the same `--programs` flag."""
+    from glances.routes_v5 import _redact_args
+
+    captured = {}
+
+    class _FakeTui:
+        def __init__(self, **kwargs):
+            captured.update(kwargs)
+
+    monkeypatch.setattr("glances.outputs.glances_curses_v5.TuiV5", _FakeTui)
+    tui_args = build_parser().parse_args(programs_flag)
+    assemble(tui_args, config)
+
+    server_args = build_parser().parse_args(["-s", *programs_flag])
+    app, _scheduler, _host, _port, _tui = assemble(server_args, config)
+    published = _redact_args(app.state.args)["programs"]
+
+    assert captured["programs"] == published, f"TUI kwarg {captured['programs']!r} != /api/5/args {published!r}"
+
+
 def test_assemble_registry_excludes_non_display_plugins(config, monkeypatch):
     """The TUI registry skips plugins with DISPLAY_IN_TUI=False; REST keeps all."""
     from glances.plugins.plugin.base_v5 import GlancesPluginBase

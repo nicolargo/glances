@@ -440,7 +440,7 @@ def test_format_alert_time_malformed_falls_back():
 
 
 def test_format_duration_compact_seconds():
-    from glances.outputs.curses_renderer_v5 import _format_duration_compact
+    from glances.alerts_incidents_v5 import _format_duration_compact
 
     assert _format_duration_compact(0) == "0s"
     assert _format_duration_compact(43) == "43s"
@@ -448,21 +448,21 @@ def test_format_duration_compact_seconds():
 
 
 def test_format_duration_compact_minutes():
-    from glances.outputs.curses_renderer_v5 import _format_duration_compact
+    from glances.alerts_incidents_v5 import _format_duration_compact
 
     assert _format_duration_compact(60) == "1m00s"
     assert _format_duration_compact(178) == "2m58s"
 
 
 def test_format_duration_compact_hours():
-    from glances.outputs.curses_renderer_v5 import _format_duration_compact
+    from glances.alerts_incidents_v5 import _format_duration_compact
 
     assert _format_duration_compact(3600) == "1h00m"
     assert _format_duration_compact(4380) == "1h13m"
 
 
 def test_format_duration_compact_days():
-    from glances.outputs.curses_renderer_v5 import _format_duration_compact
+    from glances.alerts_incidents_v5 import _format_duration_compact
 
     assert _format_duration_compact(86400) == "1d00h"
     assert _format_duration_compact(187200) == "2d04h"
@@ -470,7 +470,7 @@ def test_format_duration_compact_days():
 
 def test_format_duration_compact_never_exceeds_eight_columns():
     """The DURATION column is 8 wide; nothing plausible may overflow it."""
-    from glances.outputs.curses_renderer_v5 import _format_duration_compact
+    from glances.alerts_incidents_v5 import _format_duration_compact
 
     assert len(_format_duration_compact(999 * 86400)) <= 8
 

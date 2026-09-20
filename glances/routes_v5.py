@@ -24,6 +24,7 @@ Route inventory:
 | ``/api/5/all/limits``         | GET    | per-plugin ``get_limits()``  |
 | ``/api/5/all/info``           | GET    | per-plugin ``fields_description`` |
 | ``/api/5/alert``              | GET    | ``alerts.get_history()``     |
+| ``/api/5/alert/incidents``    | GET    | ``{is_initializing, incidents}`` envelope (``derive_incidents()``) |
 | ``/api/5/config``             | GET    | ``config.as_dict_secure()``  |
 | ``/api/5/args``               | GET    | ``app.state.args``, redacted |
 | ``/api/5/<plugin>``           | GET    | ``plugin.get_api_payload()`` (``_levels`` included) |
@@ -51,6 +52,7 @@ from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from starlette.concurrency import run_in_threadpool
 
+from glances.alerts_incidents_v5 import derive_incidents, incident_duration
 from glances.config_v5 import GlancesConfigV5
 from glances.security_v5 import verify_password
 
@@ -170,6 +172,11 @@ def build_router() -> APIRouter:
             raise HTTPException(status_code=404, detail="Alerts subsystem disabled")
         return alerts.get_history()
 
+    # Declared BEFORE /{plugin_name}, like /all/info: FastAPI matches routes
+    # in declaration order, so a dynamic route declared first would swallow
+    # `alert` as a plugin name.
+    router.add_api_route("/alert/incidents", _alert_incidents, methods=["GET"], name="alert_incidents")
+
     @router.get("/config")
     async def config_dump(request: Request) -> dict[str, Any]:
         return request.app.state.config.as_dict_secure()
@@ -225,6 +232,58 @@ async def _all_info(request: Request) -> dict[str, Any]:
     fetches this once per page load.
     """
     return {name: plugin.fields_description for name, plugin in _plugins(request).items()}
+
+
+async def _alert_incidents(request: Request) -> dict[str, Any]:
+    """The alert history collapsed into incidents — the same synthesis
+    the TUI's alert block paints (glances/alerts_incidents_v5.py).
+
+    Module-level rather than a closure inside `build_router()`, like
+    `_all_info` above: that factory was already at ruff's complexity
+    ceiling, so every route added inside it pushes it over.
+
+    A second projection of the same data as ``/alert``, not a
+    replacement: that route stays the raw transition-log export
+    contract.
+
+    Each incident also carries a ``duration``: the same formatted,
+    ``>``-prefixed-when-``partial`` string the curses renderer shows
+    (`incident_duration()`, also from `glances.alerts_incidents_v5`).
+    Computed here rather than left to the caller so the browser cannot
+    grow a second implementation of the ``partial`` → ``>`` rule — a
+    client that dropped that prefix would print a lower bound as an
+    exact duration. ``duration`` is always present in the response;
+    its value is ``null`` for the handful of malformed/unknown cases
+    `incident_duration()` itself returns ``None`` for (see its
+    docstring), which a consumer must treat as "unknown", not as a
+    missing key.
+
+    `derive_incidents()` is pure and builds every incident dict fresh
+    (never a reference into `alerts._history` or `alerts._state`), so
+    mutating the returned dicts in place to add `duration` does not
+    touch anything the engine still owns.
+
+    Returns an envelope, not a bare array: ``is_initializing`` is
+    ``GlancesAlerts.is_initializing()``, the same flag
+    `render_alert_block` uses to tell "warm-up" from "no alert
+    detected" (curses_renderer_v5.py:738-745) — warm-up is not an
+    all-clear, so a client must be able to tell the two apart instead
+    of reading an empty ``incidents`` list as a healthy system from the
+    very first paint (fix round 2, IMPORTANT 2). No consumer of this
+    route predates this change, so the shape is still free to pick.
+    """
+    alerts = request.app.state.alerts
+    if alerts is None:
+        raise HTTPException(status_code=404, detail="Alerts subsystem disabled")
+    incidents = derive_incidents(
+        alerts.get_history(),
+        ongoing=alerts.get_ongoing(),
+        ongoing_since=alerts.get_ongoing_since(),
+        ongoing_top=alerts.get_ongoing_top(),
+    )
+    for incident in incidents:
+        incident["duration"] = incident_duration(incident)
+    return {"is_initializing": alerts.is_initializing(), "incidents": incidents}
 
 
 def _redact_args(args: argparse.Namespace | None) -> dict[str, Any]:

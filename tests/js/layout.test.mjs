@@ -28,6 +28,18 @@ test("visiblePlugins ignores a server plugin the registry has no component for",
 	);
 });
 
+test("visiblePlugins never filters out an ownEndpoint entry, even when pluginslist omits it", () => {
+	// `alert` is fed by its own endpoint (/api/5/alert/incidents), never by
+	// /api/5/all, so it is never a key of `app.state.plugins` and never
+	// appears in a real /api/5/pluginslist answer -- it must stay visible
+	// regardless.
+	const registry = [...REGISTRY, { name: "alert", slot: "right", ownEndpoint: true }];
+	assert.deepEqual(
+		visiblePlugins(registry, ["cpu"]).map((e) => e.name),
+		["cpu", "alert"],
+	);
+});
+
 test("an unreadable pluginslist renders the whole registry", () => {
 	// null is what resolvePluginNames() returns on failure. Falling back to
 	// the full registry is exactly the behaviour before visibility existed.
