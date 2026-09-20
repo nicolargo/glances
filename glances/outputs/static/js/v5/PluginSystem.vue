@@ -17,19 +17,11 @@
 </template>
 
 <script>
+import { PLUGIN_PROPS } from "./plugin_props.js";
 export default {
 	name: "PluginSystem",
-	props: {
-		payload: { type: Object, default: null },
-		error: { type: String, default: undefined },
-		labels: { type: Object, default: () => ({}) },
-		// Declared but unused. An undeclared prop becomes a fallthrough
-		// attribute, so without this line the DOM gets
-		// server-args="[object Object]" on the root.
-		serverArgs: { type: Object, default: () => ({}) },
-		// `hide_os_info` (glances_curses_v5.py:87) is read below, in `hrName`.
-		degrade: { type: Object, default: () => ({}) },
-	},
+	// Reads `degrade.hide_os_info` (glances_curses_v5.py) in `hrName` below.
+	props: { ...PLUGIN_PROPS },
 	computed: {
 		// glances/plugins/system/render_curses_v5.py: no hostname, no block.
 		// `hr_name` already carries `[system] system_info_msg`, applied by the
@@ -39,7 +31,7 @@ export default {
 		},
 		// `hide_os_info` is the TUI's header step (2)
 		// (glances_curses_v5.py:87): static host metadata is worth less under
-		// width pressure than any live metric. G9-5 D3 said the browser would
+		// width pressure than any live metric. spec D3 said the browser would
 		// not reproduce this; the 2026-09-12 spec reverses that.
 		hrName() {
 			if (this.degrade.hide_os_info) return "";

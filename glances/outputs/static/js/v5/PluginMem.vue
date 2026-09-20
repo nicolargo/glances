@@ -37,23 +37,15 @@
 import { formatBytes, formatPercent } from "./format.js";
 import { levelClass, scalarLevel } from "./levels.js";
 import { labelFor } from "./labels.js";
+import { PLUGIN_PROPS } from "./plugin_props.js";
 
 const COL2_FIELDS = ["active", "inactive", "buffers", "cached"];
 
 export default {
 	name: "PluginMem",
-	props: {
-		payload: { type: Object, default: null },
-		error: { type: String, default: undefined },
-		labels: { type: Object, default: () => ({}) },
-		// Declared but unused. An undeclared prop becomes a fallthrough
-		// attribute, so without this line the DOM gets
-		// server-args="[object Object]" on the article.
-		serverArgs: { type: Object, default: () => ({}) },
-		// `mem_cols` (1 or 2) -- the TUI's first degradation notch
-		// (glances_curses_v5.py:62). Anything else means "no degradation".
-		degrade: { type: Object, default: () => ({}) },
-	},
+	// Reads `degrade.mem_cols` (1 or 2) -- the TUI's first degradation notch
+	// (glances_curses_v5.py). Anything else means "no degradation".
+	props: { ...PLUGIN_PROPS },
 	computed: {
 		// Mirrors glances/plugins/mem/render_curses_v5.py: `available` (Linux,
 		// macOS) is preferred over `used`; `used` is the fallback for
@@ -66,7 +58,7 @@ export default {
 		},
 		// mem_cols=1 (TUI step a) drops the whole 2nd column. In the TUI that
 		// also drops the line-1 `active` pair; in the WebUI `active` IS the
-		// first pair of this column (G9-5 A1), so one rule covers both.
+		// first pair of this column (spec A1), so one rule covers both.
 		col2() {
 			if (this.degrade.mem_cols === 1) return [];
 			return COL2_FIELDS.map((field) => this.statFor(field));

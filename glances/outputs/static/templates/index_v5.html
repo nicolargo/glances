@@ -4,6 +4,25 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!--
+    The WebUI is one self-hosted bundle talking to /api/5 on its own origin:
+    it loads no third-party script, no web font and no remote image, and it
+    submits no form. Saying so here means an injection that ever did reach the
+    DOM still cannot exfiltrate to another origin or pull code in.
+
+    `style-src 'unsafe-inline'` is required, not slack: style-loader injects
+    the stylesheet as a <style> tag, Vue's scoped styles do the same, and the
+    `:style` bindings that size the process <colgroup> are inline style
+    ATTRIBUTES, which this directive also governs.
+
+    `frame-ancestors` is deliberately absent: it is ignored in a <meta> CSP
+    and has to be sent as a response header. Glances serves this page as a
+    static file, so clickjacking protection belongs in the server's
+    middleware, not here.
+  -->
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'" />
+  <meta name="referrer" content="same-origin" />
   <title>Glances</title>
 
   <link rel="icon" type="image/x-icon" href="static/favicon.ico" />

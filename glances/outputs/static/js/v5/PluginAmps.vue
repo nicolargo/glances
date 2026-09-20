@@ -2,7 +2,7 @@
 	<CollectionBlock :title="TITLE" :payload="payload" :error="error" :hidden="!!payload && rows.length === 0">
 		<!-- No #head slot: the TUI paints no title and no column header
 		(amps/render_curses_v5.py module docstring, v4 parity), so
-		CollectionBlock renders no <thead> -- the `ports` case from G9-7 D4.
+		CollectionBlock renders no <thead> -- the `ports` case from spec D4.
 		`title` is still required by the shell: it names the block for assistive
 		technology and shows while loading or erroring. A comment placed BEFORE
 		<CollectionBlock> instead of inside it makes this component a two-root
@@ -12,7 +12,9 @@
 		error anywhere. Keep every comment INSIDE this root. -->
 		<template #body>
 			<tbody>
-				<tr v-for="item in displayRows" :key="item.name">
+				<!-- The truncation marker below renders with an empty name, so it
+				cannot key on `name` like a real AMP row does. -->
+				<tr v-for="item in displayRows" :key="item.truncation ? '\u0000more' : item.name">
 					<td>
 						<!-- The tier comes from the item's `count` level and lands on the
 						NAME, as the TUI does (amps/render_curses_v5.py:78-79). -->
@@ -37,6 +39,7 @@
 import { cellClassFor } from "./columns.js";
 import { ampsVisibleRows } from "./amps.js";
 import CollectionBlock from "./CollectionBlock.vue";
+import { PLUGIN_PROPS } from "./plugin_props.js";
 
 const TITLE = "AMPS";
 
@@ -50,15 +53,7 @@ export default {
 	inject: {
 		rowBudget: { default: () => ({}) },
 	},
-	props: {
-		payload: { type: Object, default: null },
-		error: { type: String, default: undefined },
-		labels: { type: Object, default: () => ({}) },
-		// Declared but unused: nothing in this block depends on a CLI flag.
-		serverArgs: { type: Object, default: () => ({}) },
-		// Declared but unused: hidden as a whole, never shrunk.
-		degrade: { type: Object, default: () => ({}) },
-	},
+	props: { ...PLUGIN_PROPS },
 	computed: {
 		TITLE: () => TITLE,
 		// amps/render_curses_v5.py:70-73: an AMP that has produced nothing yet
@@ -99,8 +94,10 @@ export default {
 				remaining -= take;
 			}
 			const hidden = totalLines - contentLines;
-			// Exact marker text amps/render_curses_v5.py:105 emits.
-			out.push({ name: "", count: null, regex: false, result: `… +${hidden} lines` });
+			// Exact marker text amps/render_curses_v5.py:105 emits. `truncation`
+			// is this component's own flag, not a payload field: it keys the row
+			// (the marker's name is deliberately empty) and nothing else reads it.
+			out.push({ name: "", count: null, regex: false, result: `… +${hidden} lines`, truncation: true });
 			return out;
 		},
 	},

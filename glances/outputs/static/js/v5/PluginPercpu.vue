@@ -30,6 +30,7 @@
 import { computed } from "vue";
 import CollectionBlock from "./CollectionBlock.vue";
 import { formatPercent } from "./format.js";
+import { PLUGIN_PROPS } from "./plugin_props.js";
 
 const TITLE = "CPU";
 
@@ -45,32 +46,20 @@ export default {
 	// or `degrade`: it has exactly one consumer (this component), so
 	// declaring it as a prop on all 24 registered components would leave 23
 	// dead declarations, and leaving it undeclared everywhere else would leak
-	// a `server-plugins` DOM attribute on every other block (found and fixed
-	// in G9-8 Task 4 review). Do not "fix" this back into a prop. The default
+	// a `server-plugins` DOM attribute on every other block. Do not "fix"
+	// this back into a prop. The default
 	// is a reactive empty list for a component mounted outside AppShell (the
 	// render probe, a future unit test) -- empty means "quicklook not
 	// instantiated", i.e. the standalone shape.
 	inject: {
 		serverPlugins: { default: () => computed(() => []) },
 	},
-	props: {
-		payload: { type: Object, default: null },
-		error: { type: String, default: undefined },
-		// Declared but unused: percpu's column headers are the plain field
-		// names, exactly as the TUI prints them -- the schema declares no
-		// short_name/label for any of them.
-		labels: { type: Object, default: () => ({}) },
-		// Read for `--percpu` (Critical 2's `standalone` gate). percpu still
-		// carries no per-field alert (this plugin's model docstring), so no
-		// cell is ever tier-coloured.
-		serverArgs: { type: Object, default: () => ({}) },
-		// Read for `hide_quicklook` only: this component is never shrunk, but a
-		// quicklook the cascade removed no longer shows the per-core totals.
-		degrade: { type: Object, default: () => ({}) },
-	},
+	// Reads `serverArgs.percpu` and `degrade.hide_quicklook`, both in
+	// `standalone` below.
+	props: { ...PLUGIN_PROPS },
 	computed: {
 		TITLE: () => TITLE,
-		// v4/TUI parity, narrowed by the final review (Critical 2): v4 gates
+		// v4/TUI parity, deliberately narrowed: v4 gates
 		// this on ONE flag (`args.percpu`) that governs both "percpu is on
 		// screen" and "quicklook draws per-core bars" at once
 		// (percpu/render_curses_v5.py module docstring). v5 split that into
@@ -93,8 +82,8 @@ export default {
 		},
 		// The columns the TUI resolves from `sys.platform` cannot be resolved
 		// in the browser, but the SERVER can: the model publishes the resolved
-		// order as `stat_fields` (final review, Important 3 -- the same fix
-		// already applied to `max_cpu_display`). The first core's own numeric
+		// order as `stat_fields` -- the same treatment `max_cpu_display`
+		// already gets. The first core's own numeric
 		// keys are only the fallback for a payload from an older server that
 		// predates the field.
 		statFields() {

@@ -15,7 +15,7 @@
 // (glances/outputs/curses_renderer_v5.py). Order within a slot is THIS
 // list's order, so keep entries in the TUI's order.
 //
-// This is a second copy of those tuples (G9-5 decision D4). Two tests keep it
+// This is a second copy of those tuples (spec D4). Two tests keep it
 // honest: test_every_slot_orders_its_plugins_like_the_tui fails on a plugin
 // in the wrong slot or out of order, and
 // test_the_registry_renders_every_registered_plugin fails on a missing or

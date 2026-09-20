@@ -30,23 +30,13 @@
 <script>
 import { levelClass, scalarLevel } from "./levels.js";
 import { labelFor } from "./labels.js";
+import { PLUGIN_PROPS } from "./plugin_props.js";
 
 const FIELDS = ["min1", "min5", "min15"];
 
 export default {
 	name: "PluginLoad",
-	props: {
-		payload: { type: Object, default: null },
-		error: { type: String, default: undefined },
-		labels: { type: Object, default: () => ({}) },
-		// Declared but unused. An undeclared prop becomes a fallthrough
-		// attribute, so without this line the DOM gets
-		// server-args="[object Object]" on the article.
-		serverArgs: { type: Object, default: () => ({}) },
-		// Declared but unused: this component is hidden as a whole rather than
-		// shrunk (spec D7). An undeclared prop becomes a fallthrough attribute.
-		degrade: { type: Object, default: () => ({}) },
-	},
+	props: { ...PLUGIN_PROPS },
 	computed: {
 		// `cpucore` is internal: true in the schema -- the TUI shows it as the
 		// header's "{N}core" suffix and never as a row. Same here.

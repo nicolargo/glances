@@ -46,6 +46,20 @@ export function fits({ content, available }) {
 	return content <= available;
 }
 
+// Compare two resolved flag sets. Both cascades resolve to a flat object of
+// primitive values (booleans/numbers), never nested, so a key-by-key
+// comparison is enough -- and it is REQUIRED: `resolveDegrade` always returns
+// a fresh object, so `===` would never be true even when the two agree.
+//
+// Both callers (AppShell.refit() for a zone, fit_block.js for a block) use it
+// to skip the final assignment when nothing actually changed, which is what
+// stops a ResizeObserver from feeding back on its own DOM writes.
+export function sameFlags(a, b) {
+	const aKeys = Object.keys(a);
+	const bKeys = Object.keys(b);
+	return aKeys.length === bKeys.length && aKeys.every((key) => a[key] === b[key]);
+}
+
 // Mirrors _build_fitted_frame / _fit_header: start with NO flag, apply one
 // cascade entry at a time, re-measure, stop as soon as it fits. Starting from
 // zero on every call is what makes a widening window give the stats back.

@@ -20,6 +20,7 @@
 </template>
 
 <script>
+import { PLUGIN_PROPS } from "./plugin_props.js";
 // glances/plugins/ip/render_curses_v5.py:35-37 -- a.b.c.d -> a.b.*.*
 function hideIp(ip) {
 	return `${String(ip).split(".").slice(0, 2).join(".")}.*.*`;
@@ -27,20 +28,14 @@ function hideIp(ip) {
 
 export default {
 	name: "PluginIp",
-	props: {
-		payload: { type: Object, default: null },
-		error: { type: String, default: undefined },
-		labels: { type: Object, default: () => ({}) },
-		// READ here: `hide_public_info` is the --hide-public-info CLI flag.
-		serverArgs: { type: Object, default: () => ({}) },
-		// `hide_ip_location` (glances_curses_v5.py:87) is read below, in `publicInfo`.
-		degrade: { type: Object, default: () => ({}) },
-	},
+	// Reads `serverArgs.hide_public_info` (--hide-public-info) and
+	// `degrade.hide_ip_location`, both in `publicInfo` below.
+	props: { ...PLUGIN_PROPS },
 	computed: {
 		// Mirrors glances/plugins/ip/render_curses_v5.py: the private cells
 		// need `address`, the public cells need `public_address`, and a block
 		// with no cell at all is not rendered. "IP" and "Pub" are block tags,
-		// not field labels (G9-5 spec §7.3).
+		// not field labels (spec §7.3).
 		address() {
 			return this.payload?.address || "";
 		},
@@ -52,14 +47,14 @@ export default {
 			return this.payload?.public_address || "";
 		},
 		// DISPLAY-ONLY masking, exactly like the TUI. /api/5/ip and /api/5/all
-		// still serve the address in clear -- G9-5 spec §11 tracks that; do not
+		// still serve the address in clear -- spec §11 tracks that; do not
 		// mistake this for a privacy control.
 		publicShown() {
 			return this.serverArgs.hide_public_info ? hideIp(this.publicAddress) : String(this.publicAddress);
 		},
 		// `hide_ip_location` is the TUI's header step (1)
 		// (glances_curses_v5.py:87): the widest, least essential segment of the
-		// banner goes first, and both addresses survive it. G9-5 D3 said the
+		// banner goes first, and both addresses survive it. spec D3 said the
 		// browser would not reproduce this; the 2026-09-12 spec reverses that.
 		publicInfo() {
 			if (this.degrade.hide_ip_location) return "";

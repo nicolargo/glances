@@ -44,6 +44,7 @@ import { toFahrenheit } from "./format.js";
 import { levelClass, itemLevel } from "./levels.js";
 import { labelFor } from "./labels.js";
 import { cellClassFor } from "./columns.js";
+import { PLUGIN_PROPS } from "./plugin_props.js";
 
 const HEADER_FALLBACK = "GPU";
 
@@ -61,20 +62,8 @@ function gpuValue(value, unit = "%") {
 
 export default {
 	name: "PluginGpu",
-	props: {
-		payload: { type: Object, default: null },
-		error: { type: String, default: undefined },
-		labels: { type: Object, default: () => ({}) },
-		// The first component that actually READS this -- `meangpu` picks the
-		// layout, `fahrenheit` the temperature unit. The declaration is
-		// mandatory either way: an undeclared prop becomes a fallthrough
-		// attribute, so without this line the DOM gets
-		// server-args="[object Object]" on the article.
-		serverArgs: { type: Object, default: () => ({}) },
-		// Declared but unused: this component is hidden as a whole rather than
-		// shrunk (spec D7). An undeclared prop becomes a fallthrough attribute.
-		degrade: { type: Object, default: () => ({}) },
-	},
+	// Reads `serverArgs.meangpu` (layout) and `serverArgs.fahrenheit` (unit).
+	props: { ...PLUGIN_PROPS },
 	computed: {
 		cards() {
 			return this.payload?.data || [];
@@ -140,7 +129,7 @@ export default {
 		// header at all, and line 116 writes f" mem {value}"). A <thead> here
 		// would show `name` and `proc`, two labels the terminal never
 		// displays. The card-name column IS capped at 9 characters in the
-		// template (G9-8 smoke fix 3) -- the TUI's own cut
+		// template -- the TUI's own cut
 		// (render_curses_v5.py:114) -- reversing the earlier design-spec §8.4
 		// call after the maintainer's smoke test found the uncapped name
 		// pushed every value column to the far edge of its 9ch floor.
@@ -173,13 +162,13 @@ export default {
 .gl-plugin td:not(.gl-num) {
 	text-align: left;
 }
-/* G9-8 smoke fix 3: the TUI's name width (render_curses_v5.py:114 `[0:9]`). */
+/* : the TUI's name width (render_curses_v5.py:114 `[0:9]`). */
 .gl-plugin {
 	--gl-name-width: calc(9 * var(--gl-col));
 }
 /* The global `.gl-num` 9ch floor is wrong for THIS table: it is wider than
    any value gpu ever renders, and with the name column no longer eating the
-   row's width (G9-8 smoke fix 3) that slack pushed every value to the far
+   row's width () that slack pushed every value to the far
    edge of a 9-character column. The previous round zeroed the floor
    entirely, which overshot the other way -- with nothing to floor on, the
    column resizes with the text every tick ("9%" -> "100%", or "mem 9%" ->

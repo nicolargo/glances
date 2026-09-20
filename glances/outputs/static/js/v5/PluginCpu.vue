@@ -33,6 +33,7 @@
 import { formatCount, formatPercent } from "./format.js";
 import { levelClass, scalarLevel } from "./levels.js";
 import { labelFor } from "./labels.js";
+import { PLUGIN_PROPS } from "./plugin_props.js";
 
 // Column 3 holds counters, not percentages -- see formatCount.
 const COUNTER_FIELDS = new Set(["interrupts", "soft_interrupts", "ctx_switches", "syscalls"]);
@@ -44,18 +45,9 @@ const PLAIN_FIELDS = new Set(["cpucore"]);
 
 export default {
 	name: "PluginCpu",
-	props: {
-		payload: { type: Object, default: null },
-		error: { type: String, default: undefined },
-		labels: { type: Object, default: () => ({}) },
-		// Declared but unused. An undeclared prop becomes a fallthrough
-		// attribute, so without this line the DOM gets
-		// server-args="[object Object]" on the article.
-		serverArgs: { type: Object, default: () => ({}) },
-		// `cpu_cols` (1..3) -- the TUI's second and third degradation notches
-		// (glances_curses_v5.py:62). Anything else means "no degradation".
-		degrade: { type: Object, default: () => ({}) },
-	},
+	// Reads `degrade.cpu_cols` (1..3) -- the TUI's second and third degradation
+	// notches (glances_curses_v5.py). Anything else means "no degradation".
+	props: { ...PLUGIN_PROPS },
 	computed: {
 		// Mirrors glances/plugins/cpu/render_curses_v5.py:145-200. The TUI
 		// branches on payload CONTENT, never on the operating system, which
@@ -69,11 +61,11 @@ export default {
 				? // The TUI writes `core` here (cpu/render_curses_v5.py:183) but
 					// no such field exists -- the schema and v4 both call it
 					// `cpucore`. Ported against the real field on purpose; see §10
-					// of the G9-4 design spec, which owns fixing the TUI side.
+					// of the design spec, which owns fixing the TUI side.
 					["idle", "cpucore", col1Last]
 				: ["user", "system", col1Last];
 
-			// `idle` (maintainer-requested Task 6b move: first row of column 2,
+			// `idle` (maintainer's request: first row of column 2,
 			// above `irq`). Same TUI condition as before
 			// (render_curses_v5.py:157): shown only outside the idle-tag branch,
 			// where `idle` already opens column 1 above.
@@ -81,7 +73,7 @@ export default {
 			if ("user" in p && p.idle != null) col2.push("idle");
 			col2.push("irq", "nice", "steal");
 
-			// `ctx_switches` (maintainer-requested Task 6b move: first row of
+			// `ctx_switches` (maintainer's request: first row of
 			// column 3, above `interrupts`). Same TUI condition as before
 			// (render_curses_v5.py:167), gated on the value only, never on
 			// `idle_tag`. In the idle-tag branch this can place `ctx_switches`

@@ -1,8 +1,8 @@
 // Glances v5 WebUI -- which container columns are visible.
 //
-// Pure: no DOM, no fetch, so `node --test` can load it. Logic inside a .vue
-// file cannot be unit-tested, and these rules are the ones most likely to
-// drift from the TUI, so they live here.
+// Pure: no DOM and no fetch, so `node --test` can load it. Logic inside a
+// .vue file cannot be unit-tested, and these rules are the ones most likely
+// to drift from the TUI, so they live here.
 //
 // Two unrelated families, kept apart on purpose (spec §5):
 //   - DATA-DRIVEN: the data (or the config) makes a column irrelevant. No
@@ -10,6 +10,8 @@
 //     and the `disable_stats` seed at :259.
 //   - WIDTH-DRIVEN: the row does not fit, so the cascade in drop_order.js
 //     hides the least useful column first. That is `flags` below.
+
+import { droppedColumns } from "./drop_order.js";
 
 // containers/render_curses_v5.py:286-292 plus the config's own list.
 export function dataDrivenHidden(rows, disableStats) {
@@ -32,8 +34,6 @@ export function dataDrivenHidden(rows, disableStats) {
 // disabled cannot come back when the window widens.
 export function hiddenColumns(rows, disableStats, flags) {
 	const hidden = dataDrivenHidden(rows, disableStats);
-	for (const [key, value] of Object.entries(flags || {})) {
-		if (value && key.startsWith("drop_")) hidden.add(key.slice("drop_".length));
-	}
+	for (const column of droppedColumns(flags)) hidden.add(column);
 	return hidden;
 }

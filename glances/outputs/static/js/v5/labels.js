@@ -28,8 +28,8 @@ export async function resolveAllLabels() {
 	} catch {
 		// A missing label must never blank a value: fall back to field names.
 		// A transient failure here pins field-name labels for the tab's life --
-		// acceptable because this is ONE request per page load, where G9-4 made
-		// one per plugin.
+		// acceptable because this is ONE request per page load, where an
+		// earlier version made one per plugin.
 		return {};
 	}
 	const labels = {};

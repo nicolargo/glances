@@ -35,24 +35,14 @@ import { labelFor } from "./labels.js";
 import { cellClassFor } from "./columns.js";
 import { byText, displayName } from "./rows.js";
 import CollectionBlock from "./CollectionBlock.vue";
+import { PLUGIN_PROPS } from "./plugin_props.js";
 
 const TITLE = "FILE SYS";
 
 export default {
 	name: "PluginFs",
 	components: { CollectionBlock },
-	props: {
-		payload: { type: Object, default: null },
-		error: { type: String, default: undefined },
-		labels: { type: Object, default: () => ({}) },
-		// Declared but unused: `free_space` is read from the payload, not from
-		// here -- /api/5/args misses a `[fs] free_space` set in the
-		// configuration, which the model has already merged (fs/model_v5.py).
-		serverArgs: { type: Object, default: () => ({}) },
-		// Declared but unused: this component is hidden as a whole rather than
-		// shrunk (spec D7). An undeclared prop becomes a fallthrough attribute.
-		degrade: { type: Object, default: () => ({}) },
-	},
+	props: { ...PLUGIN_PROPS },
 	computed: {
 		TITLE: () => TITLE,
 		// fs/render_curses_v5.py:75-76.
@@ -77,7 +67,7 @@ export default {
 </script>
 
 <style scoped>
-/* G9-6 D3: the TUI's name width (fs/render_curses_v5.py _NAME_MAX_WIDTH). */
+/* spec D3: the TUI's name width (fs/render_curses_v5.py _NAME_MAX_WIDTH). */
 .gl-plugin {
 	--gl-name-width: calc(18 * var(--gl-col));
 }

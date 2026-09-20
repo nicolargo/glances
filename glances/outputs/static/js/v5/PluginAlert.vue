@@ -68,7 +68,7 @@
 				newest-first within each group (derive_incidents(), design §5.3) --
 				this renderer never re-sorts, same rule as vms/containers. `rows`
 				is `allRows` capped to the row budget, never a re-sort of it. -->
-				<tr v-for="(incident, i) in rows" :key="i">
+				<tr v-for="incident in rows" :key="incidentKey(incident)">
 					<td><span :class="glyphClass(incident)">{{ glyphOf(incident) }}</span></td>
 					<td>{{ timeOf(incident) }}</td>
 					<td v-if="shows('DURATION')">{{ incident.duration || "-" }}</td>
@@ -84,10 +84,12 @@
 <script>
 import { levelClass } from "./levels.js";
 import { fitBlockMixin } from "./fit_block.js";
+import { droppedColumns } from "./drop_order.js";
 // The TUI's own character-column widths (curses_renderer_v5.py:525-540), so
 // the <colgroup> and CSS derive from the same numbers the terminal renderer
 // uses -- never a literal copied by hand.
 import { ALERT_COL_WIDTHS, ALERT_MIN_TARGET, ALERT_MIN_TOP, COL_SEPARATOR } from "./process_widths.js";
+import { PLUGIN_PROPS } from "./plugin_props.js";
 
 const TITLE = "ALERT";
 
@@ -109,26 +111,10 @@ export default {
 		// hide stats (design 4.8).
 		rowBudget: { default: () => ({}) },
 	},
-	props: {
-		// Not `{ data: [...] }` like every other collection plugin: this block
-		// is fed by its own endpoint (/api/5/alert/incidents), which answers an
-		// envelope -- `{isInitializing, incidents}`, AppShell.vue's own shape
-		// carried through unchanged, not the route's wire field names -- of
-		// already-collapsed incidents, never validated against a registry
-		// `spec` (it declares none).
-		payload: { type: Object, default: null },
-		error: { type: String, default: undefined },
-		// Declared but unused: no alert cell depends on a field label.
-		labels: { type: Object, default: () => ({}) },
-		// Declared but unused: no alert column depends on a CLI flag.
-		serverArgs: { type: Object, default: () => ({}) },
-		// Declared but unused: the shell binds `degrade` to every component in
-		// a slot from one shared expression (AppShell.vue). This block owns its
-		// own width cascade via fitBlockMixin (`dropFlags` below), not the
-		// shell's zone-level one -- same reasoning as PluginProcesslist.vue's
-		// own `degrade` prop.
-		degrade: { type: Object, default: () => ({}) },
-	},
+	// `payload` is this block's own envelope ({isInitializing, incidents}),
+	// not the `{ data: [...] }` every other collection plugin gets: it is fed
+	// by /api/5/alert/incidents and validated against no registry `spec`.
+	props: { ...PLUGIN_PROPS },
 	computed: {
 		TITLE: () => TITLE,
 		// The full incident list, unbudgeted. titleText's ongoing/resolved
@@ -184,17 +170,11 @@ export default {
 			{ key: "drop_LEVEL", value: true },
 			{ key: "drop_DURATION", value: true },
 		],
-		// `hiddenColumns`/`shows()` did not exist on this component before --
-		// it has never had a cascade. Same shape as processlist_columns.js's
-		// `hiddenColumns`: the mixin's cumulative `drop_<column>` flags,
-		// translated to column names -- no separate module to import it from,
-		// unlike processlist, since this cascade has only three steps.
+		// The mixin's cumulative `drop_<column>` flags, translated to column
+		// names. Unlike containers, this block has no data-driven hiding to
+		// union in -- the cascade's flags are the whole story.
 		hiddenColumns() {
-			const hidden = new Set();
-			for (const [key, value] of Object.entries(this.dropFlags || {})) {
-				if (value && key.startsWith("drop_")) hidden.add(key.slice("drop_".length));
-			}
-			return hidden;
+			return droppedColumns(this.dropFlags);
 		},
 		// The <col> elements actually rendered: GLYPH, TIME and TARGET always,
 		// plus whichever of DURATION/TOP/LEVEL survive the cascade.
@@ -250,6 +230,15 @@ export default {
 		},
 	},
 	methods: {
+		// The engine's own incident identity: `(plugin, key, field)` opens and
+		// closes an incident (alerts_incidents_v5.derive_incidents), and `begin`
+		// separates two successive incidents on the same tuple. The list
+		// re-sorts as incidents resolve (ongoing first, newest first), so an
+		// INDEX key would make Vue patch each row into a different incident's
+		// data on every tick instead of moving the row.
+		incidentKey(incident) {
+			return [incident.plugin, incident.key, incident.field, incident.begin].join("\u0000");
+		},
 		shows(column) {
 			return !this.hiddenColumns.has(column);
 		},
@@ -345,7 +334,7 @@ export default {
 </script>
 
 <style scoped>
-/* Resolved-but-was-prominent (fix round 1, IMPORTANT 2): the tier hue drops
+/* Resolved-but-was-prominent: the tier hue drops
  * (levelClassOf() above returns "" for the colour), but the badge does not
  * -- curses_renderer_v5.py:851-861 keeps `prominent` unconditional. Mirrors
  * `.gl-prominent.gl-level-*` (css/v5.css:88-91) but with the theme's muted

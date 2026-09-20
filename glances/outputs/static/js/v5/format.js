@@ -26,6 +26,23 @@ function isNumber(value) {
 	return typeof value === "number" && Number.isFinite(value);
 }
 
+// Render a value that is not a number: the value itself, or the missing
+// marker. The two rules differ only on the empty string, and both exist in
+// the terminal renderers -- keep them apart so a caller states which one it
+// means.
+
+// `_fmt` (vms/render_curses_v5.py): only a null renders as the placeholder,
+// so a field the engine publishes as "" stays empty.
+export function dashIfMissing(value) {
+	return value === null || value === undefined ? MISSING : String(value);
+}
+
+// The containers/processlist/programlist rule: an empty string is a missing
+// value too (an unnamed pod, a process whose command line is unreadable).
+export function dashIfBlank(value) {
+	return value === null || value === undefined || value === "" ? MISSING : String(value);
+}
+
 // Mirrors _auto_unit() (glances/outputs/curses_formatters_v5.py) and the
 // renderers' copies of it: one decimal from 1K up, and below 1K the TUI's
 // int(value) -- a truncation, not a rounding: 855.6 bytes is "855B".
@@ -216,7 +233,7 @@ function pad2(n) {
 // (a different algorithm: MM:SS below an hour, Hh{MM:SS} between 1h and
 // 99h, a bare `{hours}h` past that, and this module's own "-" for a missing
 // value rather than format_seconds()'s ""). Added here, not kept private to
-// PluginProcesslist.vue, because `programlist` (G9-9B task 8) reuses this
+// PluginProcesslist.vue, because `programlist` reuses this
 // renderer's cell builders VERBATIM in Python
 // (glances/plugins/programlist/render_curses_v5.py imports `_format_cpu_time`
 // from processlist rather than redefining it) -- its WebUI component needs

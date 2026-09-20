@@ -7,7 +7,7 @@
 // except PID/NPROCS (programlist/render_curses_v5.py's module docstring:
 // "Every other column is identical, so this renderer reuses the processlist
 // cell builders verbatim"). These three were duplicated byte-for-byte across
-// the two components until G9-9B Task 8 fix round 1 -- extracted here so a
+// the two components -- extracted here so a
 // future change to the terminal's sort-key mapping or its I/O-rate/command
 // conventions cannot be ported to one component and silently missed in the
 // other.

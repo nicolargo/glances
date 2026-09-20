@@ -28,24 +28,14 @@ import { labelFor } from "./labels.js";
 import { cellClassFor } from "./columns.js";
 import { byText } from "./rows.js";
 import CollectionBlock from "./CollectionBlock.vue";
+import { PLUGIN_PROPS } from "./plugin_props.js";
 
 const TITLE = "WIFI";
 
 export default {
 	name: "PluginWifi",
 	components: { CollectionBlock },
-	props: {
-		payload: { type: Object, default: null },
-		error: { type: String, default: undefined },
-		labels: { type: Object, default: () => ({}) },
-		// Declared but unused. An undeclared prop becomes a fallthrough
-		// attribute, so without this line the DOM gets
-		// server-args="[object Object]" on the article.
-		serverArgs: { type: Object, default: () => ({}) },
-		// Declared but unused: this component is hidden as a whole rather than
-		// shrunk (spec D7). An undeclared prop becomes a fallthrough attribute.
-		degrade: { type: Object, default: () => ({}) },
-	},
+	props: { ...PLUGIN_PROPS },
 	computed: {
 		TITLE: () => TITLE,
 		// Mirrors wifi/render_curses_v5.py:82-94: sorted by ssid; skip an empty
@@ -67,7 +57,7 @@ export default {
 <style scoped>
 /* One width budget for the whole left column (maintainer's aesthetic call,
  * 2026-09-12): the three-column blocks' name cap (18ch) plus the value column
- * wifi does not have (.gl-num's 9ch floor) and its cell gap. It replaces G9-6
+ * wifi does not have (.gl-num's 9ch floor) and its cell gap. It replaces 
  * D3's TUI width here (26ch, wifi/render_curses_v5.py _NAME_MAX_WIDTH).
  * A table column still shrinks to its content, so this equalises the MAXIMUM
  * width: a block whose names are all short renders narrower. */

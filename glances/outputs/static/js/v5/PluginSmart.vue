@@ -10,7 +10,7 @@
 			</tr>
 		</template>
 		<template #body>
-			<!-- One <tbody> per device (G9-7 D3). -->
+			<!-- One <tbody> per device (spec D3). -->
 			<tbody v-for="device in rows" :key="device.name">
 				<tr>
 					<!-- The device line spans both columns: it has no value. Its
@@ -38,25 +38,14 @@
 import CollectionBlock from "./CollectionBlock.vue";
 import { formatAutoUnit } from "./format.js";
 import { LARGE_VALUE_KEYS } from "./smart_keys.js";
+import { PLUGIN_PROPS } from "./plugin_props.js";
 
 const TITLE = "SMART disks";
 
 export default {
 	name: "PluginSmart",
 	components: { CollectionBlock },
-	props: {
-		payload: { type: Object, default: null },
-		error: { type: String, default: undefined },
-		// Declared but unused: `smart` has no column label (no value header).
-		labels: { type: Object, default: () => ({}) },
-		// Declared but unused. An undeclared prop becomes a fallthrough
-		// attribute, so without this line the DOM gets
-		// server-args="[object Object]" on the article.
-		serverArgs: { type: Object, default: () => ({}) },
-		// Declared but unused: this component is hidden as a whole rather than
-		// shrunk. An undeclared prop becomes a fallthrough attribute.
-		degrade: { type: Object, default: () => ({}) },
-	},
+	props: { ...PLUGIN_PROPS },
 	computed: {
 		TITLE: () => TITLE,
 		// Payload order -- the plugin sorts the attributes itself (v4's own

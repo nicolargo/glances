@@ -25,3 +25,16 @@ export const CONTAINERS_DROP_ORDER = [
 export function dropCascade(order) {
 	return order.map((column) => ({ key: `drop_${column}`, value: true }));
 }
+
+// The inverse: the column names a resolved flag set hides. Every block with a
+// width cascade needs this (containers, processlist, alert), so the `drop_`
+// prefix convention is decoded here once rather than in each of them.
+// Non-`drop_` keys are ignored, so a flag set mixing in a zone-level flag is
+// harmless.
+export function droppedColumns(flags) {
+	const dropped = new Set();
+	for (const [key, value] of Object.entries(flags || {})) {
+		if (value && key.startsWith("drop_")) dropped.add(key.slice("drop_".length));
+	}
+	return dropped;
+}

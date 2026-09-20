@@ -15,8 +15,8 @@
 			grammar requires. Only the fixed-layout blocks pass it; a block that
 			does not renders exactly as before. -->
 			<slot name="cols"></slot>
-			<!-- G9-6 D6: a loaded collection's title is its first <th>, so the
-			<h2> above renders only while loading or erroring. G9-7 D4: a block
+			<!-- spec D6: a loaded collection's title is its first <th>, so the
+			<h2> above renders only while loading or erroring. spec D4: a block
 			with no header row in the TUI (`ports`) passes no #head slot and gets
 			no <thead> at all. -->
 			<thead v-if="$slots.head">
@@ -34,10 +34,11 @@ export default {
 		payload: { type: Object, default: null },
 		error: { type: String, default: undefined },
 		title: { type: String, required: true },
-		// Hide the whole block. Five of the six G9-7 blocks (ports, folders,
+		// Hide the whole block. Five of the six blocks (ports, folders,
 		// irq, raid, smart) pass `!!payload && rows.length === 0`, because their
 		// TUI renderers return [] on an empty collection; `connections` is the
-		// sixth but is scalar and never uses this shell. The five G9-6 blocks
+		// sixth but is scalar and never uses this shell. The five other
+		// blocks
 		// (network, wifi, diskio, fs, sensors) do not pass it at all: their TUI
 		// renderers still paint a header row for an empty collection, so the
 		// shell's default `false` keeps the WebUI matching them.

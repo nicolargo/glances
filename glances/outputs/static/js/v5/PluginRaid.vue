@@ -9,7 +9,7 @@
 			</tr>
 		</template>
 		<template #body>
-			<!-- One <tbody> per array (G9-7 D3): the sub-lines belong to their
+			<!-- One <tbody> per array (spec D3): the sub-lines belong to their
 			array, and grouping is what lets a test - and a stylesheet - tell
 			them apart from a flat table. -->
 			<tbody v-for="array in rows" :key="array.name">
@@ -37,24 +37,14 @@ import CollectionBlock from "./CollectionBlock.vue";
 import { cellClassFor } from "./columns.js";
 import { labelFor } from "./labels.js";
 import { byText } from "./rows.js";
+import { PLUGIN_PROPS } from "./plugin_props.js";
 
 const TITLE = "RAID disks";
 
 export default {
 	name: "PluginRaid",
 	components: { CollectionBlock },
-	props: {
-		payload: { type: Object, default: null },
-		error: { type: String, default: undefined },
-		labels: { type: Object, default: () => ({}) },
-		// Declared but unused. An undeclared prop becomes a fallthrough
-		// attribute, so without this line the DOM gets
-		// server-args="[object Object]" on the article.
-		serverArgs: { type: Object, default: () => ({}) },
-		// Declared but unused: this component is hidden as a whole rather than
-		// shrunk. An undeclared prop becomes a fallthrough attribute.
-		degrade: { type: Object, default: () => ({}) },
-	},
+	props: { ...PLUGIN_PROPS },
 	computed: {
 		TITLE: () => TITLE,
 		// sorted(items, key=lambda it: str(it.get("name", ""))) -- code-unit

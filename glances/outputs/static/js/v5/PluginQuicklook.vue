@@ -49,6 +49,7 @@
 <script>
 import { levelClass, scalarLevel } from "./levels.js";
 import { formatPercent, toFixedHalfEven } from "./format.js";
+import { PLUGIN_PROPS } from "./plugin_props.js";
 
 const TITLE = "QUICKLOOK";
 
@@ -83,18 +84,9 @@ function clampPct(value) {
 
 export default {
 	name: "PluginQuicklook",
-	props: {
-		payload: { type: Object, default: null },
-		error: { type: String, default: undefined },
-		// Declared but unused: none of quicklook's rows has a schema-resolved
-		// label -- the bar labels are the TUI's fixed 4-char forms.
-		labels: { type: Object, default: () => ({}) },
-		// `percpu` (--percpu) gates the per-core replacement of the `cpu` bar.
-		serverArgs: { type: Object, default: () => ({}) },
-		// `quicklook_freq_only` (TOP_CASCADE step d) swaps the CPU name for the
-		// literal "Frequency".
-		degrade: { type: Object, default: () => ({}) },
-	},
+	// Reads `serverArgs.percpu` (per-core replacement of the `cpu` bar) and
+	// `degrade.quicklook_freq_only` (TOP_CASCADE step d).
+	props: { ...PLUGIN_PROPS },
 	computed: {
 		TITLE: () => TITLE,
 		freqOnly() {

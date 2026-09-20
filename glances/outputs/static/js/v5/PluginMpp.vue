@@ -2,7 +2,7 @@
 	<CollectionBlock title="MPP" :payload="payload" :error="error" :hidden="!!payload && rows.length === 0">
 		<!-- No #head slot: the TUI's first line is the title alone, with no
 		column labels (mpp/render_curses_v5.py) -- same shape as `ports`
-		(G9-7 D4). CollectionBlock renders no <thead> when the slot is absent. -->
+		(spec D4). CollectionBlock renders no <thead> when the slot is absent. -->
 		<template #body>
 			<tbody>
 				<tr v-for="item in rows" :key="item.engine_id">
@@ -23,24 +23,12 @@
 import CollectionBlock from "./CollectionBlock.vue";
 import { cellClassFor } from "./columns.js";
 import { formatPercent } from "./format.js";
+import { PLUGIN_PROPS } from "./plugin_props.js";
 
 export default {
 	name: "PluginMpp",
 	components: { CollectionBlock },
-	props: {
-		payload: { type: Object, default: null },
-		error: { type: String, default: undefined },
-		// Declared but unused: the TUI's first line is the title alone, with no
-		// column labels to resolve through the schema.
-		labels: { type: Object, default: () => ({}) },
-		// Declared but unused. An undeclared prop becomes a fallthrough
-		// attribute, so without this line the DOM gets
-		// server-args="[object Object]" on the article.
-		serverArgs: { type: Object, default: () => ({}) },
-		// Declared but unused: this component is hidden as a whole rather than
-		// shrunk. An undeclared prop becomes a fallthrough attribute.
-		degrade: { type: Object, default: () => ({}) },
-	},
+	props: { ...PLUGIN_PROPS },
 	computed: {
 		// Payload order -- the TUI does not sort (mpp/render_curses_v5.py).
 		rows() {

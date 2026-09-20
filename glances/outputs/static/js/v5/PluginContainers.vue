@@ -4,7 +4,7 @@
 			<tr>
 				<!-- The TUI's header literals (containers/render_curses_v5.py:124-165).
 				`CONTAINER` is the block title -- no separate title row, as `fs` does
-				in G9-6 D6. -->
+				in spec D6. -->
 				<th v-if="shows('engine')" class="gl-header">Engine</th>
 				<th v-if="shows('pod')" class="gl-header">Pod</th>
 				<th v-if="shows('name')" class="gl-header">{{ TITLE }}</th>
@@ -77,7 +77,7 @@
 </template>
 
 <script>
-import { formatAutoUnit, formatNetworkRate, formatPercent } from "./format.js";
+import { dashIfBlank, formatAutoUnit, formatNetworkRate, formatPercent } from "./format.js";
 import { cellClassFor } from "./columns.js";
 import { levelClass } from "./levels.js";
 import { displayName } from "./rows.js";
@@ -85,6 +85,7 @@ import CollectionBlock from "./CollectionBlock.vue";
 import { CONTAINERS_DROP_ORDER, dropCascade } from "./drop_order.js";
 import { hiddenColumns as resolveHiddenColumns } from "./containers_columns.js";
 import { fitBlockMixin } from "./fit_block.js";
+import { PLUGIN_PROPS } from "./plugin_props.js";
 
 const TITLE = "CONTAINER";
 
@@ -119,20 +120,9 @@ export default {
 	inject: {
 		rowBudget: { default: () => ({}) },
 	},
-	props: {
-		payload: { type: Object, default: null },
-		error: { type: String, default: undefined },
-		labels: { type: Object, default: () => ({}) },
-		// `byte` (--byte) switches the network rates from bits to bytes, as the
-		// TUI reads `view["byte"]` (containers/render_curses_v5.py:208).
-		serverArgs: { type: Object, default: () => ({}) },
-		// Declared and left unused: the shell binds `degrade` to every
-		// component in a slot from one shared expression (AppShell.vue), and
-		// an undeclared object prop would fall through as a stringified DOM
-		// attribute on the root element. This component owns its own width
-		// cascade (fit_block.js's `dropFlags`), not the shell's zone-level one.
-		degrade: { type: Object, default: () => ({}) },
-	},
+	// Reads `serverArgs.byte` (--byte): network rates in bytes instead of bits,
+	// as the TUI does (containers/render_curses_v5.py).
+	props: { ...PLUGIN_PROPS },
 	computed: {
 		TITLE: () => TITLE,
 		// Payload order: the sort is server-side (containers/model_v5.py
@@ -189,9 +179,7 @@ export default {
 		statusClass(status) {
 			return levelClass({ level: STATUS_TIER[String(status || "").toLowerCase()] });
 		},
-		fmt(value) {
-			return value === null || value === undefined || value === "" ? "-" : String(value);
-		},
+		fmt: dashIfBlank,
 		// containers/render_curses_v5.py `_io_cell`: auto_unit() plus a "B".
 		ioText(value) {
 			return typeof value === "number" ? `${formatAutoUnit(value)}B` : "-";

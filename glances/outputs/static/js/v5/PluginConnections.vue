@@ -28,6 +28,7 @@
 import { levelClass, scalarLevel } from "./levels.js";
 import { labelFor } from "./labels.js";
 import { formatFixed0 } from "./format.js";
+import { PLUGIN_PROPS } from "./plugin_props.js";
 
 const TITLE = "TCP CONNECTIONS";
 
@@ -37,18 +38,7 @@ const STATE_FIELDS = ["LISTEN", "initiated", "ESTABLISHED", "terminated"];
 
 export default {
 	name: "PluginConnections",
-	props: {
-		payload: { type: Object, default: null },
-		error: { type: String, default: undefined },
-		labels: { type: Object, default: () => ({}) },
-		// Declared but unused. An undeclared prop becomes a fallthrough
-		// attribute, so without this line the DOM gets
-		// server-args="[object Object]" on the article.
-		serverArgs: { type: Object, default: () => ({}) },
-		// Declared but unused: this component is hidden as a whole rather than
-		// shrunk. An undeclared prop becomes a fallthrough attribute.
-		degrade: { type: Object, default: () => ({}) },
-	},
+	props: { ...PLUGIN_PROPS },
 	computed: {
 		TITLE: () => TITLE,
 		// Neither probe enabled -> the TUI returns [] and the block is not

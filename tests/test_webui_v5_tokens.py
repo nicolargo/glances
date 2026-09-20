@@ -719,7 +719,10 @@ def test_the_column_box_separator_multiplier_matches_colstyles_offset():
 
     # ...and every <colgroup> actually offsets by that constant rather than by
     # a literal of its own, which is what makes reading one number enough.
-    for name in ("PluginProcesslist.vue", "PluginProgramlist.vue", "PluginAlert.vue"):
+    # process_block.js is the mixin PluginProcesslist.vue and
+    # PluginProgramlist.vue share, so it carries their colStyle(); PluginAlert
+    # has no width map in common with them and keeps its own.
+    for name in ("process_block.js", "PluginAlert.vue"):
         script = (_V5_JS / name).read_text()
         assert re.search(r"\+\s*COL_SEPARATOR\}\s*\*\s*var\(--gl-col\)", script), (
             f"{name}'s colStyle() does not offset by COL_SEPARATOR"

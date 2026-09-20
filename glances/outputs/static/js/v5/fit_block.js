@@ -9,19 +9,7 @@
 // The ORDER and the fit test still come from degrade.js -- this module owns
 // only the measurement, exactly as AppShell.measureZone() does for a zone.
 
-import { resolveDegrade } from "./degrade.js";
-
-// A deliberate copy of AppShell.vue's own `sameFlags()`, not an import of it:
-// extracting a shared helper would mean editing AppShell.vue, which this
-// whole group otherwise never touches. Both cascades resolve to a flat object
-// of primitives, `resolveDegrade` always returns a fresh object, and without
-// this comparison a `===` test would never be true -- so the component would
-// re-render on every pass and its ResizeObserver would oscillate.
-function sameFlags(a, b) {
-	const aKeys = Object.keys(a);
-	const bKeys = Object.keys(b);
-	return aKeys.length === bKeys.length && aKeys.every((key) => a[key] === b[key]);
-}
+import { resolveDegrade, sameFlags } from "./degrade.js";
 
 // Host contract -- a component adding this mixin MUST provide:
 //   - a `dropCascadeSteps` computed (its absence makes fitBlock() return
@@ -43,6 +31,8 @@ export const fitBlockMixin = {
 			// therefore the DOM) once per candidate notch.
 			fitting: false,
 			blockObserver: null,
+			// A pass coalesced into the next animation frame (scheduleFit).
+			fitFrame: null,
 		};
 	},
 	mounted() {
@@ -58,23 +48,46 @@ export const fitBlockMixin = {
 			window.__glancesBlockRefits.push(this._blockRefit);
 		}
 		if (typeof ResizeObserver === "function" && this.$el?.nodeType === 1) {
-			// Not awaited: a rejection here would surface as an unhandled promise
-			// rejection. The in-flight guard is cleared by fitBlock()'s `finally`,
-			// so a failed pass simply retries on the next resize.
-			this.blockObserver = new ResizeObserver(() => {
-				this.fitBlock().catch(() => {});
-			});
+			// scheduleFit(), never fitBlock() directly: dragging a window edge
+			// fires this observer on every frame, and a pass costs one forced
+			// layout per cascade step.
+			this.blockObserver = new ResizeObserver(() => this.scheduleFit());
 			this.blockObserver.observe(this.$el);
 		}
 	},
 	unmounted() {
 		if (this.blockObserver) this.blockObserver.disconnect();
+		if (this.fitFrame !== null && typeof cancelAnimationFrame === "function") {
+			cancelAnimationFrame(this.fitFrame);
+		}
 		if (typeof window !== "undefined" && Array.isArray(window.__glancesBlockRefits) && this._blockRefit) {
 			const index = window.__glancesBlockRefits.indexOf(this._blockRefit);
 			if (index !== -1) window.__glancesBlockRefits.splice(index, 1);
 		}
 	},
 	methods: {
+		// Coalesce fit requests into one animation frame, and re-schedule
+		// (rather than drop) one that arrives mid-pass -- the same reasoning as
+		// AppShell.scheduleRefit(), and the reason the LAST size of a window
+		// drag still ends up fitted.
+		scheduleFit() {
+			if (this.fitFrame !== null) return;
+			// No requestAnimationFrame means no layout engine either (the render
+			// probe), so there is nothing to coalesce and no frame to come back
+			// on: run it as the observer callback used to.
+			if (typeof requestAnimationFrame !== "function") {
+				this.fitBlock().catch(() => {});
+				return;
+			}
+			this.fitFrame = requestAnimationFrame(() => {
+				this.fitFrame = null;
+				if (this.fitting) {
+					this.scheduleFit();
+					return;
+				}
+				this.fitBlock().catch(() => {});
+			});
+		},
 		// Apply a candidate flag set, let Vue re-render, and report what the
 		// browser says about the table inside this block.
 		async measureBlock(flags) {

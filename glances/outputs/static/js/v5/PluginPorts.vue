@@ -5,7 +5,7 @@
 		sits under `network` and the two read as one block; the missing header is
 		that continuity, not an oversight. CollectionBlock renders no <thead>
 		when the slot is absent, and the title reaches the page as the
-		aria-label only (G9-7 D4). -->
+		aria-label only (spec D4). -->
 		<template #body>
 			<tbody>
 				<tr v-for="item in rows" :key="item.indice">
@@ -25,23 +25,12 @@
 import CollectionBlock from "./CollectionBlock.vue";
 import { cellClassFor } from "./columns.js";
 import { formatFixed0 } from "./format.js";
+import { PLUGIN_PROPS } from "./plugin_props.js";
 
 export default {
 	name: "PluginPorts",
 	components: { CollectionBlock },
-	props: {
-		payload: { type: Object, default: null },
-		error: { type: String, default: undefined },
-		// Declared but unused: `ports` shows no schema label (no column header).
-		labels: { type: Object, default: () => ({}) },
-		// Declared but unused. An undeclared prop becomes a fallthrough
-		// attribute, so without this line the DOM gets
-		// server-args="[object Object]" on the article.
-		serverArgs: { type: Object, default: () => ({}) },
-		// Declared but unused: this component is hidden as a whole rather than
-		// shrunk. An undeclared prop becomes a fallthrough attribute.
-		degrade: { type: Object, default: () => ({}) },
-	},
+	props: { ...PLUGIN_PROPS },
 	computed: {
 		// Payload order -- the TUI does not sort. An item with neither `url`
 		// nor `host` cannot be scanned and is skipped, never rendered with a

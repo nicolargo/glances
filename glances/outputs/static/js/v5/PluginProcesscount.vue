@@ -9,6 +9,7 @@
 </template>
 
 <script>
+import { PLUGIN_PROPS } from "./plugin_props.js";
 const TITLE = "TASKS";
 
 // processes.py `sort_for_human` -- the same object the TUI's
@@ -37,16 +38,9 @@ export default {
 	inject: {
 		maxProcessesDisplay: { default: null },
 	},
-	props: {
-		payload: { type: Object, default: null },
-		error: { type: String, default: undefined },
-		labels: { type: Object, default: () => ({}) },
-		// `serverArgs.programs` and `serverArgs.sort_processes_key` (Task 5)
-		// drive the truncation counter and the sort indicator below.
-		serverArgs: { type: Object, default: () => ({}) },
-		// Declared but unused: this block never shrinks, it is one line.
-		degrade: { type: Object, default: () => ({}) },
-	},
+	// Reads `serverArgs.programs` (truncation counter) and
+	// `serverArgs.sort_processes_key` (sort indicator).
+	props: { ...PLUGIN_PROPS },
 	computed: {
 		TITLE: () => TITLE,
 		// processcount/render_curses_v5.py:82-86: no aggregate yet -> the title

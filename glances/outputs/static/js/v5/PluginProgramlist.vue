@@ -87,144 +87,40 @@
 </template>
 
 <script>
-import { formatCpuTime, formatPercent, formatProcessBytes, formatUsername } from "./format.js";
-import { cellClassFor } from "./columns.js";
 import CollectionBlock from "./CollectionBlock.vue";
-// G9-9B Task 8 fix round 1: these three were byte-identical duplicates of
-// PluginProcesslist.vue's own local copies -- both blocks now import the
-// single copy in process_shared.js (its docstring covers why NPROCS/PID have
-// no HEADER_SORT_KEY entry either).
-import { HEADER_SORT_KEY, ioRate, commandText } from "./process_shared.js";
-// The TUI's own character-column widths (render_curses_v5.py:55-65, :91;
-// programlist/render_curses_v5.py:58), so the <colgroup> and CSS derive from
-// the same numbers the terminal renderer uses -- never a literal copied by
-// hand.
-import { COL_SEPARATOR, MIN_COMMAND_WIDTH, NPROCS_WIDTH, PROGRAM_FIXED_COL_KEYS, WEBUI_COL_WIDTHS } from "./process_widths.js";
+import { PLUGIN_PROPS } from "./plugin_props.js";
+import { processBlockMixin } from "./process_block.js";
+// The character-column widths (process_widths.js), so the <colgroup> and CSS
+// derive from the same numbers the terminal renderer uses -- never a literal
+// copied by hand.
+import { NPROCS_WIDTH, PROGRAM_FIXED_COL_KEYS, WEBUI_COL_WIDTHS } from "./process_widths.js";
 
 const TITLE = "PROGRAMS";
 
 // WEBUI_COL_WIDTHS has no NPROCS entry (it is processlist's own map) --
 // NPROCS_WIDTH is the one column this block does not share with processlist's
 // width map.
-function contentWidth(key) {
+function columnWidth(key) {
 	return key === "NPROCS" ? NPROCS_WIDTH : WEBUI_COL_WIDTHS[key];
 }
 
 export default {
 	name: "PluginProgramlist",
 	components: { CollectionBlock },
-	// `[outputs] max_processes_display` -- the same config key and the same
-	// AppShell provide() as processlist's (there is no separate
-	// `max_programs_display` key). `rowBudget` is the vertical row quota
-	// AppShell's refitVertical() pass allots this block (row_budget.js),
-	// handed down the same way -- `inject`, never a prop, for the same reason
-	// PluginProcesslist.vue gives (a prop on the shared `<component>` binding
-	// would leak a DOM attribute onto every other plugin, AppShell.vue:89-110).
-	inject: {
-		maxProcessesDisplay: { default: null },
-		rowBudget: { default: () => ({}) },
-	},
-	props: {
-		payload: { type: Object, default: null },
-		error: { type: String, default: undefined },
-		// Declared but unused: every programlist header is a literal, like
-		// processlist's.
-		labels: { type: Object, default: () => ({}) },
-		// `serverArgs.sort_processes_key` drives the sort underline (isSorted()
-		// below) -- the only server flag this block reads.
-		serverArgs: { type: Object, default: () => ({}) },
-		// Declared and left unused: no width cascade applies to this block (see
-		// the template comment) -- there is no `dropFlags`/zone-level `degrade`
-		// for it to consume, so this mirrors processlist's own reasoning for a
-		// different reason (that one owns its OWN cascade instead of the
-		// shell's; this one owns none at all).
-		degrade: { type: Object, default: () => ({}) },
-	},
+	// No fitBlockMixin, unlike processlist: programlist's own renderer never
+	// imports processlist's `_DROP_ORDER`, so this block has no width cascade
+	// and every column is unconditional.
+	mixins: [processBlockMixin({ budgetKey: "programlist", columnWidth })],
+	// Reads `serverArgs.sort_processes_key` for the sort underline (isSorted()).
+	// `degrade` is declared and left unused: this block has no width cascade to
+	// feed it to.
+	props: { ...PLUGIN_PROPS },
 	computed: {
 		TITLE: () => TITLE,
-		// The full payload, in ENGINE order -- the sort is server-side, and
-		// this component must not re-sort.
-		allRows() {
-			return this.payload?.data || [];
-		},
-		// Two ceilings, composed like processlist's own `rows()`: the height-
-		// driven budget and the config key. `min()` because `[outputs]
-		// max_processes_display` is a hard cap that available height may never
-		// raise (design 4.7). The cap applies to the payload's own order: the
-		// first N rows, never the top N by any column value.
-		//
-		// The two predicates differ on purpose, exactly as processlist's own
-		// do not merge: `maxProcessesDisplay` keeps `> 0` (its `0` means "no
-		// cap"); `rowBudget.programlist` uses `>= 0` (its `0` means "hide the
-		// block entirely", the browser's counterpart of the TUI's own
-		// `row_budget(...) <= 0` early return, programlist/render_curses_v5.py
-		// :91-94).
-		rows() {
-			const caps = [];
-			if (Number.isInteger(this.maxProcessesDisplay) && this.maxProcessesDisplay > 0) {
-				caps.push(this.maxProcessesDisplay);
-			}
-			if (Number.isInteger(this.rowBudget?.programlist) && this.rowBudget.programlist >= 0) {
-				caps.push(this.rowBudget.programlist);
-			}
-			if (!caps.length) return this.allRows;
-			return this.allRows.slice(0, Math.min(...caps));
-		},
-		// Ladder steps g and l make a block vanish entirely, header included
-		// (curses_renderer_v5.py:1035-1044, row_budget.js's `cost()`) --
-		// `rows` above already renders nothing at a zero quota, but
-		// CollectionBlock still paints the loading/title header on an empty
-		// table (G9-6 D6) unless told to hide the whole block. Tied to the
-		// EXPLICIT quota, never to `rows.length === 0`, exactly as
-		// PluginProcesslist.vue's own identical rule (design 4.8).
-		quotaHidden() {
-			return Number.isInteger(this.rowBudget?.programlist) && this.rowBudget.programlist === 0;
-		},
-		// The fixed columns, in display order -- constant per render: there is
-		// no cascade to filter it (unlike processlist's own `visibleFixedColumns`,
-		// which drops entries as `dropFlags` grows). Command is not one of them
-		// -- it is the elastic tail, sized by the <colgroup>'s implicit column.
+		// Constant, unlike processlist's own `visibleFixedColumns`: there is no
+		// cascade to filter it. Command is not one of them -- it is the elastic
+		// tail, sized by the <colgroup>'s implicit column.
 		visibleFixedColumns: () => PROGRAM_FIXED_COL_KEYS,
-		// The integer the stylesheet turns into a width -- same formula as
-		// processlist's own `fixedColsStyle`, constant here since the column
-		// set never shrinks. Below this width the table overflows its
-		// container and the block scrolls: the browser's floor, with no JS
-		// cascade to soften it (programlist has none).
-		fixedColsStyle() {
-			const keys = this.visibleFixedColumns;
-			const fixed = keys.reduce((total, key) => total + contentWidth(key), 0);
-			// One separator after each fixed column, before Command.
-			const separators = COL_SEPARATOR * keys.length;
-			return { "--gl-fixed-cols": String(fixed + separators + MIN_COMMAND_WIDTH) };
-		},
-	},
-	methods: {
-		cellClassFor,
-		formatCpuTime,
-		formatPercent,
-		formatProcessBytes,
-		formatUsername,
-		ioRate,
-		commandText,
-		isSorted(label) {
-			const key = this.serverArgs && this.serverArgs.sort_processes_key;
-			return !!key && HEADER_SORT_KEY[label] === key;
-		},
-		memField(item, field) {
-			return item && item.memory_info ? item.memory_info[field] : undefined;
-		},
-		fmt(value) {
-			return value === null || value === undefined || value === "" ? "-" : String(value);
-		},
-		// `contentWidth(key)` alone under-sizes every column by the separator --
-		// same reasoning as processlist's own `colStyle()` (see its comment):
-		// under `table-layout: fixed` the <col> is the column's WHOLE box, and
-		// the separator's `padding-right` comes out of that same box, so a
-		// <col> of exactly N characters leaves only N - COL_SEPARATOR for
-		// content. Adding COL_SEPARATOR reserves it inside the box.
-		colStyle(key) {
-			return { width: `calc(${contentWidth(key) + COL_SEPARATOR} * var(--gl-col))` };
-		},
 	},
 };
 </script>

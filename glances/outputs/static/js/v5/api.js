@@ -5,7 +5,7 @@
 // 1. `fetch` does NOT reject on 4xx/5xx. Only a network failure rejects, so a
 //    500 carrying a JSON error body parses cleanly and looks like data.
 // 2. Nor does a status check catch a 200 whose BODY is the wrong shape
-//    (FastAPI's `{"detail": ...}`). G9-1's diagnostic page reported a
+//    (FastAPI's `{"detail": ...}`). An early diagnostic page reported a
 //    plausible, wrong plugin count for exactly this reason. Hence `validate`.
 // 3. Endpoint outcomes must be independent: one plugin's failure must not
 //    blank the page.
@@ -27,7 +27,7 @@ export async function getJson(path) {
 
 export function validate(payload, spec) {
 	// `200 null` means the plugin has registered but has not published yet
-	// (scheduler cycle 0) -- the G9-1 route contract. A loading state, not a
+	// (scheduler cycle 0) -- the route contract. A loading state, not a
 	// shape error; the caller renders it as such.
 	if (payload === null || payload === undefined) return payload;
 
@@ -58,7 +58,7 @@ function requireFields(obj, required) {
 
 export async function resolveConfig() {
 	// [global] refresh and [outputs] theme, both via the SAME /api/5/config
-	// fetch. NOT /api/5/args: measured in G9-1, the v5 argument namespace
+	// fetch. NOT /api/5/args: measured -- the v5 argument namespace
 	// carries no refresh key at all.
 	let config;
 	try {
@@ -90,8 +90,8 @@ export async function resolveConfig() {
 	// reads it and slices IN THE BROWSER; the server-side read in
 	// glances_restful_api.py assigns a local and only logs it, dead code not
 	// reproduced here). Resolved once, here, alongside refresh/theme -- not
-	// fetched a second time by PluginProcesslist.vue itself (fix round 1,
-	// IMPORTANT 1) -- and handed down through AppShell's `provide()`, the same
+	// fetched a second time by PluginProcesslist.vue itself -- and handed
+	// down through AppShell's `provide()`, the same
 	// mechanism `serverPlugins` already uses for a value only ONE plugin reads.
 	// `null` means "no cap": absent key, or a value that does not parse to a
 	// positive integer.
@@ -147,7 +147,7 @@ export async function resolveArgs() {
 	//
 	// NOT merged into resolveConfig(): that reads /api/5/config, and the two
 	// namespaces are genuinely different (the argument namespace carries no
-	// `refresh` key at all -- measured in G9-1).
+	// `refresh` key at all).
 	if (argsCache) return argsCache;
 	try {
 		argsCache = await getJson("api/5/args");

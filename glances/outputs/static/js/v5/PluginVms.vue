@@ -23,8 +23,7 @@
 						<span class="gl-name gl-truncate" :title="nameOf(item)">{{ nameOf(item) }}</span>
 					</td>
 					<!-- `status` keeps the TUI's own mapping (`_status_role`) and is
-					never coloured from `_levels`. G9-9A fix wave item 1: the colour
-					was dropped from this port; restored via `statusClass()` below. -->
+					never coloured from `_levels` -- see `statusClass()` below. -->
 					<td class="gl-num"><span :class="statusClass(item.status)">{{ item.status || "-" }}</span></td>
 					<td class="gl-num"><span>{{ fmt(item.cpu_count) }}</span></td>
 					<td class="gl-num">
@@ -46,11 +45,12 @@
 </template>
 
 <script>
-import { formatAutoUnit, formatPercent } from "./format.js";
+import { dashIfMissing, formatAutoUnit, formatPercent } from "./format.js";
 import { cellClassFor } from "./columns.js";
 import { levelClass } from "./levels.js";
 import { displayName } from "./rows.js";
 import CollectionBlock from "./CollectionBlock.vue";
+import { PLUGIN_PROPS } from "./plugin_props.js";
 
 const TITLE = "VMS";
 
@@ -78,16 +78,7 @@ export default {
 	inject: {
 		rowBudget: { default: () => ({}) },
 	},
-	props: {
-		payload: { type: Object, default: null },
-		error: { type: String, default: undefined },
-		labels: { type: Object, default: () => ({}) },
-		// Declared but unused: no vms column depends on a CLI flag.
-		serverArgs: { type: Object, default: () => ({}) },
-		// Declared but unused: spec D5, vms has no width cascade because the
-		// TUI defines none for it -- the block scrolls instead.
-		degrade: { type: Object, default: () => ({}) },
-	},
+	props: { ...PLUGIN_PROPS },
 	computed: {
 		TITLE: () => TITLE,
 		// Payload order: the sort is server-side (vms/model_v5.py
@@ -132,9 +123,7 @@ export default {
 			return levelClass({ level: STATUS_TIER[String(status || "").toLowerCase()] });
 		},
 		// vms/render_curses_v5.py `_fmt`: a null renders as the placeholder.
-		fmt(value) {
-			return value === null || value === undefined ? "-" : String(value);
-		},
+		fmt: dashIfMissing,
 		memText(item) {
 			return `${formatAutoUnit(item.memory_usage)}/${formatAutoUnit(item.memory_total)}`;
 		},

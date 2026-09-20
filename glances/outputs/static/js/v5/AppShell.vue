@@ -25,9 +25,9 @@
 		</component>
 
 		<footer class="gl-alerts">
-			<!-- G9-5 D5: moved here from the removed top bar. The alert list that
+			<!-- spec D5: moved here from the removed top bar. The alert list that
 			used to share this footer (raw history, newest-first) moved into
-			PluginAlert.vue (G9-9B), fed by the collapsed /api/5/alert/incidents
+			PluginAlert.vue, fed by the collapsed /api/5/alert/incidents
 			grid -- this footer carries the server's identity on the left and the
 			cadence on the right. The class name is the one the vertical budget
 			and the render probe already look for; it outlived the alerts. -->
@@ -72,13 +72,13 @@
 </template>
 
 <script>
-import { computed } from "vue";
+import { computed, markRaw } from "vue";
 import { fetchAll, resolveConfig, resolveArgs, resolvePluginNames, resolveVersion, getJson } from "./api.js";
 import { REFRESH_STEPS, stepRefresh, loadRefresh, saveRefresh } from "./refresh.js";
 import { resolveAllLabels } from "./labels.js";
 import { visiblePlugins, groupBySlot } from "./layout.js";
 import { PLUGINS } from "./plugins/index.js";
-import { resolveDegrade, TOP_CASCADE, HEADER_CASCADE } from "./degrade.js";
+import { resolveDegrade, sameFlags, TOP_CASCADE, HEADER_CASCADE } from "./degrade.js";
 import { FULL_QUICKLOOK_HIDDEN } from "./full_quicklook.js";
 import { planRightColumn } from "./row_budget.js";
 import { ampsLineCount } from "./amps.js";
@@ -106,21 +106,28 @@ const HIDDEN_BY = {
 	hide_quicklook: "quicklook",
 };
 
-// The browser's own stacking threshold, not a TUI rule (G9-5 D3). Kept next to
+// The browser's own stacking threshold, not a TUI rule (spec D3). Kept next to
 // the media query that owns it -- test_webui_v5_tokens.py pins the two
 // together so the constant cannot drift from the stylesheet.
 const STACK_BREAKPOINT = "48rem";
 
-// Both cascades resolve to a flat object of primitive values (booleans/
-// numbers), never nested -- a plain key-by-key comparison is enough. Used by
-// refit() to skip its final `degrade` assignment when nothing actually
-// changed (spec section 6): `resolveDegrade` always returns a fresh object,
-// so `===` on the two flag sets would never be true even when they agree.
-function sameFlags(a, b) {
-	const aKeys = Object.keys(a);
-	const bKeys = Object.keys(b);
-	return aKeys.length === bKeys.length && aKeys.every((key) => a[key] === b[key]);
-}
+// Every poll payload is REPLACED, never mutated in place: fetchAll() parses a
+// fresh /api/5/all envelope each tick and the components only ever read it.
+// Deep reactivity therefore buys nothing and costs a lot -- Vue would wrap
+// every process, container and sensor object of every tick in its own Proxy,
+// and route each cell's property read through a trap plus a dependency
+// record. On a host with a few hundred processes that is thousands of proxy
+// allocations per refresh, for values that are thrown away whole at the next
+// one.
+//
+// markRaw() opts the CONTAINER out of that conversion, so `this.results` and
+// everything under it stay plain objects. Reactivity is preserved exactly
+// where it is needed: the `results`/`errors` data keys themselves still track
+// their reassignment, so a tick still re-renders, and each plugin still sees
+// a new `payload` prop identity.
+//
+// The flag markRaw() sets is non-enumerable, so it does NOT survive a spread:
+// every freshly built container below has to be marked again.
 
 export default {
 	name: "AppShell",
@@ -129,7 +136,7 @@ export default {
 	// once quicklook is instantiated). A prop on the shared `<component>`
 	// binding would fall through as a `server-plugins` DOM attribute on the
 	// other 23 plugins, which never declare it -- provide/inject reaches the
-	// one consumer without touching them (G9-8 Task 4 review). `computed()`
+	// one consumer without touching them. `computed()`
 	// keeps this reactive: `pluginNames` is null until /api/5/pluginslist
 	// resolves, and a plain `{ serverPlugins: this.pluginNames }` would
 	// capture that null forever -- the computed getter re-reads
@@ -142,7 +149,7 @@ export default {
 			// PluginProcesslist.vue (and, next task, programlist): the same
 			// reasoning as `serverPlugins` above applies verbatim -- a value read
 			// by a small number of plugins, provided once here rather than each
-			// one fetching `/api/5/config` itself (fix round 1, IMPORTANT 1: that
+			// one fetching `/api/5/config` itself (: that
 			// was a genuine second round-trip per page load to a
 			// credentials-bearing endpoint, and it broke the "AppShell resolves
 			// shared endpoints once" layering every other cross-cutting value
@@ -151,13 +158,13 @@ export default {
 			// injecting component sees the resolved value once mounted() below
 			// sets it, not the `null` it was created with.
 			maxProcessesDisplay: computed(() => this.maxProcessesDisplay),
-			// The vertical row budget (Task 4, row_budget.js): six consumers out
+			// The vertical row budget (row_budget.js): six consumers out
 			// of thirty-two (vms, containers, processlist, programlist, alert,
 			// amps), the same "small number of plugins" case `maxProcessesDisplay`
 			// above describes -- a prop on the shared `<component>` binding would
 			// fall through as a `row-budget` DOM attribute on the other
-			// twenty-six, which never declare it (fix round 1, Important 1;
-			// same reasoning as `serverPlugins`, G9-8 Task 4 review). `computed()`
+			// twenty-six, which never declare it -- the same reasoning as
+			// `serverPlugins` above. `computed()`
 			// for the same reason as the two entries above: `refitVertical()`
 			// reassigns `this.rowBudget` on every vertical pass, and a plain
 			// `{ rowBudget: this.rowBudget }` would capture whatever it was at
@@ -206,6 +213,10 @@ export default {
 			// Same guard shape as `refitting`: the vertical pass mutates
 			// rowBudget and therefore the DOM.
 			refittingVertical: false,
+			// A refit coalesced into the next animation frame (scheduleRefit).
+			refitFrame: null,
+			// Listeners this component owns and must remove on unmount.
+			visibilityHandler: null,
 		};
 	},
 	computed: {
@@ -232,7 +243,7 @@ export default {
 			if (this.serverArgs.full_quicklook) {
 				for (const name of FULL_QUICKLOOK_HIDDEN) hidden.add(name);
 			}
-			// `cpu` / `percpu` mutual exclusion (final review, Critical 1): the
+			// `cpu` / `percpu` mutual exclusion : the
 			// v5 TUI shows exactly one of them -- glances_curses_v5.py:565-567
 			// drops one from `frame.top` on EVERY frame:
 			// `hidden_top = "cpu" if self._view.show_percpu else "percpu"`.
@@ -250,10 +261,10 @@ export default {
 			} else {
 				hidden.add("percpu");
 			}
-			// `processlist` / `programlist` mutual exclusion (task 8, same shape as
+			// `processlist` / `programlist` mutual exclusion (same shape as
 			// cpu/percpu above): the v5 TUI shows exactly one --
 			// glances_curses_v5.py:578 `hidden_right = "processlist" if
-			// self._view.programs else "programlist"`. `--programs` (Task 5) is
+			// self._view.programs else "programlist"`. `--programs` is
 			// wired into both the TUI's own `_view.programs` (main_v5.assemble)
 			// and `serverArgs.programs`, so the two agree -- unlike the TUI-only
 			// `show_percpu` hotkey above, there is no browser/TUI gap to paper
@@ -295,15 +306,15 @@ export default {
 		// `[global] refresh`, which stays the value a first visit starts at.
 		this.refresh = loadRefresh() ?? refreshSeconds;
 		this.apiDoc = apiDoc;
-		// [outputs] theme, mapped straight to data-theme -- see the G9-2 design
+		// [outputs] theme, mapped straight to data-theme -- see the design
 		// spec, section 5. The static template hardcodes "dark" so the page
 		// has a theme before this fetch resolves.
 		document.documentElement.dataset.theme = theme;
 		// Resolved from the SAME /api/5/config fetch as refresh/theme above --
 		// no second round-trip. Provided to `processlist`/`programlist`
 		// (provide() above) before the first tick(), so their very first paint
-		// is already capped (fix round 1, IMPORTANT 1's third consequence: the
-		// cap used to arrive after mount, one refresh tick too late).
+		// is already capped: the cap used to arrive after mount, one refresh
+		// tick too late.
 		this.maxProcessesDisplay = maxProcessesDisplay;
 		// The schema and the server's CLI arguments never change while the
 		// server runs, so all three are resolved once here: three requests
@@ -316,8 +327,11 @@ export default {
 			resolvePluginNames(),
 			resolveVersion(),
 		]);
-		this.labels = labels;
-		this.serverArgs = serverArgs;
+		// markRaw for the same reason as the poll payloads -- see the note above
+		// the component. The schema map is the larger of the two: one entry per
+		// field of every plugin, read once per cell per render.
+		this.labels = markRaw(labels);
+		this.serverArgs = markRaw(serverArgs);
 		this.pluginNames = pluginNames;
 		this.version = version;
 		await this.tick();
@@ -327,17 +341,23 @@ export default {
 			for (const slotName of ["header-left", "top", "right"]) {
 				const zone = this.$el?.querySelector?.(`[data-slot="${slotName}"]`);
 				if (!zone) continue;
-				const observer = new ResizeObserver(() => {
-					// Not awaited: a rejection here would surface as an unhandled promise
-					// rejection. The in-flight guard is cleared by refit()'s own `finally`,
-					// so a failed pass simply retries on the next tick or resize.
-					this.refit()
-						.then(() => this.refitVertical())
-						.catch(() => {});
-				});
+				// scheduleRefit(), never refit() directly: dragging a window edge
+				// fires these observers on every frame, and a full pass costs one
+				// forced layout per cascade notch.
+				const observer = new ResizeObserver(() => this.scheduleRefit());
 				observer.observe(zone);
 				this.observers.push(observer);
 			}
+		}
+		// A hidden tab paints nothing, so polling it only burns the viewer's CPU
+		// and the server's. Stop while it is in the background (tick() returns
+		// early) and catch up in one immediate poll when it comes back, so the
+		// page is never shown holding data from minutes ago.
+		if (typeof document !== "undefined" && typeof document.addEventListener === "function") {
+			this.visibilityHandler = () => {
+				if (!document.hidden) this.tick();
+			};
+			document.addEventListener("visibilitychange", this.visibilityHandler);
 		}
 		// The render probe drives the cascade through this hook: its fake DOM
 		// has no ResizeObserver and no layout until the harness sets widths.
@@ -356,8 +376,8 @@ export default {
 			// Same shape as `__glancesRefit` above: the render probe has no
 			// timer (`setInterval` is stubbed to a no-op below) and no other way
 			// to fire a SECOND poll cycle, which is what the tick-ordering test
-			// (fix round 3) needs -- `tick()` itself calls refit()/refitVertical()
-			// internally, so this hook only needs to republish afterwards.
+			// needs -- `tick()` itself calls refit()/refitVertical() internally,
+			// so this hook only needs to republish afterwards.
 			window.__glancesTick = async () => {
 				await this.tick();
 				window.__glancesDegrade = this.degrade;
@@ -367,10 +387,24 @@ export default {
 		this.startTimer();
 	},
 	unmounted() {
-		// The poll must stop with the component, or a hot reload leaves timers
-		// stacking up against the API.
+		// Everything this component attached outside itself has to come back
+		// with it: a hot reload otherwise leaves timers stacking up against the
+		// API, and the `window.__glances*` hooks below hold a closure over a
+		// dead instance, keeping its whole payload graph alive.
 		if (this.timer) clearInterval(this.timer);
 		for (const observer of this.observers) observer.disconnect();
+		if (this.refitFrame !== null && typeof cancelAnimationFrame === "function") {
+			cancelAnimationFrame(this.refitFrame);
+		}
+		if (this.visibilityHandler && typeof document !== "undefined") {
+			document.removeEventListener("visibilitychange", this.visibilityHandler);
+		}
+		if (typeof window !== "undefined") {
+			delete window.__glancesRefit;
+			delete window.__glancesTick;
+			delete window.__glancesDegrade;
+			delete window.__glancesRowBudget;
+		}
 	},
 	methods: {
 		startTimer() {
@@ -396,6 +430,11 @@ export default {
 			// server can resolve out of order and an older response clobbers
 			// `results`/`errors` with stale data.
 			if (this.ticking) return;
+			// A background tab renders nothing: polling it costs the viewer CPU
+			// and the server a request per tab per cadence, for a frame nobody
+			// sees. The visibilitychange listener in mounted() fires one catch-up
+			// tick the moment the tab is shown again.
+			if (typeof document !== "undefined" && document.hidden === true) return;
 			this.ticking = true;
 			try {
 				// Visible plugins only: a disabled plugin is absent from /all by
@@ -408,7 +447,7 @@ export default {
 				// an error for EVERY requested spec) -- an unrelated /all outage
 				// blanking a block fed by its own healthy endpoint, exactly the
 				// coupling the brief forbade, just in the direction nobody thought
-				// to look (fix round 1, IMPORTANT 1).
+				// to look.
 				const ownEndpointPlugins = this.plugins.filter((plugin) => plugin.ownEndpoint);
 				const { results, errors } = await fetchAll(this.plugins.filter((plugin) => !plugin.ownEndpoint));
 				// fetchAll() only ever returns entries for what it was asked for, so
@@ -417,7 +456,7 @@ export default {
 				// to loading on every tick" bug excluding them from fetchAll() was
 				// meant to remove) -- carry each one over from the previous tick,
 				// generalised over the registry's `ownEndpoint` entries rather than
-				// hardcoded to `alert` (fix round 2). A `{...this.results, ...results}`
+				// hardcoded to `alert`. A `{...this.results, ...results}`
 				// spread over the WHOLE object looks simpler and was proposed in
 				// review, but is wrong: spread only ADDS/overwrites keys, it can
 				// never delete one merely absent from the newer object, so a
@@ -437,8 +476,8 @@ export default {
 					results[plugin.name] = this.results[plugin.name];
 					errors[plugin.name] = this.errors[plugin.name];
 				}
-				this.results = results;
-				this.errors = errors;
+				this.results = markRaw(results);
+				this.errors = markRaw(errors);
 				await this.refit();
 				if (typeof window !== "undefined") window.__glancesDegrade = this.degrade;
 				// PluginAlert.vue's data comes from its own endpoint -- the already
@@ -447,7 +486,7 @@ export default {
 				// own try/catch, like the block it replaced: a failing alert
 				// endpoint must not disturb the plugins fetchAll() just resolved.
 				try {
-					// Envelope, not a bare array (fix round 2, IMPORTANT 2):
+					// Envelope, not a bare array :
 					// `is_initializing` lets PluginAlert.vue tell "warm-up" from
 					// "no alert detected" apart, the same distinction
 					// `render_alert_block` makes (curses_renderer_v5.py:738-745).
@@ -459,24 +498,60 @@ export default {
 					// otherwise linger forever once the endpoint recovers.
 					const nextErrors = { ...this.errors };
 					delete nextErrors.alert;
-					this.errors = nextErrors;
-					this.results = { ...this.results, alert: { isInitializing, incidents } };
+					this.errors = markRaw(nextErrors);
+					this.results = markRaw({ ...this.results, alert: { isInitializing, incidents } });
 				} catch (e) {
-					this.errors = { ...this.errors, alert: e.message };
+					this.errors = markRaw({ ...this.errors, alert: e.message });
 				}
 				// Runs AFTER the alert fetch above, not right after refit(): it
 				// reads `this.results.alert` for `nAlerts`/`nOngoing` (`floorAlerts`),
 				// and those feed the same shared row pool `vms`/`containers`/
 				// `processlist`/`programlist` draw from -- reading it before the
 				// fetch above resolves would budget every periodic tick against the
-				// PREVIOUS cycle's alert state, forever, not just at startup (fix
-				// round 2, Important 1). `refit()` stays where it is: the horizontal
+				// PREVIOUS cycle's alert state, forever, not just at startup.
+				// `refit()` stays where it is: the horizontal
 				// cascades operate on the header/top zones and never read alert
 				// state.
 				await this.refitVertical();
 			} finally {
 				this.ticking = false;
 			}
+		},
+		// Coalesce refit requests into one animation frame. A ResizeObserver
+		// fires on every frame of a window drag, and one pass costs a forced
+		// layout per cascade notch -- running them all would make resizing the
+		// window the most expensive thing this page ever does.
+		//
+		// Re-scheduling (rather than dropping) a request that arrives while a
+		// pass is in flight is what keeps the LAST size of a drag fitted: the
+		// in-flight guards in refit()/refitVertical() make such a call a no-op,
+		// and nothing else would come back for it before the next tick.
+		scheduleRefit() {
+			if (this.refitFrame !== null) return;
+			// No requestAnimationFrame means no layout engine either (the render
+			// probe), so there is nothing to coalesce and no frame to come back
+			// on: run it as the observer callback used to.
+			if (typeof requestAnimationFrame !== "function") {
+				this.refitNow();
+				return;
+			}
+			this.refitFrame = requestAnimationFrame(() => {
+				this.refitFrame = null;
+				if (this.refitting || this.refittingVertical) {
+					this.scheduleRefit();
+					return;
+				}
+				this.refitNow();
+			});
+		},
+		// Both axes, in the TUI's order. Not awaited by its callers: a rejection
+		// would surface as an unhandled promise rejection, and the in-flight
+		// guards are cleared by each pass's own `finally`, so a failed pass
+		// simply retries on the next tick or resize.
+		refitNow() {
+			this.refit()
+				.then(() => this.refitVertical())
+				.catch(() => {});
 		},
 		// Measure one zone, apply a candidate flag set, let Vue re-render, and
 		// report what the browser says. `resolveDegrade` calls this once per
@@ -607,7 +682,7 @@ export default {
 		// The TUI emits one row per result LINE, blanking the name and count
 		// after the first, and paints no header row (amps/render_curses_v5.py
 		// module docstring) -- this WebUI puts the whole multi-line result in
-		// one `pre-line` cell instead (G9-9A spec D6), but the LINE cost is the
+		// one `pre-line` cell instead (spec D6), but the LINE cost is the
 		// same either way. `ampsLineCount` also drops an AMP whose result is
 		// still `None`, the same predicate PluginAmps.vue's own `rows` filters
 		// by (amps.js) -- so the two agree by construction, not by coincidence.
@@ -709,7 +784,7 @@ export default {
 	gap: calc(var(--gl-row) * var(--gl-size-base));
 	grid-column: 2;
 }
-/* 48rem matches no TUI rule: it is the browser's own threshold (G9-5 D3),
+/* 48rem matches no TUI rule: it is the browser's own threshold (spec D3),
  * kept in this single rule so it can be tuned. Below it the columns stack. */
 @media (max-width: 48rem) {
 	.gl-zone-body {

@@ -37,24 +37,14 @@
 <script>
 import { cellClassFor } from "./columns.js";
 import { formatFixed0, formatAutoHz, toFahrenheit } from "./format.js";
+import { PLUGIN_PROPS } from "./plugin_props.js";
 
 const TITLE = "NPU";
 
 export default {
 	name: "PluginNpu",
-	props: {
-		payload: { type: Object, default: null },
-		error: { type: String, default: undefined },
-		// Declared but unused: none of the four rows has a schema-resolved
-		// label -- the TUI writes "mem" and "temperature" as literals.
-		labels: { type: Object, default: () => ({}) },
-		// `fahrenheit` (--fahrenheit) converts the temperature row, as in the
-		// TUI's `view.get("fahrenheit")`.
-		serverArgs: { type: Object, default: () => ({}) },
-		// Declared but unused: this component is hidden as a whole rather than
-		// shrunk. An undeclared prop becomes a fallthrough attribute.
-		degrade: { type: Object, default: () => ({}) },
-	},
+	// Reads `serverArgs.fahrenheit` (--fahrenheit) for the temperature row.
+	props: { ...PLUGIN_PROPS },
 	computed: {
 		TITLE: () => TITLE,
 		// Payload order, though only the FIRST item is ever shown below --

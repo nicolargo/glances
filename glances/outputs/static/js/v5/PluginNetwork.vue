@@ -1,7 +1,7 @@
 <template>
 	<CollectionBlock :title="TITLE" :payload="payload" :error="error">
 		<template #head>
-			<!-- G9-6 D6: the TUI's header row -- the block title, then the rate
+			<!-- spec D6: the TUI's header row -- the block title, then the rate
 			labels from the schema. An empty collection keeps this row and
 			shows no line, as the TUI paints its header. -->
 			<tr>
@@ -39,6 +39,7 @@ import { labelFor } from "./labels.js";
 import { cellClassFor } from "./columns.js";
 import { displayName } from "./rows.js";
 import CollectionBlock from "./CollectionBlock.vue";
+import { PLUGIN_PROPS } from "./plugin_props.js";
 
 const RATE_FIELDS = ["bytes_recv", "bytes_sent"];
 
@@ -47,16 +48,8 @@ const TITLE = "NETWORK";
 export default {
 	name: "PluginNetwork",
 	components: { CollectionBlock },
-	props: {
-		payload: { type: Object, default: null },
-		error: { type: String, default: undefined },
-		labels: { type: Object, default: () => ({}) },
-		// `byte` (--byte) switches the rates from bits to bytes, as in the TUI.
-		serverArgs: { type: Object, default: () => ({}) },
-		// Declared but unused: this component is hidden as a whole rather than
-		// shrunk (spec D7). An undeclared prop becomes a fallthrough attribute.
-		degrade: { type: Object, default: () => ({}) },
-	},
+	// Reads `serverArgs.byte` (--byte): rates in bytes instead of bits.
+	props: { ...PLUGIN_PROPS },
 	computed: {
 		TITLE: () => TITLE,
 		// A computed, not data(): data() would hand the template a deeply
@@ -84,7 +77,7 @@ export default {
 </script>
 
 <style scoped>
-/* G9-6 D3: the TUI's name width (network/render_curses_v5.py _NAME_MAX_WIDTH). */
+/* spec D3: the TUI's name width (network/render_curses_v5.py _NAME_MAX_WIDTH). */
 .gl-plugin {
 	--gl-name-width: calc(18 * var(--gl-col));
 }

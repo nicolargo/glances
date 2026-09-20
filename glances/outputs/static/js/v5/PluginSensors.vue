@@ -33,6 +33,7 @@
 import { formatFixed0, toFahrenheit } from "./format.js";
 import { cellClassFor } from "./columns.js";
 import CollectionBlock from "./CollectionBlock.vue";
+import { PLUGIN_PROPS } from "./plugin_props.js";
 
 // sensors/render_curses_v5.py:48-49.
 const SENTINELS = new Set(["ERR", "SLP", "UNK", "NOS"]);
@@ -66,17 +67,8 @@ function valueText(item, fahrenheit) {
 export default {
 	name: "PluginSensors",
 	components: { CollectionBlock },
-	props: {
-		payload: { type: Object, default: null },
-		error: { type: String, default: undefined },
-		// Declared but unused: the TUI's value column has no label.
-		labels: { type: Object, default: () => ({}) },
-		// `fahrenheit` (--fahrenheit) converts temperatures, as in the TUI.
-		serverArgs: { type: Object, default: () => ({}) },
-		// Declared but unused: this component is hidden as a whole rather than
-		// shrunk (spec D7). An undeclared prop becomes a fallthrough attribute.
-		degrade: { type: Object, default: () => ({}) },
-	},
+	// Reads `serverArgs.fahrenheit` (--fahrenheit) for the temperatures.
+	props: { ...PLUGIN_PROPS },
 	computed: {
 		TITLE: () => TITLE,
 		// Payload order: the server already sorts with natural keys
@@ -98,7 +90,7 @@ export default {
 /* One width budget for the whole left column (maintainer's aesthetic call,
  * 2026-09-12): the three-column blocks' name cap (18ch) plus the value column
  * sensors does not have (.gl-num's 9ch floor) and its cell gap. It replaces
- * G9-6 D3's TUI width here (19ch, sensors/render_curses_v5.py
+ * spec D3's TUI width here (19ch, sensors/render_curses_v5.py
  * _NAME_MAX_WIDTH). A table column still shrinks to its content, so this
  * equalises the MAXIMUM width: a block whose names are all short renders
  * narrower. */

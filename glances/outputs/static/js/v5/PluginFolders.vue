@@ -3,7 +3,7 @@
 		<template #head>
 			<!-- The TUI's FOLDERS line carries no size label; the empty <th>
 			keeps the header aligned column by column with the body (the sensors
-			precedent). G9-7 D4. -->
+			precedent). spec D4. -->
 			<tr>
 				<th class="gl-header">{{ TITLE }}</th>
 				<th class="gl-header gl-num"></th>
@@ -33,25 +33,14 @@
 import CollectionBlock from "./CollectionBlock.vue";
 import { cellClassFor } from "./columns.js";
 import { formatBytes } from "./format.js";
+import { PLUGIN_PROPS } from "./plugin_props.js";
 
 const TITLE = "FOLDERS";
 
 export default {
 	name: "PluginFolders",
 	components: { CollectionBlock },
-	props: {
-		payload: { type: Object, default: null },
-		error: { type: String, default: undefined },
-		// Declared but unused: the size column has no header to label.
-		labels: { type: Object, default: () => ({}) },
-		// Declared but unused. An undeclared prop becomes a fallthrough
-		// attribute, so without this line the DOM gets
-		// server-args="[object Object]" on the article.
-		serverArgs: { type: Object, default: () => ({}) },
-		// Declared but unused: this component is hidden as a whole rather than
-		// shrunk. An undeclared prop becomes a fallthrough attribute.
-		degrade: { type: Object, default: () => ({}) },
-	},
+	props: { ...PLUGIN_PROPS },
 	computed: {
 		TITLE: () => TITLE,
 		// Payload order -- the TUI does not sort (folders/render_curses_v5.py).
