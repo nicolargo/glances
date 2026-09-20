@@ -714,3 +714,20 @@ def test_shipped_conf_documents_the_alerts_section():
     for key in ("min_duration_seconds", "history_size", "warmup_cycles"):
         assert f"#{key}=" in alerts_section, f"{key} must be documented, commented out"
         assert f"\n{key}=" not in alerts_section, f"{key} must NOT be active by default"
+
+
+def test_shipped_conf_documents_the_api_doc_gate():
+    """`[outputs] api_doc` decides whether the v5 server mounts Swagger UI at
+    /docs and ReDoc at /redoc (webserver_v5.build_app), and the WebUI footer
+    reads the same key to decide whether to link /docs. A security-relevant
+    switch nobody can find in the shipped file may as well not exist.
+
+    Commented out, like the [alerts] keys above: documenting a key must not
+    change its default (DEFAULTS has api_doc=True).
+    """
+    from pathlib import Path
+
+    text = Path("conf/glances.conf").read_text(encoding="utf-8")
+    outputs_section = text.split("[outputs]", 1)[1].split("\n[", 1)[0]
+    assert "#api_doc=" in outputs_section, "api_doc must be documented, commented out"
+    assert "\napi_doc=" not in outputs_section, "api_doc must NOT be active by default"
