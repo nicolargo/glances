@@ -16,6 +16,7 @@ from glances.globals import WINDOWS, key_exist_value_not_none_not_v, replace_spe
 from glances.logger import logger
 from glances.outputs.glances_unicode import unicode_message
 from glances.plugins.core import CorePlugin
+from glances.plugins.gpu.cards.arm import get_mem_capacity_bytes
 from glances.plugins.gpu.cards.intel import (
     get_per_pid_gpu_mem_bytes,
     get_per_pid_gpu_percent,
@@ -86,8 +87,8 @@ fields_description = {
         'unit': 'percent',
     },
     'gpu_mem': {
-        'description': 'Process GPU-resident memory in bytes (Intel i915/xe only, 0 when idle or unavailable)',
-        'unit': 'byte',
+        'description': 'Process GPU memory consumption in % of system memory (Intel i915/xe only)',
+        'unit': 'percent',
     },
     'memory_percent': {
         'description': 'Process memory consumption',
@@ -184,7 +185,7 @@ class ProcesslistPlugin(GlancesPluginModel):
     layout_header = {
         'cpu': '{:<6} ',
         'gpu': '{:<6} ',
-        'gmem': '{:<5} ',
+        'gmem': '{:<6} ',
         'mem': '{:<5} ',
         'virt': '{:<5} ',
         'res': '{:<5} ',
@@ -205,7 +206,7 @@ class ProcesslistPlugin(GlancesPluginModel):
         'cpu': '{:<6.1f}',
         'cpu_no_digit': '{:<6.0f}',
         'gpu': '{:<6.1f}',
-        'gmem': '{:<5} ',
+        'gmem': '{:<6.1f}',
         'mem': '{:<5.1f} ',
         'virt': '{:<5} ',
         'res': '{:<5} ',
@@ -322,12 +323,16 @@ class ProcesslistPlugin(GlancesPluginModel):
             if 'gpu_mem' not in glances_processes.disable_stats:
                 try:
                     gpu_mem_map = get_per_pid_gpu_mem_bytes()
+                    gpu_mem_capacity = get_mem_capacity_bytes('/proc/meminfo')
                 except Exception as e:
                     logger.debug(f'Per-process GPU memory unavailable: {e}')
                     gpu_mem_map = None
-                if gpu_mem_map is not None:
+                    gpu_mem_capacity = None
+                if gpu_mem_map is not None and gpu_mem_capacity:
                     for proc in stats:
-                        proc['gpu_mem'] = gpu_mem_map.get(proc['pid'], 0)
+                        proc['gpu_mem'] = round(
+                            gpu_mem_map.get(proc['pid'], 0) / gpu_mem_capacity * 100, 1
+                        )
                     anchor = (
                         'gpu_percent'
                         if 'gpu_percent' in self.enable_stats
@@ -335,6 +340,9 @@ class ProcesslistPlugin(GlancesPluginModel):
                     )
                     self.enable_stats.insert(
                         self.enable_stats.index(anchor) + 1, 'gpu_mem'
+                    )
+                    self.max_values['gpu_mem'] = max(
+                        (p['gpu_mem'] for p in stats), default=0
                     )
 
         # Update the stats
@@ -464,8 +472,14 @@ class ProcesslistPlugin(GlancesPluginModel):
     def _get_process_curses_gpu_mem(self, p, selected, args):
         """Return process GPU memory curses"""
         if key_exist_value_not_none_not_v('gpu_mem', p, ''):
-            msg = self.layout_stat['gmem'].format(self.auto_unit(p['gpu_mem'], low_precision=False))
-            ret = self.curse_add_line(msg, optional=True)
+            msg = self.layout_stat['gmem'].format(p['gpu_mem'])
+            alert = self.get_alert(
+                p['gpu_mem'],
+                highlight_zero=True,
+                is_max=(p['gpu_mem'] == self.max_values['gpu_mem']),
+                header="gmem",
+            )
+            ret = self.curse_add_line(msg, alert)
         else:
             msg = self.layout_header['gmem'].format('?')
             ret = self.curse_add_line(msg)
@@ -933,7 +947,7 @@ class ProcesslistPlugin(GlancesPluginModel):
             ret, process_sort_key, 'gpu_percent', display_stats, 'gpu', 'GPU%', sort_style=sort_style
         )
         self.msg_curse_header_common(
-            ret, process_sort_key, 'gpu_mem', display_stats, 'gmem', 'GMEM', sort_style=sort_style
+            ret, process_sort_key, 'gpu_mem', display_stats, 'gmem', 'GMEM%', sort_style=sort_style
         )
         self.msg_curse_header_common(
             ret, process_sort_key, 'memory_percent', display_stats, 'mem', 'MEM%', sort_style=sort_style

@@ -94,6 +94,7 @@ class _GlancesCurses:
         'w': {'handler': '_handle_clean_logs'},
         'W': {'switch': 'disable_wifi'},
         'x': {'handler': '_handle_clean_critical_logs'},
+        'y': {'sort_key': 'gpu_mem'},
         'z': {'handler': '_handle_disable_process'},
         '+': {'handler': '_handle_increase_nice'},
         '-': {'handler': '_handle_decrease_nice'},

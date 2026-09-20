@@ -295,6 +295,7 @@ class Config:
         self.set_default_cwc('processlist', 'cpu')
         self.set_default_cwc('processlist', 'mem')
         self.set_default_cwc('processlist', 'gpu')
+        self.set_default_cwc('processlist', 'gmem')
 
     @property
     def loaded_config_file(self):

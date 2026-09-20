@@ -63,6 +63,7 @@ class HelpPlugin(GlancesPluginModel):
                 ('sort_auto', msg_col.format('a', 'Automatically')),
                 ('sort_cpu', msg_col.format('c', 'CPU%')),
                 ('sort_gpu', msg_col.format('v', 'GPU%')),
+                ('sort_gpu_mem', msg_col.format('y', 'GMEM%')),
                 ('sort_io_rate', msg_col.format('i', 'I/O rate')),
                 ('sort_cpu_num', msg_col.format('o', 'CPU core number')),
                 ('sort_mem', msg_col.format('m', 'MEM%')),
