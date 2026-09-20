@@ -467,3 +467,15 @@ def get_per_pid_gpu_percent(proc_root: str = PROC_ROOT_FOLDER) -> dict[int, int]
         _pid_last_sample.pop(pid, None)
 
     return result
+
+
+def get_per_pid_gpu_mem_bytes(proc_root: str = PROC_ROOT_FOLDER) -> dict[int, int]:
+    """Return {pid: GPU-resident memory in bytes} for Intel GPU clients.
+
+    Point-in-time gauge (no delta): summed drm-resident-* region counters
+    per PID. Shared buffers may be counted once per holder, as in nvtop.
+    """
+    per_pid_mem: dict[int, int] = {}
+    for pid, record in _iter_fdinfo_records(proc_root):
+        per_pid_mem[pid] = per_pid_mem.get(pid, 0) + record['mem_used_bytes']
+    return per_pid_mem

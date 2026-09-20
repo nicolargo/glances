@@ -70,6 +70,27 @@ class TestProcesslistGpuColumn:
         monkeypatch.setattr(processlist_module, 'intel_gpu_present', lambda: False)
         process_plugin.update()
         assert 'gpu_percent' not in process_plugin.enable_stats
+        assert 'gpu_mem' not in process_plugin.enable_stats
+
+    def test_mem_column_merged_by_pid(self, process_plugin, monkeypatch):
+        monkeypatch.setattr(processlist_module, 'intel_gpu_present', lambda: True)
+        monkeypatch.setattr(
+            processlist_module, 'get_per_pid_gpu_percent', lambda *a, **k: {}
+        )
+        process_plugin.update()
+        target_pid = process_plugin.stats[0]['pid']
+        monkeypatch.setattr(
+            processlist_module,
+            'get_per_pid_gpu_mem_bytes',
+            lambda *a, **k: {target_pid: 1024 * 1024},
+        )
+        process_plugin.update()
+        assert 'gpu_mem' in process_plugin.enable_stats
+        by_pid = {p['pid']: p for p in process_plugin.stats}
+        assert by_pid[target_pid]['gpu_mem'] == 1024 * 1024
+        # gpu_mem sits right after gpu_percent (or cpu_percent).
+        order = process_plugin.enable_stats
+        assert order.index('gpu_mem') == order.index('gpu_percent') + 1
 
     def test_column_hidden_when_disabled(self, process_plugin, monkeypatch):
         monkeypatch.setattr(processlist_module, 'intel_gpu_present', lambda: True)

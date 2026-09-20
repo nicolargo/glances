@@ -464,6 +464,20 @@ class TestIntelPerPid:
         # Empty proc root: nothing reported, previous samples dropped.
         assert intel_backend.get_per_pid_gpu_percent(str(tmp_path)) == {}
 
+    def test_per_pid_mem_bytes(self, tmp_path):
+        fdinfo_dir = os.path.join(str(tmp_path), '424243', 'fdinfo')
+        os.makedirs(fdinfo_dir, exist_ok=True)
+        with open(os.path.join(fdinfo_dir, '7'), 'w') as f:
+            f.write(
+                "drm-driver:\ti915\n"
+                "drm-total-system0:\t2048 KiB\n"
+                "drm-resident-system0:\t1024 KiB\n"
+                "drm-engine-render:\t0 ns\n"
+            )
+        result = intel_backend.get_per_pid_gpu_mem_bytes(str(tmp_path))
+        assert result[424243] == 1024 * 1024
+        assert intel_backend.get_per_pid_gpu_mem_bytes(str(tmp_path / 'missing')) == {}
+
     def test_presence_detection(self):
         assert intel_backend.intel_gpu_present(INTEL_DRM_ROOT) is True
         assert intel_backend.intel_gpu_present('/this/path/does/not/exist') is False
