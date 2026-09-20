@@ -388,6 +388,13 @@ def test_the_footer_controls_stay_out_of_the_way():
     assert re.search(r"text-decoration:\s*none\s*;", link), f"a footer link drops the solid underline: {link!r}"
     value = _rule_body(shell, ".gl-refresh-value")
     assert re.search(r"min-width:", value), f"the cadence box has no width floor: {value!r}"
+    # The "+" sits at the viewport's right edge, where a classic scrollbar
+    # crowds it and an overlay one is drawn straight over it. Matched on the
+    # standalone `.gl-refresh` rule: the shared `.gl-about, .gl-refresh` one
+    # above must NOT carry this, or the left end moves too.
+    assert re.search(r"(?<!,)\n\.gl-refresh\s*\{[^}]*padding-right:", shell), (
+        "the cadence needs clearance from the scrollbar"
+    )
 
 
 def test_a_name_cell_is_capped_and_can_keep_its_tail():

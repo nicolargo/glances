@@ -746,6 +746,14 @@ export default {
 	gap: calc(2 * var(--gl-col));
 	font-size: var(--gl-size-sm);
 }
+/* Clearance for the vertical scrollbar. `.gl-app`'s padding leaves the "+"
+ * half a gap from the viewport edge, which a classic scrollbar crowds and an
+ * overlay one (Firefox, macOS) draws straight over -- the button ends up hard
+ * to hit, or unhittable. Two characters of padding on this end only: the
+ * version and the links keep their place at the other. */
+.gl-refresh {
+	padding-right: calc(2 * var(--gl-col));
+}
 .gl-about-sep {
 	/* The separators are quieter still than the items they part. */
 	opacity: 0.5;
