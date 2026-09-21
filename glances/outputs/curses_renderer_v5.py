@@ -1252,24 +1252,25 @@ def build_frame(
     for plugin_name, is_collection in registry:
         if view and view.get("full_quicklook") and plugin_name in _FULL_QUICKLOOK_HIDDEN:
             continue
-        if view and view.get("hide_quicklook") and plugin_name == "quicklook":
+        # A block is hidden when EITHER authority says so — the union of:
+        #
+        #   `user_hidden`  the SHOW/HIDE hotkeys (`n`, `d`, `f`, `2`, `5`, …),
+        #                  owned by `ViewState.hidden_plugins` and stable
+        #                  across cycles;
+        #   `hide_<name>`  the automatic width-degradation cascades
+        #                  (`_DEGRADE_STEPS` for the TOP row,
+        #                  `_HEADER_DEGRADE_STEPS` for the header banner, both
+        #                  in `glances_curses_v5.py`), rewritten every cycle by
+        #                  the fit loop.
+        #
+        # Two namespaces rather than one because the cascade rebuilds its keys
+        # on each pass: a user choice stored there would be clobbered by the
+        # next fit, and a user-hidden block would make the cascade believe it
+        # had already spent that step. Keeping them apart also means neither
+        # can conjure width that does not exist.
+        if view and plugin_name in view.get("user_hidden", ()):
             continue
-        if view and view.get("hide_memswap") and plugin_name == "memswap":
-            continue
-        if view and view.get("hide_gpu") and plugin_name == "gpu":
-            continue
-        # Header line progressive degradation (system … ip … uptime … cloud …
-        # now): when the terminal is too narrow, cloud (opt-in, so sacrificed
-        # first) is dropped, then two content shrinks handled by the plugins'
-        # own renderers (`hide_ip_location`, then `hide_os_info`), then the
-        # now, ip and uptime blocks.
-        if view and view.get("hide_cloud") and plugin_name == "cloud":
-            continue
-        if view and view.get("hide_now") and plugin_name == "now":
-            continue
-        if view and view.get("hide_ip") and plugin_name == "ip":
-            continue
-        if view and view.get("hide_uptime") and plugin_name == "uptime":
+        if view and view.get(f"hide_{plugin_name}"):
             continue
         payload = store_snapshot.get(plugin_name) or {}
         # v4 parity: a collection (list) plugin with an empty list renders

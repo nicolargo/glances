@@ -522,7 +522,10 @@ def test_tui_v5_handle_key_quit(fake_store, fake_alerts, fake_config):
     tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
     assert tui._handle_key(ord("q")) == "quit"
     assert tui._handle_key(27) == "quit"
-    assert tui._handle_key(ord("z")) == "ignored"
+    # `y` is bound by neither v4 nor v5 — a key that stays unmapped as the
+    # remaining 2.X groups land. (`z` sat here until it became SHOW/HIDE
+    # processes.)
+    assert tui._handle_key(ord("y")) == "ignored"
 
 
 def test_tui_v5_key_4_toggles_full_quicklook(fake_store, fake_alerts, fake_config):
@@ -1232,13 +1235,18 @@ def test_tui_v5_paint_help_renders_title_and_keys(fake_store, fake_alerts, fake_
 
     tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
     fake_stdscr = MagicMock()
-    fake_stdscr.getmaxyx.return_value = (24, 80)
+    # Tall and wide enough for the whole document: this asserts on CONTENT,
+    # and the overlay scrolls rather than clips when it does not fit. At 80
+    # columns the key list falls back to a single column (the longest
+    # description, `4`'s, is 34 chars), which makes it far too tall to fit.
+    fake_stdscr.getmaxyx.return_value = (40, 100)
     tui._paint_help(fake_stdscr)
 
     flat = " ".join(str(call) for call in fake_stdscr.addstr.call_args_list)
     assert "Glances" in flat
     assert "help" in flat
     assert "SORT PROCESSES" in flat
+    assert "SHOW/HIDE" in flat
     assert "Quit Glances" in flat
 
 
@@ -1292,7 +1300,9 @@ def test_tui_v5_help_shows_doc_link(fake_store, fake_alerts, fake_config):
 
     tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
     fake_stdscr = MagicMock()
-    fake_stdscr.getmaxyx.return_value = (30, 100)
+    # Tall enough for the whole document (it grew with the SHOW/HIDE keys);
+    # when it does not fit, the overlay scrolls rather than clips.
+    fake_stdscr.getmaxyx.return_value = (40, 100)
     tui._paint_help(fake_stdscr)
 
     flat = " ".join(str(call) for call in fake_stdscr.addstr.call_args_list)
@@ -1305,7 +1315,9 @@ def test_tui_v5_help_shows_color_binding(fake_store, fake_alerts, fake_config):
 
     tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
     fake_stdscr = MagicMock()
-    fake_stdscr.getmaxyx.return_value = (30, 100)
+    # Tall enough for the whole document (it grew with the SHOW/HIDE keys);
+    # when it does not fit, the overlay scrolls rather than clips.
+    fake_stdscr.getmaxyx.return_value = (40, 100)
     tui._paint_help(fake_stdscr)
 
     flat = " ".join(str(call) for call in fake_stdscr.addstr.call_args_list)
@@ -3043,3 +3055,153 @@ def test_paint_row_neutralises_control_characters(fake_store, fake_alerts, fake_
     painted = [call.args[2] for call in stdscr.addstr.call_args_list]
     assert painted == ["python3", "-c import time time.sleep(999)  [2J "]
     assert consumed == len("python3") + 1 + len(painted[1])
+
+
+# --------------------------------------------------- SHOW/HIDE hotkeys (2.X-a)
+#
+# v4 parity for the SHOW/HIDE key family. Design:
+# `docs/superpowers/specs/2026-09-21-glances-v5-tui-show-hide-toggles-design.md`.
+
+
+def _hide_keys(tui_mod) -> dict[str, tuple[str, ...]]:
+    """Every SHOW/HIDE key mapped to the plugin names it reaches."""
+    return {k: spec["hide"] for k, spec in tui_mod.TuiV5._HOTKEYS.items() if "hide" in spec}
+
+
+def test_show_hide_family_covers_the_v4_keys(fake_store, fake_alerts, fake_config):
+    """The 24 keys of the v4 SHOW/HIDE family, minus `4` (already ported as
+    full-quicklook) and `e` (extended stats — needs the process cursor, so it
+    belongs to 2.X-b), plus `C` (missing from Part 3 of the parity inventory)
+    and `r` (filed there under MISCELLANEOUS, but a visibility toggle)."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    expected = set("ACdDfGIKlnNPQrRsVWz7823 5".replace(" ", ""))
+    assert set(_hide_keys(tui_mod)) == expected
+    assert len(expected) == 24
+
+
+@pytest.mark.parametrize("key", sorted("ACdDfGIKlnNPQrRsVWz78235"))
+def test_hide_key_toggles_its_plugins_on_and_off(key, fake_store, fake_alerts, fake_config):
+    """Each key adds exactly its own names, then removes exactly those, and
+    reports `"changed"` so the caller repaints."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    names = set(_hide_keys(tui_mod)[key])
+
+    assert tui._view.hidden_plugins == set()
+    assert tui._handle_key(ord(key)) == "changed"
+    assert tui._view.hidden_plugins == names
+    assert tui._handle_key(ord(key)) == "changed"
+    assert tui._view.hidden_plugins == set()
+
+
+def test_compound_key_never_lands_half_hidden(fake_store, fake_alerts, fake_config):
+    """`f` reaches fs AND folders (v4 `_handle_fs_stats`). Whatever the prior
+    state of its members, one press leaves them all the same way — the tuple
+    flips as a unit, keyed on its first member."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    assert set(_hide_keys(tui_mod)["f"]) == {"fs", "folders"}
+
+    # Start from a half state: folders hidden on its own, fs visible.
+    tui._view.hidden_plugins = {"folders"}
+    tui._handle_key(ord("f"))
+    assert tui._view.hidden_plugins == {"fs", "folders"}
+    tui._handle_key(ord("f"))
+    assert tui._view.hidden_plugins == set()
+
+
+def test_slot_keys_cover_their_whole_slot(fake_store, fake_alerts, fake_config):
+    """`2` and `5` are expanded to their slot members at press time, so a later
+    single-plugin key acts on that one plugin (design §5.4)."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+    from glances.outputs.curses_renderer_v5 import LEFT_SLOT, TOP_SLOT
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+
+    tui._handle_key(ord("2"))
+    assert tui._view.hidden_plugins == set(LEFT_SLOT)
+    # `n` now un-hides network alone, leaving the rest of the sidebar hidden.
+    tui._handle_key(ord("n"))
+    assert tui._view.hidden_plugins == set(LEFT_SLOT) - {"network"}
+
+    tui._view.hidden_plugins = set()
+    tui._handle_key(ord("5"))
+    assert tui._view.hidden_plugins == set(TOP_SLOT)
+
+
+def test_every_hide_key_names_a_real_plugin(fake_store, fake_alerts, fake_config):
+    """Drift guard. A typo'd or renamed plugin name would make a key silently
+    do nothing — invisible, because a key for a config-disabled plugin is a
+    legitimate no-op (design §6.1)."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+    from glances.outputs.curses_renderer_v5 import HEADER_SLOT, LEFT_SLOT, RIGHT_SLOT, TOP_SLOT
+
+    known = set(HEADER_SLOT) | set(TOP_SLOT) | set(LEFT_SLOT) | set(RIGHT_SLOT)
+    for key, names in _hide_keys(tui_mod).items():
+        assert isinstance(names, tuple), f"{key}: `hide` must always be a tuple"
+        assert names, f"{key}: empty `hide` tuple"
+        unknown = set(names) - known
+        assert not unknown, f"{key} names unknown plugin(s): {sorted(unknown)}"
+
+
+def test_hide_keys_do_not_collide_with_the_rest_of_the_table(fake_store, fake_alerts, fake_config):
+    """Every hotkey is one action kind only — a key carrying both `hide` and
+    `switch`/`sort`/`action` would dispatch by dict order."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    for key, spec in tui_mod.TuiV5._HOTKEYS.items():
+        kinds = {k for k in ("hide", "switch", "sort", "action") if k in spec}
+        assert len(kinds) == 1, f"{key}: {sorted(kinds)}"
+
+
+def test_hide_keys_are_documented_in_the_help_overlay(fake_store, fake_alerts, fake_config):
+    """The overlay is generated from `_HOTKEYS`, so every key documents itself
+    — but only if its group is listed in `_HELP_GROUPS`."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    assert "SHOW/HIDE" in tui_mod.TuiV5._HELP_GROUPS
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    text = " ".join(c.text for row in tui._help_lines() for c in row.cells)
+    for key in _hide_keys(tui_mod):
+        assert f" {key}  " in text, f"{key} is missing from the help overlay"
+
+
+def test_build_view_publishes_the_user_hide_set(fake_store, fake_alerts, fake_config):
+    """`_build_view` hands `build_frame` a frozenset copy: the per-cycle view
+    must not be a back door onto the live ViewState, which the fit loops mutate."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    tui._handle_key(ord("n"))
+    view = tui._build_view(120)
+
+    assert view["user_hidden"] == frozenset({"network"})
+    assert isinstance(view["user_hidden"], frozenset)
+
+
+def test_hidden_right_column_plugin_frees_its_row_budget(make_tui_with_body):
+    """A hidden block is filtered before the vertical budget is planned, so
+    `plan_right_column` sees `n_processes == 0` and redistributes its rows —
+    exactly as if the plugin were not registered at all (design §6.2)."""
+    tui = make_tui_with_body()
+    tui._view.hidden_plugins = {"processlist"}
+    frame = tui._build_fitted_frame(max_x=120, max_y=20)
+    assert "processlist" not in [b.name for b in frame.right]
+    hidden_plan = tui._build_view(120)["row_budget"]
+
+    # Same TUI, but processlist never registered: the plan must match.
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    bare = tui_mod.TuiV5(
+        store=tui.store,
+        alerts=tui.alerts,
+        config=tui.config,
+        registry=[("network", False)],
+        fields_by_plugin={"network": dict(_BODY_FIELDS["network"])},
+        refresh_interval=0.01,
+    )
+    bare._build_fitted_frame(max_x=120, max_y=20)
+    assert hidden_plan == bare._build_view(120)["row_budget"]

@@ -27,13 +27,15 @@ import logging
 import threading
 import time
 from collections.abc import Callable
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from itertools import zip_longest
 from typing import TYPE_CHECKING, Any
 
 from glances import __version__
 from glances.outputs.curses_renderer_v5 import (
     HEADER_SLOT_RIGHT,
+    LEFT_SLOT,
+    TOP_SLOT,
     Cell,
     ColorRole,
     Frame,
@@ -119,12 +121,23 @@ class ViewState:
     - ``programs=False`` — process list shows threads, not the per-program
       aggregation (hotkey ``j``).
     - ``show_help=False`` — the help overlay is hidden (hotkey ``h``).
+    - ``hidden_plugins=set()`` — nothing hidden by the user (SHOW/HIDE keys).
+
+    ``hidden_plugins`` is deliberately a namespace of its own, NOT the
+    ``hide_<plugin>`` view keys the width-degradation cascades write
+    (``_DEGRADE_STEPS``, ``_HEADER_DEGRADE_STEPS``). Those keys are rebuilt
+    from scratch on every cycle by ``_build_view``, so a user choice stored
+    there would be clobbered — or would make the cascade believe it had
+    already spent a step. ``build_frame`` reads both and hides on the union:
+    "hidden because I said so" and "hidden because there is no room" are both
+    hidden, and neither authority can corrupt the other.
     """
 
     show_percpu: bool = False
     process_short_name: bool = True
     programs: bool = False
     show_help: bool = False
+    hidden_plugins: set[str] = field(default_factory=set)
 
 
 def _safe_curses_wrapper(fn):
@@ -148,7 +161,7 @@ class TuiV5(threading.Thread):
     # Each entry ALSO carries ``group`` + ``desc``: this same table is the
     # single source of truth for the ``h`` help overlay (``_help_lines``),
     # so every dispatched key is documented and the two can never drift.
-    _HOTKEYS: dict[str, dict[str, str]] = {
+    _HOTKEYS: dict[str, dict[str, Any]] = {
         # Process sort keys.
         "a": {"sort": "auto", "group": "SORT PROCESSES", "desc": "Automatically"},
         "c": {"sort": "cpu_percent", "group": "SORT PROCESSES", "desc": "By CPU consumption"},
@@ -163,13 +176,57 @@ class TuiV5(threading.Thread):
         "4": {"action": "full_quicklook", "group": "TOGGLE VIEW", "desc": "Full quicklook (hide cpu/mem/load)"},
         "/": {"switch": "process_short_name", "group": "TOGGLE VIEW", "desc": "Short / full process name"},
         "j": {"switch": "programs", "group": "TOGGLE VIEW", "desc": "Threads / programs view"},
+        # Per-plugin and per-slot visibility (v4 SHOW/HIDE family). The value
+        # is ALWAYS a tuple, so a key reaching several plugins (`f`, `z`) or a
+        # whole slot (`2`, `5`) is not a special case in the dispatcher.
+        "A": {"hide": ("amps",), "group": "SHOW/HIDE", "desc": "Show/hide AMPs"},
+        "C": {"hide": ("cloud",), "group": "SHOW/HIDE", "desc": "Show/hide cloud"},
+        "d": {"hide": ("diskio",), "group": "SHOW/HIDE", "desc": "Show/hide disk I/O"},
+        "D": {"hide": ("containers",), "group": "SHOW/HIDE", "desc": "Show/hide containers"},
+        "f": {"hide": ("fs", "folders"), "group": "SHOW/HIDE", "desc": "Show/hide filesystem and folders"},
+        "G": {"hide": ("gpu",), "group": "SHOW/HIDE", "desc": "Show/hide GPU"},
+        "I": {"hide": ("ip",), "group": "SHOW/HIDE", "desc": "Show/hide IP module"},
+        "K": {"hide": ("connections",), "group": "SHOW/HIDE", "desc": "Show/hide TCP connections"},
+        "l": {"hide": ("alert",), "group": "SHOW/HIDE", "desc": "Show/hide alerts"},
+        "n": {"hide": ("network",), "group": "SHOW/HIDE", "desc": "Show/hide network stats"},
+        "N": {"hide": ("now",), "group": "SHOW/HIDE", "desc": "Show/hide current time"},
+        "P": {"hide": ("ports",), "group": "SHOW/HIDE", "desc": "Show/hide ports stats"},
+        # v4 binds `Q` to `enable_irq` (irq is opt-in there). v5 stores one
+        # uniform "hidden or not" state, so the polarity survives only in the
+        # starting value — and a config-disabled irq is never instantiated,
+        # which makes this key a visible no-op (design §6.1).
+        "Q": {"hide": ("irq",), "group": "SHOW/HIDE", "desc": "Show/hide IRQ module"},
+        # v4's in-app help and docs/cmds.rst both label `r` "Reset history",
+        # but v4's own dispatch table binds it to `disable_smart`. We follow
+        # the v4 CODE, not the v4 docs (design §5.5).
+        "r": {"hide": ("smart",), "group": "SHOW/HIDE", "desc": "Show/hide SMART stats"},
+        "R": {"hide": ("raid",), "group": "SHOW/HIDE", "desc": "Show/hide RAID plugin"},
+        "s": {"hide": ("sensors",), "group": "SHOW/HIDE", "desc": "Show/hide sensors"},
+        "V": {"hide": ("vms",), "group": "SHOW/HIDE", "desc": "Show/hide VMs"},
+        "W": {"hide": ("wifi",), "group": "SHOW/HIDE", "desc": "Show/hide wifi module"},
+        # v4 `_handle_disable_process` also stops the shared `glances_processes`
+        # engine. v5 shares that engine with the REST API and the WebUI, so a
+        # TUI keypress must not blank `/api/5/processlist` for every other
+        # consumer: this hides the three blocks and nothing else (design §6.3).
+        "z": {
+            "hide": ("processlist", "programlist", "processcount"),
+            "group": "SHOW/HIDE",
+            "desc": "Show/hide processes",
+        },
+        "7": {"hide": ("npu",), "group": "SHOW/HIDE", "desc": "Show/hide NPU"},
+        "8": {"hide": ("mpp",), "group": "SHOW/HIDE", "desc": "Show/hide MPP"},
+        # Slot-wide toggles, expanded to their members at press time so that a
+        # later single-plugin key acts on that one plugin (design §5.4).
+        "2": {"hide": LEFT_SLOT, "group": "SHOW/HIDE", "desc": "Show/hide left sidebar"},
+        "3": {"hide": ("quicklook",), "group": "SHOW/HIDE", "desc": "Show/hide quicklook"},
+        "5": {"hide": TOP_SLOT, "group": "SHOW/HIDE", "desc": "Show/hide top menu"},
         # Misc / control.
         "h": {"action": "help", "group": "MISCELLANEOUS", "desc": "Show / hide this help screen"},
         "q": {"action": "quit", "group": "MISCELLANEOUS", "desc": "Quit Glances (or Esc)"},
     }
 
     # Display order of the hotkey groups in the help overlay.
-    _HELP_GROUPS: tuple[str, ...] = ("SORT PROCESSES", "TOGGLE VIEW", "MISCELLANEOUS")
+    _HELP_GROUPS: tuple[str, ...] = ("SORT PROCESSES", "TOGGLE VIEW", "SHOW/HIDE", "MISCELLANEOUS")
     # Horizontal gap between the two help columns.
     _HELP_COL_GAP = 4
     # Documentation link shown in the help overlay (v4 parity).
@@ -328,6 +385,17 @@ class TuiV5(threading.Thread):
         if "switch" in action:
             attr = action["switch"]
             setattr(self._view, attr, not getattr(self._view, attr))
+            return "changed"
+        if "hide" in action:
+            # v4 SHOW/HIDE parity. The whole tuple flips as one unit, keyed on
+            # its FIRST member, so a compound key (`f` → fs+folders) can never
+            # land half-hidden however its members were toggled individually
+            # beforehand.
+            names = action["hide"]
+            if names[0] in self._view.hidden_plugins:
+                self._view.hidden_plugins.difference_update(names)
+            else:
+                self._view.hidden_plugins.update(names)
             return "changed"
         if "sort" in action:
             sort_key = action["sort"]
@@ -833,6 +901,10 @@ class TuiV5(threading.Thread):
         view["hide_public_info"] = self._hide_public_info
         view["byte"] = self._byte
         view["unicode"] = self._unicode
+        # The user's own SHOW/HIDE set. A frozenset, so the per-cycle view
+        # cannot be a back door onto the live ViewState (the fit loops copy
+        # and mutate `view` freely).
+        view["user_hidden"] = frozenset(self._view.hidden_plugins)
         # Full mode: bars span (almost) the whole width; compact: a column.
         view["quicklook_width"] = max(20, max_x - 8) if self._full_quicklook else self._QUICKLOOK_COMPACT_WIDTH
         view["row_budget"] = dict(self._PREFIT_ROW_BUDGET)

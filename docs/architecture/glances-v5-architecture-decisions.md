@@ -1152,17 +1152,31 @@ curses surface — as its own owned group. No implementation in parity wave 1
 
 - **Process management**: selection cursor (`UP`/`DOWN`), `k` kill, `+`/`-` nice,
   `ENTER`/`E` filter, `e` extended stats, `M` min/max reset.
-- **The 23 per-plugin show/hide toggles** (`n` network, `d` diskio, `f` fs,
-  `2` sidebar, `3` quicklook, `g` gpu, `k` connections, …), including `F`
-  (fs free space) — deferred here by design §5.4 of the parity-wave-1 spec:
-  `[fs] free_space` and `--fs-free-space` ship in parity wave 1, but the hotkey
-  has no home in v5 until this group builds the toggle surface.
-- **The 9 remaining data-type toggles** (`b`/`B` byte/bit, `%`, `S`, …).
+- ~~**The 23 per-plugin show/hide toggles**~~ — **shipped (2.X-a, 2026-09-21)**,
+  and there are **24** of them, not 23. `A C d D f G I K l n N P Q r R s V W z
+  7 8 2 3 5`, each one a `hide` entry in `_HOTKEYS` naming the plugins it
+  reaches, hidden through `ViewState.hidden_plugins`. Two corrections the
+  chantier had to make to the figure above, both defects in Part 3 of
+  `glances-v5-v4-parity-inventory.md` rather than in this table: `C`
+  (`disable_cloud`, `glances_curses.py:58`) is missing from Part 3 entirely,
+  and `r` (`disable_smart`, `:84`) is filed there under MISCELLANEOUS though it
+  is a visibility toggle. Conversely `e` (extended stats) is listed in Part 3's
+  SHOW/HIDE section but needs the process cursor, so it stays with process
+  management below. Part 3 itself is NOT amended — a dated snapshot, corrected
+  in its own pass. Design and the divergences it records (a config-disabled
+  plugin cannot be revealed by a hotkey; `z` does not stop the shared process
+  engine):
+  `docs/superpowers/specs/2026-09-21-glances-v5-tui-show-hide-toggles-design.md`.
+  `F` (fs free space) is NOT part of this: it changes what `fs` *displays*, not
+  whether it displays, so it moves to the data-type toggles below.
+- **The 9 remaining data-type toggles** (`b`/`B` byte/bit, `%`, `S`, …), plus
+  `F` (fs free space), moved here from the show/hide line above.
 - **`F5` / `Ctrl-R`** forced refresh and the sort-navigation arrow keys.
 
 The `ViewState` mechanism this group builds on already exists
-(`glances_curses_v5.py:104`); each toggle is one `_HOTKEYS` entry plus a
-renderer gate. The exhaustive key-by-key list — v4 key, action, v5 status,
+(`glances_curses_v5.py:107`); each toggle is one `_HOTKEYS` entry plus a
+renderer gate — 2.X-a replaced that gate's seven hardcoded `if` statements with
+a single `hide_{plugin_name}` lookup, so the remaining groups add entries only. The exhaustive key-by-key list — v4 key, action, v5 status,
 `file:line` proof — is **not duplicated here**: see Part 3 of
 `glances-v5-v4-parity-inventory.md`.
 

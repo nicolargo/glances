@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
+import pytest
+
 from glances.outputs.curses_renderer_v5 import (
     _ALERT_MIN_TARGET,
     _ALERT_MIN_TOP,
@@ -2864,3 +2866,156 @@ def test_percpu_keeps_its_labels_when_the_width_cascade_hides_quicklook():
     flat = " ".join(c.text for c in percpu_block.rows[0].cells)
     assert "CPU" in flat, f"title must survive: {flat!r}"
     assert "total" in flat, f"total column must survive: {flat!r}"
+
+
+# ------------------------------------------------- SHOW/HIDE hotkeys (2.X-a)
+#
+# `build_frame` hides a block when EITHER authority says so: `user_hidden`
+# (the SHOW/HIDE hotkeys, stable across cycles) or a `hide_<plugin>` key (the
+# width-degradation cascades, rewritten every cycle). See
+# `docs/superpowers/specs/2026-09-21-glances-v5-tui-show-hide-toggles-design.md`.
+#
+# Every payload below is one a renderer actually emits rows for. A thinner
+# fixture would make the "visible" half of each assertion vacuous — the block
+# would be absent because it rendered nothing, not because it was hidden.
+
+_HIDE_FIXTURES: dict[str, tuple[str, bool, dict, dict]] = {
+    # plugin: (slot, is_collection, payload, fields)
+    "system": (
+        "header",
+        False,
+        {"hostname": "h", "hr_name": "Ubuntu", "_levels": {}},
+        {"hostname": {"unit": "string"}, "hr_name": {"unit": "string"}},
+    ),
+    "ip": (
+        "header",
+        False,
+        {"address": "192.168.1.10", "mask_cidr": 24, "_levels": {}},
+        {"address": {"unit": "string"}, "mask_cidr": {"unit": "number"}},
+    ),
+    "uptime": ("header", False, {"seconds": 3600, "_levels": {}}, {"seconds": {"unit": "seconds"}}),
+    "now": (
+        "header",
+        False,
+        {"custom": "2026-07-25 11:30:00 CEST", "iso": "2026-07-25T11:30:00+02:00", "_levels": {}},
+        {"custom": {"unit": "string"}, "iso": {"unit": "string"}},
+    ),
+    "cloud": (
+        "header",
+        False,
+        {"platform": "OpenStack", "type": "gold", "name": "my-vm", "region": "eu-west-1a", "_levels": {}},
+        {"platform": {"unit": "string"}},
+    ),
+    "quicklook": ("top", False, {"_levels": {}}, {}),
+    "memswap": ("top", False, {"_levels": {}}, {}),
+    "gpu": (
+        "top",
+        True,
+        {"data": [{"gpu_id": "n0", "name": "X", "mem": 10, "proc": 5, "temperature": 40}], "_levels": {}},
+        {},
+    ),
+    "network": ("left", True, None, None),  # filled from the module helpers below
+    "mem": ("top", False, None, None),
+}
+
+
+def _hide_fixture(plugin: str) -> tuple[str, list, dict, dict]:
+    """Return ``(slot, registry_entry, snapshot_fragment, fields_fragment)``."""
+    if plugin == "network":
+        return "left", [("network", True)], {"network": _network_payload()}, {"network": NETWORK_FIELDS}
+    if plugin == "mem":
+        return "top", [("mem", False)], {"mem": _mem_payload()}, {"mem": MEM_FIELDS}
+    slot, is_collection, payload, fields = _HIDE_FIXTURES[plugin]
+    return slot, [(plugin, is_collection)], {plugin: payload}, {plugin: fields}
+
+
+def _frame_with(plugin: str, view: dict):
+    """Build a frame holding ``plugin`` plus ``mem`` as an untouched neighbour."""
+    from glances.outputs.curses_renderer_v5 import build_frame
+
+    slot, registry, snapshot, fields = _hide_fixture(plugin)
+    _, mem_registry, mem_snapshot, mem_fields = _hide_fixture("mem")
+    if plugin != "mem":
+        registry = registry + mem_registry
+        snapshot = {**snapshot, **mem_snapshot}
+        fields = {**fields, **mem_fields}
+    return slot, build_frame(snapshot, fields, registry, [], view=view)
+
+
+@pytest.mark.parametrize("plugin", ["ip", "cloud", "gpu", "network", "quicklook"])
+def test_user_hidden_skips_the_block_in_every_slot(plugin):
+    """A plugin named in `user_hidden` contributes no block to any slot — and
+    only that plugin goes."""
+    slot, shown = _frame_with(plugin, {"user_hidden": frozenset()})
+    _, hidden = _frame_with(plugin, {"user_hidden": frozenset({plugin})})
+
+    assert plugin in [b.name for b in getattr(shown, slot)]
+    assert plugin not in [b.name for b in getattr(hidden, slot)]
+    assert "mem" in [b.name for b in hidden.top]
+
+
+@pytest.mark.parametrize(
+    "key_plugin",
+    ["quicklook", "memswap", "gpu", "cloud", "now", "ip", "uptime"],
+)
+def test_cascade_hide_keys_still_skip_their_block(key_plugin):
+    """The seven `hide_<plugin>` keys the degradation cascades write used to be
+    seven hardcoded `if` statements; they are now one `hide_{plugin_name}`
+    lookup. One case per key, so the generalisation is proven equivalent rather
+    than merely plausible."""
+    slot, shown = _frame_with(key_plugin, {f"hide_{key_plugin}": False})
+    _, hidden = _frame_with(key_plugin, {f"hide_{key_plugin}": True})
+
+    assert key_plugin in [b.name for b in getattr(shown, slot)]
+    assert key_plugin not in [b.name for b in getattr(hidden, slot)]
+
+
+def test_user_hidden_and_cascade_compose_by_union():
+    """Neither authority can un-hide what the other hid: a block is gone when
+    either says so, whichever one it is."""
+    from glances.outputs.curses_renderer_v5 import build_frame
+
+    registry = [("gpu", True), ("memswap", False), ("mem", False)]
+    snapshot = {
+        "gpu": _HIDE_FIXTURES["gpu"][2],
+        "memswap": _HIDE_FIXTURES["memswap"][2],
+        "mem": _mem_payload(),
+    }
+    fields = {"gpu": {}, "memswap": {}, "mem": MEM_FIELDS}
+
+    # gpu hidden by the user, memswap by the cascade — both go, in one frame.
+    frame = build_frame(
+        snapshot,
+        fields,
+        registry,
+        [],
+        view={"user_hidden": frozenset({"gpu"}), "hide_memswap": True},
+    )
+    assert [b.name for b in frame.top] == ["mem"]
+
+    # A falsy cascade key never overrides the user's choice.
+    frame = build_frame(
+        snapshot,
+        fields,
+        registry,
+        [],
+        view={"user_hidden": frozenset({"gpu"}), "hide_gpu": False},
+    )
+    assert "gpu" not in [b.name for b in frame.top]
+
+    # ...and symmetrically, an empty user set never revives a cascade-hidden
+    # block.
+    frame = build_frame(
+        snapshot,
+        fields,
+        registry,
+        [],
+        view={"user_hidden": frozenset(), "hide_gpu": True},
+    )
+    assert "gpu" not in [b.name for b in frame.top]
+
+
+def test_user_hidden_absent_from_view_hides_nothing():
+    """The key is optional: a view dict without it is unchanged."""
+    _, frame = _frame_with("gpu", {"percpu": False})
+    assert "gpu" in [b.name for b in frame.top]
