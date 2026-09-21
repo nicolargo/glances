@@ -1,5 +1,26 @@
 <template>
-	<CollectionBlock :title="TITLE" :payload="payload" :error="error" :hidden="!!payload && rows.length === 0">
+	<CollectionBlock
+		:title="TITLE"
+		:payload="payload"
+		:error="error"
+		table-class="gl-process-table"
+		:style="fixedColsStyle"
+		:hidden="!!payload && rows.length === 0"
+	>
+		<template #cols>
+			<colgroup>
+				<!-- One <col> per painted cell EXCEPT the last, deliberately.
+				Under `table-layout: fixed` (CSS 2.1 17.5.2.1) a column past the
+				<colgroup>'s specified count takes the whole remaining space once
+				every other column is pinned, so the tail column is the elastic
+				one -- the browser's equivalent of the TUI's unbounded trailing
+				Command cell (containers/render_curses_v5.py:213), and the same
+				mechanism PluginProcesslist.vue uses for its own Command column.
+				Which column that is depends on the cascade: `command` normally,
+				`ports` once `command` is dropped, and so on down `_DROP_ORDER`. -->
+				<col v-for="(cell, index) in fixedCells" :key="index" :style="colStyle(cell)" />
+			</colgroup>
+		</template>
 		<template #head>
 			<tr>
 				<!-- The TUI's header literals (containers/render_curses_v5.py:124-165).
@@ -33,8 +54,11 @@
 					renderer), but the CELL renders `pod_id` (:235) -- they are two
 					distinct payload fields. -->
 					<td v-if="shows('pod')"><span>{{ fmt(item.pod_id) }}</span></td>
+					<!-- `.gl-truncate` and a `title`, but no `.gl-name` cap: the
+					<col> above already holds this column to the terminal's own
+					`name_w`, and `.gl-process-table td` crops what overflows. -->
 					<td v-if="shows('name')">
-						<span class="gl-name gl-truncate" :title="nameOf(item)">{{ nameOf(item) }}</span>
+						<span class="gl-truncate" :title="nameOf(item)">{{ nameOf(item) }}</span>
 					</td>
 					<!-- The TUI colours `status` from its own mapping, never from
 					`_levels` (containers/render_curses_v5.py `_status_role`). -->
@@ -65,10 +89,10 @@
 						<td class="gl-num gl-num-left"><span>{{ netText(item.network_tx) }}</span></td>
 					</template>
 					<td v-if="shows('ports')">
-						<span class="gl-ports gl-truncate" :title="fmt(item.ports)">{{ fmt(item.ports) }}</span>
+						<span class="gl-truncate" :title="fmt(item.ports)">{{ fmt(item.ports) }}</span>
 					</td>
 					<td v-if="shows('command')">
-						<span class="gl-command gl-truncate" :title="fmt(item.command)">{{ fmt(item.command) }}</span>
+						<span class="gl-truncate" :title="fmt(item.command)">{{ fmt(item.command) }}</span>
 					</td>
 				</tr>
 			</tbody>
@@ -83,9 +107,15 @@ import { levelClass } from "./levels.js";
 import { displayName } from "./rows.js";
 import CollectionBlock from "./CollectionBlock.vue";
 import { CONTAINERS_DROP_ORDER, dropCascade } from "./drop_order.js";
-import { hiddenColumns as resolveHiddenColumns } from "./containers_columns.js";
+import {
+	hiddenColumns as resolveHiddenColumns,
+	nameWidth as resolveNameWidth,
+	rowWidth,
+	visibleCells,
+} from "./containers_columns.js";
 import { fitBlockMixin } from "./fit_block.js";
 import { PLUGIN_PROPS } from "./plugin_props.js";
+import { COL_SEPARATOR } from "./process_widths.js";
 
 const TITLE = "CONTAINER";
 
@@ -157,6 +187,34 @@ export default {
 		hiddenColumns() {
 			return resolveHiddenColumns(this.allRows, this.payload?.disable_stats, this.dropFlags);
 		},
+		// The name column's width, in characters: the terminal's own `name_w`
+		// (containers/render_curses_v5.py:261-262). `allRows`, not `rows` --
+		// the TUI computes it BEFORE slicing to the row budget (:273), so a
+		// container a short viewport hides does not change the column width.
+		nameWidth() {
+			return resolveNameWidth(this.allRows, this.payload?.max_name_size, TITLE);
+		},
+		// Every cell still on screen, in display order.
+		cells() {
+			return visibleCells(this.hiddenColumns, this.nameWidth);
+		},
+		// The same list minus the LAST cell: that one is the elastic tail, and
+		// giving it a <col> would pin it (see the <colgroup> comment in the
+		// template).
+		fixedCells() {
+			return this.cells.slice(0, -1);
+		},
+		// The integer the stylesheet turns into the table's `min-width`, same
+		// contract as processBlockMixin's own `fixedColsStyle`: CSS does the
+		// character->pixel conversion, so no JS ever measures `--gl-col`. The
+		// sum covers EVERY cell, the elastic tail included -- at its floor,
+		// which is the width `_COL_GEOMETRY` already budgets it at (8 for
+		// `command`, its own width for any other tail). So the table overflows
+		// its container at the same point the TUI's row_width() stops fitting,
+		// and the cascade fires there.
+		fixedColsStyle() {
+			return { "--gl-fixed-cols": String(rowWidth(this.cells)) };
+		},
 	},
 	watch: {
 		// A new container, a longer command or a wider port list changes the
@@ -188,16 +246,22 @@ export default {
 		netText(value) {
 			return formatNetworkRate(value, !!this.serverArgs.byte);
 		},
+		// `+ COL_SEPARATOR`, not the bare width: under table-layout:fixed the
+		// <col> is the column's WHOLE box and
+		// `.gl-process-table td:not(:last-child)`'s `padding-right` separator
+		// comes out of that same box, so a <col> of exactly N characters would
+		// leave only N - COL_SEPARATOR for content. Same reasoning, same
+		// constant, as processBlockMixin's own colStyle(); `fixedColsStyle`
+		// needs no counterpart because rowWidth() charges the separators
+		// itself, one per inter-cell boundary.
+		colStyle(cell) {
+			return { width: `calc(${cell.width + COL_SEPARATOR} * var(--gl-col))` };
+		},
 	},
 };
 </script>
 
 <style scoped>
-/* The TUI's name column (containers/render_curses_v5.py `max_name_size`,
- * default 20 -- published in the payload, capped here at the same value). */
-.gl-plugin {
-	--gl-name-width: calc(20 * var(--gl-col));
-}
 /* The TUI right-aligns `IOR/s`/`Rx/s` and LEFT-aligns `IOW/s`/`Tx/s`
  * (containers/render_curses_v5.py:158-162 for the headers, :205-209 for the
  * cells), so each rate pair hugs in the middle instead of drifting apart.

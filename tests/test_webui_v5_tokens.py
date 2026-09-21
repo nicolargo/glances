@@ -414,21 +414,26 @@ def test_a_name_cell_is_capped_and_can_keep_its_tail():
 
 
 def test_a_measuring_exclusion_has_its_cap_in_the_token_file():
-    """`.gl-measuring` excludes `.gl-name`, `.gl-command` and `.gl-ports` so
-    their caps survive the measurement. `.gl-name`'s cap is global; the
-    other two were scoped to PluginContainers.vue, so a SECOND component
-    using either class would inherit the exclusion with no cap and its
-    cascade would under-fire -- silently, because an uncapped span simply
-    measures narrower than it should.
+    """`.gl-measuring` excludes `.gl-name` so its cap survives the
+    measurement, and that cap has to live in the token file too: a cap
+    defined in a component cannot serve a class the token file exempts
+    globally -- a SECOND component using the class would inherit the
+    exclusion with no cap and its cascade would under-fire, silently,
+    because an uncapped span simply measures narrower than it should.
 
-    Reads the token file only: a cap defined in a component cannot serve a
-    class the token file exempts globally.
+    `.gl-command` and `.gl-ports` were exempted here for the same reason
+    until `containers` became a fixed-layout table: its <colgroup> now sizes
+    those columns, so both classes are gone and the exclusion list is back to
+    the single class that still needs one.
     """
     css = _strip_comments(_TOKENS.read_text())
-    for cls in (".gl-name", ".gl-command", ".gl-ports"):
-        body = _rule_body(css, cls)
-        assert re.search(r"\bdisplay:\s*block\s*;", body), f"{cls} needs a block box for its cap: {body!r}"
-        assert re.search(r"\bmax-width:", body), f"{cls} has no cap in the token file: {body!r}"
+    body = _rule_body(css, ".gl-name")
+    assert re.search(r"\bdisplay:\s*block\s*;", body), f".gl-name needs a block box for its cap: {body!r}"
+    assert re.search(r"\bmax-width:", body), f".gl-name has no cap in the token file: {body!r}"
+    for gone in (".gl-command", ".gl-ports"):
+        assert not re.search(rf"^{re.escape(gone)}\s*\{{", css, re.M), (
+            f"{gone} is back in the token file with no consumer and no measuring exclusion"
+        )
 
 
 def test_every_collection_table_fills_the_left_column():
@@ -517,9 +522,7 @@ def test_the_cascade_measures_header_text_at_its_natural_width():
     `.gl-name` keeps its deliberate cap (G9-6 D3).
     """
     css = _strip_comments(_TOKENS.read_text())
-    body = _rule_body(
-        css, ".gl-measuring .gl-inline,\n.gl-measuring .gl-truncate:not(.gl-name):not(.gl-command):not(.gl-ports)"
-    )
+    body = _rule_body(css, ".gl-measuring .gl-inline,\n.gl-measuring .gl-truncate:not(.gl-name)")
     assert re.search(r"\bmin-width:\s*max-content\s*;", body), body
     assert re.search(r"\bmax-width:\s*none\s*;", body), body
     shell = (_V5_JS / "AppShell.vue").read_text()
@@ -652,22 +655,22 @@ def test_the_right_column_gives_its_slack_to_the_last_cell():
     column -- spread that width across the columns, so `amps` (three short
     columns) rendered its name cell 431px wide around a 136px cap: 295px of
     empty space. The TUI gives its slack to the last, unbounded column
-    instead. `last-child` rather than a per-block class so a `containers`
-    row whose tail columns were dropped by the cascade still has one.
+    instead. `last-child` rather than a per-block class so a row whose tail
+    columns were dropped by the cascade still has one.
     """
     body = _rule_body(
         _strip_comments(_TOKENS.read_text()),
         '[data-slot="right"] .gl-table td:last-child,\n[data-slot="right"] .gl-table th:last-child',
     )
     assert re.search(r"\bwidth:\s*100%\s*;", body), f"the tail cell absorbs the slack: {body!r}"
-    # `processlist`'s fixed-layout table excludes itself from the rule
-    # above -- under `table-layout: fixed`, `width: 100%` on the last cell
-    # would claim the WHOLE table width for Command, leaving nothing for the
-    # fixed columns. The `<col>` element (auto width) already does the job
-    # this rule exists for, so the higher-specificity `.gl-process-table`
-    # selector overrides it back to `auto`. This narrows the rule the test
-    # above pins; it does not replace it -- `amps`/`containers` (automatic
-    # layout) must still get their slack from the general rule.
+    # A fixed-layout table excludes itself from the rule above -- under
+    # `table-layout: fixed`, `width: 100%` on the last cell would claim the
+    # WHOLE table width for the tail column, leaving nothing for the fixed
+    # ones. The column left OUT of the <colgroup> already does the job this
+    # rule exists for, so the higher-specificity `.gl-process-table` selector
+    # overrides it back to `auto`. This narrows the rule the test above pins;
+    # it does not replace it -- `amps`/`vms` (automatic layout) must still get
+    # their slack from the general rule.
     excluded = _rule_body(
         _strip_comments(_TOKENS.read_text()),
         '[data-slot="right"] .gl-table.gl-process-table td:last-child,\n'
@@ -721,37 +724,51 @@ def test_the_column_box_separator_multiplier_matches_colstyles_offset():
     # a literal of its own, which is what makes reading one number enough.
     # process_block.js is the mixin PluginProcesslist.vue and
     # PluginProgramlist.vue share, so it carries their colStyle(); PluginAlert
-    # has no width map in common with them and keeps its own.
-    for name in ("process_block.js", "PluginAlert.vue"):
+    # and PluginContainers have no width map in common with them and keep
+    # their own.
+    for name in ("process_block.js", "PluginAlert.vue", "PluginContainers.vue"):
         script = (_V5_JS / name).read_text()
         assert re.search(r"\+\s*COL_SEPARATOR\}\s*\*\s*var\(--gl-col\)", script), (
             f"{name}'s colStyle() does not offset by COL_SEPARATOR"
         )
 
 
-def test_the_ports_cell_is_bounded_like_the_command_cell():
+def test_the_container_cells_are_bounded_by_their_colgroup():
     """Measured in Chrome on 2026-09-19: the `ports` cell rendered 1540px wide
-    for "61208/tcp,61209/tcp" because its span is inline, so neither
-    `.gl-truncate`'s ellipsis nor any cap applies -- the exact defect
-    `.gl-command` had. The TUI budgets this column at 16 characters
-    (containers/render_curses_v5.py `_COL_GEOMETRY["ports"]`), so an
-    unbounded browser cell makes the width cascade over-fire on a host
-    publishing many ports: the block measures far wider than it needs and
-    drops columns that had room.
+    for "61208/tcp,61209/tcp", and the `command` cell had the same defect --
+    both spans are inline, so neither `.gl-truncate`'s ellipsis nor any cap
+    applied, and a content-sized table made the width cascade over-fire on a
+    host publishing many ports. Both were then capped at 24 characters, which
+    pinned the tail column to 24 characters on a 2560px window too: the
+    opposite complaint, and the one the maintainer raised next.
 
-    `display: block` is the load-bearing half -- a cap alone is inert on a
-    non-replaced inline element.
-
-    The rule lives in the token file, not PluginContainers.vue: `.gl-measuring`
-    exempts `.gl-ports` globally (css/v5.css), so its cap has to be global too,
-    or a second component using the class would inherit the exclusion with
-    no cap.
+    The caps are gone and the table is `table-layout: fixed` with a <colgroup>
+    instead, so a cell can no longer grow -- or refuse to grow -- with its
+    content: every column but the tail is pinned to the terminal's own
+    character width, and the tail takes whatever the window leaves. This pins
+    the two halves that make that true, since the caps they replace are no
+    longer there to be checked.
     """
-    body = _rule_body(_strip_comments(_TOKENS.read_text()), ".gl-ports")
-    assert re.search(r"\bdisplay:\s*block\s*;", body), f"the cap needs a block box to apply: {body!r}"
-    assert re.search(r"\bmax-width:\s*calc\(\d+ \* var\(--gl-col\)\)\s*;", body), (
-        f"the cap is a character count, in the column unit: {body!r}"
+    template = (_V5_JS / "PluginContainers.vue").read_text()
+    assert 'table-class="gl-process-table"' in template, "the containers table is a fixed-layout one"
+    assert ':style="fixedColsStyle"' in template, "the table's min-width comes from the visible columns"
+    assert "<col v-for=" in template, "the fixed columns come from a <colgroup>"
+    body = _rule_body(_strip_comments(_TOKENS.read_text()), ".gl-table.gl-process-table")
+    assert re.search(r"\btable-layout:\s*fixed\s*;", body), f"the class carries the fixed layout: {body!r}"
+
+
+def test_the_container_colgroup_leaves_exactly_one_column_elastic():
+    """Under `table-layout: fixed` a column past the <colgroup>'s count takes
+    the whole remainder (CSS 2.1 17.5.2.1), so the tail is elastic only as
+    long as the colgroup stops ONE cell short. `fixedCells` is that slice; a
+    future edit rendering a <col> per visible cell would pin the tail back to
+    its floor, and no CSS assertion would notice.
+    """
+    script = (_V5_JS / "PluginContainers.vue").read_text()
+    assert re.search(r"fixedCells\(\)\s*\{\s*return this\.cells\.slice\(0, -1\);", script), (
+        "fixedCells no longer drops the tail cell"
     )
+    assert '<col v-for="(cell, index) in fixedCells"' in script, "the <colgroup> no longer renders fixedCells"
 
 
 def test_the_stacking_breakpoint_matches_the_stylesheet():

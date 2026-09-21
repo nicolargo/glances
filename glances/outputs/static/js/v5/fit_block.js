@@ -96,9 +96,10 @@ export const fitBlockMixin = {
 			const block = this.$el;
 			if (!block || block.nodeType !== 1) return { content: 0, available: 0 };
 			// Measure the text at its natural width: shrunk into its ellipsis it
-			// never overflows and the cascade would never run. `.gl-command` and
-			// `.gl-name` keep their caps (css/v5.css) -- the TUI budgets Command
-			// at _MIN_COMMAND_WIDTH for the same reason.
+			// never overflows and the cascade would never run. `.gl-name` keeps
+			// its cap (css/v5.css); a fixed-layout block needs no exemption at
+			// all, since its <colgroup> already keeps the table's width
+			// independent of what the cells hold.
 			block.classList.add("gl-measuring");
 			const table = block.querySelector?.("table");
 			// A table can overflow its container, so its scrollWidth (not the

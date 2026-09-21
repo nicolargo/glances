@@ -142,3 +142,89 @@ export const ALERT_MIN_TOP = 22; // :537
 export const ALERT_W_WITH_TOP = 66;
 export const ALERT_W_WITH_LEVEL = 43;
 export const ALERT_W_WITH_DURATION = 34;
+
+// glances/plugins/containers/render_curses_v5.py `_COL_GEOMETRY`: the same
+// key -> (painted cells, total width) table, split in two maps so the drift
+// check can read each one with the `"key": <int>` regex it already uses for
+// PROCESS_COL_WIDTHS above. `command` carries `_MIN_COMMAND_WIDTH`, not a
+// real width: its data is unbounded, so the terminal budgets the column at
+// that floor and the browser's elastic tail uses the same number.
+//
+// The property names below must stay written as string literals: the drift
+// check that compares these against the Python side uses a regex that only
+// matches names given in that quoted form.
+export const CONTAINER_COL_WIDTHS = {
+	"engine": 6,
+	"pod": 12,
+	"status": 10,
+	"uptime": 10,
+	"cpu": 6,
+	"mem": 7,
+	"memory_max": 8,
+	"diskio": 14,
+	"networkio": 14,
+	"ports": 16,
+	"command": 8,
+};
+
+// How many cells each key above paints. The IO and network pairs are ONE key
+// over TWO cells (7 characters each), so a half-pair can never be shown --
+// and a <colgroup> needs one <col> per cell, not per key.
+export const CONTAINER_COL_CELLS = {
+	"engine": 1,
+	"pod": 1,
+	"status": 1,
+	"uptime": 1,
+	"cpu": 1,
+	"mem": 1,
+	"memory_max": 1,
+	"diskio": 2,
+	"networkio": 2,
+	"ports": 1,
+	"command": 1,
+};
+
+// The container columns in DISPLAY order -- what a <colgroup> needs, and not
+// the key order of the two maps above (`name` has no entry there at all: the
+// terminal sizes that column from the data, `name_w` at
+// containers/render_curses_v5.py:262, never from a constant).
+export const CONTAINER_COL_KEYS = [
+	"engine",
+	"pod",
+	"name",
+	"status",
+	"uptime",
+	"cpu",
+	"mem",
+	"memory_max",
+	"diskio",
+	"networkio",
+	"ports",
+	"command",
+];
+
+// The browser's own container widths, `WEBUI_COL_WIDTHS`' counterpart for
+// this block and for the same reason: `formatPercent()` appends a `%` curses
+// never prints. `cpu` is the only column it changes -- the terminal's
+// `{cpu:>6.1f}` holds `9999.9`, but the browser renders `9999.9%`, and a
+// container spread over many cores genuinely passes 1000%. Every other
+// column renders the same string on both surfaces.
+// tests/js/containers_columns.test.mjs checks each entry against the longest
+// string its own formatter can produce, and against the terminal width.
+export const WEBUI_CONTAINER_COL_WIDTHS = {
+	"engine": 6,
+	"pod": 12,
+	"status": 10, // `restarting`, the longest status the TUI maps
+	"uptime": 10,
+	"cpu": 7, // 9999.9% -- one more than `_COL_GEOMETRY`, for the `%` the TUI omits
+	"mem": 7,
+	"memory_max": 8,
+	"diskio": 14,
+	"networkio": 14,
+	"ports": 16,
+	"command": 8,
+};
+
+// `[containers] max_name_size`'s own default, for a payload that carries none
+// (containers/render_curses_v5.py:261).
+export const CONTAINER_MAX_NAME_SIZE = 20;

@@ -1005,6 +1005,14 @@ const CONTAINERS_UNMAPPED_STATUS = {
 	data: CONTAINERS_FIXTURE.data.map((item, i) => (i === 0 ? { ...item, status: "removing" } : item)),
 };
 
+// A 25-character name against the fixture's own `max_name_size: 20`: the
+// name <col> must grow past the header label and stop at the configured cap,
+// so the tail column gets every character the names do not need.
+const CONTAINERS_LONG_NAMES = {
+	...CONTAINERS_FIXTURE,
+	data: CONTAINERS_FIXTURE.data.map((item, i) => (i === 0 ? { ...item, name: "web-frontend-production-1" } : item)),
+};
+
 const ALL_FIXTURES = {
 	default: {},
 	"gpu-disabled": {},
@@ -1217,6 +1225,7 @@ const ALL_FIXTURES = {
 	"containers-disable-mem": { containers: CONTAINERS_DISABLE_MEM },
 	"containers-no-limits": { containers: CONTAINERS_NO_LIMITS },
 	"containers-unmapped-status": { containers: CONTAINERS_UNMAPPED_STATUS },
+	"containers-long-names": { containers: CONTAINERS_LONG_NAMES },
 	"containers-empty": { containers: { _key: "name", data: [], _levels: {} } },
 	// G9-9A Task 6: the containers block's own width cascade (fit_block.js),
 	// reusing the Task 4 payload -- see BLOCK_WIDTH_FIXTURES below.

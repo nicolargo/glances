@@ -10,8 +10,20 @@
 //     and the `disable_stats` seed at :259.
 //   - WIDTH-DRIVEN: the row does not fit, so the cascade in drop_order.js
 //     hides the least useful column first. That is `flags` below.
+//
+// The geometry helpers at the bottom answer a third question -- how WIDE each
+// surviving column is -- for the <colgroup> the block renders (its table is
+// `table-layout: fixed`, like processlist's).
 
 import { droppedColumns } from "./drop_order.js";
+import {
+	COL_SEPARATOR,
+	CONTAINER_COL_CELLS,
+	CONTAINER_COL_KEYS,
+	CONTAINER_MAX_NAME_SIZE,
+	WEBUI_CONTAINER_COL_WIDTHS,
+} from "./process_widths.js";
+import { displayName } from "./rows.js";
 
 // containers/render_curses_v5.py:286-292 plus the config's own list.
 export function dataDrivenHidden(rows, disableStats) {
@@ -36,4 +48,48 @@ export function hiddenColumns(rows, disableStats, flags) {
 	const hidden = dataDrivenHidden(rows, disableStats);
 	for (const column of droppedColumns(flags)) hidden.add(column);
 	return hidden;
+}
+
+// The visible columns, expanded to the CELLS a browser paints, in display
+// order: `diskio` and `networkio` are one key over two cells of 7, and `name`
+// is sized from the data like the terminal's own `name_w`. This is the walk
+// `_hidden_columns`' row_width() does (containers/render_curses_v5.py:85-92),
+// with the per-cell split a <colgroup> additionally needs.
+export function visibleCells(hidden, nameWidth) {
+	const cells = [];
+	for (const key of CONTAINER_COL_KEYS) {
+		if (hidden.has(key)) continue;
+		if (key === "name") {
+			cells.push({ key, width: nameWidth });
+			continue;
+		}
+		const count = CONTAINER_COL_CELLS[key];
+		for (let index = 0; index < count; index += 1) {
+			cells.push({ key, width: WEBUI_CONTAINER_COL_WIDTHS[key] / count });
+		}
+	}
+	return cells;
+}
+
+// The terminal's own row width (row_width() again): the painted cells plus
+// one separator between two consecutive ones. The component turns it into the
+// table's `min-width`, so the width cascade fires at the same point the TUI
+// drops its own column at -- in the browser's own characters, which include
+// `COL_SEPARATOR` rather than the terminal's single space.
+export function rowWidth(cells) {
+	const total = cells.reduce((sum, cell) => sum + cell.width, 0);
+	return total + COL_SEPARATOR * Math.max(0, cells.length - 1);
+}
+
+// containers/render_curses_v5.py:261-262 and :280: the narrower of the
+// configured cap and the longest name, but never below the header label --
+// which is this block's own title, `CONTAINER`.
+//
+// Measured on the name the BROWSER paints (the alias when there is one,
+// rows.js `displayName`), not on the raw `name` the terminal reads: the WebUI
+// shows the alias, so that is what the column has to hold.
+export function nameWidth(rows, maxNameSize, label) {
+	const longest = (rows || []).reduce((widest, item) => Math.max(widest, displayName(item, "name").length), 1);
+	const cap = Number.isInteger(maxNameSize) && maxNameSize > 0 ? maxNameSize : CONTAINER_MAX_NAME_SIZE;
+	return Math.max(Math.min(cap, longest), String(label).length);
 }

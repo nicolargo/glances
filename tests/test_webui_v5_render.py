@@ -2884,6 +2884,98 @@ def test_an_unmeasurable_containers_block_keeps_every_column():
     assert "Command" in headers, f"got {headers!r}"
 
 
+# -------------------------------- containers elastic tail column (maintainer)
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_container_table_declares_the_terminal_column_widths():
+    """The block used to paint an automatic-layout table whose `command` and
+    `ports` spans were capped at 24 characters, so the tail column stayed 24
+    characters wide however much room the window had -- the maintainer asked
+    for the processlist treatment instead: a <colgroup> in the terminal's own
+    character widths (`_COL_GEOMETRY`) and an elastic last column.
+
+    The expectation is re-extracted from process_widths.js by regex, never by
+    importing or calling the component's own colStyle(), for the same reason
+    test_the_column_box_reserves_one_character_for_the_separator_inside_it
+    gives: a copy of the code under test proves nothing. `+ COL_SEPARATOR` per
+    <col> because under `table-layout: fixed` the <col> is the column's WHOLE
+    box and the separator's `padding-right` comes out of it.
+    """
+    widths_path = _BUNDLE_PATH.parent.parent / "js" / "v5" / "process_widths.js"
+    source = widths_path.read_text()
+    widths_match = re.search(r"export const WEBUI_CONTAINER_COL_WIDTHS\s*=\s*\{(.*?)\};", source, re.S)
+    assert widths_match, f"WEBUI_CONTAINER_COL_WIDTHS is not exported from {widths_path}"
+    widths = {k: int(v) for k, v in re.findall(r'"([^"]+)"\s*:\s*(\d+)', widths_match.group(1))}
+    separator_match = re.search(r"export const COL_SEPARATOR\s*=\s*(\d+)\s*;", source)
+    assert separator_match, f"COL_SEPARATOR is not exported from {widths_path}"
+    separator = int(separator_match.group(1))
+
+    # The `containers` fixture's longest name is "web", so the name column
+    # falls back to the header label's own 9 characters (`CONTAINER`).
+    expected = [
+        widths["engine"],
+        widths["pod"],
+        len("CONTAINER"),
+        widths["status"],
+        widths["uptime"],
+        widths["cpu"],
+        widths["mem"],
+        widths["memory_max"],
+        # One key, two painted cells: the pair splits its width evenly.
+        widths["diskio"] // 2,
+        widths["diskio"] // 2,
+        widths["networkio"] // 2,
+        widths["networkio"] // 2,
+        widths["ports"],
+        # `command`, the elastic tail, gets no <col> at all.
+    ]
+    payload = _run_render_probe("containers")
+    assert payload["pluginColWidths"]["containers"] == [f"calc({n + separator} * var(--gl-col))" for n in expected], (
+        payload["pluginColWidths"]["containers"]
+    )
+    assert "gl-process-table" in payload["pluginTableClasses"]["containers"]
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_container_tail_column_is_the_one_left_out_of_the_colgroup():
+    """Under `table-layout: fixed` a column past the <colgroup>'s count takes
+    the whole remaining width (CSS 2.1 17.5.2.1), so the tail is elastic only
+    because the colgroup stops one cell short -- exactly how processlist's
+    Command column works. `Command` is that tail here; `Ports` becomes it once
+    the cascade's first step drops `Command` (`_DROP_ORDER`), which is why the
+    <col> list is one short in BOTH cases rather than pinned to a column name.
+    """
+    for scenario in ("containers", "containers-one-notch"):
+        payload = _run_render_probe(scenario)
+        headers = payload["pluginHeaderCells"]["containers"]
+        cols = payload["pluginColWidths"]["containers"]
+        assert len(cols) == len(headers) - 1, f"{scenario}: {len(cols)} <col> for {len(headers)} columns"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_container_name_column_is_sized_from_the_data():
+    """The terminal's `name_w` (containers/render_curses_v5.py:262) is the
+    LONGEST name, capped by `[containers] max_name_size` and floored at the
+    header label. The WebUI used to spend a flat 20 characters here whatever
+    the names were, which is 11 characters the tail column never got back.
+
+    `containers-long-names` publishes a 25-character name against the
+    fixture's own `max_name_size: 20`, so this pins both ends: the column
+    grows past the label, and stops at the configured cap.
+    """
+    separator = int(
+        re.search(
+            r"export const COL_SEPARATOR\s*=\s*(\d+)\s*;",
+            (_BUNDLE_PATH.parent.parent / "js" / "v5" / "process_widths.js").read_text(),
+        ).group(1)
+    )
+    short = _run_render_probe("containers")["pluginColWidths"]["containers"][2]
+    assert short == f"calc({len('CONTAINER') + separator} * var(--gl-col))", short
+    long_names = _run_render_probe("containers-long-names")["pluginColWidths"]["containers"][2]
+    assert long_names == f"calc({20 + separator} * var(--gl-col))", long_names
+
+
 # ------------------------------- right-column alignment retouches (maintainer)
 
 
@@ -3819,7 +3911,11 @@ def test_a_block_with_neither_new_input_renders_its_table_unchanged():
     consumer (its own hand-rolled `<table>`, not CollectionBlock's)
     -- unlike programlist it renders in every scenario (`ownEndpoint`), so it
     is excluded from the loop below too, rather than silently never being
-    iterated over. Every OTHER plugin still shows no <colgroup>
+    iterated over. `containers` is the FOURTH, and is excluded on its own line
+    for the same reason as programlist: this scenario gives it no payload, so
+    it paints no table here and the loop would pass on it by accident -- see
+    test_the_container_table_declares_the_terminal_column_widths, which runs
+    the `containers` scenario, for its widths. Every OTHER plugin still shows no <colgroup>
     (pluginColWidths == []) and carries only the base
     `.gl-table` class (pluginTableClasses == ["gl-table"]), proving the two
     new inputs are additive rather than a silent behaviour change for the
@@ -3833,7 +3929,7 @@ def test_a_block_with_neither_new_input_renders_its_table_unchanged():
     assert table_classes["processlist"] == ["gl-table", "gl-process-table"], table_classes["processlist"]
     assert table_classes["alert"] == ["gl-table", "gl-process-table"], table_classes["alert"]
     for name in payload["pluginNames"]:
-        if name in ("processlist", "alert"):
+        if name in ("processlist", "alert", "containers"):
             continue
         assert col_widths[name] == [], f"{name} rendered a <colgroup> with no consumer yet: {col_widths[name]!r}"
         # [] for a plugin whose article has no <table> at all (a scalar-grid

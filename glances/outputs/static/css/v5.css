@@ -284,13 +284,15 @@ body {
  * hides blocks/columns BEFORE anything is ellipsized (spec D4: hide, then
  * crop, then scroll). Never painted -- the class is removed before the
  * measuring method returns. `.gl-name` keeps its deliberate cap (G9-6 D3).
- * `.gl-command` and `.gl-ports` keep their caps too, for a stronger reason: the TUI budgets it
- * at _MIN_COMMAND_WIDTH = 8 (containers/render_curses_v5.py:59) because the
- * data is unbounded -- measured at natural width, one very long command line
- * would push the row over the limit and drop every droppable column on a
- * window that has plenty of room. */
+ *
+ * `containers` used to need two more exclusions here (`.gl-command`,
+ * `.gl-ports`): its table was content-sized, so one very long command line,
+ * measured at its natural width, dropped every droppable column on a window
+ * that had plenty of room. That table is now `table-layout: fixed` with a
+ * <colgroup> in the TUI's own character widths, so its cells can no longer
+ * grow with their content and the caps -- and their exclusions -- are gone. */
 .gl-measuring .gl-inline,
-.gl-measuring .gl-truncate:not(.gl-name):not(.gl-command):not(.gl-ports) {
+.gl-measuring .gl-truncate:not(.gl-name) {
   min-width: max-content;
   max-width: none;
 }
@@ -304,38 +306,6 @@ body {
 .gl-name {
   display: block;
   max-width: var(--gl-name-width);
-}
-
-/* The unbounded column: the TUI budgets it at _MIN_COMMAND_WIDTH = 8
- * (containers/render_curses_v5.py:59), and the measuring pass depends
- * on this cap holding. `display: block` is load-bearing, not decorative:
- * `max-width` (and `.gl-truncate`'s overflow/text-overflow) do not apply to
- * a non-replaced INLINE element, so without it this span would measure at
- * its natural, unbounded width during `.gl-measuring` -- the same reason
- * `.gl-name` above carries it. Global, not scoped to one component: the
- * `.gl-measuring` exclusion above exempts `.gl-command` for every consumer
- * of the class, so the cap that makes the exclusion safe has to live where
- * the exclusion does, not in a single component's scoped style. 24 is an
- * arbitrary readability choice (wider than the TUI's _MIN_COMMAND_WIDTH = 8),
- * never a measured value, so it is written in the column unit like every
- * other unmeasured character count -- `ch` lies under the shipped font
- * stack (0.5em vs `--gl-col`'s real 0.6em glyph advance). */
-.gl-command {
-  display: block;
-  max-width: calc(24 * var(--gl-col));
-}
-/* Same defect, same fix as `.gl-command` above, found by measuring the live
- * page on 2026-09-19: this span is inline, so its ellipsis and any cap were
- * inert and the cell rendered 1540px wide for "61208/tcp,61209/tcp". The TUI
- * budgets the column at 16 characters (`_COL_GEOMETRY["ports"]`), so an
- * unbounded cell makes the width cascade over-fire on a host publishing many
- * ports. 24 rather than 16 for the same readability reason as the command
- * cap, and the full list stays on the `title`. Global for the same reason
- * as `.gl-command` above: `.gl-measuring` exempts `.gl-ports` globally, so
- * its cap cannot live in only one component's scoped style. */
-.gl-ports {
-  display: block;
-  max-width: calc(24 * var(--gl-col));
 }
 
 /* Ellipsis at the START, keeping the tail -- the TUI's "_" + name[-17:] for
@@ -389,15 +359,16 @@ body {
  * rendered its name cell 431px wide around a 136px cap -- 295px of empty
  * space -- while `containers`, with eleven columns, drifted by only 76px.
  * The TUI gives its slack to the last, unbounded column; so does this.
- * `last-child` rather than a per-block class because `containers` can have
- * its tail columns dropped by the width cascade and still needs one. */
+ * `last-child` rather than a per-block class because a block can have its
+ * tail columns dropped by the width cascade and still needs one. */
 [data-slot="right"] .gl-table td:last-child,
 [data-slot="right"] .gl-table th:last-child {
   width: 100%;
 }
 
-/* Fixed-layout collection tables (processlist, programlist, alert). Their
- * columns come from a <colgroup> in TUI character widths, so they no longer
+/* Fixed-layout collection tables (processlist, programlist, containers,
+ * alert). Their columns come from a <colgroup> in TUI character widths, so
+ * they no longer
  * depend on their content: a wider PID at the next refresh cannot re-lay the
  * table out. `min-width` is what keeps the existing width cascade working --
  * under fixed layout a table never overflows, so `scrollWidth > clientWidth`
@@ -433,8 +404,8 @@ body {
   padding-right: calc(2 * var(--gl-col));
 }
 /* The right column's slack goes to the last cell -- but not here: under fixed
- * layout that rule would claim the whole width. The `auto` <col> already does
- * the job the rule was written for. */
+ * layout that rule would claim the whole width. The column left OUT of the
+ * <colgroup> already does the job the rule was written for. */
 [data-slot="right"] .gl-table.gl-process-table td:last-child,
 [data-slot="right"] .gl-table.gl-process-table th:last-child {
   width: auto;
