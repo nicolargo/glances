@@ -510,6 +510,8 @@ function collect() {
 		// per `<li>`. [] when the overlay is closed, which is itself an
 		// assertion a test makes.
 		helpRows: [],
+		// The footer's items, in order, skipping the aria-hidden separators.
+		footerAbout: [],
 		// Full textContent of each rendered <article class="gl-plugin">, keyed
 		// by its data-plugin (registry name) -- lets a test assert on the
 		// formatted values a plugin actually rendered (e.g. the eight mem
@@ -644,6 +646,12 @@ function collect() {
 			// The help overlay, when `h` opened it. Read by class rather than by
 			// position: it is the last child of <main>, and asserting that would
 			// break the moment anything else is appended there.
+			const about = findDescendantByClass(first, "gl-about");
+			if (about) {
+				result.footerAbout = (about.childNodes || [])
+					.filter((n) => n.nodeType === ELEMENT_NODE && n.getAttribute("aria-hidden") !== "true")
+					.map((n) => n.textContent.replace(/\s+/g, " ").trim());
+			}
 			const help = findDescendantByClass(first, "gl-help-list");
 			if (help) {
 				result.helpRows = findAllByTag(help, "LI").map((li) => li.textContent.replace(/\s+/g, " ").trim());
@@ -668,9 +676,15 @@ function collect() {
 					text: a.textContent,
 					href: a.getAttribute("href"),
 				}));
-				// The cadence steppers. `disabled` lands as an attribute here:
-				// FakeElement has no such property for Vue to prefer over one.
-				result.footerButtons = findAllByTag(footer, "BUTTON").map((button) => ({
+				// The cadence steppers, and ONLY those: scoped to `.gl-refresh`
+				// rather than to the whole footer, which also carries the
+				// Hotkeys button. The name and the comment always meant the
+				// steppers; collecting every footer button made the next one
+				// added break an unrelated assertion.
+				// `disabled` lands as an attribute here: FakeElement has no such
+				// property for Vue to prefer over one.
+				const refresh = findDescendantByClass(footer, "gl-refresh") || footer;
+				result.footerButtons = findAllByTag(refresh, "BUTTON").map((button) => ({
 					text: button.textContent.trim(),
 					// A DOM property, not an attribute -- see FakeElement's
 					// constructor for why the distinction matters here.
@@ -897,7 +911,14 @@ setImmediate(async () => {
 	// Keys last: they hide blocks, and every measurement above must have run
 	// against the full page first -- exactly the order a viewer produces.
 	for (const key of hotkeys) {
-		if (sandbox.__glancesHotkey) await sandbox.__glancesHotkey(key);
+		// `click:hotkeys` stands for the footer's Hotkeys button, which cannot be
+		// clicked here (the fake document dispatches no events) -- it drives the
+		// same method the button's @click calls.
+		if (key === "click:hotkeys") {
+			if (sandbox.__glancesToggleHelp) await sandbox.__glancesToggleHelp();
+		} else if (sandbox.__glancesHotkey) {
+			await sandbox.__glancesHotkey(key);
+		}
 	}
 	process.stdout.write(JSON.stringify(collect()));
 });

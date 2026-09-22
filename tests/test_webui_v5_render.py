@@ -4200,3 +4200,43 @@ def test_an_untouched_toggle_still_follows_the_server():
     args = _run_render_probe("quicklook-full", "1")["effectiveArgs"]
     assert args["percpu"] is False, "`1` flipped the server's percpu=True"
     assert args["full_quicklook"] is True, "`4` was never pressed; it must still follow the server"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_footer_offers_hotkeys_before_github():
+    """The keys are otherwise undiscoverable: nothing on the page says `h`
+    exists. The link sits before GitHub, where a reader looking for what this
+    page can do finds it before the external links."""
+    about = _run_render_probe("default")["footerAbout"]
+    assert "Hotkeys" in about, about
+    assert about.index("Hotkeys") < about.index("GitHub")
+    # It is the first thing after the version, not buried at the end.
+    assert about[1] == "Hotkeys", about
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_footer_link_opens_the_same_overlay_as_h():
+    """Both go through `toggleHelp()`, so the overlay they raise is the same
+    one. Asserted on the RENDERED rows, not just the flag.
+
+    NOTE on what this does and does not cover: the probe drives the method,
+    because its fake document dispatches no events, so it cannot see the
+    button's `@click` binding. That the button is bound to `toggleHelp` rather
+    than setting `showHelp` itself is pinned in test_webui_v5_tokens.py
+    (`test_the_footer_hotkeys_control_is_a_button_dressed_as_a_link`). The two
+    tests together are the coverage; neither is sufficient alone.
+    """
+    by_click = _run_render_probe("default", "click:hotkeys")
+    by_key = _run_render_probe("default", "h")
+
+    assert by_click["showHelp"] is True
+    assert by_click["helpRows"] == by_key["helpRows"]
+    assert by_click["helpRows"], "vacuous: the overlay rendered no rows"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_footer_link_toggles_rather_than_only_opening():
+    assert _run_render_probe("default", "click:hotkeys,click:hotkeys")["showHelp"] is False
+    # And the two entry points are interchangeable, in either order.
+    assert _run_render_probe("default", "click:hotkeys,h")["showHelp"] is False
+    assert _run_render_probe("default", "h,click:hotkeys")["showHelp"] is False

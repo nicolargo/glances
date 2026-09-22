@@ -513,6 +513,26 @@ def test_a_quicklook_bar_track_keeps_a_width_without_the_cpu_header():
     assert "'gl-quicklook-no-header': !header" in template, "the block flags the missing header"
 
 
+def test_the_footer_hotkeys_control_is_a_button_dressed_as_a_link():
+    """It acts on this page rather than navigating, so an `<a>` would lie to
+    assistive tech and offer a middle-click that goes nowhere. It must still
+    look like the links beside it, which means resetting the UA's button
+    chrome — a reset that is easy to half-do."""
+    template = (_V5_JS / "AppShell.vue").read_text()
+    assert '<button\n					type="button"\n					class="gl-about-action"' in template, (
+        "the footer control must be a <button>, not an <a>"
+    )
+    assert '@click="toggleHelp"' in template, "it must go through the same switch as the `h` key"
+
+    body = _rule_body(_strip_comments(template), ".gl-about-action")
+    assert body, "the button needs its own rule or it renders as UA button chrome"
+    for prop in ("appearance", "background", "border", "padding", "font"):
+        assert re.search(rf"\b{prop}:", body), f"{prop} must be reset so it matches the links beside it"
+    assert re.search(r"\bborder-bottom:\s*1px dotted currentcolor\s*;", body), (
+        "it carries the same dotted underline as `.gl-about a`"
+    )
+
+
 def test_full_quicklook_lets_the_block_grow_into_the_row():
     """`4` leaves quicklook alone on the top row; it must then TAKE that row.
 

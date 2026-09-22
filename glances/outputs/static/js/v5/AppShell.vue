@@ -34,6 +34,19 @@
 			<div class="gl-muted gl-about">
 				<span>{{ versionLabel }}</span>
 				<span class="gl-about-sep" aria-hidden="true">·</span>
+				<!-- A <button>, styled as a link: it acts on this page rather than
+				navigating, so an <a> would lie to assistive tech and offer a
+				middle-click that goes nowhere. `aria-expanded` names the overlay's
+				state, which is the part a sighted user reads off the screen. -->
+				<button
+					type="button"
+					class="gl-about-action"
+					:aria-expanded="showHelp ? 'true' : 'false'"
+					@click="toggleHelp"
+				>
+					Hotkeys
+				</button>
+				<span class="gl-about-sep" aria-hidden="true">·</span>
 				<a href="https://github.com/nicolargo/glances" target="_blank" rel="noopener noreferrer">GitHub</a>
 				<!-- /docs only when [outputs] api_doc is on: that same key decides
 				whether FastAPI mounts Swagger UI at all (webserver_v5.build_app),
@@ -439,6 +452,19 @@ export default {
 			// would stop working the moment one of them took focus.
 			this.keydownHandler = (event) => {
 				if (!this.ownsKeystroke(event)) return;
+				// Escape closes the overlay and nothing else -- what every modal
+				// owes its user, and what the TUI does too (ESC closes the help
+				// screen instead of quitting while it is open,
+				// `glances_curses_v5._handle_help_key`). Handled here rather than
+				// in `handleHotkey` because it is a dismissal, not a toggle:
+				// Escape on a closed overlay must do nothing.
+				if (event.key === "Escape") {
+					if (this.showHelp) {
+						this.showHelp = false;
+						event.preventDefault();
+					}
+					return;
+				}
 				if (this.handleHotkey(event.key)) event.preventDefault();
 			};
 			document.addEventListener("keydown", this.keydownHandler);
@@ -470,6 +496,13 @@ export default {
 			// Same shape again: the probe's fake document has a no-op
 			// addEventListener, so it cannot dispatch a real keydown. It drives
 			// the behaviour through the method the listener itself calls.
+			// The footer's Hotkeys button: the probe has no event dispatch, so it
+			// drives the method the button's @click is bound to.
+			window.__glancesToggleHelp = async () => {
+				this.toggleHelp();
+				await this.$nextTick();
+				window.__glancesShowHelp = this.showHelp;
+			};
 			window.__glancesHotkey = async (key) => {
 				this.handleHotkey(key);
 				await this.$nextTick();
@@ -502,6 +535,7 @@ export default {
 			delete window.__glancesHotkey;
 			delete window.__glancesUserHidden;
 			delete window.__glancesShowHelp;
+			delete window.__glancesToggleHelp;
 			delete window.__glancesEffectiveArgs;
 			delete window.__glancesDegrade;
 			delete window.__glancesRowBudget;
@@ -517,9 +551,14 @@ export default {
 		 * render probe drives this directly (the probe's fake document has a
 		 * no-op addEventListener and cannot dispatch events).
 		 */
+		// The overlay's one switch: the `h` key and the footer's Hotkeys button
+		// both come through here, so the two can never drift apart.
+		toggleHelp() {
+			this.showHelp = !this.showHelp;
+		},
 		handleHotkey(key) {
 			if (key === HELP_KEY) {
-				this.showHelp = !this.showHelp;
+				this.toggleHelp();
 				return true;
 			}
 			const flag = viewFlag(key);
@@ -993,6 +1032,27 @@ export default {
 }
 .gl-about a:hover,
 .gl-about a:focus-visible {
+	color: var(--gl-fg);
+}
+/* The Hotkeys button, indistinguishable from the links beside it: a <button>
+ * for semantics, a link for the eye. It has to reset the UA's button chrome
+ * (background, border, font, padding) before the `.gl-about a` rules above can
+ * be repeated here -- `:is()` on the two selectors would be shorter but would
+ * still leave every one of those resets to write. */
+.gl-about-action {
+	appearance: none;
+	background: none;
+	border: none;
+	padding: 0;
+	font: inherit;
+	line-height: inherit;
+	cursor: pointer;
+	color: inherit;
+	text-decoration: none;
+	border-bottom: 1px dotted currentcolor;
+}
+.gl-about-action:hover,
+.gl-about-action:focus-visible {
 	color: var(--gl-fg);
 }
 /* The `h` overlay. A centred panel over a scrim, not a sidebar: it is read
