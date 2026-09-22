@@ -3205,3 +3205,51 @@ def test_hidden_right_column_plugin_frees_its_row_budget(make_tui_with_body):
     )
     bare._build_fitted_frame(max_x=120, max_y=20)
     assert hidden_plan == bare._build_view(120)["row_budget"]
+
+
+def test_empty_left_sidebar_gives_its_width_to_the_right_column(make_tui_with_body):
+    """Hiding the left sidebar (`2`, or its plugins one by one) must hand the
+    freed width to the right column, not leave a blank band.
+
+    v4's `_left_sidebar_min_width = 23` is a floor for a column that HAS
+    content. It used to apply to an absent one too, so the right column still
+    started at column 25 over 23 blank columns — reported from a TUI smoke
+    test."""
+    tui = make_tui_with_body()
+    max_x = 160
+
+    frame = tui._build_fitted_frame(max_x=max_x, max_y=40)
+    assert [b.name for b in frame.left] == ["network"], "fixture must have a left column"
+    left_width, right_x, right_width = tui._body_columns(frame, max_x)
+    assert left_width >= 23 and right_x == left_width + tui._SIDEBAR_SEPARATOR_GAP
+
+    tui._handle_key(ord("2"))  # hide the whole LEFT slot
+    frame = tui._build_fitted_frame(max_x=max_x, max_y=40)
+    assert frame.left == []
+    left_width, right_x, right_width = tui._body_columns(frame, max_x)
+    assert (left_width, right_x, right_width) == (0, 0, max_x)
+
+
+def test_right_column_renderers_are_told_the_widened_width(make_tui_with_body):
+    """The width the right column is PAINTED at and the width its renderers are
+    TOLD must agree — both now come from `_body_columns`."""
+    tui = make_tui_with_body()
+    max_x = 160
+
+    tui._handle_key(ord("2"))
+    view = tui._build_view(max_x)
+    frame = tui._frame_for_view(view)
+    tui._fit_right_width(view, frame, max_x)
+
+    assert view["right_width"] == max_x
+
+
+def test_hiding_left_plugins_one_by_one_also_frees_the_width(make_tui_with_body):
+    """Same outcome by a different route: `2` is only a bulk form of `n`."""
+    tui = make_tui_with_body()
+    max_x = 160
+
+    tui._handle_key(ord("n"))  # network is the fixture's only left plugin
+    frame = tui._build_fitted_frame(max_x=max_x, max_y=40)
+    assert frame.left == []
+    assert tui._body_columns(frame, max_x) == (0, 0, max_x)

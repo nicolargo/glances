@@ -766,8 +766,7 @@ class TuiV5(threading.Thread):
         """
         if not frame.right:
             return frame
-        left_width = self._sidebar_split(frame, max_x)
-        right_width = max(0, max_x - left_width - self._SIDEBAR_SEPARATOR_GAP)
+        _, _, right_width = self._body_columns(frame, max_x)
         if right_width and view.get("right_width") != right_width:
             view["right_width"] = right_width
             frame = self._frame_for_view(view)
@@ -972,9 +971,7 @@ class TuiV5(threading.Thread):
         # fit pass can never disagree on the available height.
         body_y0, body_height = self._body_geometry(frame, max_y)
         if body_height > 0:
-            left_width = self._sidebar_split(frame, max_x)
-            right_x = left_width + self._SIDEBAR_SEPARATOR_GAP
-            right_width = max(0, max_x - right_x)
+            left_width, right_x, right_width = self._body_columns(frame, max_x)
 
             self._paint_sidebar(stdscr, frame.left, body_y0, 0, left_width, body_height)
             self._paint_sidebar(stdscr, frame.right, body_y0, right_x, right_width, body_height)
@@ -983,11 +980,31 @@ class TuiV5(threading.Thread):
     def _sidebar_split(frame: Frame, max_x: int) -> int:
         """Width allocated to the left sidebar — bounded like v4
         (`_left_sidebar_min_width=23`, `_left_sidebar_max_width=34`).
+
+        An EMPTY left column takes no width at all. v4's minimum is a floor
+        for a column that HAS content, not a reservation: without this guard
+        the 23-column floor applied to an absent sidebar, so hiding it (`2`,
+        or its plugins one by one) left a blank 23-column band and the right
+        column stayed exactly where it was.
         """
+        if not frame.left:
+            return 0
         natural = max((b.width for b in frame.left), default=0)
         # +2 for breathing room, mirroring v4's column gap.
         natural = max(natural + 2, 23)
         return min(natural, 34, max(1, max_x // 2))
+
+    def _body_columns(self, frame: Frame, max_x: int) -> tuple[int, int, int]:
+        """``(left_width, right_x, right_width)`` for the body's two columns.
+
+        Single source of truth for the painter and for ``_fit_right_width``,
+        so the width the right-column renderers are TOLD can never differ
+        from the width they are painted at. The inter-column gap exists only
+        when there is a left column to separate from.
+        """
+        left_width = self._sidebar_split(frame, max_x)
+        right_x = left_width + self._SIDEBAR_SEPARATOR_GAP if left_width else 0
+        return left_width, right_x, max(0, max_x - right_x)
 
     # Horizontal gap between two adjacent header blocks, in either alignment
     # group (v4 parity: `space_between_column = 3` between system and ip).
