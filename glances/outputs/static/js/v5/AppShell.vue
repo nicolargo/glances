@@ -68,6 +68,34 @@
 				</button>
 			</div>
 		</footer>
+
+		<!-- `h`, mirroring the TUI's overlay. Rows come from hotkeys.js, the same
+		table the dispatcher reads, so a bound key cannot go undocumented. -->
+		<div
+			v-if="showHelp"
+			class="gl-help"
+			role="dialog"
+			aria-modal="true"
+			aria-label="Keyboard shortcuts"
+			@click="showHelp = false"
+		>
+			<div class="gl-help-panel" @click.stop>
+				<div class="gl-help-title">
+					<span>Keyboard shortcuts</span>
+					<button type="button" class="gl-step" aria-label="Close" @click="showHelp = false">×</button>
+				</div>
+				<ul class="gl-help-list">
+					<li v-for="row in helpKeys" :key="row.key">
+						<kbd>{{ row.key }}</kbd>
+						<span>{{ row.desc }}</span>
+					</li>
+					<li>
+						<kbd>h</kbd>
+						<span>Show / hide this help</span>
+					</li>
+				</ul>
+			</div>
+		</div>
 	</main>
 </template>
 
@@ -80,6 +108,7 @@ import { visiblePlugins, groupBySlot } from "./layout.js";
 import { PLUGINS } from "./plugins/index.js";
 import { resolveDegrade, sameFlags, TOP_CASCADE, HEADER_CASCADE } from "./degrade.js";
 import { FULL_QUICKLOOK_HIDDEN } from "./full_quicklook.js";
+import { hideTargets, toggleHidden, helpRows, HELP_KEY } from "./hotkeys.js";
 import { planRightColumn } from "./row_budget.js";
 import { ampsLineCount } from "./amps.js";
 
@@ -217,6 +246,18 @@ export default {
 			refitFrame: null,
 			// Listeners this component owns and must remove on unmount.
 			visibilityHandler: null,
+			keydownHandler: null,
+			// The plugins the viewer hid with the SHOW/HIDE keys. A plain Array
+			// rather than a Set: Vue 3 does proxy Sets, but every read here goes
+			// through `slots()`, which builds a Set anyway -- and an Array keeps
+			// the render probe's JSON round-trip trivial.
+			//
+			// Deliberately NOT persisted. The TUI's `ViewState.hidden_plugins`
+			// is not either, and `--disable-plugin` / `[<p>] disable` remain the
+			// way to make a choice stick.
+			userHidden: [],
+			// The `h` overlay listing the keys, mirroring the TUI's.
+			showHelp: false,
 		};
 	},
 	computed: {
@@ -250,10 +291,13 @@ export default {
 			// Without this the WebUI rendered both side by side, a duplicated
 			// CPU surface. `show_percpu` is a TUI-only runtime toggle (hotkey
 			// `1`) with no server-side representation, so the browser cannot
-			// mirror it exactly (browser hotkeys are out of scope for this
-			// group) -- the best available signal is `serverArgs.percpu`
-			// (`--percpu`), which is also what gates quicklook's own per-core
-			// view. This is NOT what the v4 WebUI does: its equivalent block is
+			// mirror it exactly -- the best available signal is
+			// `serverArgs.percpu` (`--percpu`), which is also what gates
+			// quicklook's own per-core view. The browser DOES read keys now
+			// (hotkeys.js), but only the SHOW/HIDE family; `1` and the rest of
+			// the TOGGLE VIEW group would each have to settle this same
+			// server-state-versus-local-override question first, so they are
+			// deliberately still unbound here. This is NOT what the v4 WebUI does: its equivalent block is
 			// commented out (glances/outputs/static/js/App.vue:43-52), so v4's
 			// WebUI renders no `percpu` at all. The authority here is the v5 TUI.
 			if (this.serverArgs.percpu) {
@@ -274,6 +318,11 @@ export default {
 			} else {
 				hidden.add("programlist");
 			}
+			// The viewer's own SHOW/HIDE keys, unioned in last. Same rule as the
+			// TUI (`build_frame`, curses_renderer_v5.py): a block is hidden when
+			// EITHER authority says so, and this one cannot conjure width the
+			// degradation cascade above has already taken away.
+			for (const name of this.userHidden) hidden.add(name);
 			return groupBySlot(this.plugins.filter((plugin) => !hidden.has(plugin.name)));
 		},
 		// Always all three: design spec section 8 stacks header, top, body
@@ -284,6 +333,9 @@ export default {
 		// requires empty slots to render nothing.
 		zones() {
 			return ZONES;
+		},
+		helpKeys() {
+			return helpRows();
 		},
 		refreshLabel() {
 			return this.refresh === null ? "…" : `${this.refresh}s`;
@@ -358,6 +410,15 @@ export default {
 				if (!document.hidden) this.tick();
 			};
 			document.addEventListener("visibilitychange", this.visibilityHandler);
+			// SHOW/HIDE keys, the TUI's own (hotkeys.js mirrors its table).
+			// On `document`, not on the root element: the page has focusable
+			// controls (the refresh steppers), and a listener on the component
+			// would stop working the moment one of them took focus.
+			this.keydownHandler = (event) => {
+				if (!this.ownsKeystroke(event)) return;
+				if (this.handleHotkey(event.key)) event.preventDefault();
+			};
+			document.addEventListener("keydown", this.keydownHandler);
 		}
 		// The render probe drives the cascade through this hook: its fake DOM
 		// has no ResizeObserver and no layout until the harness sets widths.
@@ -383,6 +444,15 @@ export default {
 				window.__glancesDegrade = this.degrade;
 				window.__glancesRowBudget = this.rowBudget;
 			};
+			// Same shape again: the probe's fake document has a no-op
+			// addEventListener, so it cannot dispatch a real keydown. It drives
+			// the behaviour through the method the listener itself calls.
+			window.__glancesHotkey = async (key) => {
+				this.handleHotkey(key);
+				await this.$nextTick();
+				window.__glancesUserHidden = [...this.userHidden];
+				window.__glancesShowHelp = this.showHelp;
+			};
 		}
 		this.startTimer();
 	},
@@ -399,14 +469,59 @@ export default {
 		if (this.visibilityHandler && typeof document !== "undefined") {
 			document.removeEventListener("visibilitychange", this.visibilityHandler);
 		}
+		if (this.keydownHandler && typeof document !== "undefined") {
+			document.removeEventListener("keydown", this.keydownHandler);
+		}
 		if (typeof window !== "undefined") {
 			delete window.__glancesRefit;
 			delete window.__glancesTick;
+			delete window.__glancesHotkey;
+			delete window.__glancesUserHidden;
+			delete window.__glancesShowHelp;
 			delete window.__glancesDegrade;
 			delete window.__glancesRowBudget;
 		}
 	},
 	methods: {
+		/**
+		 * Act on one SHOW/HIDE key. Returns true when the key was handled, so
+		 * the DOM listener knows whether to swallow it.
+		 *
+		 * Split from the listener because it is the whole behaviour: the
+		 * listener only decides whether a keystroke is ours to read, and the
+		 * render probe drives this directly (the probe's fake document has a
+		 * no-op addEventListener and cannot dispatch events).
+		 */
+		handleHotkey(key) {
+			if (key === HELP_KEY) {
+				this.showHelp = !this.showHelp;
+				return true;
+			}
+			const names = hideTargets(key, this.plugins);
+			if (!names) return false;
+			this.userHidden = [...toggleHidden(new Set(this.userHidden), names)];
+			// The zones' ResizeObserver fires on its own when the layout moves,
+			// but a toggle that leaves every zone the same size (a right-column
+			// block among several) would otherwise keep a stale row budget.
+			this.scheduleRefit();
+			return true;
+		},
+		/**
+		 * Whether a keystroke is ours to read.
+		 *
+		 * Ignores anything carrying a modifier, so the browser's own shortcuts
+		 * (Ctrl-R, Cmd-L, Alt-Left...) keep working, and anything typed into a
+		 * field, so a future filter box does not toggle plugins as it is typed.
+		 * `isContentEditable` covers the editable-div case a tag check misses.
+		 */
+		ownsKeystroke(event) {
+			if (event.ctrlKey || event.altKey || event.metaKey) return false;
+			const target = event.target;
+			if (!target) return true;
+			if (target.isContentEditable) return false;
+			const tag = typeof target.tagName === "string" ? target.tagName.toLowerCase() : "";
+			return !["input", "textarea", "select"].includes(tag);
+		},
 		startTimer() {
 			// Always replaces the running interval: changeRefresh() calls this to
 			// re-arm at the new cadence, and a second interval left behind would
@@ -845,6 +960,66 @@ export default {
 .gl-about a:focus-visible {
 	color: var(--gl-fg);
 }
+/* The `h` overlay. A centred panel over a scrim, not a sidebar: it is read
+ * once and dismissed, and it must not reflow the page underneath -- the
+ * degradation cascade measures that layout and a transient width change would
+ * make it thrash. Every colour is a token; the stylesheet is the only place a
+ * literal may appear (test_webui_v5_tokens.py). */
+.gl-help {
+	position: fixed;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	/* The scrim leans on the page background rather than a black literal, so it
+	 * stays correct in the light theme too. */
+	background: var(--gl-bg);
+	opacity: 0.98;
+	z-index: 10;
+	padding: var(--gl-gap);
+}
+.gl-help-panel {
+	background: var(--gl-surface);
+	border: 1px solid var(--gl-border);
+	padding: var(--gl-gap);
+	max-height: 90vh;
+	overflow-y: auto;
+	min-width: 0;
+}
+.gl-help-title {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: var(--gl-gap);
+	font-weight: var(--gl-weight-bold);
+	margin-bottom: var(--gl-gap);
+}
+.gl-help-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	/* Two columns where there is room, one on a phone. The key column is sized
+	 * in `--gl-col` like every other character-width in this UI. */
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+	column-gap: calc(2 * var(--gl-gap));
+}
+.gl-help-list li {
+	display: grid;
+	grid-template-columns: calc(3 * var(--gl-col)) 1fr;
+	gap: var(--gl-gap);
+	align-items: baseline;
+	line-height: var(--gl-row);
+}
+.gl-help-list kbd {
+	font: inherit;
+	font-weight: var(--gl-weight-bold);
+	text-align: center;
+}
+.gl-help-list span {
+	color: var(--gl-muted);
+}
+
 /* The -/+ steppers: text, not chrome. No border, no background, the same
  * muted colour and size as the cadence they change -- the footer must not
  * grow a control bar. */

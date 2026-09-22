@@ -1206,6 +1206,18 @@ curses surface — as its own owned group. No implementation in parity wave 1
   `docs/superpowers/specs/2026-09-21-glances-v5-tui-show-hide-toggles-design.md`.
   `F` (fs free space) is NOT part of this: it changes what `fs` *displays*, not
   whether it displays, so it moves to the data-type toggles below.
+  **The WebUI binds the same 24 keys** (2026-09-22), reversing §6.5 of that
+  design at the maintainer's request. The two surfaces keep independent hidden
+  sets — two viewers, two states — but share the *table*: `hotkeys.js` mirrors
+  the `hide` entries of `_HOTKEYS`, targets and descriptions alike, so the two
+  help screens cannot describe a key differently
+  (`tests/test_webui_v5_hotkeys_drift.py`). The browser unions its set into
+  `AppShell.slots()` exactly as `build_frame` unions `user_hidden`, and `h`
+  opens an overlay generated from that same table. The two slot keys (`2`,
+  `5`) resolve against the live plugin registry rather than carrying a second
+  copy of the slot lists. Not bound in the browser: the TOGGLE VIEW keys (`1`,
+  `j`, `4`, `/`), which it currently derives from `serverArgs` — binding them
+  needs a decision on whether a browser keystroke may override server state.
 - **The 9 remaining data-type toggles** (`b`/`B` byte/bit, `%`, `S`, …), plus
   `F` (fs free space), moved here from the show/hide line above.
 - **`F5` / `Ctrl-R`** forced refresh and the sort-navigation arrow keys.

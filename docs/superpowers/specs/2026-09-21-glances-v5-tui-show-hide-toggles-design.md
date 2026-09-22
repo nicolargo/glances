@@ -321,6 +321,18 @@ v4's show/hide keys are terminal-only, and v5's WebUI has no keyboard surface.
 scope, deliberately: a browser-side visibility control is a WebUI feature, not
 a parity gap.
 
+**Reversed 2026-09-22, at the maintainer's request.** The WebUI now binds the
+same 24 keys. It does NOT read `ViewState` — this paragraph's reasoning about
+the REST layer still holds, and the two surfaces keep independent hidden sets,
+as two independent viewers must. What is shared is the *table*: `hotkeys.js`
+mirrors the `hide` entries of `_HOTKEYS`, targets and descriptions alike, and
+`tests/test_webui_v5_hotkeys_drift.py` fails on any divergence. The browser
+unions its set into `slots()` exactly as `build_frame` unions
+`user_hidden` (§5.1), so the composition rule is the same on both sides.
+Still out of scope there: the TOGGLE VIEW keys (`1`, `j`, `4`, `/`), which the
+browser currently derives from `serverArgs` — binding them needs a decision on
+whether a browser keystroke may override server state.
+
 ### 6.6 Toggles do not persist
 
 v4 does not persist them across restarts either. `--disable-plugin` and

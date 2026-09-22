@@ -336,12 +336,12 @@ def test_the_api_docs_link_is_dropped_when_the_server_mounts_no_docs():
 # --------------------------------------------------------- mem TUI parity (G9-3 Task 5)
 
 
-def _run_render_probe(scenario: str) -> dict:
+def _run_render_probe(scenario: str, keys: str = "") -> dict:
     if not _BUNDLE_PATH.exists():
         pytest.fail(f"{_BUNDLE_PATH} is missing -- run `npm run build` in glances/outputs/static/")
 
     result = subprocess.run(
-        ["node", str(_RENDER_PROBE_PATH), str(_BUNDLE_PATH), scenario],
+        ["node", str(_RENDER_PROBE_PATH), str(_BUNDLE_PATH), scenario, keys],
         capture_output=True,
         text=True,
         timeout=30,
@@ -4009,3 +4009,114 @@ def test_the_pod_column_reads_the_full_containers_list_not_the_budgeted_one():
     assert payload["rowBudget"]["containers"] == 3, f"got {payload['rowBudget']!r}"
     headers = payload["pluginHeaderCells"].get("containers") or []
     assert "Pod" in headers, f"got {headers!r}"
+
+
+# ----------------------------------------------------- SHOW/HIDE hotkeys
+#
+# The key table itself is compared to the TUI's in
+# tests/test_webui_v5_hotkeys_drift.py, and the toggle logic is unit-tested in
+# tests/js/hotkeys.test.mjs. What is left, and only the probe can show it, is
+# that pressing a key actually removes the block from the rendered DOM.
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+@pytest.mark.parametrize(
+    ("key", "gone"),
+    [
+        ("n", {"network"}),
+        ("d", {"diskio"}),
+        ("s", {"sensors"}),
+        ("f", {"fs", "folders"}),  # compound: one key, two plugins
+    ],
+)
+def test_a_show_hide_key_removes_its_blocks_from_the_page(key, gone):
+    before = set(_run_render_probe("default")["pluginNames"])
+    assert gone <= before, f"vacuous: {sorted(gone - before)} was not rendered to begin with"
+
+    after = set(_run_render_probe("default", key)["pluginNames"])
+    assert not (gone & after), f"{key!r} left {sorted(gone & after)} on the page"
+    # Only the named plugins go.
+    assert before - gone == after
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_pressing_a_key_twice_brings_the_block_back():
+    before = set(_run_render_probe("default")["pluginNames"])
+    after = set(_run_render_probe("default", "n,n")["pluginNames"])
+    assert after == before
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_slot_keys_clear_their_whole_column():
+    """`2` and `5` resolve against the live registry, so they cover exactly the
+    plugins the page actually renders in that slot."""
+    baseline = _run_render_probe("default")
+    left = set(baseline["slots"].get("left", []))
+    top = set(baseline["slots"].get("top", []))
+    assert left and top, "vacuous: the fixture has no left/top column"
+
+    after_2 = _run_render_probe("default", "2")
+    assert after_2["slots"].get("left", []) == []
+    assert set(after_2["slots"].get("top", [])) == top, "`2` must not touch the top row"
+
+    after_5 = _run_render_probe("default", "5")
+    assert after_5["slots"].get("top", []) == []
+    assert set(after_5["slots"].get("left", [])) == left, "`5` must not touch the sidebar"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_a_slot_key_then_a_plugin_key_acts_on_that_one_plugin():
+    """Slot keys are expanded to their members, so a later single-plugin key
+    un-hides that plugin alone — the TUI's behaviour (design section 5.4), and
+    the reason `2` is not carried as indivisible slot state."""
+    left = set(_run_render_probe("default")["slots"].get("left", []))
+    assert "network" in left
+
+    after = _run_render_probe("default", "2,n")
+    assert set(after["slots"].get("left", [])) == {"network"}
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_an_unbound_key_changes_nothing():
+    """`y` is bound by neither v4 nor v5. A page that reacted to it would be
+    swallowing keystrokes the browser should keep."""
+    before = _run_render_probe("default")
+    after = _run_render_probe("default", "y")
+    assert after["pluginNames"] == before["pluginNames"]
+    assert after["userHidden"] == []
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_h_opens_and_closes_the_help_overlay():
+    assert _run_render_probe("default", "h")["showHelp"] is True
+    assert _run_render_probe("default", "h,h")["showHelp"] is False
+    # The overlay does not hide anything by itself.
+    assert _run_render_probe("default", "h")["userHidden"] == []
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_help_overlay_renders_every_bound_key():
+    """Not just the flag: the rows must actually reach the DOM. The TUI
+    generates its overlay from `_HOTKEYS`, so a bound key cannot go
+    undocumented; `helpRows()` gives the browser the same property, and this is
+    what proves it survives the template."""
+    from glances.outputs.glances_curses_v5 import TuiV5
+
+    rendered = _run_render_probe("default", "h")["helpRows"]
+    bound = [key for key, spec in TuiV5._HOTKEYS.items() if "hide" in spec]
+    # One row per SHOW/HIDE key, plus `h` documenting itself.
+    assert len(rendered) == len(bound) + 1 == 25
+
+    joined = " ".join(rendered)
+    for key, spec in TuiV5._HOTKEYS.items():
+        if "hide" not in spec:
+            continue
+        assert f"{key}{spec['desc']}" in joined, f"{key} is missing from the overlay: {rendered!r}"
+    assert any("help" in row for row in rendered), "`h` must document itself"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_help_overlay_is_absent_until_asked_for():
+    """v-if, not v-show: a closed overlay must not sit in the DOM, where the
+    degradation cascade would measure it."""
+    assert _run_render_probe("default")["helpRows"] == []

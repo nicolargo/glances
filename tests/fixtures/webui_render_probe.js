@@ -305,6 +305,15 @@ const {
 
 const scenario = process.argv[3] || "default";
 
+// Optional 4th argument: SHOW/HIDE keys to press, comma-separated, applied in
+// order just before collect(). The fake document's addEventListener is a
+// no-op and cannot dispatch a real keydown, so the keys go through
+// `window.__glancesHotkey` -- the same method AppShell's own keydown listener
+// calls, so this exercises the real dispatch rather than a parallel path.
+// An argument rather than a fixture entry: a test parametrises key sequences
+// freely without a new named scenario for each one.
+const hotkeys = (process.argv[4] || "").split(",").filter(Boolean);
+
 // Fix round 3: opt-in, per-call sequence for the tick-ordering test --
 // consumed one envelope per `api/5/alert/incidents` call, holding on the
 // last entry once exhausted. A scenario absent from ALERT_INCIDENTS_SEQUENCES
@@ -490,6 +499,14 @@ function collect() {
 		// pluginHeaders below, which is the ordered <h2> TEXT and is only
 		// meaningful for components whose title is a constant.
 		pluginNames: [],
+		// What the SHOW/HIDE keys left behind: the hidden set and whether the
+		// `h` overlay is open. Both undefined when no key was pressed.
+		userHidden: sandbox.__glancesUserHidden || [],
+		showHelp: sandbox.__glancesShowHelp || false,
+		// The `h` overlay's rows as the viewer reads them: "<key> <description>"
+		// per `<li>`. [] when the overlay is closed, which is itself an
+		// assertion a test makes.
+		helpRows: [],
 		// Full textContent of each rendered <article class="gl-plugin">, keyed
 		// by its data-plugin (registry name) -- lets a test assert on the
 		// formatted values a plugin actually rendered (e.g. the eight mem
@@ -621,6 +638,13 @@ function collect() {
 		result.tagName = first.tagName ?? null;
 		if (first.nodeType === ELEMENT_NODE) {
 			result.hasClass = first.classList.contains("gl-app");
+			// The help overlay, when `h` opened it. Read by class rather than by
+			// position: it is the last child of <main>, and asserting that would
+			// break the moment anything else is appended there.
+			const help = findDescendantByClass(first, "gl-help-list");
+			if (help) {
+				result.helpRows = findAllByTag(help, "LI").map((li) => li.textContent.replace(/\s+/g, " ").trim());
+			}
 			const header = findDescendantTag(first, "HEADER");
 			const footer = findDescendantTag(first, "FOOTER");
 			result.hasHeader = !!header;
@@ -867,5 +891,10 @@ setImmediate(async () => {
 	// exercises the tick-ordering fix rather than the `__glancesRefit`
 	// shortcut every other test above uses.
 	if (ALERT_INCIDENTS_SEQUENCES[scenario] && sandbox.__glancesTick) await sandbox.__glancesTick();
+	// Keys last: they hide blocks, and every measurement above must have run
+	// against the full page first -- exactly the order a viewer produces.
+	for (const key of hotkeys) {
+		if (sandbox.__glancesHotkey) await sandbox.__glancesHotkey(key);
+	}
 	process.stdout.write(JSON.stringify(collect()));
 });
