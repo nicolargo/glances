@@ -880,6 +880,27 @@ make set-password-v5   # Interactive hash helper
 
 (The `make help` regex was extended to recognize digits in target names — pre-existing bug exposed by these v5 targets.)
 
+#### Logging — the console stays at CRITICAL
+
+`setup_logging()` (`main_v5.py`) delegates to `glances.logger`, v4's
+configuration: a rotating file handler (XDG-aware path, `$LOG_CFG` override,
+1 MB × 3) that takes everything, and a console handler pinned to **CRITICAL**.
+
+This is a correctness requirement, not a preference. In TUI mode stderr *is*
+the terminal curses is painting: one WARNING scrolls the screen and
+desynchronises ncurses' model of it, so text bleeds across columns and stays
+corrupted. v5 originally called `logging.basicConfig()`, whose default handler
+writes every INFO and WARNING there; fixed 2026-09-22 after a TUI smoke test.
+
+Two consequences worth stating, both matching v4:
+
+- Every fatal startup path in `main_v5.py` logs at `critical` before
+  `sys.exit(2)`, so it still reaches the terminal. That is exactly what the
+  CRITICAL threshold is for — fatal errors surface, routine noise does not.
+- `--debug` raises the **root** level, making the *file* verbose. It does not
+  lower the console threshold, in server mode either: the log file is where
+  an operator reads what happened.
+
 ### 4.8 Security audit — end of v5 development
 
 Before merging `develop-v5 → develop`, schedule a **full cybersecurity audit on the `develop-v5` branch**. Open items the audit must explicitly address:

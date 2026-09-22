@@ -150,6 +150,71 @@ def test_setup_logging_normal_sets_info_level():
     assert logging.getLogger().level == logging.INFO
 
 
+def _console_handlers() -> list[logging.StreamHandler]:
+    """Root handlers that write to a stream rather than a file.
+
+    `FileHandler` subclasses `StreamHandler`, so the file handler has to be
+    excluded explicitly or this matches it too.
+    """
+    return [
+        h
+        for h in logging.getLogger().handlers
+        if isinstance(h, logging.StreamHandler) and not isinstance(h, logging.FileHandler)
+    ]
+
+
+@pytest.mark.parametrize("debug", [False, True])
+def test_setup_logging_never_puts_anything_below_critical_on_the_console(debug):
+    """In TUI mode stderr IS the terminal curses paints: one WARNING scrolls
+    the screen and desynchronises ncurses' model of it. v4 keeps the console
+    at CRITICAL (`glances/logger.py`, handler `console`); v5 used to call
+    `logging.basicConfig()`, whose default handler writes every INFO and
+    WARNING straight there.
+
+    `--debug` must not relax this: it makes the FILE verbose, not the TUI
+    unusable.
+    """
+    setup_logging(debug=debug)
+    consoles = _console_handlers()
+    assert consoles, "a console handler must exist (v4 has one)"
+    for handler in consoles:
+        assert handler.level == logging.CRITICAL, f"{handler!r} would paint over the TUI"
+
+
+def test_setup_logging_writes_to_a_rotating_file_like_v4():
+    """The real log goes to a rotating file, v4's single source of truth for
+    where (XDG-aware) and how big (1 MB x 3)."""
+    from logging.handlers import RotatingFileHandler
+
+    from glances.logger import LOG_FILENAME
+
+    setup_logging(debug=False)
+    files = [h for h in logging.getLogger().handlers if isinstance(h, RotatingFileHandler)]
+    assert len(files) == 1, logging.getLogger().handlers
+    assert files[0].baseFilename == str(LOG_FILENAME)
+    assert files[0].level == logging.DEBUG
+
+
+def test_setup_logging_is_idempotent():
+    """Called twice it must not stack a second copy of each handler -- a
+    doubled file handler writes every record twice."""
+    setup_logging(debug=False)
+    first = list(logging.getLogger().handlers)
+    setup_logging(debug=False)
+    second = list(logging.getLogger().handlers)
+    assert len(second) == len(first)
+
+
+def test_setup_logging_resets_a_handler_a_harness_attached():
+    """What `force=True` used to buy: a root handler attached by pytest (or
+    any embedding harness) after import is dropped, so records do not leak to
+    that harness's stream."""
+    intruder = logging.StreamHandler()
+    logging.getLogger().addHandler(intruder)
+    setup_logging(debug=False)
+    assert intruder not in logging.getLogger().handlers
+
+
 # ----------------------------------------------------------- discover_plugins
 
 

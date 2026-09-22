@@ -317,16 +317,37 @@ def validate_args(args: argparse.Namespace) -> None:
 
 
 def setup_logging(debug: bool) -> None:
-    level = logging.DEBUG if debug else logging.INFO
-    # ``force=True`` resets existing handlers — required when the entrypoint
-    # is invoked under pytest or any harness that has already attached a
-    # default handler to the root logger.
-    logging.basicConfig(
-        level=level,
-        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-        force=True,
-    )
+    """Configure logging exactly as v4 does: a rotating file handler that takes
+    everything, and a console handler that only ever emits CRITICAL.
+
+    **The console threshold is not a preference, it is a correctness
+    requirement.** In TUI mode stderr *is* the terminal curses is painting, so
+    a single WARNING scrolls the screen and desynchronises ncurses' model of
+    it — text bleeds across columns and the display stays corrupted until the
+    next full repaint. v4 avoids this by keeping the console at CRITICAL and
+    sending the real log to a file; v5 used to call ``logging.basicConfig()``,
+    whose default handler writes every INFO and WARNING straight to that
+    terminal.
+
+    ``glances.logger`` is the single source of truth for the file location
+    (XDG-aware, `$LOG_CFG` override, rotation at 1 MB × 3) and is already in
+    the process — shared v4 modules import it. Calling ``glances_logger()``
+    re-applies that configuration rather than duplicating it here, which also
+    makes this idempotent: a harness (pytest) that attached its own root
+    handler after the import is reset the same way ``force=True`` used to
+    reset it, because ``dictConfig`` replaces the root handler list outright.
+
+    ``debug`` then raises the *root* level, exactly like v4's ``init_debug``
+    (``glances/main.py:710-714``). The console handler stays at CRITICAL
+    either way: ``--debug`` makes the file verbose, it does not make the TUI
+    unusable.
+    """
+    # Local import: this applies the logging configuration as a side effect,
+    # so it must not run at module import time in a library context.
+    from glances.logger import glances_logger
+
+    glances_logger()
+    logging.getLogger().setLevel(logging.DEBUG if debug else logging.INFO)
 
 
 # --------------------------------------------------------------- discovery
