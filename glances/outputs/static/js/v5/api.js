@@ -17,9 +17,34 @@ const VALID_THEMES = new Set(["dark", "light"]);
 const TRUE_STRINGS = new Set(["1", "true", "yes", "on"]);
 const FALSE_STRINGS = new Set(["0", "false", "no", "off"]);
 
+// Thrown when `fetch` itself rejects: the server is GONE (stopped, crashed,
+// unreachable), not answering badly. `fetch` rejects only on a transport
+// failure -- a 4xx/5xx resolves normally (see note 1 at the top) -- so this
+// is the one signal that separates "no server" from "a bad answer from a
+// live one", and the caller renders the two very differently: one overlay
+// saying the connection is lost, versus a per-plugin error.
+//
+// The browser's own message is unhelpfully phrased ("NetworkError when
+// attempting to fetch resource", "Failed to fetch") and was, before this,
+// what the page showed 34 times over.
+export class OfflineError extends Error {
+	constructor(path) {
+		super(`${path}: server unreachable`);
+		this.name = "OfflineError";
+		this.offline = true;
+	}
+}
+
 export async function getJson(path) {
-	const response = await fetch(path);
+	let response;
+	try {
+		response = await fetch(path);
+	} catch {
+		throw new OfflineError(path);
+	}
 	if (!response.ok) {
+		// The server ANSWERED. Not an outage: one endpoint is unhappy, and the
+		// per-plugin error path says so without hiding the rest of the page.
 		throw new Error(`${path}: HTTP ${response.status}`);
 	}
 	return response.json();
@@ -188,6 +213,13 @@ export async function fetchAll(specs) {
 	try {
 		all = await getJson("api/5/all");
 	} catch (e) {
+		if (e && e.offline) {
+			// The server is gone. There is nothing per-plugin to say -- every
+			// block would carry the same transport message, which is precisely
+			// the wall of identical errors this replaces. The caller shows one
+			// overlay instead, and keeps the last good data underneath it.
+			return { results: {}, errors: {}, offline: true };
+		}
 		const errors = {};
 		specs.forEach((s) => {
 			errors[s.name] = e.message;

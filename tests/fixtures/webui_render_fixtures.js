@@ -254,6 +254,13 @@ const PLUGINSLIST_FIXTURES = {
 // every visible block shows its error, header included."
 const ALL_UNREACHABLE_SCENARIOS = new Set(["all-unreachable"]);
 
+// The server is GONE, not answering badly: `fetch` itself rejects, which is
+// the only signal that separates a stopped/crashed server from a live one
+// returning 500 (`all-unreachable` above). The WebUI answers the two very
+// differently -- one overlay versus a per-plugin error -- so the probe needs
+// both shapes.
+const SERVER_DOWN_SCENARIOS = new Set(["server-down"]);
+
 // Scenarios whose `/api/5/alert/incidents` answers with an HTTP 500. The
 // alert fetch stays in its OWN try/catch (AppShell.vue tick()), separate
 // from the one guarding `/api/5/all` above: a failing alert endpoint must
@@ -1952,6 +1959,7 @@ module.exports = {
 	SERVER_PLUGINS,
 	PLUGINSLIST_FIXTURES,
 	ALL_UNREACHABLE_SCENARIOS,
+	SERVER_DOWN_SCENARIOS,
 	ALERT_INCIDENTS_UNREACHABLE_SCENARIOS,
 	ARGS_FIXTURES,
 	CONFIG_FIXTURES,

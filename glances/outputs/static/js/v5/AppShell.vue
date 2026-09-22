@@ -82,6 +82,20 @@
 			</div>
 		</footer>
 
+		<!-- The server stopped answering. One overlay, not one error per plugin:
+		they would all carry the same transport message. `role="alert"` so a
+		screen reader announces it without the viewer having to go looking. -->
+		<div v-if="offline" class="gl-offline" role="alert" aria-live="assertive">
+			<div class="gl-offline-panel">
+				<p class="gl-offline-title">Connection to the Glances server lost</p>
+				<p class="gl-muted">
+					<template v-if="reconnectIn > 0">Reconnecting in {{ reconnectIn }}s…</template>
+					<template v-else>Reconnecting…</template>
+				</p>
+				<button type="button" class="gl-about-action" @click="reconnectNow">Retry now</button>
+			</div>
+		</div>
+
 		<!-- `h`, mirroring the TUI's overlay. Rows come from hotkeys.js, the same
 		table the dispatcher reads, so a bound key cannot go undocumented. -->
 		<div
@@ -152,6 +166,12 @@ const HIDDEN_BY = {
 // the media query that owns it -- test_webui_v5_tokens.py pins the two
 // together so the constant cannot drift from the stylesheet.
 const STACK_BREAKPOINT = "48rem";
+
+// Seconds between reconnection attempts once the server has gone. Fixed, not
+// a backoff: a Glances server is normally a machine the viewer controls and
+// is about to restart, so a predictable "back in N" beats a delay that grows
+// to minutes exactly when they are watching for it to come back.
+const RECONNECT_SECONDS = 5;
 
 // Every poll payload is REPLACED, never mutated in place: fetchAll() parses a
 // fresh /api/5/all envelope each tick and the components only ever read it.
@@ -271,6 +291,15 @@ export default {
 			userHidden: [],
 			// The `h` overlay listing the keys, mirroring the TUI's.
 			showHelp: false,
+			// The server stopped answering at the transport level (`OfflineError`,
+			// api.js): not a bad response, no response at all. Drives the one
+			// overlay that replaces what used to be the same transport message
+			// repeated once per plugin.
+			offline: false,
+			// Seconds until the next reconnection attempt, counted down for the
+			// viewer so the page is visibly waiting rather than just stuck.
+			reconnectIn: 0,
+			reconnectTimer: null,
 			// TOGGLE VIEW keys (`1`, `j`, `4`, `/`). Each entry is absent while
 			// the viewer has not pressed its key, and the SERVER's value
 			// (`serverArgs`) is what applies; pressing the key writes a boolean
@@ -531,6 +560,7 @@ export default {
 		// API, and the `window.__glances*` hooks below hold a closure over a
 		// dead instance, keeping its whole payload graph alive.
 		if (this.timer) clearInterval(this.timer);
+		if (this.reconnectTimer) clearInterval(this.reconnectTimer);
 		for (const observer of this.observers) observer.disconnect();
 		if (this.refitFrame !== null && typeof cancelAnimationFrame === "function") {
 			cancelAnimationFrame(this.refitFrame);
@@ -554,6 +584,55 @@ export default {
 		}
 	},
 	methods: {
+		/**
+		 * Enter the disconnected state and start counting down to the next
+		 * attempt. Idempotent: a failed RETRY must restart the countdown, not
+		 * stack a second one.
+		 */
+		goOffline() {
+			this.offline = true;
+			// The normal cadence stops: the countdown owns retrying from here,
+			// so the two cannot both be firing requests at a dead server.
+			if (this.timer) {
+				clearInterval(this.timer);
+				this.timer = null;
+			}
+			if (this.reconnectTimer) clearInterval(this.reconnectTimer);
+			this.reconnectIn = RECONNECT_SECONDS;
+			this.reconnectTimer = setInterval(() => {
+				this.reconnectIn -= 1;
+				if (this.reconnectIn <= 0) this.reconnectNow();
+			}, 1000);
+		},
+		/** Leave the disconnected state, if we were in it, and resume polling. */
+		goOnline() {
+			if (!this.offline) return;
+			this.offline = false;
+			this.reconnectIn = 0;
+			if (this.reconnectTimer) {
+				clearInterval(this.reconnectTimer);
+				this.reconnectTimer = null;
+			}
+			// `startTimer` replaces whatever interval is running, so this is
+			// safe even if one somehow survived.
+			this.startTimer();
+		},
+		/**
+		 * Try now, rather than waiting out the countdown. Bound to the
+		 * overlay's button and to the countdown reaching zero.
+		 *
+		 * The countdown is stopped first: `tick()` either succeeds (goOnline
+		 * clears everything) or fails (goOffline starts a fresh countdown), so
+		 * leaving it running would race the attempt it just triggered.
+		 */
+		reconnectNow() {
+			if (this.reconnectTimer) {
+				clearInterval(this.reconnectTimer);
+				this.reconnectTimer = null;
+			}
+			this.reconnectIn = 0;
+			this.tick();
+		},
 		/**
 		 * Act on one SHOW/HIDE key. Returns true when the key was handled, so
 		 * the DOM listener knows whether to swallow it.
@@ -650,7 +729,18 @@ export default {
 				// coupling the brief forbade, just in the direction nobody thought
 				// to look.
 				const ownEndpointPlugins = this.plugins.filter((plugin) => plugin.ownEndpoint);
-				const { results, errors } = await fetchAll(this.plugins.filter((plugin) => !plugin.ownEndpoint));
+				const { results, errors, offline } = await fetchAll(this.plugins.filter((plugin) => !plugin.ownEndpoint));
+				if (offline) {
+					// The server is gone. Return BEFORE touching `results` /
+					// `errors`: the last good frame stays on screen under the
+					// overlay, which reads better than blanking the page and means
+					// reconnecting restores the view rather than rebuilding it.
+					// Skipping the alert fetch below matters for the same reason --
+					// it would only fail too and stamp an error on that one block.
+					this.goOffline();
+					return;
+				}
+				this.goOnline();
 				// fetchAll() only ever returns entries for what it was asked for, so
 				// the reassignment below would otherwise blank every ownEndpoint
 				// slot for the length of the refit() await (the same "flashes back
@@ -1067,6 +1157,47 @@ export default {
 .gl-about-action:focus-visible {
 	color: var(--gl-fg);
 }
+/* The disconnected overlay. Same shape as the help overlay below -- a centred
+ * panel over an opaque scrim -- because it is the same kind of thing: a
+ * message that owns the screen until it no longer applies. It is NOT
+ * dismissible by clicking, unlike help: the condition decides when it goes,
+ * not the viewer.
+ *
+ * The last good frame stays mounted underneath rather than being torn down,
+ * so the degradation cascade keeps its measurements and reconnecting restores
+ * the view instead of rebuilding it. */
+.gl-offline {
+	position: fixed;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: var(--gl-bg);
+	opacity: 0.98;
+	/* Above the help overlay: if both are somehow up, losing the server is
+	 * the more urgent news. */
+	z-index: 20;
+	padding: var(--gl-gap);
+}
+.gl-offline-panel {
+	border: 1px solid var(--gl-border);
+	background: var(--gl-surface);
+	padding: calc(2 * var(--gl-gap));
+	text-align: center;
+	display: flex;
+	flex-direction: column;
+	gap: var(--gl-gap);
+	min-width: 0;
+}
+.gl-offline-title {
+	margin: 0;
+	font-weight: var(--gl-weight-bold);
+	color: var(--gl-level-critical);
+}
+.gl-offline-panel p {
+	margin: 0;
+}
+
 /* The `h` overlay. A centred panel over a scrim, not a sidebar: it is read
  * once and dismissed, and it must not reflow the page underneath -- the
  * degradation cascade measures that layout and a transient width change would

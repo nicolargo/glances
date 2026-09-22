@@ -294,6 +294,7 @@ const {
 	SERVER_PLUGINS,
 	PLUGINSLIST_FIXTURES,
 	ALL_UNREACHABLE_SCENARIOS,
+	SERVER_DOWN_SCENARIOS,
 	ARGS_FIXTURES,
 	CONFIG_FIXTURES,
 	ALL_FIXTURES,
@@ -323,6 +324,13 @@ let alertIncidentsSequenceIndex = 0;
 
 async function fakeFetch(url) {
 	const path = String(url);
+	// A stopped server answers NOTHING, so this rejects before any per-path
+	// branch below -- `fetch` rejecting is the browser's only signal that
+	// there is no server, as opposed to one returning an error (the
+	// `all-unreachable` scenario, which answers 500 on /api/5/all alone).
+	if (SERVER_DOWN_SCENARIOS.has(scenario)) {
+		throw new TypeError("NetworkError when attempting to fetch resource.");
+	}
 	// BEFORE the `api/5/alert` check below: "api/5/alert/incidents" contains
 	// "api/5/alert", and would otherwise be answered with the raw history
 	// fixture -- the same trap "api/5/all/info" documents against "api/5/all".
@@ -506,6 +514,9 @@ function collect() {
 		// The effective view flags after any TOGGLE VIEW key: what the server
 		// reported with the viewer's own overrides on top.
 		effectiveArgs: sandbox.__glancesEffectiveArgs || null,
+		// The disconnected overlay: whether it is up, and the text it shows.
+		// [] / null when the server is answering.
+		offlineText: null,
 		// The `h` overlay's rows as the viewer reads them: "<key> <description>"
 		// per `<li>`. [] when the overlay is closed, which is itself an
 		// assertion a test makes.
@@ -646,6 +657,10 @@ function collect() {
 			// The help overlay, when `h` opened it. Read by class rather than by
 			// position: it is the last child of <main>, and asserting that would
 			// break the moment anything else is appended there.
+			const offline = findDescendantByClass(first, "gl-offline");
+			if (offline) {
+				result.offlineText = offline.textContent.replace(/\s+/g, " ").trim();
+			}
 			const about = findDescendantByClass(first, "gl-about");
 			if (about) {
 				result.footerAbout = (about.childNodes || [])

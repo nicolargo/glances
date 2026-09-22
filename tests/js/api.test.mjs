@@ -269,3 +269,42 @@ test("resolveVersion returns null rather than failing the page", async () => {
 	stubFetch({ status: { body: { status: "ok", version: "5" } } });
 	assert.equal(await resolveVersion(), null);
 });
+
+test("a rejected fetch is an OfflineError, a 5xx is not", async () => {
+	// The only signal that separates "no server" from "a live server
+	// answering badly". `fetch` rejects ONLY on a transport failure.
+	globalThis.fetch = async () => {
+		throw new TypeError("NetworkError when attempting to fetch resource.");
+	};
+	await assert.rejects(() => getJson("api/5/all"), (e) => e.offline === true && e.name === "OfflineError");
+
+	globalThis.fetch = async () => ({ ok: false, status: 503, json: async () => ({}) });
+	await assert.rejects(() => getJson("api/5/all"), (e) => !e.offline && /HTTP 503/.test(e.message));
+});
+
+test("an unreachable server reports offline once instead of erroring every plugin", async () => {
+	// The wall of identical transport messages -- one per plugin -- is what
+	// this replaces. There is nothing per-plugin to say when there is no
+	// server, so fetchAll says it once and the caller shows one overlay.
+	globalThis.fetch = async () => {
+		throw new TypeError("Failed to fetch");
+	};
+	const specs = [
+		{ name: "mem", spec: { shape: "scalar", required: ["percent"] } },
+		{ name: "network", spec: { shape: "collection", required: [] } },
+	];
+	const { results, errors, offline } = await fetchAll(specs);
+	assert.equal(offline, true);
+	assert.deepEqual(errors, {}, "no per-plugin error: they would all be the same one");
+	assert.deepEqual(results, {});
+});
+
+test("a 5xx on /all still errors every plugin, and is not offline", async () => {
+	// Unchanged, deliberately: the server ANSWERED. One endpoint is unhappy,
+	// which is a different thing from the server being gone, and the
+	// per-plugin error says so without hiding the rest of the page.
+	globalThis.fetch = async () => ({ ok: false, status: 503, json: async () => ({}) });
+	const { errors, offline } = await fetchAll([{ name: "mem", spec: { shape: "scalar", required: [] } }]);
+	assert.ok(!offline);
+	assert.match(errors.mem, /HTTP 503/);
+});

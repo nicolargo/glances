@@ -4314,3 +4314,56 @@ def test_key_0_shows_the_load_averages_as_percentages():
 
     assert "%" not in before, before
     assert "%" in after, after
+
+
+# ------------------------------------------------- server gone (2026-09-22)
+#
+# A STOPPED server, not a failing endpoint: `fetch` rejects rather than
+# answering. Before this, fetchAll() fanned the transport message out to every
+# plugin and the page showed the browser's "NetworkError when attempting to
+# fetch resource" thirty-odd times over.
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_a_stopped_server_shows_one_overlay_not_an_error_per_plugin():
+    payload = _run_render_probe("server-down")
+
+    assert payload["offlineText"], "the overlay must be up"
+    assert "Connection to the Glances server lost" in payload["offlineText"]
+    # The countdown the viewer watches, and a way not to wait it out.
+    assert "Reconnecting in 5s" in payload["offlineText"]
+    assert "Retry now" in payload["offlineText"]
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_a_stopped_server_leaves_no_transport_error_on_any_block():
+    """The wall of identical messages is the actual complaint. Every block
+    must be free of one — including `alert`, whose own endpoint is just as
+    dead and which must not be stamped with an error either."""
+    payload = _run_render_probe("server-down")
+
+    for name, text in payload["pluginText"].items():
+        assert "attempting to fetch" not in text, f"{name}: {text!r}"
+        assert "unreachable" not in text, f"{name}: {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_a_stopped_server_keeps_the_page_mounted_underneath():
+    """The last good frame stays rather than being torn down: the degradation
+    cascade keeps its measurements, and reconnecting restores the view instead
+    of rebuilding it."""
+    payload = _run_render_probe("server-down")
+    assert payload["pluginNames"], "the blocks must still be mounted under the overlay"
+    assert payload["hasFooter"] is True
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_a_failing_endpoint_is_not_a_lost_connection():
+    """`all-unreachable` answers HTTP 500 on /api/5/all: the server is ALIVE
+    and one endpoint is unhappy. That keeps the per-plugin error path — an
+    overlay claiming the connection was lost would be a lie, and would hide
+    the rest of a working page."""
+    payload = _run_render_probe("all-unreachable")
+
+    assert payload["offlineText"] is None, "no overlay for a server that answered"
+    assert "HTTP 500" in payload["pluginText"].get("system", "")
