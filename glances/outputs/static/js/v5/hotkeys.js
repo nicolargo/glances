@@ -61,7 +61,10 @@ export const VIEW_KEYS = {
 	"1": { desc: "Per-CPU / aggregated CPU", flag: "percpu" },
 	"4": { desc: "Full quicklook (hide the rest of the row)", flag: "full_quicklook" },
 	"/": { desc: "Short / full process name", flag: "process_short_name" },
-	j: { desc: "Threads / programs view", flag: "programs" }
+	j: { desc: "Threads / programs view", flag: "programs" },
+	b: { desc: "Network I/O in bit/s or byte/s", flag: "byte" },
+	"6": { desc: "GPU: per-card or mean", flag: "meangpu" },
+	F: { desc: "Filesystem: used or free space", flag: "fs_free_space" }
 };
 
 /** The view flag `key` flips, or null when `key` is not a TOGGLE VIEW key. */

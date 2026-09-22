@@ -505,13 +505,21 @@ class _FakeEngine:
 
 
 def _make_tui(tui_mod, fake_store, fake_alerts, fake_config, **kw):
+    """Build a TuiV5 with test defaults.
+
+    Every keyword other than the two defaulted below is forwarded to the
+    constructor. It used to read only those two out of `**kw` and drop the
+    rest silently, so a test passing e.g. `byte=True` got a TUI that ignored
+    it — and would have passed vacuously against a weak assertion.
+    """
     return tui_mod.TuiV5(
         store=fake_store,
         alerts=fake_alerts,
         config=fake_config,
-        registry=kw.get("registry", [("mem", False)]),
-        fields_by_plugin=kw.get("fields_by_plugin", {"mem": {}}),
+        registry=kw.pop("registry", [("mem", False)]),
+        fields_by_plugin=kw.pop("fields_by_plugin", {"mem": {}}),
         refresh_interval=0.01,
+        **kw,
     )
 
 
@@ -640,7 +648,7 @@ def test_build_view_seeds_meangpu_and_fahrenheit(fake_store, fake_alerts, fake_c
         meangpu=True,
         fahrenheit=True,
     )
-    assert tui._meangpu is True
+    assert tui._view.meangpu is True
     assert tui._fahrenheit is True
     view = tui._build_view(max_x=200)
     assert view["meangpu"] is True
@@ -651,7 +659,7 @@ def test_build_view_meangpu_fahrenheit_default_false(fake_store, fake_alerts, fa
     from glances.outputs import glances_curses_v5 as tui_mod
 
     tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
-    assert tui._meangpu is False
+    assert tui._view.meangpu is False
     assert tui._fahrenheit is False
     view = tui._build_view(max_x=200)
     assert view["meangpu"] is False
@@ -672,7 +680,7 @@ def test_build_view_carries_byte_flag(fake_store, fake_alerts, fake_config):
         refresh_interval=0.01,
         byte=True,
     )
-    assert tui._byte is True
+    assert tui._view.byte is True
     view = tui._build_view(max_x=200)
     assert view["byte"] is True
 
@@ -681,7 +689,7 @@ def test_build_view_byte_defaults_false(fake_store, fake_alerts, fake_config):
     from glances.outputs import glances_curses_v5 as tui_mod
 
     tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
-    assert tui._byte is False
+    assert tui._view.byte is False
     view = tui._build_view(max_x=200)
     assert view["byte"] is False
 
@@ -3252,3 +3260,82 @@ def test_hiding_left_plugins_one_by_one_also_frees_the_width(make_tui_with_body)
     frame = tui._build_fitted_frame(max_x=max_x, max_y=40)
     assert frame.left == []
     assert tui._body_columns(frame, max_x) == (0, 0, max_x)
+
+
+# ------------------------------------------------ data-type toggles (2.X-c)
+
+
+@pytest.mark.parametrize(("key", "attr"), [("b", "byte"), ("6", "meangpu")])
+def test_a_data_type_key_flips_its_view_flag(key, attr, fake_store, fake_alerts, fake_config):
+    """`b` and `6` are plain ViewState booleans: the renderers already read
+    both modes (`--byte`, `--meangpu`), so the key is the whole feature."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    assert getattr(tui._view, attr) is False
+    assert tui._handle_key(ord(key)) == "changed"
+    assert getattr(tui._view, attr) is True
+    assert tui._build_view(120)[attr] is True
+    tui._handle_key(ord(key))
+    assert getattr(tui._view, attr) is False
+
+
+def test_a_data_type_key_starts_from_the_cli_flag(fake_store, fake_alerts, fake_config):
+    """A server started with `--byte` must see `b` turn it OFF, not on."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config, byte=True)
+    assert tui._view.byte is True
+    tui._handle_key(ord("b"))
+    assert tui._view.byte is False
+    assert tui._build_view(120)["byte"] is False
+
+
+def test_fs_free_space_follows_the_payload_until_the_key_is_pressed(fake_store, fake_alerts, fake_config):
+    """`[fs] free_space` is plugin CONFIG: it reaches the renderer as payload
+    metadata, and the TUI has no constructor argument to seed from. So the
+    ViewState field is tri-state — `None` means "whatever the payload says",
+    and `_build_view` publishes nothing at all until `F` is pressed."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    fake_store.as_dict.return_value = {"fs": {"free_space": False, "data": []}}
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+
+    assert tui._view.fs_free_space is None
+    assert "fs_free_space" not in tui._build_view(120), "an unpressed key must not override the config"
+
+    assert tui._handle_key(ord("F")) == "changed"
+    assert tui._build_view(120)["fs_free_space"] is True
+
+
+def test_fs_free_space_key_flips_a_config_that_already_says_free(fake_store, fake_alerts, fake_config):
+    """The first press resolves the tri-state against the payload, so on a
+    server with `[fs] free_space=true` it turns the mode OFF. Starting from a
+    hardcoded `False` would make that first press do nothing."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    fake_store.as_dict.return_value = {"fs": {"free_space": True, "data": []}}
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+
+    tui._handle_key(ord("F"))
+    assert tui._build_view(120)["fs_free_space"] is False
+
+
+def test_the_fs_renderer_prefers_the_view_override_over_the_payload():
+    from glances.plugins.fs.render_curses_v5 import render
+
+    payload = {
+        "data": [{"mnt_point": "/", "size": 100_000_000_000, "used": 60_000_000_000, "free": 40_000_000_000}],
+        "free_space": False,
+        "_levels": {},
+    }
+    fields = {"used": {"unit": "bytes"}, "free": {"unit": "bytes"}, "size": {"unit": "bytes"}}
+
+    # The header labels come from `fields_desc`; this minimal dict carries no
+    # `short_name`, so `field_label` falls back to the field key itself --
+    # which is exactly the value under test (`used` vs `free`).
+    used_header = " ".join(c.text for c in render(payload, fields)[0].cells)
+    free_header = " ".join(c.text for c in render(payload, fields, view={"fs_free_space": True})[0].cells)
+
+    assert "used" in used_header and "free" not in used_header, used_header
+    assert "free" in free_header and "used" not in free_header, free_header

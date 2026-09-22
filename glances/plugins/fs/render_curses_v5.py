@@ -27,7 +27,9 @@ Reference layout:
 ``[fs] free_space`` / ``--fs-free-space`` (design §5.4) switch the second
 column from used to free space. The flag rides along as the plugin's
 ``free_space`` payload metadata (``fs/model_v5.py::_add_metadata``) — the
-renderer has no other way to reach the config.
+renderer has no other way to reach the config. The ``F`` hotkey (2.X-c)
+overrides it through ``view["fs_free_space"]``, which is published only once
+the key has been pressed.
 """
 
 from __future__ import annotations
@@ -70,9 +72,17 @@ def _total_cell(value: Any) -> Cell:
     return Cell(text=text)
 
 
-def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> list[Row]:
+def render(
+    payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]], view: dict[str, Any] | None = None
+) -> list[Row]:
     """Render the fs plugin's TUI block — mirrors v4 ``fs.msg_curse``."""
+    # `[fs] free_space` / `--fs-free-space` reach here as payload metadata.
+    # The `F` hotkey overrides them for this session: it publishes
+    # `view["fs_free_space"]` only once pressed, so an absent key means "keep
+    # following the config" rather than "used".
     free_space = bool(payload.get("free_space")) if isinstance(payload, dict) else False
+    if view is not None and "fs_free_space" in view:
+        free_space = bool(view["fs_free_space"])
     value_field = "free" if free_space else "used"
     # The block title stays a literal; the column labels come from the schema
     # (single source of truth, shared with the WebUI), as network's do.

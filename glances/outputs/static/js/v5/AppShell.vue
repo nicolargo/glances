@@ -371,7 +371,19 @@ export default {
 		// `process_short_name` has no server default (no CLI option sets it),
 		// so it is seeded true, matching `ViewState.process_short_name`.
 		effectiveArgs() {
-			return { process_short_name: true, ...this.serverArgs, ...this.viewOverrides };
+			return {
+				process_short_name: true,
+				...this.serverArgs,
+				// `fs_free_space` is seeded AFTER the spread, from the payload,
+				// because the payload is the authority and `serverArgs` is not:
+				// the fs plugin resolves BOTH `[fs] free_space` and
+				// `--fs-free-space` into its own metadata, while /api/5/args
+				// dumps the raw CLI namespace and so reads `false` for a
+				// config-set `true`. Letting `serverArgs` win here would make
+				// `F` start from the wrong side on such a server.
+				fs_free_space: !!this.results.fs?.free_space,
+				...this.viewOverrides,
+			};
 		},
 		refreshLabel() {
 			return this.refresh === null ? "…" : `${this.refresh}s`;

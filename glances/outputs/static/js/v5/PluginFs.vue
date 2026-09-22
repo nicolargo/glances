@@ -47,7 +47,9 @@ export default {
 		TITLE: () => TITLE,
 		// fs/render_curses_v5.py:75-76.
 		valueField() {
-			return this.payload?.free_space ? "free" : "used";
+			// `serverArgs` here is AppShell's `effectiveArgs`, which seeds this
+			// from the same payload metadata and lets the `F` key override it.
+			return this.serverArgs.fs_free_space ? "free" : "used";
 		},
 		// fs/render_curses_v5.py:101-106: sorted by raw mount point, a row with
 		// no mount point skipped.

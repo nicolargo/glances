@@ -138,6 +138,17 @@ class ViewState:
     programs: bool = False
     show_help: bool = False
     hidden_plugins: set[str] = field(default_factory=set)
+    # TOGGLE DATA TYPE (2.X-c). Seeded from the CLI at construction, then
+    # flipped by their keys.
+    byte: bool = False
+    meangpu: bool = False
+    # Tri-state, unlike the two above: `[fs] free_space` lives in the fs
+    # plugin's CONFIG and reaches the renderer as payload metadata, not as a
+    # constructor argument the TUI could seed from. `None` therefore means
+    # "whatever the payload says"; pressing `F` writes a boolean that wins.
+    # Same shape as the browser's `viewOverrides` over `serverArgs`, and for
+    # the same reason: a copy taken once would go stale against its source.
+    fs_free_space: bool | None = None
 
 
 def _safe_curses_wrapper(fn):
@@ -220,6 +231,14 @@ class TuiV5(threading.Thread):
         "2": {"hide": LEFT_SLOT, "group": "SHOW/HIDE", "desc": "Show/hide left sidebar"},
         "3": {"hide": ("quicklook",), "group": "SHOW/HIDE", "desc": "Show/hide quicklook"},
         "5": {"hide": TOP_SLOT, "group": "SHOW/HIDE", "desc": "Show/hide top menu"},
+        # Data-type toggles: these change HOW a value is shown, not whether
+        # its block is. Each flips one ViewState field that a renderer reads
+        # through the per-cycle `view` dict.
+        "b": {"switch": "byte", "group": "TOGGLE VIEW", "desc": "Network I/O in bit/s or byte/s"},
+        "6": {"switch": "meangpu", "group": "TOGGLE VIEW", "desc": "GPU: per-card or mean"},
+        # Tri-state, so it cannot be a plain `switch`: `None` means "follow
+        # `[fs] free_space`", which is why it has its own verb.
+        "F": {"action": "fs_free_space", "group": "TOGGLE VIEW", "desc": "Filesystem: used or free space"},
         # Misc / control.
         "h": {"action": "help", "group": "MISCELLANEOUS", "desc": "Show / hide this help screen"},
         "q": {"action": "quit", "group": "MISCELLANEOUS", "desc": "Quit Glances (or Esc)"},
@@ -297,14 +316,15 @@ class TuiV5(threading.Thread):
         self._full_quicklook = bool(full_quicklook)
         self._percpu = bool(percpu)
         # GPU view options seeded from the CLI flags --meangpu / --fahrenheit.
-        # ``_meangpu`` forces the gpu renderer into a single mean summary;
-        # ``_fahrenheit`` switches temperatures to °F. Consumed via _build_view.
-        self._meangpu = bool(meangpu)
+        # ``_view.meangpu`` forces the gpu renderer into a single mean summary
+        # and is flipped live by the ``6`` hotkey, which is why it lives in
+        # ViewState rather than beside ``_fahrenheit``; the latter has no key.
+        self._view.meangpu = bool(meangpu)
         self._fahrenheit = bool(fahrenheit)
         self._hide_public_info = bool(hide_public_info)
-        # Network I/O unit for the containers renderer, seeded from --byte.
-        # False (default) = bits, matching the v4 default.
-        self._byte = bool(byte)
+        # Network I/O unit, seeded from --byte and flipped live by the ``b``
+        # hotkey. False (default) = bits, matching the v4 default.
+        self._view.byte = bool(byte)
         # v4 parity for `--disable-unicode`: when set, renderers must emit
         # pure ASCII. v5 emitted no non-ASCII character at all until the
         # alert block's state glyphs (design §6.5), so this is the first
@@ -375,6 +395,19 @@ class TuiV5(threading.Thread):
                 self._view.show_help = True
                 self._help_scroll = 0
                 return "repaint"
+            if verb == "fs_free_space":
+                # First press resolves the tri-state against what the fs
+                # payload is currently showing, so it always visibly flips --
+                # the same rule the browser's TOGGLE VIEW overrides follow.
+                # Read from the store rather than cached at render time: the
+                # payload IS the source of truth, and a cache would go stale
+                # against a config reload.
+                current = self._view.fs_free_space
+                if current is None:
+                    fs = self.store.as_dict().get("fs")
+                    current = bool(fs.get("free_space")) if isinstance(fs, dict) else False
+                self._view.fs_free_space = not current
+                return "changed"
             if verb == "full_quicklook":
                 # Toggle full-width quicklook: EVERY other TOP block goes,
                 # so the row holds quicklook alone
@@ -902,10 +935,14 @@ class TuiV5(threading.Thread):
         view = self._render_view()
         view["full_quicklook"] = self._full_quicklook
         view["percpu"] = self._percpu
-        view["meangpu"] = self._meangpu
+        view["meangpu"] = self._view.meangpu
         view["fahrenheit"] = self._fahrenheit
         view["hide_public_info"] = self._hide_public_info
-        view["byte"] = self._byte
+        view["byte"] = self._view.byte
+        # Only published when the viewer has pressed `F`; absent means the fs
+        # renderer keeps reading its payload metadata.
+        if self._view.fs_free_space is not None:
+            view["fs_free_space"] = self._view.fs_free_space
         view["unicode"] = self._unicode
         # The user's own SHOW/HIDE set. A frozenset, so the per-cycle view
         # cannot be a back door onto the live ViewState (the fit loops copy

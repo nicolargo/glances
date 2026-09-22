@@ -4108,8 +4108,8 @@ def test_the_help_overlay_renders_every_bound_key():
         for key, spec in TuiV5._HOTKEYS.items()
         if "hide" in spec or spec.get("group") == "TOGGLE VIEW"
     }
-    # One row per bound key (24 SHOW/HIDE + 4 TOGGLE VIEW), plus `h` itself.
-    assert len(rendered) == len(bound) + 1 == 29
+    # One row per bound key (24 SHOW/HIDE + 7 TOGGLE VIEW), plus `h` itself.
+    assert len(rendered) == len(bound) + 1 == 32
 
     joined = " ".join(rendered)
     for key, desc in bound.items():
@@ -4240,3 +4240,29 @@ def test_the_footer_link_toggles_rather_than_only_opening():
     # And the two entry points are interchangeable, in either order.
     assert _run_render_probe("default", "click:hotkeys,h")["showHelp"] is False
     assert _run_render_probe("default", "h,click:hotkeys")["showHelp"] is False
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+@pytest.mark.parametrize(("key", "flag"), [("b", "byte"), ("6", "meangpu"), ("F", "fs_free_space")])
+def test_a_data_type_key_flips_its_flag(key, flag):
+    """2.X-c: `b`, `6` and `F` change HOW a value is shown. They ride the same
+    override mechanism as the other TOGGLE VIEW keys."""
+    before = _run_render_probe("default")
+    assert before["effectiveArgs"] is None, "vacuous: no key pressed yet"
+
+    after = _run_render_probe("default", key)["effectiveArgs"]
+    assert flag in after, f"{key!r} published no {flag!r}: {sorted(after)!r}"
+    assert _run_render_probe("default", f"{key},{key}")["effectiveArgs"][flag] == (not after[flag])
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_fs_free_space_key_starts_from_the_payload_not_from_serverargs():
+    """`--fs-free-space` AND `[fs] free_space` both resolve into the fs
+    plugin's own payload metadata, while /api/5/args dumps only the raw CLI
+    namespace. Seeding `F` from `serverArgs` would therefore read `false` on a
+    server whose CONFIG set it, and the first press would do nothing visible.
+    """
+    seeded = _run_render_probe("default", "F")["effectiveArgs"]["fs_free_space"]
+    # The `default` fixture's fs payload carries no `free_space`, so the
+    # effective value starts false and one press turns it on.
+    assert seeded is True
