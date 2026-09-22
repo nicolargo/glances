@@ -513,6 +513,36 @@ def test_a_quicklook_bar_track_keeps_a_width_without_the_cpu_header():
     assert "'gl-quicklook-no-header': !header" in template, "the block flags the missing header"
 
 
+def test_full_quicklook_lets_the_block_grow_into_the_row():
+    """`4` leaves quicklook alone on the top row; it must then TAKE that row.
+
+    `.gl-slot-top` is `justify-content: space-between`, which does nothing for
+    a single child, so the block kept its content width and the freed space
+    was blank. Measured in a real browser: 373 px of a 1584 px row.
+
+    Two properties, both of which were wrong in the first attempt:
+
+    1. `flex-grow` only. `.gl-plugin` sets `flex: 0 0 auto`, and that
+       `flex-shrink: 0` is what makes a zone overflow rather than squeeze --
+       the signal the degradation cascade runs on. The shorthand would have
+       reset it.
+    2. Qualified with `.gl-plugin`. Both classes are on the same element, so
+       at equal specificity source order decides, and `.gl-plugin` comes LATER
+       in the file. A bare `.gl-quicklook-full` rule is silently dead.
+    """
+    css = _strip_comments(_TOKENS.read_text())
+    body = _rule_body(css, ".gl-plugin.gl-quicklook-full")
+    assert body, "the rule must be qualified with .gl-plugin or it loses to it on source order"
+    assert re.search(r"\bflex-grow:\s*1\s*;", body), "the block must grow into the free width"
+    assert not re.search(r"\bflex\s*:", body), (
+        "use flex-grow alone: the `flex` shorthand resets flex-shrink, which .gl-plugin needs at 0"
+    )
+    # The rule is dead without the class, and the class without the rule.
+    template = (_V5_JS / "PluginQuicklook.vue").read_text()
+    assert "'gl-quicklook-full': fullQuicklook" in template, "the block flags full-quicklook mode"
+    assert "this.serverArgs.full_quicklook" in template, "the flag comes from the effective view args"
+
+
 def test_the_cascade_measures_header_text_at_its_natural_width():
     """Maintainer spec D4 order is hide, then crop, then scroll. `.gl-truncate`
     and `.gl-inline` shrink into their ellipsis, so the zone never overflowed

@@ -2,7 +2,7 @@
 	<article
 		v-show="!isHidden"
 		class="gl-plugin"
-		:class="{ 'gl-quicklook-no-header': !header }"
+		:class="{ 'gl-quicklook-no-header': !header, 'gl-quicklook-full': fullQuicklook }"
 		:aria-label="TITLE"
 	>
 		<!-- aria-label: once loaded the CPU name/frequency line is a plain row,
@@ -84,11 +84,22 @@ function clampPct(value) {
 
 export default {
 	name: "PluginQuicklook",
-	// Reads `serverArgs.percpu` (per-core replacement of the `cpu` bar) and
+	// Reads `serverArgs.percpu` (per-core replacement of the `cpu` bar),
+	// `serverArgs.full_quicklook` (the block takes the whole row) and
 	// `degrade.quicklook_freq_only` (TOP_CASCADE step d).
 	props: { ...PLUGIN_PROPS },
 	computed: {
 		TITLE: () => TITLE,
+		// `--full-quicklook` / the `4` key. The TUI sizes the bars to the whole
+		// terminal width in this mode (`_fit_full_quicklook`); the browser's
+		// equivalent is letting the block grow into the row it now has to
+		// itself, which the `.gl-quicklook-full` rule does. Without it the
+		// article keeps its content width and the freed space is simply blank --
+		// `.gl-slot-top` is `justify-content: space-between`, which does nothing
+		// for a single child.
+		fullQuicklook() {
+			return !!this.serverArgs.full_quicklook;
+		},
 		freqOnly() {
 			return !!this.degrade.quicklook_freq_only;
 		},

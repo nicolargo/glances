@@ -238,6 +238,30 @@ body {
   min-width: 38ch;
 }
 
+/* Full-quicklook (`--full-quicklook`, the `4` key): the block is alone on the
+ * top row and takes all of it, the way the TUI sizes its bars to the whole
+ * terminal width (`_fit_full_quicklook`). `.gl-slot-top` is a flex row, so
+ * growth is the flex item's to ask for -- `justify-content: space-between`
+ * does nothing for a single child, which is why the freed width was simply
+ * left blank.
+ *
+ * TWO deliberate details:
+ *
+ * `flex-grow` ALONE, not the `flex` shorthand. `.gl-plugin` sets
+ * `flex: 0 0 auto` further down, and that `flex-shrink: 0` is load-bearing:
+ * it is what makes a zone overflow rather than squeeze, which is the signal
+ * the degradation cascade (js/v5/degrade.js) runs on. Growing into free space
+ * and refusing to shrink below the content are independent, and only the
+ * first is wanted here.
+ *
+ * Qualified with `.gl-plugin`, not left as a bare class. Both classes sit on
+ * the same element, so at equal specificity source order decides -- and
+ * `.gl-plugin` comes later in this file. The first version of this rule was
+ * silently dead for exactly that reason. */
+.gl-plugin.gl-quicklook-full {
+  flex-grow: 1;
+}
+
 /* `currentColor` is load-bearing: the tier class (.gl-level-*) sets `color`,
  * so the fill takes the payload's tier with no second token and no colour
  * literal. A fill with no tier class inherits the body colour, which is what
