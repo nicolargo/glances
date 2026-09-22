@@ -503,6 +503,9 @@ function collect() {
 		// `h` overlay is open. Both undefined when no key was pressed.
 		userHidden: sandbox.__glancesUserHidden || [],
 		showHelp: sandbox.__glancesShowHelp || false,
+		// The effective view flags after any TOGGLE VIEW key: what the server
+		// reported with the viewer's own overrides on top.
+		effectiveArgs: sandbox.__glancesEffectiveArgs || null,
 		// The `h` overlay's rows as the viewer reads them: "<key> <description>"
 		// per `<li>`. [] when the overlay is closed, which is itself an
 		// assertion a test makes.

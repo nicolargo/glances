@@ -95,7 +95,13 @@ export function processBlockMixin({ budgetKey, columnWidth }) {
 		},
 		methods: {
 			cellClassFor,
-			commandText,
+			// Wrapped rather than exposed raw: the `/` key (TOGGLE VIEW) decides
+			// short vs full path, and reading it here keeps both templates'
+			// `commandText(item)` calls unchanged. Default true -- the TUI's
+			// `ViewState.process_short_name`.
+			commandText(item) {
+				return commandText(item, this.serverArgs?.process_short_name !== false);
+			},
 			formatCpuTime,
 			formatPercent,
 			formatProcessBytes,

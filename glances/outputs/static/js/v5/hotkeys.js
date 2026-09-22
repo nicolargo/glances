@@ -49,6 +49,27 @@ export const HIDE_SLOT_KEYS = {
 	5: { desc: "Show/hide top menu", slot: "top" }
 };
 
+// The TOGGLE VIEW keys. Unlike SHOW/HIDE, these do not remove a block -- they
+// flip HOW something is shown, and each one has a server-side default the
+// viewer is overriding (`serverArgs`, from /api/5/args). `flag` is the key
+// that default lives under.
+//
+// `process_short_name` is the exception: the TUI defaults it to true
+// (`ViewState`) and no CLI option sets it, so the browser defaults it to true
+// as well and the server never has an opinion.
+export const VIEW_KEYS = {
+	"1": { desc: "Per-CPU / aggregated CPU", flag: "percpu" },
+	"4": { desc: "Full quicklook (hide the rest of the row)", flag: "full_quicklook" },
+	"/": { desc: "Short / full process name", flag: "process_short_name" },
+	j: { desc: "Threads / programs view", flag: "programs" }
+};
+
+/** The view flag `key` flips, or null when `key` is not a TOGGLE VIEW key. */
+export function viewFlag(key) {
+	const entry = VIEW_KEYS[key];
+	return entry ? entry.flag : null;
+}
+
 // The key that opens the overlay listing all of the above, mirroring the TUI's
 // `h`. Not a `hide` entry, so it is not part of the drift comparison.
 export const HELP_KEY = "h";
@@ -91,15 +112,18 @@ export function toggleHidden(hidden, names) {
 }
 
 /**
- * `[{ key, desc }]` for the help overlay, in the TUI's own table order.
+ * `[{ key, desc, group }]` for the help overlay, grouped the way the TUI
+ * groups its own (`_HELP_GROUPS`: TOGGLE VIEW before SHOW/HIDE).
  *
  * Built from the same two objects the dispatcher reads, so a key cannot be
  * bound and undocumented (the property the TUI gets from generating its
  * overlay out of `_HOTKEYS`).
  */
 export function helpRows() {
+	const rows = (table, group) => Object.entries(table).map(([key, entry]) => ({ key, desc: entry.desc, group }));
 	return [
-		...Object.entries(HIDE_KEYS).map(([key, entry]) => ({ key, desc: entry.desc })),
-		...Object.entries(HIDE_SLOT_KEYS).map(([key, entry]) => ({ key, desc: entry.desc }))
+		...rows(VIEW_KEYS, "TOGGLE VIEW"),
+		...rows(HIDE_KEYS, "SHOW/HIDE"),
+		...rows(HIDE_SLOT_KEYS, "SHOW/HIDE")
 	];
 }

@@ -1215,9 +1215,27 @@ curses surface — as its own owned group. No implementation in parity wave 1
   `AppShell.slots()` exactly as `build_frame` unions `user_hidden`, and `h`
   opens an overlay generated from that same table. The two slot keys (`2`,
   `5`) resolve against the live plugin registry rather than carrying a second
-  copy of the slot lists. Not bound in the browser: the TOGGLE VIEW keys (`1`,
-  `j`, `4`, `/`), which it currently derives from `serverArgs` — binding them
-  needs a decision on whether a browser keystroke may override server state.
+  copy of the slot lists.
+- **The TOGGLE VIEW keys (`1`, `j`, `4`, `/`) are bound in the browser too**
+  (2026-09-22). These do not remove a block, they flip *how* something is
+  shown, and each has a server-side default in `/api/5/args`. **A browser
+  keystroke overrides server state, per key, for that viewer only** — the
+  question this line previously left open. `AppShell.viewOverrides` holds an
+  entry only for a key that was actually pressed; every other flag keeps
+  following `serverArgs`, which is re-read on each tick. The override flips
+  the *effective* value, not a `false` default, so the first press of `4` on a
+  server started with `--full-quicklook` turns the mode off rather than doing
+  nothing.
+  The merged result is published as `effectiveArgs` and passed down under the
+  existing `server-args` prop, so `PluginPercpu`, `PluginQuicklook` and the two
+  process blocks pick the toggles up unchanged; the prop's meaning is now "the
+  effective view flags", documented at its computed. Renaming it would touch
+  all 32 components for no behavioural gain.
+  `/` was not merely unbound but unimplemented: `commandText()` hardcoded
+  `short_name=True`. It now takes the flag, with **a divergence the browser
+  cannot avoid** — the TUI shows the path prefix only when
+  `os.path.isdir(path)` holds (`render_curses_v5.py:329`), and a browser has
+  no filesystem, so it shows the prefix whenever `cmdline[0]` carried one.
 - **The 9 remaining data-type toggles** (`b`/`B` byte/bit, `%`, `S`, …), plus
   `F` (fs free space), moved here from the show/hide line above.
 - **`F5` / `Ctrl-R`** forced refresh and the sort-navigation arrow keys.

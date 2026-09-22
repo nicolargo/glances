@@ -4103,15 +4103,17 @@ def test_the_help_overlay_renders_every_bound_key():
     from glances.outputs.glances_curses_v5 import TuiV5
 
     rendered = _run_render_probe("default", "h")["helpRows"]
-    bound = [key for key, spec in TuiV5._HOTKEYS.items() if "hide" in spec]
-    # One row per SHOW/HIDE key, plus `h` documenting itself.
-    assert len(rendered) == len(bound) + 1 == 25
+    bound = {
+        key: spec["desc"]
+        for key, spec in TuiV5._HOTKEYS.items()
+        if "hide" in spec or spec.get("group") == "TOGGLE VIEW"
+    }
+    # One row per bound key (24 SHOW/HIDE + 4 TOGGLE VIEW), plus `h` itself.
+    assert len(rendered) == len(bound) + 1 == 29
 
     joined = " ".join(rendered)
-    for key, spec in TuiV5._HOTKEYS.items():
-        if "hide" not in spec:
-            continue
-        assert f"{key}{spec['desc']}" in joined, f"{key} is missing from the overlay: {rendered!r}"
+    for key, desc in bound.items():
+        assert f"{key}{desc}" in joined, f"{key} is missing from the overlay: {rendered!r}"
     assert any("help" in row for row in rendered), "`h` must document itself"
 
 
@@ -4120,3 +4122,81 @@ def test_the_help_overlay_is_absent_until_asked_for():
     """v-if, not v-show: a closed overlay must not sit in the DOM, where the
     degradation cascade would measure it."""
     assert _run_render_probe("default")["helpRows"] == []
+
+
+# ----------------------------------------------------- TOGGLE VIEW hotkeys
+#
+# `1`, `j`, `4`, `/`. Unlike SHOW/HIDE these do not remove a block: they flip
+# HOW something is shown, over a default the server supplies in /api/5/args.
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_key_1_swaps_cpu_for_percpu():
+    before = set(_run_render_probe("default")["pluginNames"])
+    assert "cpu" in before and "percpu" not in before
+
+    after = set(_run_render_probe("default", "1")["pluginNames"])
+    assert "percpu" in after and "cpu" not in after
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_key_j_swaps_processlist_for_programlist():
+    before = set(_run_render_probe("default")["pluginNames"])
+    assert "processlist" in before and "programlist" not in before
+
+    after = set(_run_render_probe("default", "j")["pluginNames"])
+    assert "programlist" in after and "processlist" not in after
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_key_4_empties_the_top_row_but_for_quicklook():
+    """The same set the TUI hides since 2026-09-22 — `_FULL_QUICKLOOK_HIDDEN`,
+    mirrored in full_quicklook.js and pinned by its own drift test."""
+    assert _run_render_probe("default", "4")["slots"]["top"] == ["quicklook"]
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_key_slash_switches_the_command_column_to_the_full_path():
+    """`/` is not a visibility toggle: it changes what the Command column
+    renders. The browser had only the short form before this key existed."""
+    short = _run_render_probe("processlist")["pluginText"]["processlist"]
+    full = _run_render_probe("processlist", "/")["pluginText"]["processlist"]
+
+    assert "python3 myscript.py" in short
+    assert "/usr/bin/python3" not in short
+    assert "/usr/bin/python3 myscript.py" in full
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+@pytest.mark.parametrize(
+    ("scenario", "key", "flag"),
+    [
+        ("cpu-percpu-on", "1", "percpu"),
+        ("quicklook-full", "4", "full_quicklook"),
+    ],
+)
+def test_a_toggle_view_key_flips_the_servers_value_not_a_false_default(scenario, key, flag):
+    """The override starts from what the server reported, so the FIRST press
+    always visibly changes something. A server started with `--percpu` or
+    `--full-quicklook` must see that key turn the mode OFF — an override
+    initialised to `false` would make the first press a no-op."""
+    assert _run_render_probe(scenario)["effectiveArgs"] is None, "vacuous: no key pressed yet"
+
+    after = _run_render_probe(scenario, key)["effectiveArgs"]
+    assert after[flag] is False, f"{key!r} did not turn {flag} off: {after!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_a_toggle_view_key_is_reversible():
+    assert _run_render_probe("default", "1")["effectiveArgs"]["percpu"] is True
+    assert _run_render_probe("default", "1,1")["effectiveArgs"]["percpu"] is False
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_an_untouched_toggle_still_follows_the_server():
+    """Only the pressed key is overridden. The others keep reading
+    `serverArgs`, which is re-read on every tick — a viewer who never pressed
+    `4` must still follow a server that has `--full-quicklook` on."""
+    args = _run_render_probe("quicklook-full", "1")["effectiveArgs"]
+    assert args["percpu"] is False, "`1` flipped the server's percpu=True"
+    assert args["full_quicklook"] is True, "`4` was never pressed; it must still follow the server"

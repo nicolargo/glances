@@ -6,7 +6,7 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
-"""Glances v5 — the WebUI's SHOW/HIDE hotkeys are the TUI's.
+"""Glances v5 — the WebUI's hotkeys are the TUI's.
 
 The `hide` entries of `TuiV5._HOTKEYS` (glances/outputs/glances_curses_v5.py)
 are a Python dict. The browser cannot import Python, so js/v5/hotkeys.js keeps
@@ -20,6 +20,11 @@ The two slot keys (`2`, `5`) are NOT literal lists in the JS: they resolve
 against the plugin registry at press time. They are compared here by resolving
 them against the registry's own slot membership, which is what the browser
 does — so this test also fails if the registry's slots drift from the TUI's.
+
+The TOGGLE VIEW group (`1`, `j`, `4`, `/`) is covered the same way, further
+down: those keys carry no plugin list, so what is compared is the key set and
+the descriptions, plus the requirement that each one names the `serverArgs`
+flag it overrides.
 """
 
 from __future__ import annotations
@@ -105,10 +110,48 @@ def test_the_copy_is_not_empty():
     assert len(py) == 24, sorted(py)
 
 
+def _python_view_table() -> dict[str, str]:
+    """The TUI's TOGGLE VIEW group: key -> description."""
+    return {key: spec["desc"] for key, spec in TuiV5._HOTKEYS.items() if spec.get("group") == "TOGGLE VIEW"}
+
+
+def _js_view_table() -> dict[str, dict[str, str]]:
+    script = f"""
+    import('{_MODULE.as_posix()}').then((m) => process.stdout.write(JSON.stringify(m.VIEW_KEYS)));
+    """
+    result = subprocess.run(
+        ["node", "--no-warnings", "--input-type=module", "-e", script],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    return json.loads(result.stdout)
+
+
+def test_the_js_copy_binds_the_same_toggle_view_keys():
+    """`1`, `j`, `4`, `/` -- the keys that change HOW something is shown rather
+    than whether it is shown."""
+    assert sorted(_js_view_table()) == sorted(_python_view_table())
+
+
+def test_every_toggle_view_key_is_described_identically_in_both_surfaces():
+    js, py = _js_view_table(), _python_view_table()
+    for key in sorted(py):
+        assert js[key]["desc"] == py[key], key
+
+
+def test_every_toggle_view_key_names_a_flag():
+    """The flag is what the browser overrides on top of `serverArgs`. An entry
+    without one would be a key that dispatches and does nothing."""
+    for key, entry in _js_view_table().items():
+        assert entry.get("flag"), key
+
+
 def test_the_help_overlay_documents_every_bound_key():
     """The TUI generates its overlay from `_HOTKEYS` itself, so a bound key
     cannot go undocumented. `helpRows()` gives the browser the same property —
-    this test is what holds it."""
+    this test is what holds it, across BOTH groups."""
     script = f"""
     import('{_MODULE.as_posix()}').then((m) => {{
         process.stdout.write(JSON.stringify(m.helpRows().map((r) => r.key)));
@@ -121,4 +164,5 @@ def test_the_help_overlay_documents_every_bound_key():
         timeout=30,
     )
     assert result.returncode == 0, result.stdout + result.stderr
-    assert sorted(json.loads(result.stdout)) == sorted(_python_hide_table())
+    documented = sorted(json.loads(result.stdout))
+    assert documented == sorted([*_python_hide_table(), *_python_view_table()])

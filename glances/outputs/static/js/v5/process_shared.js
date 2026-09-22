@@ -41,22 +41,52 @@ export function ioRate(item, read) {
 	return Math.max(delta, 0) / elapsed;
 }
 
-// A copy of `_split_cmdline` + `_command_cells` (`short_name=True`, the only
-// mode either WebUI block has -- there is no `/` hotkey to toggle the full
-// path view in the browser). No bold/plain split either: unlike the TUI, no
-// WebUI collection component decorates part of a cell's text today.
-export function commandText(item) {
+// A copy of `_split_cmdline`
+// (glances/plugins/processlist/render_curses_v5.py): returns
+// `{ path, cmd, args }`.
+//
+// `cmdline[0]` starting with psutil's bare `name` is taken as the command
+// whole, with no path split -- the TUI's rule, and what keeps an interpreter
+// invoked as `python3` from being mistaken for a path.
+export function splitCmdline(item) {
 	const cmdline = item && item.cmdline;
 	const name = String((item && item.name) || "");
 	if (!Array.isArray(cmdline) || cmdline.length === 0) {
-		return name ? `[${name}]` : "";
+		return { path: "", cmd: name, args: "" };
 	}
 	const head = String(cmdline[0]);
-	const cmd = name && head.startsWith(name) ? head : head.slice(head.lastIndexOf("/") + 1);
+	const cut = head.lastIndexOf("/");
+	const [path, cmd] = name && head.startsWith(name) ? ["", head] : [head.slice(0, Math.max(cut, 0)), head.slice(cut + 1)];
 	const args = cmdline
 		.slice(1)
 		.filter((token) => token !== null && token !== undefined)
 		.map(String)
 		.join(" ");
-	return args ? `${cmd} ${args}` : cmd;
+	return { path, cmd, args };
+}
+
+// A copy of `_command_cells` (same file), flattened to text: unlike the TUI,
+// no WebUI collection component decorates part of a cell's text today, so the
+// bold/plain split is dropped.
+//
+// `shortName` is the `/` hotkey (TUI: `ViewState.process_short_name`,
+// default true). false prefixes the executable with its directory.
+//
+// KNOWN DIVERGENCE from the terminal. The TUI shows the prefix only when
+// `os.path.isdir(path)` holds (render_curses_v5.py:329); a browser has no
+// filesystem, so it cannot make that check and shows the prefix whenever
+// `cmdline[0]` carried one. The two disagree only for a `cmdline[0]` that
+// looks like a path but is not one -- `./foo/bar` from a deleted tree, say --
+// where the browser prints the prefix and the terminal does not.
+export function commandText(item, shortName = true) {
+	const cmdline = item && item.cmdline;
+	if (!Array.isArray(cmdline) || cmdline.length === 0) {
+		// Kernel threads have no cmdline in /proc: the `[name]` convention.
+		const name = String((item && item.name) || "");
+		return name ? `[${name}]` : "";
+	}
+	const { path, cmd, args } = splitCmdline(item);
+	// No space between the path and the exe name -- "/usr/bin/python3".
+	const command = !shortName && path ? `${path}/${cmd}` : cmd;
+	return args ? `${command} ${args}` : command;
 }

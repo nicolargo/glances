@@ -17,7 +17,7 @@
 						:payload="results[plugin.name]"
 						:error="errors[plugin.name]"
 						:labels="labels[plugin.name] || {}"
-						:server-args="serverArgs"
+						:server-args="effectiveArgs"
 						:degrade="zone.name === 'header' ? degrade.header : degrade.top"
 					/>
 				</section>
@@ -85,11 +85,11 @@
 					<button type="button" class="gl-step" aria-label="Close" @click="showHelp = false">×</button>
 				</div>
 				<ul class="gl-help-list">
-					<li v-for="row in helpKeys" :key="row.key">
+					<li v-for="row in helpKeys" :key="row.key" :data-group="row.group">
 						<kbd>{{ row.key }}</kbd>
 						<span>{{ row.desc }}</span>
 					</li>
-					<li>
+					<li data-group="MISCELLANEOUS">
 						<kbd>h</kbd>
 						<span>Show / hide this help</span>
 					</li>
@@ -108,7 +108,7 @@ import { visiblePlugins, groupBySlot } from "./layout.js";
 import { PLUGINS } from "./plugins/index.js";
 import { resolveDegrade, sameFlags, TOP_CASCADE, HEADER_CASCADE } from "./degrade.js";
 import { FULL_QUICKLOOK_HIDDEN } from "./full_quicklook.js";
-import { hideTargets, toggleHidden, helpRows, HELP_KEY } from "./hotkeys.js";
+import { hideTargets, toggleHidden, helpRows, viewFlag, HELP_KEY } from "./hotkeys.js";
 import { planRightColumn } from "./row_budget.js";
 import { ampsLineCount } from "./amps.js";
 
@@ -258,6 +258,16 @@ export default {
 			userHidden: [],
 			// The `h` overlay listing the keys, mirroring the TUI's.
 			showHelp: false,
+			// TOGGLE VIEW keys (`1`, `j`, `4`, `/`). Each entry is absent while
+			// the viewer has not pressed its key, and the SERVER's value
+			// (`serverArgs`) is what applies; pressing the key writes a boolean
+			// here, which then wins.
+			//
+			// An override rather than a copy of `serverArgs` seeded at mount:
+			// `/api/5/args` is re-read on every tick, so a copy would be
+			// silently overwritten by the next poll, and a viewer who has NOT
+			// pressed the key must keep following the server if it changes.
+			viewOverrides: {},
 		};
 	},
 	computed: {
@@ -281,7 +291,7 @@ export default {
 			// `_FULL_QUICKLOOK_HIDDEN`) and deliberately spares `load` and
 			// `percpu`. Server state, not a viewport response, so it is unioned
 			// with the cascade's own hidden set rather than being a cascade step.
-			if (this.serverArgs.full_quicklook) {
+			if (this.effectiveArgs.full_quicklook) {
 				for (const name of FULL_QUICKLOOK_HIDDEN) hidden.add(name);
 			}
 			// `cpu` / `percpu` mutual exclusion : the
@@ -300,7 +310,7 @@ export default {
 			// deliberately still unbound here. This is NOT what the v4 WebUI does: its equivalent block is
 			// commented out (glances/outputs/static/js/App.vue:43-52), so v4's
 			// WebUI renders no `percpu` at all. The authority here is the v5 TUI.
-			if (this.serverArgs.percpu) {
+			if (this.effectiveArgs.percpu) {
 				hidden.add("cpu");
 			} else {
 				hidden.add("percpu");
@@ -313,7 +323,7 @@ export default {
 			// and `serverArgs.programs`, so the two agree -- unlike the TUI-only
 			// `show_percpu` hotkey above, there is no browser/TUI gap to paper
 			// over here.
-			if (this.serverArgs.programs) {
+			if (this.effectiveArgs.programs) {
 				hidden.add("processlist");
 			} else {
 				hidden.add("programlist");
@@ -336,6 +346,19 @@ export default {
 		},
 		helpKeys() {
 			return helpRows();
+		},
+		// What the server reported, with this viewer's TOGGLE VIEW keys applied
+		// on top. This -- not the raw `serverArgs` -- is what goes down to the
+		// plugins as `server-args`, so `1`, `4` and `/` reach their consumers
+		// (PluginPercpu, PluginQuicklook, the two process blocks) with no
+		// change to any of them. The prop keeps its name because renaming it
+		// would touch all 32 components for no behavioural gain; its meaning is
+		// "the effective view flags", and it is documented as such here.
+		//
+		// `process_short_name` has no server default (no CLI option sets it),
+		// so it is seeded true, matching `ViewState.process_short_name`.
+		effectiveArgs() {
+			return { process_short_name: true, ...this.serverArgs, ...this.viewOverrides };
 		},
 		refreshLabel() {
 			return this.refresh === null ? "…" : `${this.refresh}s`;
@@ -452,6 +475,7 @@ export default {
 				await this.$nextTick();
 				window.__glancesUserHidden = [...this.userHidden];
 				window.__glancesShowHelp = this.showHelp;
+				window.__glancesEffectiveArgs = { ...this.effectiveArgs };
 			};
 		}
 		this.startTimer();
@@ -478,6 +502,7 @@ export default {
 			delete window.__glancesHotkey;
 			delete window.__glancesUserHidden;
 			delete window.__glancesShowHelp;
+			delete window.__glancesEffectiveArgs;
 			delete window.__glancesDegrade;
 			delete window.__glancesRowBudget;
 		}
@@ -495,6 +520,16 @@ export default {
 		handleHotkey(key) {
 			if (key === HELP_KEY) {
 				this.showHelp = !this.showHelp;
+				return true;
+			}
+			const flag = viewFlag(key);
+			if (flag) {
+				// Flip the EFFECTIVE value, so the first press always visibly
+				// changes something: starting from the server's own value rather
+				// than from `false` is what makes `4` turn full-quicklook OFF on
+				// a server started with `--full-quicklook`.
+				this.viewOverrides = { ...this.viewOverrides, [flag]: !this.effectiveArgs[flag] };
+				this.scheduleRefit();
 				return true;
 			}
 			const names = hideTargets(key, this.plugins);
@@ -772,7 +807,7 @@ export default {
 				// present even though only one is rendered. Summing them would
 				// tell the solver there are twice as many processes as exist.
 				// The visible one is chosen by the same flag `slots()` uses.
-				const processes = this.serverArgs.programs ? count("programlist") : count("processlist");
+				const processes = this.effectiveArgs.programs ? count("programlist") : count("processlist");
 				const alert = this.results.alert || {};
 				const incidents = Array.isArray(alert.incidents) ? alert.incidents : [];
 				const next = planRightColumn({
