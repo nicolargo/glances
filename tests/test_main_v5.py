@@ -36,6 +36,7 @@ import pytest
 
 from glances.config_v5 import GlancesConfigV5
 from glances.main_v5 import (
+    _console_handlers,
     apply_plugin_flags,
     assemble,
     build_parser,
@@ -150,21 +151,8 @@ def test_setup_logging_normal_sets_info_level():
     assert logging.getLogger().level == logging.INFO
 
 
-def _console_handlers() -> list[logging.StreamHandler]:
-    """Root handlers that write to a stream rather than a file.
-
-    `FileHandler` subclasses `StreamHandler`, so the file handler has to be
-    excluded explicitly or this matches it too.
-    """
-    return [
-        h
-        for h in logging.getLogger().handlers
-        if isinstance(h, logging.StreamHandler) and not isinstance(h, logging.FileHandler)
-    ]
-
-
 @pytest.mark.parametrize("debug", [False, True])
-def test_setup_logging_never_puts_anything_below_critical_on_the_console(debug):
+def test_setup_logging_never_puts_anything_below_critical_on_the_tui_console(debug):
     """In TUI mode stderr IS the terminal curses paints: one WARNING scrolls
     the screen and desynchronises ncurses' model of it. v4 keeps the console
     at CRITICAL (`glances/logger.py`, handler `console`); v5 used to call
@@ -174,11 +162,51 @@ def test_setup_logging_never_puts_anything_below_critical_on_the_console(debug):
     `--debug` must not relax this: it makes the FILE verbose, not the TUI
     unusable.
     """
-    setup_logging(debug=debug)
+    setup_logging(debug=debug, server=False)
     consoles = _console_handlers()
     assert consoles, "a console handler must exist (v4 has one)"
     for handler in consoles:
         assert handler.level == logging.CRITICAL, f"{handler!r} would paint over the TUI"
+
+
+@pytest.mark.parametrize(
+    ("debug", "expected"),
+    [(False, logging.INFO), (True, logging.DEBUG)],
+)
+def test_setup_logging_server_mode_puts_the_log_on_the_console(debug, expected):
+    """`-s` starts no TUI (`assemble`), so there is no curses display to
+    protect and a foreground server -- or `docker logs` -- must not be silent.
+
+    Deliberate v4 divergence: v4 pins the console to CRITICAL in every mode.
+    """
+    setup_logging(debug=debug, server=True)
+    consoles = _console_handlers()
+    assert consoles
+    for handler in consoles:
+        assert handler.level == expected
+
+
+def test_setup_logging_server_console_shows_the_severity():
+    """v4's `console` handler carries the bare `%(message)s` format, which
+    drops the level from a stream an operator now reads as a log. Server mode
+    promotes it to v4's own `standard` format."""
+    from glances.logger import LOGGING_CFG
+
+    setup_logging(debug=False, server=True)
+    fmt = _console_handlers()[0].formatter
+    assert fmt is not None
+    assert fmt._fmt == LOGGING_CFG["formatters"]["standard"]["format"]
+    assert "levelname" in fmt._fmt
+
+
+def test_setup_logging_tui_mode_does_not_inherit_a_previous_server_console():
+    """The handler object is shared across calls, so a server run followed by
+    a TUI run in the same process must not leave the console verbose --
+    `glances_logger()` re-applies the config, which resets it."""
+    setup_logging(debug=True, server=True)
+    assert _console_handlers()[0].level == logging.DEBUG
+    setup_logging(debug=False, server=False)
+    assert _console_handlers()[0].level == logging.CRITICAL
 
 
 def test_setup_logging_writes_to_a_rotating_file_like_v4():
@@ -593,8 +621,8 @@ def test_main_exits_2_on_unloadable_config(tmp_path, monkeypatch, caplog):
     starting without it would drop `[outputs] password` and expose the API."""
     bad = tmp_path / "bad.conf"
     bad.write_text("[outputs]\npassword = secret\n[outputs]\n")
-    # setup_logging(force=True) would detach caplog's handler.
-    monkeypatch.setattr("glances.main_v5.setup_logging", lambda debug: None)
+    # setup_logging() re-applies the root config, detaching caplog's handler.
+    monkeypatch.setattr("glances.main_v5.setup_logging", lambda debug, server=False: None)
     with patch("glances.main_v5.assemble") as assemble_mock, caplog.at_level(logging.CRITICAL):
         with pytest.raises(SystemExit) as excinfo:
             main(["-C", str(bad), "-s"])

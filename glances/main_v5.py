@@ -316,38 +316,71 @@ def validate_args(args: argparse.Namespace) -> None:
 # --------------------------------------------------------------- logging
 
 
-def setup_logging(debug: bool) -> None:
-    """Configure logging exactly as v4 does: a rotating file handler that takes
-    everything, and a console handler that only ever emits CRITICAL.
+def _console_handlers() -> list[logging.StreamHandler]:
+    """The root handlers that write to a stream rather than a file.
 
-    **The console threshold is not a preference, it is a correctness
-    requirement.** In TUI mode stderr *is* the terminal curses is painting, so
+    ``FileHandler`` subclasses ``StreamHandler``, so the rotating file handler
+    has to be excluded explicitly or it matches here too — and lowering *its*
+    level is not what any caller means by "the console".
+    """
+    root = logging.getLogger()
+    return [h for h in root.handlers if isinstance(h, logging.StreamHandler) and not isinstance(h, logging.FileHandler)]
+
+
+def setup_logging(debug: bool, server: bool = False) -> None:
+    """Configure logging from v4's own configuration: a rotating file handler
+    that takes everything, plus a console handler whose level depends on
+    whether a curses TUI is going to own the terminal.
+
+    **In TUI mode the console threshold is not a preference, it is a
+    correctness requirement.** stderr *is* the terminal curses is painting, so
     a single WARNING scrolls the screen and desynchronises ncurses' model of
     it — text bleeds across columns and the display stays corrupted until the
-    next full repaint. v4 avoids this by keeping the console at CRITICAL and
+    next full repaint. v4 avoids this by pinning the console to CRITICAL and
     sending the real log to a file; v5 used to call ``logging.basicConfig()``,
     whose default handler writes every INFO and WARNING straight to that
     terminal.
 
-    ``glances.logger`` is the single source of truth for the file location
-    (XDG-aware, `$LOG_CFG` override, rotation at 1 MB × 3) and is already in
-    the process — shared v4 modules import it. Calling ``glances_logger()``
-    re-applies that configuration rather than duplicating it here, which also
-    makes this idempotent: a harness (pytest) that attached its own root
-    handler after the import is reset the same way ``force=True`` used to
-    reset it, because ``dictConfig`` replaces the root handler list outright.
+    ``server`` (``-s``) has no curses to protect, so there the console carries
+    the normal log — INFO, or DEBUG under ``--debug``. **This is a deliberate
+    v4 divergence** (maintainer's call, 2026-09-22): v4 keeps the console at
+    CRITICAL in every mode, which leaves an operator running a foreground
+    server, or reading ``docker logs``, with a silent process.
 
-    ``debug`` then raises the *root* level, exactly like v4's ``init_debug``
-    (``glances/main.py:710-714``). The console handler stays at CRITICAL
-    either way: ``--debug`` makes the file verbose, it does not make the TUI
-    unusable.
+    ``--quiet`` / ``--no-tui`` also runs without curses, but keeps the quiet
+    console its name promises. Only ``-s`` opts into the verbose one.
+
+    ``glances.logger`` is the single source of truth for the file location
+    (XDG-aware, `$LOG_CFG` override, rotation at 1 MB × 3), for the handler
+    set and for the formats — all reused, none duplicated here. It is already
+    in the process, since shared v4 modules import it; calling
+    ``glances_logger()`` re-applies it, which also makes this idempotent and
+    keeps what ``force=True`` was there for: ``dictConfig`` replaces the root
+    handler list outright, so a handler a harness (pytest) attached after the
+    import is dropped.
+
+    ``debug`` raises the *root* level, exactly like v4's ``init_debug``
+    (``glances/main.py:710-714``).
     """
     # Local import: this applies the logging configuration as a side effect,
     # so it must not run at module import time in a library context.
-    from glances.logger import glances_logger
+    from glances.logger import LOGGING_CFG, glances_logger
 
     glances_logger()
-    logging.getLogger().setLevel(logging.DEBUG if debug else logging.INFO)
+    level = logging.DEBUG if debug else logging.INFO
+    logging.getLogger().setLevel(level)
+
+    if not server:
+        return
+    # Server mode: the console becomes the log. v4's `console` handler carries
+    # the `free` format (bare `%(message)s`), which is right for the CRITICAL
+    # death-rattle it normally is, but drops the severity from a stream an
+    # operator now reads as a log. Promote it to v4's own `standard` format
+    # rather than inventing one.
+    fmt = logging.Formatter(LOGGING_CFG["formatters"]["standard"]["format"])
+    for handler in _console_handlers():
+        handler.setLevel(level)
+        handler.setFormatter(fmt)
 
 
 # --------------------------------------------------------------- discovery
@@ -807,7 +840,9 @@ async def serve(
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    setup_logging(args.debug)
+    # `server` decides the console verbosity: only the TUI needs the terminal
+    # kept clean, and `-s` never starts one (`assemble`).
+    setup_logging(args.debug, server=args.server)
     validate_args(args)
 
     if args.set_password:
