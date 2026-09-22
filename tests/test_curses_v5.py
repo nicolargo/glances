@@ -711,9 +711,9 @@ def test_build_view_forbids_unicode_when_disable_unicode_is_set(fake_store, fake
 
 def test_tui_v5_full_quicklook_hides_siblings_end_to_end(fake_store, fake_alerts, fake_config):
     """End-to-end: with `_full_quicklook` on, `_build_frame(max_x)` drives the
-    real chain (_build_view → build_frame) and the hidden TOP siblings
-    (cpu/mem) vanish while quicklook stays. Proves the flag flows all the way
-    through, not just the literal-view shortcut. v4 parity: `load` stays."""
+    real chain (_build_view → build_frame) and EVERY TOP sibling vanishes,
+    quicklook included nowhere else. Proves the flag flows all the way
+    through, not just the literal-view shortcut."""
     from glances.outputs import glances_curses_v5 as tui_mod
 
     fake_store.as_dict.return_value = {
@@ -743,11 +743,7 @@ def test_tui_v5_full_quicklook_hides_siblings_end_to_end(fake_store, fake_alerts
 
     tui._full_quicklook = True
     frame = tui._build_frame(max_x=120)
-    top_names = [b.name for b in frame.top]
-    assert "quicklook" in top_names
-    assert "load" in top_names  # v4 parity: load is NOT a hidden sibling
-    assert "cpu" not in top_names
-    assert "mem" not in top_names
+    assert [b.name for b in frame.top] == ["quicklook"]
 
 
 def test_tui_v5_sort_hotkeys_drive_engine(monkeypatch, fake_store, fake_alerts, fake_config):
@@ -3016,19 +3012,22 @@ def test_paint_sidebar_skips_the_counter_on_a_block_with_no_header_row(fake_stor
 
 
 @pytest.mark.parametrize("max_x", [100, 160, 240])
-def test_full_quicklook_leaves_room_for_load(make_tui_with_top, max_x):
-    """Full-quicklook mode used to size the bars at `max_x - 8`, a whole row on
-    its own: LOAD, meant to stay visible (v4 keeps it), was pushed off screen.
-    v4 sizes quicklook from the width its visible siblings leave."""
+def test_full_quicklook_fills_the_row_exactly(make_tui_with_top, max_x):
+    """Full-quicklook owns the whole row and must end exactly at the right
+    edge — never past it.
+
+    This guard predates the 2026-09-22 decision to hide every sibling: back
+    then the bars were sized at a flat `max_x - 8`, which overflowed and
+    pushed LOAD off screen. The sibling it protected is gone, the overflow it
+    protects against is not, so the assertion moves from "LOAD still fits"
+    to "quicklook is exactly the row".
+    """
     tui = make_tui_with_top()
     tui._full_quicklook = True
     frame = tui._build_fitted_frame(max_x=max_x)
-    names = [b.name for b in frame.top]
-    assert names == ["quicklook", "load"]
+    assert [b.name for b in frame.top] == ["quicklook"]
     assert tui._top_fits(frame, max_x) is True
-    quicklook, load = frame.top
-    # Quicklook takes what the siblings leave, v4's 3-column spacing aside.
-    assert quicklook.width == max_x - load.width - tui._FULL_QUICKLOOK_GAP
+    assert frame.top[0].width == max_x
 
 
 def test_paint_row_neutralises_control_characters(fake_store, fake_alerts, fake_config):

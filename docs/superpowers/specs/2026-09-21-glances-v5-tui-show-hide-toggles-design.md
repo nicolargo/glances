@@ -303,9 +303,16 @@ Full-quicklook (`4`) hides TOP siblings through `_FULL_QUICKLOOK_HIDDEN`
 (`curses_renderer_v5.py:91`, applied :1253) — a third authority, untouched by
 this design. `3` puts `quicklook` in `hidden_plugins`.
 
-Pressing `4` then `3` therefore yields: cpu/npu/mpp/gpu/mem/memswap hidden by
-full-quicklook, quicklook hidden by the user — an empty TOP row. v4 reaches
-the same state by the same route. No special case.
+Pressing `4` then `3` therefore yields: every other TOP block hidden by
+full-quicklook, quicklook hidden by the user — an empty TOP row. No special
+case.
+
+**Amended 2026-09-22.** When this was written `_FULL_QUICKLOOK_HIDDEN` was v4's
+six-plugin set, leaving `load` and `percpu` on the row, and v4 reached the same
+end state by the same route. The maintainer has since widened `4` to hide every
+TOP sibling (`…decisions.md` §10, "Reversed decision — full quicklook"), so the
+union above now empties the row one key earlier and v4 no longer matches. The
+composition rule itself is unchanged.
 
 ### 6.5 The WebUI is not affected
 

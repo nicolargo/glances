@@ -2324,24 +2324,21 @@ def test_an_empty_quicklook_payload_is_hidden():
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
-def test_full_quicklook_hides_the_tui_s_six_blocks_and_spares_load():
-    """--full-quicklook hides cpu/npu/mpp/gpu/mem/memswap and deliberately NOT
-    load or percpu (curses_renderer_v5.py:89, exact v4 parity). The WebUI reads
-    the flag from /api/5/args, the way mem reads --byte.
+def test_full_quicklook_hides_every_top_block_but_quicklook():
+    """--full-quicklook hides EVERY TOP sibling, `load` and `percpu` included
+    (curses_renderer_v5.py:91). The WebUI reads the flag from /api/5/args, the
+    way mem reads --byte, and mirrors the constant in full_quicklook.js --
+    tests/test_webui_v5_full_quicklook_drift.py fails on drift between the two.
 
-    All six hidden plugins and both spared ones are covered here (final
-    review, Minor 2 -- the original test only checked four of the six hidden
-    plugins and neither spared one). The `cpu-percpu-on` scenario's fixtures
-    set `--percpu` too, so `percpu` is not ALSO hidden by the unrelated
-    cpu/percpu exclusivity rule (Critical 1) -- this test observes only what
-    full_quicklook itself hides.
+    Was "…and spares load": until 2026-09-22 this matched v4's six-plugin set
+    exactly, leaving `load` and `percpu` on the row. The maintainer widened the
+    mode (`…decisions.md` §10, "Reversed decision -- full quicklook"), so the
+    two spared blocks are now hidden like the rest.
     """
     payload = _run_render_probe("quicklook-full")
     rendered = set(payload["pluginNames"])
-    for name in ("cpu", "npu", "mpp", "gpu", "mem", "memswap"):
+    for name in ("cpu", "percpu", "npu", "mpp", "gpu", "mem", "memswap", "load"):
         assert name not in rendered, f"{name} must be hidden: {sorted(rendered)!r}"
-    assert "load" in rendered, f"load is spared: {sorted(rendered)!r}"
-    assert "percpu" in rendered, f"percpu is spared: {sorted(rendered)!r}"
     assert "quicklook" in rendered, f"vacuous: {sorted(rendered)!r}"
 
 

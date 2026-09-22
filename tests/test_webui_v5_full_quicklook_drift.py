@@ -8,7 +8,7 @@
 
 """Glances v5 — the WebUI's `--full-quicklook` hidden set is the TUI's.
 
-`_FULL_QUICKLOOK_HIDDEN` (glances/outputs/curses_renderer_v5.py:89) is a
+`_FULL_QUICKLOOK_HIDDEN` (glances/outputs/curses_renderer_v5.py:91) is a
 Python frozenset. The browser cannot import Python, so
 js/v5/full_quicklook.js keeps a copy — and a silent divergence there would
 hide (or fail to hide) the wrong blocks under `--full-quicklook`. This test
@@ -53,5 +53,14 @@ def test_the_js_copy_matches_the_curses_renderer_constant():
 
 
 def test_the_copy_is_not_empty():
-    """Guard: an empty set on both sides would satisfy the comparison above."""
-    assert len(_FULL_QUICKLOOK_HIDDEN) == 6
+    """Guard: an empty set on both sides would satisfy the comparison above.
+
+    The count is `TOP_SLOT` minus `quicklook` -- the mode hides every sibling
+    since 2026-09-22 (it was v4's 6 before, with `load` and `percpu` exempt).
+    Asserted against `TOP_SLOT` rather than a literal so that adding a TOP
+    plugin does not fail this guard for the wrong reason.
+    """
+    from glances.outputs.curses_renderer_v5 import TOP_SLOT
+
+    assert len(_FULL_QUICKLOOK_HIDDEN) == len(TOP_SLOT) - 1
+    assert "quicklook" not in _FULL_QUICKLOOK_HIDDEN

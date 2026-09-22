@@ -84,11 +84,21 @@ RIGHT_SLOT: tuple[str, ...] = (
     "alert",
 )
 
-# In full-quicklook mode these TOP-slot plugins are hidden so quicklook
-# takes the full width. EXACT v4 parity: `enable_fullquicklook`
-# (glances/outputs/glances_curses.py:455) disables cpu/npu/mpp/gpu/mem/memswap
-# only — `load` and `percpu` stay visible.
-_FULL_QUICKLOOK_HIDDEN: frozenset[str] = frozenset({"cpu", "npu", "mpp", "gpu", "mem", "memswap"})
+# In full-quicklook mode (`4`) these TOP-slot plugins are hidden so quicklook
+# takes the whole row: EVERY sibling, so the mode means exactly what its name
+# says — quicklook alone, full width.
+#
+# DELIBERATE v4 DIVERGENCE (maintainer's call, 2026-09-22). v4's
+# `enable_fullquicklook` (glances/outputs/glances_curses.py:451-455) disables
+# cpu/npu/mpp/gpu/mem/memswap only, leaving `load` and `percpu` on the row; v5
+# mirrored that exactly until now. The mode's own help text has always
+# advertised the wider behaviour, and leaving two blocks behind made `4` read
+# as an arbitrary subset rather than a mode.
+#
+# Derived from `TOP_SLOT` rather than listed, so a TOP plugin added later is
+# hidden by this mode without a second edit — the drift this file would
+# otherwise accumulate silently.
+_FULL_QUICKLOOK_HIDDEN: frozenset[str] = frozenset(TOP_SLOT) - {"quicklook"}
 
 
 def slot_for(plugin_name: str) -> str:

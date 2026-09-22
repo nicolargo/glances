@@ -1226,6 +1226,22 @@ brought them to life, so the premise is gone; v5 now flips `EMITS_ALERTS` to
 shipped `[vms]` threshold keys stay commented, so no threshold resolves, no
 level is computed, and nothing fires.
 
+**Reversed decision — full quicklook (`4`) hides the whole TOP row.**
+v4's `enable_fullquicklook` (`glances/outputs/glances_curses.py:451-455`)
+disables `cpu`/`npu`/`mpp`/`gpu`/`mem`/`memswap` and leaves `load` and `percpu`
+on the row; v5 mirrored that exactly, and a guard test
+(`test_full_quicklook_leaves_room_for_load`) pinned it after the bars were
+found overflowing and pushing LOAD off screen. Reversed by the maintainer on
+2026-09-22, from a TUI smoke test: `4` now hides **every** TOP sibling, so the
+mode means what its name says — quicklook alone, full width. The mode's own
+help text had always advertised the wider behaviour, and leaving two blocks
+behind made `4` read as an arbitrary subset rather than a mode.
+`_FULL_QUICKLOOK_HIDDEN` (`curses_renderer_v5.py:91`) is now derived from
+`TOP_SLOT` instead of being listed, so a TOP plugin added later is covered
+without a second edit. The overflow guard the old test carried is kept, moved
+from "LOAD still fits" to "quicklook is exactly the row width". A breaking
+change against v4 behaviour, for the 5.0.0 release notes.
+
 ---
 
 ## 11. MCP endpoint — Model Context Protocol

@@ -173,7 +173,7 @@ class TuiV5(threading.Thread):
         "o": {"sort": "cpu_num", "group": "SORT PROCESSES", "desc": "By CPU core number"},
         # View toggles.
         "1": {"switch": "show_percpu", "group": "TOGGLE VIEW", "desc": "Per-CPU / aggregated CPU"},
-        "4": {"action": "full_quicklook", "group": "TOGGLE VIEW", "desc": "Full quicklook (hide cpu/mem/load)"},
+        "4": {"action": "full_quicklook", "group": "TOGGLE VIEW", "desc": "Full quicklook (hide the rest of the row)"},
         "/": {"switch": "process_short_name", "group": "TOGGLE VIEW", "desc": "Short / full process name"},
         "j": {"switch": "programs", "group": "TOGGLE VIEW", "desc": "Threads / programs view"},
         # Per-plugin and per-slot visibility (v4 SHOW/HIDE family). The value
@@ -376,9 +376,11 @@ class TuiV5(threading.Thread):
                 self._help_scroll = 0
                 return "repaint"
             if verb == "full_quicklook":
-                # v4 ``_handle_quicklook`` parity: toggle full-width quicklook
-                # (hides cpu/mem/load TOP siblings). A stats-view mutation, so
-                # it returns ``"changed"`` like the other view switches.
+                # Toggle full-width quicklook: EVERY other TOP block goes,
+                # so the row holds quicklook alone
+                # (``curses_renderer_v5._FULL_QUICKLOOK_HIDDEN``, a deliberate
+                # v4 divergence recorded there). A stats-view mutation, so it
+                # returns ``"changed"`` like the other view switches.
                 self._full_quicklook = not self._full_quicklook
                 return "changed"
             return "ignored"
@@ -710,13 +712,18 @@ class TuiV5(threading.Thread):
     _FULL_QUICKLOOK_GAP = 3
 
     def _fit_full_quicklook(self, view: dict[str, Any], frame: Frame, max_x: int) -> Frame:
-        """Size the full-quicklook bars from the room the visible TOP siblings leave.
+        """Size the full-quicklook bars from the room the TOP row actually leaves.
 
-        v4 (`_handle_quicklook_for_display`) subtracts the siblings still shown
-        (LOAD, percpu) and their spacing from the screen width. `_build_view`'s
-        provisional `max_x - 8` fills the whole row and pushes LOAD off screen.
-        The block width is the bar width plus a fixed label/bracket overhead,
-        measured on the provisional frame, so one rebuild settles it.
+        `_build_view`'s provisional `max_x - 8` guesses the label/bracket
+        overhead; this measures it on the provisional frame instead, so the
+        bars end exactly at the right edge rather than 'about there'. One
+        rebuild settles it.
+
+        `_FULL_QUICKLOOK_HIDDEN` now takes every sibling off the row, so
+        `others` is normally empty and the subtraction is a no-op — it is kept
+        because the sibling set is derived from `TOP_SLOT`, and a plugin
+        deliberately exempted from the mode later would land here with its
+        spacing correctly accounted for.
         """
         quicklook = next((b for b in frame.top if b.name == "quicklook"), None)
         if quicklook is None:

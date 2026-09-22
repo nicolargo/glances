@@ -1400,12 +1400,14 @@ def test_build_frame_full_layout():
 
 
 def test_full_quicklook_hides_top_siblings():
-    """In full-quicklook mode, TOP-slot siblings cpu/mem are hidden so
-    quicklook spans the full width; quicklook itself and LEFT plugins stay.
+    """In full-quicklook mode EVERY TOP-slot sibling is hidden, so the row
+    holds quicklook alone; LEFT plugins are untouched.
 
-    EXACT v4 parity (`enable_fullquicklook`, glances_curses.py:455): only
-    cpu/npu/mpp/gpu/mem/memswap are disabled — `load` and `percpu` MUST
-    stay visible. Hiding them would be a regression.
+    DELIBERATE v4 DIVERGENCE (maintainer's call, 2026-09-22). v4's
+    `enable_fullquicklook` (glances_curses.py:451-455) leaves `load` and
+    `percpu` on the row, and v5 mirrored that until now. `4` means quicklook
+    full width, so nothing else survives it. The hidden set is derived from
+    `TOP_SLOT`, so a TOP plugin added later is covered without an edit here.
     """
     store_snapshot = {
         "quicklook": {"cpu": 12.0, "_levels": {"cpu": {"level": "ok"}}},
@@ -1440,14 +1442,8 @@ def test_full_quicklook_hides_top_siblings():
         view={"full_quicklook": True},
     )
 
-    top_names = [b.name for b in frame.top]
-    # v4 parity: quicklook stays, and so do load + percpu.
-    assert "quicklook" in top_names
-    assert "load" in top_names
-    assert "percpu" in top_names
-    # cpu/mem are the hidden siblings.
-    assert "cpu" not in top_names
-    assert "mem" not in top_names
+    # Quicklook alone: load and percpu go too, unlike v4.
+    assert [b.name for b in frame.top] == ["quicklook"]
     assert [b.name for b in frame.left] == ["network"]
 
 
