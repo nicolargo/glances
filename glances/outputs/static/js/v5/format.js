@@ -104,6 +104,23 @@ export function formatAutoUnit(value) {
 	return toFixedHalfEven(value, fallbackDecimals);
 }
 
+// Mirrors diskio/render_curses_v5.py::_format_count_rate(), the `B` key's
+// IOPS mode. Counts, not bytes: 1000 is the step (not 1024) and there is no
+// unit suffix. Deliberately NOT formatCount() below, which is 1024-based --
+// the two surfaces must print the same string for the same number.
+export function formatIops(value) {
+	if (!isNumber(value)) return MISSING;
+	const abs = Math.abs(value);
+	for (const [symbol, threshold] of [
+		["G", 1e9],
+		["M", 1e6],
+		["K", 1e3]
+	]) {
+		if (abs >= threshold) return `${(value / threshold).toFixed(1)}${symbol}`;
+	}
+	return String(Math.trunc(value));
+}
+
 // Mirrors network/render_curses_v5.py::_format_rate(). Bits by default --
 // bytes x 8, with a `b` on every magnitude ("800b", "8.0Mb") -- and the
 // plain byte count with no `b` suffix under --byte ("100", "1.0M").

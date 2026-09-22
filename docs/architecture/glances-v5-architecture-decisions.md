@@ -1236,8 +1236,42 @@ curses surface — as its own owned group. No implementation in parity wave 1
   cannot avoid** — the TUI shows the path prefix only when
   `os.path.isdir(path)` holds (`render_curses_v5.py:329`), and a browser has
   no filesystem, so it shows the prefix whenever `cmdline[0]` carried one.
-- **The 9 remaining data-type toggles** (`b`/`B` byte/bit, `%`, `S`, …), plus
-  `F` (fs free space), moved here from the show/hide line above.
+- **The data-type toggles** (2.X-c, 2026-09-22). **Six of the nine shipped**,
+  on both surfaces, plus `F` (fs free space) which moved here from the
+  show/hide line above. Three are blocked, and NONE of the three is a hotkey
+  problem — the key is one table entry either way; what is missing is the
+  second render mode's DATA.
+
+  Shipped because v5 already rendered both modes, so the key was the whole
+  feature: `b` (network bit/s ↔ byte/s), `6` (GPU per-card ↔ mean), `F`
+  (filesystem used ↔ free).
+
+  Shipped after writing the second mode, the data being already collected:
+  `B` (disk I/O byte/s ↔ IOPS — `read_count`/`write_count` were collected and
+  `internal`, and now carry the `IOR/s`/`IOW/s` short names v4 uses), `0`
+  (load average ↔ Irix percentage — `cpucore` was collected and `internal`),
+  `T` (network Rx/Tx apart ↔ combined).
+
+  `T` carries a deliberate divergence in route, not in value: v4 renders a
+  `bytes_all` field its model computes; v5's schema has no such field, so both
+  renderers sum the two rates they already have. The sum of two rates over one
+  interval is the combined rate.
+
+  **Blocked, each needing model or infrastructure work first:**
+  - `U` (network live ↔ cumulative) — `_transform_gauge`
+    (`plugins/plugin/base_v5.py`) REPLACES a counter with its rate and keeps
+    the raw value only in `_raw_previous`. Exposing it is a field-contract
+    change to the REST payload, not a renderer change.
+  - `L` (disk I/O byte/s ↔ latency) — `read_time`/`write_time` are not
+    collected at all, explicitly deferred (`diskio/model_v5.py`).
+  - `S` (quicklook bar ↔ sparkline) — no v5 history store
+    (`quicklook/model_v5.py`).
+
+  `F` needed a shape neither group had used: `[fs] free_space` is plugin
+  CONFIG and reaches the renderer as payload metadata, so the TUI's ViewState
+  field is tri-state (`None` = follow the payload) and the browser seeds it
+  from the fs payload rather than from `serverArgs`, which carries only the
+  CLI flag and reads `false` for a config-set `true`.
 - **`F5` / `Ctrl-R`** forced refresh and the sort-navigation arrow keys.
 
 The `ViewState` mechanism this group builds on already exists

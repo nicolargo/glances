@@ -102,6 +102,15 @@ def render(
 ) -> list[Row]:
     """Render the network plugin's TUI block — mirrors v4 ``network.msg_curse``."""
     byte = bool((view or {}).get("byte"))
+    # `T` (v4 `network_sum`): one combined column instead of two.
+    #
+    # DIVERGENCE, in the route not the number. v4 renders a dedicated
+    # `bytes_all` / `bytes_all_rate_per_sec` field its model computes
+    # (`network/__init__.py:276,294`); v5's schema has no such field, so the
+    # renderer sums the two rates it already has. Same value, one fewer field
+    # to keep in step -- and the sum of two rates over the same interval IS
+    # the combined rate.
+    combined = bool((view or {}).get("network_sum"))
     # The first header cell is the TUI block title, not a field label — it
     # stays a literal. The value columns read their labels from the schema
     # (single source of truth, shared with the WebUI).
@@ -118,6 +127,20 @@ def render(
             ),
         ]
     )
+    if combined:
+        # v4's label for the mode (`network/__init__.py:254`), widened to the
+        # two columns it replaces so the block keeps its width and the right
+        # edge stays where the other left-column blocks put theirs.
+        header_row = Row(
+            cells=[
+                Cell(text="NETWORK".ljust(_NAME_MAX_WIDTH), color=ColorRole.HEADER, bold=True),
+                Cell(
+                    text=("Rx+Tx" if byte else "Rx+Tx/s").rjust(_RATE_COL_WIDTH * 2 + 1),
+                    color=ColorRole.HEADER,
+                    bold=True,
+                ),
+            ]
+        )
     rows: list[Row] = [header_row]
 
     if not isinstance(payload, dict):
@@ -154,13 +177,21 @@ def render(
         # keyed by the raw `name`.
         display_name = str(item.get("alias") or name)
 
+        if combined:
+            total = float(item["bytes_recv"]) + float(item["bytes_sent"])
+            # No threshold decoration: the two fields carry their own levels
+            # and a sum belongs to neither. v4 paints its `ax` cell plain for
+            # the same reason (`network/__init__.py:294-295`).
+            value_cells = [Cell(text=_format_rate(total, byte).rjust(_RATE_COL_WIDTH * 2 + 1))]
+        else:
+            value_cells = [
+                _rate_cell(item.get("bytes_recv"), if_levels.get("bytes_recv", {}), byte),
+                _rate_cell(item.get("bytes_sent"), if_levels.get("bytes_sent", {}), byte),
+            ]
+
         rows.append(
             Row(
-                cells=[
-                    Cell(text=_format_if_name(display_name)),
-                    _rate_cell(item.get("bytes_recv"), if_levels.get("bytes_recv", {}), byte),
-                    _rate_cell(item.get("bytes_sent"), if_levels.get("bytes_sent", {}), byte),
-                ],
+                cells=[Cell(text=_format_if_name(display_name)), *value_cells],
                 item_start=True,
             )
         )

@@ -233,3 +233,42 @@ def test_render_falls_back_to_disk_name_when_no_alias(diskio_fields):
     }
     rows = render(payload, diskio_fields)
     assert "sda" in rows[1].cells[0].text
+
+
+def test_iops_mode_swaps_both_the_columns_and_the_header():
+    """`B` (v4 `_handle_diskio_iops`). The labels come from the schema, so
+    swapping the field pair swaps the header with it."""
+    from glances.plugins.diskio.render_curses_v5 import render
+
+    payload = {
+        "data": [
+            {"disk_name": "sda", "read_bytes": 2048.0, "write_bytes": 0.0, "read_count": 2500.0, "write_count": 7.4}
+        ],
+        "_levels": {},
+    }
+    fields = {
+        "read_bytes": {"short_name": "R/s"},
+        "write_bytes": {"short_name": "W/s"},
+        "read_count": {"short_name": "IOR/s"},
+        "write_count": {"short_name": "IOW/s"},
+    }
+
+    default_rows = render(payload, fields)
+    iops_rows = render(payload, fields, view={"diskio_iops": True})
+
+    assert [c.text.strip() for c in default_rows[0].cells][1:] == ["R/s", "W/s"]
+    assert [c.text.strip() for c in iops_rows[0].cells][1:] == ["IOR/s", "IOW/s"]
+    # Byte rates take the 1024 scale and a `B`; counts take 1000 and no unit.
+    assert [c.text.strip() for c in default_rows[1].cells][1:] == ["2.0K", "0B"]
+    assert [c.text.strip() for c in iops_rows[1].cells][1:] == ["2.5K", "7"]
+
+
+def test_iops_mode_skips_a_disk_with_no_count_yet():
+    """Cycle 1 leaves every rate field None, counts included."""
+    from glances.plugins.diskio.render_curses_v5 import render
+
+    payload = {
+        "data": [{"disk_name": "sda", "read_bytes": 1.0, "write_bytes": 1.0, "read_count": None, "write_count": None}],
+        "_levels": {},
+    }
+    assert len(render(payload, {}, view={"diskio_iops": True})) == 1, "header only"

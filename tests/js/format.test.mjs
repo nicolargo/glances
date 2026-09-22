@@ -1,6 +1,21 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { formatBytes, formatRate, formatPercent, formatCount, toFahrenheit, formatSeconds, toFixedHalfEven, formatNetworkRate, formatFixed0, formatAutoUnit, formatAutoHz, formatProcessBytes, formatUsername } from "../../glances/outputs/static/js/v5/format.js";
+import {
+	formatAutoHz,
+	formatAutoUnit,
+	formatBytes,
+	formatCount,
+	formatFixed0,
+	formatIops,
+	formatNetworkRate,
+	formatPercent,
+	formatProcessBytes,
+	formatRate,
+	formatSeconds,
+	formatUsername,
+	toFahrenheit,
+	toFixedHalfEven
+} from "../../glances/outputs/static/js/v5/format.js";
 
 test("formatBytes uses binary units", () => {
 	assert.equal(formatBytes(0), "0B");
@@ -260,4 +275,18 @@ test('formatAutoHz returns "?" for whatever it cannot parse', () => {
 	assert.equal(formatAutoHz("abc"), "?");
 	assert.equal(formatAutoHz(""), "?");
 	assert.equal(formatAutoHz(NaN), "?");
+});
+
+test("formatIops mirrors the TUI's _format_count_rate: 1000-step, unitless", () => {
+	// Deliberately NOT formatCount's 1024 step -- the two surfaces must print
+	// the same string for the same number.
+	assert.equal(formatIops(0), "0");
+	assert.equal(formatIops(7.4), "7");
+	assert.equal(formatIops(999), "999");
+	assert.equal(formatIops(1000), "1.0K");
+	assert.equal(formatIops(2500), "2.5K");
+	assert.equal(formatIops(1e6), "1.0M");
+	assert.equal(formatIops(1e9), "1.0G");
+	assert.equal(formatIops(null), "-");
+	assert.equal(formatIops(undefined), "-");
 });

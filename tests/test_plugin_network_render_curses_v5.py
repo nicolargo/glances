@@ -396,3 +396,51 @@ def test_rate_between_1000_and_1024_units_fits_the_column(scaled, symbol, factor
     text = _format_rate(scaled * factor / 8)
     assert len(text) <= _RATE_COL_WIDTH, text
     assert text.endswith(f"{symbol}b"), text
+
+
+def test_combined_mode_replaces_the_two_columns_with_their_sum():
+    """`T` (v4 `network_sum`).
+
+    v4 renders a dedicated `bytes_all` field its model computes; v5's schema
+    has no such field, so the renderer sums the two rates. Same number, and
+    the sum of two rates over one interval IS the combined rate.
+    """
+    from glances.plugins.network.render_curses_v5 import render
+
+    payload = {
+        "data": [{"interface_name": "eth0", "bytes_recv": 100.0, "bytes_sent": 25.0, "is_up": True}],
+        "_levels": {},
+    }
+    fields = {"bytes_recv": {"short_name": "Rx/s"}, "bytes_sent": {"short_name": "Tx/s"}}
+
+    apart = render(payload, fields)
+    combined = render(payload, fields, view={"network_sum": True})
+
+    assert [c.text.strip() for c in apart[0].cells][1:] == ["Rx/s", "Tx/s"]
+    assert [c.text.strip() for c in combined[0].cells][1:] == ["Rx+Tx/s"]
+    # 125 B/s x 8 = 1000 bits/s.
+    assert [c.text.strip() for c in combined[1].cells][1:] == ["1000b"]
+
+
+def test_combined_mode_drops_the_per_second_suffix_under_byte():
+    """v4 labels it `Rx+Tx` under --byte (`network/__init__.py:246-254`)."""
+    from glances.plugins.network.render_curses_v5 import render
+
+    payload = {"data": [], "_levels": {}}
+    header = render(payload, {}, view={"network_sum": True, "byte": True})[0]
+    assert header.cells[1].text.strip() == "Rx+Tx"
+
+
+def test_the_combined_cell_carries_no_threshold_colour():
+    """The two fields have their own levels; a sum belongs to neither, and v4
+    paints its combined cell plain for the same reason."""
+    from glances.outputs.curses_renderer_v5 import ColorRole
+    from glances.plugins.network.render_curses_v5 import render
+
+    payload = {
+        "data": [{"interface_name": "eth0", "bytes_recv": 100.0, "bytes_sent": 25.0, "is_up": True}],
+        "_levels": {"eth0": {"bytes_recv": {"level": "critical", "prominent": True}}},
+    }
+    row = render(payload, {}, view={"network_sum": True})[1]
+    assert row.cells[1].color == ColorRole.DEFAULT
+    assert row.cells[1].prominent is False

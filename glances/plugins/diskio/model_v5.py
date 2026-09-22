@@ -17,9 +17,9 @@ V5 scope (G4-diskio):
   but **no default thresholds** — sustained disk traffic is host-
   specific, alerts only fire when the user sets per-disk or per-field
   keys in ``[diskio]`` (e.g. ``read_bytes_warning=50_000_000``).
-- ``read_count`` / ``write_count`` are kept exportable for IOPS-style
-  consumers but flagged ``internal=True`` so the generic renderer
-  skips them.
+- ``read_count`` / ``write_count`` are flagged ``internal=True`` so the
+  generic renderer skips them; the ``B`` hotkey's IOPS mode renders them
+  explicitly, and exporters have always had them.
 - ``read_time``/``write_time`` and the derived ``read_latency`` /
   ``write_latency`` of v4 are not ported — deferred to a later phase
   with the ``--diskio-latency`` mode.
@@ -61,15 +61,21 @@ class PluginModel(GlancesPluginBase[list]):
             "description": "Read operations per second (rate of psutil read_count counter).",
             "unit": "number",
             "rate": True,
-            # Useful for IOPS-style export downstream but not rendered in
-            # the default TUI (which shows byte rates only — v4 parity).
+            # `internal` keeps it out of the GENERIC renderer's default
+            # columns (which show byte rates — v4 parity); the `B` hotkey's
+            # IOPS mode renders it explicitly, and exporters have always had
+            # it. `short_name` is v4's header for that mode
+            # (`diskio/__init__.py:242`).
             "internal": True,
+            "short_name": "IOR/s",
         },
         "write_count": {
             "description": "Write operations per second (rate of psutil write_count counter).",
             "unit": "number",
             "rate": True,
+            # See `read_count` above.
             "internal": True,
+            "short_name": "IOW/s",
         },
         "read_bytes": {
             "description": "Bytes read per second (rate of psutil read_bytes counter).",

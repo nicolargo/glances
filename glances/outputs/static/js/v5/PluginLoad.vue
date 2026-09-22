@@ -45,9 +45,17 @@ export default {
 			return typeof cores === "number" && cores > 0 ? `${Math.trunc(cores)}core` : "";
 		},
 		rows() {
+			// The `0` key (v4 `args.disable_irix`, issue #1554): each average
+			// divided by the core count and shown as a percentage. Mirrors
+			// load/render_curses_v5.py::_load_value_cell, including its guard --
+			// an absent or zero `cpucore` falls back to the plain float rather
+			// than dividing by zero.
+			const cores = this.payload?.cpucore;
+			const irix = !!this.serverArgs.load_irix && typeof cores === "number" && cores > 0;
 			return FIELDS.map((field) => {
 				const value = this.payload?.[field];
-				return { field, value: typeof value === "number" ? value.toFixed(2) : "-" };
+				if (typeof value !== "number") return { field, value: "-" };
+				return { field, value: irix ? `${((value / cores) * 100).toFixed(1)}%` : value.toFixed(2) };
 			});
 		},
 	},

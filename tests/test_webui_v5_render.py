@@ -4108,8 +4108,8 @@ def test_the_help_overlay_renders_every_bound_key():
         for key, spec in TuiV5._HOTKEYS.items()
         if "hide" in spec or spec.get("group") == "TOGGLE VIEW"
     }
-    # One row per bound key (24 SHOW/HIDE + 7 TOGGLE VIEW), plus `h` itself.
-    assert len(rendered) == len(bound) + 1 == 32
+    # One row per bound key (24 SHOW/HIDE + 10 TOGGLE VIEW), plus `h` itself.
+    assert len(rendered) == len(bound) + 1 == 35
 
     joined = " ".join(rendered)
     for key, desc in bound.items():
@@ -4243,7 +4243,17 @@ def test_the_footer_link_toggles_rather_than_only_opening():
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
-@pytest.mark.parametrize(("key", "flag"), [("b", "byte"), ("6", "meangpu"), ("F", "fs_free_space")])
+@pytest.mark.parametrize(
+    ("key", "flag"),
+    [
+        ("b", "byte"),
+        ("6", "meangpu"),
+        ("F", "fs_free_space"),
+        ("B", "diskio_iops"),
+        ("0", "load_irix"),
+        ("T", "network_sum"),
+    ],
+)
 def test_a_data_type_key_flips_its_flag(key, flag):
     """2.X-c: `b`, `6` and `F` change HOW a value is shown. They ride the same
     override mechanism as the other TOGGLE VIEW keys."""
@@ -4266,3 +4276,41 @@ def test_the_fs_free_space_key_starts_from_the_payload_not_from_serverargs():
     # The `default` fixture's fs payload carries no `free_space`, so the
     # effective value starts false and one press turns it on.
     assert seeded is True
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_key_B_switches_the_diskio_columns_to_iops():
+    """Not a visibility toggle: `B` swaps which pair of fields the two columns
+    render. The labels come from the schema, so the header follows."""
+    before = _run_render_probe("diskio")
+    after = _run_render_probe("diskio", "B")
+
+    assert before["pluginColumnHeaders"]["diskio"] == ["DISK I/O", "R/s", "W/s"]
+    assert after["pluginColumnHeaders"]["diskio"] == ["DISK I/O", "IOR/s", "IOW/s"]
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_key_T_combines_the_network_columns():
+    before = _run_render_probe("network")
+    after = _run_render_probe("network", "T")
+
+    assert before["pluginColumnHeaders"]["network"] == ["NETWORK", "Rx/s", "Tx/s"]
+    assert after["pluginColumnHeaders"]["network"] == ["NETWORK", "Rx+Tx/s"]
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_key_T_drops_the_per_second_suffix_under_byte_mode():
+    """v4 labels the combined column `Rx+Tx` under --byte and `Rx+Tx/s`
+    otherwise (`network/__init__.py:246-254`). The two keys compose."""
+    assert _run_render_probe("network", "T,b")["pluginColumnHeaders"]["network"] == ["NETWORK", "Rx+Tx"]
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_key_0_shows_the_load_averages_as_percentages():
+    """Irix mode divides each average by `cpucore`. The fixture's load payload
+    carries the core count, without which the key correctly does nothing."""
+    before = _run_render_probe("load")["pluginText"]["load"]
+    after = _run_render_probe("load", "0")["pluginText"]["load"]
+
+    assert "%" not in before, before
+    assert "%" in after, after

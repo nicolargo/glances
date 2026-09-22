@@ -3339,3 +3339,16 @@ def test_the_fs_renderer_prefers_the_view_override_over_the_payload():
 
     assert "used" in used_header and "free" not in used_header, used_header
     assert "free" in free_header and "used" not in free_header, free_header
+
+
+@pytest.mark.parametrize(("key", "attr"), [("B", "diskio_iops"), ("0", "load_irix"), ("T", "network_sum")])
+def test_a_render_mode_key_flips_its_view_flag(key, attr, fake_store, fake_alerts, fake_config):
+    """`B`, `0` and `T` do not remove a block either: they change which fields
+    a renderer draws. Unlike `b`/`6` the second mode had to be written — v5
+    rendered only one of each — but the data was already collected."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    assert tui._build_view(120)[attr] is False
+    assert tui._handle_key(ord(key)) == "changed"
+    assert tui._build_view(120)[attr] is True

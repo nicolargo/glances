@@ -196,7 +196,13 @@ const INFO_FIXTURES = {
 	cloud: { id: {}, platform: {}, name: {}, type: {}, region: {} },
 	// short_names copied from glances/plugins/diskio/model_v5.py and
 	// glances/plugins/fs/model_v5.py (G9-6 Task 3).
-	diskio: { disk_name: {}, read_bytes: { short_name: "R/s" }, write_bytes: { short_name: "W/s" } },
+	diskio: {
+		disk_name: {},
+		read_bytes: { short_name: "R/s" },
+		write_bytes: { short_name: "W/s" },
+		read_count: { short_name: "IOR/s" },
+		write_count: { short_name: "IOW/s" },
+	},
 	fs: { mnt_point: {}, size: { short_name: "Total" }, used: { short_name: "Used" }, free: { short_name: "Free" }, percent: {} },
 	// short_name copied from glances/plugins/wifi/model_v5.py (G9-6 Task 3);
 	// sensors declares none -- its value column has no header in the TUI.
@@ -333,11 +339,15 @@ const NETWORK_ROWS = {
 // exact 1.25K tie ("1.2K"). `sdb`'s read rate carries a warning.
 const DISKIO_FIXTURE = {
 	_key: "disk_name",
+	// `read_count` / `write_count` ride along on every row: the server has
+	// always published them (`internal: true` keeps them out of the DEFAULT
+	// columns, not out of the payload), and the `B` key renders them instead
+	// of the byte rates. A row missing them would be dropped in that mode.
 	data: [
-		{ disk_name: "sdb", alias: "Backup", read_bytes: 1536, write_bytes: 0, hidden: false },
-		{ disk_name: "loop0", read_bytes: 0, write_bytes: 0, hidden: true },
-		{ disk_name: "sda", read_bytes: null, write_bytes: null, hidden: false },
-		{ disk_name: "nvme0n1", read_bytes: 855.6, write_bytes: 1280, hidden: false },
+		{ disk_name: "sdb", alias: "Backup", read_bytes: 1536, write_bytes: 0, read_count: 12, write_count: 0, hidden: false },
+		{ disk_name: "loop0", read_bytes: 0, write_bytes: 0, read_count: 0, write_count: 0, hidden: true },
+		{ disk_name: "sda", read_bytes: null, write_bytes: null, read_count: null, write_count: null, hidden: false },
+		{ disk_name: "nvme0n1", read_bytes: 855.6, write_bytes: 1280, read_count: 2500, write_count: 7.4, hidden: false },
 	],
 	_levels: { sdb: { read_bytes: { level: "warning", prominent: false } } },
 };

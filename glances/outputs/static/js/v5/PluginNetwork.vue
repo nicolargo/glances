@@ -6,7 +6,8 @@
 			shows no line, as the TUI paints its header. -->
 			<tr>
 				<th class="gl-header">{{ TITLE }}</th>
-				<th v-for="field in RATE_FIELDS" :key="field" class="gl-header gl-num">
+				<th v-if="combined" class="gl-header gl-num" colspan="2">{{ combinedLabel }}</th>
+				<th v-for="field in combined ? [] : RATE_FIELDS" :key="field" class="gl-header gl-num">
 					{{ labelFor(labels, field) }}
 				</th>
 			</tr>
@@ -22,7 +23,14 @@
 					</td>
 					<!-- The tier goes on the <span>, not the <td>: a prominent badge's
 					background would otherwise fill the whole cell. -->
-					<td v-for="field in RATE_FIELDS" :key="field" class="gl-num">
+					<!-- `T` (v4 `network_sum`): one combined column. No tier class --
+					the two fields carry their own levels and a sum belongs to
+					neither, which is why the TUI paints its combined cell plain
+					too. -->
+					<td v-if="combined" class="gl-num" colspan="2">
+						<span>{{ formatNetworkRate(rxPlusTx(item), !!serverArgs.byte) }}</span>
+					</td>
+					<td v-for="field in combined ? [] : RATE_FIELDS" :key="field" class="gl-num">
 						<span :class="cellClassFor(payload, item, field)">{{
 							formatNetworkRate(item[field], !!serverArgs.byte)
 						}}</span>
@@ -55,6 +63,15 @@ export default {
 		// A computed, not data(): data() would hand the template a deeply
 		// reactive Proxy of the array.
 		RATE_FIELDS: () => RATE_FIELDS,
+		// The `T` key, through AppShell's `effectiveArgs`.
+		combined() {
+			return !!this.serverArgs.network_sum;
+		},
+		// v4's own label for the mode (`network/__init__.py:246-254`): the
+		// "/s" is dropped under --byte there too.
+		combinedLabel() {
+			return this.serverArgs.byte ? "Rx+Tx" : "Rx+Tx/s";
+		},
 		// Mirrors network/render_curses_v5.py:129-142: skip a down interface
 		// (v4 #765), one hide_zero still hides, and one with no rate yet (cycle
 		// 1). Payload order -- the TUI does not sort this block.
@@ -66,6 +83,12 @@ export default {
 		},
 	},
 	methods: {
+		// v5 has no `bytes_all` field (v4's model computes one); summing the
+		// two rates the payload already carries gives the same number over the
+		// same interval. Mirrors network/render_curses_v5.py.
+		rxPlusTx(item) {
+			return Number(item.bytes_recv) + Number(item.bytes_sent);
+		},
 		labelFor,
 		cellClassFor,
 		formatNetworkRate,

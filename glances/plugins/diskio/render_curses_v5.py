@@ -63,8 +63,29 @@ def _format_byte_rate(bytes_per_sec: Any) -> str:
     return f"{int(bytes_value)}B"
 
 
-def _rate_cell(value: Any, level_entry: dict[str, Any]) -> Cell:
-    text = _format_byte_rate(value).rjust(_RATE_COL_WIDTH)
+def _format_count_rate(ops_per_sec: Any) -> str:
+    """Operations/s → human-readable, K/M/G scaled, no unit suffix.
+
+    The `B` hotkey's IOPS mode. Same shape as `_format_byte_rate` above but
+    decimal-scaled and unitless: these are counts, not bytes, so 1000 is the
+    step and there is no `B` to append (v4 `auto_unit`, no unit argument,
+    `diskio/__init__.py:272`).
+    """
+    try:
+        value = float(ops_per_sec)
+    except (TypeError, ValueError):
+        return "-"
+    for symbol, threshold in (("G", 1_000_000_000), ("M", 1_000_000), ("K", 1_000)):
+        if abs(value) >= threshold:
+            return f"{value / threshold:.1f}{symbol}"
+    return f"{int(value)}"
+
+
+def _rate_cell(value: Any, level_entry: dict[str, Any], iops: bool = False) -> Cell:
+    # IOPS are a plain count, so they take the generic auto-unit rather than
+    # the byte formatter -- v4 `auto_unit(read_count_rate_per_sec)` with no
+    # unit suffix (`diskio/__init__.py:272`).
+    text = (_format_count_rate(value) if iops else _format_byte_rate(value)).rjust(_RATE_COL_WIDTH)
     level = level_entry.get("level") if isinstance(level_entry, dict) else None
     role = _LEVEL_TO_ROLE.get(level, ColorRole.DEFAULT)
     prominent = bool(level_entry.get("prominent")) if isinstance(level_entry, dict) else False
@@ -77,8 +98,15 @@ def _format_disk_name(name: str) -> str:
     return name.ljust(_NAME_MAX_WIDTH)
 
 
-def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> list[Row]:
+def render(
+    payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]], view: dict[str, Any] | None = None
+) -> list[Row]:
     """Render the diskio plugin's TUI block — mirrors v4 ``diskio.msg_curse``."""
+    # `B` (v4 `_handle_diskio_iops`): operations per second instead of byte
+    # rates. Same two columns, different pair of fields -- the labels come
+    # from the schema, so swapping the pair swaps the header too.
+    iops = bool((view or {}).get("diskio_iops"))
+    read_key, write_key = ("read_count", "write_count") if iops else ("read_bytes", "write_bytes")
     # The first header cell is the TUI block title, not a field label -- it
     # stays a literal. The rate columns read their labels from the schema
     # (single source of truth, shared with the WebUI), as network's do.
@@ -91,7 +119,7 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> l
                     color=ColorRole.HEADER,
                     bold=True,
                 )
-                for key in ("read_bytes", "write_bytes")
+                for key in (read_key, write_key)
             ),
         ]
     )
@@ -114,7 +142,7 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> l
         if item.get("hidden") is True:
             continue
         # Skip disks with no rate yet — cycle 1 sets read_bytes/write_bytes to None.
-        if item.get("read_bytes") is None or item.get("write_bytes") is None:
+        if item.get(read_key) is None or item.get(write_key) is None:
             continue
 
         name = str(item.get("disk_name") or "")
@@ -132,8 +160,8 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]]) -> l
             Row(
                 cells=[
                     Cell(text=_format_disk_name(display_name)),
-                    _rate_cell(item.get("read_bytes"), disk_levels.get("read_bytes", {})),
-                    _rate_cell(item.get("write_bytes"), disk_levels.get("write_bytes", {})),
+                    _rate_cell(item.get(read_key), disk_levels.get(read_key, {}), iops=iops),
+                    _rate_cell(item.get(write_key), disk_levels.get(write_key, {}), iops=iops),
                 ],
                 item_start=True,
             )

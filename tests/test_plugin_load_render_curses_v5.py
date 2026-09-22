@@ -156,3 +156,48 @@ def test_render_total_line_width_matches_across_rows(load_payload, load_fields):
     rows = render(load_payload, load_fields)
     totals = {sum(len(c.text) for c in r.cells) + max(0, len(r.cells) - 1) for r in rows}
     assert len(totals) == 1, f"line widths differ: {totals}"
+
+
+def test_irix_mode_shows_percentages_of_the_core_count():
+    """`0` (v4 `args.disable_irix`, issue #1554): each average divided by
+    `cpucore`, as a percentage."""
+    from glances.plugins.load.render_curses_v5 import render
+
+    payload = {"min1": 2.0, "min5": 1.0, "min15": 0.5, "cpucore": 4, "_levels": {}}
+    fields = {"min1": {"short_name": "1 min"}, "min5": {"short_name": "5 min"}, "min15": {"short_name": "15 min"}}
+
+    plain = [r.cells[1].text.strip() for r in render(payload, fields)[1:]]
+    irix = [r.cells[1].text.strip() for r in render(payload, fields, view={"load_irix": True})[1:]]
+
+    assert plain == ["2.00", "1.00", "0.50"]
+    assert irix == ["50.0%", "25.0%", "12.5%"]
+
+
+def test_irix_mode_falls_back_when_the_core_count_is_unusable():
+    """v4 guards on `log_core() != 0`; an absent or zero count must not divide
+    by zero, and must not print a nonsense percentage either."""
+    from glances.plugins.load.render_curses_v5 import render
+
+    for cores in (0, None):
+        payload = {"min1": 2.0, "min5": 1.0, "min15": 0.5, "cpucore": cores, "_levels": {}}
+        values = [r.cells[1].text.strip() for r in render(payload, {}, view={"load_irix": True})[1:]]
+        assert values == ["2.00", "1.00", "0.50"], cores
+
+
+def test_irix_mode_keeps_the_threshold_colour():
+    """The key changes what the cell DISPLAYS, never which level it is
+    coloured with — per-core normalisation is already implicit in the
+    threshold computation (`normalize_by: cpucore`)."""
+    from glances.outputs.curses_renderer_v5 import ColorRole
+    from glances.plugins.load.render_curses_v5 import render
+
+    payload = {
+        "min1": 2.0,
+        "min5": 1.0,
+        "min15": 8.0,
+        "cpucore": 4,
+        "_levels": {"min15": {"level": "critical", "prominent": True}},
+    }
+    row = render(payload, {}, view={"load_irix": True})[3]
+    assert row.cells[1].color == ColorRole.CRITICAL
+    assert row.cells[1].prominent is True

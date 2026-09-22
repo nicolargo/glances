@@ -142,6 +142,9 @@ class ViewState:
     # flipped by their keys.
     byte: bool = False
     meangpu: bool = False
+    diskio_iops: bool = False
+    load_irix: bool = False
+    network_sum: bool = False
     # Tri-state, unlike the two above: `[fs] free_space` lives in the fs
     # plugin's CONFIG and reaches the renderer as payload metadata, not as a
     # constructor argument the TUI could seed from. `None` therefore means
@@ -236,6 +239,9 @@ class TuiV5(threading.Thread):
         # through the per-cycle `view` dict.
         "b": {"switch": "byte", "group": "TOGGLE VIEW", "desc": "Network I/O in bit/s or byte/s"},
         "6": {"switch": "meangpu", "group": "TOGGLE VIEW", "desc": "GPU: per-card or mean"},
+        "B": {"switch": "diskio_iops", "group": "TOGGLE VIEW", "desc": "Disk I/O in byte/s or IOPS"},
+        "0": {"switch": "load_irix", "group": "TOGGLE VIEW", "desc": "Load average or Irix percentage"},
+        "T": {"switch": "network_sum", "group": "TOGGLE VIEW", "desc": "Network Rx/Tx apart or combined"},
         # Tri-state, so it cannot be a plain `switch`: `None` means "follow
         # `[fs] free_space`", which is why it has its own verb.
         "F": {"action": "fs_free_space", "group": "TOGGLE VIEW", "desc": "Filesystem: used or free space"},
@@ -939,6 +945,9 @@ class TuiV5(threading.Thread):
         view["fahrenheit"] = self._fahrenheit
         view["hide_public_info"] = self._hide_public_info
         view["byte"] = self._view.byte
+        view["diskio_iops"] = self._view.diskio_iops
+        view["load_irix"] = self._view.load_irix
+        view["network_sum"] = self._view.network_sum
         # Only published when the viewer has pressed `F`; absent means the fs
         # renderer keeps reading its payload metadata.
         if self._view.fs_free_space is not None:
