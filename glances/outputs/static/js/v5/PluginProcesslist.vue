@@ -270,9 +270,23 @@ export default {
 .gl-pin-button:hover {
 	opacity: 1;
 }
-/* Every row is clickable, so every row says so on hover. */
+/* Every row is clickable, so every row says so on hover: the pointer AND a
+ * raised background, which is what v4 gets from Bootstrap's `table-hover`
+ * (plugin-processlist.vue:38). v5 ships no Bootstrap, so the rule lives here.
+ *
+ * `.gl-pinnable` and not `.gl-table tr`: `programlist`, `containers` and the
+ * left-column blocks are not clickable, and a row that lights up under the
+ * cursor but does nothing when clicked is a lie about what a click will do.
+ *
+ * The colour is `--gl-row-hover`, a token of its own in css/v5.css rather
+ * than `--gl-surface` (the overlays' raised background, which must not
+ * retune this) and never a literal, which
+ * test_no_colour_literal_outside_the_token_file forbids here anyway. */
 .gl-table tr.gl-pinnable {
 	cursor: pointer;
+}
+.gl-table tr.gl-pinnable:hover {
+	background: var(--gl-row-hover);
 }
 /* The pinned row, marked the way the terminal marks its selection: the
  * command underlined, not the whole row inverted

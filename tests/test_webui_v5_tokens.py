@@ -829,3 +829,105 @@ def test_the_stacking_breakpoint_matches_the_stylesheet():
     shell = (_V5_JS / "AppShell.vue").read_text()
     assert 'STACK_BREAKPOINT = "48rem"' in shell
     assert re.search(r"@media\s*\(max-width:\s*48rem\)", shell)
+
+
+def test_the_row_hover_colour_is_a_token_in_both_themes():
+    """The hover highlight on a clickable process row (v4 gets it from
+    Bootstrap's `table-hover`; v5 ships no Bootstrap).
+
+    Its own token rather than `--gl-surface`: that one is the raised
+    background of the overlays, and retuning those must not silently retune
+    a table's hover feedback.
+    """
+    css = _TOKENS.read_text()
+    assert css.count("--gl-row-hover:") >= 2, "--gl-row-hover must be defined in both the default and the light block"
+
+
+def test_only_clickable_rows_light_up_under_the_cursor():
+    """`.gl-pinnable` — the process list — and nothing else.
+
+    `programlist`, `containers`, `network`, `fs` and the rest are not
+    clickable, and a row that lights up under the cursor but does nothing
+    when clicked is a lie about what a click will do. Measured in Chromium
+    across every table on the page: only PROCESSES reacts, and only it gets
+    `cursor: pointer`.
+
+    Read from the source rather than a browser because the suite has no
+    browser; what this protects is the SELECTOR, which is the design
+    decision. A rule widened to `.gl-table tr:hover` would pass every other
+    test in this file.
+    """
+    source = (_V5_JS / "PluginProcesslist.vue").read_text()
+    assert ".gl-table tr.gl-pinnable:hover {" in source
+    # The cursor and the highlight must agree about which rows are clickable.
+    assert ".gl-table tr.gl-pinnable {" in source
+
+    hover_rules = re.findall(r"^([^\n{]*:hover[^\n{]*)\{", source, re.M)
+    for rule in hover_rules:
+        assert "gl-pinnable" in rule or "gl-pin-button" in rule, (
+            f"a hover rule that is not scoped to the clickable rows: {rule.strip()!r}"
+        )
+
+
+def _relative_luminance(hex_colour: str) -> float:
+    """WCAG 2.x relative luminance of a `#rrggbb` token value."""
+    raw = hex_colour.lstrip("#")
+    channels = [int(raw[i : i + 2], 16) / 255 for i in (0, 2, 4)]
+    linear = [c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4 for c in channels]
+    return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2]
+
+
+def _contrast(a: str, b: str) -> float:
+    high, low = sorted((_relative_luminance(a), _relative_luminance(b)), reverse=True)
+    return (high + 0.05) / (low + 0.05)
+
+
+def _theme_blocks(css: str) -> dict[str, str]:
+    """The `:root` (dark) and `:root[data-theme="light"]` declaration bodies."""
+    blocks = {}
+    for name, pattern in (
+        ("dark", r"^:root\s*\{(.*?)\}"),
+        ("light", r'^:root\[data-theme="light"\]\s*\{(.*?)\}'),
+    ):
+        match = re.search(pattern, css, re.M | re.S)
+        assert match, f"no {name} theme block"
+        blocks[name] = match.group(1)
+    return blocks
+
+
+# Bootstrap's `table-hover`, which is what v4 uses, lands at about 1.16
+# against a white page. The floor sits just above it: the first attempt here
+# reused `--gl-surface` and measured 1.10 in Chromium, which reads as almost
+# nothing in a dense monospace table -- visible only if you already know which
+# row you are looking for.
+_MIN_HOVER_CONTRAST = 1.2
+
+
+@pytest.mark.parametrize("theme", ["dark", "light"])
+def test_the_hover_highlight_is_actually_perceptible(theme):
+    """A token that exists is not the same as a highlight you can see.
+
+    Without this, retuning `--gl-row-hover` to any value near `--gl-bg` --
+    including back to `--gl-surface`, which is the mistake this chantier
+    actually made first -- passes every other test in this file while the
+    feature silently stops working.
+    """
+    block = _theme_blocks(_TOKENS.read_text())[theme]
+    values = dict(re.findall(r"(--gl-[\w-]+)\s*:\s*(#[0-9a-fA-F]{6})\s*;", block))
+
+    ratio = _contrast(values["--gl-row-hover"], values["--gl-bg"])
+    assert ratio >= _MIN_HOVER_CONTRAST, (
+        f"{theme}: --gl-row-hover is {ratio:.3f}:1 against --gl-bg, "
+        f"below the {_MIN_HOVER_CONTRAST}:1 floor -- it would read as nothing"
+    )
+
+
+@pytest.mark.parametrize("theme", ["dark", "light"])
+def test_the_hover_highlight_does_not_shout(theme):
+    """The other end: a hover is feedback, not an alert. Anything approaching
+    a tier badge's contrast would make a moving cursor the loudest thing on
+    the page."""
+    block = _theme_blocks(_TOKENS.read_text())[theme]
+    values = dict(re.findall(r"(--gl-[\w-]+)\s*:\s*(#[0-9a-fA-F]{6})\s*;", block))
+
+    assert _contrast(values["--gl-row-hover"], values["--gl-bg"]) <= 2.0, theme

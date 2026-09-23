@@ -18,6 +18,15 @@
   --gl-muted: #99a1ab;
   --gl-border: #2c3239;
 
+  /* A row the cursor is over, in a table whose rows do something when
+   * clicked (the process list, `.gl-pinnable`). Its OWN token rather than
+   * `--gl-surface`: that one is the raised background of the overlays, and
+   * retuning those must not silently retune this. Measured against
+   * `--gl-bg` rather than picked by eye -- 1.35:1 here, where `--gl-surface`
+   * gave 1.10 and v4's Bootstrap `table-hover` gives about 1.16. A dense
+   * monospace table swallows a tint that would read fine on a card. */
+  --gl-row-hover: #2a3038;
+
   --gl-level-ok: #57c08a;
   --gl-level-careful: #5aa9e6;
   --gl-level-warning: #e0a63c;
@@ -77,6 +86,9 @@
   --gl-fg: #1b1f23;
   --gl-muted: #5a636d;
   --gl-border: #d5dae0;
+  /* 1.27:1 against this theme's white page -- the same perceived step as the
+   * dark theme's, not the same hex arithmetic. */
+  --gl-row-hover: #dfe5eb;
 
   --gl-level-ok: #1a7f4b;
   --gl-level-careful: #1667a8;
