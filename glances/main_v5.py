@@ -270,6 +270,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="disable unicode characters in the curses interface",
     )
     parser.add_argument(
+        "--disable-cursor",
+        dest="disable_cursor",
+        action="store_true",
+        default=False,
+        help="disable the process-selection cursor (UP/DOWN) in the curses interface",
+    )
+    parser.add_argument(
         "--disable-config-exec",
         dest="disable_config_exec",
         action="store_true",
@@ -763,6 +770,7 @@ def assemble(
             hide_public_info=getattr(args, "hide_public_info", False),
             byte=getattr(args, "byte", False),
             disable_unicode=getattr(args, "disable_unicode", False),
+            disable_cursor=getattr(args, "disable_cursor", False),
             programs=getattr(args, "programs", False),
         )
 

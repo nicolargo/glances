@@ -1187,8 +1187,72 @@ curses surface — as its own owned group. No implementation in parity wave 1
 (2026-09-10); scope decision recorded in
 `docs/superpowers/specs/2026-09-10-glances-v5-parity-wave1-design.md` §6._
 
-- **Process management**: selection cursor (`UP`/`DOWN`), `k` kill, `+`/`-` nice,
-  `ENTER`/`E` filter, `e` extended stats, `M` min/max reset.
+- **Process management** (2.X-b). Designed as one group and **split into
+  four** because the roadmap line above is six features with three different
+  prerequisites — and because a destructive key must not land in the same
+  push as its own scaffolding. Design:
+  `docs/superpowers/specs/2026-09-23-glances-v5-tui-process-management-design.md`.
+
+  **Shipped (b1 + b2, 2026-09-23)**: the selection cursor (`UP`/`DOWN`,
+  `--disable-cursor`), `k` kill, `+`/`-` nice, and the popup machinery the
+  last three need. The engine already carried every action
+  (`processes.py:758`, `:769`, `:780`) — the whole chantier was on the TUI
+  side.
+
+  **Still open**: `e` extended stats (b3) and the process filter (b4 —
+  `ENTER`, `E`, `-f/--process-filter`, the filtered summary block, and `M`
+  which only resets *that* block).
+
+  Four decisions worth carrying forward:
+
+  - **The cursor is clamped to the rows the last frame DREW**, not to
+    `glances_processes.processes_count` — which reads 0 in v5, because
+    `_max_processes` is never set (`processes.py:247-254`). The renderer is
+    the authority. The property this buys is the one that makes `k`
+    trustworthy: the selected process is always on screen, so a confirmation
+    can never name something the user cannot see.
+  - **A mutation names its target before it acts.** The pid is captured from
+    the frame on screen, once, before any popup, and the engine is called
+    with that captured value. The list re-sorts every cycle, so an index
+    re-resolved after a confirmation can address a different process than the
+    one the confirmation named.
+  - **`_handle_key` stays pure.** A popup is curses I/O, so a key that needs
+    one returns a new result kind, `"modal"`, and `_loop` runs it. Same
+    separation v4 reaches by accident (its handler sets a flag, `display()`
+    draws the popup), made deliberate — and it is what keeps ~40 unit tests
+    running without a terminal.
+  - **A refused renice is now visible.** v4 logs it and shows nothing
+    (`processes.py:767`, `:778`), so pressing `+` on someone else's process
+    does literally nothing a TUI user can perceive. `nice_increase` /
+    `nice_decrease` now return whether the OS accepted, and the TUI puts the
+    refusal on screen. Additive: v4's callers ignore the return.
+
+  **Three v4 defects this chantier surfaced**, all recorded in the design
+  rather than fixed in v4:
+
+  1. `k`, `+` and `-` read the pid from the `processlist` plugin
+     unconditionally (`glances_curses.py:638`, `:641`, `:647`) — **even while
+     the program list is on screen**, so they act on a row other than the one
+     displayed. v5 refuses in program view; its `programlist` schema carries
+     no pid at all.
+  2. v4 runs **both** of its dispatch tables on every keypress
+     (`glances_curses.py:303-305`), and its second table binds the raw codes
+     65 / 66 as arrow fallbacks — which are `ord("A")` and `ord("B")`. So
+     pressing `A` in v4 toggles AMPs *and* moves the cursor up. v5 does not
+     carry the aliases.
+  3. `M` (reset min/max) reads its flag inside
+     `if glances_processes.process_filter is not None:`
+     (`processlist/__init__.py:648-650`). With no filter set it does nothing
+     at all — it is a sub-feature of the filter, not a peer of it, which is
+     why it ships with b4 and not before.
+
+  And **one v5 defect it found in the live smoke test**: an escape sequence
+  ncurses does not translate arrives byte by byte, and 27 is `quit` — so the
+  first arrow key **exited Glances**. The bug predates 2.X-b (a mouse report,
+  a bracketed paste or an unmapped function key did the same), but binding the
+  arrows is what makes it the first thing a user hits. `_read_key` peeks once,
+  non-blocking, behind a 27: nothing there is a real Esc; something there is a
+  sequence to resolve or swallow. Design §5.7.
 - ~~**The 23 per-plugin show/hide toggles**~~ — **shipped (2.X-a, 2026-09-21)**,
   and there are **24** of them, not 23. `A C d D f G I K l n N P Q r R s V W z
   7 8 2 3 5`, each one a `hide` entry in `_HOTKEYS` naming the plugins it

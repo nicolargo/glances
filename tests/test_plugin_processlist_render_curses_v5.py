@@ -633,3 +633,48 @@ def test_render_thread_count_is_never_truncated(fields):
     """1234 threads used to read "234"; v4 lets the value overflow instead."""
     rows = render({"data": [_proc(pid=1, num_threads=1234)], "_levels": {}}, fields)
     assert "1234" in [c.text.strip() for c in rows[1].cells]
+
+
+# ------------------------------------------------- selection cursor (2.X-b)
+
+
+def _decorated_rows(rows):
+    """Row indices (0 = header) whose command cells carry the selection mark."""
+    return [
+        i for i, row in enumerate(rows) if any(c.underline and c.color is ColorRole.OK for c in row.cells[CMD_START:])
+    ]
+
+
+def test_no_cursor_in_the_view_decorates_nothing(payload, fields):
+    """Export, tests and `--disable-cursor` all reach the renderer as an
+    ABSENT key — the pre-2.X-b output, byte for byte."""
+    assert _decorated_rows(render(payload, fields)) == []
+    assert _decorated_rows(render(payload, fields, view={"sort_key": "cpu_percent"})) == []
+
+
+@pytest.mark.parametrize("position", [0, 1, 2])
+def test_the_cursor_decorates_the_row_it_names(position, payload, fields):
+    """Row 0 is the column header, so process *i* is drawn at row *i+1*."""
+    rows = render(payload, fields, view={"cursor_position": position})
+    assert _decorated_rows(rows) == [position + 1]
+
+
+def test_the_decoration_is_v4s_underlined_green_command(payload, fields):
+    """v4 marks the command cells and nothing else, with `PROCESS_SELECTED` =
+    `OK | A_UNDERLINE` (`processlist/__init__.py:553`,
+    `outputs/glances_colors.py:154`). Not a reverse-video bar."""
+    rows = render(payload, fields, view={"cursor_position": 0})
+    selected = rows[1]
+
+    command = selected.cells[CMD_START:]
+    assert command and all(c.underline and c.color is ColorRole.OK for c in command)
+    # The numeric columns keep their own colours — including the warning-level
+    # CPU cell, which the selection must not overwrite.
+    assert not any(c.underline for c in selected.cells[:CMD_START])
+    assert selected.cells[CPU_COL].color is ColorRole.WARNING
+
+
+def test_a_cursor_past_the_last_row_decorates_nothing(payload, fields):
+    """The TUI clamps, but the renderer must not raise if it ever gets an
+    index it cannot honour (a frame built between a shrink and its re-clamp)."""
+    assert _decorated_rows(render(payload, fields, view={"cursor_position": 99})) == []

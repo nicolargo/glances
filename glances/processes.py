@@ -758,24 +758,36 @@ class GlancesProcesses:
     def nice_decrease(self, pid):
         """Decrease nice level
         On UNIX this is a number which usually goes from -20 to 20.
-        The higher the nice value, the lower the priority of the process."""
+        The higher the nice value, the lower the priority of the process.
+
+        Return True when the new level was applied, False when the OS refused
+        it. The v4 curses UI ignores the return and reads the log; the v5 TUI
+        tells the user on screen, which it cannot do if a refusal only ever
+        becomes a log line."""
         p = psutil.Process(pid)
         try:
             p.nice(p.nice() - 1)
             logger.info(f'Set nice level of process {pid} to {p.nice()} (higher the priority)')
         except psutil.AccessDenied:
             logger.warning(f'Can not decrease (higher the priority) the nice level of process {pid} (access denied)')
+            return False
+        return True
 
     def nice_increase(self, pid):
         """Increase nice level
         On UNIX this is a number which usually goes from -20 to 20.
-        The higher the nice value, the lower the priority of the process."""
+        The higher the nice value, the lower the priority of the process.
+
+        Return True when the new level was applied, False when the OS refused
+        it (see ``nice_decrease``)."""
         p = psutil.Process(pid)
         try:
             p.nice(p.nice() + 1)
             logger.info(f'Set nice level of process {pid} to {p.nice()} (lower the priority)')
         except psutil.AccessDenied:
             logger.warning(f'Can not increase (lower the priority) the nice level of process {pid} (access denied)')
+            return False
+        return True
 
     def kill(self, pid, timeout=3):
         """Kill process with pid"""

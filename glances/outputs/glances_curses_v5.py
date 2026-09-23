@@ -24,12 +24,15 @@ from __future__ import annotations
 
 import curses
 import logging
+import os
 import threading
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field, replace
 from itertools import zip_longest
 from typing import TYPE_CHECKING, Any
+
+import psutil
 
 from glances import __version__
 from glances.outputs.curses_renderer_v5 import (
@@ -122,6 +125,7 @@ class ViewState:
       aggregation (hotkey ``j``).
     - ``show_help=False`` — the help overlay is hidden (hotkey ``h``).
     - ``hidden_plugins=set()`` — nothing hidden by the user (SHOW/HIDE keys).
+    - ``cursor_position=0`` — the process list's first row (UP / DOWN).
 
     ``hidden_plugins`` is deliberately a namespace of its own, NOT the
     ``hide_<plugin>`` view keys the width-degradation cascades write
@@ -138,6 +142,13 @@ class ViewState:
     programs: bool = False
     show_help: bool = False
     hidden_plugins: set[str] = field(default_factory=set)
+    # Process-selection cursor (2.X-b): an index into the order the process
+    # block is CURRENTLY DRAWING, not into the store's list and not a pid.
+    # The list is re-sorted every cycle (`_apply_live_sort`), so the process
+    # under the cursor changes when the sort is volatile -- v4 behaves the
+    # same way (design 5.2), and the one place where that is dangerous (`k`)
+    # closes it by naming its target before it acts, not by pinning the index.
+    cursor_position: int = 0
     # TOGGLE DATA TYPE (2.X-c). Seeded from the CLI at construction, then
     # flipped by their keys.
     byte: bool = False
@@ -245,13 +256,80 @@ class TuiV5(threading.Thread):
         # Tri-state, so it cannot be a plain `switch`: `None` means "follow
         # `[fs] free_space`", which is why it has its own verb.
         "F": {"action": "fs_free_space", "group": "TOGGLE VIEW", "desc": "Filesystem: used or free space"},
+        # Acting on the cursor-selected process (2.X-b). Each needs a target,
+        # so each is `cursor: True` -- `_handle_key` refuses them outright
+        # when the cursor is disabled, exactly as v4 guards them in its
+        # dispatch dict (`glances_curses.py:279-290`).
+        "k": {
+            "action": "kill_process",
+            "cursor": True,
+            "group": "MISCELLANEOUS",
+            "desc": "Kill the selected process (asks first)",
+        },
+        "+": {
+            "action": "nice_increase",
+            "cursor": True,
+            "group": "MISCELLANEOUS",
+            "desc": "Increase nice (lower priority)",
+        },
+        "-": {
+            "action": "nice_decrease",
+            "cursor": True,
+            "group": "MISCELLANEOUS",
+            "desc": "Decrease nice (needs admin rights)",
+        },
         # Misc / control.
         "h": {"action": "help", "group": "MISCELLANEOUS", "desc": "Show / hide this help screen"},
         "q": {"action": "quit", "group": "MISCELLANEOUS", "desc": "Quit Glances (or Esc)"},
     }
 
+    # Hotkeys that have no character to be keyed by.
+    #
+    # `_HOTKEYS` is addressed by `chr(key)`, and every consumer relies on its
+    # key being the character to press -- `hotkeys.js` and its drift test
+    # (`tests/test_webui_v5_hotkeys_drift.py`) iterate it on that assumption.
+    # `chr(curses.KEY_UP)` is a real character (U+0103), so an entry there
+    # would dispatch and then print a nonsense key label in the help overlay.
+    #
+    # So: a second table, keyed by the curses keycode, carrying the same
+    # `group` / `desc` plus the `label` to print. `_help_lines` reads BOTH,
+    # which is what keeps "no bound key goes undocumented" true -- the
+    # property 2.X-a established and the reason the help screen is worth
+    # trusting.
+    # v4 also accepts the raw ANSI codes 65 / 66 for terminals that do not
+    # report KEY_UP / KEY_DOWN (`glances_curses.py:289-290`). v5 does NOT,
+    # because 65 and 66 are `ord("A")` and `ord("B")` -- both bound here
+    # (show/hide AMPs, disk I/O byte/s vs IOPS). v4 gets away with it only by
+    # running BOTH of its dispatch tables on every keypress
+    # (`glances_curses.py:303-305`), which means pressing `A` in v4 toggles
+    # AMPs *and* moves the cursor up. `curses.wrapper` enables `keypad`, so
+    # KEY_UP / KEY_DOWN arrive as themselves; the aliases buy nothing and
+    # would cost two working hotkeys.
+    _SPECIAL_HOTKEYS: dict[int, dict[str, Any]] = {
+        curses.KEY_UP: {
+            "action": "cursor_up",
+            "cursor": True,
+            "group": "SELECT PROCESS",
+            "desc": "Select the previous process",
+            "label": "UP",
+        },
+        curses.KEY_DOWN: {
+            "action": "cursor_down",
+            "cursor": True,
+            "group": "SELECT PROCESS",
+            "desc": "Select the next process",
+            "label": "DOWN",
+        },
+    }
+
     # Display order of the hotkey groups in the help overlay.
-    _HELP_GROUPS: tuple[str, ...] = ("SORT PROCESSES", "TOGGLE VIEW", "SHOW/HIDE", "MISCELLANEOUS")
+    _HELP_GROUPS: tuple[str, ...] = (
+        "SORT PROCESSES",
+        "SELECT PROCESS",
+        "TOGGLE VIEW",
+        "SHOW/HIDE",
+        "MISCELLANEOUS",
+    )
     # Horizontal gap between the two help columns.
     _HELP_COL_GAP = 4
     # Documentation link shown in the help overlay (v4 parity).
@@ -288,6 +366,7 @@ class TuiV5(threading.Thread):
         byte: bool = False,
         disable_unicode: bool = False,
         programs: bool = False,
+        disable_cursor: bool = False,
     ) -> None:
         super().__init__(name="glances-tui-v5", daemon=True)
         self.store = store
@@ -348,6 +427,23 @@ class TuiV5(threading.Thread):
         # time the overlay is opened; clamped to the content in ``_paint_help``
         # (which is the only place that knows the terminal height).
         self._help_scroll = 0
+        # Process-selection cursor (2.X-b), seeded from --disable-cursor.
+        # When off, every cursor key and every key that needs a target is
+        # `"ignored"` and no row is decorated -- v4's guard, one flag instead
+        # of repeated `and not self.args.disable_cursor` clauses.
+        self._cursor_enabled = not bool(disable_cursor)
+        # How many process rows the LAST painted frame actually drew. The
+        # cursor is clamped to it so the selected process is always on
+        # screen -- which is what makes `k`'s confirmation trustworthy: it
+        # can never name a process the user cannot see (design 5.3).
+        # 0 until the first paint, so `DOWN` is inert for exactly one frame.
+        self._cursor_max = 0
+        # Set by `_handle_key` (which stays pure) when a key needs the
+        # terminal: a popup, i.e. curses I/O. `_loop` runs it and clears it.
+        self._pending: str | None = None
+        # The ordered process items of the frame currently on screen; see
+        # `_frame_for_view`.
+        self._cursor_items: list[dict[str, Any]] = []
 
     # ----------------------------------------------------------- control
 
@@ -368,9 +464,14 @@ class TuiV5(threading.Thread):
           *immediately*, bypassing the key throttle (the help frame is static
           and cheap to rebuild; a resize must reflow to the new dimensions at
           once).
+        - ``"modal"``   — the key needs the terminal (a popup). ``_pending``
+          names what to run; the caller calls ``_run_pending`` and repaints.
         - ``"ignored"`` — unmapped key / non-character: no state change.
 
-        Pure (no curses I/O) so it can be unit-tested without a terminal.
+        Pure (no curses I/O) so it can be unit-tested without a terminal —
+        which is exactly why a popup cannot happen here. Same separation v4
+        arrives at (its handler sets a flag, ``display()`` draws the popup),
+        made deliberate.
         """
         # Terminal resize (SIGWINCH → curses.KEY_RESIZE): force an immediate
         # repaint so the layout reflows to the new dimensions without waiting
@@ -386,43 +487,23 @@ class TuiV5(threading.Thread):
 
         if key == 27:  # ESC always quits (not a printable hotkey).
             return "quit"
-        try:
-            ch = chr(key)
-        except ValueError:
-            return "ignored"
-        action = self._HOTKEYS.get(ch)
+        # Keys with no character to be keyed by (arrows) are looked up FIRST:
+        # `chr(curses.KEY_UP)` is a real character, so leaving them to the
+        # character table would silently shadow whatever letter that is.
+        action = self._SPECIAL_HOTKEYS.get(key)
+        if action is None:
+            try:
+                ch = chr(key)
+            except ValueError:
+                return "ignored"
+            action = self._HOTKEYS.get(ch)
         if action is None:
             return "ignored"
-        if "action" in action:
-            verb = action["action"]
-            if verb == "quit":
-                return "quit"
-            if verb == "help":
-                self._view.show_help = True
-                self._help_scroll = 0
-                return "repaint"
-            if verb == "fs_free_space":
-                # First press resolves the tri-state against what the fs
-                # payload is currently showing, so it always visibly flips --
-                # the same rule the browser's TOGGLE VIEW overrides follow.
-                # Read from the store rather than cached at render time: the
-                # payload IS the source of truth, and a cache would go stale
-                # against a config reload.
-                current = self._view.fs_free_space
-                if current is None:
-                    fs = self.store.as_dict().get("fs")
-                    current = bool(fs.get("free_space")) if isinstance(fs, dict) else False
-                self._view.fs_free_space = not current
-                return "changed"
-            if verb == "full_quicklook":
-                # Toggle full-width quicklook: EVERY other TOP block goes,
-                # so the row holds quicklook alone
-                # (``curses_renderer_v5._FULL_QUICKLOOK_HIDDEN``, a deliberate
-                # v4 divergence recorded there). A stats-view mutation, so it
-                # returns ``"changed"`` like the other view switches.
-                self._full_quicklook = not self._full_quicklook
-                return "changed"
+        # A key that needs a selected process does nothing without a cursor.
+        if action.get("cursor") and not self._cursor_enabled:
             return "ignored"
+        if "action" in action:
+            return self._handle_action(action["action"])
         if "switch" in action:
             attr = action["switch"]
             setattr(self._view, attr, not getattr(self._view, attr))
@@ -446,6 +527,56 @@ class TuiV5(threading.Thread):
                 glances_processes.set_sort_key(sort_key, sort_key == "auto")
             except Exception as e:  # pragma: no cover — defensive
                 logger.warning("TUI: set_sort_key(%s) failed: %s", sort_key, e)
+            return "changed"
+        return "ignored"
+
+    # Verbs that need the terminal, so they are deferred to `_run_pending`
+    # rather than executed in this pure function (design 5.4).
+    _MODAL_VERBS = frozenset({"kill_process", "nice_increase", "nice_decrease"})
+
+    def _handle_action(self, verb: str) -> str:
+        """Execute an ``action`` entry's verb. Pure, like its caller."""
+        if verb == "quit":
+            return "quit"
+        if verb == "help":
+            self._view.show_help = True
+            self._help_scroll = 0
+            return "repaint"
+        if verb in self._MODAL_VERBS:
+            self._pending = verb
+            return "modal"
+        if verb == "fs_free_space":
+            # First press resolves the tri-state against what the fs payload
+            # is currently showing, so it always visibly flips -- the same
+            # rule the browser's TOGGLE VIEW overrides follow. Read from the
+            # store rather than cached at render time: the payload IS the
+            # source of truth, and a cache would go stale against a config
+            # reload.
+            current = self._view.fs_free_space
+            if current is None:
+                fs = self.store.as_dict().get("fs")
+                current = bool(fs.get("free_space")) if isinstance(fs, dict) else False
+            self._view.fs_free_space = not current
+            return "changed"
+        if verb == "cursor_up":
+            if self._view.cursor_position == 0:
+                return "ignored"
+            self._view.cursor_position -= 1
+            return "changed"
+        if verb == "cursor_down":
+            # The ceiling is what the last frame DREW, not how many processes
+            # exist: the selection must stay visible (design 5.3).
+            if self._view.cursor_position >= self._cursor_max - 1:
+                return "ignored"
+            self._view.cursor_position += 1
+            return "changed"
+        if verb == "full_quicklook":
+            # Toggle full-width quicklook: EVERY other TOP block goes, so the
+            # row holds quicklook alone
+            # (``curses_renderer_v5._FULL_QUICKLOOK_HIDDEN``, a deliberate v4
+            # divergence recorded there). A stats-view mutation, so it returns
+            # ``"changed"`` like the other view switches.
+            self._full_quicklook = not self._full_quicklook
             return "changed"
         return "ignored"
 
@@ -479,6 +610,207 @@ class TuiV5(threading.Thread):
             self._help_scroll = 0
             return "repaint"
         return "ignored"
+
+    # An escape sequence ncurses handed back unassembled, mapped to the key
+    # it stands for. `\x1bOA` is what a terminal sends for Up in APPLICATION
+    # cursor mode (terminfo `kcud1`, which ncurses switches on via `smkx`);
+    # `\x1b[A` is the NORMAL-mode form. ncurses translates whichever one its
+    # terminfo entry lists, and hands the other back byte by byte -- so under
+    # tmux, screen, or a TERM whose entry covers only one of the two, an arrow
+    # key arrives here as a bare ESC followed by its tail.
+    _ESCAPE_SEQUENCES: dict[str, int] = {
+        "[A": curses.KEY_UP,
+        "OA": curses.KEY_UP,
+        "[B": curses.KEY_DOWN,
+        "OB": curses.KEY_DOWN,
+    }
+    # Longest tail `_read_key` will drain after an ESC before giving up.
+    _ESCAPE_TAIL_MAX = 6
+
+    def _read_key(self, stdscr) -> int:
+        """Read one key, resolving an escape sequence ncurses did not.
+
+        A bare 27 is ambiguous: the user pressed Esc, OR ncurses is handing
+        back a sequence it could not translate, one byte at a time. Telling
+        them apart takes exactly one non-blocking read -- a real Esc has
+        nothing behind it.
+
+        Getting this wrong is not cosmetic: 27 means QUIT, so an untranslated
+        arrow key would exit Glances. That was invisible until 2.X-b bound the
+        arrows, but it was never only about arrows -- a mouse report, a
+        bracketed paste or an unmapped function key is an escape sequence too,
+        and each of them quit Glances.
+        """
+        key = stdscr.getch()
+        if key != 27:
+            return key
+        # Peek: `nodelay` so a real Esc costs nothing.
+        stdscr.nodelay(True)
+        try:
+            tail = ""
+            for _ in range(self._ESCAPE_TAIL_MAX):
+                nxt = stdscr.getch()
+                if nxt == -1:
+                    break
+                tail += chr(nxt) if 0 <= nxt < 0x110000 else ""
+                resolved = self._ESCAPE_SEQUENCES.get(tail)
+                if resolved is not None:
+                    return resolved
+        finally:
+            # `nodelay(False)` is `wtimeout(-1)` -- blocking. That is fine
+            # here and only here: `_loop` re-applies its own `timeout()` at
+            # the top of every iteration, before the next read.
+            stdscr.nodelay(False)
+        # Nothing followed -> a real Esc. Something followed but we do not
+        # know it -> swallow it rather than quit or dispatch its tail as
+        # separate keystrokes.
+        return 27 if not tail else -1
+
+    # ------------------------------------------- popups & process actions
+
+    # How long an informational popup stays up when the user presses nothing.
+    _POPUP_INFO_SECONDS = 3.0
+    # Longest a confirmation popup blocks in one `getch`, so `stop()` is
+    # honoured within that bound instead of waiting for an answer forever.
+    _POPUP_GETCH_BLOCK = 0.25
+
+    def _ordered_process_items(self, snapshot: dict[str, Any]) -> list[dict[str, Any]]:
+        """The process items in render order, filtered exactly as the
+        renderer filters them — so index *i* here is the row the renderer
+        draws at *i*."""
+        payload = snapshot.get(self._cursor_block_name())
+        data = payload.get("data") if isinstance(payload, dict) else None
+        if not isinstance(data, list):
+            return []
+        return [item for item in data if isinstance(item, dict)]
+
+    def _selected_process(self) -> tuple[dict[str, Any] | None, str | None]:
+        """Resolve the cursor to a process, or to a reason it cannot be.
+
+        Returns ``(process, None)`` or ``(None, reason)``. Every refusal is a
+        sentence the user reads in a popup — an interactive key that silently
+        does nothing is the defect this whole path exists to avoid.
+        """
+        if self._view.programs:
+            # v4 resolves the pid from the `processlist` plugin even while the
+            # PROGRAM list is on screen (`glances_curses.py:638`, `:641`,
+            # `:647`), so it acts on a row other than the one it shows. v5's
+            # `programlist` payload carries no pid at all, and reproducing the
+            # v4 behaviour would mean reproducing that bug (design 8.3).
+            return None, "Not available in the program view.\n\nPress `j` to go back to the process list."
+        if self._view.cursor_position >= len(self._cursor_items):
+            return None, "No process is selected."
+        process = self._cursor_items[self._view.cursor_position]
+        pid = process.get("pid")
+        if not isinstance(pid, int):
+            return None, "The selected process has no PID."
+        if pid == os.getpid():
+            # `glances_processes.kill` guards this with a bare `assert`
+            # (`processes.py:782`), which `python -O` strips. Check it here,
+            # for all three actions rather than just for `kill`.
+            return None, "That is Glances itself."
+        return process, None
+
+    def _run_pending(self, stdscr) -> None:
+        """Execute the popup-bearing action `_handle_key` deferred.
+
+        The pid is captured ONCE, before any popup, and the action runs
+        against that captured value — never re-resolved through the cursor
+        afterwards. The list re-sorts every cycle, so an index resolved after
+        a confirmation can address a different process than the one the
+        confirmation named (design 5.6).
+        """
+        verb, self._pending = self._pending, None
+        if verb is None:  # pragma: no cover — defensive
+            return
+        process, refusal = self._selected_process()
+        if refusal is not None:
+            self._popup_info(stdscr, refusal)
+            return
+        if process is None:  # pragma: no cover — `_selected_process` pairs them
+            return
+        pid = int(process["pid"])
+        name = str(process.get("name") or "?")
+        if verb == "kill_process" and not self._popup_yesno(stdscr, f"Kill {name} (pid {pid})?"):
+            return
+        self._apply_process_action(stdscr, verb, pid, name)
+
+    def _apply_process_action(self, stdscr, verb: str, pid: int, name: str) -> None:
+        """Call the engine for `verb` on `pid`, reporting every failure.
+
+        v4 logs a refused nice change and shows nothing (`processes.py:767`,
+        `:778`); a TUI user has no log to read, so the key looks broken. Here
+        every outcome that is not "it worked" reaches the screen.
+        """
+        label = f"{name} (pid {pid})"
+        try:
+            if verb == "kill_process":
+                glances_processes.kill(pid)
+            elif verb == "nice_increase":
+                if not glances_processes.nice_increase(pid):
+                    self._popup_info(stdscr, f"Not allowed to renice {label}.")
+            elif verb == "nice_decrease":
+                if not glances_processes.nice_decrease(pid):
+                    self._popup_info(stdscr, f"Not allowed to renice {label}.\n\nLowering a nice value needs root.")
+        except psutil.NoSuchProcess:
+            self._popup_info(stdscr, f"{label} is already gone.")
+        except psutil.AccessDenied:
+            self._popup_info(stdscr, f"Not allowed to act on {label}.")
+        except Exception as e:  # noqa: BLE001 — psutil raises widely; never kill the TUI over it
+            logger.warning("TUI: %s on pid %s failed: %s", verb, pid, e)
+            self._popup_info(stdscr, f"Could not act on {label}:\n\n{e}")
+
+    def _popup_window(self, stdscr, message: str):
+        """Draw a centred bordered popup, or return None if it does not fit.
+
+        v4 aborts the same way rather than clipping (`glances_curses.py:1041-1043`).
+        """
+        max_y, max_x = stdscr.getmaxyx()
+        lines = message.split("\n")
+        width = max((len(line) for line in lines), default=0) + 4
+        height = len(lines) + 4
+        if width > max_x or height > max_y:
+            logger.info("TUI: popup does not fit (%s)", " ".join(lines))
+            return None
+        try:
+            win = curses.newwin(height, width, (max_y - height) // 2, (max_x - width) // 2)
+            win.border()
+            for i, line in enumerate(lines):
+                win.addnstr(2 + i, 2, line, width - 4)
+            win.keypad(True)
+            win.refresh()
+        except curses.error as e:  # pragma: no cover — terminal-dependent
+            logger.warning("TUI: could not draw popup: %s", e)
+            return None
+        return win
+
+    def _popup_info(self, stdscr, message: str) -> None:
+        """Show `message` until the user presses a key, or for a few seconds.
+
+        v4 naps for the whole duration (`glances_curses.py:1060`) and ignores
+        both the keyboard and `stop()` while it does.
+        """
+        win = self._popup_window(stdscr, message)
+        if win is None:
+            return
+        win.timeout(int(self._POPUP_INFO_SECONDS * 1000))
+        win.getch()
+
+    def _popup_yesno(self, stdscr, message: str) -> bool:
+        """Ask for confirmation. Anything but an explicit yes is a no."""
+        win = self._popup_window(stdscr, f"{message}\n\nConfirm ([y]es / [n]o): ")
+        if win is None:
+            # A terminal too small to ask in is a terminal too small to
+            # destroy something from.
+            return False
+        win.timeout(int(self._POPUP_GETCH_BLOCK * 1000))
+        while not self._stop_event.is_set():
+            key = win.getch()
+            if key in (ord("y"), ord("Y")):
+                return True
+            if key in (ord("n"), ord("N"), 27, ord("q")):
+                return False
+        return False
 
     # ----------------------------------------------------------- run loop
 
@@ -538,7 +870,7 @@ class TuiV5(threading.Thread):
                     block = min(block, self._STARTUP_POLL_INTERVAL)
                 stdscr.timeout(int(block * 1000))
 
-                key = stdscr.getch()
+                key = self._read_key(stdscr)
                 if key != -1:
                     result = self._handle_key(key)
                     if result == "quit":
@@ -549,6 +881,18 @@ class TuiV5(threading.Thread):
                             except Exception as e:  # pragma: no cover — defensive
                                 logger.warning("TUI on_quit callback failed: %s", e)
                         break
+                    if result == "modal":
+                        # A popup: curses I/O, so it happens here and not in
+                        # the pure `_handle_key`. Repaint unconditionally
+                        # afterwards -- the popup window has to be erased
+                        # whatever the user chose.
+                        self._run_pending(stdscr)
+                        self._repaint(stdscr)
+                        now = time.monotonic()
+                        last_paint = now
+                        last_change_paint = now - self._MIN_KEY_REPAINT_INTERVAL
+                        dirty = False
+                        continue
                     if result == "repaint":
                         # Help open / close / scroll: repaint at once, bypassing
                         # the key throttle (the help frame is static and cheap).
@@ -627,8 +971,32 @@ class TuiV5(threading.Thread):
         else:
             max_y, max_x = stdscr.getmaxyx()
             frame = self._build_fitted_frame(max_x, max_y)
+            self._note_cursor_bound(frame)
             self._paint(stdscr, frame)
         stdscr.refresh()
+
+    # Name of the process block the cursor addresses, per view mode. `j`
+    # swaps which of the two is in the frame (`_frame_for_view`), and the
+    # cursor follows whichever is actually drawn.
+    def _cursor_block_name(self) -> str:
+        return "programlist" if self._view.programs else "processlist"
+
+    def _note_cursor_bound(self, frame: Frame) -> None:
+        """Record how many process rows the frame drew, and clamp into it.
+
+        The renderer is the authority: only it knows what the vertical-fit
+        pass left room for. Row 0 of the block is the column header, so the
+        item count is ``len(rows) - 1``.
+
+        Clamping HERE as well as in ``_handle_key`` is not belt-and-braces:
+        the terminal can shrink (or an alert can claim rows) under a cursor
+        that never moved, and a stale index would decorate nothing while
+        `k` still resolved it.
+        """
+        block = next((b for b in frame.right if b.name == self._cursor_block_name()), None)
+        self._cursor_max = max(0, len(block.rows) - 1) if block is not None else 0
+        if self._view.cursor_position >= self._cursor_max:
+            self._view.cursor_position = max(0, self._cursor_max - 1)
 
     # ----------------------------------------------------------- helpers
 
@@ -654,6 +1022,13 @@ class TuiV5(threading.Thread):
         # so a key change is reflected on the very next repaint, without
         # waiting for the engine's next update cycle to re-sort the store.
         self._apply_live_sort(snapshot)
+        # The ordered list the process block is about to render, kept so that
+        # `k` / `+` / `-` resolve the cursor against THE FRAME ON SCREEN and
+        # not against a fresher snapshot taken at keypress time. Between a
+        # paint and a keypress the collector may have published a differently
+        # ordered list; resolving an index against that one would act on a
+        # process other than the underlined row (design 5.6).
+        self._cursor_items = self._ordered_process_items(snapshot)
         history = self.alerts.get_history() if self.alerts is not None else []
         # Distinguish "still in warmup" (alerts cannot fire yet) from "truly
         # empty history" — the alert block shows different placeholders for
@@ -952,6 +1327,11 @@ class TuiV5(threading.Thread):
         # renderer keeps reading its payload metadata.
         if self._view.fs_free_space is not None:
             view["fs_free_space"] = self._view.fs_free_space
+        # Published only when the cursor is enabled, so `--disable-cursor`
+        # reaches the renderer as an ABSENT key -- the same "no key, no
+        # decoration" path export and the tests already take.
+        if self._cursor_enabled:
+            view["cursor_position"] = self._view.cursor_position
         view["unicode"] = self._unicode
         # The user's own SHOW/HIDE set. A frozenset, so the per-cycle view
         # cannot be a back door onto the live ViewState (the fit loops copy
@@ -1289,24 +1669,32 @@ class TuiV5(threading.Thread):
     def _help_lines(self) -> list[Row]:
         """Build the help body as a single column of display rows.
 
-        Generated straight from ``_HOTKEYS`` (the dispatch table) so the
-        overlay documents *every* key the TUI actually responds to — add a
-        hotkey and it shows up here automatically, with no second list to
-        keep in sync (CLAUDE.md "extensibilité sans modification du cœur").
+        Generated straight from the dispatch tables so the overlay documents
+        *every* key the TUI actually responds to — add a hotkey and it shows
+        up here automatically, with no second list to keep in sync (CLAUDE.md
+        "extensibilité sans modification du cœur").
+
+        BOTH tables: ``_HOTKEYS`` keyed by character, and ``_SPECIAL_HOTKEYS``
+        keyed by curses keycode for the keys that have no character (the
+        arrows), which print the ``label`` they carry.
 
         Each group is a bold header followed by one ``  k  description`` row
         per key, with a blank spacer line between groups.
         """
+        labelled: list[tuple[str, dict[str, Any]]] = [
+            *self._HOTKEYS.items(),
+            *((spec["label"], spec) for spec in self._SPECIAL_HOTKEYS.values()),
+        ]
         lines: list[Row] = []
         for group in self._HELP_GROUPS:
-            keys = [(k, spec) for k, spec in self._HOTKEYS.items() if spec.get("group") == group]
+            keys = [(k, spec) for k, spec in labelled if spec.get("group") == group]
             if not keys:
                 continue
             if lines:
                 lines.append(Row(cells=[Cell(text="")]))  # spacer between groups
             lines.append(Row(cells=[Cell(text=group, color=ColorRole.HEADER)]))
             for k, spec in keys:
-                lines.append(Row(cells=[Cell(text=f"  {k:>2}  {spec.get('desc', '')}")]))
+                lines.append(Row(cells=[Cell(text=f"  {k:>4}  {spec.get('desc', '')}")]))
         return lines
 
     @staticmethod

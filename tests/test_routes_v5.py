@@ -1021,6 +1021,11 @@ def test_args_matches_the_real_v5_argument_set(config_factory, store):
         "config_path",
         "debug",
         "disable_config_exec",
+        # A boolean display preference, like `disable_unicode` two lines down:
+        # whether the curses UI offers a process-selection cursor. Nothing
+        # sensitive, and the WebUI would read this key if the cursor ever
+        # reaches the browser (2.X-b design 8.1).
+        "disable_cursor",
         "disable_plugin",
         "disable_unicode",
         "disable_webui",

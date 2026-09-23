@@ -8,6 +8,7 @@ renderer in test_curses_renderer_v5.
 
 from __future__ import annotations
 
+import curses
 import time
 from unittest.mock import MagicMock
 
@@ -1243,7 +1244,7 @@ def test_tui_v5_paint_help_renders_title_and_keys(fake_store, fake_alerts, fake_
     # and the overlay scrolls rather than clips when it does not fit. At 80
     # columns the key list falls back to a single column (the longest
     # description, `4`'s, is 34 chars), which makes it far too tall to fit.
-    fake_stdscr.getmaxyx.return_value = (40, 100)
+    fake_stdscr.getmaxyx.return_value = (80, 100)
     tui._paint_help(fake_stdscr)
 
     flat = " ".join(str(call) for call in fake_stdscr.addstr.call_args_list)
@@ -1306,7 +1307,7 @@ def test_tui_v5_help_shows_doc_link(fake_store, fake_alerts, fake_config):
     fake_stdscr = MagicMock()
     # Tall enough for the whole document (it grew with the SHOW/HIDE keys);
     # when it does not fit, the overlay scrolls rather than clips.
-    fake_stdscr.getmaxyx.return_value = (40, 100)
+    fake_stdscr.getmaxyx.return_value = (80, 100)
     tui._paint_help(fake_stdscr)
 
     flat = " ".join(str(call) for call in fake_stdscr.addstr.call_args_list)
@@ -1321,7 +1322,7 @@ def test_tui_v5_help_shows_color_binding(fake_store, fake_alerts, fake_config):
     fake_stdscr = MagicMock()
     # Tall enough for the whole document (it grew with the SHOW/HIDE keys);
     # when it does not fit, the overlay scrolls rather than clips.
-    fake_stdscr.getmaxyx.return_value = (40, 100)
+    fake_stdscr.getmaxyx.return_value = (80, 100)
     tui._paint_help(fake_stdscr)
 
     flat = " ".join(str(call) for call in fake_stdscr.addstr.call_args_list)
@@ -1389,7 +1390,9 @@ def test_tui_v5_paint_help_no_footer_when_everything_fits(fake_store, fake_alert
 
     tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
     fake_stdscr = MagicMock()
-    fake_stdscr.getmaxyx.return_value = (40, 120)
+    # Height grows with every hotkey group; the two-column layout at 120
+    # halves it, but "roomy" still has to mean roomy for the CURRENT table.
+    fake_stdscr.getmaxyx.return_value = (50, 120)
     tui._paint_help(fake_stdscr)
 
     flat = " ".join(str(call) for call in fake_stdscr.addstr.call_args_list)
@@ -3352,3 +3355,467 @@ def test_a_render_mode_key_flips_its_view_flag(key, attr, fake_store, fake_alert
     assert tui._build_view(120)[attr] is False
     assert tui._handle_key(ord(key)) == "changed"
     assert tui._build_view(120)[attr] is True
+
+
+# ------------------------------------------- 2.X-b1/b2: cursor and actions
+
+
+def _procs(n: int) -> list[dict]:
+    return [{"pid": 1000 + i, "name": f"proc{i}", "cmdline": [f"/bin/proc{i}"]} for i in range(n)]
+
+
+def _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config, n=5, **kw):
+    """A TUI whose cursor addresses `n` drawn process rows.
+
+    `_cursor_items` and `_cursor_max` are normally filled by `_repaint` from
+    the painted frame; setting them directly is what lets these tests exercise
+    the dispatch without a terminal.
+    """
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config, **kw)
+    tui._cursor_items = _procs(n)
+    tui._cursor_max = n
+    return tui
+
+
+def test_arrow_keys_move_the_cursor_and_stop_at_both_ends(fake_store, fake_alerts, fake_config):
+    """`UP`/`DOWN` are keyed by curses KEYCODE, not by character — they have no
+    character to be keyed by (design §5.1)."""
+    import curses
+
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config, n=3)
+
+    assert tui._handle_key(curses.KEY_UP) == "ignored"  # already at the top
+    assert tui._view.cursor_position == 0
+    assert tui._handle_key(curses.KEY_DOWN) == "changed"
+    assert tui._handle_key(curses.KEY_DOWN) == "changed"
+    assert tui._view.cursor_position == 2
+    # Ceiling: 3 rows drawn -> the last selectable index is 2.
+    assert tui._handle_key(curses.KEY_DOWN) == "ignored"
+    assert tui._view.cursor_position == 2
+    assert tui._handle_key(curses.KEY_UP) == "changed"
+    assert tui._view.cursor_position == 1
+
+
+def test_the_ansi_arrow_codes_are_not_bound_because_they_are_A_and_B(fake_store, fake_alerts, fake_config):
+    """v4 also accepts the raw codes 65/66 for KEY_UP/KEY_DOWN — and those are
+    `ord("A")` and `ord("B")`, both bound to real hotkeys. v4 runs both of its
+    dispatch tables on every key, so pressing `A` there toggles AMPs *and*
+    moves the cursor. v5 binds the codes to the letters only."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config)
+
+    assert 65 not in tui_mod.TuiV5._SPECIAL_HOTKEYS
+    assert 66 not in tui_mod.TuiV5._SPECIAL_HOTKEYS
+    assert tui._handle_key(65) == "changed"  # `A` -> show/hide AMPs
+    assert "amps" in tui._view.hidden_plugins
+    assert tui._view.cursor_position == 0  # ... and the cursor did NOT move
+
+
+def test_the_cursor_is_clamped_to_the_rows_actually_drawn(fake_store, fake_alerts, fake_config):
+    """The ceiling is the frame's row count, not the process count: the
+    selection has to stay on screen, because `k` names what it is about to
+    kill and must never name something invisible (design §5.3)."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config, n=50)
+    tui._cursor_max = 4  # a short terminal drew 4 rows out of the 50 processes
+    for _ in range(10):
+        tui._handle_key(curses.KEY_DOWN)
+    assert tui._view.cursor_position == 3
+
+
+def test_a_shrinking_frame_pulls_the_cursor_back_into_view(fake_store, fake_alerts, fake_config):
+    """The terminal can shrink under a cursor that never moved. `_repaint`
+    re-clamps from the painted frame, so a stale index cannot survive."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+    from glances.outputs.curses_renderer_v5 import Frame, PluginBlock, Row
+
+    tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config, n=20)
+    tui._view.cursor_position = 15
+
+    # 1 header row + 3 item rows.
+    frame = Frame(right=[PluginBlock(name="processlist", rows=[Row() for _ in range(4)])])
+    tui._note_cursor_bound(frame)
+
+    assert tui._cursor_max == 3
+    assert tui._view.cursor_position == 2
+
+
+def test_disable_cursor_neutralises_every_key_that_needs_a_target(fake_store, fake_alerts, fake_config):
+    """v4 guards each such key with `and not self.args.disable_cursor`
+    (`glances_curses.py:279-290`); v5 carries the guard on the table entry."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config, disable_cursor=True)
+
+    for key in (curses.KEY_UP, curses.KEY_DOWN, ord("k"), ord("+"), ord("-")):
+        assert tui._handle_key(key) == "ignored", key
+    assert tui._view.cursor_position == 0
+    assert tui._pending is None
+    # ... and the renderer is told nothing, so no row is decorated.
+    assert "cursor_position" not in tui._build_view(120)
+
+
+def test_the_cursor_reaches_the_renderer_through_the_view(fake_store, fake_alerts, fake_config):
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config)
+    tui._handle_key(curses.KEY_DOWN)
+    assert tui._build_view(120)["cursor_position"] == 1
+
+
+@pytest.mark.parametrize(("key", "verb"), [("k", "kill_process"), ("+", "nice_increase"), ("-", "nice_decrease")])
+def test_a_mutating_key_defers_to_the_loop_instead_of_acting(key, verb, fake_store, fake_alerts, fake_config):
+    """`_handle_key` is pure — no curses I/O — so a key that needs a popup
+    records what to do and returns `"modal"` (design §5.4)."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config)
+    assert tui._handle_key(ord(key)) == "modal"
+    assert tui._pending == verb
+
+
+def test_the_help_overlay_documents_both_hotkey_tables(fake_store, fake_alerts, fake_config):
+    """2.X-a's invariant — a bound key cannot go undocumented — now has to
+    span the keycode table too, or the arrows would be silent."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    text = " ".join(c.text for row in tui._help_lines() for c in row.cells)
+
+    for spec in tui_mod.TuiV5._HOTKEYS.values():
+        assert spec["desc"] in text, spec
+    for spec in tui_mod.TuiV5._SPECIAL_HOTKEYS.values():
+        assert spec["desc"] in text, spec
+        assert spec["label"] in text, spec
+
+
+# ------------------------------------------------------- acting on a process
+
+
+def test_the_selected_process_is_the_row_on_screen(fake_store, fake_alerts, fake_config):
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config)
+    tui._view.cursor_position = 2
+    process, refusal = tui._selected_process()
+    assert refusal is None
+    assert process["pid"] == 1002
+
+
+def test_the_program_view_refuses_to_act(fake_store, fake_alerts, fake_config):
+    """v4 resolves the pid from the PROCESS list even while the PROGRAM list is
+    displayed (`glances_curses.py:638`,`:641`,`:647`), acting on a row other
+    than the one shown. v5's programlist carries no pid at all (design §8.3)."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config)
+    tui._view.programs = True
+    process, refusal = tui._selected_process()
+    assert process is None
+    assert "program view" in refusal
+
+
+def test_glances_refuses_to_act_on_itself(fake_store, fake_alerts, fake_config):
+    """The engine guards this with a bare `assert` (`processes.py:782`), which
+    `python -O` strips — and it guards only `kill`, not the nice keys."""
+    import os
+
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config)
+    tui._cursor_items = [{"pid": os.getpid(), "name": "glances"}]
+    process, refusal = tui._selected_process()
+    assert process is None
+    assert "Glances itself" in refusal
+
+
+def test_an_empty_process_list_refuses_rather_than_raising(fake_store, fake_alerts, fake_config):
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config, n=0)
+    process, refusal = tui._selected_process()
+    assert process is None
+    assert "No process" in refusal
+
+
+def test_kill_asks_first_and_acts_on_the_pid_it_named(monkeypatch, fake_store, fake_alerts, fake_config):
+    """The whole point of §5.6: the pid is captured BEFORE the popup and the
+    engine is called with that captured value. Here the list re-sorts while
+    the confirmation is up — a re-resolve by index would kill the wrong one."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config)
+    tui._view.cursor_position = 1  # pid 1001
+    killed = []
+    monkeypatch.setattr(tui_mod.glances_processes, "kill", lambda pid: killed.append(pid))
+
+    asked = []
+
+    def _yesno(self, stdscr, message):
+        asked.append(message)
+        tui._cursor_items = list(reversed(tui._cursor_items))  # the list re-sorts
+        return True
+
+    monkeypatch.setattr(tui_mod.TuiV5, "_popup_yesno", _yesno)
+    tui._pending = "kill_process"
+    tui._run_pending(MagicMock())
+
+    assert "1001" in asked[0] and "proc1" in asked[0]
+    assert killed == [1001]
+
+
+def test_answering_no_kills_nothing(monkeypatch, fake_store, fake_alerts, fake_config):
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config)
+    killed = []
+    monkeypatch.setattr(tui_mod.glances_processes, "kill", lambda pid: killed.append(pid))
+    monkeypatch.setattr(tui_mod.TuiV5, "_popup_yesno", lambda self, stdscr, message: False)
+    tui._pending = "kill_process"
+    tui._run_pending(MagicMock())
+    assert killed == []
+
+
+def test_nice_does_not_ask_but_reports_a_refusal(monkeypatch, fake_store, fake_alerts, fake_config):
+    """v4 logs a refused renice and shows nothing (`processes.py:767`,`:778`),
+    so the key looks broken to a TUI user. The engine now says whether it
+    worked and the TUI puts a refusal on screen (design §5.6)."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config)
+    monkeypatch.setattr(tui_mod.glances_processes, "nice_increase", lambda pid: False)
+    shown = []
+    monkeypatch.setattr(tui_mod.TuiV5, "_popup_info", lambda self, stdscr, message: shown.append(message))
+    monkeypatch.setattr(tui_mod.TuiV5, "_popup_yesno", lambda self, stdscr, message: pytest.fail("nice must not ask"))
+
+    tui._pending = "nice_increase"
+    tui._run_pending(MagicMock())
+    assert shown and "Not allowed" in shown[0]
+
+
+def test_a_process_that_exited_is_reported_not_raised(monkeypatch, fake_store, fake_alerts, fake_config):
+    import psutil
+
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    def _gone(pid):
+        raise psutil.NoSuchProcess(pid)
+
+    tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config)
+    monkeypatch.setattr(tui_mod.glances_processes, "kill", _gone)
+    monkeypatch.setattr(tui_mod.TuiV5, "_popup_yesno", lambda self, stdscr, message: True)
+    shown = []
+    monkeypatch.setattr(tui_mod.TuiV5, "_popup_info", lambda self, stdscr, message: shown.append(message))
+
+    tui._pending = "kill_process"
+    tui._run_pending(MagicMock())
+    assert shown and "already gone" in shown[0]
+
+
+def test_a_refusal_is_shown_and_nothing_is_touched(monkeypatch, fake_store, fake_alerts, fake_config):
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config, n=0)
+    monkeypatch.setattr(tui_mod.glances_processes, "kill", lambda pid: pytest.fail("nothing to kill"))
+    shown = []
+    monkeypatch.setattr(tui_mod.TuiV5, "_popup_info", lambda self, stdscr, message: shown.append(message))
+
+    tui._pending = "kill_process"
+    tui._run_pending(MagicMock())
+    assert shown and "No process" in shown[0]
+
+
+def test_the_stashed_order_is_the_one_the_renderer_draws(fake_store, fake_alerts, fake_config):
+    """`_cursor_items` must be filtered exactly as the renderer filters, or
+    index *i* here would not be the row drawn at *i*."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    snapshot = {"processlist": {"data": [{"pid": 1}, "not-a-dict", {"pid": 2}]}}
+    assert tui._ordered_process_items(snapshot) == [{"pid": 1}, {"pid": 2}]
+
+
+def test_the_cursor_follows_whichever_process_block_is_drawn(fake_store, fake_alerts, fake_config):
+    """`j` swaps processlist for programlist in the frame; the cursor bound and
+    the stashed order have to follow it, not stay pinned to one name."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    assert tui._cursor_block_name() == "processlist"
+    tui._view.programs = True
+    assert tui._cursor_block_name() == "programlist"
+    snapshot = {"processlist": {"data": [{"pid": 1}]}, "programlist": {"data": [{"name": "a"}, {"name": "b"}]}}
+    assert len(tui._ordered_process_items(snapshot)) == 2
+
+
+# --------------------------------------- escape sequences ncurses hands back
+
+
+class _ScriptedScreen:
+    """A stdscr whose `getch` replays a byte script, honouring `nodelay`.
+
+    `nodelay(True)` is what `_read_key` uses to peek behind an ESC, so the
+    script must be able to say "nothing more right now" — which is what the
+    `None` sentinel means here.
+    """
+
+    def __init__(self, script, size=(40, 120)):
+        self._script = list(script)
+        self._nodelay = False
+        self._size = size
+
+    def nodelay(self, flag):
+        self._nodelay = bool(flag)
+
+    def getmaxyx(self):
+        return self._size
+
+    def __getattr__(self, name):
+        """Every other curses call (erase, addstr, refresh, timeout…) is a
+        no-op here: these tests are about which BYTES reach `_handle_key`,
+        not about what gets painted."""
+        return lambda *a, **kw: None
+
+    def getch(self):
+        if not self._script:
+            return -1
+        if self._script[0] is None:
+            # Nothing pending: a non-blocking read says so, a blocking one
+            # would wait — which no test wants.
+            self._script.pop(0)
+            return -1
+        return self._script.pop(0)
+
+
+def test_a_lone_escape_is_still_escape(fake_store, fake_alerts, fake_config):
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    assert tui._read_key(_ScriptedScreen([27, None])) == 27
+    assert tui._handle_key(27) == "quit"
+
+
+@pytest.mark.parametrize(
+    ("script", "expected"),
+    [
+        ([27, ord("["), ord("B")], curses.KEY_DOWN),  # normal cursor mode
+        ([27, ord("O"), ord("B")], curses.KEY_DOWN),  # application cursor mode
+        ([27, ord("["), ord("A")], curses.KEY_UP),
+        ([27, ord("O"), ord("A")], curses.KEY_UP),
+    ],
+)
+def test_an_unassembled_arrow_resolves_to_its_key(script, expected, fake_store, fake_alerts, fake_config):
+    """ncurses translates whichever form its terminfo entry lists and hands
+    the other back byte by byte. Observed live: under a pty announcing
+    `xterm-256color`, `\\x1b[B` arrived as 27, 91, 66 — and 27 means QUIT."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    assert tui._read_key(_ScriptedScreen(script)) == expected
+
+
+def test_an_arrow_key_does_not_quit_glances(fake_store, fake_alerts, fake_config):
+    """The regression this guards: before `_read_key`, pressing Down in such a
+    terminal exited Glances on the leading ESC."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config)
+    key = tui._read_key(_ScriptedScreen([27, ord("["), ord("B")]))
+    assert tui._handle_key(key) != "quit"
+    assert tui._view.cursor_position == 1
+
+
+def test_an_unknown_escape_sequence_is_swallowed_whole(fake_store, fake_alerts, fake_config):
+    """A mouse report, a bracketed paste or an unmapped function key is an
+    escape sequence too. None of them may quit, and none of them may have its
+    tail dispatched as separate keystrokes — `[`, `2`, `~` are not hotkeys
+    today, but `O` and `B` are."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    assert tui._read_key(_ScriptedScreen([27, ord("["), ord("2"), ord("~")])) == -1
+
+
+def test_the_peek_is_non_blocking_and_restores_the_mode(fake_store, fake_alerts, fake_config):
+    """A real Esc must cost nothing, and the loop's own timeout must survive
+    the peek — leaving `nodelay` on would turn the getch loop into a spin."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    calls = []
+
+    class _Recording(_ScriptedScreen):
+        def nodelay(self, flag):
+            calls.append(flag)
+            super().nodelay(flag)
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    tui._read_key(_Recording([27, None]))
+    assert calls == [True, False]
+
+
+def test_a_plain_key_never_pays_for_the_peek(fake_store, fake_alerts, fake_config):
+    """Only ESC is ambiguous; every other key returns before `nodelay`."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    calls = []
+
+    class _Recording(_ScriptedScreen):
+        def nodelay(self, flag):
+            calls.append(flag)
+            super().nodelay(flag)
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    assert tui._read_key(_Recording([ord("q")])) == ord("q")
+    assert calls == []
+
+
+def test_the_escape_tail_is_bounded(fake_store, fake_alerts, fake_config):
+    """A terminal emitting garbage after an ESC must not hold the loop."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    screen = _ScriptedScreen([27] + [ord("x")] * 100)
+    assert tui._read_key(screen) == -1
+    # Only the bounded tail was consumed, not the whole 100 bytes.
+    assert len(screen._script) >= 100 - tui_mod.TuiV5._ESCAPE_TAIL_MAX
+
+
+def test_the_loop_itself_reads_keys_through_the_resolver(fake_store, fake_alerts, fake_config):
+    """Testing `_read_key` in isolation proves nothing about the loop: the
+    original defect was precisely that `_loop` called `getch` directly, so an
+    arrow key's leading ESC reached `_handle_key` and quit. This drives the
+    real loop with the byte script a pty produced, and asserts the cursor
+    moved — which cannot happen if the resolver is bypassed."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    script = [27, ord("["), ord("B"), None, 27, ord("["), ord("B"), None, ord("q")]
+
+    screen = _ScriptedScreen(script)
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    # Two process rows available to move onto.
+    tui._note_cursor_bound = lambda frame: setattr(tui, "_cursor_max", 5)
+
+    tui._loop(screen)
+
+    assert tui._view.cursor_position == 2
+    assert tui._stop_event.is_set()  # `q` still quits
+
+
+def test_arrows_now_scroll_the_help_overlay_instead_of_closing_it(fake_store, fake_alerts, fake_config):
+    """A latent bug the resolver fixes for free: `_handle_help_key` already
+    accepted `curses.KEY_DOWN`, but an untranslated Down arrived as a bare 27
+    — which closes the overlay. Scrolling the help with the arrows only ever
+    worked in terminals whose terminfo matched."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    tui._view.show_help = True
+
+    key = tui._read_key(_ScriptedScreen([27, ord("["), ord("B")]))
+    assert tui._handle_key(key) == "repaint"
+    assert tui._view.show_help is True
+    assert tui._help_scroll == 1

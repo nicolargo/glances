@@ -46,6 +46,7 @@ Limit: top 20 processes (engine returns the full sorted list).
 from __future__ import annotations
 
 import os
+from dataclasses import replace
 from typing import Any
 
 from glances.globals import WINDOWS
@@ -340,6 +341,18 @@ def _command_cells(item: dict[str, Any], short_name: bool = True) -> list[Cell]:
     return cells
 
 
+def _select(cells: list[Cell]) -> list[Cell]:
+    """Decorate the cursor-selected row's command cells (2.X-b).
+
+    v4 marks the SAME cells and nothing else, with `PROCESS_SELECTED` =
+    ``OK | A_UNDERLINE`` (`processlist/__init__.py:553`,
+    `outputs/glances_colors.py:154`) — an underlined green command, not a
+    reverse-video bar. `Cell.underline` already exists for the sort-column
+    header, so this needs no new field and no new colour role.
+    """
+    return [replace(cell, color=ColorRole.OK, underline=True) for cell in cells]
+
+
 def _pid_width(items: list[dict[str, Any]]) -> int:
     width = len(str(max((int(i.get("pid") or 0) for i in items), default=0)))
     return max(width, 4)
@@ -400,6 +413,9 @@ def render(
     sort_key = (view or {}).get("sort_key")
     short_name = (view or {}).get("process_short_name", True)
     available = (view or {}).get("right_width")
+    # Absent (export, tests, `--disable-cursor`) → no row is decorated, which
+    # is the pre-2.X-b output byte for byte.
+    cursor = (view or {}).get("cursor_position")
 
     def _header(label: str, width: int, *, ljust: bool = False, color: ColorRole = ColorRole.HEADER) -> Cell:
         text = label.ljust(width) if ljust else label.rjust(width)
@@ -459,7 +475,7 @@ def render(
     # `_MAX_ROWS` is the nominal fallback; the TUI publishes a height-driven
     # budget in `view["row_budget"]` which may be lower (short terminal) or
     # higher (tall terminal — the list fills the screen).
-    for item in items[:budget]:
+    for position, item in enumerate(items[:budget]):
         pid = item.get("pid")
         pid_levels = levels_index.get(pid) if isinstance(levels_index, dict) else None
         pid_levels = pid_levels if isinstance(pid_levels, dict) else {}
@@ -483,6 +499,9 @@ def render(
             _io_cell(r_rate, r_unknown, _W_IO),
             _io_cell(w_rate, w_unknown, _W_IO),
         ]
-        rows.append(Row(cells=_filter_fixed(fixed_cells) + _command_cells(item, short_name)))
+        command_cells = _command_cells(item, short_name)
+        if cursor == position:
+            command_cells = _select(command_cells)
+        rows.append(Row(cells=_filter_fixed(fixed_cells) + command_cells))
 
     return rows
