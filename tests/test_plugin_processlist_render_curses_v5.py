@@ -678,3 +678,167 @@ def test_a_cursor_past_the_last_row_decorates_nothing(payload, fields):
     """The TUI clamps, but the renderer must not raise if it ever gets an
     index it cannot honour (a frame built between a shrink and its re-clamp)."""
     assert _decorated_rows(render(payload, fields, view={"cursor_position": 99})) == []
+
+
+# ------------------------------------------- extended stats block (2.X-b3)
+
+
+def _extended_payload(**overrides):
+    """The shape the real engine produces — verified against it, not invented.
+
+    `ionice` and `memory_info` are DICTS by the time a renderer sees them:
+    the engine stores `namedtuple_to_dict(proc)` (`processes.py:669`).
+    """
+    base = {
+        "pid": 1,
+        "name": "hot",
+        "cpu_min": 0.5,
+        "cpu_max": 78.4,
+        "cpu_mean": 12.25,
+        "memory_min": 1.0,
+        "memory_max": 12.5,
+        "memory_mean": 6.0,
+        "cpu_affinity": [0, 1, 2, 3],
+        "ionice": {"ioclass": 2, "value": 4},
+        "memory_info": {"rss": 32 * 1024**2, "vms": 120 * 1024**2},
+        "memory_swap": 4 * 1024**2,
+        "num_threads": 20,
+        "num_fds": 45,
+        "tcp": 3,
+        "udp": 1,
+    }
+    base.update(overrides)
+    return base
+
+
+def _flat(rows):
+    return [" ".join(c.text for c in r.cells) for r in rows]
+
+
+def test_no_extended_payload_renders_nothing_extra(payload, fields):
+    """Absent from `view` (export, tests, `e` off) → the output is what it was
+    before 2.X-b3, byte for byte."""
+    assert len(render(payload, fields, view={})) == 4
+    assert len(render(payload, fields)) == 4
+
+
+def test_the_extended_block_renders_v4s_four_lines(payload, fields):
+    rows = render(payload, fields, view={"extended_process": _extended_payload()})
+    lines = _flat(rows)
+
+    assert "Pinned thread" in lines[0] and "hot" in lines[0] and "'e' to unpin" in lines[0]
+    assert "CPU Min/Max/Mean" in lines[1]
+    assert "MEM Min/Max/Mean" in lines[2]
+    assert lines[3].startswith(" Open:")
+    # ... and the process table still follows.
+    assert "CPU%" in lines[4]
+
+
+def test_the_cpu_line_carries_min_max_mean_affinity_and_io_nice(payload, fields):
+    line = _flat(render(payload, fields, view={"extended_process": _extended_payload()}))[1]
+    assert "0.5" in line and "78.4" in line and "12.2" in line
+    assert "4 cores" in line
+    assert "Best Effort" in line
+
+
+def test_v4_never_renders_its_io_nice_line_and_v5_does(payload, fields):
+    """v4 guards on `hasattr(prog['ionice'], 'ioclass')`
+    (`processlist/__init__.py:728-742`), but the engine already converted the
+    `pionice` namedtuple to a dict — which has no attribute of that name. So
+    the guard is always False. Confirmed against the live engine."""
+    from glances.plugins.processlist.render_curses_v5 import _ionice_text
+
+    live_shape = {"ioclass": 0, "value": 0}
+    assert not hasattr(live_shape, "ioclass")  # what v4 tests, on the real shape
+    assert _ionice_text(live_shape) is not None  # what v5 does instead
+
+
+def test_the_io_nice_value_is_shown_only_when_it_is_set(payload, fields):
+    from glances.plugins.processlist.render_curses_v5 import _ionice_text
+
+    assert "value 4/7" in _ionice_text({"ioclass": 2, "value": 4})
+    assert "value" not in _ionice_text({"ioclass": 2, "value": 0})
+    assert _ionice_text({"value": 3}) is None
+    assert _ionice_text(None) is None
+
+
+def test_the_mem_line_carries_the_memory_breakdown_and_swap(payload, fields):
+    line = _flat(render(payload, fields, view={"extended_process": _extended_payload()}))[2]
+    assert "rss" in line and "vms" in line
+    assert "32.0M" in line and "120M" in line
+    assert "4.0M" in line and "swap" in line
+
+
+def test_the_open_line_counts_only_what_the_platform_reports(payload, fields):
+    """`num_fds` is Unix, `num_handles` is Windows — neither is invented."""
+    rows = render(payload, fields, view={"extended_process": _extended_payload(num_fds=None)})
+    line = _flat(rows)[3]
+    assert "20 threads" in line
+    assert "fds" not in line
+    assert "3 tcp" in line and "1 udp" in line
+
+
+def test_a_missing_field_does_not_break_the_block(payload, fields):
+    """The engine sets `extended_stats: False` and leaves the rest out when
+    the grab failed (`processes.py:397-400`)."""
+    rows = render(payload, fields, view={"extended_process": {"pid": 1, "name": "hot"}})
+    lines = _flat(rows)
+    assert "Pinned thread" in lines[0]
+    assert "0.0" in lines[1]  # min/max/mean fall back to zero, as in v4
+
+
+def test_the_budget_still_buys_process_rows_with_the_block_on(payload, fields):
+    """The block does NOT spend the process budget. It cannot: four rows do
+    not fit in a budget of three, and truncating a stats block is worse than
+    useless. The vertical solver is told the cost instead
+    (`extended_block_height` → `plan_right_column(process_extra_rows=…)`), so
+    the budget that arrives here has already paid for them."""
+    view = {"row_budget": {"processlist": 3}}
+    rows = render(payload, fields, view={**view, "extended_process": _extended_payload()})
+
+    assert len(rows) == 4 + 1 + 3  # block + column header + the full budget
+
+
+def test_the_declared_height_is_what_the_block_actually_renders(payload, fields):
+    """Derived, not a constant: a fifth line added to the block must move this
+    number by itself, or the solver would under-reserve and the body overflow."""
+    from glances.plugins.processlist.render_curses_v5 import extended_block_height
+
+    extended = _extended_payload()
+    declared = extended_block_height(extended)
+    plain = render(payload, fields, view={})
+    with_block = render(payload, fields, view={"extended_process": extended})
+
+    assert declared == len(with_block) - len(plain)
+
+
+def test_nothing_is_declared_when_the_block_is_off(payload, fields):
+    from glances.plugins.processlist.render_curses_v5 import extended_block_height
+
+    assert extended_block_height(None) == 0
+    assert extended_block_height({}) == 0
+
+
+def test_an_empty_payload_renders_no_block_at_all(payload, fields):
+    """An empty dict is not "a process with unknown values" — it is no
+    process. Rendering four lines of `?` for it would contradict the height
+    declared to the solver, which counts it as zero."""
+    assert len(render(payload, fields, view={"extended_process": {}})) == 4
+
+
+def test_the_io_nice_classes_mirror_v4s_table():
+    """v4 `get_headers` (`processlist/__init__.py:719-726`): on Linux class 0
+    is the bare "no priority" wording, the others carry "Class is"; Windows
+    keeps 0/1/2 with entirely different meanings."""
+    from glances.plugins.processlist.render_curses_v5 import (
+        _IONICE_CLASSES,
+        _IONICE_CLASSES_WINDOWS,
+        _ionice_text,
+    )
+
+    assert _IONICE_CLASSES[0] == "No specific I/O priority"
+    assert _IONICE_CLASSES[2] == "Class is Best Effort"
+    assert _IONICE_CLASSES_WINDOWS[2] == "No specific I/O priority"
+    assert _IONICE_CLASSES_WINDOWS[0] == "Class is Very Low"
+    # An unknown class is named, not dropped.
+    assert _ionice_text({"ioclass": 9}) == "Class is 9"

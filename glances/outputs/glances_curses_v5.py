@@ -48,6 +48,7 @@ from glances.outputs.curses_renderer_v5 import (
     plan_right_column,
     with_truncation_counter,
 )
+from glances.plugins.processlist.render_curses_v5 import extended_block_height
 from glances.processes import glances_processes, sort_stats
 
 if TYPE_CHECKING:
@@ -126,6 +127,7 @@ class ViewState:
     - ``show_help=False`` — the help overlay is hidden (hotkey ``h``).
     - ``hidden_plugins=set()`` — nothing hidden by the user (SHOW/HIDE keys).
     - ``cursor_position=0`` — the process list's first row (UP / DOWN).
+    - ``extended=False`` — no extended stats block (hotkey ``e``).
 
     ``hidden_plugins`` is deliberately a namespace of its own, NOT the
     ``hide_<plugin>`` view keys the width-degradation cascades write
@@ -149,6 +151,11 @@ class ViewState:
     # same way (design 5.2), and the one place where that is dangerous (`k`)
     # closes it by naming its target before it acts, not by pinning the index.
     cursor_position: int = 0
+    # Extended stats for the selected process (hotkey `e`, 2.X-b3). While on,
+    # the cursor is FROZEN -- v4 does the same (`glances_curses.py:356`),
+    # because otherwise the block describes whatever the cursor last touched
+    # while the user is still moving it.
+    extended: bool = False
     # TOGGLE DATA TYPE (2.X-c). Seeded from the CLI at construction, then
     # flipped by their keys.
     byte: bool = False
@@ -260,6 +267,12 @@ class TuiV5(threading.Thread):
         # so each is `cursor: True` -- `_handle_key` refuses them outright
         # when the cursor is disabled, exactly as v4 guards them in its
         # dispatch dict (`glances_curses.py:279-290`).
+        "e": {
+            "action": "extended",
+            "cursor": True,
+            "group": "MISCELLANEOUS",
+            "desc": "Extended stats for the selected process",
+        },
         "k": {
             "action": "kill_process",
             "cursor": True,
@@ -532,7 +545,10 @@ class TuiV5(threading.Thread):
 
     # Verbs that need the terminal, so they are deferred to `_run_pending`
     # rather than executed in this pure function (design 5.4).
-    _MODAL_VERBS = frozenset({"kill_process", "nice_increase", "nice_decrease"})
+    _MODAL_VERBS = frozenset({"kill_process", "nice_increase", "nice_decrease", "extended"})
+    # Of those, the ones that CHANGE the process. `e` only looks at it, which
+    # is why it is allowed to look at Glances itself (`_selected_process`).
+    _MUTATING_VERBS = frozenset({"kill_process", "nice_increase", "nice_decrease"})
 
     def _handle_action(self, verb: str) -> str:
         """Execute an ``action`` entry's verb. Pure, like its caller."""
@@ -558,6 +574,11 @@ class TuiV5(threading.Thread):
                 current = bool(fs.get("free_space")) if isinstance(fs, dict) else False
             self._view.fs_free_space = not current
             return "changed"
+        if verb in ("cursor_up", "cursor_down") and self._view.extended:
+            # v4 freezes the cursor while extended stats are on
+            # (`glances_curses.py:356`), so the block cannot describe a
+            # moving target. Press `e` again to move on.
+            return "ignored"
         if verb == "cursor_up":
             if self._view.cursor_position == 0:
                 return "ignored"
@@ -684,12 +705,40 @@ class TuiV5(threading.Thread):
             return []
         return [item for item in data if isinstance(item, dict)]
 
-    def _selected_process(self) -> tuple[dict[str, Any] | None, str | None]:
+    def _extended_payload(self) -> dict[str, Any] | None:
+        """The engine's accumulated extended stats, or None.
+
+        Read HERE and handed to the renderer through the per-cycle `view`,
+        rather than letting the renderer reach for the engine singleton: the
+        renderers are pure functions of (payload, fields, view), and this is
+        the only way to keep them so. It also keeps the extended stats out of
+        the REST payload entirely, which is what the TUI-only decision for
+        2.X-b requires (design §8.1).
+
+        The pid guard matters on two cycles: the one after `e` is pressed
+        (the engine has not grabbed yet) and the one after the selection
+        changes. Showing the previous process' numbers under the new name
+        would be worse than showing nothing.
+        """
+        if not self._view.extended:
+            return None
+        payload = getattr(glances_processes, "extended_process", None)
+        if not isinstance(payload, dict):
+            return None
+        if payload.get("pid") != getattr(glances_processes, "extended_pid", None):
+            return None
+        return payload
+
+    def _selected_process(self, *, mutating: bool = True) -> tuple[dict[str, Any] | None, str | None]:
         """Resolve the cursor to a process, or to a reason it cannot be.
 
         Returns ``(process, None)`` or ``(None, reason)``. Every refusal is a
         sentence the user reads in a popup — an interactive key that silently
         does nothing is the defect this whole path exists to avoid.
+
+        ``mutating=False`` (``e``) drops the own-pid refusal: watching
+        Glances' own extended stats is legitimate and harmless, and refusing
+        it would be the surprise, not the protection.
         """
         if self._view.programs:
             # v4 resolves the pid from the `processlist` plugin even while the
@@ -704,10 +753,10 @@ class TuiV5(threading.Thread):
         pid = process.get("pid")
         if not isinstance(pid, int):
             return None, "The selected process has no PID."
-        if pid == os.getpid():
+        if mutating and pid == os.getpid():
             # `glances_processes.kill` guards this with a bare `assert`
             # (`processes.py:782`), which `python -O` strips. Check it here,
-            # for all three actions rather than just for `kill`.
+            # and for every mutating action rather than just for `kill`.
             return None, "That is Glances itself."
         return process, None
 
@@ -723,7 +772,12 @@ class TuiV5(threading.Thread):
         verb, self._pending = self._pending, None
         if verb is None:  # pragma: no cover — defensive
             return
-        process, refusal = self._selected_process()
+        if verb == "extended" and self._view.extended:
+            # Turning it OFF needs no selection at all -- and must not be
+            # refused by one, or `e` would be a trap in the program view.
+            self._set_extended(None)
+            return
+        process, refusal = self._selected_process(mutating=verb in self._MUTATING_VERBS)
         if refusal is not None:
             self._popup_info(stdscr, refusal)
             return
@@ -731,9 +785,34 @@ class TuiV5(threading.Thread):
             return
         pid = int(process["pid"])
         name = str(process.get("name") or "?")
+        if verb == "extended":
+            self._set_extended(pid)
+            return
         if verb == "kill_process" and not self._popup_yesno(stdscr, f"Kill {name} (pid {pid})?"):
             return
         self._apply_process_action(stdscr, verb, pid, name)
+
+    def _set_extended(self, pid: int | None) -> None:
+        """Turn extended stats on for `pid`, or off when it is None.
+
+        Two divergences from v4, both in `enable_extended` / `disable_extended`
+        (`processes.py:210-217`):
+
+        - v4's `enable_extended()` calls `update()` synchronously. From the TUI
+          thread that is a second full process collection racing the
+          collector's own. Setting the tag costs one refresh interval of
+          latency and no race.
+        - Turning it OFF also clears `extended_process`, which is what
+          actually stops the engine grabbing: the grab is keyed on
+          `extended_process` being set (`processes.py:663-669`), not on
+          `disable_extended_tag`. v4 leaves it set and keeps paying for it
+          after `e` is pressed again; only its renderer stops looking.
+        """
+        self._view.extended = pid is not None
+        glances_processes.extended_pid = pid
+        glances_processes.disable_extended_tag = pid is None
+        if pid is None:
+            glances_processes.extended_process = None
 
     def _apply_process_action(self, stdscr, verb: str, pid: int, name: str) -> None:
         """Call the engine for `verb` on `pid`, reporting every failure.
@@ -997,6 +1076,26 @@ class TuiV5(threading.Thread):
         self._cursor_max = max(0, len(block.rows) - 1) if block is not None else 0
         if self._view.cursor_position >= self._cursor_max:
             self._view.cursor_position = max(0, self._cursor_max - 1)
+            self._repin_extended()
+
+    def _repin_extended(self) -> None:
+        """Keep the `e` block describing the row that is underlined.
+
+        `e` freezes the cursor, so nothing the USER does can separate the two.
+        A shrink can: the extended block spends four rows of the process
+        list's budget, so turning it on near the bottom of a short terminal
+        pulls the clamp down under a cursor that never moved — and then the
+        pinned block and the underlined row name different processes, with
+        `k` following the underline. Re-pinning keeps the one invariant that
+        matters: what is described is what is selected.
+        """
+        if not self._view.extended:
+            return
+        if self._view.cursor_position >= len(self._cursor_items):
+            return
+        pid = self._cursor_items[self._view.cursor_position].get("pid")
+        if isinstance(pid, int) and pid != glances_processes.extended_pid:
+            self._set_extended(pid)
 
     # ----------------------------------------------------------- helpers
 
@@ -1227,6 +1326,9 @@ class TuiV5(threading.Thread):
             n_processes=n_processes,
             n_alerts=count("alert"),
             n_ongoing=by_name["alert"].data_pinned if "alert" in by_name else 0,
+            # The `e` block sits inside the process block but costs rows the
+            # solver's "one line per data row" model does not know about.
+            process_extra_rows=extended_block_height(view.get("extended_process")),
         )
 
         current = view.get("row_budget") or {}
@@ -1332,6 +1434,9 @@ class TuiV5(threading.Thread):
         # decoration" path export and the tests already take.
         if self._cursor_enabled:
             view["cursor_position"] = self._view.cursor_position
+        extended = self._extended_payload()
+        if extended is not None:
+            view["extended_process"] = extended
         view["unicode"] = self._unicode
         # The user's own SHOW/HIDE set. A frozenset, so the per-cycle view
         # cannot be a back door onto the live ViewState (the fit loops copy

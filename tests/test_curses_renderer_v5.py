@@ -3015,3 +3015,40 @@ def test_user_hidden_absent_from_view_hides_nothing():
     """The key is optional: a view dict without it is unchanged."""
     _, frame = _frame_with("gpu", {"percpu": False})
     assert "gpu" in [b.name for b in frame.top]
+
+
+# ------------------------------- the `e` block's cost to the solver (2.X-b3)
+
+
+def test_extra_process_rows_are_paid_for_by_the_process_block():
+    """The `e` block (2.X-b3) sits INSIDE the process block but breaks the
+    solver's "one line per data row plus one header" model. It is declared
+    rather than left to overflow, so the process budget gives way one for
+    one."""
+    plain = _plan(40)
+    with_block = _plan(40, process_extra_rows=4)
+    assert with_block["processlist"] == plain["processlist"] - 4
+
+
+def test_extra_process_rows_keep_the_layout_inside_the_body():
+    """The property that matters: whatever the body height, the real occupied
+    height still fits once the block's rows are counted."""
+    for body_height in range(12, 60):
+        plan = _plan(body_height, process_extra_rows=4)
+        occupied = _cost(plan) + (4 if plan["processlist"] else 0)
+        assert occupied <= body_height, (body_height, plan, occupied)
+
+
+def test_zero_extra_rows_is_the_historical_arithmetic():
+    """Every caller but the TUI's `e` path passes nothing; the default must
+    not shift a single budget."""
+    for body_height in range(12, 60):
+        assert _plan(body_height) == _plan(body_height, process_extra_rows=0)
+
+
+def test_a_hidden_process_block_costs_nothing_extra():
+    """Step l of the shrink ladder drops the process block outright; its
+    extended rows go with it, and must not be reserved anyway."""
+    plan = _plan(10, process_extra_rows=4, n_alerts=40, n_ongoing=10)
+    if plan["processlist"] == 0:
+        assert _cost(plan) <= 10

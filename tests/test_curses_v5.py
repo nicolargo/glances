@@ -3819,3 +3819,254 @@ def test_arrows_now_scroll_the_help_overlay_instead_of_closing_it(fake_store, fa
     assert tui._handle_key(key) == "repaint"
     assert tui._view.show_help is True
     assert tui._help_scroll == 1
+
+
+# ------------------------------------------- 2.X-b3: extended stats (`e`)
+
+
+@pytest.fixture
+def engine(monkeypatch):
+    """The process engine, with its `e` state isolated per test."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    monkeypatch.setattr(tui_mod.glances_processes, "extended_pid", None, raising=False)
+    monkeypatch.setattr(tui_mod.glances_processes, "extended_process", None, raising=False)
+    monkeypatch.setattr(tui_mod.glances_processes, "disable_extended_tag", True, raising=False)
+    return tui_mod.glances_processes
+
+
+def test_e_defers_to_the_loop_like_the_other_selection_keys(fake_store, fake_alerts, fake_config):
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config)
+    assert tui._handle_key(ord("e")) == "modal"
+    assert tui._pending == "extended"
+
+
+def test_e_pins_the_selected_pid_on_the_engine(engine, fake_store, fake_alerts, fake_config):
+    """A PID, not a position: the list re-sorts every cycle, so a position
+    would make the block describe a moving target (design §5.5)."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config)
+    tui._view.cursor_position = 2
+
+    tui._pending = "extended"
+    tui._run_pending(MagicMock())
+
+    assert tui._view.extended is True
+    assert engine.extended_pid == 1002
+    assert engine.disable_extended_tag is False
+
+
+def test_e_again_unpins_and_stops_the_engine_grabbing(engine, fake_store, fake_alerts, fake_config):
+    """Clearing `extended_process` is what actually stops the grab — it is
+    keyed on that being set, not on `disable_extended_tag`. v4 leaves it set
+    and keeps paying for it after `e` is pressed again."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config)
+    tui._pending = "extended"
+    tui._run_pending(MagicMock())
+    engine.extended_process = {"pid": 1000, "name": "proc0"}
+
+    tui._pending = "extended"
+    tui._run_pending(MagicMock())
+
+    assert tui._view.extended is False
+    assert engine.extended_pid is None
+    assert engine.extended_process is None
+    assert engine.disable_extended_tag is True
+
+
+def test_the_cursor_freezes_while_extended_is_on(engine, fake_store, fake_alerts, fake_config):
+    """v4 does the same (`glances_curses.py:356`). Without it the block
+    describes whatever the cursor last touched while the user is still
+    moving it."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config)
+    tui._handle_key(curses.KEY_DOWN)
+    assert tui._view.cursor_position == 1
+
+    tui._pending = "extended"
+    tui._run_pending(MagicMock())
+
+    assert tui._handle_key(curses.KEY_DOWN) == "ignored"
+    assert tui._handle_key(curses.KEY_UP) == "ignored"
+    assert tui._view.cursor_position == 1
+
+    # ... and unfreezes when `e` is pressed again.
+    tui._pending = "extended"
+    tui._run_pending(MagicMock())
+    assert tui._handle_key(curses.KEY_DOWN) == "changed"
+
+
+def test_e_may_target_glances_itself_where_k_may_not(engine, fake_store, fake_alerts, fake_config):
+    """`e` only LOOKS at the process. Refusing to show Glances its own
+    extended stats would be the surprise, not the protection."""
+    import os
+
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config)
+    tui._cursor_items = [{"pid": os.getpid(), "name": "glances"}]
+
+    assert tui._selected_process(mutating=False)[0] is not None
+    assert tui._selected_process(mutating=True)[0] is None
+
+    tui._pending = "extended"
+    tui._run_pending(MagicMock())
+    assert engine.extended_pid == os.getpid()
+
+
+def test_e_refuses_in_the_program_view(monkeypatch, engine, fake_store, fake_alerts, fake_config):
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config)
+    tui._view.programs = True
+    shown = []
+    monkeypatch.setattr(tui_mod.TuiV5, "_popup_info", lambda self, stdscr, message: shown.append(message))
+
+    tui._pending = "extended"
+    tui._run_pending(MagicMock())
+
+    assert shown and "program view" in shown[0]
+    assert tui._view.extended is False
+    assert engine.extended_pid is None
+
+
+def test_unpinning_is_never_refused_by_a_selection(engine, fake_store, fake_alerts, fake_config):
+    """Turning `e` OFF needs no selection — otherwise pressing `j` while
+    pinned would trap the user with a block they cannot dismiss."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config)
+    tui._pending = "extended"
+    tui._run_pending(MagicMock())
+    assert tui._view.extended is True
+
+    tui._view.programs = True  # the very state that refuses to PIN
+    tui._pending = "extended"
+    tui._run_pending(MagicMock())
+    assert tui._view.extended is False
+
+
+def test_the_extended_payload_reaches_the_renderer_through_the_view(engine, fake_store, fake_alerts, fake_config):
+    """Through `view`, never by the renderer reaching for the singleton: the
+    renderers are pure functions of (payload, fields, view), and this also
+    keeps the extended stats out of the REST payload entirely (design §8.1)."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config)
+    assert "extended_process" not in tui._build_view(120)
+
+    tui._pending = "extended"
+    tui._run_pending(MagicMock())
+    engine.extended_process = {"pid": 1000, "name": "proc0", "cpu_min": 1.0}
+
+    assert tui._build_view(120)["extended_process"]["pid"] == 1000
+
+
+def test_a_stale_extended_payload_is_not_published(engine, fake_store, fake_alerts, fake_config):
+    """Two cycles need this guard: the one after `e` (the engine has not
+    grabbed yet) and the one after the pin moves. Showing the previous
+    process' numbers under the new name is worse than showing nothing."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config)
+    tui._pending = "extended"
+    tui._run_pending(MagicMock())
+    engine.extended_process = {"pid": 4242, "name": "someone-else"}
+
+    assert "extended_process" not in tui._build_view(120)
+
+
+def test_a_shrink_repins_so_the_block_describes_the_underlined_row(engine, fake_store, fake_alerts, fake_config):
+    """`e` freezes the cursor, so nothing the USER does separates the pin from
+    the underline. A shrink can — the block spends four rows of the list's
+    budget. Re-pinning keeps what is described equal to what is selected."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+    from glances.outputs.curses_renderer_v5 import Frame, PluginBlock, Row
+
+    tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config, n=20)
+    tui._view.cursor_position = 15
+    tui._pending = "extended"
+    tui._run_pending(MagicMock())
+    assert engine.extended_pid == 1015
+
+    # The terminal shrinks to 1 header + 3 item rows.
+    tui._note_cursor_bound(Frame(right=[PluginBlock(name="processlist", rows=[Row() for _ in range(4)])]))
+
+    assert tui._view.cursor_position == 2
+    assert engine.extended_pid == 1002
+
+
+def test_no_repin_when_extended_is_off(engine, fake_store, fake_alerts, fake_config):
+    """A shrink with no pin must not create one."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+    from glances.outputs.curses_renderer_v5 import Frame, PluginBlock, Row
+
+    tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config, n=20)
+    tui._view.cursor_position = 15
+    tui._note_cursor_bound(Frame(right=[PluginBlock(name="processlist", rows=[Row() for _ in range(4)])]))
+
+    assert tui._view.cursor_position == 2
+    assert engine.extended_pid is None
+
+
+def test_the_vertical_solver_is_told_what_the_block_costs(engine, fake_store, fake_alerts, fake_config):
+    """`_fit_right_column` must PASS the cost, not merely have it available.
+    Without this the solver keeps its "one line per data row plus one header"
+    model and the body overflows by the height of the block."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+    from glances.outputs.curses_renderer_v5 import Frame, PluginBlock, Row
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    seen = {}
+
+    def _spy(**kwargs):
+        seen.update(kwargs)
+        return {"processlist": 5}
+
+    monkeypatched = tui_mod.plan_right_column
+    tui_mod.plan_right_column = _spy
+    try:
+        frame = Frame(
+            top=[PluginBlock(name="mem", rows=[Row()])],
+            right=[PluginBlock(name="processlist", rows=[Row() for _ in range(6)], data_count=40)],
+        )
+        payload = {"pid": 1, "name": "hot"}
+        tui._fit_right_column({"extended_process": payload}, frame, 40)
+    finally:
+        tui_mod.plan_right_column = monkeypatched
+
+    from glances.plugins.processlist.render_curses_v5 import extended_block_height
+
+    assert seen["process_extra_rows"] == extended_block_height(payload)
+    assert seen["process_extra_rows"] > 0
+
+
+def test_nothing_extra_is_reserved_when_the_block_is_off(engine, fake_store, fake_alerts, fake_config):
+    from glances.outputs import glances_curses_v5 as tui_mod
+    from glances.outputs.curses_renderer_v5 import Frame, PluginBlock, Row
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    seen = {}
+
+    def _spy(**kwargs):
+        seen.update(kwargs)
+        return {"processlist": 5}
+
+    original = tui_mod.plan_right_column
+    tui_mod.plan_right_column = _spy
+    try:
+        frame = Frame(
+            top=[PluginBlock(name="mem", rows=[Row()])],
+            right=[PluginBlock(name="processlist", rows=[Row() for _ in range(6)], data_count=40)],
+        )
+        tui._fit_right_column({}, frame, 40)
+    finally:
+        tui_mod.plan_right_column = original
+
+    assert seen["process_extra_rows"] == 0

@@ -1193,15 +1193,50 @@ curses surface — as its own owned group. No implementation in parity wave 1
   push as its own scaffolding. Design:
   `docs/superpowers/specs/2026-09-23-glances-v5-tui-process-management-design.md`.
 
+  **The whole group is TUI-only** — decided by the maintainer on 2026-09-23,
+  closing §8.1 of the design. Unlike 2.X-a and 2.X-c, this one does not
+  reverse to the browser: `k`/`+`/`-` would need a mutating REST endpoint on
+  an API Glances leaves unauthenticated by default, and the process filter is
+  engine-global, so a filter typed in one tab would change what the TUI and
+  every other consumer sees.
+
   **Shipped (b1 + b2, 2026-09-23)**: the selection cursor (`UP`/`DOWN`,
   `--disable-cursor`), `k` kill, `+`/`-` nice, and the popup machinery the
   last three need. The engine already carried every action
   (`processes.py:758`, `:769`, `:780`) — the whole chantier was on the TUI
   side.
 
-  **Still open**: `e` extended stats (b3) and the process filter (b4 —
-  `ENTER`, `E`, `-f/--process-filter`, the filtered summary block, and `M`
-  which only resets *that* block).
+  **Shipped (b3, 2026-09-23)**: `e`, extended stats for the selected process.
+  Three things this one had to settle:
+
+  - **The engine is given a PID, not a position.** v4 pushes its cursor
+    position in through `set_args`; v5 never hands the engine an argparse
+    namespace, and a position is the wrong handle regardless — the list
+    re-sorts every cycle, so the block would describe a moving target.
+    `glances_processes.extended_pid` is additive and None unless the v5 TUI
+    sets it, so v4's path is untouched.
+  - **The data reaches the renderer through the per-cycle `view`**, read from
+    the engine by the TUI. The renderers stay pure functions of (payload,
+    fields, view), and the extended stats stay out of the REST payload
+    entirely — which is what the TUI-only decision requires.
+  - **The vertical solver is told what the block costs.**
+    `plan_right_column` models an elastic block as "one line per data row
+    plus one header"; the `e` block breaks that, so it declares its height
+    (`process_extra_rows`) rather than overflowing the body by it. The height
+    is derived from the rows themselves, not a constant. The WebUI's copy of
+    the solver needs no change: the parameter defaults to 0 and the browser
+    has no `e`.
+
+  Two smaller divergences: `e` may target Glances itself (it only *looks* at
+  the process, unlike `k`), and turning it off clears `extended_process` —
+  which is what actually stops the engine grabbing, since the grab is keyed
+  on that being set (`processes.py:663-669`), not on `disable_extended_tag`.
+  v4 keeps paying for it after `e` is pressed again; only its renderer stops
+  looking.
+
+  **Still open**: the process filter (b4 — `ENTER`, `E`,
+  `-f/--process-filter`, the filtered summary block, and `M` which only
+  resets *that* block).
 
   Four decisions worth carrying forward:
 
@@ -1245,6 +1280,12 @@ curses surface — as its own owned group. No implementation in parity wave 1
      (`processlist/__init__.py:648-650`). With no filter set it does nothing
      at all — it is a sub-feature of the filter, not a peer of it, which is
      why it ships with b4 and not before.
+  4. `maybe_add_ionice_line` (`processlist/__init__.py:728-742`) guards on
+     `hasattr(prog['ionice'], 'ioclass')`, but the engine stores
+     `namedtuple_to_dict(proc)` (`processes.py:669`) — psutil's `pionice`
+     namedtuple is a **dict** by then, and a dict has no `.ioclass`. The
+     guard is always False, so **v4 never renders its IO nice line**. Checked
+     against the live engine, not inferred. v5 reads the dict.
 
   And **one v5 defect it found in the live smoke test**: an escape sequence
   ncurses does not translate arrives byte by byte, and 27 is `quit` — so the

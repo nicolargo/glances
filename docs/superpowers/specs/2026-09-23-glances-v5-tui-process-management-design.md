@@ -374,7 +374,7 @@ which is the existing behaviour byte-for-byte.
 ## 7. The split
 
 Four chantiers, each independently shippable and smoke-testable.
-**b1 and b2 shipped 2026-09-23**; b3 and b4 remain.
+**b1, b2 and b3 shipped 2026-09-23**; b4 remains.
 
 **b1 — the cursor.** `_SPECIAL_HOTKEYS`, `ViewState.cursor_position`,
 `--disable-cursor`, the clamp, the decoration, `view["cursor_position"]`.
@@ -402,7 +402,12 @@ only one with a cross-surface consequence to decide first (§8.1).
 
 ## 8. Open questions for the maintainer
 
-### 8.1 Does any of this reach the WebUI? — **needs a decision before b4**
+### 8.1 Does any of this reach the WebUI? — **CLOSED, 2026-09-23: no**
+
+**The maintainer's decision: 2.X-b is TUI-only, b4 included.** Nothing below
+is open any more; it is kept as the reasoning the decision was made on.
+
+---
 
 2.X-a and 2.X-c both ended up in the browser, by explicit reversal of the
 TUI-only default. This group is not the same shape:
@@ -420,7 +425,7 @@ TUI-only default. This group is not the same shape:
   Unlike the hidden-plugin sets, this cannot be per-viewer without giving the
   filter a per-request life the engine does not have.
 
-Nothing in b1–b3 is blocked on this. b4 is.
+Nothing in b1–b3 was blocked on this. b4 was, and is not any more.
 
 ### 8.2 `--disable-cursor` default
 

@@ -986,6 +986,7 @@ def plan_right_column(
     n_processes: int,
     n_alerts: int,
     n_ongoing: int = 0,
+    process_extra_rows: int = 0,
 ) -> dict[str, int]:
     """Return the RIGHT column row budget for the available `body_height`.
 
@@ -1004,6 +1005,11 @@ def plan_right_column(
         n_alerts: incident count available (`PluginBlock.data_count` of the
             synthesized `alert` block — one per incident, not one per raw
             history event).
+        process_extra_rows: rows the process block carries on top of its
+            header and its data rows — currently only the `e` extended-stats
+            block (2.X-b3), which is not modelled by the "one line per data
+            row" rule the rest of this solver rests on. 0 keeps the historical
+            arithmetic exactly.
         n_ongoing: how many of those incidents are still ACTIVE
             (`PluginBlock.data_pinned`). An active alert must stay visible at
             the expense of everything else, so `min(n_ongoing,
@@ -1052,7 +1058,7 @@ def plan_right_column(
         # A zero quota hides the block outright, header included (step l) —
         # mirroring `_paint_sidebar`, which skips a block with no rows.
         if n_processes and candidate["processes"]:
-            heights.append(1 + min(n_processes, candidate["processes"]))
+            heights.append(process_extra_rows + 1 + min(n_processes, candidate["processes"]))
         # The alert block is always emitted, if only as a header line. Its
         # height is title + column-header + data rows, not title + data rows
         # (`_alert_block_height` mirrors `render_alert_block`'s own collapse

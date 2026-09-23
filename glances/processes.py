@@ -97,6 +97,12 @@ class GlancesProcesses:
         self.disable_extended_tag = False
         self.extended_process = None
 
+        # v5 TUI: the process to grab extended stats for, named by PID.
+        # None (the default) leaves v4's position-based path
+        # (`is_selected_extended_process`) in sole charge, so nothing changes
+        # for a caller that never sets it.
+        self.extended_pid = None
+
         # Tests (and disable if not available) optionals features
         self._test_grab()
 
@@ -471,6 +477,18 @@ class GlancesProcesses:
             udp = None
         return tcp, udp
 
+    def is_extended_pid(self, pid):
+        """Return True if `pid` is the v5 TUI's selected process.
+
+        v4 pushes its cursor POSITION into the engine through `set_args`
+        (`is_selected_extended_process`). v5 does not hand the engine its
+        argparse namespace at all — and a position is the wrong handle
+        regardless: the list is re-sorted on every cycle, so position 3 names
+        a different process from one refresh to the next and the extended
+        block would describe a moving target. A PID does not move.
+        """
+        return self.extended_pid is not None and pid == self.extended_pid
+
     def is_selected_extended_process(self, position):
         """Return True if the process is the selected one for extended stats."""
         return (
@@ -642,7 +660,7 @@ class GlancesProcesses:
             ################
 
             # Get the selected process when the 'e' key is pressed
-            if self.is_selected_extended_process(position):
+            if self.is_selected_extended_process(position) or self.is_extended_pid(proc.get('pid')):
                 self.extended_process = proc
 
             # Grab extended stats only for the selected process (see issue #2225)

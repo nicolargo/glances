@@ -341,6 +341,119 @@ def _command_cells(item: dict[str, Any], short_name: bool = True) -> list[Cell]:
     return cells
 
 
+# v4 `get_headers` (`processlist/__init__.py:719-726`), labels included: the
+# Linux scheduling class, and Windows' own 0/1/2 with different meanings. The
+# "Class is " prefix lives in the values, as it does there, so the mapping is
+# a flat lookup rather than a lookup plus a special case for the default.
+_IONICE_CLASSES = {
+    0: "No specific I/O priority",
+    1: "Class is Real Time",
+    2: "Class is Best Effort",
+    3: "Class is IDLE",
+}
+_IONICE_CLASSES_WINDOWS = {
+    0: "Class is Very Low",
+    1: "Class is Low",
+    2: "No specific I/O priority",
+}
+
+
+def _ionice_text(ionice: Any) -> str | None:
+    """v4's IO-nice line, which v4 itself never renders.
+
+    `maybe_add_ionice_line` (`processlist/__init__.py:728-742`) guards on
+    `hasattr(prog['ionice'], 'ioclass')` — but the engine stores
+    `namedtuple_to_dict(proc)` (`processes.py:669`), so by render time psutil's
+    `pionice` namedtuple is a plain **dict**, which has no `.ioclass`. The
+    guard is therefore always False. Verified against the live engine, not
+    inferred: it yields `{'ioclass': <IOPriority...: 0>, 'value': 0}`.
+
+    v5 reads the dict, so the line appears.
+    """
+    if not isinstance(ionice, dict):
+        return None
+    ioclass = ionice.get("ioclass")
+    if ioclass is None:
+        return None
+    table = _IONICE_CLASSES_WINDOWS if WINDOWS else _IONICE_CLASSES
+    label = table.get(int(ioclass), f"Class is {int(ioclass)}")
+    value = ionice.get("value")
+    if isinstance(value, int) and value != 0:
+        label += f" (value {value}/7)"
+    return label
+
+
+def _mmm(payload: dict[str, Any], prefix: str) -> str:
+    """v4's `{: >7.1f}` min/max/mean triple."""
+    return "{: >7.1f}{: >7.1f}{: >7.1f}%".format(
+        payload.get(f"{prefix}_min") or 0.0,
+        payload.get(f"{prefix}_max") or 0.0,
+        payload.get(f"{prefix}_mean") or 0.0,
+    )
+
+
+def _extended_rows(payload: dict[str, Any]) -> list[Row]:
+    """The `e` block (2.X-b3), mirroring v4's four lines.
+
+    v4: `_msg_curse_extended_process_thread`
+    (`processlist/__init__.py:794-812`) — a pinned title, CPU min/max/mean with
+    affinity and IO nice, MEM min/max/mean with the memory breakdown and swap,
+    then the Open counters.
+    """
+    name = str(payload.get("name") or "?")
+    rows: list[Row] = [
+        Row(
+            cells=[
+                Cell(text="Pinned thread", color=ColorRole.HEADER),
+                Cell(text=name, underline=True),
+                Cell(text="('e' to unpin)"),
+            ]
+        )
+    ]
+
+    cpu: list[Cell] = [Cell(text=" CPU Min/Max/Mean:"), Cell(text=_mmm(payload, "cpu"), color=ColorRole.OK)]
+    affinity = payload.get("cpu_affinity")
+    if isinstance(affinity, list):
+        cpu += [Cell(text="Affinity:"), Cell(text=f"{len(affinity)} cores", color=ColorRole.OK)]
+    ionice = _ionice_text(payload.get("ionice"))
+    if ionice:
+        cpu += [Cell(text="IO nice:"), Cell(text=ionice, color=ColorRole.OK)]
+    rows.append(Row(cells=cpu))
+
+    mem: list[Cell] = [Cell(text=" MEM Min/Max/Mean:"), Cell(text=_mmm(payload, "memory"), color=ColorRole.OK)]
+    info = payload.get("memory_info")
+    if isinstance(info, dict) and info:
+        mem.append(Cell(text="Memory info:"))
+        for key, val in info.items():
+            mem += [Cell(text=_format_bytes(val, 0), color=ColorRole.OK), Cell(text=str(key))]
+    swap = payload.get("memory_swap")
+    if isinstance(swap, int):
+        mem += [Cell(text=_format_bytes(swap, 0), color=ColorRole.OK), Cell(text="swap")]
+    rows.append(Row(cells=mem))
+
+    opened: list[Cell] = [Cell(text=" Open:")]
+    for key in ("num_threads", "num_fds", "num_handles", "tcp", "udp"):
+        val = payload.get(key)
+        if val is not None:
+            opened += [Cell(text=str(val), color=ColorRole.OK), Cell(text=key.replace("num_", ""))]
+    rows.append(Row(cells=opened))
+    return rows
+
+
+def extended_block_height(payload: Any) -> int:
+    """Rows the `e` block adds on top of the process table, 0 when off.
+
+    The vertical solver (`curses_renderer_v5.plan_right_column`) models an
+    elastic block as "one line per data row plus one header". The `e` block
+    breaks that, so the solver is TOLD its cost rather than left to overflow
+    by it. Derived by building the rows, not by a constant a future line
+    would silently invalidate.
+    """
+    if not isinstance(payload, dict) or not payload:
+        return 0
+    return len(_extended_rows(payload))
+
+
 def _select(cells: list[Cell]) -> list[Cell]:
     """Decorate the cursor-selected row's command cells (2.X-b).
 
@@ -442,6 +555,13 @@ def render(
         # the block goes entirely — header included (parity with `containers`).
         return []
 
+    # The `e` block (2.X-b3), above the table as in v4. Its cost is declared
+    # to the vertical solver through `extended_block_height`, which is why
+    # nothing is subtracted from the budget here: the budget the solver hands
+    # back has already paid for these rows.
+    extended = (view or {}).get("extended_process")
+    extended_rows = _extended_rows(extended) if isinstance(extended, dict) and extended else []
+
     raw_levels = payload.get("_levels") if isinstance(payload, dict) else None
     levels_index = raw_levels if isinstance(raw_levels, dict) else {}
 
@@ -470,7 +590,7 @@ def render(
         _header("W/s", _W_IO),
     ]
     header_cells = _filter_fixed(header_fixed) + [_header("Command", len("Command"))]
-    rows: list[Row] = [Row(cells=header_cells)]
+    rows: list[Row] = [*extended_rows, Row(cells=header_cells)]
 
     # `_MAX_ROWS` is the nominal fallback; the TUI publishes a height-driven
     # budget in `view["row_budget"]` which may be lower (short terminal) or
