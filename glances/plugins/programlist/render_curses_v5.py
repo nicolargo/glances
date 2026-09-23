@@ -96,6 +96,7 @@ def render(
     """
     sort_key = (view or {}).get("sort_key")
     short_name = (view or {}).get("process_short_name", True)
+    command_offset = (view or {}).get("command_offset") or 0
 
     def _header(label: str, width: int, *, ljust: bool = False, color: ColorRole = ColorRole.HEADER) -> Cell:
         text = label.ljust(width) if ljust else label.rjust(width)
@@ -150,6 +151,6 @@ def render(
             _io_cell(r_rate, r_unknown, _W_IO),
             _io_cell(w_rate, w_unknown, _W_IO),
         ]
-        rows.append(Row(cells=fixed_cells + _command_cells(item, short_name)))
+        rows.append(Row(cells=fixed_cells + _command_cells(item, short_name, command_offset)))
 
     return rows

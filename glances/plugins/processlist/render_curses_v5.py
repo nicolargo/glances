@@ -307,7 +307,7 @@ def _io_cell(value: Any, is_unknown: bool, width: int) -> Cell:
     return Cell(text=_format_bytes(value, width))
 
 
-def _command_cells(item: dict[str, Any], short_name: bool = True) -> list[Cell]:
+def _command_cells(item: dict[str, Any], short_name: bool = True, offset: int = 0) -> list[Cell]:
     """Render the command as bold cmd + plain args.
 
     - ``short_name=True`` (default, v4 short view): the ``/path/to/``
@@ -317,6 +317,13 @@ def _command_cells(item: dict[str, Any], short_name: bool = True) -> list[Cell]:
       path is a real directory, it is prepended as a plain ``path + os.sep``
       cell before the bold cmd (mirrors v4 ``_get_process_curses_cmdline``,
       including the ``os.path.isdir`` guard so a bogus path is not shown).
+
+    ``offset`` scrolls the ARGUMENTS horizontally (LEFT / RIGHT). The
+    executable name — and its path prefix in full mode — stays put: it is the
+    part that identifies the row, and scrolling the whole cell would push it
+    off the left edge. A ``…`` replaces the leading space once the offset is
+    non-zero, exactly as v4 does
+    (``processlist/__init__.py:566-567``).
 
     Empty / missing cmdline falls back to the kernel-thread convention
     ``[name]`` (no bold) — kthreads have no cmdline in ``/proc``.
@@ -334,7 +341,12 @@ def _command_cells(item: dict[str, Any], short_name: bool = True) -> list[Cell]:
         cells.append(Cell(text=cmd, bold=True, glue=True))
     else:
         cells.append(Cell(text=cmd, bold=True))
-    if args:
+    if offset > 0:
+        # A scrolled row whose arguments have run out shows the marker alone,
+        # rather than silently losing the column: the user can see that the
+        # text is off to the left and scroll back.
+        cells.append(Cell(text="…" + args[offset:]))
+    elif args:
         # No leading space: the painter already inserts one separator space
         # between this cell and the command (single space, not double).
         cells.append(Cell(text=args))
@@ -626,6 +638,7 @@ def render(
     """
     sort_key = (view or {}).get("sort_key")
     short_name = (view or {}).get("process_short_name", True)
+    command_offset = (view or {}).get("command_offset") or 0
     available = (view or {}).get("right_width")
     # Absent (export, tests, `--disable-cursor`) → no row is decorated, which
     # is the pre-2.X-b output byte for byte.
@@ -720,7 +733,7 @@ def render(
             _io_cell(r_rate, r_unknown, _W_IO),
             _io_cell(w_rate, w_unknown, _W_IO),
         ]
-        command_cells = _command_cells(item, short_name)
+        command_cells = _command_cells(item, short_name, command_offset)
         if cursor == position:
             command_cells = _select(command_cells)
         rows.append(Row(cells=_filter_fixed(fixed_cells) + command_cells))

@@ -278,6 +278,14 @@ def build_parser() -> argparse.ArgumentParser:
         help="set the process filter pattern (regular expression); TUI mode only",
     )
     parser.add_argument(
+        "--arrow-keys-sort",
+        dest="arrow_keys_sort",
+        action="store_true",
+        default=False,
+        help="use the arrow keys to step the process sort, and SHIFT+arrows to scroll the command column "
+        "(the default is the other way round)",
+    )
+    parser.add_argument(
         "--disable-cursor",
         dest="disable_cursor",
         action="store_true",
@@ -790,6 +798,7 @@ def assemble(
             byte=getattr(args, "byte", False),
             disable_unicode=getattr(args, "disable_unicode", False),
             disable_cursor=getattr(args, "disable_cursor", False),
+            arrow_keys_sort=getattr(args, "arrow_keys_sort", False),
             programs=getattr(args, "programs", False),
         )
 

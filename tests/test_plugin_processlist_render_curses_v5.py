@@ -957,3 +957,57 @@ def test_summarise_ignores_an_unknown_io_rate():
     unknown = summarise([_proc(pid=1, io_counters=[2048, 1024, 0, 0, 0], time_since_update=1.0)])
     assert known["read"] == 2048
     assert unknown["read"] == 0.0
+
+
+# ------------------------------- the command column's horizontal scroll
+
+
+def _command_text(rows, index=1):
+    from glances.plugins.processlist.render_curses_v5 import _FIXED_COL_KEYS
+
+    return " ".join(c.text for c in rows[index].cells[len(_FIXED_COL_KEYS) :])
+
+
+def test_no_offset_leaves_the_command_untouched(payload, fields):
+    rows = render(payload, fields, view={"command_offset": 0, "process_short_name": True})
+    assert _command_text(rows) == _command_text(render(payload, fields))
+
+
+def test_the_offset_scrolls_the_arguments_only(payload, fields):
+    """The executable name is what identifies the row; scrolling the whole
+    cell would push it off the left edge. v4 scrolls the arguments alone
+    (`processlist/__init__.py:566-567`)."""
+    rows = render(payload, fields, view={"command_offset": 3})
+    text = _command_text(rows)
+    assert text.startswith("python3")  # the name stayed
+    assert "…" in text
+    assert "myscript.py" not in text  # ... and the arguments moved
+    assert "cript.py" in text
+
+
+def test_a_scrolled_row_keeps_its_marker_when_the_arguments_run_out(payload, fields):
+    """Losing the column silently would leave a user with no clue that the
+    text is off to the left."""
+    rows = render(payload, fields, view={"command_offset": 500})
+    text = _command_text(rows)
+    assert text.startswith("python3")
+    assert "…" in text
+
+
+def test_a_row_with_no_arguments_gains_the_marker_too(fields):
+    """Consistency: every row scrolls by the same amount, so a row that had
+    nothing to scroll must still show that the column is scrolled."""
+    payload = {"data": [_proc(pid=1, cmdline=["python3"])], "_levels": {}}
+    assert "…" in _command_text(render(payload, fields, view={"command_offset": 2}))
+    assert "…" not in _command_text(render(payload, fields))
+
+
+def test_the_path_prefix_does_not_scroll_in_full_mode(fields, monkeypatch):
+    """In full mode the path is part of what names the process, so it stays
+    with the executable rather than scrolling away."""
+    monkeypatch.setattr("glances.plugins.processlist.render_curses_v5.os.path.isdir", lambda p: True)
+    payload = {"data": [_proc(pid=1, cmdline=["/usr/bin/python3", "--flag", "value"])], "_levels": {}}
+
+    text = _command_text(render(payload, fields, view={"command_offset": 2, "process_short_name": False}))
+    assert text.startswith("/usr/bin/ python3")
+    assert "…" in text

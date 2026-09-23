@@ -1481,7 +1481,34 @@ curses surface — as its own owned group. No implementation in parity wave 1
   field is tri-state (`None` = follow the payload) and the browser seeds it
   from the fs payload rather than from `serverArgs`, which carries only the
   CLI flag and reads `false` for a config-set `true`.
-- **`F5` / `Ctrl-R`** forced refresh and the sort-navigation arrow keys.
+- ~~**`F5` / `Ctrl-R`** forced refresh and the sort-navigation arrow keys.~~
+  **Shipped (2026-09-23)**, and with it **Phase 2.X is complete**. Four keys,
+  plus the `--arrow-keys-sort` flag (v4 issue #3385) that swaps which arrow
+  pair steps the sort column and which scrolls the command text.
+
+  Two things worth carrying forward:
+
+  - **The swappable pair is resolved, not tabulated.** The same keycode does
+    different things in the two configurations, so a static entry would
+    describe the wrong binding in one of them — and "the `h` overlay cannot
+    drift from what the TUI does" is the property 2.X-a built and every
+    chantier since has kept. One method returns the four bindings; the
+    dispatcher and the overlay both call it, so the help is right by
+    construction rather than by care.
+  - **The scroll moves the ARGUMENTS only.** The executable name — and its
+    path prefix in full mode — stays put: it is the part that identifies the
+    row, and scrolling the whole cell would push it off the left edge. v4
+    does the same (`processlist/__init__.py:566-567`), and `programlist`
+    shares the renderer so both blocks behave alike.
+
+  **A gap 2.X-b1 left, found in a pty rather than in a test**: the escape
+  resolver knew `[A`/`OA`/`[B`/`OB` and nothing else, because only Up and
+  Down had been bound. An untranslated `\x1b[C` was therefore swallowed as an
+  unknown sequence and the command column simply did not scroll — while
+  `SHIFT+arrow` worked, because its terminfo entry translates. The table now
+  carries all four directions, and a test asserts that every plain arrow the
+  dispatcher binds is one the resolver can produce, so the next key to be
+  bound cannot repeat it.
 
 The `ViewState` mechanism this group builds on already exists
 (`glances_curses_v5.py:107`); each toggle is one `_HOTKEYS` entry plus a

@@ -1016,6 +1016,10 @@ def test_args_matches_the_real_v5_argument_set(config_factory, store):
 
     assert set(payload) == {
         "api_doc",
+        # `--arrow-keys-sort`: which arrow pair steps the sort and which
+        # scrolls the command column. A display preference, like
+        # `disable_cursor` and `disable_unicode` — nothing sensitive.
+        "arrow_keys_sort",
         "bind",
         "byte",
         "config_path",

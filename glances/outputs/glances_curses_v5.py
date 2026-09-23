@@ -30,7 +30,7 @@ import time
 from collections.abc import Callable
 from dataclasses import dataclass, field, replace
 from itertools import zip_longest
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import psutil
 
@@ -49,7 +49,7 @@ from glances.outputs.curses_renderer_v5 import (
     with_truncation_counter,
 )
 from glances.plugins.processlist.render_curses_v5 import process_extra_rows, summarise
-from glances.processes import glances_processes, sort_stats
+from glances.processes import glances_processes, sort_processes_stats_list, sort_stats
 
 if TYPE_CHECKING:
     from glances.alerts_v5 import GlancesAlerts
@@ -129,6 +129,7 @@ class ViewState:
     - ``cursor_position=0`` — the process list's first row (UP / DOWN).
     - ``extended=False`` — no extended stats block (hotkey ``e``).
     - ``filter_mmm`` — empty min/max accumulators (hotkeys ``ENTER``, ``M``).
+    - ``command_offset=0`` — the command column unscrolled (LEFT / RIGHT).
 
     ``hidden_plugins`` is deliberately a namespace of its own, NOT the
     ``hide_<plugin>`` view keys the width-degradation cascades write
@@ -163,6 +164,10 @@ class ViewState:
     # functions of (payload, fields, view), so the memory lives here and the
     # three rows reach the renderer through `view`.
     filter_mmm: dict[str, dict[str, float]] = field(default_factory=lambda: {"min": {}, "max": {}})
+    # Horizontal scroll of the command column's ARGUMENTS, in characters
+    # (LEFT / RIGHT, or SHIFT+ them under `--arrow-keys-sort`). The executable
+    # name stays put: it is the part that identifies the row.
+    command_offset: int = 0
     # TOGGLE DATA TYPE (2.X-c). Seeded from the CLI at construction, then
     # flipped by their keys.
     byte: bool = False
@@ -361,7 +366,62 @@ class TuiV5(threading.Thread):
             "desc": "Select the next process",
             "label": "DOWN",
         },
+        curses.KEY_F5: {
+            "action": "refresh",
+            "group": "MISCELLANEOUS",
+            "desc": "Refresh (drop the process cache)",
+            "label": "F5",
+        },
+        # Ctrl-R, the other spelling v4 accepts (`glances_curses.py:291`).
+        18: {"action": "refresh"},
     }
+
+    # The four keys `--arrow-keys-sort` SWAPS (v4 issue #3385,
+    # `glances_curses.py:281-288`). Not in the table above, because the table
+    # is also what the `h` overlay is generated from: a static entry would
+    # describe the wrong binding in one of the two configurations, and "the
+    # overlay cannot drift from what the TUI does" is the property every
+    # chantier since 2.X-a has kept. Resolved once, here, for both consumers.
+    _SORT_ARROWS: tuple[dict[str, Any], dict[str, Any]] = (
+        {"action": "sort_prev", "group": "SORT PROCESSES", "desc": "Previous sort column"},
+        {"action": "sort_next", "group": "SORT PROCESSES", "desc": "Next sort column"},
+    )
+    _SCROLL_ARROWS: tuple[dict[str, Any], dict[str, Any]] = (
+        {
+            "action": "command_left",
+            "cursor": True,
+            "group": "SELECT PROCESS",
+            "desc": "Scroll the command column left",
+        },
+        {
+            "action": "command_right",
+            "cursor": True,
+            "group": "SELECT PROCESS",
+            "desc": "Scroll the command column right",
+        },
+    )
+
+    _ARROW_LABELS: ClassVar[dict[int, str]] = {
+        curses.KEY_LEFT: "LEFT",
+        curses.KEY_RIGHT: "RIGHT",
+        curses.KEY_SLEFT: "SHIFT-LEFT",
+        curses.KEY_SRIGHT: "SHIFT-RIGHT",
+    }
+
+    def _arrow_bindings(self) -> dict[int, dict[str, Any]]:
+        """The four horizontal arrows, bound per `--arrow-keys-sort`."""
+        plain = (curses.KEY_LEFT, curses.KEY_RIGHT)
+        shifted = (curses.KEY_SLEFT, curses.KEY_SRIGHT)
+        sort_keys, scroll_keys = (plain, shifted) if self._arrow_keys_sort else (shifted, plain)
+        bindings: dict[int, dict[str, Any]] = {}
+        for keys, specs in ((sort_keys, self._SORT_ARROWS), (scroll_keys, self._SCROLL_ARROWS)):
+            for key, spec in zip(keys, specs):
+                bindings[key] = {**spec, "label": self._ARROW_LABELS[key]}
+        return bindings
+
+    def _special_hotkeys(self) -> dict[int, dict[str, Any]]:
+        """Every keycode-addressed hotkey, the swappable arrows included."""
+        return {**self._SPECIAL_HOTKEYS, **self._arrow_bindings()}
 
     # Display order of the hotkey groups in the help overlay.
     _HELP_GROUPS: tuple[str, ...] = (
@@ -408,6 +468,7 @@ class TuiV5(threading.Thread):
         disable_unicode: bool = False,
         programs: bool = False,
         disable_cursor: bool = False,
+        arrow_keys_sort: bool = False,
     ) -> None:
         super().__init__(name="glances-tui-v5", daemon=True)
         self.store = store
@@ -473,6 +534,9 @@ class TuiV5(threading.Thread):
         # `"ignored"` and no row is decorated -- v4's guard, one flag instead
         # of repeated `and not self.args.disable_cursor` clauses.
         self._cursor_enabled = not bool(disable_cursor)
+        # `--arrow-keys-sort` (v4 issue #3385): swaps which arrow pair steps
+        # the sort column and which scrolls the command text.
+        self._arrow_keys_sort = bool(arrow_keys_sort)
         # How many process rows the LAST painted frame actually drew. The
         # cursor is clamped to it so the selected process is always on
         # screen -- which is what makes `k`'s confirmation trustworthy: it
@@ -531,7 +595,7 @@ class TuiV5(threading.Thread):
         # Keys with no character to be keyed by (arrows) are looked up FIRST:
         # `chr(curses.KEY_UP)` is a real character, so leaving them to the
         # character table would silently shadow whatever letter that is.
-        action = self._SPECIAL_HOTKEYS.get(key)
+        action = self._special_hotkeys().get(key)
         if action is None:
             try:
                 ch = chr(key)
@@ -621,6 +685,30 @@ class TuiV5(threading.Thread):
                 return "ignored"
             self._view.cursor_position += 1
             return "changed"
+        if verb in ("sort_prev", "sort_next"):
+            self._step_sort(-1 if verb == "sort_prev" else 1)
+            return "changed"
+        if verb == "command_left":
+            if self._view.command_offset == 0:
+                return "ignored"
+            self._view.command_offset -= 1
+            return "changed"
+        if verb == "command_right":
+            # No ceiling: the longest argument string on screen is not known
+            # until the frame is built, and clamping to it would make the key
+            # stop working because of a row the user cannot see. Scrolling
+            # past the end shows an empty column, which is self-correcting.
+            self._view.command_offset += 1
+            return "changed"
+        if verb == "refresh":
+            # v4's `_handle_refresh` (`glances_curses.py:432-433`). Silent by
+            # nature: nothing visible happens until the next collection cycle,
+            # and a popup on every refresh would be worse than saying nothing.
+            try:
+                glances_processes.reset_internal_cache()
+            except Exception as e:  # pragma: no cover — defensive
+                logger.warning("TUI: reset_internal_cache failed: %s", e)
+            return "changed"
         if verb == "erase_filter":
             # No popup: erasing is unambiguous and instant. The min/max go
             # with it -- they describe a set of processes that no longer
@@ -681,6 +769,15 @@ class TuiV5(threading.Thread):
         "OA": curses.KEY_UP,
         "[B": curses.KEY_DOWN,
         "OB": curses.KEY_DOWN,
+        # Left and right were absent until these keys were bound: an
+        # untranslated `\x1b[C` was swallowed as an unknown sequence and the
+        # command column simply did not scroll. Found in a pty, not in a test
+        # -- the four horizontal arrows are only as useful as the terminal's
+        # encoding is understood.
+        "[C": curses.KEY_RIGHT,
+        "OC": curses.KEY_RIGHT,
+        "[D": curses.KEY_LEFT,
+        "OD": curses.KEY_LEFT,
     }
     # Longest tail `_read_key` will drain after an ESC before giving up.
     _ESCAPE_TAIL_MAX = 6
@@ -842,6 +939,23 @@ class TuiV5(threading.Thread):
             # and for every mutating action rather than just for `kill`.
             return None, "That is Glances itself."
         return process, None
+
+    def _step_sort(self, step: int) -> None:
+        """Move the process sort one place along v4's own loop.
+
+        `sort_processes_stats_list` (`processes.py:33-34`) is the list v4
+        steps through, and the engine is the only holder of the current key —
+        so the position is read back from it rather than tracked here, which
+        keeps a sort set by `c`/`m`/`u` and one set by the arrows the same
+        thing.
+        """
+        loop = list(sort_processes_stats_list)
+        current = getattr(glances_processes, "sort_key", None)
+        position = loop.index(current) if current in loop else 0
+        try:
+            glances_processes.set_sort_key(loop[(position + step) % len(loop)], False)
+        except Exception as e:  # pragma: no cover — defensive
+            logger.warning("TUI: set_sort_key failed: %s", e)
 
     def _set_filter(self, pattern: str | None) -> None:
         """Apply a process filter, or clear it, and reset the summary memory.
@@ -1637,6 +1751,7 @@ class TuiV5(threading.Thread):
         # decoration" path export and the tests already take.
         if self._cursor_enabled:
             view["cursor_position"] = self._view.cursor_position
+        view["command_offset"] = self._view.command_offset
         extended = self._extended_payload()
         if extended is not None:
             view["extended_process"] = extended
@@ -1996,7 +2111,7 @@ class TuiV5(threading.Thread):
         """
         labelled: list[tuple[str, dict[str, Any]]] = [
             *self._HOTKEYS.items(),
-            *((spec["label"], spec) for spec in self._SPECIAL_HOTKEYS.values() if spec.get("desc")),
+            *((spec["label"], spec) for spec in self._special_hotkeys().values() if spec.get("desc")),
         ]
         lines: list[Row] = []
         for group in self._HELP_GROUPS:

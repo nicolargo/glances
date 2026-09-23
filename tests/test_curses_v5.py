@@ -4571,3 +4571,185 @@ def test_an_arrow_key_in_the_prompt_does_not_throw_the_text_away(monkeypatch, fa
     _typed(monkeypatch, tui, [ord("a"), 27, ord("["), ord("D"), ord("b"), ord("\n")])
 
     assert tui._popup_input(MagicMock(), "filter: ") == "ab"
+
+
+# ------------------------- F5 and the arrow keys (Phase 2.X, last bullet)
+
+
+@pytest.fixture
+def sorted_engine(monkeypatch):
+    """The engine's sort key, isolated per test."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    monkeypatch.setattr(tui_mod.glances_processes, "_sort_key", "cpu_percent", raising=False)
+    monkeypatch.setattr(tui_mod.glances_processes, "auto_sort", False, raising=False)
+    return tui_mod.glances_processes
+
+
+def test_f5_and_ctrl_r_both_drop_the_process_cache(monkeypatch, fake_store, fake_alerts, fake_config):
+    """v4's `_handle_refresh` (`glances_curses.py:432-433`), under both of the
+    spellings it accepts."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    calls = []
+    monkeypatch.setattr(tui_mod.glances_processes, "reset_internal_cache", lambda: calls.append(1))
+
+    assert tui._handle_key(curses.KEY_F5) == "changed"
+    assert tui._handle_key(18) == "changed"
+    assert len(calls) == 2
+
+
+def test_a_failing_refresh_does_not_take_the_tui_down(monkeypatch, fake_store, fake_alerts, fake_config):
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    def _boom():
+        raise RuntimeError("boom")
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    monkeypatch.setattr(tui_mod.glances_processes, "reset_internal_cache", _boom)
+    assert tui._handle_key(curses.KEY_F5) == "changed"
+
+
+def test_the_sort_arrows_step_v4s_own_loop(sorted_engine, fake_store, fake_alerts, fake_config):
+    """`sort_processes_stats_list` (`processes.py:33-34`) is the list v4 steps
+    through, and stepping wraps as its `%` does."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+    from glances.processes import sort_processes_stats_list as loop
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+
+    assert tui._handle_key(curses.KEY_SRIGHT) == "changed"
+    assert sorted_engine.sort_key == loop[1]
+    assert tui._handle_key(curses.KEY_SLEFT) == "changed"
+    assert sorted_engine.sort_key == loop[0]
+    # ... and wraps off the front.
+    tui._handle_key(curses.KEY_SLEFT)
+    assert sorted_engine.sort_key == loop[-1]
+
+
+def test_the_sort_position_is_read_back_from_the_engine(sorted_engine, fake_store, fake_alerts, fake_config):
+    """A sort set by `c`/`m`/`u` and one set by the arrows must be the same
+    thing — so the position is read from the engine, never tracked here."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+    from glances.processes import sort_processes_stats_list as loop
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    tui._handle_key(ord("u"))  # sort by username, through the letter key
+    assert sorted_engine.sort_key == "username"
+
+    tui._handle_key(curses.KEY_SRIGHT)
+    assert sorted_engine.sort_key == loop[loop.index("username") + 1]
+
+
+def test_an_unknown_sort_key_starts_the_loop_from_the_front(sorted_engine, fake_store, fake_alerts, fake_config):
+    """`set_sort_key('auto')` leaves a key the loop does not carry; stepping
+    from there must not raise."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+    from glances.processes import sort_processes_stats_list as loop
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    sorted_engine._sort_key = "not_in_the_loop"
+
+    tui._handle_key(curses.KEY_SRIGHT)
+    assert sorted_engine.sort_key == loop[1]
+
+
+def test_the_command_arrows_scroll_and_floor_at_zero(fake_store, fake_alerts, fake_config):
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+
+    assert tui._handle_key(curses.KEY_LEFT) == "ignored"  # already at 0
+    assert tui._handle_key(curses.KEY_RIGHT) == "changed"
+    assert tui._handle_key(curses.KEY_RIGHT) == "changed"
+    assert tui._view.command_offset == 2
+    assert tui._handle_key(curses.KEY_LEFT) == "changed"
+    assert tui._view.command_offset == 1
+    assert tui._build_view(120)["command_offset"] == 1
+
+
+def test_arrow_keys_sort_swaps_the_two_pairs(sorted_engine, fake_store, fake_alerts, fake_config):
+    """v4 issue #3385 (`glances_curses.py:281-288`)."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config, arrow_keys_sort=True)
+
+    # Plain arrows now sort...
+    assert tui._handle_key(curses.KEY_RIGHT) == "changed"
+    assert sorted_engine.sort_key != "cpu_percent"
+    assert tui._view.command_offset == 0
+    # ... and SHIFT+arrows scroll.
+    assert tui._handle_key(curses.KEY_SRIGHT) == "changed"
+    assert tui._view.command_offset == 1
+
+
+def test_the_help_describes_the_binding_that_is_actually_live(fake_store, fake_alerts, fake_config):
+    """A static table would describe the wrong binding in one of the two
+    configurations — and "the overlay cannot drift from what the TUI does" is
+    the property every chantier since 2.X-a has kept."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    def rows(**kw):
+        tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config, **kw)
+        return {r.cells[0].text.strip() for r in tui._help_lines()}
+
+    default = rows()
+    swapped = rows(arrow_keys_sort=True)
+
+    assert any(line.startswith("SHIFT-RIGHT") and "sort" in line.lower() for line in default)
+    assert any(line.startswith("RIGHT") and "command" in line.lower() for line in default)
+    assert any(line.startswith("RIGHT") and "sort" in line.lower() for line in swapped)
+    assert any(line.startswith("SHIFT-RIGHT") and "command" in line.lower() for line in swapped)
+
+
+def test_disable_cursor_neutralises_the_scroll_but_not_the_sort(sorted_engine, fake_store, fake_alerts, fake_config):
+    """v4 guards the scroll pair with `not disable_cursor` and the sort pair
+    without (`glances_curses.py:281-288`); mirrored."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config, disable_cursor=True)
+
+    assert tui._handle_key(curses.KEY_RIGHT) == "ignored"
+    assert tui._view.command_offset == 0
+    assert tui._handle_key(curses.KEY_SRIGHT) == "changed"
+    assert sorted_engine.sort_key != "cpu_percent"
+
+
+@pytest.mark.parametrize(
+    ("script", "expected"),
+    [
+        ([27, ord("["), ord("C")], curses.KEY_RIGHT),  # normal cursor mode
+        ([27, ord("O"), ord("C")], curses.KEY_RIGHT),  # application cursor mode
+        ([27, ord("["), ord("D")], curses.KEY_LEFT),
+        ([27, ord("O"), ord("D")], curses.KEY_LEFT),
+    ],
+)
+def test_the_horizontal_arrows_resolve_too(script, expected, fake_store, fake_alerts, fake_config):
+    """Left and right were absent from the table until these keys were bound.
+
+    Found in a pty, not in a test: `\\x1b[C` was swallowed as an unknown
+    sequence and the command column simply did not scroll, while
+    `SHIFT+arrow` worked because its terminfo entry translates. The table only
+    ever covered the two directions something was bound to.
+    """
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    assert tui._read_key(_ScriptedScreen(script)) == expected
+
+
+def test_every_arrow_the_tui_binds_is_resolvable(fake_store, fake_alerts, fake_config):
+    """The guard that would have caught the above by construction: a key the
+    dispatcher binds but the resolver cannot produce is a key that only works
+    on terminals whose terminfo happens to translate it."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    resolvable = set(tui_mod.TuiV5._ESCAPE_SEQUENCES.values())
+    # KEY_SLEFT / KEY_SRIGHT are excluded: no terminal sends them as a bare
+    # CSI arrow, and every terminfo that knows shift-arrows translates them.
+    plain_arrows = {curses.KEY_UP, curses.KEY_DOWN, curses.KEY_LEFT, curses.KEY_RIGHT}
+    bound = set(tui._special_hotkeys()) & plain_arrows
+
+    assert bound <= resolvable, f"bound but unresolvable: {sorted(bound - resolvable)}"
