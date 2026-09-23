@@ -295,6 +295,7 @@ const {
 	PLUGINSLIST_FIXTURES,
 	ALL_UNREACHABLE_SCENARIOS,
 	SERVER_DOWN_SCENARIOS,
+	RECONNECT_LADDER_SCENARIOS,
 	ARGS_FIXTURES,
 	CONFIG_FIXTURES,
 	ALL_FIXTURES,
@@ -322,13 +323,19 @@ const hotkeys = (process.argv[4] || "").split(",").filter(Boolean);
 // through to the existing single-static-envelope lookup below, unchanged.
 let alertIncidentsSequenceIndex = 0;
 
+// Whether the server is currently GONE. Seeded from the scenario, but a
+// variable rather than a set lookup so the ladder scenario can bring the
+// server back mid-run and take it away again -- the reconnection ladder is
+// about what happens ACROSS attempts, which a fixed answer cannot express.
+let serverDown = SERVER_DOWN_SCENARIOS.has(scenario);
+
 async function fakeFetch(url) {
 	const path = String(url);
 	// A stopped server answers NOTHING, so this rejects before any per-path
 	// branch below -- `fetch` rejecting is the browser's only signal that
 	// there is no server, as opposed to one returning an error (the
 	// `all-unreachable` scenario, which answers 500 on /api/5/all alone).
-	if (SERVER_DOWN_SCENARIOS.has(scenario)) {
+	if (serverDown) {
 		throw new TypeError("NetworkError when attempting to fetch resource.");
 	}
 	// BEFORE the `api/5/alert` check below: "api/5/alert/incidents" contains
@@ -399,10 +406,13 @@ async function fakeFetch(url) {
 // (a FakeElement) is correctly recognised as an Element.
 class FakeSVGElement extends FakeElement {}
 
+let nextTimerId = 1;
+const liveTimers = new Set();
+
 // AppShell.mounted() calls setInterval() as its last statement to schedule
 // the poll; without it in the sandbox the hook throws ReferenceError at that
 // line, which vm swallows as an unhandled rejection instead of surfacing --
-// see Finding 3. No-ops are fine: the probe observes the first paint, it
+// see Finding 3. They never FIRE: the probe observes what each tick arms, it
 // does not drive time.
 const sandbox = {
 	document,
@@ -411,8 +421,21 @@ const sandbox = {
 	Node: FakeNode,
 	Element: FakeElement,
 	SVGElement: FakeSVGElement,
-	setInterval: () => 0,
-	clearInterval: () => {},
+	// Real ids, and a record of which are live. Two reasons: the component's
+	// own `if (this.timer)` guards behave as they do in a browser (a 0 id is
+	// falsy, so they never fired), and the reconnection loop must own exactly
+	// ONE countdown -- a second armed interval would retry twice as fast and
+	// nothing in the DOM would show it. No-ops otherwise: the probe observes
+	// what each tick ARMS, it does not drive time.
+	setInterval: () => {
+		const id = nextTimerId;
+		nextTimerId += 1;
+		liveTimers.add(id);
+		return id;
+	},
+	clearInterval: (id) => {
+		liveTimers.delete(id);
+	},
 	// AppShell observes zone widths with this; the harness never fires it, so
 	// the cascade runs exactly once, on the shell's own post-payload pass.
 	ResizeObserver: class {
@@ -493,6 +516,19 @@ function findDescendantByClass(root, cls) {
 	return null;
 }
 
+// The disconnected overlay's text right now, or null when it is not up.
+// Read by class rather than by position: it is a child of the shell, and
+// asserting where would break the moment anything else is appended there.
+function offlineText() {
+	const first = appDiv.childNodes[0];
+	if (!first || first.nodeType !== ELEMENT_NODE) return null;
+	const offline = findDescendantByClass(first, "gl-offline");
+	return offline ? offline.textContent.replace(/\s+/g, " ").trim() : null;
+}
+
+// One entry per attempt made by the ladder script (see the driver below).
+const offlineSequence = [];
+
 function collect() {
 	const result = {
 		childCount: appDiv.childNodes.length,
@@ -514,9 +550,15 @@ function collect() {
 		// The effective view flags after any TOGGLE VIEW key: what the server
 		// reported with the viewer's own overrides on top.
 		effectiveArgs: sandbox.__glancesEffectiveArgs || null,
+		// How many intervals are armed right now (see the sandbox's setInterval).
+		liveTimers: liveTimers.size,
 		// The disconnected overlay: whether it is up, and the text it shows.
 		// [] / null when the server is answering.
 		offlineText: null,
+		// What that overlay showed after each attempt of the ladder script
+		// below -- null for the attempt that found the server back. [] for
+		// every scenario that does not run it.
+		offlineSequence,
 		// The `h` overlay's rows as the viewer reads them: "<key> <description>"
 		// per `<li>`. [] when the overlay is closed, which is itself an
 		// assertion a test makes.
@@ -654,13 +696,7 @@ function collect() {
 		result.tagName = first.tagName ?? null;
 		if (first.nodeType === ELEMENT_NODE) {
 			result.hasClass = first.classList.contains("gl-app");
-			// The help overlay, when `h` opened it. Read by class rather than by
-			// position: it is the last child of <main>, and asserting that would
-			// break the moment anything else is appended there.
-			const offline = findDescendantByClass(first, "gl-offline");
-			if (offline) {
-				result.offlineText = offline.textContent.replace(/\s+/g, " ").trim();
-			}
+			result.offlineText = offlineText();
 			const about = findDescendantByClass(first, "gl-about");
 			if (about) {
 				result.footerAbout = (about.childNodes || [])
@@ -893,6 +929,11 @@ function applyHeights() {
 	return true;
 }
 
+// Vue renders on the microtask queue; a macrotask turn drains it, so a DOM
+// read after one of these sees the render the tick produced, not the one
+// before it.
+const flush = () => new Promise((resolve) => setImmediate(resolve));
+
 // AppShell's `mounted()` hook is async (resolveConfig, then tick(),
 // which itself awaits fetchAll() and the /api/5/alert call) -- none of
 // that has run yet the instant vm.runInContext() returns; only the initial,
@@ -923,6 +964,42 @@ setImmediate(async () => {
 	// exercises the tick-ordering fix rather than the `__glancesRefit`
 	// shortcut every other test above uses.
 	if (ALERT_INCIDENTS_SEQUENCES[scenario] && sandbox.__glancesTick) await sandbox.__glancesTick();
+	// The reconnection ladder. mounted()'s own tick() has already failed once
+	// by the time this runs, so the overlay is up and showing the FIRST wait:
+	// record it, then keep attempting. Each extra tick is one more failed
+	// attempt, and the countdown it arms is the ladder rung under test -- the
+	// sandbox's intervals never fire, so nothing counts down on its own and the
+	// number the overlay shows is exactly what goOffline() just armed.
+	//
+	// The server then ANSWERS for one attempt and is killed again: the last two
+	// entries are what proves the ladder resets on recovery rather than
+	// carrying a finished outage's position into the next one.
+	if (RECONNECT_LADDER_SCENARIOS.has(scenario) && sandbox.__glancesTick) {
+		offlineSequence.push(offlineText());
+		for (let i = 0; i < 6; i += 1) {
+			await sandbox.__glancesTick();
+			await flush();
+			offlineSequence.push(offlineText());
+		}
+		serverDown = false;
+		await sandbox.__glancesTick();
+		await flush();
+		offlineSequence.push(offlineText());
+		serverDown = true;
+		await sandbox.__glancesTick();
+		await flush();
+		offlineSequence.push(offlineText());
+		// The overlay's "Retry now", with tick() unable to run: a hidden tab
+		// renders nothing, so tick() returns before attempting anything. The
+		// entry this leaves behind is the countdown the page is STILL on --
+		// nothing failed, so the rung must not move, and above all the loop
+		// must not be left unarmed.
+		sandbox.document.hidden = true;
+		await sandbox.__glancesReconnectNow();
+		await flush();
+		offlineSequence.push(offlineText());
+		sandbox.document.hidden = false;
+	}
 	// Keys last: they hide blocks, and every measurement above must have run
 	// against the full page first -- exactly the order a viewer produces.
 	for (const key of hotkeys) {

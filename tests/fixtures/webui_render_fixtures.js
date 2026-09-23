@@ -259,7 +259,15 @@ const ALL_UNREACHABLE_SCENARIOS = new Set(["all-unreachable"]);
 // returning 500 (`all-unreachable` above). The WebUI answers the two very
 // differently -- one overlay versus a per-plugin error -- so the probe needs
 // both shapes.
-const SERVER_DOWN_SCENARIOS = new Set(["server-down"]);
+const SERVER_DOWN_SCENARIOS = new Set(["server-down", "server-down-ladder"]);
+
+// `server-down-ladder` drives the RECONNECTION LADDER rather than the first
+// paint: the probe re-ticks against the dead server, then lets it answer
+// again, then kills it again -- recording the countdown the overlay shows
+// after each attempt. The probe owns that script (it is the only thing that
+// can decide WHEN the server comes back); this set is what opts the scenario
+// into it.
+const RECONNECT_LADDER_SCENARIOS = new Set(["server-down-ladder"]);
 
 // Scenarios whose `/api/5/alert/incidents` answers with an HTTP 500. The
 // alert fetch stays in its OWN try/catch (AppShell.vue tick()), separate
@@ -1960,6 +1968,7 @@ module.exports = {
 	PLUGINSLIST_FIXTURES,
 	ALL_UNREACHABLE_SCENARIOS,
 	SERVER_DOWN_SCENARIOS,
+	RECONNECT_LADDER_SCENARIOS,
 	ALERT_INCIDENTS_UNREACHABLE_SCENARIOS,
 	ARGS_FIXTURES,
 	CONFIG_FIXTURES,

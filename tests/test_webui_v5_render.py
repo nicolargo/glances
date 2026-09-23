@@ -351,6 +351,11 @@ def _run_render_probe(scenario: str, keys: str = "") -> dict:
     return json.loads(result.stdout)
 
 
+def _countdowns(waits: list) -> list[int]:
+    """The seconds each "Reconnecting in Ns…" of the ladder script showed."""
+    return [int(re.search(r"Reconnecting in (\d+)s", w).group(1)) for w in waits]
+
+
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
 def test_mem_renders_all_eight_statistics_with_avail():
     """`render_curses_v5.py`'s reference block (module docstring, lines
@@ -4335,8 +4340,10 @@ def test_a_stopped_server_shows_one_overlay_not_an_error_per_plugin():
 
     assert payload["offlineText"], "the overlay must be up"
     assert "Connection to the Glances server lost" in payload["offlineText"]
-    # The countdown the viewer watches, and a way not to wait it out.
-    assert "Reconnecting in 5s" in payload["offlineText"]
+    # The countdown the viewer watches, and a way not to wait it out. 2s is the
+    # FIRST rung of the ladder below: the server has just gone, and the common
+    # case is a machine the viewer has restarted and is watching come back.
+    assert "Reconnecting in 2s" in payload["offlineText"]
     assert "Retry now" in payload["offlineText"]
 
 
@@ -4360,6 +4367,60 @@ def test_a_stopped_server_keeps_the_page_mounted_underneath():
     payload = _run_render_probe("server-down")
     assert payload["pluginNames"], "the blocks must still be mounted under the overlay"
     assert payload["hasFooter"] is True
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_reconnection_delay_climbs_while_the_server_stays_away():
+    """2s, 5s, 10s, 15s, 30s, then a minute for as long as it takes.
+
+    The short first rungs are for the ordinary case -- a server the viewer
+    has just restarted -- and the ceiling is for the other one: a host that
+    is still gone a minute later is usually gone for a while, and retrying
+    it every two seconds until the tab is closed is a request and a console
+    error per attempt, indefinitely, for nothing.
+
+    The probe re-ticks against the dead server; each tick is one failed
+    attempt, and the countdown the overlay shows is the wait that attempt
+    armed (the sandbox's timers never fire, so nothing counts down on its
+    own).
+    """
+    waits = _run_render_probe("server-down-ladder")["offlineSequence"]
+
+    assert _countdowns(waits[:7]) == [2, 5, 10, 15, 30, 60, 60], f"ladder: {waits!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_a_server_that_comes_back_starts_the_ladder_over():
+    """`reconnectStep` counts failures SINCE THE SERVER LAST ANSWERED, so a
+    second outage gets the short rungs back. Without the reset, a viewer
+    whose server flaps would wait a minute for a restart that took two
+    seconds -- the ladder would only ever climb, per browser tab."""
+    payload = _run_render_probe("server-down-ladder")
+    waits = payload["offlineSequence"]
+
+    assert waits[7] is None, f"the overlay must come down when the server answers: {waits!r}"
+    assert _countdowns(waits[8:9]) == [2], f"back to the first rung: {waits!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_a_retry_that_cannot_run_still_leaves_the_loop_armed():
+    """The overlay's button stops the countdown before attempting, and
+    `tick()` can decline to run at all -- a hidden tab, another tick still in
+    flight. Neither goOnline nor goOffline fires then, so without the re-arm
+    the retry loop would end on the spot and the page would sit on
+    "Reconnecting…" until the tab was shown again.
+
+    The rung must not move either: nothing was attempted, so nothing failed.
+    """
+    payload = _run_render_probe("server-down-ladder")
+    waits = payload["offlineSequence"]
+
+    assert _countdowns(waits[-2:]) == [2, 2], f"declined retry: {waits!r}"
+    # And exactly one countdown, not two: `armReconnect` is reached from both
+    # the failure path and this one, so a second interval would quietly halve
+    # every wait the ladder just set, with nothing in the DOM to show it. (The
+    # poll interval is not running -- goOffline stops it while disconnected.)
+    assert payload["liveTimers"] == 1, f"one armed countdown, got {payload['liveTimers']}"
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")

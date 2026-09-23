@@ -167,11 +167,22 @@ const HIDDEN_BY = {
 // together so the constant cannot drift from the stylesheet.
 const STACK_BREAKPOINT = "48rem";
 
-// Seconds between reconnection attempts once the server has gone. Fixed, not
-// a backoff: a Glances server is normally a machine the viewer controls and
-// is about to restart, so a predictable "back in N" beats a delay that grows
-// to minutes exactly when they are watching for it to come back.
-const RECONNECT_SECONDS = 5;
+// Seconds to wait before each reconnection attempt once the server has gone.
+// One rung per FAILED attempt; the LAST value repeats for as long as the
+// server stays away, so the delay never grows past a minute.
+//
+// A ladder rather than a fixed delay because the two cases it has to serve
+// pull in opposite directions. A Glances server is usually a machine the
+// viewer controls and has just restarted -- there the first rungs must be
+// short, or a page sits dark for seconds after the server is back up. But a
+// host that is still gone a minute later is generally gone for a while, and
+// polling it every two seconds until the tab is closed buys nothing: it is a
+// request and a browser console error per attempt, indefinitely, on both
+// machines.
+//
+// The viewer is never held behind the long rungs: the overlay's button
+// attempts immediately, whatever the countdown says.
+const RECONNECT_LADDER = [2, 5, 10, 15, 30, 60];
 
 // Every poll payload is REPLACED, never mutated in place: fetchAll() parses a
 // fresh /api/5/all envelope each tick and the components only ever read it.
@@ -300,6 +311,11 @@ export default {
 			// viewer so the page is visibly waiting rather than just stuck.
 			reconnectIn: 0,
 			reconnectTimer: null,
+			// How many attempts have failed since the server last answered,
+			// capped at the ladder's length -- which rung the wait comes from.
+			// Reset by goOnline(), so an outage that ends and starts again gets
+			// the short rungs back rather than inheriting the previous one's.
+			reconnectStep: 0,
 			// TOGGLE VIEW keys (`1`, `j`, `4`, `/`). Each entry is absent while
 			// the viewer has not pressed its key, and the SERVER's value
 			// (`serverArgs`) is what applies; pressing the key writes a boolean
@@ -534,6 +550,13 @@ export default {
 				window.__glancesDegrade = this.degrade;
 				window.__glancesRowBudget = this.rowBudget;
 			};
+			// The disconnected overlay's "Retry now" button: the fake document
+			// dispatches no events, so the probe drives the method the @click
+			// calls, exactly as it does for the footer's Hotkeys button.
+			window.__glancesReconnectNow = async () => {
+				await this.reconnectNow();
+				await this.$nextTick();
+			};
 			// Same shape again: the probe's fake document has a no-op
 			// addEventListener, so it cannot dispatch a real keydown. It drives
 			// the behaviour through the method the listener itself calls.
@@ -574,6 +597,7 @@ export default {
 		if (typeof window !== "undefined") {
 			delete window.__glancesRefit;
 			delete window.__glancesTick;
+			delete window.__glancesReconnectNow;
 			delete window.__glancesHotkey;
 			delete window.__glancesUserHidden;
 			delete window.__glancesShowHelp;
@@ -588,6 +612,8 @@ export default {
 		 * Enter the disconnected state and start counting down to the next
 		 * attempt. Idempotent: a failed RETRY must restart the countdown, not
 		 * stack a second one.
+		 *
+		 * Called once per failed attempt, so this is where the ladder advances.
 		 */
 		goOffline() {
 			this.offline = true;
@@ -597,18 +623,19 @@ export default {
 				clearInterval(this.timer);
 				this.timer = null;
 			}
-			if (this.reconnectTimer) clearInterval(this.reconnectTimer);
-			this.reconnectIn = RECONNECT_SECONDS;
-			this.reconnectTimer = setInterval(() => {
-				this.reconnectIn -= 1;
-				if (this.reconnectIn <= 0) this.reconnectNow();
-			}, 1000);
+			// One rung per failed attempt; the cap is what makes the last rung
+			// repeat for as long as the server stays away.
+			this.reconnectStep = Math.min(this.reconnectStep + 1, RECONNECT_LADDER.length);
+			this.armReconnect();
 		},
 		/** Leave the disconnected state, if we were in it, and resume polling. */
 		goOnline() {
 			if (!this.offline) return;
 			this.offline = false;
 			this.reconnectIn = 0;
+			// Back to the bottom of the ladder: `reconnectStep` counts failures
+			// since the server last answered, and it just answered.
+			this.reconnectStep = 0;
 			if (this.reconnectTimer) {
 				clearInterval(this.reconnectTimer);
 				this.reconnectTimer = null;
@@ -616,6 +643,25 @@ export default {
 			// `startTimer` replaces whatever interval is running, so this is
 			// safe even if one somehow survived.
 			this.startTimer();
+		},
+		/** Seconds to wait before the next attempt, per RECONNECT_LADDER. */
+		reconnectDelay() {
+			// 1-based: the first failed attempt waits the first rung. Only ever
+			// read while offline, which means goOffline() has counted at least
+			// one failure.
+			return RECONNECT_LADDER[this.reconnectStep - 1];
+		},
+		/**
+		 * Start (or restart) the countdown to the next attempt. Never stacks:
+		 * an armed countdown is replaced, not joined.
+		 */
+		armReconnect() {
+			if (this.reconnectTimer) clearInterval(this.reconnectTimer);
+			this.reconnectIn = this.reconnectDelay();
+			this.reconnectTimer = setInterval(() => {
+				this.reconnectIn -= 1;
+				if (this.reconnectIn <= 0) this.reconnectNow();
+			}, 1000);
 		},
 		/**
 		 * Try now, rather than waiting out the countdown. Bound to the
@@ -631,7 +677,15 @@ export default {
 				this.reconnectTimer = null;
 			}
 			this.reconnectIn = 0;
-			this.tick();
+			return this.tick().finally(() => {
+				// `tick()` can decline to run at all -- a previous one still in
+				// flight, or a hidden tab -- in which case neither goOnline nor
+				// goOffline fired and NOTHING is armed. Without this the retry
+				// loop would end on the spot and the overlay would sit on
+				// "Reconnecting…" until the tab was shown again. Re-arm at the
+				// same step: no attempt was made, so none failed.
+				if (this.offline && !this.reconnectTimer) this.armReconnect();
+			});
 		},
 		/**
 		 * Act on one SHOW/HIDE key. Returns true when the key was handled, so
