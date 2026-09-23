@@ -3488,9 +3488,18 @@ def test_the_help_overlay_documents_both_hotkey_tables(fake_store, fake_alerts, 
 
     for spec in tui_mod.TuiV5._HOTKEYS.values():
         assert spec["desc"] in text, spec
-    for spec in tui_mod.TuiV5._SPECIAL_HOTKEYS.values():
+    documented = [spec for spec in tui_mod.TuiV5._SPECIAL_HOTKEYS.values() if spec.get("desc")]
+    for spec in documented:
         assert spec["desc"] in text, spec
         assert spec["label"] in text, spec
+
+    # An entry with no `desc` is an ALIAS of one that has it (KEY_ENTER beside
+    # 10) and must not be listed twice -- but it must still be an alias of a
+    # verb the table really documents, not an orphan.
+    verbs = {spec["action"] for spec in documented}
+    for spec in tui_mod.TuiV5._SPECIAL_HOTKEYS.values():
+        if not spec.get("desc"):
+            assert spec["action"] in verbs, spec
 
 
 # ------------------------------------------------------- acting on a process
@@ -3773,14 +3782,45 @@ def test_a_plain_key_never_pays_for_the_peek(fake_store, fake_alerts, fake_confi
     assert calls == []
 
 
-def test_the_escape_tail_is_bounded(fake_store, fake_alerts, fake_config):
-    """A terminal emitting garbage after an ESC must not hold the loop."""
+def test_a_plain_key_after_escape_means_the_escape_was_real(fake_store, fake_alerts, fake_config):
+    """Only `[` (CSI) or `O` (SS3) can START a sequence. Anything else means
+    the Esc was an Esc — and the key is handed back rather than eaten, which
+    in a text field is the difference between cancelling and losing whatever
+    was typed next."""
     from glances.outputs import glances_curses_v5 as tui_mod
 
     tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
     screen = _ScriptedScreen([27] + [ord("x")] * 100)
+
+    assert tui._read_key(screen) == 27
+    # Exactly one key was looked at, not the bounded tail and certainly not
+    # the whole 100.
+    assert len(screen._script) == 99
+
+
+def test_an_unknown_sequence_is_consumed_to_its_final_byte_and_no_further(fake_store, fake_alerts, fake_config):
+    """`\x1b[1;5A` (Ctrl-Up) is a sequence this table does not name. It must be
+    swallowed whole — and stop at its final byte, because reading the bounded
+    tail regardless would eat the keystrokes after it."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    rest = [ord("a"), ord("b")]
+    screen = _ScriptedScreen([27, *(ord(c) for c in "[1;5A"), *rest])
+
     assert tui._read_key(screen) == -1
-    # Only the bounded tail was consumed, not the whole 100 bytes.
+    assert screen._script == rest
+
+
+def test_the_escape_tail_is_bounded(fake_store, fake_alerts, fake_config):
+    """A terminal emitting a sequence with no final byte must not hold the
+    loop. `[` starts one, so the peek keeps reading — up to the bound."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    screen = _ScriptedScreen([27, ord("[")] + [ord("1")] * 100)
+
+    assert tui._read_key(screen) == -1
     assert len(screen._script) >= 100 - tui_mod.TuiV5._ESCAPE_TAIL_MAX
 
 
@@ -4104,3 +4144,430 @@ def test_a_live_pin_is_not_dropped_by_the_resync(engine, fake_store, fake_alerts
 
     assert tui._view.extended is True
     assert engine.extended_pid == 1000
+
+
+# ------------------------------------------- 2.X-b4: the process filter
+
+
+@pytest.fixture
+def filtered(monkeypatch):
+    """The engine's filter, isolated per test.
+
+    The whole `GlancesFilter` is swapped rather than the two properties:
+    `process_filter_input` is read-only (it reads through to the filter
+    object), so there is nothing to patch there — and replacing the object
+    resets the compiled regex and the raw input together, which is what
+    "no filter" actually means.
+    """
+    from glances.filter import GlancesFilter
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    monkeypatch.setattr(tui_mod.glances_processes, "_filter", GlancesFilter(), raising=False)
+    return tui_mod.glances_processes
+
+
+def _answer(monkeypatch, tui_mod, text):
+    """Make the input popup return `text` without a terminal."""
+    seen = {}
+
+    def _input(self, stdscr, message, value=""):
+        seen["message"] = message
+        seen["seed"] = value
+        return text
+
+    monkeypatch.setattr(tui_mod.TuiV5, "_popup_input", _input)
+    return seen
+
+
+def test_enter_is_keyed_by_code_so_the_help_can_name_it(fake_store, fake_alerts, fake_config):
+    """`chr(10)` is well defined and v4 binds ENTER as a character
+    (`glances_curses.py:42`). It lives in the keycode table anyway, so the
+    overlay prints "ENTER" instead of a line break."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    assert 10 in tui_mod.TuiV5._SPECIAL_HOTKEYS
+    assert "\n" not in tui_mod.TuiV5._HOTKEYS
+    assert tui._handle_key(10) == "modal"
+    assert tui._pending == "edit_filter"
+
+
+def test_the_keypad_enter_is_an_alias(fake_store, fake_alerts, fake_config):
+    """Some terminals send KEY_ENTER instead of 10; both must work, and the
+    overlay must list the key once."""
+    import curses as _curses
+
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    assert tui._handle_key(_curses.KEY_ENTER) == "modal"
+    assert tui._pending == "edit_filter"
+    assert " ".join(c.text for row in tui._help_lines() for c in row.cells).count("ENTER") == 1
+
+
+def test_a_filter_typed_at_the_prompt_reaches_the_engine(monkeypatch, filtered, fake_store, fake_alerts, fake_config):
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config)
+    _answer(monkeypatch, tui_mod, ".*python.*")
+
+    tui._pending = "edit_filter"
+    tui._run_pending(MagicMock())
+
+    assert filtered.process_filter == ".*python.*"
+
+
+def test_the_prompt_is_seeded_with_the_current_filter(monkeypatch, filtered, fake_store, fake_alerts, fake_config):
+    """Editing an existing filter must not mean retyping it."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config)
+    filtered.process_filter = "python"
+    seen = _answer(monkeypatch, tui_mod, "python3")
+
+    tui._pending = "edit_filter"
+    tui._run_pending(MagicMock())
+
+    assert seen["seed"] == "python"
+    assert filtered.process_filter == "python3"
+
+
+def test_escaping_the_prompt_changes_nothing(monkeypatch, filtered, fake_store, fake_alerts, fake_config):
+    """None is ESC. A user who opened the prompt by accident gets back exactly
+    where they were -- which `curses.textpad.Textbox`, what v4 uses, cannot
+    express at all."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config)
+    filtered.process_filter = "python"
+    _answer(monkeypatch, tui_mod, None)
+
+    tui._pending = "edit_filter"
+    tui._run_pending(MagicMock())
+
+    assert filtered.process_filter == "python"
+
+
+def test_an_empty_answer_clears_the_filter(monkeypatch, filtered, fake_store, fake_alerts, fake_config):
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config)
+    filtered.process_filter = "python"
+    _answer(monkeypatch, tui_mod, "   ")
+
+    tui._pending = "edit_filter"
+    tui._run_pending(MagicMock())
+
+    assert filtered.process_filter is None
+
+
+def test_an_invalid_pattern_is_reported(monkeypatch, filtered, fake_store, fake_alerts, fake_config):
+    """`GlancesFilter`'s setter compiles the regex and, on failure, quietly
+    sets the filter back to None and writes a log line
+    (`glances/filter.py:141-145`). In v4 that makes a typo a keypress that
+    does nothing, with no feedback anywhere the user is looking."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config)
+    _answer(monkeypatch, tui_mod, "[unterminated")
+    shown = []
+    monkeypatch.setattr(tui_mod.TuiV5, "_popup_info", lambda self, stdscr, m: shown.append(m))
+
+    tui._pending = "edit_filter"
+    tui._run_pending(MagicMock())
+
+    assert filtered.process_filter is None
+    assert shown and "valid filter pattern" in shown[0]
+
+
+def test_a_valid_pattern_is_not_reported(monkeypatch, filtered, fake_store, fake_alerts, fake_config):
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config)
+    _answer(monkeypatch, tui_mod, "python")
+    monkeypatch.setattr(tui_mod.TuiV5, "_popup_info", lambda self, stdscr, m: pytest.fail(f"unexpected popup: {m}"))
+
+    tui._pending = "edit_filter"
+    tui._run_pending(MagicMock())
+
+    assert filtered.process_filter == "python"
+
+
+def test_E_erases_the_filter_without_asking(filtered, fake_store, fake_alerts, fake_config):
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config)
+    filtered.process_filter = "python"
+
+    assert tui._handle_key(ord("E")) == "changed"
+    assert filtered.process_filter is None
+
+
+def test_no_summary_without_a_filter(filtered, fake_store, fake_alerts, fake_config):
+    """v4 draws the aggregate rows only under a FILTERED table, which is also
+    why `M` could not ship before this chantier."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config)
+    assert tui._filter_summary() is None
+    assert "filter_summary" not in tui._build_view(120)
+
+
+def test_the_summary_sums_the_rows_on_screen(filtered, fake_store, fake_alerts, fake_config):
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    filtered.process_filter = "python"
+    tui._cursor_items = [
+        {"pid": 1, "cpu_percent": 2.0, "memory_percent": 1.0},
+        {"pid": 2, "cpu_percent": 3.0, "memory_percent": 0.5},
+    ]
+
+    summary = tui._filter_summary()
+    assert summary["current"]["cpu_percent"] == 5.0
+    assert summary["current"]["memory_percent"] == 1.5
+
+
+def test_min_and_max_accumulate_across_frames(filtered, fake_store, fake_alerts, fake_config):
+    """A pure renderer cannot remember, so the memory lives in the TUI. v4
+    keeps it on the plugin instance instead, which is what makes its renderer
+    stateful."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    filtered.process_filter = "python"
+
+    # Neither extreme is the LAST sample, on purpose: with 5, 2, 9 an
+    # accumulator that simply overwrote would still report max 9.
+    for total in (5.0, 9.0, 2.0):
+        tui._cursor_items = [{"pid": 1, "cpu_percent": total}]
+        summary = tui._filter_summary()
+
+    assert summary["current"]["cpu_percent"] == 2.0
+    assert summary["min"]["cpu_percent"] == 2.0
+    assert summary["max"]["cpu_percent"] == 9.0
+
+
+def test_M_resets_the_accumulated_min_and_max(filtered, fake_store, fake_alerts, fake_config):
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    filtered.process_filter = "python"
+    for total in (5.0, 2.0, 9.0):
+        tui._cursor_items = [{"pid": 1, "cpu_percent": total}]
+        tui._filter_summary()
+
+    assert tui._handle_key(ord("M")) == "modal"
+    tui._pending = "reset_minmax"
+    tui._run_pending(MagicMock())
+
+    tui._cursor_items = [{"pid": 1, "cpu_percent": 4.0}]
+    summary = tui._filter_summary()
+    assert summary["min"]["cpu_percent"] == 4.0
+    assert summary["max"]["cpu_percent"] == 4.0
+
+
+def test_M_without_a_filter_says_so(monkeypatch, filtered, fake_store, fake_alerts, fake_config):
+    """v4 reads its reset flag inside `if process_filter is not None`, so with
+    no filter the key does nothing AND says nothing."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    shown = []
+    monkeypatch.setattr(tui_mod.TuiV5, "_popup_info", lambda self, stdscr, m: shown.append(m))
+
+    tui._pending = "reset_minmax"
+    tui._run_pending(MagicMock())
+
+    assert shown and "No process filter" in shown[0]
+
+
+def test_changing_the_filter_resets_the_memory(filtered, fake_store, fake_alerts, fake_config):
+    """The extremes describe a set of processes that no longer exists; keeping
+    them would make the new filter start from the old one's numbers."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    filtered.process_filter = "python"
+    tui._cursor_items = [{"pid": 1, "cpu_percent": 90.0}]
+    tui._filter_summary()
+
+    tui._set_filter("bash")
+    tui._cursor_items = [{"pid": 2, "cpu_percent": 1.0}]
+
+    assert tui._filter_summary()["max"]["cpu_percent"] == 1.0
+
+
+def test_erasing_the_filter_resets_the_memory(filtered, fake_store, fake_alerts, fake_config):
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    filtered.process_filter = "python"
+    tui._cursor_items = [{"pid": 1, "cpu_percent": 90.0}]
+    tui._filter_summary()
+
+    tui._handle_key(ord("E"))
+
+    assert tui._view.filter_mmm == {"min": {}, "max": {}}
+
+
+# ----------------------------------------- the text input popup (2.X-b4)
+
+
+class _FakeInputWindow:
+    """A popup window that replays a key script and records what was drawn."""
+
+    def __init__(self, keys):
+        self._keys = list(keys)
+        self.drawn = []
+        self.exhausted = False
+
+    def getch(self):
+        if self._keys:
+            key = self._keys.pop(0)
+            # `None` means "nothing pending right now", without the script
+            # being over -- which is what `_read_key`'s non-blocking peek sees
+            # behind a real Esc.
+            return -1 if key is None else key
+        # The script is spent. Without this the popup's own loop -- which only
+        # exits on submit, on cancel, or on `stop()` -- would spin forever, and
+        # a regression that swallowed ESC would HANG the suite instead of
+        # failing it.
+        self.exhausted = True
+        return -1
+
+    def addnstr(self, y, x, text, n):
+        self.drawn.append(text[:n])
+
+    def __getattr__(self, name):
+        return lambda *a, **kw: None
+
+
+def _typed(monkeypatch, tui, keys):
+    window = _FakeInputWindow(keys)
+    monkeypatch.setattr(type(tui), "_popup_window", lambda self, stdscr, message, extra_rows=0: window)
+    # Running out of script ends the popup, so a key the loop should have
+    # acted on but did not is a failed assertion and not a hung test.
+    original = tui._stop_event.is_set
+    tui._stop_event.is_set = lambda: window.exhausted or original()
+    return window
+
+
+def test_typing_and_submitting_returns_the_text(monkeypatch, fake_store, fake_alerts, fake_config):
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    _typed(monkeypatch, tui, [ord("p"), ord("y"), ord("\n")])
+    assert tui._popup_input(MagicMock(), "filter: ") == "py"
+
+
+def test_escape_cancels_and_returns_none(monkeypatch, fake_store, fake_alerts, fake_config):
+    """The case `curses.textpad.Textbox` — what v4 uses — cannot express at
+    all: there is no cancel, so a prompt opened by accident has to be cleared
+    by hand."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    # `None` is "nothing pending" -- what the peek behind a real Esc sees. The
+    # keys after it are never read if the popup honours the cancel; without
+    # them, "returned None" would also be satisfied by a loop that simply ran
+    # out of script, which is not the same thing at all.
+    window = _typed(monkeypatch, tui, [ord("p"), 27, None, ord("q"), ord("\n")])
+
+    assert tui._popup_input(MagicMock(), "filter: ") is None
+    assert window.exhausted is False, "the ESC was swallowed and the loop kept reading"
+
+
+@pytest.mark.parametrize("erase", [127, 8, curses.KEY_BACKSPACE])
+def test_every_backspace_a_terminal_sends_erases(erase, monkeypatch, fake_store, fake_alerts, fake_config):
+    """127 is DEL, which most terminals actually send for Backspace; 8 is ^H,
+    which some still do."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    _typed(monkeypatch, tui, [ord("a"), ord("b"), erase, ord("\n")])
+    assert tui._popup_input(MagicMock(), "filter: ") == "a"
+
+
+def test_backspace_on_an_empty_field_is_harmless(monkeypatch, fake_store, fake_alerts, fake_config):
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    _typed(monkeypatch, tui, [127, 127, ord("x"), ord("\n")])
+    assert tui._popup_input(MagicMock(), "filter: ") == "x"
+
+
+@pytest.mark.parametrize("submit", [10, 13, curses.KEY_ENTER])
+def test_every_enter_a_terminal_sends_submits(submit, monkeypatch, fake_store, fake_alerts, fake_config):
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    _typed(monkeypatch, tui, [ord("z"), submit])
+    assert tui._popup_input(MagicMock(), "filter: ") == "z"
+
+
+def test_the_field_is_seeded_and_editable(monkeypatch, fake_store, fake_alerts, fake_config):
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    _typed(monkeypatch, tui, [127, ord("3"), ord("\n")])
+    assert tui._popup_input(MagicMock(), "filter: ", "python") == "pytho3"
+
+
+def test_a_non_printable_key_is_ignored_not_inserted(monkeypatch, fake_store, fake_alerts, fake_config):
+    """An arrow or a function key arrives as a keycode far above 127; inserting
+    `chr()` of it would put a stray glyph in the pattern."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    _typed(monkeypatch, tui, [ord("a"), curses.KEY_UP, curses.KEY_F5, ord("b"), ord("\n")])
+    assert tui._popup_input(MagicMock(), "filter: ") == "ab"
+
+
+def test_a_pattern_longer_than_the_box_scrolls(monkeypatch, fake_store, fake_alerts, fake_config):
+    """The visible tail, not a truncated head: a user typing past the edge
+    must keep seeing what they are typing."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    field = tui_mod.TuiV5._INPUT_FIELD
+    # A repeating pattern rather than one character: with `xxxx...` the head
+    # and the tail are identical, and a field that showed the wrong end would
+    # look right.
+    alphabet = "abcdefghijklmnopqrstuvwxyz0123456789"
+    text = "".join(alphabet[i % len(alphabet)] for i in range(field + 5))
+    window = _typed(monkeypatch, tui, [*(ord(c) for c in text), ord("\n")])
+
+    assert tui._popup_input(MagicMock(), "filter: ") == text
+    assert all(len(drawn) == field for drawn in window.drawn)
+    assert window.drawn[-1] == text[-field:]
+    assert window.drawn[-1] != text[:field]
+
+
+def test_a_popup_that_does_not_fit_cancels(monkeypatch, fake_store, fake_alerts, fake_config):
+    """`_popup_window` returns None on a terminal too small to draw in. A
+    prompt the user cannot see must not silently accept an empty pattern and
+    clear their filter."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    monkeypatch.setattr(type(tui), "_popup_window", lambda self, stdscr, message, extra_rows=0: None)
+    assert tui._popup_input(MagicMock(), "filter: ", "python") is None
+
+
+def test_an_arrow_key_in_the_prompt_does_not_throw_the_text_away(monkeypatch, fake_store, fake_alerts, fake_config):
+    """The prompt reads through `_read_key` too, so an untranslated arrow --
+    which arrives as a bare 27 followed by its tail -- is swallowed rather
+    than read as a cancel. Before this, pressing Left in the filter prompt
+    discarded whatever had been typed.
+
+    The cost, stated: Esc followed IMMEDIATELY by another keystroke now reads
+    as an unrecognised sequence rather than a cancel. That is the same trade
+    the main loop makes, and a user who means to cancel presses Esc and stops.
+    """
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    _typed(monkeypatch, tui, [ord("a"), 27, ord("["), ord("D"), ord("b"), ord("\n")])
+
+    assert tui._popup_input(MagicMock(), "filter: ") == "ab"

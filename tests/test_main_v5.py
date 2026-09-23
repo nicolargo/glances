@@ -937,3 +937,56 @@ def test_apply_plugin_flags_explicit_processcount_disable_still_cascades(config)
     apply_plugin_flags(args, config)
     assert config._merged["processcount"]["disable"] is True
     assert config._merged["processlist"]["disable"] is True
+
+
+# ------------------------------------- `-f` / `--process-filter` (2.X-b4)
+
+
+@pytest.fixture
+def clean_filter(monkeypatch):
+    from glances.filter import GlancesFilter
+    from glances.processes import glances_processes
+
+    monkeypatch.setattr(glances_processes, "_filter", GlancesFilter(), raising=False)
+    return glances_processes
+
+
+@pytest.mark.parametrize("flag", ["-f", "--process-filter"])
+def test_the_process_filter_flag_parses_under_both_spellings(flag):
+    """v4's own spelling (`main.py:513-519`)."""
+    assert build_parser().parse_args([flag, ".*python.*"]).process_filter == ".*python.*"
+
+
+def test_the_process_filter_reaches_the_engine_in_tui_mode(clean_filter, config):
+    """The same property the `ENTER` hotkey writes — one filter, two ways to
+    set it."""
+    args = build_parser().parse_args(["-f", ".*python.*"])
+    assemble(args, config)
+    assert clean_filter.process_filter == ".*python.*"
+
+
+def test_no_flag_leaves_the_engine_unfiltered(clean_filter, config):
+    assemble(build_parser().parse_args([]), config)
+    assert clean_filter.process_filter is None
+
+
+def test_the_process_filter_is_not_applied_in_server_mode(clean_filter, config):
+    """`glances_processes.process_filter` is global to the process, so a
+    server-wide filter would silently narrow what EVERY REST client sees. v4
+    refuses it outside standalone for the same reason
+    (`main.py:150-152`)."""
+    args = build_parser().parse_args(["-s", "-f", ".*python.*"])
+    assemble(args, config)
+    assert clean_filter.process_filter is None
+
+
+def test_an_invalid_pattern_from_the_command_line_is_logged(clean_filter, config, caplog):
+    """`GlancesFilter` swallows the compile error and sets the filter to None
+    (`glances/filter.py:141-145`); on the command line there is no popup to
+    show, so the log is the only place left to say it."""
+    args = build_parser().parse_args(["-f", "[unterminated"])
+    with caplog.at_level(logging.ERROR):
+        assemble(args, config)
+
+    assert clean_filter.process_filter is None
+    assert any("process-filter" in record.message for record in caplog.records)

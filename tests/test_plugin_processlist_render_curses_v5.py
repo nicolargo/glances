@@ -842,3 +842,118 @@ def test_the_io_nice_classes_mirror_v4s_table():
     assert _IONICE_CLASSES_WINDOWS[0] == "Class is Very Low"
     # An unknown class is named, not dropped.
     assert _ionice_text({"ioclass": 9}) == "Class is 9"
+
+
+# ------------------------------------ the filtered summary (2.X-b4)
+
+
+_SUMMARY = {
+    "current": {"cpu_percent": 12.5, "memory_percent": 3.1, "vms": 33554432, "rss": 1048576, "read": 0.0, "write": 0.0},
+    "min": {"cpu_percent": 1.0, "memory_percent": 0.5, "vms": 1024, "rss": 512, "read": 0.0, "write": 0.0},
+    "max": {"cpu_percent": 90.0, "memory_percent": 9.9, "vms": 67108864, "rss": 2097152, "read": 0.0, "write": 0.0},
+}
+
+
+def test_no_summary_key_renders_nothing_extra(payload, fields):
+    """Absent from `view` (no filter, export, tests) → the output is what it
+    was before 2.X-b4, byte for byte."""
+    assert len(render(payload, fields, view={})) == 4
+
+
+def test_the_summary_adds_a_rule_and_three_rows(payload, fields):
+    rows = render(payload, fields, view={"filter_summary": _SUMMARY})
+    assert len(rows) == 4 + 4
+    lines = _flat(rows)
+    assert set(lines[4].strip()) == {"_"}
+    assert lines[5].endswith("< current")
+    assert "< min" in lines[6] and "('M' to reset)" in lines[6]
+    assert "< max" in lines[7] and "('M' to reset)" in lines[7]
+
+
+def test_the_summary_carries_the_aggregate_values(payload, fields):
+    line = _flat(render(payload, fields, view={"filter_summary": _SUMMARY}))[5]
+    assert "12.5" in line and "3.1" in line
+    assert "32.0M" in line and "1.0M" in line
+
+
+def test_the_summary_follows_the_columns_that_survived_the_cascade(payload, fields):
+    """A narrow block drops columns; the aggregate row has to drop the same
+    ones or the numbers land under the wrong headers."""
+    view = {"filter_summary": _SUMMARY, "right_width": 60}
+    rows = render(payload, fields, view=view)
+    header_cells = len(rows[0].cells)
+    # The summary row is the fixed columns that survived, plus its `< label`.
+    assert len(rows[-1].cells) <= header_cells + 1
+    assert "VIRT" not in " ".join(c.text for c in rows[0].cells)
+    assert "32.0M" not in _flat(rows)[-1]
+
+
+def test_the_summary_is_declared_to_the_vertical_solver(payload, fields):
+    """Four unmodelled rows would overflow the body by four, exactly as the
+    `e` block would."""
+    from glances.plugins.processlist.render_curses_v5 import process_extra_rows
+
+    assert process_extra_rows({"filter_summary": _SUMMARY}) == 4
+    assert process_extra_rows({}) == 0
+    assert process_extra_rows(None) == 0
+
+
+def test_the_two_extra_blocks_cost_the_solver_their_sum(payload, fields):
+    """`e` and the filter can be on at once; the solver needs ONE number."""
+    from glances.plugins.processlist.render_curses_v5 import process_extra_rows
+
+    both = {"filter_summary": _SUMMARY, "extended_process": _extended_payload()}
+    assert process_extra_rows(both) == 4 + 4
+
+    rows = render(payload, fields, view=both)
+    assert len(rows) == 4 + 1 + 3 + 4  # block + header + processes + summary
+
+
+def test_a_partial_summary_renders_only_what_it_carries(payload, fields):
+    """Defensive: the TUI always sends all three, but a row with no dict must
+    not become a row of `None`s."""
+    rows = render(payload, fields, view={"filter_summary": {"current": _SUMMARY["current"]}})
+    assert len(rows) == 4 + 2
+
+
+# ---------------------------------------------------------- summarise()
+
+
+def test_summarise_adds_up_the_columns_that_matter():
+    from glances.plugins.processlist.render_curses_v5 import summarise
+
+    totals = summarise(
+        [
+            _proc(pid=1, cpu_percent=2.0, memory_percent=1.0, memory_info={"rss": 100, "vms": 200}),
+            _proc(pid=2, cpu_percent=3.0, memory_percent=0.5, memory_info={"rss": 50, "vms": 100}),
+        ]
+    )
+    assert totals["cpu_percent"] == 5.0
+    assert totals["memory_percent"] == 1.5
+    assert totals["rss"] == 150
+    assert totals["vms"] == 300
+
+
+def test_summarise_of_nothing_is_zero_not_an_error():
+    from glances.plugins.processlist.render_curses_v5 import summarise
+
+    assert summarise([])["cpu_percent"] == 0.0
+
+
+def test_summarise_skips_a_value_it_cannot_add():
+    """`cpu_percent` is -1 or None on a process psutil could not read."""
+    from glances.plugins.processlist.render_curses_v5 import summarise
+
+    totals = summarise([_proc(pid=1, cpu_percent=None), _proc(pid=2, cpu_percent=4.0)])
+    assert totals["cpu_percent"] == 4.0
+
+
+def test_summarise_ignores_an_unknown_io_rate():
+    """An unknown rate renders `?` in the table; summing it as zero would be a
+    quiet lie, and summing it as anything else impossible."""
+    from glances.plugins.processlist.render_curses_v5 import summarise
+
+    known = summarise([_proc(pid=1, io_counters=[2048, 1024, 0, 0, 1], time_since_update=1.0)])
+    unknown = summarise([_proc(pid=1, io_counters=[2048, 1024, 0, 0, 0], time_since_update=1.0)])
+    assert known["read"] == 2048
+    assert unknown["read"] == 0.0

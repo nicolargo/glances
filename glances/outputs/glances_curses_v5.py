@@ -48,7 +48,7 @@ from glances.outputs.curses_renderer_v5 import (
     plan_right_column,
     with_truncation_counter,
 )
-from glances.plugins.processlist.render_curses_v5 import extended_block_height
+from glances.plugins.processlist.render_curses_v5 import process_extra_rows, summarise
 from glances.processes import glances_processes, sort_stats
 
 if TYPE_CHECKING:
@@ -128,6 +128,7 @@ class ViewState:
     - ``hidden_plugins=set()`` — nothing hidden by the user (SHOW/HIDE keys).
     - ``cursor_position=0`` — the process list's first row (UP / DOWN).
     - ``extended=False`` — no extended stats block (hotkey ``e``).
+    - ``filter_mmm`` — empty min/max accumulators (hotkeys ``ENTER``, ``M``).
 
     ``hidden_plugins`` is deliberately a namespace of its own, NOT the
     ``hide_<plugin>`` view keys the width-degradation cascades write
@@ -156,6 +157,12 @@ class ViewState:
     # because otherwise the block describes whatever the cursor last touched
     # while the user is still moving it.
     extended: bool = False
+    # Accumulated min/max of the FILTERED summary (hotkey `M` resets it).
+    # v4 keeps this on the plugin instance -- a stateful renderer
+    # (`processlist/__init__.py` `mmm_min`/`mmm_max`). v5's renderers are pure
+    # functions of (payload, fields, view), so the memory lives here and the
+    # three rows reach the renderer through `view`.
+    filter_mmm: dict[str, dict[str, float]] = field(default_factory=lambda: {"min": {}, "max": {}})
     # TOGGLE DATA TYPE (2.X-c). Seeded from the CLI at construction, then
     # flipped by their keys.
     byte: bool = False
@@ -267,6 +274,16 @@ class TuiV5(threading.Thread):
         # so each is `cursor: True` -- `_handle_key` refuses them outright
         # when the cursor is disabled, exactly as v4 guards them in its
         # dispatch dict (`glances_curses.py:279-290`).
+        "E": {
+            "action": "erase_filter",
+            "group": "MISCELLANEOUS",
+            "desc": "Erase the process filter",
+        },
+        "M": {
+            "action": "reset_minmax",
+            "group": "MISCELLANEOUS",
+            "desc": "Reset the filtered summary's min/max",
+        },
         "e": {
             "action": "extended",
             "cursor": True,
@@ -319,6 +336,17 @@ class TuiV5(threading.Thread):
     # KEY_UP / KEY_DOWN arrive as themselves; the aliases buy nothing and
     # would cost two working hotkeys.
     _SPECIAL_HOTKEYS: dict[int, dict[str, Any]] = {
+        # v4 binds ENTER as the CHARACTER `'\n'` (`glances_curses.py:42`) and
+        # v5 could too -- `chr(10)` is well defined. It lives here anyway so
+        # the help overlay prints "ENTER" rather than a line break.
+        # `curses.KEY_ENTER` is the keypad variant some terminals send.
+        10: {
+            "action": "edit_filter",
+            "group": "MISCELLANEOUS",
+            "desc": "Set the process filter (a regular expression)",
+            "label": "ENTER",
+        },
+        curses.KEY_ENTER: {"action": "edit_filter"},
         curses.KEY_UP: {
             "action": "cursor_up",
             "cursor": True,
@@ -545,7 +573,9 @@ class TuiV5(threading.Thread):
 
     # Verbs that need the terminal, so they are deferred to `_run_pending`
     # rather than executed in this pure function (design 5.4).
-    _MODAL_VERBS = frozenset({"kill_process", "nice_increase", "nice_decrease", "extended"})
+    _MODAL_VERBS = frozenset(
+        {"kill_process", "nice_increase", "nice_decrease", "extended", "edit_filter", "reset_minmax"}
+    )
     # Of those, the ones that CHANGE the process. `e` only looks at it, which
     # is why it is allowed to look at Glances itself (`_selected_process`).
     _MUTATING_VERBS = frozenset({"kill_process", "nice_increase", "nice_decrease"})
@@ -590,6 +620,13 @@ class TuiV5(threading.Thread):
             if self._view.cursor_position >= self._cursor_max - 1:
                 return "ignored"
             self._view.cursor_position += 1
+            return "changed"
+        if verb == "erase_filter":
+            # No popup: erasing is unambiguous and instant. The min/max go
+            # with it -- they describe a set of processes that no longer
+            # exists, and keeping them would make the next filter start from
+            # the previous one's extremes.
+            self._set_filter(None)
             return "changed"
         if verb == "full_quicklook":
             # Toggle full-width quicklook: EVERY other TOP block goes, so the
@@ -648,8 +685,16 @@ class TuiV5(threading.Thread):
     # Longest tail `_read_key` will drain after an ESC before giving up.
     _ESCAPE_TAIL_MAX = 6
 
-    def _read_key(self, stdscr) -> int:
-        """Read one key, resolving an escape sequence ncurses did not.
+    @staticmethod
+    def _unget(key: int) -> None:
+        """Push a key back for the next read. A no-op where curses cannot."""
+        try:
+            curses.ungetch(key)
+        except (curses.error, AttributeError):  # pragma: no cover — no terminal
+            pass
+
+    def _read_key(self, window) -> int:
+        """Read one key from `window`, resolving an escape sequence ncurses did not.
 
         A bare 27 is ambiguous: the user pressed Esc, OR ncurses is handing
         back a sequence it could not translate, one byte at a time. Telling
@@ -662,26 +707,38 @@ class TuiV5(threading.Thread):
         bracketed paste or an unmapped function key is an escape sequence too,
         and each of them quit Glances.
         """
-        key = stdscr.getch()
+        key = window.getch()
         if key != 27:
             return key
         # Peek: `nodelay` so a real Esc costs nothing.
-        stdscr.nodelay(True)
+        window.nodelay(True)
         try:
             tail = ""
             for _ in range(self._ESCAPE_TAIL_MAX):
-                nxt = stdscr.getch()
+                nxt = window.getch()
                 if nxt == -1:
                     break
                 tail += chr(nxt) if 0 <= nxt < 0x110000 else ""
                 resolved = self._ESCAPE_SEQUENCES.get(tail)
                 if resolved is not None:
                     return resolved
+                # Only `[` (CSI) or `O` (SS3) can start a sequence. Anything
+                # else means the Esc was a real Esc and this key is the user's
+                # next one, so give it back rather than eat it.
+                if len(tail) == 1 and tail not in ("[", "O"):
+                    self._unget(nxt)
+                    tail = ""
+                    break
+                # A CSI/SS3 sequence ends at its final byte (0x40-0x7E). Reading
+                # past it would swallow real keystrokes -- which in a text field
+                # means characters the user typed and never saw.
+                if len(tail) > 1 and 0x40 <= nxt <= 0x7E:
+                    break
         finally:
-            # `nodelay(False)` is `wtimeout(-1)` -- blocking. That is fine
-            # here and only here: `_loop` re-applies its own `timeout()` at
-            # the top of every iteration, before the next read.
-            stdscr.nodelay(False)
+            # `nodelay(False)` is `wtimeout(-1)` -- blocking. Both callers
+            # re-apply their own `timeout()` before the next read: `_loop` at
+            # the top of every iteration, `_popup_input` inside its loop.
+            window.nodelay(False)
         # Nothing followed -> a real Esc. Something followed but we do not
         # know it -> swallow it rather than quit or dispatch its tail as
         # separate keystrokes.
@@ -694,6 +751,9 @@ class TuiV5(threading.Thread):
     # Longest a confirmation popup blocks in one `getch`, so `stop()` is
     # honoured within that bound instead of waiting for an answer forever.
     _POPUP_GETCH_BLOCK = 0.25
+    # Visible width of a text field, and a floor for the popup that holds it.
+    _INPUT_FIELD = 40
+    _POPUP_MIN_WIDTH = 60
 
     def _ordered_process_items(self, snapshot: dict[str, Any]) -> list[dict[str, Any]]:
         """The process items in render order, filtered exactly as the
@@ -729,6 +789,29 @@ class TuiV5(threading.Thread):
             return None
         return payload
 
+    def _filter_summary(self) -> dict[str, dict[str, float]] | None:
+        """The three aggregate rows v4 draws under a FILTERED process table.
+
+        None when no filter is set — the key's absence is the signal, as it is
+        for `extended_process`.
+
+        The sum is computed by the renderer's pure `summarise`; the min/max
+        across frames are folded in here, because a pure renderer cannot
+        remember. v4 keeps them on the plugin instance instead, which is what
+        makes its renderer stateful.
+
+        `_cursor_items` is the list the frame is being built from, so the
+        summary describes exactly the rows on screen.
+        """
+        if glances_processes.process_filter is None:
+            return None
+        current = summarise(self._cursor_items)
+        low, high = self._view.filter_mmm["min"], self._view.filter_mmm["max"]
+        for key, value in current.items():
+            low[key] = value if key not in low else min(low[key], value)
+            high[key] = value if key not in high else max(high[key], value)
+        return {"current": current, "min": dict(low), "max": dict(high)}
+
     def _selected_process(self, *, mutating: bool = True) -> tuple[dict[str, Any] | None, str | None]:
         """Resolve the cursor to a process, or to a reason it cannot be.
 
@@ -760,6 +843,18 @@ class TuiV5(threading.Thread):
             return None, "That is Glances itself."
         return process, None
 
+    def _set_filter(self, pattern: str | None) -> None:
+        """Apply a process filter, or clear it, and reset the summary memory.
+
+        The engine's filter is what `get_list()` is filtered by, so this is
+        the same property `-f/--process-filter` writes. Global to the
+        process — which in v5 means global to the TUI and its exporters and
+        to nothing else: `main_v5.assemble` starts either the REST API or the
+        TUI, never both, so a filter typed here cannot reach a browser.
+        """
+        glances_processes.process_filter = pattern
+        self._view.filter_mmm = {"min": {}, "max": {}}
+
     def _run_pending(self, stdscr) -> None:
         """Execute the popup-bearing action `_handle_key` deferred.
 
@@ -771,6 +866,18 @@ class TuiV5(threading.Thread):
         """
         verb, self._pending = self._pending, None
         if verb is None:  # pragma: no cover — defensive
+            return
+        if verb == "edit_filter":
+            self._edit_filter(stdscr)
+            return
+        if verb == "reset_minmax":
+            if glances_processes.process_filter is None:
+                # v4 reads this flag INSIDE `if process_filter is not None`
+                # (`processlist/__init__.py:648-650`), so without a filter the
+                # key does nothing at all and says nothing either.
+                self._popup_info(stdscr, "No process filter is set.\n\nPress ENTER to set one.")
+                return
+            self._view.filter_mmm = {"min": {}, "max": {}}
             return
         if verb == "extended" and self._view.extended:
             # Turning it OFF needs no selection at all -- and must not be
@@ -814,6 +921,30 @@ class TuiV5(threading.Thread):
         if pid is None:
             glances_processes.extended_process = None
 
+    _FILTER_PROMPT = "Process filter (regex, empty to clear): "
+    _FILTER_HELP = (
+        "Examples:  python  |  .*python.*  |  name:.*nautilus.*\n           cmdline:.*glances.*  |  username:^root"
+    )
+
+    def _edit_filter(self, stdscr) -> None:
+        """Prompt for a filter pattern and apply it.
+
+        An invalid regex is REPORTED. `GlancesFilter`'s setter compiles the
+        pattern, and on failure sets the filter back to None and writes a log
+        line (`glances/filter.py:141-145`) — so in v4 a typo is a keypress
+        that does nothing at all, with no feedback anywhere the user is
+        looking. Comparing what went in against what came back is the only
+        way to tell "cleared" from "rejected" through that API.
+        """
+        current = getattr(glances_processes, "process_filter_input", None) or ""
+        pattern = self._popup_input(stdscr, self._FILTER_PROMPT, current)
+        if pattern is None:
+            return  # ESC: nothing was touched.
+        pattern = pattern.strip()
+        self._set_filter(pattern or None)
+        if pattern and glances_processes.process_filter is None:
+            self._popup_info(stdscr, f"Not a valid filter pattern:\n\n  {pattern}\n\n{self._FILTER_HELP}")
+
     def _apply_process_action(self, stdscr, verb: str, pid: int, name: str) -> None:
         """Call the engine for `verb` on `pid`, reporting every failure.
 
@@ -839,15 +970,16 @@ class TuiV5(threading.Thread):
             logger.warning("TUI: %s on pid %s failed: %s", verb, pid, e)
             self._popup_info(stdscr, f"Could not act on {label}:\n\n{e}")
 
-    def _popup_window(self, stdscr, message: str):
+    def _popup_window(self, stdscr, message: str, *, extra_rows: int = 0):
         """Draw a centred bordered popup, or return None if it does not fit.
 
         v4 aborts the same way rather than clipping (`glances_curses.py:1041-1043`).
+        `extra_rows` reserves space the caller will draw into itself.
         """
         max_y, max_x = stdscr.getmaxyx()
         lines = message.split("\n")
         width = max((len(line) for line in lines), default=0) + 4
-        height = len(lines) + 4
+        height = len(lines) + 4 + extra_rows
         if width > max_x or height > max_y:
             logger.info("TUI: popup does not fit (%s)", " ".join(lines))
             return None
@@ -874,6 +1006,69 @@ class TuiV5(threading.Thread):
             return
         win.timeout(int(self._POPUP_INFO_SECONDS * 1000))
         win.getch()
+
+    # Keys that submit a text field, and keys that erase one character. 127 is
+    # DEL, which is what most terminals actually send for Backspace; 8 is
+    # ^H, which some still do.
+    _INPUT_SUBMIT = (ord("\n"), curses.KEY_ENTER, 10, 13)
+    _INPUT_ERASE = (curses.KEY_BACKSPACE, 127, 8)
+
+    def _popup_input(self, stdscr, message: str, value: str = "") -> str | None:
+        """Ask for a line of text. Returns it, or None if the user cancelled.
+
+        Own loop rather than `curses.textpad.Textbox`, which v4 wraps in a
+        `GlancesTextbox` subclass just to make Enter submit
+        (`glances_curses.py:1426-1435`). Textbox has no CANCEL, and cancel is
+        the case that matters here: a user who opened the filter prompt by
+        accident would otherwise have to clear the field by hand to get back
+        to where they were. ESC returns None and nothing is touched.
+        """
+        width = max(len(message) + self._INPUT_FIELD + 4, self._POPUP_MIN_WIDTH)
+        win = self._popup_window(stdscr, message.ljust(width - 4), extra_rows=0)
+        if win is None:
+            return None
+        text = value or ""
+        try:
+            curses.curs_set(1)
+        except curses.error:  # pragma: no cover — terminal-dependent
+            pass
+        try:
+            while not self._stop_event.is_set():
+                # Re-applied every pass: `_read_key`'s peek leaves the window
+                # blocking, and a blocking read would stop honouring `stop()`.
+                win.timeout(int(self._POPUP_GETCH_BLOCK * 1000))
+                # Redraw the field each pass: the shown tail is the last
+                # `_INPUT_FIELD` characters, so a pattern longer than the box
+                # scrolls instead of vanishing off the edge.
+                shown = text[-self._INPUT_FIELD :]
+                try:
+                    win.addnstr(2, 2 + len(message), shown.ljust(self._INPUT_FIELD), self._INPUT_FIELD)
+                    win.move(2, 2 + len(message) + len(shown))
+                    win.refresh()
+                except curses.error:  # pragma: no cover — terminal-dependent
+                    return None
+                # Through `_read_key`, not `getch`: an untranslated arrow
+                # key arrives as a bare 27 here too, and in a text field
+                # cancelling on it would throw away what the user typed. Same
+                # defect the main loop had, and the same one line of fix.
+                key = self._read_key(win)
+                if key == -1:
+                    continue
+                if key == 27:
+                    return None
+                if key in self._INPUT_SUBMIT:
+                    return text
+                if key in self._INPUT_ERASE:
+                    text = text[:-1]
+                    continue
+                if 32 <= key < 127:
+                    text += chr(key)
+            return None
+        finally:
+            try:
+                curses.curs_set(0)
+            except curses.error:  # pragma: no cover — terminal-dependent
+                pass
 
     def _popup_yesno(self, stdscr, message: str) -> bool:
         """Ask for confirmation. Anything but an explicit yes is a no."""
@@ -1333,9 +1528,10 @@ class TuiV5(threading.Thread):
             n_processes=n_processes,
             n_alerts=count("alert"),
             n_ongoing=by_name["alert"].data_pinned if "alert" in by_name else 0,
-            # The `e` block sits inside the process block but costs rows the
-            # solver's "one line per data row" model does not know about.
-            process_extra_rows=extended_block_height(view.get("extended_process")),
+            # The `e` block and the filtered summary sit inside the process
+            # block but cost rows the solver's "one line per data row" model
+            # does not know about.
+            process_extra_rows=process_extra_rows(view),
         )
 
         current = view.get("row_budget") or {}
@@ -1444,6 +1640,9 @@ class TuiV5(threading.Thread):
         extended = self._extended_payload()
         if extended is not None:
             view["extended_process"] = extended
+        summary = self._filter_summary()
+        if summary is not None:
+            view["filter_summary"] = summary
         view["unicode"] = self._unicode
         # The user's own SHOW/HIDE set. A frozenset, so the per-cycle view
         # cannot be a back door onto the live ViewState (the fit loops copy
@@ -1788,14 +1987,16 @@ class TuiV5(threading.Thread):
 
         BOTH tables: ``_HOTKEYS`` keyed by character, and ``_SPECIAL_HOTKEYS``
         keyed by curses keycode for the keys that have no character (the
-        arrows), which print the ``label`` they carry.
+        arrows and ENTER), which print the ``label`` they carry. An entry with
+        no ``desc`` is an alias of one that has it (``curses.KEY_ENTER`` beside
+        ``10``) and is deliberately not listed twice.
 
         Each group is a bold header followed by one ``  k  description`` row
         per key, with a blank spacer line between groups.
         """
         labelled: list[tuple[str, dict[str, Any]]] = [
             *self._HOTKEYS.items(),
-            *((spec["label"], spec) for spec in self._SPECIAL_HOTKEYS.values()),
+            *((spec["label"], spec) for spec in self._SPECIAL_HOTKEYS.values() if spec.get("desc")),
         ]
         lines: list[Row] = []
         for group in self._HELP_GROUPS:

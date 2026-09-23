@@ -374,7 +374,7 @@ which is the existing behaviour byte-for-byte.
 ## 7. The split
 
 Four chantiers, each independently shippable and smoke-testable.
-**b1, b2 and b3 shipped 2026-09-23**; b4 remains.
+**All four shipped 2026-09-23**, plus b3-web (the browser's click-to-pin).
 
 **b1 — the cursor.** `_SPECIAL_HOTKEYS`, `ViewState.cursor_position`,
 `--disable-cursor`, the clamp, the decoration, `view["cursor_position"]`.
@@ -416,9 +416,12 @@ whole group:
   already does (`plugin-processlist.vue:59` "Command (click to pin)",
   `:720` / `:726` the two POSTs). Shipped for the browser in its own chantier,
   b3-web.
-- **`ENTER`/`E`** — still open, and b4's to settle. Not destructive, but
-  **engine-global**: a filter typed in one tab changes what the TUI and every
-  other consumer sees (§3.4).
+- **`ENTER`/`E` — no**, settled in b4 on two facts rather than a judgement:
+  v4's own web UI has no process filter (only `help.vue` mentions one, and
+  that documents the terminal key), and v5's TUI and REST API are mutually
+  exclusive (`main_v5.assemble`), so the engine-global leak this line worried
+  about cannot happen while the TUI is the one running. A filter in v5's
+  browser would be a new feature, not parity.
 
 The first record of this decision generalised "no" from the three mutating
 keys to all of 2.X-b, `e` included. That was wrong, and wrong in the direction
@@ -444,7 +447,7 @@ TUI-only default. This group is not the same shape:
   Unlike the hidden-plugin sets, this cannot be per-viewer without giving the
   filter a per-request life the engine does not have.
 
-Nothing in b1–b3 was blocked on this. b4 still is.
+Nothing was ultimately blocked on this: b4 answered its own question.
 
 ### 8.2 `--disable-cursor` default
 

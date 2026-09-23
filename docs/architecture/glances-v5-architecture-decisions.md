@@ -1302,10 +1302,45 @@ curses surface — as its own owned group. No implementation in parity wave 1
   which is exactly what pinning a short-lived process does. One line, plus
   the three swap-read paths pinned as one decision.
 
-  **Still open**: the process filter (b4 — `ENTER`, `E`,
-  `-f/--process-filter`, the filtered summary block, and `M` which only
-  resets *that* block). Whether it reaches the browser is the one part of
-  §8.1 still undecided: it is not destructive, but it is engine-global.
+  **Shipped (b4, 2026-09-23) — and with it, Phase 2.X-b is complete**: the
+  process filter. `ENTER` prompts for a pattern, `E` erases it,
+  `-f/--process-filter` sets it from the command line, the three aggregate
+  rows appear under a filtered table, and `M` resets their min/max.
+
+  **§8.1's last open question answered itself**, on two facts rather than a
+  judgement: v4's own web UI has **no** process filter (grepping its
+  components for `process_filter` finds only `help.vue`, documenting the
+  terminal key), and v5's TUI and REST API are **mutually exclusive** —
+  `main_v5.assemble` is `if args.server: … elif not no_tui: …`, so when the
+  TUI runs there is no FastAPI app in the process and the engine-global leak
+  the objection was about cannot happen. A filter in v5's browser would be a
+  new feature, not parity.
+
+  Three decisions:
+
+  - **A third popup type, with a CANCEL.** `curses.textpad.Textbox` — which
+    v4 wraps in a `GlancesTextbox` subclass just to make Enter submit
+    (`glances_curses.py:1426-1435`) — has no cancel at all, so a prompt
+    opened by accident has to be cleared by hand. ESC returns None and
+    nothing is touched.
+  - **An invalid pattern is reported.** `GlancesFilter`'s setter compiles the
+    regex and, on failure, quietly sets the filter back to None and writes a
+    log line (`glances/filter.py:141-145`). In v4 that makes a typo a
+    keypress that does nothing, with no feedback anywhere the user is
+    looking. Comparing what went in against what came back is the only way to
+    tell "cleared" from "rejected" through that API.
+  - **The min/max live in the TUI, not the renderer.** v4 keeps them on the
+    plugin instance (`mmm_min`/`mmm_max`), which makes its renderer stateful;
+    v5's renderers are pure functions of (payload, fields, view), so the
+    renderer exports a pure `summarise()` and the memory across frames sits
+    beside `_cursor_max`. The rows are declared to the vertical solver
+    through the same `process_extra_rows` the `e` block uses — one number,
+    because that is what the solver wants.
+
+  `-f` is applied in TUI mode only: `glances_processes.process_filter` is
+  global to the process, so a server-wide filter would silently narrow what
+  every REST client sees. v4 refuses it outside standalone for the same
+  reason (`main.py:150-152`).
 
   Four decisions worth carrying forward:
 

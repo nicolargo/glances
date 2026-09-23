@@ -1036,6 +1036,11 @@ def test_args_matches_the_real_v5_argument_set(config_factory, store):
         "export_csv_overwrite",
         "export_json_file",
         "export_process_filter",
+        # The TUI's process filter (`-f`). A regex the operator typed, the
+        # same shape as `export_process_filter` above it — not a credential.
+        # It is also always None here: `--process-filter` is applied in TUI
+        # mode, and TUI mode serves no REST API at all.
+        "process_filter",
         "fahrenheit",
         "fs_free_space",
         "full_quicklook",

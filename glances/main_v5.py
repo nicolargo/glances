@@ -270,6 +270,14 @@ def build_parser() -> argparse.ArgumentParser:
         help="disable unicode characters in the curses interface",
     )
     parser.add_argument(
+        "-f",
+        "--process-filter",
+        dest="process_filter",
+        default=None,
+        type=str,
+        help="set the process filter pattern (regular expression); TUI mode only",
+    )
+    parser.add_argument(
         "--disable-cursor",
         dest="disable_cursor",
         action="store_true",
@@ -731,6 +739,17 @@ def assemble(
         # reading from the shared StatsStoreV5.
         # Local import — curses is platform-dependent and only needed when the TUI is on.
         from glances.outputs.glances_curses_v5 import TuiV5 as _TuiV5
+
+        # `-f/--process-filter` (v4 `main.py:513-519`). Applied here and not
+        # in server mode: `glances_processes.process_filter` is global to the
+        # process, and a server-wide filter would silently narrow what every
+        # REST client sees -- v4 logs "only available in standalone mode" for
+        # the same reason (`main.py:150-152`). The `ENTER` hotkey writes this
+        # same property.
+        if getattr(args, "process_filter", None):
+            glances_processes.process_filter = args.process_filter
+            if glances_processes.process_filter is None:
+                logger.error("Invalid --process-filter pattern (not a regular expression): %s", args.process_filter)
 
         registry = [(p.plugin_name, p.IS_COLLECTION) for p in plugins if p.DISPLAY_IN_TUI]
         fields_by_plugin = {p.plugin_name: p._fields for p in plugins if p.DISPLAY_IN_TUI}

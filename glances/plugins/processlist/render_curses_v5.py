@@ -440,6 +440,107 @@ def _extended_rows(payload: dict[str, Any]) -> list[Row]:
     return rows
 
 
+# The aggregate columns of the filtered summary, in the order v4 draws them
+# (`processlist/__init__.py:909-1000`). `io` is derived from the rate the row
+# renderer already computes, not from the raw counters v4 re-differences.
+_SUMMARY_KEYS: tuple[str, ...] = ("cpu_percent", "memory_percent", "vms", "rss", "read", "write")
+
+
+def summarise(items: list[dict[str, Any]]) -> dict[str, float]:
+    """Sum the aggregate columns over `items`. Pure.
+
+    v4 keeps the running min/max on the plugin INSTANCE, which makes its
+    renderer stateful (`mmm_min`/`mmm_max`). Here the sum is all the renderer
+    computes; the memory across frames belongs to whoever owns the view.
+    """
+    totals = dict.fromkeys(_SUMMARY_KEYS, 0.0)
+    for item in items:
+        for key, value in (
+            ("cpu_percent", item.get("cpu_percent")),
+            ("memory_percent", item.get("memory_percent")),
+            ("vms", _memory_info_field(item, "vms")),
+            ("rss", _memory_info_field(item, "rss")),
+        ):
+            if isinstance(value, (int, float)):
+                totals[key] += float(value)
+        for key, read in (("read", True), ("write", False)):
+            rate, unknown = _io_rate(item, read=read)
+            # `unknown` is the contract (`_io_rate` returns `(None, True)`),
+            # so testing the type as well would be belt-and-braces over our
+            # own function two screens up -- and it would make a dropped
+            # `unknown` check invisible, since None fails the type test too.
+            if not unknown:
+                totals[key] += float(rate)
+    return totals
+
+
+def _summary_row(label: str, totals: dict[str, float], active: list[str], pid_width: int, note: str = "") -> Row:
+    """One aggregate row, aligned to the columns still on screen."""
+    cells: list[Cell] = []
+    blank = {
+        "PID": pid_width,
+        "USER": _W_USER,
+        "THR": _W_THR,
+        "NI": _W_NI,
+        "S": _W_STATUS,
+        "TIME+": _W_TIME,
+    }
+    for key in _FIXED_COL_KEYS:
+        if key not in active:
+            continue
+        if key == "CPU%":
+            cells.append(Cell(text=_format_percent(totals["cpu_percent"], _W_CPU), color=ColorRole.CAREFUL))
+        elif key == "MEM%":
+            cells.append(Cell(text=_format_percent(totals["memory_percent"], _W_MEM), color=ColorRole.CAREFUL))
+        elif key == "VIRT":
+            cells.append(Cell(text=_format_bytes(totals["vms"], _W_VIRT), color=ColorRole.CAREFUL))
+        elif key == "RES":
+            cells.append(Cell(text=_format_bytes(totals["rss"], _W_RES), color=ColorRole.CAREFUL))
+        elif key == "R/s":
+            cells.append(Cell(text=_format_bytes(totals["read"], _W_IO), color=ColorRole.CAREFUL))
+        elif key == "W/s":
+            cells.append(Cell(text=_format_bytes(totals["write"], _W_IO), color=ColorRole.CAREFUL))
+        else:
+            cells.append(Cell(text=" " * blank.get(key, 1)))
+    cells.append(Cell(text=f"< {label}"))
+    if note:
+        cells.append(Cell(text=note))
+    return Row(cells=cells)
+
+
+def _summary_rows(summary: dict[str, Any], active: list[str], pid_width: int) -> list[Row]:
+    """v4's three aggregate rows under a filtered process table.
+
+    Drawn only when a filter is on -- which is also why `M` could not ship
+    before this chantier: v4 reads its reset flag INSIDE
+    `if glances_processes.process_filter is not None`
+    (`processlist/__init__.py:648-650`).
+    """
+    rows = [Row(cells=[Cell(text="_" * 24, color=ColorRole.CAREFUL)])]
+    for label, note in (("current", ""), ("min", "('M' to reset)"), ("max", "('M' to reset)")):
+        totals = summary.get(label)
+        if isinstance(totals, dict):
+            rows.append(_summary_row(label, totals, active, pid_width, note))
+    return rows
+
+
+def process_extra_rows(view: dict[str, Any] | None) -> int:
+    """Every row the process block carries beyond its header and its data.
+
+    The vertical solver (`curses_renderer_v5.plan_right_column`) models an
+    elastic block as "one line per data row plus one header"; the `e` block
+    and the filtered summary both break that, so their cost is DECLARED
+    rather than left to overflow the body. One function, because the solver
+    wants one number.
+    """
+    view = view or {}
+    height = extended_block_height(view.get("extended_process"))
+    summary = view.get("filter_summary")
+    if isinstance(summary, dict) and summary:
+        height += len(_summary_rows(summary, [], _W_PID_DEFAULT))
+    return height
+
+
 def extended_block_height(payload: Any) -> int:
     """Rows the `e` block adds on top of the process table, 0 when off.
 
@@ -623,5 +724,10 @@ def render(
         if cursor == position:
             command_cells = _select(command_cells)
         rows.append(Row(cells=_filter_fixed(fixed_cells) + command_cells))
+
+    # v4's aggregate rows, under the table and only while a filter is on.
+    summary = (view or {}).get("filter_summary")
+    if isinstance(summary, dict) and summary:
+        rows.extend(_summary_rows(summary, active, pid_width))
 
     return rows
