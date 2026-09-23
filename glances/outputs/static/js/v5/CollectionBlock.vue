@@ -10,7 +10,14 @@
 		</div>
 		<p v-if="error" class="gl-level-critical">{{ error }}</p>
 		<p v-else-if="!payload" class="gl-muted">loading…</p>
-		<table v-else class="gl-table" :class="tableClass">
+		<!-- Content above the table, for a block that has some. Only
+		`processlist` does (the `e` block, 2.X-b3-web), and it belongs inside
+		THIS <article> rather than beside it: a sibling would make a second
+		root node, which is what the comment at the top of this template
+		warns about. -->
+		<template v-else>
+		<slot name="prepend"></slot>
+		<table class="gl-table" :class="tableClass">
 			<!-- Optional <colgroup>, rendered before <thead> as the HTML
 			grammar requires. Only the fixed-layout blocks pass it; a block that
 			does not renders exactly as before. -->
@@ -24,6 +31,7 @@
 			</thead>
 			<slot name="body"></slot>
 		</table>
+		</template>
 	</article>
 </template>
 

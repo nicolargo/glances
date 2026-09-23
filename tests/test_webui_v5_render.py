@@ -3351,6 +3351,11 @@ def test_processlist_renders_the_tui_columns_and_rows():
         "TIME+",
         "R/s",
         "W/s",
+        # "Command", not v4's "Command (click to pin)": measured in Chromium,
+        # this elastic column lands at 72-161px across 640/900/1280 viewports
+        # while that wording needs 186, so it would wrap the header row nearly
+        # always. The click affordance lives in `cursor: pointer` and a
+        # `title`, which cost no layout.
         "Command",
     ], f"got {payload['pluginHeaderCells'].get('processlist')!r}"
     rows = _table_rows(payload, "processlist", 13)

@@ -50,6 +50,24 @@ export async function getJson(path) {
 	return response.json();
 }
 
+export async function postJson(path) {
+	// The only WRITE this UI makes: pinning / unpinning the process whose
+	// extended stats the server collects (2.X-b3-web). Same OfflineError
+	// discrimination as `getJson` -- a rejected fetch is a gone server, an
+	// HTTP error is a live one answering badly -- because a click that fails
+	// silently is exactly the defect the TUI chantiers kept finding.
+	let response;
+	try {
+		response = await fetch(path, { method: "POST" });
+	} catch {
+		throw new OfflineError(path);
+	}
+	if (!response.ok) {
+		throw new Error(`${path}: HTTP ${response.status}`);
+	}
+	return response.json();
+}
+
 export function validate(payload, spec) {
 	// `200 null` means the plugin has registered but has not published yet
 	// (scheduler cycle 0) -- the route contract. A loading state, not a

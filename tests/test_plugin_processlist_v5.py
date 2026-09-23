@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from unittest.mock import patch
 
 import pytest
@@ -347,3 +348,159 @@ async def test_get_export_invalid_regex_ignored_with_warning(tmp_path, monkeypat
         await plugin.update()
     # No usable pattern survived compilation → export stays empty (v4-safe default).
     assert plugin.get_export() == []
+
+
+# ------------------------- the pinned process, as payload metadata (b3-web)
+
+
+@pytest.fixture
+def pin(monkeypatch):
+    from glances.processes import glances_processes
+
+    monkeypatch.setattr(glances_processes, "extended_pid", None, raising=False)
+    monkeypatch.setattr(glances_processes, "extended_process", None, raising=False)
+    return glances_processes
+
+
+def _extended(pid=42, **over):
+    base = {
+        "pid": pid,
+        "name": "hot",
+        "extended_stats": True,
+        "cpu_min": 1.0,
+        "cpu_max": 9.0,
+        "cpu_mean": 4.0,
+        "memory_min": 1.0,
+        "memory_max": 2.0,
+        "memory_mean": 1.5,
+        "cpu_affinity": [0, 1],
+        "ionice": {"ioclass": 2, "value": 4},
+        "memory_info": {"rss": 1024, "vms": 2048},
+        "memory_swap": 0,
+        "num_threads": 3,
+        "num_fds": 7,
+        "tcp": 1,
+        "udp": 0,
+        # Fields already in `data[]` for the same pid: must NOT be duplicated.
+        "username": "alice",
+        "cpu_percent": 4.0,
+        "status": "S",
+    }
+    base.update(over)
+    return base
+
+
+@pytest.fixture
+def plugin_and_store(store, config):
+    """A processlist plugin whose engine grab returns one stable process.
+
+    Patched at the engine boundary so these tests are about what the plugin
+    PUBLISHES, not about what psutil happens to see."""
+    with patch(
+        "glances.plugins.processlist.model_v5.glances_processes.get_list",
+        return_value=[_proc(pid=42), _proc(pid=7)],
+    ):
+        yield PluginModel(store, config), store
+
+
+def _metadata_of(plugin, store):
+    asyncio.run(plugin.update())
+    return store.get("processlist", {})
+
+
+def test_no_pin_publishes_no_extended_key(pin, plugin_and_store):
+    """The key's PRESENCE is the signal, so it must be absent by default."""
+    plugin, store = plugin_and_store
+    assert "extended" not in _metadata_of(plugin, store)
+
+
+def test_a_pinned_process_publishes_its_extended_stats(pin, plugin_and_store):
+    plugin, store = plugin_and_store
+    pin.extended_pid = 42
+    pin.extended_process = _extended(42)
+
+    extended = _metadata_of(plugin, store)["extended"]
+
+    assert extended["pid"] == 42
+    assert extended["name"] == "hot"
+    assert extended["cpu_max"] == 9.0
+    assert extended["ionice"] == {"ioclass": 2, "value": 4}
+
+
+def test_only_the_extended_keys_are_published(pin, plugin_and_store):
+    """The engine accumulates extended stats INTO the whole process dict.
+    Publishing it whole would duplicate a dozen fields already in `data[]`."""
+    plugin, store = plugin_and_store
+    pin.extended_pid = 42
+    pin.extended_process = _extended(42)
+
+    extended = _metadata_of(plugin, store)["extended"]
+
+    assert "username" not in extended
+    assert "status" not in extended
+    assert "cpu_percent" not in extended
+    # And `cmdline` is not even offered: the engine has not added it yet when
+    # it captures the accumulator. Measured against the live engine.
+    assert "cmdline" not in PluginModel._EXTENDED_KEYS
+
+
+def test_a_stale_accumulation_is_not_published(pin, plugin_and_store):
+    """The cycle right after a pin still holds the PREVIOUS process' numbers.
+    Publishing those under the new name is worse than publishing nothing."""
+    plugin, store = plugin_and_store
+    pin.extended_pid = 42
+    pin.extended_process = _extended(7)  # the previous pin
+
+    assert "extended" not in _metadata_of(plugin, store)
+
+
+def test_unpinning_removes_the_key_from_the_payload(pin, plugin_and_store):
+    """`_metadata` persists across cycles, so the key has to be actively
+    removed — leaving it would freeze the block on screen forever."""
+    plugin, store = plugin_and_store
+    pin.extended_pid = 42
+    pin.extended_process = _extended(42)
+    assert "extended" in _metadata_of(plugin, store)
+
+    pin.extended_pid = None
+    pin.extended_process = None
+
+    assert "extended" not in _metadata_of(plugin, store)
+
+
+def test_exporters_never_see_it(pin, plugin_and_store):
+    """`get_export()` returns the items, not the envelope — a time-series
+    backend has no use for a UI pin."""
+    plugin, store = plugin_and_store
+    pin.extended_pid = 42
+    pin.extended_process = _extended(42)
+    asyncio.run(plugin.update())
+
+    for item in plugin.get_export():
+        assert "extended" not in item
+
+
+def test_the_api_payload_carries_it(pin, plugin_and_store):
+    """It has to survive `get_api_payload()`'s projection, or the browser
+    would never see it — the same route `fs` publishes `free_space` by."""
+    plugin, store = plugin_and_store
+    pin.extended_pid = 42
+    pin.extended_process = _extended(42)
+    asyncio.run(plugin.update())
+
+    assert plugin.get_api_payload()["extended"]["pid"] == 42
+
+
+def test_the_published_payload_is_json_serialisable(pin, plugin_and_store):
+    """`ionice.ioclass` is a psutil IntEnum in the live engine, not a plain
+    int — and this payload goes out over the REST API."""
+    import json
+
+    import psutil
+
+    plugin, store = plugin_and_store
+    ioclass = getattr(psutil, "IOPRIO_CLASS_BE", 2)
+    pin.extended_pid = 42
+    pin.extended_process = _extended(42, ionice={"ioclass": ioclass, "value": 4})
+
+    json.dumps(_metadata_of(plugin, store)["extended"])

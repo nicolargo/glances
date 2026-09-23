@@ -54,6 +54,7 @@ from starlette.concurrency import run_in_threadpool
 
 from glances.alerts_incidents_v5 import derive_incidents, incident_duration
 from glances.config_v5 import GlancesConfigV5
+from glances.processes import glances_processes
 from glances.security_v5 import verify_password
 
 if TYPE_CHECKING:
@@ -77,6 +78,75 @@ _SENSITIVE_ARGS: frozenset[str] = frozenset({"config_path"})
 # ``WWW-Authenticate`` header. ``auto_error=True`` short-circuits before the
 # username comparison and produces a generic 403 — we want consistent 401s.
 _basic_security = HTTPBasic(auto_error=False)
+
+
+def _register_extended_process_routes(router: APIRouter) -> None:
+    """Register the two pin/unpin routes.
+
+    Their own function, not inlined in ``build_router``: they are the only
+    state-changing pair in an otherwise read-only API, and grouping them
+    keeps that visible rather than buried among thirteen getters.
+    """
+    # ----------------------------------------- the pinned process (2.X-b3)
+    #
+    # Declared BEFORE the `/{plugin_name}` family so nothing about their
+    # ordering has to be reasoned about later. `POST`, and state-changing, in
+    # an API that is otherwise read-only — the same two routes v4 carries
+    # (`glances_restful_api.py:534-537`), reaching the same engine.
+    #
+    # Security posture, stated rather than left implicit: Glances is
+    # unauthenticated by default. What an unauthenticated caller gains here is
+    # one pinned process' affinity, ionice, fd count, swap and connection
+    # counts — the same nature of information as the process list it can
+    # already GET, and exactly v4's exposure. Nothing on the host is modified.
+    # Under `[outputs] password` these sit behind the same auth middleware as
+    # every other route.
+    #
+    # The pin is GLOBAL: one pinned process per server, set either from here
+    # or by the TUI's `e` key. Extended stats cost a psutil grab per cycle, so
+    # that ceiling is a property worth having rather than an accident.
+
+    def _pinnable_pids(request: Request) -> set[int]:
+        """PIDs the current process list actually carries.
+
+        Read from the store rather than from `glances_processes` directly:
+        the store is what every other route answers from, so a pid accepted
+        here is a pid the caller can see in `/api/5/processlist`.
+        """
+        payload = request.app.state.store.get("processlist", {})
+        data = payload.get("data") if isinstance(payload, dict) else None
+        if not isinstance(data, list):
+            return set()
+        return {item["pid"] for item in data if isinstance(item, dict) and isinstance(item.get("pid"), int)}
+
+    @router.post("/processes/extended/disable")
+    async def unpin_extended_process(request: Request) -> bool:
+        """Stop collecting extended stats for whichever process was pinned."""
+        glances_processes.extended_pid = None
+        glances_processes.disable_extended_tag = True
+        # Clearing this is what actually stops the grab — it is keyed on
+        # `extended_process` being set (`processes.py:663-669`), not on the
+        # tag. v4 leaves it set and keeps paying for it.
+        glances_processes.extended_process = None
+        return True
+
+    @router.post("/processes/extended/{pid}")
+    async def pin_extended_process(pid: int, request: Request) -> bool:
+        """Collect extended stats for `pid` from the next cycle on.
+
+        404 on a pid the process list does not carry, as v4 does — v4 reaches
+        that through `int(pid)`, which raises `ValueError` (→ 500) on garbage;
+        here FastAPI's path type rejects it with a 422 before the handler runs.
+        """
+        if pid not in _pinnable_pids(request):
+            raise HTTPException(status_code=404, detail=f"Unknown PID process {pid}")
+        glances_processes.extended_pid = pid
+        glances_processes.disable_extended_tag = False
+        # The previous pin's accumulated min/max/mean must not carry over to
+        # the new process. The model's own pid guard would hide it for one
+        # cycle anyway; clearing it here means there is nothing to hide.
+        glances_processes.extended_process = None
+        return True
 
 
 def build_router() -> APIRouter:
@@ -185,6 +255,8 @@ def build_router() -> APIRouter:
     async def args_dump(request: Request) -> dict[str, Any]:
         """Return the CLI argument namespace, redacted (issue #1527 / CVE-2026-68520)."""
         return _redact_args(getattr(request.app.state, "args", None))
+
+    _register_extended_process_routes(router)
 
     @router.get("/{plugin_name}/info")
     async def plugin_info(plugin_name: str, request: Request) -> dict[str, Any]:

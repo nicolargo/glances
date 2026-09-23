@@ -4070,3 +4070,37 @@ def test_nothing_extra_is_reserved_when_the_block_is_off(engine, fake_store, fak
         tui_mod.plan_right_column = original
 
     assert seen["process_extra_rows"] == 0
+
+
+def test_the_tui_unfreezes_when_the_pinned_process_exits(engine, fake_store, fake_alerts, fake_config):
+    """The pin can end without this TUI asking: the process exits and the
+    engine forgets it. Without the re-sync, `e` would leave the cursor frozen
+    on a block that is no longer drawn, and the next `e` would UNpin something
+    already gone — two presses to get back to where one should."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+    from glances.outputs.curses_renderer_v5 import Frame, PluginBlock, Row
+
+    tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config)
+    tui._pending = "extended"
+    tui._run_pending(MagicMock())
+    assert tui._view.extended is True
+    assert tui._handle_key(curses.KEY_DOWN) == "ignored"  # frozen
+
+    engine.extended_pid = None  # the engine dropped a dead pin
+    tui._note_cursor_bound(Frame(right=[PluginBlock(name="processlist", rows=[Row() for _ in range(6)])]))
+
+    assert tui._view.extended is False
+    assert tui._handle_key(curses.KEY_DOWN) == "changed"  # and moves again
+
+
+def test_a_live_pin_is_not_dropped_by_the_resync(engine, fake_store, fake_alerts, fake_config):
+    from glances.outputs import glances_curses_v5 as tui_mod
+    from glances.outputs.curses_renderer_v5 import Frame, PluginBlock, Row
+
+    tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config)
+    tui._pending = "extended"
+    tui._run_pending(MagicMock())
+    tui._note_cursor_bound(Frame(right=[PluginBlock(name="processlist", rows=[Row() for _ in range(6)])]))
+
+    assert tui._view.extended is True
+    assert engine.extended_pid == 1000

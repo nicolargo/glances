@@ -20,7 +20,9 @@ V5 scope (G4-processlist):
   ``gids``, ``time_since_update``, ``key``) are flagged ``internal=True``
   so they are kept in the store for downstream consumers but excluded
   from the generic renderer's column set.
-- No extended view, no programs aggregation, no filter UI (deferred).
+- Programs aggregation and the filter UI live elsewhere / are deferred.
+- The extended view (2.X-b3) is published as payload METADATA under
+  ``extended`` while a process is pinned — see ``_add_metadata``.
 
 Coupling note: depends on ``processcount`` running first in the cycle to
 trigger ``engine.update()``. Mirrors v4 contract.
@@ -165,6 +167,70 @@ class PluginModel(GlancesPluginBase[list]):
         # filter are exported. `[processlist] export` is the same config key
         # v4 uses; `programlist` reuses this SAME section (see its __init__).
         self._export_patterns: list[re.Pattern[str]] = self._compile_filter("export", section="processlist")
+
+    # What the `e` block needs, and nothing else. `glances_processes`
+    # accumulates the extended stats INTO the whole process dict, so
+    # publishing it whole would duplicate a dozen fields already in `data[]`
+    # for the same pid.
+    #
+    # NO `cmdline`: the engine has not added it yet when it captures
+    # `extended_process` (it arrives later, through `maybe_add_cached_stats`),
+    # so the key is simply absent — measured against the live engine, not
+    # assumed. v4's web UI titles its block with a command line because it
+    # reads the PUBLISHED LIST ITEM, which does carry one; here the block is
+    # titled with `name`, exactly as the terminal titles it.
+    _EXTENDED_KEYS: ClassVar[tuple[str, ...]] = (
+        "pid",
+        "name",
+        "extended_stats",
+        "cpu_min",
+        "cpu_max",
+        "cpu_mean",
+        "memory_min",
+        "memory_max",
+        "memory_mean",
+        "cpu_affinity",
+        "ionice",
+        "num_ctx_switches",
+        "memory_info",
+        "memory_swap",
+        "num_threads",
+        "num_fds",
+        "num_handles",
+        "tcp",
+        "udp",
+    )
+
+    def _add_metadata(self) -> None:
+        """Publish the pinned process' extended stats as payload metadata.
+
+        Metadata, not fields: v5 filters every collection item to
+        `fields_description` (`_remove_parameters`), so v4's shape — the
+        extended values merged into the pinned item — would mean declaring
+        twenty fields that are null on every process but one. `fs` already
+        publishes `[fs] free_space` this way, for the same reason: the
+        consumer has no other route to it.
+
+        This is also what keeps the browser's cost at ZERO extra requests.
+        `fetchAll` makes one request per tick on purpose; a per-tick
+        `GET /processes/extended` would double that for a feature that is off
+        almost all the time.
+
+        The pin is global server state (`glances_processes.extended_pid`),
+        set either by the TUI's `e` or by the WebUI's click — one pin, two
+        ways to ask. Absent when nothing is pinned, so the key's presence is
+        the signal.
+        """
+        super()._add_metadata()
+        payload = getattr(glances_processes, "extended_process", None)
+        pinned = getattr(glances_processes, "extended_pid", None)
+        # The pid guard covers the cycle right after a pin, where the engine
+        # still holds the PREVIOUS process' accumulated numbers. Publishing
+        # those under the new name would be worse than publishing nothing.
+        if not isinstance(payload, dict) or pinned is None or payload.get("pid") != pinned:
+            self._metadata.pop("extended", None)
+            return
+        self._metadata["extended"] = {k: payload[k] for k in self._EXTENDED_KEYS if k in payload}
 
     def get_export(self) -> list[dict[str, Any]]:
         """Filtered export view (v4 parity, issue #794).

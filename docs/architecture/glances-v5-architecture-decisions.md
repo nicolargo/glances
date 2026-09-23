@@ -1193,12 +1193,22 @@ curses surface — as its own owned group. No implementation in parity wave 1
   push as its own scaffolding. Design:
   `docs/superpowers/specs/2026-09-23-glances-v5-tui-process-management-design.md`.
 
-  **The whole group is TUI-only** — decided by the maintainer on 2026-09-23,
-  closing §8.1 of the design. Unlike 2.X-a and 2.X-c, this one does not
-  reverse to the browser: `k`/`+`/`-` would need a mutating REST endpoint on
-  an API Glances leaves unauthenticated by default, and the process filter is
-  engine-global, so a filter typed in one tab would change what the TUI and
-  every other consumer sees.
+  **Which of it reaches the browser was decided per key** on 2026-09-23
+  (design §8.1), not for the group as a whole:
+
+  - **`k`, `+`, `-` stay TUI-only.** They change the process, and that would
+    need a mutating REST endpoint on an API Glances leaves unauthenticated by
+    default — a different product decision from "show fewer plugins".
+  - **`e` is in the browser too**, as a **click on the process row** rather
+    than a key, which is how v4's web UI already offers it
+    (`plugin-processlist.vue:59`, `:720`, `:726`). Chantier b3-web.
+  - **`ENTER`/`E` (b4) is still open**: not destructive, but engine-global —
+    a filter typed in one tab changes what the TUI and every other consumer
+    sees.
+
+  This line first recorded the decision as "the whole group is TUI-only",
+  generalising from the three mutating keys. That was a misreading, and it
+  would have silently dropped a v4 feature against the standing rule above.
 
   **Shipped (b1 + b2, 2026-09-23)**: the selection cursor (`UP`/`DOWN`,
   `--disable-cursor`), `k` kill, `+`/`-` nice, and the popup machinery the
@@ -1218,7 +1228,8 @@ curses surface — as its own owned group. No implementation in parity wave 1
   - **The data reaches the renderer through the per-cycle `view`**, read from
     the engine by the TUI. The renderers stay pure functions of (payload,
     fields, view), and the extended stats stay out of the REST payload
-    entirely — which is what the TUI-only decision requires.
+    entirely. (b3-web then gives the browser its own read path — see below —
+    rather than widening the collection payload.)
   - **The vertical solver is told what the block costs.**
     `plan_right_column` models an elastic block as "one line per data row
     plus one header"; the `e` block breaks that, so it declares its height
@@ -1234,9 +1245,67 @@ curses surface — as its own owned group. No implementation in parity wave 1
   v4 keeps paying for it after `e` is pressed again; only its renderer stops
   looking.
 
+  **Shipped (b3-web, 2026-09-23)**: the same feature in the browser, as a
+  **click on the process row** — v4's gesture, and the maintainer's
+  correction to §8.1's first, over-broad reading. Three decisions:
+
+  - **The payload rides in `/api/5/all`, as plugin METADATA.** `fetchAll`
+    makes one request per tick on purpose (api.js: 34 components at a 2 s
+    cadence would otherwise be 17 req/s per tab), so a per-tick
+    `GET /processes/extended` was out for a feature that is off almost all
+    the time. `processlist._add_metadata` publishes `extended` the way `fs`
+    publishes `free_space`. NOT v4's shape — v4 merges the extended fields
+    into the pinned list ITEM, which v5 cannot do without declaring twenty
+    fields that are null on every process but one (`_remove_parameters`
+    filters each item to `fields_description`).
+  - **Two POST routes**, `/api/5/processes/extended/{pid}` and `.../disable`,
+    setting the same `extended_pid` the TUI's `e` sets: one pin, two ways to
+    ask. They are the only state-changing pair in an otherwise read-only API.
+    What an unauthenticated caller gains is one pinned process' affinity,
+    ionice, fd count, swap and connection counts — the same nature of
+    information as the process list it can already GET, and exactly v4's
+    exposure (`glances_restful_api.py:534-537`). Nothing on the host is
+    modified, and under `[outputs] password` they sit behind the same auth
+    middleware as every other route.
+  - **The two surfaces are held equal by a drift test.** `process_extended.js`
+    mirrors `_extended_rows` segment for segment, and
+    `tests/test_webui_v5_extended_drift.py` compares the labels each emits
+    for the same payload — the `hotkeys.js` pattern, applied to a stats
+    block. The browser therefore shows v5's OWN terminal lines, including the
+    IO nice line v4 never renders, rather than v4's narrower three.
+
+  Two things measured rather than assumed. The header stays **"Command"**:
+  v4's web UI says "Command (click to pin)", but in Chromium that column is
+  the elastic remainder and lands at 72–161px across 640/900/1280 viewports
+  while the wording needs 186, so it would wrap the header row at nearly
+  every width; the affordance is carried by `cursor: pointer` and a `title`
+  instead. And the block is titled with the process **name**, not its command
+  line: the engine has not added `cmdline` yet when it captures the
+  accumulator, so v4's title works only because v4 reads the published list
+  item instead.
+
+  **A fifth v4 defect, found in a real browser rather than in a test**: pin a
+  process, let it exit, and the block stays on screen showing its last
+  numbers forever, still flagged `extended_stats: True`. Nothing in the update
+  loop runs again for a pid that has left the list, so `extended_process` is
+  never refreshed and never cleared. Fixed at the engine, which is where both
+  surfaces read it: a pin whose process was not seen this cycle is dropped,
+  the pin with it — otherwise the TUI's cursor stays frozen on a block it no
+  longer draws.
+
+  **And a sixth, which b3 made reachable rather than introduced**:
+  `__get_extended_memory_swap` caught `NoSuchProcess`/`KeyError` with a bare
+  `pass`, leaving `memory_swap` unbound — so the `return` below raised
+  `UnboundLocalError` instead of reporting "no swap figure". Nothing but the
+  `e` path calls `set_extended_stats`, so no v5 release could hit it until
+  now; the two ways in are issue #1551 and a process that exits mid-grab,
+  which is exactly what pinning a short-lived process does. One line, plus
+  the three swap-read paths pinned as one decision.
+
   **Still open**: the process filter (b4 — `ENTER`, `E`,
   `-f/--process-filter`, the filtered summary block, and `M` which only
-  resets *that* block).
+  resets *that* block). Whether it reaches the browser is the one part of
+  §8.1 still undecided: it is not destructive, but it is engine-global.
 
   Four decisions worth carrying forward:
 

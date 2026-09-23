@@ -1072,6 +1072,13 @@ class TuiV5(threading.Thread):
         that never moved, and a stale index would decorate nothing while
         `k` still resolved it.
         """
+        # The pin can end without the TUI asking: the pinned process exits and
+        # the engine forgets it (`processes.py`, `extended_seen`). Re-sync, or
+        # `e` would leave the cursor frozen on a block that is no longer drawn
+        # and the next `e` would UNpin something already gone.
+        if self._view.extended and glances_processes.extended_pid is None:
+            self._view.extended = False
+
         block = next((b for b in frame.right if b.name == self._cursor_block_name()), None)
         self._cursor_max = max(0, len(block.rows) - 1) if block is not None else 0
         if self._view.cursor_position >= self._cursor_max:

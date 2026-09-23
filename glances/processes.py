@@ -447,10 +447,17 @@ class GlancesProcesses:
         """Return the memory swap for the given process"""
         if not LINUX:
             return None
+        memory_swap = None
         try:
             memory_swap = sum([v.swap for v in process.memory_maps()])
         except (psutil.NoSuchProcess, KeyError):
             # (KeyError catch for issue #1551)
+            # `pass` here left `memory_swap` UNBOUND, so the `return` below
+            # raised UnboundLocalError instead of reporting "no swap figure".
+            # Unreachable until v5 gained the `e` key (2.X-b3): nothing else
+            # calls `set_extended_stats`, and the two ways in are a process
+            # that exits mid-grab and issue #1551 -- the first of which is
+            # exactly what pinning a short-lived process does.
             pass
         except (psutil.AccessDenied, NotImplementedError):
             # NotImplementedError: /proc/${PID}/smaps file doesn't exist
@@ -655,6 +662,13 @@ class GlancesProcesses:
         # Loop over processes and :
         # - add extended stats for selected process
         # - add metadata
+        # Whether the pinned process was still running this cycle. Without it,
+        # a process that exits leaves `extended_process` holding its last
+        # values forever -- nothing below ever runs again for a pid that is no
+        # longer in the list, so every consumer keeps rendering a frozen block
+        # for a process that no longer exists.
+        extended_seen = False
+
         for position, proc in enumerate(processlist):
             # Extended stats
             ################
@@ -667,6 +681,7 @@ class GlancesProcesses:
             if self.extended_process is not None and proc['pid'] == self.extended_process['pid']:
                 proc.update(self.set_extended_stats(self.extended_process))
                 self.extended_process = namedtuple_to_dict(proc)
+                extended_seen = True
 
             # Meta data
             ###########
@@ -677,6 +692,15 @@ class GlancesProcesses:
 
             # Manage cached information
             proc = self.maybe_add_cached_stats(is_cached, cached_attrs, proc)
+
+        # The pinned process is gone. Forget it, rather than leave the TUI and
+        # the WebUI showing its last numbers under a `extended_stats: True`
+        # that is no longer true. The PIN goes with the accumulator: a pin on
+        # a dead pid can never come back, and leaving it set would keep the
+        # TUI's cursor frozen on a block it no longer draws.
+        if self.extended_process is not None and not extended_seen:
+            self.extended_process = None
+            self.extended_pid = None
 
         # Remove non running process from the cache (avoid issue #2976)
         self.remove_non_running_procs(processlist)

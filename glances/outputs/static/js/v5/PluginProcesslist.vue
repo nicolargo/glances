@@ -7,6 +7,24 @@
 		:style="fixedColsStyle"
 		:hidden="quotaHidden"
 	>
+		<template #prepend>
+			<!-- The `e` block (2.X-b3-web). v4's web UI offers the same thing
+			by clicking a row (plugin-processlist.vue:59, :720, :726); the
+			LINES are v5's terminal's, not v4's browser's, so the two surfaces
+			of this version describe a pinned process identically
+			(process_extended.js, held to the Python by
+			tests/test_webui_v5_extended_drift.py). -->
+			<div v-if="extended" class="gl-pinned">
+				<div class="gl-pinned-head">
+					<span class="gl-header">Pinned task:</span>
+					<span class="gl-truncate" :title="pinnedTitle(extended)">{{ pinnedTitle(extended) }}</span>
+					<button type="button" class="gl-pin-button" @click="unpin">Unpin</button>
+				</div>
+				<div v-for="(line, i) in extendedLines(extended)" :key="i" class="gl-pinned-line">
+					<span v-for="(seg, j) in line" :key="j" :class="{ 'gl-level-ok': seg.value }">{{ seg.text }}</span>
+				</div>
+			</div>
+		</template>
 		<template #cols>
 			<colgroup>
 				<!-- Command: no <col> at all, deliberately -- not a `<col />` with
@@ -46,12 +64,30 @@
 				confirmed knowing the terminal disagrees. Do not "fix" this back to
 				match the TUI. -->
 				<th v-if="shows('W/s')" class="gl-header gl-num gl-num-left" :class="{ 'gl-sorted': isSorted('W/s') }">W/s</th>
-				<th class="gl-header" :class="{ 'gl-sorted': isSorted('Command') }">Command</th>
+				<!-- "Command", like the terminal and like `programlist` -- NOT
+				v4's "Command (click to pin)" (plugin-processlist.vue:59).
+				Measured in Chromium: this column is the elastic remainder and
+				lands at 72-161px across 640/900/1280px viewports, while that
+				wording needs 186px, so it would wrap the header row at almost
+				every width. The click affordance is carried by the row's
+				`cursor: pointer` and by this cell's `title` instead, neither
+				of which costs a pixel of layout. -->
+				<th
+					class="gl-header"
+					:class="{ 'gl-sorted': isSorted('Command') }"
+					title="Click a process to pin its extended stats"
+				>Command</th>
 			</tr>
 		</template>
 		<template #body>
 			<tbody>
-				<tr v-for="item in rows" :key="item.pid">
+				<tr
+					v-for="item in rows"
+					:key="item.pid"
+					class="gl-pinnable"
+					:class="{ 'gl-pinned-row': isPinned(item) }"
+					@click="pin(item)"
+				>
 					<td v-if="shows('CPU%')" class="gl-num">
 						<span :class="cellClassFor(payload, item, 'cpu_percent')">{{ formatPercent(item.cpu_percent) }}</span>
 					</td>
@@ -98,6 +134,10 @@ import { processBlockMixin } from "./process_block.js";
 // renders one column (MEM%) one character wider than the terminal, because
 // `formatPercent()` appends a `%` curses never prints -- see that module.
 import { FIXED_COL_KEYS, WEBUI_COL_WIDTHS } from "./process_widths.js";
+// The `e` block's segments, shared with the terminal renderer through a drift
+// test rather than through a second hand-written copy.
+import { extendedLines, pinnedTitle } from "./process_extended.js";
+import { postJson } from "./api.js";
 
 const TITLE = "PROCESSES";
 
@@ -127,6 +167,15 @@ export default {
 		visibleFixedColumns() {
 			return FIXED_COL_KEYS.filter((key) => this.shows(key));
 		},
+		// The pinned process, straight from the payload metadata the server
+		// publishes while a pin is live (processlist/model_v5.py
+		// `_add_metadata`). No local copy: the pin is GLOBAL server state --
+		// the TUI's `e` sets the same one -- so the payload is the truth and
+		// a component-level mirror could only go stale against it.
+		extended() {
+			const payload = this.payload;
+			return payload && payload.extended ? payload.extended : null;
+		},
 	},
 	watch: {
 		// A new process, a longer command line or a wider PID changes the natural
@@ -139,6 +188,26 @@ export default {
 	methods: {
 		shows(column) {
 			return !this.hiddenColumns.has(column);
+		},
+		extendedLines,
+		pinnedTitle,
+		isPinned(item) {
+			return !!this.extended && this.extended.pid === item.pid;
+		},
+		// Clicking the pinned row again unpins it: the affordance is one
+		// gesture, and a row you cannot un-click is a trap.
+		pin(item) {
+			const path = this.isPinned(item)
+				? "api/5/processes/extended/disable"
+				: `api/5/processes/extended/${item.pid}`;
+			// No optimistic update and no `$forceUpdate` (v4 does both): the
+			// next tick re-reads the payload from the server, which is where
+			// the pin actually lives. A failed POST therefore leaves the UI
+			// showing the truth rather than a pin that was never set.
+			postJson(path).catch(() => {});
+		},
+		unpin() {
+			postJson("api/5/processes/extended/disable").catch(() => {});
 		},
 	},
 };
@@ -167,5 +236,48 @@ export default {
 .gl-table th.gl-num-left,
 .gl-table td.gl-num-left {
 	text-align: left;
+}
+
+/* The `e` block (2.X-b3-web). Scoped here for the same reason `.gl-sorted`
+ * is: one consumer, and nothing in css/v5.css describes a pinned process. */
+.gl-pinned {
+	margin-bottom: 0.35rem;
+}
+.gl-pinned-head,
+.gl-pinned-line {
+	display: flex;
+	gap: 0.5ch;
+	align-items: baseline;
+	flex-wrap: wrap;
+}
+/* The command line can be arbitrarily long; it must not push the Unpin
+ * button off the row. */
+.gl-pinned-head > .gl-truncate {
+	flex: 1 1 auto;
+	min-width: 0;
+}
+.gl-pin-button {
+	flex: 0 0 auto;
+	font: inherit;
+	color: inherit;
+	background: transparent;
+	border: 1px solid currentColor;
+	border-radius: 3px;
+	padding: 0 0.5ch;
+	cursor: pointer;
+	opacity: 0.8;
+}
+.gl-pin-button:hover {
+	opacity: 1;
+}
+/* Every row is clickable, so every row says so on hover. */
+.gl-table tr.gl-pinnable {
+	cursor: pointer;
+}
+/* The pinned row, marked the way the terminal marks its selection: the
+ * command underlined, not the whole row inverted
+ * (processlist/render_curses_v5.py `_select`). */
+.gl-table tr.gl-pinned-row td:last-child span {
+	text-decoration: underline;
 }
 </style>

@@ -402,10 +402,29 @@ only one with a cross-surface consequence to decide first (§8.1).
 
 ## 8. Open questions for the maintainer
 
-### 8.1 Does any of this reach the WebUI? — **CLOSED, 2026-09-23: no**
+### 8.1 Does any of this reach the WebUI? — **CLOSED, 2026-09-23, per key**
 
-**The maintainer's decision: 2.X-b is TUI-only, b4 included.** Nothing below
-is open any more; it is kept as the reasoning the decision was made on.
+**The maintainer's decision, and a correction to how it was first recorded
+here.** The ruling was about the keys that *act on* a process, not about the
+whole group:
+
+- **`k`, `+`, `-` — no.** They change the process. A mutating REST endpoint on
+  an API Glances leaves unauthenticated by default is a different product
+  decision from "show fewer plugins".
+- **`e` — yes**, and it is a **click on the process row**, not a key: the row
+  pins, the extended block appears, a button unpins. That is what v4's web UI
+  already does (`plugin-processlist.vue:59` "Command (click to pin)",
+  `:720` / `:726` the two POSTs). Shipped for the browser in its own chantier,
+  b3-web.
+- **`ENTER`/`E`** — still open, and b4's to settle. Not destructive, but
+  **engine-global**: a filter typed in one tab changes what the TUI and every
+  other consumer sees (§3.4).
+
+The first record of this decision generalised "no" from the three mutating
+keys to all of 2.X-b, `e` included. That was wrong, and wrong in the direction
+that silently drops a v4 feature — the standing rule in `…decisions.md` is
+that a v4 feature is dropped only by an explicit decision, and no such
+decision was made about `e`.
 
 ---
 
@@ -425,7 +444,7 @@ TUI-only default. This group is not the same shape:
   Unlike the hidden-plugin sets, this cannot be per-viewer without giving the
   filter a per-request life the engine does not have.
 
-Nothing in b1–b3 was blocked on this. b4 was, and is not any more.
+Nothing in b1–b3 was blocked on this. b4 still is.
 
 ### 8.2 `--disable-cursor` default
 

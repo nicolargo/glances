@@ -1085,3 +1085,113 @@ def test_token_rejects_a_non_ascii_username_with_401(config_factory, store):
     with TestClient(app, raise_server_exceptions=False) as client:
         r = client.post("/api/5/token", headers=_basic_header("glancés", "hunter2"))
     assert r.status_code == 401
+
+
+# ------------------------------------- the pinned process (2.X-b3-web)
+
+
+@pytest.fixture
+def engine(monkeypatch):
+    """The process engine's pin state, isolated per test."""
+    from glances.processes import glances_processes
+
+    monkeypatch.setattr(glances_processes, "extended_pid", None, raising=False)
+    monkeypatch.setattr(glances_processes, "extended_process", None, raising=False)
+    monkeypatch.setattr(glances_processes, "disable_extended_tag", True, raising=False)
+    return glances_processes
+
+
+def _app_with_processes(config_factory, store, pids=(1, 42)):
+    config = config_factory()
+    app = _make_app_with_plugins(config, store)
+    asyncio.run(store.set("processlist", {"data": [{"pid": p, "name": f"p{p}"} for p in pids]}))
+    return app
+
+
+def test_pinning_a_process_sets_the_engine_pin(engine, config_factory, store):
+    """The same `extended_pid` the TUI's `e` sets — one pin, two ways to ask
+    for it. v4 reaches the same engine from its own two POSTs
+    (`glances_restful_api.py:534-537`)."""
+    app = _app_with_processes(config_factory, store)
+
+    with TestClient(app) as client:
+        response = client.post("/api/5/processes/extended/42")
+
+    assert response.status_code == 200
+    assert response.json() is True
+    assert engine.extended_pid == 42
+    assert engine.disable_extended_tag is False
+
+
+def test_pinning_clears_the_previous_accumulation(engine, config_factory, store):
+    """min/max/mean accumulate into `extended_process`. Carrying the previous
+    process' numbers into the new pin would misreport it."""
+    app = _app_with_processes(config_factory, store)
+    engine.extended_pid = 1
+    engine.extended_process = {"pid": 1, "cpu_max": 99.0}
+
+    with TestClient(app) as client:
+        client.post("/api/5/processes/extended/42")
+
+    assert engine.extended_process is None
+
+
+def test_unpinning_stops_the_grab(engine, config_factory, store):
+    """Clearing `extended_process` is what actually stops it — the grab is
+    keyed on that being set (`processes.py:663-669`), not on the tag."""
+    app = _app_with_processes(config_factory, store)
+    engine.extended_pid = 42
+    engine.extended_process = {"pid": 42}
+    engine.disable_extended_tag = False
+
+    with TestClient(app) as client:
+        response = client.post("/api/5/processes/extended/disable")
+
+    assert response.status_code == 200
+    assert engine.extended_pid is None
+    assert engine.extended_process is None
+    assert engine.disable_extended_tag is True
+
+
+def test_an_unknown_pid_is_refused(engine, config_factory, store):
+    """A pid the caller cannot see in /api/5/processlist is not pinnable."""
+    app = _app_with_processes(config_factory, store)
+
+    with TestClient(app) as client:
+        response = client.post("/api/5/processes/extended/9999")
+
+    assert response.status_code == 404
+    assert engine.extended_pid is None
+
+
+def test_a_non_numeric_pid_is_rejected_before_the_handler(engine, config_factory, store):
+    """v4 reaches this through `int(pid)`, which raises ValueError → 500.
+    FastAPI's path type answers 422 without the handler running."""
+    app = _app_with_processes(config_factory, store)
+
+    with TestClient(app) as client:
+        response = client.post("/api/5/processes/extended/notapid")
+
+    assert response.status_code == 422
+    assert engine.extended_pid is None
+
+
+def test_the_pin_route_is_not_captured_by_the_plugin_catch_all(engine, config_factory, store):
+    """`/{plugin_name}` sits at the end of the router. If the pin route were
+    declared after it, `processes` would be read as a plugin name."""
+    app = _app_with_processes(config_factory, store)
+
+    with TestClient(app) as client:
+        assert client.post("/api/5/processes/extended/42").status_code == 200
+        # ... and the catch-all still answers for a real unknown plugin.
+        assert client.get("/api/5/nosuchplugin").status_code == 404
+
+
+def test_pinning_is_refused_when_nothing_has_been_published(engine, config_factory, store):
+    """Cycle 0: no process list, so no pid is pinnable — and the handler must
+    say 404 rather than raise on an absent payload."""
+    config = config_factory()
+    app = _make_app_with_plugins(config, store)
+
+    with TestClient(app) as client:
+        assert client.post("/api/5/processes/extended/1").status_code == 404
