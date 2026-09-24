@@ -382,3 +382,28 @@ async def test_v4_latency_threshold_keys_colour_the_latency(tmp_path, monkeypatc
     levels = store.get("diskio")["_levels"]["sda"]
     assert levels["read_latency"]["level"] == "warning"  # 25 ms
     assert levels["write_latency"]["level"] == "critical"  # 3 ms, per-disk key
+
+
+# ---------------------------------------------------------- `U` cumulative counters
+
+
+async def test_cumulative_counters_ride_beside_the_rates(store, config, monkeypatch):
+    plugin = PluginModel(store, config)
+    await _two_cycles(
+        plugin, monkeypatch, {"sda": _io(rc=1, wc=2, rb=10, wb=20)}, {"sda": _io(rc=5, wc=6, rb=50, wb=60)}
+    )
+    sda = store.get("diskio")["data"][0]
+    assert sda["read_bytes"] == 40.0
+    assert (sda["read_bytes_cumul"], sda["write_bytes_cumul"]) == (50, 60)
+    assert (sda["read_count_cumul"], sda["write_count_cumul"]) == (5, 6)
+
+
+def test_cumulative_fields_are_internal(store, config):
+    fields = PluginModel(store, config)._fields
+    for name, label in (
+        ("read_bytes_cumul", "R"),
+        ("write_bytes_cumul", "W"),
+        ("read_count_cumul", "IOR"),
+        ("write_count_cumul", "IOW"),
+    ):
+        assert fields[name]["internal"] is True and fields[name]["short_name"] == label

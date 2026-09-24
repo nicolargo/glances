@@ -1476,10 +1476,28 @@ curses surface — as its own owned group. No implementation in parity wave 1
   two per-operation means is not a latency, so `L` keeps its two columns.
 
   **Blocked, each needing model or infrastructure work first:**
-  - `U` (network live ↔ cumulative) — `_transform_gauge`
-    (`plugins/plugin/base_v5.py`) REPLACES a counter with its rate and keeps
-    the raw value only in `_raw_previous`. Exposing it is a field-contract
-    change to the REST payload, not a renderer change.
+  - ~~`U` (network live ↔ cumulative)~~ — **shipped 2026-09-24, on network
+    AND disk I/O** (the disk half is a v5 addition at the maintainer's
+    request; v4's `U` is network-only). The field-contract change the line
+    above anticipated is **additive**: `_transform_gauge` still replaces each
+    counter with its rate, and the model now ALSO copies the raw counter into
+    an internal `*_cumul` field in `_grab_stats` — `bytes_recv_cumul` /
+    `bytes_sent_cumul` (`Rx` / `Tx`, v4's headers) and, for diskio,
+    `read_bytes_cumul` / `write_bytes_cumul` (`R` / `W`) and
+    `read_count_cumul` / `write_count_cumul` (`IOR` / `IOW`). No base-class
+    change; exported like every internal field. One key, one `network_cumul`
+    flag (v4's name) switching both blocks, like `T`. Choices worth keeping:
+    - The cells keep the **rate's** level colour — v4 reads the same
+      `bytes_recv` decoration in both modes. `_levels` is not recomputed on
+      the counters.
+    - A row with no rate yet (cycle 1, new interface/disk) **is** shown:
+      the counter exists, and v4 tests the raw counter in that mode.
+    - `U` + `T` gives `Rx+Tx` / `R+W` / `IOR+W` — no `/s`, a total is not a
+      rate (v4 drops it the same way).
+    - Disk I/O: `U` applies to byte and IOPS mode alike, **not to latency
+      mode**, which has no counter to show.
+    - No `--network-cumul` CLI flag: v4 has none either (`main.py` forces
+      `args.network_cumul = False`).
   - ~~`L` (disk I/O byte/s ↔ latency)~~ — **shipped 2026-09-24**, with
     `--diskio-latency` to seed it. The model now collects `read_time` /
     `write_time` (internal ms/s rates) and derives `read_latency` /

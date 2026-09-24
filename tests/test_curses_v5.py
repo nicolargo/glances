@@ -3355,7 +3355,8 @@ def test_the_fs_renderer_prefers_the_view_override_over_the_payload():
 
 
 @pytest.mark.parametrize(
-    ("key", "attr"), [("B", "diskio_iops"), ("L", "diskio_latency"), ("0", "load_irix"), ("T", "network_sum")]
+    ("key", "attr"),
+    [("B", "diskio_iops"), ("L", "diskio_latency"), ("0", "load_irix"), ("T", "network_sum"), ("U", "network_cumul")],
 )
 def test_a_render_mode_key_flips_its_view_flag(key, attr, fake_store, fake_alerts, fake_config):
     """`B`, `0` and `T` do not remove a block either: they change which fields

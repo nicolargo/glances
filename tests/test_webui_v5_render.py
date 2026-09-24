@@ -4133,8 +4133,8 @@ def test_the_help_overlay_renders_every_bound_key():
         for key, spec in TuiV5._HOTKEYS.items()
         if "hide" in spec or spec.get("group") == "TOGGLE VIEW"
     }
-    # One row per bound key (24 SHOW/HIDE + 11 TOGGLE VIEW), plus `h` itself.
-    assert len(rendered) == len(bound) + 1 == 36
+    # One row per bound key (24 SHOW/HIDE + 12 TOGGLE VIEW), plus `h` itself.
+    assert len(rendered) == len(bound) + 1 == 37
 
     joined = " ".join(rendered)
     for key, desc in bound.items():
@@ -4278,6 +4278,7 @@ def test_the_footer_link_toggles_rather_than_only_opening():
         ("L", "diskio_latency"),
         ("0", "load_irix"),
         ("T", "network_sum"),
+        ("U", "network_cumul"),
     ],
 )
 def test_a_data_type_key_flips_its_flag(key, flag):
@@ -4352,6 +4353,42 @@ def test_key_T_sums_the_operations_in_iops_mode_and_is_ignored_in_latency_mode()
     assert iops["pluginColumnHeaders"]["diskio"] == ["DISK I/O", "IOR+W/s"]
     assert _table_rows(iops, "diskio", 2) == [["nvme0n1", "2.5K"], ["Backup", "12"]]
     latency = _run_render_probe("diskio", "T,L")
+    assert latency["pluginColumnHeaders"]["diskio"] == ["DISK I/O", "ms/opR", "ms/opW"]
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_key_U_shows_the_network_counters():
+    """`U` (v4 `network_cumul`): `Rx` / `Tx`, the counters since the
+    interface came up. A row with no rate yet appears (its counter exists),
+    and the rate's level still colours the cell."""
+    after = _run_render_probe("network-rows", "U")
+    assert after["pluginColumnHeaders"]["network"] == ["NETWORK", "Rx", "Tx"]
+    assert _table_rows(after, "network", 3) == [
+        ["Loopback", "1.0Kb", "1.0Kb"],
+        ["wlan0", "8.0Kb", "0b"],
+        ["eth0", "1.0Gb", "8.0Kb"],
+    ]
+    eth0_rx = [c for c in after["pluginTableCells"]["network"] if c["cell"] == "gl-num"][4]
+    assert eth0_rx["value"] == "gl-level-warning"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_keys_U_and_T_compose_into_one_cumulative_column():
+    after = _run_render_probe("network-rows", "U,T")
+    assert after["pluginColumnHeaders"]["network"] == ["NETWORK", "Rx+Tx"]
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_key_U_shows_the_diskio_counters_in_byte_and_iops_mode():
+    """Network's `U` extended to disks (v5 addition); not in latency mode."""
+    bytes_mode = _run_render_probe("diskio", "U")
+    assert bytes_mode["pluginColumnHeaders"]["diskio"] == ["DISK I/O", "R", "W"]
+    assert _table_rows(bytes_mode, "diskio", 3) == [["nvme0n1", "2.0G", "4.0K"], ["Backup", "1.0M", "0B"]]
+    iops = _run_render_probe("diskio", "U,B")
+    assert iops["pluginColumnHeaders"]["diskio"] == ["DISK I/O", "IOR", "IOW"]
+    assert _table_rows(iops, "diskio", 3) == [["nvme0n1", "90", "3"], ["Backup", "1.5K", "0"]]
+    assert _run_render_probe("diskio", "U,T")["pluginColumnHeaders"]["diskio"] == ["DISK I/O", "R+W"]
+    latency = _run_render_probe("diskio", "U,L")
     assert latency["pluginColumnHeaders"]["diskio"] == ["DISK I/O", "ms/opR", "ms/opW"]
 
 

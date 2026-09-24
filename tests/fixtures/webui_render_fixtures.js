@@ -156,6 +156,8 @@ const INFO_FIXTURES = {
 		interface_name: {},
 		bytes_recv: { short_name: "Rx/s" },
 		bytes_sent: { short_name: "Tx/s" },
+		bytes_recv_cumul: { short_name: "Rx" },
+		bytes_sent_cumul: { short_name: "Tx" },
 		errors_in: {},
 		errors_out: {},
 	},
@@ -204,6 +206,10 @@ const INFO_FIXTURES = {
 		write_count: { short_name: "IOW/s" },
 		read_latency: { short_name: "ms/opR" },
 		write_latency: { short_name: "ms/opW" },
+		read_bytes_cumul: { short_name: "R" },
+		write_bytes_cumul: { short_name: "W" },
+		read_count_cumul: { short_name: "IOR" },
+		write_count_cumul: { short_name: "IOW" },
 	},
 	fs: { mnt_point: {}, size: { short_name: "Total" }, used: { short_name: "Used" }, free: { short_name: "Free" }, percent: {} },
 	// short_name copied from glances/plugins/wifi/model_v5.py (G9-6 Task 3);
@@ -338,16 +344,19 @@ const NETWORK_FIXTURE = {
 // hides, one with no rate yet. `lo` comes FIRST with an alias: the TUI keeps
 // payload order, so "Loopback" must render before "eth0" -- a component
 // sorting by raw key ("eth0" < "lo") would put "eth0" first.
+// The `*_cumul` counters feed the `U` key: `wlan0` has one although its rate
+// is not known yet, so it appears in that mode only; eth0's Rx level must
+// colour its cumulative cell too (v4 reads the rate's decoration).
 const NETWORK_ROWS = {
 	_key: "interface_name",
 	data: [
-		{ interface_name: "lo", alias: "Loopback", bytes_recv: 100, bytes_sent: 100, is_up: true, hidden: false },
-		{ interface_name: "virbr0", bytes_recv: 0, bytes_sent: 0, is_up: false, hidden: false },
-		{ interface_name: "docker0", bytes_recv: 0, bytes_sent: 0, is_up: true, hidden: true },
-		{ interface_name: "wlan0", bytes_recv: null, bytes_sent: null, is_up: true, hidden: false },
-		{ interface_name: "eth0", bytes_recv: 1048576, bytes_sent: 524288, is_up: true, hidden: false },
+		{ interface_name: "lo", alias: "Loopback", bytes_recv: 100, bytes_sent: 100, bytes_recv_cumul: 128, bytes_sent_cumul: 128, is_up: true, hidden: false },
+		{ interface_name: "virbr0", bytes_recv: 0, bytes_sent: 0, bytes_recv_cumul: 0, bytes_sent_cumul: 0, is_up: false, hidden: false },
+		{ interface_name: "docker0", bytes_recv: 0, bytes_sent: 0, bytes_recv_cumul: 0, bytes_sent_cumul: 0, is_up: true, hidden: true },
+		{ interface_name: "wlan0", bytes_recv: null, bytes_sent: null, bytes_recv_cumul: 1024, bytes_sent_cumul: 0, is_up: true, hidden: false },
+		{ interface_name: "eth0", bytes_recv: 1048576, bytes_sent: 524288, bytes_recv_cumul: 134217728, bytes_sent_cumul: 1024, is_up: true, hidden: false },
 	],
-	_levels: {},
+	_levels: { eth0: { bytes_recv: { level: "warning", prominent: false } } },
 };
 
 // diskio (render_curses_v5.py:109-140): sorted by RAW disk_name, a hide_zero
@@ -362,10 +371,10 @@ const DISKIO_FIXTURE = {
 	// columns, not out of the payload), and the `B` key renders them instead
 	// of the byte rates. A row missing them would be dropped in that mode.
 	data: [
-		{ disk_name: "sdb", alias: "Backup", read_bytes: 1536, write_bytes: 0, read_count: 12, write_count: 0, read_latency: 3, write_latency: 0, hidden: false },
+		{ disk_name: "sdb", alias: "Backup", read_bytes: 1536, write_bytes: 0, read_count: 12, write_count: 0, read_latency: 3, write_latency: 0, read_bytes_cumul: 1048576, write_bytes_cumul: 0, read_count_cumul: 1500, write_count_cumul: 0, hidden: false },
 		{ disk_name: "loop0", read_bytes: 0, write_bytes: 0, read_count: 0, write_count: 0, read_latency: 0, write_latency: 0, hidden: true },
 		{ disk_name: "sda", read_bytes: null, write_bytes: null, read_count: null, write_count: null, read_latency: null, write_latency: null, hidden: false },
-		{ disk_name: "nvme0n1", read_bytes: 855.6, write_bytes: 1280, read_count: 2500, write_count: 7.4, read_latency: 1500, write_latency: 2, hidden: false },
+		{ disk_name: "nvme0n1", read_bytes: 855.6, write_bytes: 1280, read_count: 2500, write_count: 7.4, read_latency: 1500, write_latency: 2, read_bytes_cumul: 2147483648, write_bytes_cumul: 4096, read_count_cumul: 90, write_count_cumul: 3, hidden: false },
 	],
 	// `read_latency` is only drawn by the `L` key: in the default mode this
 	// entry must colour nothing.

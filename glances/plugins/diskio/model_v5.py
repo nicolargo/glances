@@ -121,6 +121,34 @@ class PluginModel(GlancesPluginBase[list]):
             "strict_thresholds": True,
             "threshold_field": "tx_latency",
         },
+        # Cumulative copies of the four counters the base class replaces by a
+        # rate -- the `U` hotkey (network's `network_cumul`, extended to disks
+        # in v5) renders them. `internal`: out of the default columns, still
+        # exported.
+        "read_bytes_cumul": {
+            "description": "Bytes read since boot (cumulative counter).",
+            "short_name": "R",
+            "unit": "bytes",
+            "internal": True,
+        },
+        "write_bytes_cumul": {
+            "description": "Bytes written since boot (cumulative counter).",
+            "short_name": "W",
+            "unit": "bytes",
+            "internal": True,
+        },
+        "read_count_cumul": {
+            "description": "Read operations since boot (cumulative counter).",
+            "short_name": "IOR",
+            "unit": "number",
+            "internal": True,
+        },
+        "write_count_cumul": {
+            "description": "Write operations since boot (cumulative counter).",
+            "short_name": "IOW",
+            "unit": "number",
+            "internal": True,
+        },
         "read_bytes": {
             "description": "Bytes read per second (rate of psutil read_bytes counter).",
             # Column label, TUI header and WebUI alike (field_label, prefer_short).
@@ -192,6 +220,10 @@ class PluginModel(GlancesPluginBase[list]):
                 "write_count": counters.write_count,
                 "read_bytes": counters.read_bytes,
                 "write_bytes": counters.write_bytes,
+                "read_count_cumul": counters.read_count,
+                "write_count_cumul": counters.write_count,
+                "read_bytes_cumul": counters.read_bytes,
+                "write_bytes_cumul": counters.write_bytes,
             }
             # Not every platform's psutil reports the time counters.
             for name in ("read_time", "write_time"):

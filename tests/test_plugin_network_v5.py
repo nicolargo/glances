@@ -640,3 +640,33 @@ async def test_hide_zero_row_visible_when_only_one_direction_moves(tmp_path, mon
         await plugin.update()  # rx moves, tx stays at 0
 
     assert store.get("network")["data"][0]["hidden"] is False
+
+
+# ---------------------------------------------------------- `U` cumulative counters
+
+
+async def test_cumulative_counters_ride_beside_the_rates(store, config, monkeypatch):
+    """`bytes_recv` becomes a rate; the raw counter the `U` key renders
+    (v4 `network_cumul`) stays in `*_cumul`, from cycle 1 on."""
+    plugin = PluginModel(store, config)
+    now = _fake_now(monkeypatch)
+    with _patch_psutil(io_counters={"eth0": _io(rx=1_000, tx=500)}, if_stats={"eth0": _stats()}):
+        await plugin.update()
+    first = store.get("network")["data"][0]
+    assert (first["bytes_recv_cumul"], first["bytes_sent_cumul"]) == (1_000, 500)
+
+    now[0] = 102.0
+    with _patch_psutil(io_counters={"eth0": _io(rx=3_000, tx=1_500)}, if_stats={"eth0": _stats()}):
+        await plugin.update()
+    second = store.get("network")["data"][0]
+    assert second["bytes_recv"] == 1000.0
+    assert (second["bytes_recv_cumul"], second["bytes_sent_cumul"]) == (3_000, 1_500)
+
+
+def test_cumulative_fields_are_internal_and_exported(store, config):
+    fields = PluginModel(store, config)._fields
+    for name, label in (("bytes_recv_cumul", "Rx"), ("bytes_sent_cumul", "Tx")):
+        assert fields[name]["internal"] is True
+        assert fields[name].get("exportable", True) is True
+        assert fields[name]["short_name"] == label
+        assert not fields[name].get("rate")

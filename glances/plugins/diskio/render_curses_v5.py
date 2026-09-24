@@ -28,6 +28,9 @@ Three data modes, v4 precedence (``diskio/__init__.py:241-255``): ``B``
 which wins over the default byte rates. ``T`` folds the two columns into
 one sum -- a v5 addition, network's ``T`` applied to disks -- except in
 latency mode: the sum of two per-operation means is not a latency.
+``U`` swaps the rates for the counters since boot -- network's
+``network_cumul`` applied to disks, a v5 addition -- in byte and IOPS
+mode alike, and not in latency mode, which has no counter to show.
 """
 
 from __future__ import annotations
@@ -115,6 +118,12 @@ def render(
         read_key, write_key = "read_latency", "write_latency"
     else:
         read_key, write_key = "read_bytes", "write_bytes"
+    # `_levels` stays keyed by the rate fields, whatever the mode shows.
+    level_keys = (read_key, write_key)
+    # `U`: the same flag as network's, so one key switches both blocks.
+    cumul = not latency and bool((view or {}).get("network_cumul"))
+    if cumul:
+        read_key, write_key = f"{read_key}_cumul", f"{write_key}_cumul"
     # `T`: the same flag as network's, so one key folds both blocks.
     combined = not latency and bool((view or {}).get("network_sum"))
     # The first header cell is the TUI block title, not a field label -- it
@@ -140,7 +149,7 @@ def render(
             cells=[
                 header_row.cells[0],
                 Cell(
-                    text=("IOR+W/s" if iops else "R+W/s").rjust(_RATE_COL_WIDTH * 2 + 1),
+                    text=(("IOR+W" if iops else "R+W") + ("" if cumul else "/s")).rjust(_RATE_COL_WIDTH * 2 + 1),
                     color=ColorRole.HEADER,
                     bold=True,
                 ),
@@ -190,8 +199,8 @@ def render(
             value_cells = [Cell(text=text.rjust(_RATE_COL_WIDTH * 2 + 1))]
         else:
             value_cells = [
-                _rate_cell(item.get(read_key), disk_levels.get(read_key, {}), iops=count),
-                _rate_cell(item.get(write_key), disk_levels.get(write_key, {}), iops=count),
+                _rate_cell(item.get(read_key), disk_levels.get(level_keys[0], {}), iops=count),
+                _rate_cell(item.get(write_key), disk_levels.get(level_keys[1], {}), iops=count),
             ]
 
         rows.append(

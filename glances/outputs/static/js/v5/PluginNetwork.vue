@@ -7,7 +7,7 @@
 			<tr>
 				<th class="gl-header">{{ TITLE }}</th>
 				<th v-if="combined" class="gl-header gl-num" colspan="2">{{ combinedLabel }}</th>
-				<th v-for="field in combined ? [] : RATE_FIELDS" :key="field" class="gl-header gl-num">
+				<th v-for="field in combined ? [] : valueFields" :key="field" class="gl-header gl-num">
 					{{ labelFor(labels, field) }}
 				</th>
 			</tr>
@@ -30,8 +30,10 @@
 					<td v-if="combined" class="gl-num" colspan="2">
 						<span>{{ formatNetworkRate(rxPlusTx(item), !!serverArgs.byte) }}</span>
 					</td>
-					<td v-for="field in combined ? [] : RATE_FIELDS" :key="field" class="gl-num">
-						<span :class="cellClassFor(payload, item, field)">{{
+					<!-- Coloured by the RATE field's level in both modes, as v4 reads
+					the same `bytes_recv` decoration for its cumulative cells. -->
+					<td v-for="(field, index) in combined ? [] : valueFields" :key="field" class="gl-num">
+						<span :class="cellClassFor(payload, item, RATE_FIELDS[index])">{{
 							formatNetworkRate(item[field], !!serverArgs.byte)
 						}}</span>
 					</td>
@@ -50,6 +52,9 @@ import CollectionBlock from "./CollectionBlock.vue";
 import { PLUGIN_PROPS } from "./plugin_props.js";
 
 const RATE_FIELDS = ["bytes_recv", "bytes_sent"];
+// The `U` key (v4 `network_cumul`): the counters since the interface came up,
+// kept by the model beside the rates that replaced them.
+const CUMUL_FIELDS = ["bytes_recv_cumul", "bytes_sent_cumul"];
 
 const TITLE = "NETWORK";
 
@@ -69,16 +74,25 @@ export default {
 		},
 		// v4's own label for the mode (`network/__init__.py:246-254`): the
 		// "/s" is dropped under --byte there too.
+		// Cumulative mode drops it as well: a total is not a rate.
 		combinedLabel() {
-			return this.serverArgs.byte ? "Rx+Tx" : "Rx+Tx/s";
+			return this.serverArgs.byte || this.cumul ? "Rx+Tx" : "Rx+Tx/s";
+		},
+		// The `U` key, through AppShell's `effectiveArgs`.
+		cumul() {
+			return !!this.serverArgs.network_cumul;
+		},
+		valueFields() {
+			return this.cumul ? CUMUL_FIELDS : RATE_FIELDS;
 		},
 		// Mirrors network/render_curses_v5.py:129-142: skip a down interface
 		// (v4 #765), one hide_zero still hides, and one with no rate yet (cycle
 		// 1). Payload order -- the TUI does not sort this block.
+		// A counter exists from cycle 1, so `U` shows a row the rate mode skips.
 		rows() {
+			const [rx, tx] = this.valueFields;
 			return (this.payload?.data || []).filter(
-				(item) =>
-					item.is_up !== false && item.hidden !== true && item.bytes_recv != null && item.bytes_sent != null,
+				(item) => item.is_up !== false && item.hidden !== true && item[rx] != null && item[tx] != null,
 			);
 		},
 	},
@@ -87,7 +101,8 @@ export default {
 		// two rates the payload already carries gives the same number over the
 		// same interval. Mirrors network/render_curses_v5.py.
 		rxPlusTx(item) {
-			return Number(item.bytes_recv) + Number(item.bytes_sent);
+			const [rx, tx] = this.valueFields;
+			return Number(item[rx]) + Number(item[tx]);
 		},
 		labelFor,
 		cellClassFor,

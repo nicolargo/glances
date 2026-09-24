@@ -355,3 +355,51 @@ def test_the_sum_is_never_coloured(diskio_fields):
 
 def render_width(rows):
     return max(sum(len(c.text) for c in r.cells) + len(r.cells) - 1 for r in rows)
+
+
+# ---------------------------------------------------------------- `U` cumulative
+
+
+def _cumul_disk(**fields):
+    payload = _one_disk(
+        read_bytes_cumul=3 * 1024 * 1024,
+        write_bytes_cumul=2048,
+        read_count_cumul=12_000,
+        write_count_cumul=40,
+    )
+    payload["data"][0].update(fields)
+    return payload
+
+
+def test_u_shows_the_byte_counters_since_boot(diskio_fields):
+    """Network's `U` (v4 `network_cumul`) extended to disks, a v5 addition."""
+    rows = render(_cumul_disk(), diskio_fields, view={"network_cumul": True})
+    assert _texts(rows[0]) == ["R", "W"]
+    assert _texts(rows[1]) == ["3.0M", "2.0K"]
+
+
+def test_u_in_iops_mode_shows_the_operation_counters(diskio_fields):
+    rows = render(_cumul_disk(), diskio_fields, view={"network_cumul": True, "diskio_iops": True})
+    assert _texts(rows[0]) == ["IOR", "IOW"]
+    assert _texts(rows[1]) == ["12.0K", "40"]
+
+
+def test_u_is_ignored_in_latency_mode(diskio_fields):
+    rows = render(_cumul_disk(), diskio_fields, view={"network_cumul": True, "diskio_latency": True})
+    assert _texts(rows[0]) == ["ms/opR", "ms/opW"]
+
+
+def test_u_and_t_compose_without_the_per_second_suffix(diskio_fields):
+    rows = render(_cumul_disk(), diskio_fields, view={"network_cumul": True, "network_sum": True})
+    assert _texts(rows[0]) == ["R+W"]
+    iops = render(_cumul_disk(), diskio_fields, view={"network_cumul": True, "network_sum": True, "diskio_iops": True})
+    assert _texts(iops[0]) == ["IOR+W"]
+    assert _texts(iops[1]) == ["12.0K"]
+
+
+def test_u_keeps_the_rate_s_colour_and_shows_a_disk_with_no_rate_yet(diskio_fields):
+    payload = _cumul_disk(read_bytes=None, write_bytes=None)
+    payload["_levels"] = {"sda": {"read_bytes": {"level": "warning", "prominent": False}}}
+    assert len(render(payload, diskio_fields)) == 1, "rate mode: header only"
+    row = render(payload, diskio_fields, view={"network_cumul": True})[1]
+    assert row.cells[1].color is ColorRole.WARNING

@@ -28,10 +28,12 @@ Reference layout (default — rate display, bits/s, two columns):
 - Long interface names are tail-truncated with a leading underscore.
 - Color of each rate cell from ``_levels[interface_name][bytes_recv|bytes_sent]``.
 
-TODO(G2+): plumb ``max_width`` and ``args`` (``--network-cumul``,
-``--network-sum``) from the painter so this renderer can replicate every
-v4 display mode. For G1 we hardcode ``name_max_width=20`` and the
-rate-bits-two-column mode (v4 default).
+``U`` (v4 ``network_cumul``) swaps the rates for the cumulative counters,
+``Rx`` / ``Tx`` (``Rx+Tx`` under ``T``). The cells keep the colour of the
+RATE's level, as v4's do: they read the same ``bytes_recv`` decoration.
+
+TODO(G2+): plumb ``max_width`` from the painter; ``name_max_width`` is
+hardcoded to 18.
 """
 
 from __future__ import annotations
@@ -111,6 +113,11 @@ def render(
     # to keep in step -- and the sum of two rates over the same interval IS
     # the combined rate.
     combined = bool((view or {}).get("network_sum"))
+    # `U` (v4 `network_cumul`): the counters since the interface came up, in
+    # the fields the model keeps beside the rates it replaced. `_levels` stays
+    # keyed by the rate fields, which is where v4 reads the colour from too.
+    cumul = bool((view or {}).get("network_cumul"))
+    rx_key, tx_key = ("bytes_recv_cumul", "bytes_sent_cumul") if cumul else ("bytes_recv", "bytes_sent")
     # The first header cell is the TUI block title, not a field label — it
     # stays a literal. The value columns read their labels from the schema
     # (single source of truth, shared with the WebUI).
@@ -123,7 +130,7 @@ def render(
                     color=ColorRole.HEADER,
                     bold=True,
                 )
-                for key in ("bytes_recv", "bytes_sent")
+                for key in (rx_key, tx_key)
             ),
         ]
     )
@@ -135,7 +142,9 @@ def render(
             cells=[
                 Cell(text="NETWORK".ljust(_NAME_MAX_WIDTH), color=ColorRole.HEADER, bold=True),
                 Cell(
-                    text=("Rx+Tx" if byte else "Rx+Tx/s").rjust(_RATE_COL_WIDTH * 2 + 1),
+                    # v4 drops the "/s" under --byte and in cumulative mode
+                    # (`network/__init__.py:246-254`).
+                    text=("Rx+Tx" if byte or cumul else "Rx+Tx/s").rjust(_RATE_COL_WIDTH * 2 + 1),
                     color=ColorRole.HEADER,
                     bold=True,
                 ),
@@ -165,7 +174,9 @@ def render(
             continue
         # Skip first-cycle interfaces — rate fields are None until the
         # base class has two samples (cf. `_transform_gauge`).
-        if item.get("bytes_recv") is None or item.get("bytes_sent") is None:
+        # A counter exists from cycle 1, so `U` shows an interface the rate
+        # mode still skips (v4 tests `bytes_recv`, the raw counter, there).
+        if item.get(rx_key) is None or item.get(tx_key) is None:
             continue
 
         name = str(item.get("interface_name") or "")
@@ -178,15 +189,15 @@ def render(
         display_name = str(item.get("alias") or name)
 
         if combined:
-            total = float(item["bytes_recv"]) + float(item["bytes_sent"])
+            total = float(item[rx_key]) + float(item[tx_key])
             # No threshold decoration: the two fields carry their own levels
             # and a sum belongs to neither. v4 paints its `ax` cell plain for
             # the same reason (`network/__init__.py:294-295`).
             value_cells = [Cell(text=_format_rate(total, byte).rjust(_RATE_COL_WIDTH * 2 + 1))]
         else:
             value_cells = [
-                _rate_cell(item.get("bytes_recv"), if_levels.get("bytes_recv", {}), byte),
-                _rate_cell(item.get("bytes_sent"), if_levels.get("bytes_sent", {}), byte),
+                _rate_cell(item.get(rx_key), if_levels.get("bytes_recv", {}), byte),
+                _rate_cell(item.get(tx_key), if_levels.get("bytes_sent", {}), byte),
             ]
 
         rows.append(

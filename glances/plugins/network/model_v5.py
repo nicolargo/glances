@@ -96,6 +96,22 @@ class PluginModel(GlancesPluginBase[list]):
             "default_thresholds": _DEFAULT_BANDWIDTH_THRESHOLDS,
             "normalize_by": "bytes_speed_rate_per_sec",
         },
+        # The raw counters `bytes_recv`/`bytes_sent` are REPLACED by their rate
+        # (`rate: True`), so the `U` hotkey's cumulative mode (v4
+        # `network_cumul`, which renders the raw counter) needs its own copy.
+        # `internal`: out of the generic renderer's columns, still exported.
+        "bytes_recv_cumul": {
+            "description": "Bytes received since the interface came up (cumulative counter).",
+            "short_name": "Rx",
+            "unit": "bytes",
+            "internal": True,
+        },
+        "bytes_sent_cumul": {
+            "description": "Bytes sent since the interface came up (cumulative counter).",
+            "short_name": "Tx",
+            "unit": "bytes",
+            "internal": True,
+        },
         "errors_in": {
             "description": "Receive errors per second.",
             "unit": "number",
@@ -188,6 +204,8 @@ class PluginModel(GlancesPluginBase[list]):
                     "interface_name": name,
                     "bytes_recv": counters.bytes_recv,
                     "bytes_sent": counters.bytes_sent,
+                    "bytes_recv_cumul": counters.bytes_recv,
+                    "bytes_sent_cumul": counters.bytes_sent,
                     "errors_in": counters.errin,
                     "errors_out": counters.errout,
                     "dropped_in": counters.dropin,

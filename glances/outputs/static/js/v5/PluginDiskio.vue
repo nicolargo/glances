@@ -4,7 +4,7 @@
 			<!-- The TUI's header row: block title, then the schema's labels. -->
 			<tr>
 				<th class="gl-header">{{ TITLE }}</th>
-				<th v-if="combined" class="gl-header gl-num" colspan="2">{{ iops ? "IOR+W/s" : "R+W/s" }}</th>
+				<th v-if="combined" class="gl-header gl-num" colspan="2">{{ combinedLabel }}</th>
 				<th v-for="field in combined ? [] : rateFields" :key="field" class="gl-header gl-num">
 					{{ labelFor(labels, field) }}
 				</th>
@@ -22,8 +22,9 @@
 					<td v-if="combined" class="gl-num" colspan="2">
 						<span>{{ formatCell(Number(item[rateFields[0]]) + Number(item[rateFields[1]])) }}</span>
 					</td>
-					<td v-for="field in combined ? [] : rateFields" :key="field" class="gl-num">
-						<span :class="cellClassFor(payload, item, field)">{{ formatCell(item[field]) }}</span>
+					<!-- `U` keeps the RATE field's level, as network does (v4 parity). -->
+					<td v-for="(field, index) in combined ? [] : rateFields" :key="field" class="gl-num">
+						<span :class="cellClassFor(payload, item, levelFields[index])">{{ formatCell(item[field]) }}</span>
 					</td>
 				</tr>
 			</tbody>
@@ -66,9 +67,21 @@ export default {
 		latency() {
 			return !this.iops && !!this.serverArgs.diskio_latency;
 		},
-		rateFields() {
+		// The fields `_levels` is keyed by -- the rate pair, whatever `U` shows.
+		levelFields() {
 			if (this.iops) return IOPS_FIELDS;
 			return this.latency ? LATENCY_FIELDS : RATE_FIELDS;
+		},
+		// The `U` key -- network's flag, extended to disks: the counters since
+		// boot, byte or IOPS mode alike. Not in latency mode: no counter there.
+		cumul() {
+			return !this.latency && !!this.serverArgs.network_cumul;
+		},
+		rateFields() {
+			return this.cumul ? this.levelFields.map((field) => `${field}_cumul`) : this.levelFields;
+		},
+		combinedLabel() {
+			return (this.iops ? "IOR+W" : "R+W") + (this.cumul ? "" : "/s");
 		},
 		// The `T` key -- network's flag, so one key folds both blocks. Not in
 		// latency mode: the sum of two per-operation means is not a latency.

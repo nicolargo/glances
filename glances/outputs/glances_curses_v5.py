@@ -176,6 +176,7 @@ class ViewState:
     diskio_latency: bool = False
     load_irix: bool = False
     network_sum: bool = False
+    network_cumul: bool = False
     # Tri-state, unlike the two above: `[fs] free_space` lives in the fs
     # plugin's CONFIG and reaches the renderer as payload metadata, not as a
     # constructor argument the TUI could seed from. `None` therefore means
@@ -274,6 +275,7 @@ class TuiV5(threading.Thread):
         "L": {"switch": "diskio_latency", "group": "TOGGLE VIEW", "desc": "Disk I/O in byte/s or latency"},
         "0": {"switch": "load_irix", "group": "TOGGLE VIEW", "desc": "Load average or Irix percentage"},
         "T": {"switch": "network_sum", "group": "TOGGLE VIEW", "desc": "Network and disk I/O apart or combined"},
+        "U": {"switch": "network_cumul", "group": "TOGGLE VIEW", "desc": "Network and disk I/O rate or cumulative"},
         # Tri-state, so it cannot be a plain `switch`: `None` means "follow
         # `[fs] free_space`", which is why it has its own verb.
         "F": {"action": "fs_free_space", "group": "TOGGLE VIEW", "desc": "Filesystem: used or free space"},
@@ -1748,6 +1750,7 @@ class TuiV5(threading.Thread):
         view["diskio_latency"] = self._view.diskio_latency
         view["load_irix"] = self._view.load_irix
         view["network_sum"] = self._view.network_sum
+        view["network_cumul"] = self._view.network_cumul
         # Only published when the viewer has pressed `F`; absent means the fs
         # renderer keeps reading its payload metadata.
         if self._view.fs_free_space is not None:

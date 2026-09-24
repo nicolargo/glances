@@ -444,3 +444,59 @@ def test_the_combined_cell_carries_no_threshold_colour():
     row = render(payload, {}, view={"network_sum": True})[1]
     assert row.cells[1].color == ColorRole.DEFAULT
     assert row.cells[1].prominent is False
+
+
+# ---------------------------------------------------------------- `U` cumulative
+
+
+def _cumul_payload(**overrides):
+    item = {
+        "interface_name": "eth0",
+        "bytes_recv": 100.0,
+        "bytes_sent": 25.0,
+        "bytes_recv_cumul": 1024 * 1024,
+        "bytes_sent_cumul": 1024,
+        "is_up": True,
+    }
+    item.update(overrides)
+    return {"data": [item], "_levels": {}}
+
+
+def test_cumulative_mode_shows_the_counters_under_v4_headers():
+    """`U` (v4 `network_cumul`): `Rx` / `Tx`, bits by default like the rates."""
+    from glances.plugins.network.model_v5 import PluginModel
+    from glances.plugins.network.render_curses_v5 import render
+
+    rows = render(_cumul_payload(), PluginModel.fields_description, view={"network_cumul": True})
+    assert [c.text.strip() for c in rows[0].cells][1:] == ["Rx", "Tx"]
+    assert [c.text.strip() for c in rows[1].cells][1:] == ["8.0Mb", "8.0Kb"]
+
+
+def test_cumulative_mode_shows_an_interface_with_no_rate_yet():
+    """The counter exists from cycle 1 (v4 tests the raw `bytes_recv` there)."""
+    from glances.plugins.network.render_curses_v5 import render
+
+    payload = _cumul_payload(bytes_recv=None, bytes_sent=None)
+    assert len(render(payload, {})) == 1, "rate mode: header only"
+    assert len(render(payload, {}, view={"network_cumul": True})) == 2
+
+
+def test_cumulative_cells_keep_the_rate_s_colour():
+    """v4 reads the same `bytes_recv` decoration for its cumulative cells."""
+    from glances.outputs.curses_renderer_v5 import ColorRole
+    from glances.plugins.network.render_curses_v5 import render
+
+    payload = _cumul_payload()
+    payload["_levels"] = {"eth0": {"bytes_recv": {"level": "warning", "prominent": False}}}
+    row = render(payload, {}, view={"network_cumul": True})[1]
+    assert row.cells[1].color is ColorRole.WARNING
+
+
+def test_cumulative_and_combined_compose_without_the_per_second_suffix():
+    """v4: `Rx+Tx` in cumulative mode, even in bits (`network/__init__.py:246`)."""
+    from glances.plugins.network.render_curses_v5 import render
+
+    rows = render(_cumul_payload(), {}, view={"network_cumul": True, "network_sum": True})
+    assert rows[0].cells[1].text.strip() == "Rx+Tx"
+    # (1 MiB + 1 KiB) x 8 bits
+    assert rows[1].cells[1].text.strip() == "8.0Mb"
