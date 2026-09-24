@@ -1747,3 +1747,120 @@ async def test_persistent_process_survives_trimming_and_stays_first(tmp_path, mo
     assert len(state.top_counter) <= _TOP_COUNTER_MAX_KEYS
     assert state.top_counter["persistent"] == total_cycles
     assert alerts.get_history()[0]["top"][0] == "persistent"
+
+
+# ---------------------------------------------------------- `<field>_log` opt-out
+
+
+async def test_field_log_false_keeps_transitions_out_of_history(tmp_path, monkeypatch, store):
+    """``<field>_log=False`` (v4 ``get_limit_log``): no event, not ongoing."""
+    config = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n[fakescalar]\npercent_log=False\n")
+    alerts = GlancesAlerts(config)
+    plugin = _FakeScalarPlugin(store, config)
+
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "critical", "prominent": True}})
+    assert alerts.get_history() == []
+    assert alerts.get_ongoing() == {}
+    assert alerts.get_ongoing_since() == {}
+
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "ok", "prominent": True}})
+    assert alerts.get_history() == []
+
+
+async def test_field_log_false_still_fires_actions(tmp_path, monkeypatch, store):
+    """v4 ran ``manage_action`` whatever ``_log`` said — so does v5."""
+    config = _config_with(
+        tmp_path,
+        monkeypatch,
+        "[alerts]\nmin_duration_seconds=0\n[fakescalar]\npercent_log=False\nwarning_action=true\n",
+    )
+    action = _RecordingAction()
+    alerts = GlancesAlerts(config, actions={"action": action})
+    plugin = _FakeScalarPlugin(store, config)
+
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
+    assert alerts.get_history() == []
+    assert any(call["repeat"] is False and call["level"] == "warning" for call in action.calls)
+
+
+async def test_field_log_false_only_silences_that_field(tmp_path, monkeypatch, store):
+    config = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n[fakescalar]\npercent_log=False\n")
+    alerts = GlancesAlerts(config)
+    plugin = _FakeScalarPlugin(store, config)
+
+    await _run_with_levels(
+        plugin,
+        alerts,
+        {"percent": {"level": "warning", "prominent": True}, "total": {"level": "warning", "prominent": True}},
+    )
+    assert [e["field"] for e in alerts.get_history()] == ["total"]
+    assert list(alerts.get_ongoing()) == [("fakescalar", None, "total")]
+
+
+async def test_plugin_level_log_false_silences_every_field(tmp_path, monkeypatch, store):
+    """Bare ``log=False`` is v4's ``[load] log`` — the whole section."""
+    config = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n[fakescalar]\nlog=False\n")
+    alerts = GlancesAlerts(config)
+    plugin = _FakeScalarPlugin(store, config)
+
+    await _run_with_levels(
+        plugin,
+        alerts,
+        {"percent": {"level": "warning", "prominent": True}, "total": {"level": "warning", "prominent": True}},
+    )
+    assert alerts.get_history() == []
+
+
+async def test_field_log_true_overrides_plugin_level_log_false(tmp_path, monkeypatch, store):
+    """Most specific key wins, as for thresholds."""
+    config = _config_with(
+        tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n[fakescalar]\nlog=False\ntotal_log=True\n"
+    )
+    alerts = GlancesAlerts(config)
+    plugin = _FakeScalarPlugin(store, config)
+
+    await _run_with_levels(
+        plugin,
+        alerts,
+        {"percent": {"level": "warning", "prominent": True}, "total": {"level": "warning", "prominent": True}},
+    )
+    assert [e["field"] for e in alerts.get_history()] == ["total"]
+
+
+async def test_collection_pk_field_log_false_silences_one_item(tmp_path, monkeypatch, store):
+    """``<pk>_<field>_log`` — v4's ``[network] wlan0_rx_log``."""
+    config = _config_with(
+        tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n[fakecollection]\neth0_rx_log=False\n"
+    )
+    alerts = GlancesAlerts(config)
+    plugin = _FakeCollectionPlugin(store, config)
+
+    await _run_with_levels(
+        plugin,
+        alerts,
+        {
+            "eth0": {"rx": {"level": "warning", "prominent": True}},
+            "lo": {"rx": {"level": "warning", "prominent": True}},
+        },
+    )
+    assert [e["key"] for e in alerts.get_history()] == ["lo"]
+
+
+async def test_invalid_log_value_is_ignored(tmp_path, monkeypatch, store):
+    """A non-boolean ``_log`` falls through to the next key (default: logged)."""
+    config = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n[fakescalar]\npercent_log=maybe\n")
+    alerts = GlancesAlerts(config)
+    plugin = _FakeScalarPlugin(store, config)
+
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
+    assert [e["field"] for e in alerts.get_history()] == ["percent"]
+
+
+async def test_unlogged_alert_does_not_steer_auto_sort(tmp_path, monkeypatch, store):
+    """In v4 the auto-sort hung off events, and an unlogged stat made none."""
+    config = _config_with(tmp_path, monkeypatch, "[alerts]\nmin_duration_seconds=0\n[mem]\npercent_log=False\n")
+    engine = _FakeProcessEngine()
+    alerts = GlancesAlerts(config, process_engine=engine)
+    plugin = _MemPlugin(store, config)
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "critical", "prominent": True}})
+    assert engine.sort_key == "cpu_percent"

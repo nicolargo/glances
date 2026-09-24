@@ -48,6 +48,7 @@ from typing import Any
 from glances.actions_v5.action_base import GlancesActionBase
 from glances.config_v5 import GlancesConfigV5
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
+from glances.plugins.plugin.thresholds_v5 import read_log_flag
 from glances.processes import sort_stats
 
 logger = logging.getLogger(__name__)
@@ -124,6 +125,12 @@ class _AlertState:
     top_counter: Counter[str] | None = None
     top_sort: str | None = None
     top_event: dict[str, Any] | None = None
+    # ``False`` when the user opted this tuple out of the history with
+    # ``<field>_log=False`` (v4 ``get_limit_log``). The state machine still
+    # runs — actions keep firing — but no event is written, and the tuple is
+    # neither reported as ongoing nor allowed to steer the process auto-sort:
+    # in v4 an unlogged stat never became an event, and both hang off events.
+    logged: bool = True
 
 
 @dataclass
@@ -212,7 +219,7 @@ class GlancesAlerts:
         return {
             state_key: state.committed_level
             for state_key, state in list(self._state.items())
-            if state.committed_level != "ok"
+            if state.committed_level != "ok" and state.logged
         }
 
     def get_ongoing_since(self) -> dict[tuple[str, str | None, str], str]:
@@ -374,7 +381,11 @@ class GlancesAlerts:
             state_key = (plugin.plugin_name, key, field_name)
             observed.add(state_key)
             plugin_keys.add(state_key)
-            state = self._state.setdefault(state_key, _AlertState())
+            state = self._state.get(state_key)
+            if state is None:
+                # `_log` resolved once per tuple, not per cycle: processlist
+                # yields over a thousand observations a cycle.
+                state = self._state[state_key] = _AlertState(logged=self._is_logged(plugin, key, field_name))
             # Hot-path short-circuit: when the observation matches the
             # currently committed level AND no candidate transition is
             # pending, no min_duration is needed and ``_reconcile`` would
@@ -395,7 +406,7 @@ class GlancesAlerts:
                 min_duration = self._min_duration_for(plugin.plugin_name, key, field_name, observed_level)
                 transition = self._reconcile(state, observed_level, min_duration)
 
-            if transition is not None:
+            if transition is not None and state.logged:
                 event = self._build_event(
                     plugin.plugin_name,
                     key,
@@ -418,9 +429,10 @@ class GlancesAlerts:
                     # `committed_since` set and must not restart the capture).
                     state.committed_since = event["ts"]
                     self._open_top(state, self._top_sort_key(plugin, field_name), event)
-                if transition.new != "ok":
-                    # Entry into a non-ok level: fire non-repeat actions.
-                    self._fire_actions(plugin, key, field_name, transition.new, value, repeat=False)
+            if transition is not None and transition.new != "ok":
+                # Entry into a non-ok level: fire non-repeat actions — logged
+                # or not, as v4's `manage_action` ran regardless of `_log`.
+                self._fire_actions(plugin, key, field_name, transition.new, value, repeat=False)
 
             # Steady-state repeat dispatch — fires on every ingest cycle
             # while the committed level is non-ok, including the cycle of
@@ -452,7 +464,7 @@ class GlancesAlerts:
         mem_active = False
         iowait_active = False
         for (plugin_name, _key, field_name), state in self._state.items():
-            if state.committed_level == "ok":
+            if state.committed_level == "ok" or not state.logged:
                 continue
             if plugin_name == "mem":
                 mem_active = True
@@ -569,6 +581,18 @@ class GlancesAlerts:
         state.top_event["top"] = [name for name, _ in state.top_counter.most_common(_TOP_PROCESSES_KEEP)]
         state.top_event["top_sort"] = state.top_sort
 
+    # ------------------------------------------------------------- log opt-out
+
+    def _is_logged(self, plugin: GlancesPluginBase, key: str | None, field_name: str) -> bool:
+        """Resolve ``<pk>_<field>_log`` / ``<field>_log`` / ``log`` for a tuple.
+
+        Keyed on the field's threshold name, not its value key, so the flag
+        sits next to the thresholds it silences (``[containers] cpu_log``
+        beside ``cpu_warning``).
+        """
+        schema = type(plugin).fields_description.get(field_name, {})
+        return read_log_flag(self.config, plugin.plugin_name, plugin._threshold_key(field_name, schema), key)
+
     # ----------------------------------------------------- min duration override
 
     def _min_duration_for(
@@ -644,7 +668,7 @@ class GlancesAlerts:
             if state.committed_level != "ok" or state.pending_level is not None:
                 min_duration = self._min_duration_for(plugin_name, key, field_name, "ok")
                 transition = self._reconcile(state, "ok", min_duration)
-                if transition is not None:
+                if transition is not None and state.logged:
                     self._history.append(
                         self._build_event(
                             plugin_name,

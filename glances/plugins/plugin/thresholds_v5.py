@@ -150,6 +150,39 @@ def read_thresholds(
     return out
 
 
+def read_log_flag(
+    config: Any,
+    section: str,
+    field: str,
+    pk_value: str | None = None,
+) -> bool:
+    """Return whether a watched field's transitions go to the alert history.
+
+    v4 ``get_limit_log`` parity — ``[cpu] user_log=False`` keeps the field
+    coloured (and its actions firing) but out of the event list. Same
+    most-specific-first walk as :func:`read_thresholds`:
+
+    1. ``<pk_value>_<field>_log`` — per-item (e.g. ``wlan0_bytes_recv_log``).
+    2. ``<field>_log``            — per-field (e.g. ``user_log``).
+    3. ``log``                    — the whole plugin section (v4 ``[load] log``).
+
+    Defaults to ``True``: in v5 every watched field is historised unless the
+    user opts out. A value that is not a boolean is skipped, as a
+    non-numeric threshold is.
+    """
+    keys: list[str] = []
+    if pk_value is not None:
+        keys.append(f"{pk_value}_{field}_log")
+    keys.extend((f"{field}_log", "log"))
+    for key in keys:
+        text = str(config.get(section, key, "")).strip().lower()
+        if text in ("true", "1", "yes", "on"):
+            return True
+        if text in ("false", "0", "no", "off"):
+            return False
+    return True
+
+
 # --------------------------------------------------------------- categorical
 
 
