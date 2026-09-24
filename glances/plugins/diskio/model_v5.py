@@ -20,9 +20,12 @@ V5 scope (G4-diskio):
 - ``read_count`` / ``write_count`` are flagged ``internal=True`` so the
   generic renderer skips them; the ``B`` hotkey's IOPS mode renders them
   explicitly, and exporters have always had them.
-- ``read_time``/``write_time`` and the derived ``read_latency`` /
-  ``write_latency`` of v4 are not ported — deferred to a later phase
-  with the ``--diskio-latency`` mode.
+- ``read_time`` / ``write_time`` (cumulative ms, turned into ms/s by the
+  base class) are ``internal``; the derived ``read_latency`` /
+  ``write_latency`` (mean ms per operation, v4 ``update_latency``) are
+  what the ``L`` hotkey / ``--diskio-latency`` mode renders. Both latencies
+  are opt-in alerts under v4's own keys (``[diskio] rx_latency_*`` /
+  ``tx_latency_*``, per disk ``<disk>_rx_latency_*``) via ``threshold_field``.
 
 SNMP support is **not ported to v5** (architecture §10).
 """
@@ -77,6 +80,47 @@ class PluginModel(GlancesPluginBase[list]):
             "internal": True,
             "short_name": "IOW/s",
         },
+        "read_time": {
+            "description": "Time spent reading, in milliseconds per second (rate of psutil read_time counter).",
+            "unit": "number",
+            "rate": True,
+            # Only the input of `read_latency` below; exporters keep it.
+            "internal": True,
+        },
+        "write_time": {
+            "description": "Time spent writing, in milliseconds per second (rate of psutil write_time counter).",
+            "unit": "number",
+            "rate": True,
+            "internal": True,
+        },
+        "read_latency": {
+            "description": "Mean time spent reading per operation, in milliseconds.",
+            "unit": "number",
+            # Not a column of the default mode: the `L` hotkey renders it.
+            "internal": True,
+            # v4's header for that mode (`diskio/__init__.py:247`).
+            "short_name": "ms/opR",
+            # Opt-in, like the byte rates: no default thresholds (v4 has none
+            # either), and v4's key names kept -- `rx_latency_careful`,
+            # `dm-0_rx_latency_warning` -- through `threshold_field`, so the
+            # shipped glances.conf examples work as written.
+            "watched": True,
+            "watch_direction": "high",
+            "prominent": False,
+            "strict_thresholds": True,
+            "threshold_field": "rx_latency",
+        },
+        "write_latency": {
+            "description": "Mean time spent writing per operation, in milliseconds.",
+            "unit": "number",
+            "internal": True,
+            "short_name": "ms/opW",
+            "watched": True,
+            "watch_direction": "high",
+            "prominent": False,
+            "strict_thresholds": True,
+            "threshold_field": "tx_latency",
+        },
         "read_bytes": {
             "description": "Bytes read per second (rate of psutil read_bytes counter).",
             # Column label, TUI header and WebUI alike (field_label, prefer_short).
@@ -106,6 +150,31 @@ class PluginModel(GlancesPluginBase[list]):
         },
     }
 
+    def _expand_parameters(self) -> None:
+        """Derive the per-operation latencies from this cycle's rates.
+
+        v4 ``update_latency``: ``int(time_rate / count_rate)`` ms, 0 when no
+        operation happened. Runs after ``_transform_gauge`` (the rates exist)
+        and before ``_derived_parameters`` (the levels see the latency).
+        ``None`` while a rate is not known yet -- cycle 1, a new disk, or a
+        platform whose psutil has no ``read_time``.
+        """
+        super()._expand_parameters()
+        if not isinstance(self._stats, list):
+            return
+        for item in self._stats:
+            if not isinstance(item, dict):
+                continue
+            for latency, time_key, count_key in (
+                ("read_latency", "read_time", "read_count"),
+                ("write_latency", "write_time", "write_count"),
+            ):
+                spent, ops = item.get(time_key), item.get(count_key)
+                if spent is None or ops is None:
+                    item[latency] = None
+                else:
+                    item[latency] = int(spent / ops) if ops > 0 else 0
+
     async def _grab_stats(self) -> list:
         try:
             iomap = await asyncio.to_thread(psutil.disk_io_counters, perdisk=True)
@@ -117,13 +186,16 @@ class PluginModel(GlancesPluginBase[list]):
 
         out: list[dict[str, Any]] = []
         for disk_name, counters in iomap.items():
-            out.append(
-                {
-                    "disk_name": disk_name,
-                    "read_count": counters.read_count,
-                    "write_count": counters.write_count,
-                    "read_bytes": counters.read_bytes,
-                    "write_bytes": counters.write_bytes,
-                }
-            )
+            entry: dict[str, Any] = {
+                "disk_name": disk_name,
+                "read_count": counters.read_count,
+                "write_count": counters.write_count,
+                "read_bytes": counters.read_bytes,
+                "write_bytes": counters.write_bytes,
+            }
+            # Not every platform's psutil reports the time counters.
+            for name in ("read_time", "write_time"):
+                if hasattr(counters, name):
+                    entry[name] = getattr(counters, name)
+            out.append(entry)
         return out

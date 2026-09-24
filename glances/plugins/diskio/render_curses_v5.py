@@ -23,9 +23,11 @@ Replicates v4 ``diskio.msg_curse()`` default mode (R/s + W/s):
   a startup wall of ``-`` placeholders.
 - Long disk names are tail-truncated with a leading underscore.
 
-TODO(G4+): plumb args so ``--diskio-iops`` (IOR/s + IOW/s) and
-``--diskio-latency`` (ms/opR + ms/opW) are honoured. Default mode only
-for G4.
+Three data modes, v4 precedence (``diskio/__init__.py:241-255``): ``B``
+(IOR/s + IOW/s) wins over ``L`` / ``--diskio-latency`` (ms/opR + ms/opW),
+which wins over the default byte rates. ``T`` folds the two columns into
+one sum -- a v5 addition, network's ``T`` applied to disks -- except in
+latency mode: the sum of two per-operation means is not a latency.
 """
 
 from __future__ import annotations
@@ -106,7 +108,15 @@ def render(
     # rates. Same two columns, different pair of fields -- the labels come
     # from the schema, so swapping the pair swaps the header too.
     iops = bool((view or {}).get("diskio_iops"))
-    read_key, write_key = ("read_count", "write_count") if iops else ("read_bytes", "write_bytes")
+    latency = not iops and bool((view or {}).get("diskio_latency"))
+    if iops:
+        read_key, write_key = "read_count", "write_count"
+    elif latency:
+        read_key, write_key = "read_latency", "write_latency"
+    else:
+        read_key, write_key = "read_bytes", "write_bytes"
+    # `T`: the same flag as network's, so one key folds both blocks.
+    combined = not latency and bool((view or {}).get("network_sum"))
     # The first header cell is the TUI block title, not a field label -- it
     # stays a literal. The rate columns read their labels from the schema
     # (single source of truth, shared with the WebUI), as network's do.
@@ -123,6 +133,19 @@ def render(
             ),
         ]
     )
+    if combined:
+        # Widened to the two columns it replaces, so the block keeps its width
+        # (network's `Rx+Tx/s` does the same).
+        header_row = Row(
+            cells=[
+                header_row.cells[0],
+                Cell(
+                    text=("IOR+W/s" if iops else "R+W/s").rjust(_RATE_COL_WIDTH * 2 + 1),
+                    color=ColorRole.HEADER,
+                    bold=True,
+                ),
+            ]
+        )
     rows: list[Row] = [header_row]
 
     if not isinstance(payload, dict):
@@ -156,13 +179,24 @@ def render(
         # keyed by the raw `name`.
         display_name = str(item.get("alias") or name)
 
+        # Latencies are unitless ms counts, formatted like IOPS (v4
+        # `auto_unit(..., low_precision=True)`, `diskio/__init__.py:288`).
+        count = iops or latency
+        if combined:
+            total = float(item[read_key]) + float(item[write_key])
+            # No threshold colour: each field has its own level and a sum
+            # belongs to neither (network's `T` cell is plain too).
+            text = _format_count_rate(total) if iops else _format_byte_rate(total)
+            value_cells = [Cell(text=text.rjust(_RATE_COL_WIDTH * 2 + 1))]
+        else:
+            value_cells = [
+                _rate_cell(item.get(read_key), disk_levels.get(read_key, {}), iops=count),
+                _rate_cell(item.get(write_key), disk_levels.get(write_key, {}), iops=count),
+            ]
+
         rows.append(
             Row(
-                cells=[
-                    Cell(text=_format_disk_name(display_name)),
-                    _rate_cell(item.get(read_key), disk_levels.get(read_key, {}), iops=iops),
-                    _rate_cell(item.get(write_key), disk_levels.get(write_key, {}), iops=iops),
-                ],
+                cells=[Cell(text=_format_disk_name(display_name)), *value_cells],
                 item_start=True,
             )
         )

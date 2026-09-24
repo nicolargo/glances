@@ -173,6 +173,7 @@ class ViewState:
     byte: bool = False
     meangpu: bool = False
     diskio_iops: bool = False
+    diskio_latency: bool = False
     load_irix: bool = False
     network_sum: bool = False
     # Tri-state, unlike the two above: `[fs] free_space` lives in the fs
@@ -270,8 +271,9 @@ class TuiV5(threading.Thread):
         "b": {"switch": "byte", "group": "TOGGLE VIEW", "desc": "Network I/O in bit/s or byte/s"},
         "6": {"switch": "meangpu", "group": "TOGGLE VIEW", "desc": "GPU: per-card or mean"},
         "B": {"switch": "diskio_iops", "group": "TOGGLE VIEW", "desc": "Disk I/O in byte/s or IOPS"},
+        "L": {"switch": "diskio_latency", "group": "TOGGLE VIEW", "desc": "Disk I/O in byte/s or latency"},
         "0": {"switch": "load_irix", "group": "TOGGLE VIEW", "desc": "Load average or Irix percentage"},
-        "T": {"switch": "network_sum", "group": "TOGGLE VIEW", "desc": "Network Rx/Tx apart or combined"},
+        "T": {"switch": "network_sum", "group": "TOGGLE VIEW", "desc": "Network and disk I/O apart or combined"},
         # Tri-state, so it cannot be a plain `switch`: `None` means "follow
         # `[fs] free_space`", which is why it has its own verb.
         "F": {"action": "fs_free_space", "group": "TOGGLE VIEW", "desc": "Filesystem: used or free space"},
@@ -465,6 +467,7 @@ class TuiV5(threading.Thread):
         fahrenheit: bool = False,
         hide_public_info: bool = False,
         byte: bool = False,
+        diskio_latency: bool = False,
         disable_unicode: bool = False,
         programs: bool = False,
         disable_cursor: bool = False,
@@ -512,6 +515,8 @@ class TuiV5(threading.Thread):
         # Network I/O unit, seeded from --byte and flipped live by the ``b``
         # hotkey. False (default) = bits, matching the v4 default.
         self._view.byte = bool(byte)
+        # Disk I/O latency mode, seeded from --diskio-latency, flipped by `L`.
+        self._view.diskio_latency = bool(diskio_latency)
         # v4 parity for `--disable-unicode`: when set, renderers must emit
         # pure ASCII. v5 emitted no non-ASCII character at all until the
         # alert block's state glyphs (design §6.5), so this is the first
@@ -1740,6 +1745,7 @@ class TuiV5(threading.Thread):
         view["hide_public_info"] = self._hide_public_info
         view["byte"] = self._view.byte
         view["diskio_iops"] = self._view.diskio_iops
+        view["diskio_latency"] = self._view.diskio_latency
         view["load_irix"] = self._view.load_irix
         view["network_sum"] = self._view.network_sum
         # Only published when the viewer has pressed `F`; absent means the fs

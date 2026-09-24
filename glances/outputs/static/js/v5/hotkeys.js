@@ -66,8 +66,9 @@ export const VIEW_KEYS = {
 	"6": { desc: "GPU: per-card or mean", flag: "meangpu" },
 	F: { desc: "Filesystem: used or free space", flag: "fs_free_space" },
 	B: { desc: "Disk I/O in byte/s or IOPS", flag: "diskio_iops" },
+	L: { desc: "Disk I/O in byte/s or latency", flag: "diskio_latency" },
 	"0": { desc: "Load average or Irix percentage", flag: "load_irix" },
-	T: { desc: "Network Rx/Tx apart or combined", flag: "network_sum" }
+	T: { desc: "Network and disk I/O apart or combined", flag: "network_sum" }
 };
 
 /** The view flag `key` flips, or null when `key` is not a TOGGLE VIEW key. */

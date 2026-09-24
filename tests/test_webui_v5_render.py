@@ -4133,8 +4133,8 @@ def test_the_help_overlay_renders_every_bound_key():
         for key, spec in TuiV5._HOTKEYS.items()
         if "hide" in spec or spec.get("group") == "TOGGLE VIEW"
     }
-    # One row per bound key (24 SHOW/HIDE + 10 TOGGLE VIEW), plus `h` itself.
-    assert len(rendered) == len(bound) + 1 == 35
+    # One row per bound key (24 SHOW/HIDE + 11 TOGGLE VIEW), plus `h` itself.
+    assert len(rendered) == len(bound) + 1 == 36
 
     joined = " ".join(rendered)
     for key, desc in bound.items():
@@ -4275,6 +4275,7 @@ def test_the_footer_link_toggles_rather_than_only_opening():
         ("6", "meangpu"),
         ("F", "fs_free_space"),
         ("B", "diskio_iops"),
+        ("L", "diskio_latency"),
         ("0", "load_irix"),
         ("T", "network_sum"),
     ],
@@ -4312,6 +4313,46 @@ def test_key_B_switches_the_diskio_columns_to_iops():
 
     assert before["pluginColumnHeaders"]["diskio"] == ["DISK I/O", "R/s", "W/s"]
     assert after["pluginColumnHeaders"]["diskio"] == ["DISK I/O", "IOR/s", "IOW/s"]
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_key_L_switches_the_diskio_columns_to_latency():
+    """`L` (v4 `diskio_latency`): ms per operation, unitless, coloured from
+    the latency's own `_levels` entry -- which colours nothing before."""
+    before = _run_render_probe("diskio")
+    after = _run_render_probe("diskio", "L")
+
+    assert after["pluginColumnHeaders"]["diskio"] == ["DISK I/O", "ms/opR", "ms/opW"]
+    assert _table_rows(after, "diskio", 3) == [["nvme0n1", "1.5K", "2"], ["Backup", "3", "0"]]
+    classes = [c["value"] for c in after["pluginTableCells"]["diskio"]]
+    assert classes[1] == "gl-level-critical"
+    before_classes = [c["value"] or "" for c in before["pluginTableCells"]["diskio"]]
+    assert not any("critical" in c for c in before_classes)
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_key_B_wins_over_L_like_v4():
+    after = _run_render_probe("diskio", "L,B")
+    assert after["pluginColumnHeaders"]["diskio"] == ["DISK I/O", "IOR/s", "IOW/s"]
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_key_T_combines_the_diskio_columns():
+    """A v5 addition: network's `T` also folds R/s + W/s, uncoloured."""
+    after = _run_render_probe("diskio", "T")
+    assert after["pluginColumnHeaders"]["diskio"] == ["DISK I/O", "R+W/s"]
+    # 855.6 + 1280 = 2135.6 -> 2.1K ; 1536 + 0 -> 1.5K
+    assert _table_rows(after, "diskio", 2) == [["nvme0n1", "2.1K"], ["Backup", "1.5K"]]
+    assert not any(c["value"] for c in after["pluginTableCells"]["diskio"] if c["cell"] == "gl-num")
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_key_T_sums_the_operations_in_iops_mode_and_is_ignored_in_latency_mode():
+    iops = _run_render_probe("diskio", "T,B")
+    assert iops["pluginColumnHeaders"]["diskio"] == ["DISK I/O", "IOR+W/s"]
+    assert _table_rows(iops, "diskio", 2) == [["nvme0n1", "2.5K"], ["Backup", "12"]]
+    latency = _run_render_probe("diskio", "T,L")
+    assert latency["pluginColumnHeaders"]["diskio"] == ["DISK I/O", "ms/opR", "ms/opW"]
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")

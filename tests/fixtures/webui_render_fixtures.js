@@ -202,6 +202,8 @@ const INFO_FIXTURES = {
 		write_bytes: { short_name: "W/s" },
 		read_count: { short_name: "IOR/s" },
 		write_count: { short_name: "IOW/s" },
+		read_latency: { short_name: "ms/opR" },
+		write_latency: { short_name: "ms/opW" },
 	},
 	fs: { mnt_point: {}, size: { short_name: "Total" }, used: { short_name: "Used" }, free: { short_name: "Free" }, percent: {} },
 	// short_name copied from glances/plugins/wifi/model_v5.py (G9-6 Task 3);
@@ -360,12 +362,17 @@ const DISKIO_FIXTURE = {
 	// columns, not out of the payload), and the `B` key renders them instead
 	// of the byte rates. A row missing them would be dropped in that mode.
 	data: [
-		{ disk_name: "sdb", alias: "Backup", read_bytes: 1536, write_bytes: 0, read_count: 12, write_count: 0, hidden: false },
-		{ disk_name: "loop0", read_bytes: 0, write_bytes: 0, read_count: 0, write_count: 0, hidden: true },
-		{ disk_name: "sda", read_bytes: null, write_bytes: null, read_count: null, write_count: null, hidden: false },
-		{ disk_name: "nvme0n1", read_bytes: 855.6, write_bytes: 1280, read_count: 2500, write_count: 7.4, hidden: false },
+		{ disk_name: "sdb", alias: "Backup", read_bytes: 1536, write_bytes: 0, read_count: 12, write_count: 0, read_latency: 3, write_latency: 0, hidden: false },
+		{ disk_name: "loop0", read_bytes: 0, write_bytes: 0, read_count: 0, write_count: 0, read_latency: 0, write_latency: 0, hidden: true },
+		{ disk_name: "sda", read_bytes: null, write_bytes: null, read_count: null, write_count: null, read_latency: null, write_latency: null, hidden: false },
+		{ disk_name: "nvme0n1", read_bytes: 855.6, write_bytes: 1280, read_count: 2500, write_count: 7.4, read_latency: 1500, write_latency: 2, hidden: false },
 	],
-	_levels: { sdb: { read_bytes: { level: "warning", prominent: false } } },
+	// `read_latency` is only drawn by the `L` key: in the default mode this
+	// entry must colour nothing.
+	_levels: {
+		sdb: { read_bytes: { level: "warning", prominent: false } },
+		nvme0n1: { read_latency: { level: "critical", prominent: false } },
+	},
 };
 
 // fs (render_curses_v5.py:99-124): sorted by RAW mount point, an empty mount

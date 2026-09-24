@@ -256,6 +256,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="Display network rate in bytes per second (default: bits per second).",
     )
     parser.add_argument(
+        "--diskio-latency",
+        dest="diskio_latency",
+        action="store_true",
+        default=False,
+        help="Display disk I/O latency (ms per read/write operation) instead of byte rates. Toggle live with L.",
+    )
+    parser.add_argument(
         "--fs-free-space",
         dest="fs_free_space",
         action="store_true",
@@ -796,6 +803,7 @@ def assemble(
             fahrenheit=getattr(args, "fahrenheit", False),
             hide_public_info=getattr(args, "hide_public_info", False),
             byte=getattr(args, "byte", False),
+            diskio_latency=getattr(args, "diskio_latency", False),
             disable_unicode=getattr(args, "disable_unicode", False),
             disable_cursor=getattr(args, "disable_cursor", False),
             arrow_keys_sort=getattr(args, "arrow_keys_sort", False),

@@ -272,3 +272,86 @@ def test_iops_mode_skips_a_disk_with_no_count_yet():
         "_levels": {},
     }
     assert len(render(payload, {}, view={"diskio_iops": True})) == 1, "header only"
+
+
+# ---------------------------------------------------------------- `L` latency and `T` combined
+
+
+def _one_disk(**fields):
+    base = {
+        "disk_name": "sda",
+        "read_bytes": 2048.0,
+        "write_bytes": 1024.0,
+        "read_count": 2500.0,
+        "write_count": 500.0,
+        "read_latency": 4,
+        "write_latency": 1200,
+    }
+    base.update(fields)
+    return {"data": [base], "_levels": {}}
+
+
+def _texts(row):
+    return [c.text.strip() for c in row.cells][1:]
+
+
+def test_latency_mode_shows_ms_per_operation_under_v4_headers(diskio_fields):
+    """`L` / --diskio-latency (v4 `diskio_latency`): `ms/opR` / `ms/opW`,
+    unitless ms counts (v4 `auto_unit(..., low_precision=True)`)."""
+    rows = render(_one_disk(), diskio_fields, view={"diskio_latency": True})
+    assert _texts(rows[0]) == ["ms/opR", "ms/opW"]
+    assert _texts(rows[1]) == ["4", "1.2K"]
+
+
+def test_latency_cells_take_their_colour_from_levels(diskio_fields):
+    payload = _one_disk()
+    payload["_levels"] = {"sda": {"read_latency": {"level": "critical", "prominent": False}}}
+    row = render(payload, diskio_fields, view={"diskio_latency": True})[1]
+    assert row.cells[1].color is ColorRole.CRITICAL
+    assert row.cells[2].color is ColorRole.DEFAULT
+
+
+def test_iops_wins_over_latency_like_v4(diskio_fields):
+    """v4's if/elif: `diskio_iops` is tested before `diskio_latency`."""
+    rows = render(_one_disk(), diskio_fields, view={"diskio_iops": True, "diskio_latency": True})
+    assert _texts(rows[0]) == ["IOR/s", "IOW/s"]
+
+
+def test_latency_mode_skips_a_disk_with_no_latency_yet(diskio_fields):
+    payload = _one_disk(read_latency=None, write_latency=None)
+    assert len(render(payload, diskio_fields, view={"diskio_latency": True})) == 1, "header only"
+
+
+def test_t_folds_the_byte_rates_into_one_sum(diskio_fields):
+    """`T` (network's `network_sum`) applied to disks: R/s + W/s, one column
+    spanning the two it replaces so the block keeps its width."""
+    default = render(_one_disk(), diskio_fields)
+    combined = render(_one_disk(), diskio_fields, view={"network_sum": True})
+    assert _texts(combined[0]) == ["R+W/s"]
+    assert _texts(combined[1]) == ["3.0K"]
+    assert combined[0].cells[1].text == "R+W/s".rjust(15)
+    assert render_width(combined) == render_width(default)
+
+
+def test_t_in_iops_mode_sums_the_operations(diskio_fields):
+    rows = render(_one_disk(), diskio_fields, view={"network_sum": True, "diskio_iops": True})
+    assert _texts(rows[0]) == ["IOR+W/s"]
+    assert _texts(rows[1]) == ["3.0K"]
+
+
+def test_t_is_ignored_in_latency_mode(diskio_fields):
+    """The sum of two per-operation means is not a latency."""
+    rows = render(_one_disk(), diskio_fields, view={"network_sum": True, "diskio_latency": True})
+    assert _texts(rows[0]) == ["ms/opR", "ms/opW"]
+
+
+def test_the_sum_is_never_coloured(diskio_fields):
+    """Each field has its own level; a sum belongs to neither (as network's)."""
+    payload = _one_disk()
+    payload["_levels"] = {"sda": {"read_bytes": {"level": "warning", "prominent": False}}}
+    row = render(payload, diskio_fields, view={"network_sum": True})[1]
+    assert row.cells[1].color is ColorRole.DEFAULT
+
+
+def render_width(rows):
+    return max(sum(len(c.text) for c in r.cells) + len(r.cells) - 1 for r in rows)

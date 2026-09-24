@@ -117,6 +117,11 @@ def test_disable_unicode_default_false():
     assert args.disable_unicode is False
 
 
+def test_diskio_latency_flag_parses():
+    assert build_parser().parse_args(["--diskio-latency"]).diskio_latency is True
+    assert build_parser().parse_args([]).diskio_latency is False
+
+
 def test_fs_free_space_flag_parses():
     parser = build_parser()
     args = parser.parse_args(["--fs-free-space"])

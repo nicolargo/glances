@@ -1322,7 +1322,7 @@ def test_tui_v5_help_shows_color_binding(fake_store, fake_alerts, fake_config):
     fake_stdscr = MagicMock()
     # Tall enough for the whole document (it grew with the SHOW/HIDE keys);
     # when it does not fit, the overlay scrolls rather than clips.
-    fake_stdscr.getmaxyx.return_value = (80, 100)
+    fake_stdscr.getmaxyx.return_value = (90, 100)
     tui._paint_help(fake_stdscr)
 
     flat = " ".join(str(call) for call in fake_stdscr.addstr.call_args_list)
@@ -3294,6 +3294,16 @@ def test_a_data_type_key_starts_from_the_cli_flag(fake_store, fake_alerts, fake_
     assert tui._build_view(120)["byte"] is False
 
 
+def test_the_latency_key_starts_from_the_cli_flag(fake_store, fake_alerts, fake_config):
+    """`--diskio-latency` seeds the mode; `L` then turns it OFF."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config, diskio_latency=True)
+    assert tui._build_view(120)["diskio_latency"] is True
+    tui._handle_key(ord("L"))
+    assert tui._build_view(120)["diskio_latency"] is False
+
+
 def test_fs_free_space_follows_the_payload_until_the_key_is_pressed(fake_store, fake_alerts, fake_config):
     """`[fs] free_space` is plugin CONFIG: it reaches the renderer as payload
     metadata, and the TUI has no constructor argument to seed from. So the
@@ -3344,7 +3354,9 @@ def test_the_fs_renderer_prefers_the_view_override_over_the_payload():
     assert "free" in free_header and "used" not in free_header, free_header
 
 
-@pytest.mark.parametrize(("key", "attr"), [("B", "diskio_iops"), ("0", "load_irix"), ("T", "network_sum")])
+@pytest.mark.parametrize(
+    ("key", "attr"), [("B", "diskio_iops"), ("L", "diskio_latency"), ("0", "load_irix"), ("T", "network_sum")]
+)
 def test_a_render_mode_key_flips_its_view_flag(key, attr, fake_store, fake_alerts, fake_config):
     """`B`, `0` and `T` do not remove a block either: they change which fields
     a renderer draws. Unlike `b`/`6` the second mode had to be written — v5

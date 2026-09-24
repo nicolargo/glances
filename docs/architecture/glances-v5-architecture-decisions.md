@@ -1467,13 +1467,30 @@ curses surface — as its own owned group. No implementation in parity wave 1
   renderers sum the two rates they already have. The sum of two rates over one
   interval is the combined rate.
 
+  **`T` also folds DISK I/O (2026-09-24, maintainer request — a v5 addition,
+  v4's `T` is network-only).** Same key, same `network_sum` flag (the name
+  `/api/5/args` already publishes), so one press folds both blocks; the
+  description in both help tables becomes "Network and disk I/O apart or
+  combined". Diskio shows `R+W/s` (or `IOR+W/s` under `B`), one uncoloured
+  column spanning the two it replaces. **Not in latency mode**: the sum of
+  two per-operation means is not a latency, so `L` keeps its two columns.
+
   **Blocked, each needing model or infrastructure work first:**
   - `U` (network live ↔ cumulative) — `_transform_gauge`
     (`plugins/plugin/base_v5.py`) REPLACES a counter with its rate and keeps
     the raw value only in `_raw_previous`. Exposing it is a field-contract
     change to the REST payload, not a renderer change.
-  - `L` (disk I/O byte/s ↔ latency) — `read_time`/`write_time` are not
-    collected at all, explicitly deferred (`diskio/model_v5.py`).
+  - ~~`L` (disk I/O byte/s ↔ latency)~~ — **shipped 2026-09-24**, with
+    `--diskio-latency` to seed it. The model now collects `read_time` /
+    `write_time` (internal ms/s rates) and derives `read_latency` /
+    `write_latency` in `_expand_parameters` (v4 `update_latency`:
+    `int(time_rate / count_rate)`, 0 without operations, `None` while a rate
+    is unknown or on a platform whose psutil has no time counters). Columns
+    `ms/opR` / `ms/opW`, v4's headers. `B` wins when both are on (v4's
+    if/elif). The latencies are opt-in watched fields with **no default
+    thresholds** (v4 has none) and `threshold_field: rx_latency / tx_latency`,
+    so v4's keys — `[diskio] rx_latency_careful`, per disk
+    `dm-0_tx_latency_warning`, and `dm-0_rx_latency_log` — work unchanged.
   - `S` (quicklook bar ↔ sparkline) — no v5 history store
     (`quicklook/model_v5.py`).
 
@@ -1532,7 +1549,6 @@ backport sweep of 2026-09-10 (develop `2bf3aadb`):
 |---|---|---|---|
 | `--process-focus` and the process filter | `glances/processes.py` + `glances/filter.py` — both shared with v5, and already carrying the v4 fixes | Never wired: `main_v5.py` does not push `args` into `glances_processes`, and `processlist/model_v5.py` records "no filter UI (deferred)". | Phase 2.X — wire the CLI args into the shared engine and add the TUI filter key. No engine work needed. |
 | `[percpu] max_cpu_display` ignored by the `percpu` plugin | `percpu/__init__.py:119` and `quicklook/__init__.py:108` — v4 reads the same key from the same `[percpu]` section in both blocks and they stay in sync. | `quicklook/model_v5.py` now honours it (npu/quicklook/vms backport, 2026-09-10), but `percpu/render_curses_v5.py:35-37` still carries the open `TODO(G2+)` and its own `_DEFAULT_MAX_CPU_DISPLAY = 4` (line 48) — a user setting `max_cpu_display=8` sees 8 bars in quicklook and 4 in percpu. | Phase 2.X — apply the pattern quicklook just established: the model reads the config key and publishes it as an `internal` payload field. |
-| `diskio` lost the latency family | `[diskio] rx_latency_*` / `tx_latency_*` (+ per-disk `<disk>_rx_latency_*` / `<disk>_tx_latency_*`, `_log`) | `diskio/model_v5.py:23-25`: `read_time`/`write_time` and the derived `read_latency`/`write_latency` of v4 are not collected at all — deferred to a later phase alongside the `--diskio-iops`/`--diskio-latency` CLI modes (also absent, `glances-v5-v4-parity-inventory.md` Part 1 §6). | Phase 2.X — collect the two counters, derive the rates, declare them `watched`, and wire `--diskio-latency` to switch the renderer from throughput to latency (v4 parity). |
 | Threshold keys renamed, one of them re-scaled | `[network] rx_*` / `tx_*` (percent), `[processlist] cpu_*` / `mem_*`, `[fs] <mnt>_careful` | v5 reads `bytes_recv_*` / `bytes_sent_*` **as a ratio in [0,1]** (`normalize_by: bytes_speed_rate_per_sec`), `cpu_percent_*` / `memory_percent_*`, `<mnt>_percent_careful`. The v4 keys — the ones the shipped `conf/glances.conf` still documents — are silently ignored. | **Decided** (parity wave 1, 2026-09-10): rename kept, no v4 aliases; a startup WARNING now fires on any unrecognised threshold key (`base_v5.py::_warn_unknown_threshold_keys`, §3.2 above). The rename itself is still a breaking change to document in the 5.0.0 release notes. |
 | CLI — short aliases and whole option families | `glances/main.py` argparse: `-V -p -B -u -t -w -c -q -f -0..-6`, the process family (`-f`, `--process-focus`, `--programs`, `--sort-processes`), stdout/diagnostic (`--stdout`, `--stdout-csv`, `--issue`), SNMP | 59 of v4's 86 options are absent. Client/browser and SNMP are Phase 3; the rest is not owned by any group. | Phase 2.X for display/process options; Phase 3 for client, browser and SNMP. |
 
@@ -1550,6 +1566,10 @@ closed.
 **2026-09-24 — `<stat>_log` family shipped** and removed from the table:
 `thresholds_v5.read_log_flag` reads it, `alerts_v5` gates the history write
 on it — semantics in §3.4.
+
+**2026-09-24 — `diskio` latency family shipped** and removed from the table
+(`L` / `--diskio-latency`, v4 threshold keys kept) — see the `L` line under
+Phase 2.X above.
 
 **2026-09-24 — `percpu` threshold colouring shipped** and removed from the
 table. The design question the row left open, answered:
