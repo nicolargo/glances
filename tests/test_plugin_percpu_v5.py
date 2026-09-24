@@ -90,13 +90,22 @@ def test_cpu_number_is_primary_key(store, config):
     assert schema["primary_key"] is True
 
 
-def test_no_field_is_watched(store, config):
-    """Per-core fields must not trigger alerts (cpu plugin handles aggregate alerts)."""
+def test_displayed_columns_are_watched_for_colour_only(store, config):
+    """v4 colours every percpu cell (`get_alert(cpu[stat], header=stat)`), but
+    never logs it: watched, font colour only, and no alert ingestion."""
+    plugin = PluginModel(store, config)
+    watched = {name for name, schema in plugin._fields.items() if schema.get("watched")}
+    assert watched == {"total", "user", "system", "idle", "iowait", "irq", "nice", "steal", "guest", "dpc", "interrupt"}
+    assert all(plugin._fields[name]["prominent"] is False for name in watched)
+    assert PluginModel.EMITS_ALERTS is False
+
+
+def test_only_user_and_system_have_default_thresholds(store, config):
+    """v4 `config.py` `set_default_cwc('percpu', 'user'|'system')` — 50/70/90."""
     fields = PluginModel(store, config)._fields
-    for name, schema in fields.items():
-        if name == "time_since_update":
-            continue
-        assert schema.get("watched", False) is False, f"{name} should not be watched"
+    defaults = {name for name, schema in fields.items() if schema.get("default_thresholds")}
+    assert defaults == {"user", "system"}
+    assert fields["user"]["default_thresholds"] == {"careful": 50.0, "warning": 70.0, "critical": 90.0}
 
 
 # ---------------------------------------------------------- update pipeline
@@ -143,12 +152,38 @@ async def test_update_drops_undeclared_fields(store, config):
 # ---------------------------------------------------------- _levels
 
 
-async def test_levels_stay_empty_for_collection(store, config):
-    """Collection-level alert computation is deferred to Phase 1.3."""
+async def test_levels_colour_user_and_system_by_default(store, config):
     plugin = PluginModel(store, config)
-    with _patch_sampler([_core(), _core()]):
+    with _patch_sampler([_core(user=75.0, system=10.0), _core(user=10.0, system=95.0)]):
         await plugin.update()
-    assert store.get("percpu")["_levels"] == {}
+    levels = store.get("percpu")["_levels"]
+    assert levels[0]["user"] == {"level": "warning", "prominent": False}
+    assert levels[0]["system"]["level"] == "ok"
+    assert levels[1]["system"]["level"] == "critical"
+    # No default for the other columns: uncoloured until configured.
+    assert "iowait" not in levels[0] and "total" not in levels[0]
+
+
+async def test_configured_column_thresholds_colour_that_column(tmp_path, monkeypatch, store):
+    config = _cfg_with(tmp_path, monkeypatch, "[percpu]\niowait_careful=1\niowait_warning=5\nuser_critical=60\n")
+    plugin = PluginModel(store, config)
+    with _patch_sampler([_core(user=65.0)]):  # _core: iowait=2.0
+        await plugin.update()
+    levels = store.get("percpu")["_levels"][0]
+    assert levels["iowait"]["level"] == "careful"
+    assert levels["user"]["level"] == "critical"
+
+
+async def test_the_model_publishes_the_effective_thresholds(tmp_path, monkeypatch, store):
+    """The `CPU*` mean row has no `_levels`: renderers grade it from these."""
+    config = _cfg_with(tmp_path, monkeypatch, "[percpu]\nuser_warning=60\niowait_critical=20\n")
+    plugin = PluginModel(store, config)
+    with _patch_sampler([_core()]):
+        await plugin.update()
+    thresholds = store.get("percpu")["thresholds"]
+    assert thresholds["user"] == {"careful": 50.0, "warning": 60.0, "critical": 90.0}
+    assert thresholds["iowait"] == {"critical": 20.0}
+    assert "idle" not in thresholds
 
 
 # ---------------------------------------------------------- export

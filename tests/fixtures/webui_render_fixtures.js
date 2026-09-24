@@ -246,6 +246,7 @@ const PLUGINSLIST_FIXTURES = {
 	// here: the SERVER_PLUGINS default already includes quicklook.
 	percpu: SERVER_PLUGINS.filter((name) => name !== "quicklook"),
 	"percpu-cap-2": SERVER_PLUGINS.filter((name) => name !== "quicklook"),
+	"percpu-levels": SERVER_PLUGINS.filter((name) => name !== "quicklook"),
 	"percpu-empty": SERVER_PLUGINS.filter((name) => name !== "quicklook"),
 };
 
@@ -524,6 +525,7 @@ const ARGS_FIXTURES = {
 	// between Critical 1 and Critical 2's fixes.
 	percpu: { percpu: true },
 	"percpu-cap-2": { percpu: true },
+	"percpu-levels": { percpu: true },
 	"percpu-empty": { percpu: true },
 	"percpu-loading": { percpu: true },
 	// The other half of `percpu-with-quicklook`: quicklook instantiated AND
@@ -1103,6 +1105,16 @@ const ALL_FIXTURES = {
 	"percpu-with-quicklook": { percpu: PERCPU_FIXTURE },
 	"percpu-cap-2": { percpu: { ...PERCPU_FIXTURE, max_cpu_display: 2 } },
 	"percpu-empty": { percpu: { _key: "cpu_number", max_cpu_display: 4, data: [], _levels: {} } },
+	// Threshold colouring: core 0's `user` carries a level; the CPU* row (cores
+	// 4 and 5, user 30 and 25 -> mean 27.5) has none and is graded in the
+	// browser against the published `thresholds` (careful at 20).
+	"percpu-levels": {
+		percpu: {
+			...PERCPU_FIXTURE,
+			_levels: { 0: { user: { level: "warning", prominent: false } } },
+			thresholds: { user: { careful: 20 } },
+		},
+	},
 	// quicklook (G9-8 Task 5): as-is, `stats_list` selects cpu/mem/load only --
 	// `swap` is in the payload and must NOT render.
 	quicklook: { quicklook: QUICKLOOK_FIXTURE },

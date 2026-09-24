@@ -18,8 +18,12 @@
 					<td v-if="standalone">
 						<span class="gl-name">{{ row.label }}</span>
 					</td>
-					<td v-if="standalone" class="gl-num">{{ formatPercent(row.stats.total) }}</td>
-					<td v-for="field in statFields" :key="field" class="gl-num">{{ formatPercent(row.stats[field]) }}</td>
+					<td v-if="standalone" class="gl-num">
+						<span :class="cellClass(row, 'total')">{{ formatPercent(row.stats.total) }}</span>
+					</td>
+					<td v-for="field in statFields" :key="field" class="gl-num">
+						<span :class="cellClass(row, field)">{{ formatPercent(row.stats[field]) }}</span>
+					</td>
 				</tr>
 			</tbody>
 		</template>
@@ -30,6 +34,7 @@
 import { computed } from "vue";
 import CollectionBlock from "./CollectionBlock.vue";
 import { formatPercent } from "./format.js";
+import { computeLevel, itemLevel, levelClass } from "./levels.js";
 import { PLUGIN_PROPS } from "./plugin_props.js";
 
 const TITLE = "CPU";
@@ -110,6 +115,7 @@ export default {
 				key: `cpu-${item.cpu_number}`,
 				label: `CPU${item.cpu_number}`,
 				stats: item,
+				levelKey: item.cpu_number,
 			}));
 
 			if (overflow.length) {
@@ -119,13 +125,24 @@ export default {
 					const values = overflow.map((item) => Number(item[field]) || 0);
 					means[field] = values.reduce((a, b) => a + b, 0) / values.length;
 				}
-				rows.push({ key: "cpu-mean", label: "CPU*", stats: means });
+				// No `_levels` for a synthetic row: `levelKey: null` sends
+				// `cellClass` to the published thresholds (TUI twin: _mean_levels).
+				rows.push({ key: "cpu-mean", label: "CPU*", stats: means, levelKey: null });
 			}
 			return rows;
 		},
 	},
 	methods: {
 		formatPercent,
+		// v4 `get_alert(cpu[stat], header=stat)`: a core cell reads its own
+		// `_levels` entry (JSON turns the `cpu_number` key into a string, which
+		// is what property access does anyway); the `CPU*` row is graded here.
+		cellClass(row, field) {
+			if (row.levelKey === null) {
+				return levelClass(computeLevel(row.stats[field], this.payload?.thresholds?.[field]));
+			}
+			return levelClass(itemLevel(this.payload, row.levelKey, field));
+		},
 	},
 };
 </script>

@@ -29,10 +29,12 @@ shows the per-core totals, so this block drops its ``CPU`` title, its
 ``total`` column and its row labels (v4 parity,
 ``glances/plugins/percpu/__init__.py:158,183,210``).
 
-V5 percpu carries no field-level alerts (see ``percpu/model_v5.py``
-docstring), so every value cell is DEFAULT-coloured — no
-warning/critical decoration here. The system-wide ``cpu`` plugin
-remains the source of CPU alerts.
+Each value cell takes its font colour from the core's ``_levels`` entry
+(v4 ``get_alert(cpu[stat], header=stat)``) — never a background: percpu
+fields are ``prominent: False`` and never alert (``percpu/model_v5.py``).
+The ``CPU*`` mean row has no ``_levels`` of its own, so its cells are
+graded here against the ``thresholds`` the model publishes, as v4 graded
+the mean in ``summarize_all_cpus_not_displayed``.
 """
 
 from __future__ import annotations
@@ -40,7 +42,8 @@ from __future__ import annotations
 import sys
 from typing import Any
 
-from glances.outputs.curses_renderer_v5 import Cell, ColorRole, Row
+from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row
+from glances.plugins.plugin.thresholds_v5 import compute_level
 
 # v4 fidelity: top-N cores shown, the rest collapsed into a CPU* row.
 _DEFAULT_MAX_CPU_DISPLAY = 4
@@ -109,8 +112,8 @@ def _format_value(value: Any) -> str:
         return "     ?%"
 
 
-def _value_cell(value: Any) -> Cell:
-    return Cell(text=_format_value(value).rjust(_VALUE_WIDTH))
+def _value_cell(value: Any, level: Any = None) -> Cell:
+    return Cell(text=_format_value(value).rjust(_VALUE_WIDTH), color=_LEVEL_TO_ROLE.get(level, ColorRole.DEFAULT))
 
 
 def _label_cell(text: str) -> Cell:
@@ -123,11 +126,39 @@ def _header_cell(text: str) -> Cell:
     return Cell(text=text.rjust(_VALUE_WIDTH))
 
 
-def _build_data_row(label: str | None, stats: dict[str, Any], headers: list[str], standalone: bool) -> Row:
+def _build_data_row(
+    label: str | None, stats: dict[str, Any], headers: list[str], standalone: bool, levels: dict[str, Any]
+) -> Row:
+    """``levels`` maps a column to its level string (absent = uncoloured)."""
     cells: list[Cell] = [_label_cell(label)] if standalone else []
     for stat in headers:
-        cells.append(_value_cell(stats.get(stat)))
+        cells.append(_value_cell(stats.get(stat), levels.get(stat)))
     return Row(cells=cells)
+
+
+def _core_levels(levels_index: Any, cpu_number: Any) -> dict[str, Any]:
+    """One core's ``{column: level}``. ``_levels`` is keyed by the raw
+    ``cpu_number`` in process and by its string once through JSON."""
+    if not isinstance(levels_index, dict):
+        return {}
+    entry = levels_index.get(cpu_number)
+    if entry is None:
+        entry = levels_index.get(str(cpu_number))
+    if not isinstance(entry, dict):
+        return {}
+    return {stat: e.get("level") for stat, e in entry.items() if isinstance(e, dict)}
+
+
+def _mean_levels(thresholds: Any, means: dict[str, float]) -> dict[str, Any]:
+    """Grade the ``CPU*`` means against the published plugin-level thresholds."""
+    if not isinstance(thresholds, dict):
+        return {}
+    out: dict[str, Any] = {}
+    for stat, value in means.items():
+        limits = thresholds.get(stat)
+        if isinstance(limits, dict) and limits:
+            out[stat] = compute_level(value, limits)
+    return out
 
 
 def render(
@@ -176,9 +207,11 @@ def render(
     displayed = sorted_items[:max_display]
     overflow = sorted_items[max_display:]
 
+    levels_index = payload.get("_levels")
     for item in displayed:
         label = _cpu_label(item.get("cpu_number")) if standalone else None
-        rows.append(_build_data_row(label, item, headers, standalone))
+        levels = _core_levels(levels_index, item.get("cpu_number"))
+        rows.append(_build_data_row(label, item, headers, standalone, levels))
 
     if overflow:
         # The "CPU*" row averages the cores that did NOT fit on screen — the
@@ -188,6 +221,7 @@ def render(
         for stat in headers:
             vals = [float(it.get(stat) or 0.0) for it in overflow]
             means[stat] = sum(vals) / len(vals) if vals else 0.0
-        rows.append(_build_data_row("CPU*" if standalone else None, means, headers, standalone))
+        levels = _mean_levels(payload.get("thresholds"), means)
+        rows.append(_build_data_row("CPU*" if standalone else None, means, headers, standalone, levels))
 
     return rows

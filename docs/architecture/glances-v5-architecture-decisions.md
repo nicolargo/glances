@@ -1532,7 +1532,6 @@ backport sweep of 2026-09-10 (develop `2bf3aadb`):
 |---|---|---|---|
 | `--process-focus` and the process filter | `glances/processes.py` + `glances/filter.py` — both shared with v5, and already carrying the v4 fixes | Never wired: `main_v5.py` does not push `args` into `glances_processes`, and `processlist/model_v5.py` records "no filter UI (deferred)". | Phase 2.X — wire the CLI args into the shared engine and add the TUI filter key. No engine work needed. |
 | `[percpu] max_cpu_display` ignored by the `percpu` plugin | `percpu/__init__.py:119` and `quicklook/__init__.py:108` — v4 reads the same key from the same `[percpu]` section in both blocks and they stay in sync. | `quicklook/model_v5.py` now honours it (npu/quicklook/vms backport, 2026-09-10), but `percpu/render_curses_v5.py:35-37` still carries the open `TODO(G2+)` and its own `_DEFAULT_MAX_CPU_DISPLAY = 4` (line 48) — a user setting `max_cpu_display=8` sees 8 bars in quicklook and 4 in percpu. | Phase 2.X — apply the pattern quicklook just established: the model reads the config key and publishes it as an `internal` payload field. |
-| `percpu` has no threshold colouring in v5 | v4 colours each core's `user`/`system`/`iowait` (etc.) cells from `[percpu] user_*` / `system_*` / `iowait_*` thresholds. | `percpu/model_v5.py:19-22` declares no watched field, so no `_levels` exist for any percpu field — every core cell renders uncoloured regardless of value or config. The docstring there justifies this by v4 having "no `'log': True` on percpu fields" — but `log`/`prominent` gates *alerting* (event history, background highlight, §3.2/§3.3), not *colouring* (the per-cycle `_levels` a cell reads its font colour from). v4 colours percpu cells today with or without `log`, so the justification given does not actually cover the gap it is attached to. | Phase 2.X — needs its own design: which fields become `watched` (with what `default_thresholds`), and whether `[percpu] user_careful` etc. are read through the generic `_watched_fields` pipeline or per-field `threshold_field` aliases (§3.2 precedence). |
 | `diskio` lost the latency family | `[diskio] rx_latency_*` / `tx_latency_*` (+ per-disk `<disk>_rx_latency_*` / `<disk>_tx_latency_*`, `_log`) | `diskio/model_v5.py:23-25`: `read_time`/`write_time` and the derived `read_latency`/`write_latency` of v4 are not collected at all — deferred to a later phase alongside the `--diskio-iops`/`--diskio-latency` CLI modes (also absent, `glances-v5-v4-parity-inventory.md` Part 1 §6). | Phase 2.X — collect the two counters, derive the rates, declare them `watched`, and wire `--diskio-latency` to switch the renderer from throughput to latency (v4 parity). |
 | Threshold keys renamed, one of them re-scaled | `[network] rx_*` / `tx_*` (percent), `[processlist] cpu_*` / `mem_*`, `[fs] <mnt>_careful` | v5 reads `bytes_recv_*` / `bytes_sent_*` **as a ratio in [0,1]** (`normalize_by: bytes_speed_rate_per_sec`), `cpu_percent_*` / `memory_percent_*`, `<mnt>_percent_careful`. The v4 keys — the ones the shipped `conf/glances.conf` still documents — are silently ignored. | **Decided** (parity wave 1, 2026-09-10): rename kept, no v4 aliases; a startup WARNING now fires on any unrecognised threshold key (`base_v5.py::_warn_unknown_threshold_keys`, §3.2 above). The rename itself is still a breaking change to document in the 5.0.0 release notes. |
 | CLI — short aliases and whole option families | `glances/main.py` argparse: `-V -p -B -u -t -w -c -q -f -0..-6`, the process family (`-f`, `--process-focus`, `--programs`, `--sort-processes`), stdout/diagnostic (`--stdout`, `--stdout-csv`, `--issue`), SNMP | 59 of v4's 86 options are absent. Client/browser and SNMP are Phase 3; the rest is not owned by any group. | Phase 2.X for display/process options; Phase 3 for client, browser and SNMP. |
@@ -1551,6 +1550,26 @@ closed.
 **2026-09-24 — `<stat>_log` family shipped** and removed from the table:
 `thresholds_v5.read_log_flag` reads it, `alerts_v5` gates the history write
 on it — semantics in §3.4.
+
+**2026-09-24 — `percpu` threshold colouring shipped** and removed from the
+table. The design question the row left open, answered:
+- **Which fields are `watched`**: every column the block can display
+  (`total` + the OS `stat_fields` superset) — v4 runs `get_alert` on each
+  of them. **Only `user` and `system` carry `default_thresholds`** (50/70/90,
+  v4 `config.py` `set_default_cwc`); every other column stays uncoloured
+  until `[percpu] <column>_careful/_warning/_critical` is set, as in v4.
+- **Through the generic pipeline**, no `threshold_field` alias: v4's keys
+  already are `<column>_<level>` in `[percpu]`, which is exactly what
+  `_watched_fields` reads. Bare `careful=` applies to every column — v4's
+  `get_limit` falls back to the plugin-level key the same way.
+- **Colour, not alert**: fields are `prominent: False` (font colour, no
+  background — v4 never tagged them `_LOG`) and `percpu` sets
+  `EMITS_ALERTS = False`. Divergence: v4 would have run a
+  `[percpu] <column>_<level>_action`; v5 does not, like `processlist`.
+- **The `CPU*` mean row** has no `_levels` of its own. The model publishes its
+  effective plugin-level thresholds as the internal `thresholds` field, and
+  both renderers grade the mean against it (`render_curses_v5._mean_levels`,
+  `levels.js` `computeLevel`) — v4 ran `get_alert` on the mean too.
 
 Every backport sweep appends what it finds here (see the sweep method in the
 maintainer notes); the table is the single list of "v4 has it, v5 does not yet".

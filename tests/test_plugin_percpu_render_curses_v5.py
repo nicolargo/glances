@@ -342,3 +342,64 @@ def test_quicklook_absent_keeps_the_title_the_total_column_and_the_labels():
         assert "CPU" in header, f"view={view!r}: {header!r}"
         assert "total" in header, f"view={view!r}: {header!r}"
         assert rows[1].cells[0].text.strip() == "CPU0", f"view={view!r}: {rows[1].cells[0].text!r}"
+
+
+# ---------------------------------------------------------------- threshold colouring
+
+
+def _cells_by_header(rows):
+    """Map each data row's cells to the header row's column names."""
+    names = [c.text.strip() for c in rows[0].cells]
+    return [dict(zip(names, r.cells)) for r in rows[1:]]
+
+
+def test_a_core_cell_takes_its_colour_from_levels():
+    """v4 `get_alert(cpu[stat], header=stat)` — font colour, no background."""
+    payload = {
+        "data": [_core(0, user=75.0)],
+        "stat_fields": ["user", "system", "iowait"],
+        "_levels": {
+            0: {"user": {"level": "warning", "prominent": False}, "system": {"level": "ok", "prominent": False}}
+        },
+    }
+    row = _cells_by_header(render(payload, _SCHEMA))[0]
+    assert row["user"].color is ColorRole.WARNING
+    assert row["user"].prominent is False
+    assert row["system"].color is ColorRole.OK
+    # No level entry: uncoloured, as v4's DEFAULT for an unconfigured column.
+    assert row["iowait"].color is ColorRole.DEFAULT
+    assert row["total"].color is ColorRole.DEFAULT
+
+
+def test_levels_keyed_by_string_after_json_still_colour():
+    """Through REST the `_levels` keys are strings — a remote TUI must colour too."""
+    payload = {
+        "data": [_core(3, user=95.0)],
+        "stat_fields": ["user"],
+        "_levels": {"3": {"user": {"level": "critical", "prominent": False}}},
+    }
+    row = _cells_by_header(render(payload, _SCHEMA))[0]
+    assert row["user"].color is ColorRole.CRITICAL
+
+
+def test_the_mean_row_is_graded_against_the_published_thresholds():
+    """v4 ran `get_alert` on the CPU* mean too (`summarize_all_cpus_not_displayed`)."""
+    # 6 cores, cap 4: the two hidden cores have user 60 and 80 -> mean 70 = warning.
+    data = [_core(i, total=float(90 - i * 10), user=10.0) for i in range(4)]
+    data += [_core(4, total=5.0, user=60.0), _core(5, total=1.0, user=80.0)]
+    payload = {
+        "data": data,
+        "stat_fields": ["user", "iowait"],
+        "_levels": {},
+        "thresholds": {"user": {"careful": 50.0, "warning": 70.0, "critical": 90.0}},
+    }
+    mean = _cells_by_header(render(payload, _SCHEMA))[-1]
+    assert mean["CPU"].text.strip() == "CPU*"
+    assert mean["user"].color is ColorRole.WARNING
+    assert mean["iowait"].color is ColorRole.DEFAULT
+
+
+def test_the_mean_row_stays_uncoloured_without_published_thresholds():
+    """A payload from an older server carries no `thresholds`: no colour, no crash."""
+    rows = render(_payload_with_cores(6), _SCHEMA)
+    assert all(c.color is ColorRole.DEFAULT for c in rows[-1].cells[1:])

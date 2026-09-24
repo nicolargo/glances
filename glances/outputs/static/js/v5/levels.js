@@ -30,3 +30,20 @@ export function itemLevel(payload, key, field) {
 	const item = levels && levels[key];
 	return (item && item[field]) || null;
 }
+
+// Grade a value the server computed no `_levels` for (percpu's synthetic
+// `CPU*` mean row) against published `{careful, warning, critical}` limits.
+// Port of `thresholds_v5.compute_level`, "high" direction: most severe first,
+// `value >= limit` wins. Returns a `levelClass`-ready entry, or null when
+// there is nothing to grade against -- no colour, as the TUI.
+export function computeLevel(value, thresholds) {
+	if (!thresholds || typeof value !== "number" || Number.isNaN(value)) return null;
+	let graded = false;
+	for (const tier of ["critical", "warning", "careful"]) {
+		const limit = thresholds[tier];
+		if (typeof limit !== "number") continue;
+		graded = true;
+		if (value >= limit) return { level: tier, prominent: false };
+	}
+	return graded ? { level: "ok", prominent: false } : null;
+}

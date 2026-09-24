@@ -16,15 +16,17 @@ Migrated from `glances/plugins/percpu/__init__.py`. Companion to the v5
 
 Stats shape: one entry per logical CPU core, keyed on ``cpu_number``.
 
-Field-level alerts (`watched`/`prominent`) are **not enabled** on
-`percpu` — per-core alerting would mostly amplify noise from individual
-cores while the aggregate is calm. The system-wide ``cpu`` plugin is
-the source of CPU alerts. This matches v4 behaviour (no `'log': True`
-on percpu fields).
-
-Per-item level computation in collections lands in Phase 1.3 alongside
-the network plugin; until then `_levels` stays empty for this plugin
-regardless.
+Threshold COLOURING, not alerting (v4 parity). v4 colours every percpu
+cell through ``get_alert(cpu[stat], header=stat)``, i.e. from
+``[percpu] <column>_careful/_warning/_critical`` — with built-in 50/70/90
+defaults for ``user`` and ``system`` only (``config.py`` ``set_default_cwc``),
+so every other column stays uncoloured until configured. v5 mirrors that:
+every displayed column is ``watched``, only ``user``/``system`` carry
+``default_thresholds``. Fields are ``prominent: False`` (font colour, no
+background — v4 never tagged them ``_LOG``) and ``EMITS_ALERTS = False``:
+per-core alerting would mostly amplify noise from individual cores while
+the aggregate is calm, and v4 never logged a percpu event. The system-wide
+``cpu`` plugin remains the source of CPU alerts.
 """
 
 from __future__ import annotations
@@ -57,11 +59,20 @@ def _os_headers() -> list[str]:
     return base + ["iowait", "idle", "irq", "nice", "steal", "guest"]
 
 
+# v4 `config.py` `set_default_cwc('percpu', 'user'|'system')`.
+_DEFAULT_PERCENT_THRESHOLDS = {"careful": 50.0, "warning": 70.0, "critical": 90.0}
+
+# Colour-only: see the module docstring.
+_COLOURED = {"watched": True, "watch_direction": "high", "prominent": False}
+
+
 class PluginModel(GlancesPluginBase[list]):
     """Per-CPU plugin (collection)."""
 
     plugin_name: ClassVar[str] = "percpu"
     IS_COLLECTION: ClassVar[bool] = True
+    # `_levels` colour the cells; they never reach the alert history.
+    EMITS_ALERTS: ClassVar[bool] = False
 
     fields_description: ClassVar[dict[str, dict[str, Any]]] = {
         "cpu_number": {
@@ -72,6 +83,7 @@ class PluginModel(GlancesPluginBase[list]):
         "total": {
             "description": "Sum of CPU percentages (except idle) for this core.",
             "unit": "percent",
+            **_COLOURED,
         },
         "system": {
             "description": (
@@ -79,6 +91,8 @@ class PluginModel(GlancesPluginBase[list]):
                 "the time spent running code in the operating system kernel."
             ),
             "unit": "percent",
+            **_COLOURED,
+            "default_thresholds": _DEFAULT_PERCENT_THRESHOLDS,
         },
         "user": {
             "description": (
@@ -86,18 +100,23 @@ class PluginModel(GlancesPluginBase[list]):
                 "time spent on the processor running the program's code."
             ),
             "unit": "percent",
+            **_COLOURED,
+            "default_thresholds": _DEFAULT_PERCENT_THRESHOLDS,
         },
         "idle": {
             "description": "Percent time this core was idle.",
             "unit": "percent",
+            **_COLOURED,
         },
         "iowait": {
             "description": "(Linux) Percent time this core spent waiting for I/O operations to complete.",
             "unit": "percent",
+            **_COLOURED,
         },
         "irq": {
             "description": "(Linux and BSD) Percent time this core spent servicing hardware/software interrupts.",
             "unit": "percent",
+            **_COLOURED,
         },
         "softirq": {
             "description": "(Linux) Percent time this core spent handling software interrupts.",
@@ -106,6 +125,7 @@ class PluginModel(GlancesPluginBase[list]):
         "nice": {
             "description": "(UNIX) Percent time this core spent on niced user-level processes.",
             "unit": "percent",
+            **_COLOURED,
         },
         "steal": {
             "description": (
@@ -113,10 +133,12 @@ class PluginModel(GlancesPluginBase[list]):
                 "while the hypervisor was servicing another virtual processor."
             ),
             "unit": "percent",
+            **_COLOURED,
         },
         "guest": {
             "description": "(Linux) Percent of time this core spent running a virtual CPU for guest OSes.",
             "unit": "percent",
+            **_COLOURED,
         },
         "guest_nice": {
             "description": "(Linux) Percent of time this core spent running a niced guest virtual CPU.",
@@ -125,10 +147,12 @@ class PluginModel(GlancesPluginBase[list]):
         "dpc": {
             "description": "(Windows) Percent of time this core spent handling deferred procedure calls.",
             "unit": "percent",
+            **_COLOURED,
         },
         "interrupt": {
             "description": "(Windows) Percent of time this core spent handling software interrupts.",
             "unit": "percent",
+            **_COLOURED,
         },
         # `[percpu] max_cpu_display` — the cap both this plugin and quicklook
         # honour. Declared `internal`: it is configuration the renderers need,
@@ -136,6 +160,16 @@ class PluginModel(GlancesPluginBase[list]):
         "max_cpu_display": {
             "description": "Maximum number of CPU cores displayed before the mean row ([percpu] max_cpu_display).",
             "unit": "number",
+            "internal": True,
+            "watched": False,
+        },
+        # Effective plugin-level thresholds (`get_limits()` numeric subset),
+        # published so the renderers can colour the synthetic `CPU*` mean row
+        # that has no `_levels` entry of its own — v4 ran `get_alert` on the
+        # mean too (`summarize_all_cpus_not_displayed`).
+        "thresholds": {
+            "description": "Effective [percpu] thresholds per column, used to colour the CPU* mean row.",
+            "unit": "string",
             "internal": True,
             "watched": False,
         },
@@ -164,6 +198,11 @@ class PluginModel(GlancesPluginBase[list]):
         super()._add_metadata()
         self._metadata["max_cpu_display"] = self.max_cpu_display
         self._metadata["stat_fields"] = self.stat_fields
+        self._metadata["thresholds"] = {
+            name: dict(entry["thresholds"])
+            for name, entry in self._precompute_plugin_thresholds().items()
+            if "thresholds" in entry
+        }
 
     async def _grab_stats(self) -> list:
         # The shared sampler guards against psutil's "no baseline yet"

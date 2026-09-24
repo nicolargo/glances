@@ -2160,12 +2160,27 @@ def test_percpu_honours_the_configured_core_cap():
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
-def test_percpu_never_colours_a_cell():
-    """v5 percpu publishes no field-level alert (its model docstring says so);
-    the system-wide `cpu` plugin is the source of CPU alerts."""
+def test_percpu_colours_nothing_without_levels_or_thresholds():
+    """A payload with empty `_levels` and no `thresholds` (an older server)
+    leaves every cell uncoloured -- no tier is invented in the browser."""
     payload = _run_render_probe("percpu")
     spans = [cell["value"] for cell in payload["pluginTableCells"]["percpu"]]
     assert not any("gl-level-" in (s or "") for s in spans), f"got {spans!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_percpu_colours_core_cells_from_levels_and_the_mean_row_from_thresholds():
+    """v4 `get_alert(cpu[stat], header=stat)` on each core AND on the CPU* mean
+    (`summarize_all_cpus_not_displayed`). Font colour only: never a badge."""
+    payload = _run_render_probe("percpu-levels")
+    cells = payload["pluginTableCells"]["percpu"]
+    # Standalone: label, total, then the 8 stat_fields -> 10 cells a row.
+    rows = [cells[i : i + 10] for i in range(0, len(cells), 10)]
+    assert [r[0]["text"] for r in rows] == ["CPU0", "CPU1", "CPU2", "CPU3", "CPU*"]
+    user = 2  # label, total, user
+    assert rows[0][user]["value"] == "gl-level-warning"
+    assert rows[-1][user]["value"] == "gl-level-careful"
+    assert not any("gl-level-" in (c["value"] or "") for c in rows[1] + rows[0][:user] + rows[0][user + 1 :])
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
