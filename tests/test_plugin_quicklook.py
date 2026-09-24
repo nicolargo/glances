@@ -10,6 +10,7 @@
 """Tests for the Quicklook plugin stats list configuration."""
 
 import os
+from argparse import Namespace
 
 import pytest
 
@@ -224,3 +225,52 @@ class TestConfigListParsing:
         plugin = QuicklookPlugin(args=None, config=Config(config_dir=os.fspath(config_file)))
 
         assert plugin.get_limits('alias') == ['sda1:System Disk', 'sdb1:Data Disk']
+
+
+class TestQuicklookGpuHistory:
+    """`gpu_mem` and `gpu_proc` can be listed, so --sparkline must find a history for them.
+
+    Only the items in `items_history_list` are historised; for any other key
+    `get_raw_history()` returns None, and the sparkline branch of `_msg_cpu` iterates
+    over it: `[quicklook] list=cpu,gpu_mem` with --sparkline crashed the curses UI
+    with "'NoneType' object is not iterable".
+    """
+
+    @staticmethod
+    def _plugin(tmp_path, list_value):
+        config_file = tmp_path / 'glances-gpu.conf'
+        config_file.write_text(f'[quicklook]\nlist={list_value}\n', encoding='utf-8')
+        args = Namespace(sparkline=True, client=None, disable_history=False, disable_quicklook=False, percpu=False)
+        plugin = QuicklookPlugin(args=args, config=Config(config_dir=os.fspath(config_file)))
+        for percent in (10.0, 20.0, 30.0):
+            plugin.stats = {
+                'cpu': percent,
+                'percpu': [],
+                'mem': percent,
+                'swap': percent,
+                'load': percent,
+                'gpu_mem': percent,
+                'gpu_proc': percent + 1,
+            }
+            plugin.update_stats_history()
+        plugin.update_views()
+        return plugin, args
+
+    GPU_HISTORY = [('gpu_mem', [10.0, 20.0, 30.0]), ('gpu_proc', [11.0, 21.0, 31.0])]
+
+    @pytest.mark.parametrize(('key', 'expected'), GPU_HISTORY)
+    def test_the_gpu_entries_are_historised(self, tmp_path, key, expected):
+        plugin, _ = self._plugin(tmp_path, f'cpu,{key}')
+
+        assert [value for _, value in plugin.get_raw_history(item=key)] == expected
+
+    @pytest.mark.parametrize(('key', 'expected'), GPU_HISTORY)
+    def test_a_gpu_entry_is_drawn_as_a_sparkline_of_its_history(self, tmp_path, key, expected):
+        sparklines = pytest.importorskip('sparklines').sparklines
+        plugin, args = self._plugin(tmp_path, f'cpu,{key}')
+
+        lines = [line['msg'] for line in plugin.msg_curse(args, max_width=40)]
+
+        # max_width=40 gives a 34-cell sparkline, padded on the right with None
+        drawn = sparklines(expected + [None] * (34 - len(expected)), minimum=0, maximum=100)[0]
+        assert lines[lines.index(f'{key.upper():4} ') + 2] == f'{drawn}{expected[-1]:5.1f}%'
