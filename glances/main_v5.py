@@ -112,6 +112,23 @@ def modules_list() -> str:
     return f"Plugins list: {', '.join(plugins)}\nExporters list: {', '.join(exporters)}"
 
 
+def open_web_ui(host: str, port: int) -> None:
+    """`--open-web-browser` (v4 issue #946): open the Web UI in a new tab.
+
+    A wildcard bind address is not somewhere a browser can go, so it is
+    opened as localhost. Best effort: no browser is not an error.
+    """
+    import webbrowser
+
+    target = "localhost" if host in ("0.0.0.0", "::", "") else host
+    if ":" in target:
+        target = f"[{target}]"
+    try:
+        webbrowser.open(f"http://{target}:{port}/", new=2, autoraise=True)
+    except webbrowser.Error as exc:
+        logger.warning("--open-web-browser: could not open a browser (%s)", exc)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="glances-v5",
@@ -426,6 +443,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="Stop after n refreshes (TUI and stdout modes).",
     )
     parser.add_argument(
+        "--open-web-browser",
+        dest="open_web_browser",
+        action="store_true",
+        default=False,
+        help="Open the Web UI in the default web browser at startup (requires --server).",
+    )
+    parser.add_argument(
         "--modules-list",
         "--module-list",
         dest="modules_list",
@@ -571,6 +595,8 @@ def validate_args(args: argparse.Namespace) -> None:
         build_parser().error("--stdout, --stdout-json and --stdout-csv cannot be combined with --server (-s).")
     if len(chosen) > 1:
         build_parser().error("Use only one of --stdout, --stdout-json and --stdout-csv.")
+    if getattr(args, "open_web_browser", False) and (not args.server or args.disable_webui):
+        build_parser().error("--open-web-browser requires --server (-s) with the Web UI enabled.")
     if getattr(args, "stop_after", None) is not None and args.stop_after <= 0:
         build_parser().error("--stop-after needs a positive number of refreshes.")
 
@@ -1182,6 +1208,8 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.server:
         logger.info("Starting Glances v5 REST API on http://%s:%d", host, port)
+        if getattr(args, "open_web_browser", False):
+            open_web_ui(host, port)
     else:
         logger.info("Starting Glances v5 in TUI mode (no REST API bound).")
     try:

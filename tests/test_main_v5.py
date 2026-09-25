@@ -1198,3 +1198,32 @@ def test_modules_list_names_every_plugin_and_v5_exporter():
 def test_modules_list_flag_prints_and_exits(capsys, monkeypatch):
     assert main(["--modules-list"]) == 0
     assert "Plugins list:" in capsys.readouterr().out
+
+
+# ------------------------------------------------ --open-web-browser (v4 issue #946)
+
+
+@pytest.mark.parametrize(
+    ("host", "url"),
+    [
+        ("127.0.0.1", "http://127.0.0.1:61208/"),
+        ("0.0.0.0", "http://localhost:61208/"),
+        ("::", "http://localhost:61208/"),
+        ("::1", "http://[::1]:61208/"),
+    ],
+)
+def test_open_web_ui_targets_a_reachable_url(host, url, monkeypatch):
+    import webbrowser
+
+    from glances.main_v5 import open_web_ui
+
+    opened = []
+    monkeypatch.setattr(webbrowser, "open", lambda u, **_: opened.append(u))
+    open_web_ui(host, 61208)
+    assert opened == [url]
+
+
+@pytest.mark.parametrize("argv", [["--open-web-browser"], ["-s", "--disable-webui", "--open-web-browser"]])
+def test_open_web_browser_needs_a_served_web_ui(argv):
+    with pytest.raises(SystemExit):
+        validate_args(build_parser().parse_args(argv))

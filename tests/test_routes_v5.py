@@ -1065,6 +1065,8 @@ def test_args_matches_the_real_v5_argument_set(config_factory, store):
         "stdout_csv",
         "stop_after",
         "modules_list",
+        # `--open-web-browser`: a startup convenience, boolean.
+        "open_web_browser",
         "enable_mcp",
         "enable_plugin",
         "export",
