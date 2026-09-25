@@ -274,3 +274,15 @@ class TestQuicklookGpuHistory:
         # max_width=40 gives a 34-cell sparkline, padded on the right with None
         drawn = sparklines(expected + [None] * (34 - len(expected)), minimum=0, maximum=100)[0]
         assert lines[lines.index(f'{key.upper():4} ') + 2] == f'{drawn}{expected[-1]:5.1f}%'
+
+    @pytest.mark.parametrize(('key', 'expected'), GPU_HISTORY)
+    def test_a_gpu_entry_is_historised_even_when_not_in_the_list(self, tmp_path, key, expected):
+        """History is per plugin, not per displayed stat -- exactly like `swap` today.
+
+        `update_stats_history` iterates `get_items_history_list()`, not `stats_list`,
+        so a GPU entry keeps building history while only `cpu` is in `list=`.
+        """
+        plugin, _ = self._plugin(tmp_path, 'cpu')
+
+        assert key not in plugin.stats_list
+        assert [value for _, value in plugin.get_raw_history(item=key)] == expected
