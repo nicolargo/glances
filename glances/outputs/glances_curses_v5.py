@@ -287,7 +287,7 @@ class TuiV5(threading.Thread):
         "6": {"switch": "meangpu", "group": "TOGGLE VIEW", "desc": "GPU: per-card or mean"},
         "B": {"switch": "diskio_iops", "group": "TOGGLE VIEW", "desc": "Disk I/O in byte/s or IOPS"},
         "L": {"switch": "diskio_latency", "group": "TOGGLE VIEW", "desc": "Disk I/O in byte/s or latency"},
-        "0": {"switch": "load_irix", "group": "TOGGLE VIEW", "desc": "Load average or Irix percentage"},
+        "0": {"switch": "load_irix", "group": "TOGGLE VIEW", "desc": "Irix mode: load and process CPU% per core"},
         "T": {"switch": "network_sum", "group": "TOGGLE VIEW", "desc": "Network and disk I/O apart or combined"},
         "U": {"switch": "network_cumul", "group": "TOGGLE VIEW", "desc": "Network and disk I/O rate or cumulative"},
         # Tri-state, so it cannot be a plain `switch`: `None` means "follow

@@ -1033,3 +1033,62 @@ def test_no_focus_no_banner():
 
     rows = render({"data": [], "_levels": {}}, {})
     assert rows[0].cells[0].text.strip() == "CPU%"
+
+
+# ---------------------------------------------------------------- Irix mode (`0`, v4 disable_irix)
+
+
+def _irix_payload(cores=4):
+    return {
+        "data": [{"pid": 1, "name": "python", "cmdline": ["python"], "cpu_percent": 80.0}],
+        "_levels": {1: {"cpu_percent": {"level": "critical", "prominent": False}}},
+        "cpucore": cores,
+    }
+
+
+def test_irix_divides_the_cpu_by_the_core_count():
+    """v4 `processlist/__init__.py:361,817-822`: `CPU%/4`, 80% -> 20%."""
+    from glances.outputs.curses_renderer_v5 import ColorRole
+    from glances.plugins.processlist.render_curses_v5 import render
+
+    rows = render(_irix_payload(), {}, view={"load_irix": True})
+    assert rows[0].cells[0].text.strip() == "CPU%/4"
+    assert rows[1].cells[0].text.strip() == "20.0"
+    # The colour stays the raw value's level.
+    assert rows[1].cells[0].color is ColorRole.CRITICAL
+
+
+def test_irix_says_cpui_from_ten_cores_up():
+    from glances.plugins.processlist.render_curses_v5 import render
+
+    assert render(_irix_payload(16), {}, view={"load_irix": True})[0].cells[0].text.strip() == "CPUi"
+
+
+def test_irix_keeps_the_sort_underline_on_the_cpu_column():
+    from glances.plugins.processlist.render_curses_v5 import render
+
+    header = render(_irix_payload(), {}, view={"load_irix": True, "sort_key": "cpu_percent"})[0]
+    assert header.cells[0].underline is True
+
+
+def test_irix_is_inert_without_the_published_core_count():
+    """An older server's payload has no `cpucore`: no division by a guess."""
+    from glances.plugins.processlist.render_curses_v5 import render
+
+    payload = _irix_payload()
+    del payload["cpucore"]
+    rows = render(payload, {}, view={"load_irix": True})
+    assert rows[0].cells[0].text.strip() == "CPU%"
+    assert rows[1].cells[0].text.strip() == "80.0"
+
+
+def test_programlist_says_cpu_per_c_from_ten_cores_up():
+    """v4 programlist `_cpu_header_msg`: `CPU%/<n>`, then `CPU%/C`."""
+    from glances.plugins.programlist.render_curses_v5 import render
+
+    payload = {"data": [{"name": "python", "cpu_percent": 80.0, "nprocs": 2}], "_levels": {}, "cpucore": 4}
+    rows = render(payload, {}, view={"load_irix": True})
+    assert rows[0].cells[0].text.strip() == "CPU%/4"
+    assert rows[1].cells[0].text.strip() == "20.0"
+    payload["cpucore"] = 12
+    assert render(payload, {}, view={"load_irix": True})[0].cells[0].text.strip() == "CPU%/C"

@@ -22,7 +22,7 @@ import { dashIfBlank, formatCpuTime, formatPercent, formatProcessBytes, formatUs
 import { HEADER_SORT_KEY, commandText, ioRate } from "./process_shared.js";
 import { COL_SEPARATOR, MIN_COMMAND_WIDTH } from "./process_widths.js";
 
-export function processBlockMixin({ budgetKey, columnWidth }) {
+export function processBlockMixin({ budgetKey, columnWidth, wideIrixLabel }) {
 	return {
 		// Both values are resolved once by AppShell and handed down through its
 		// provide() -- never as props on the shared `<component>` binding, which
@@ -41,6 +41,20 @@ export function processBlockMixin({ budgetKey, columnWidth }) {
 			rowBudget: { default: () => ({}) },
 		},
 		computed: {
+			// The `0` key's Irix mode (v4 `disable_irix`): each CPU% divided by
+			// the logical core count the model publishes as `cpucore`. Null when
+			// off, or against a server too old to publish the count -- the TUI
+			// twin is `irix_cores()` in processlist/render_curses_v5.py.
+			irixCores() {
+				const cores = this.payload?.cpucore;
+				return this.serverArgs?.load_irix && Number.isInteger(cores) && cores > 0 ? cores : null;
+			},
+			// v4's header: `CPU%/<n>` under ten cores, the block's own wide
+			// label from ten up (`CPUi` / `CPU%/C`), `irix_cpu_label()`.
+			cpuLabel() {
+				if (this.irixCores === null) return "CPU%";
+				return this.irixCores < 10 ? `CPU%/${this.irixCores}` : wideIrixLabel;
+			},
 			// The full payload, in ENGINE order -- the sort is server-side
 			// (glances_processes.sort_key), and this component must not re-sort.
 			allRows() {
@@ -104,6 +118,11 @@ export function processBlockMixin({ budgetKey, columnWidth }) {
 			},
 			formatCpuTime,
 			formatPercent,
+			// The CPU% cell, divided in Irix mode; its colour stays the raw
+			// level's, as in the TUI.
+			formatCpu(value) {
+				return formatPercent(this.irixCores !== null && typeof value === "number" ? value / this.irixCores : value);
+			},
 			formatProcessBytes,
 			formatUsername,
 			ioRate,

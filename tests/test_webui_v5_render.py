@@ -4545,3 +4545,26 @@ def test_a_startup_hidden_block_comes_back_with_its_key():
     """`-3` is the `3` key pressed once, so `3` brings quicklook back."""
     assert "quicklook" not in _run_render_probe("startup-no-quicklook")["slots"]["top"]
     assert "quicklook" in _run_render_probe("startup-no-quicklook", "3")["slots"]["top"]
+
+
+# ------------------------------------------------ Irix mode for the process blocks
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_key_0_divides_the_process_cpu_by_the_core_count():
+    """v4 `disable_irix` (`processlist/__init__.py:361,817-822`): `CPU%/4`
+    and 78.4% -> 19.6%, colour unchanged."""
+    before = _run_render_probe("processlist")
+    after = _run_render_probe("processlist", "0")
+    assert after["pluginHeaderCells"]["processlist"][0] == "CPU%/4"
+    assert before["pluginTableCells"]["processlist"][0]["text"] == "78.4%"
+    first = after["pluginTableCells"]["processlist"][0]
+    assert first["text"] == "19.6%"
+    assert first["value"] == before["pluginTableCells"]["processlist"][0]["value"]
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_key_0_divides_the_program_cpu_too():
+    after = _run_render_probe("programlist", "0")
+    assert after["pluginHeaderCells"]["programlist"][0] == "CPU%/4"
+    assert after["pluginTableCells"]["programlist"][0]["text"] == "19.6%"

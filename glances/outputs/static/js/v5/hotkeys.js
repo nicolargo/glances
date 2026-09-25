@@ -67,7 +67,7 @@ export const VIEW_KEYS = {
 	F: { desc: "Filesystem: used or free space", flag: "fs_free_space" },
 	B: { desc: "Disk I/O in byte/s or IOPS", flag: "diskio_iops" },
 	L: { desc: "Disk I/O in byte/s or latency", flag: "diskio_latency" },
-	"0": { desc: "Load average or Irix percentage", flag: "load_irix" },
+	"0": { desc: "Irix mode: load and process CPU% per core", flag: "load_irix" },
 	T: { desc: "Network and disk I/O apart or combined", flag: "network_sum" },
 	U: { desc: "Network and disk I/O rate or cumulative", flag: "network_cumul" }
 };

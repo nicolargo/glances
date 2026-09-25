@@ -1392,6 +1392,8 @@ ALL_FIXTURES["percpu-quicklook-cascaded-out"] = { percpu: PERCPU_FIXTURE, quickl
 // "[kthread0]", not the placeholder.
 const PROCESSLIST_FIXTURE = {
 	_key: "pid",
+	// The `0` key's Irix divisor (processlist/model_v5.py `cpucore`).
+	cpucore: 4,
 	data: [
 		{
 			pid: 12345,
@@ -1540,6 +1542,7 @@ ALL_FIXTURES["processlist-wide"] = { processlist: PROCESSLIST_WIDE_FIXTURE };
 // per-s/Command), so the same formatted strings apply.
 const PROGRAMLIST_FIXTURE = {
 	_key: "name",
+	cpucore: 4,
 	data: [
 		{
 			name: "python3",

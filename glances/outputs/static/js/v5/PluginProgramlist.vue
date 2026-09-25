@@ -30,7 +30,7 @@
 				renderer never imports processlist's `_DROP_ORDER`/`_MIN_COMMAND_WIDTH`,
 				so every column below is unconditional -- no `shows()`/`v-if` per
 				column, unlike processlist's own template. -->
-				<th class="gl-header gl-num" :class="{ 'gl-sorted': isSorted('CPU%') }">CPU%</th>
+				<th class="gl-header gl-num" :class="{ 'gl-sorted': isSorted('CPU%') }">{{ cpuLabel }}</th>
 				<th class="gl-header gl-num" :class="{ 'gl-sorted': isSorted('MEM%') }">MEM%</th>
 				<th class="gl-header gl-num" :class="{ 'gl-sorted': isSorted('VIRT') }">VIRT</th>
 				<th class="gl-header gl-num" :class="{ 'gl-sorted': isSorted('RES') }">RES</th>
@@ -54,7 +54,7 @@
 			<tbody>
 				<tr v-for="item in rows" :key="item.name">
 					<td class="gl-num">
-						<span :class="cellClassFor(payload, item, 'cpu_percent')">{{ formatPercent(item.cpu_percent) }}</span>
+						<span :class="cellClassFor(payload, item, 'cpu_percent')">{{ formatCpu(item.cpu_percent) }}</span>
 					</td>
 					<td class="gl-num">
 						<span :class="cellClassFor(payload, item, 'memory_percent')">{{
@@ -110,7 +110,7 @@ export default {
 	// No fitBlockMixin, unlike processlist: programlist's own renderer never
 	// imports processlist's `_DROP_ORDER`, so this block has no width cascade
 	// and every column is unconditional.
-	mixins: [processBlockMixin({ budgetKey: "programlist", columnWidth })],
+	mixins: [processBlockMixin({ budgetKey: "programlist", columnWidth, wideIrixLabel: "CPU%/C" })],
 	// Reads `serverArgs.sort_processes_key` for the sort underline (isSorted()).
 	// `degrade` is declared and left unused: this block has no width cascade to
 	// feed it to.

@@ -504,3 +504,15 @@ def test_the_published_payload_is_json_serialisable(pin, plugin_and_store):
     pin.extended_process = _extended(42, ionice={"ioclass": ioclass, "value": 4})
 
     json.dumps(_metadata_of(plugin, store)["extended"])
+
+
+async def test_the_core_count_is_published_for_irix_mode(store, config):
+    """The `0` key divides each CPU% by it, in the TUI and the browser alike."""
+    import psutil
+
+    plugin = PluginModel(store, config)
+    with patch("glances.plugins.processlist.model_v5.glances_processes.get_list", return_value=[_proc(pid=1)]):
+        await plugin.update()
+    payload = store.get("processlist")
+    assert payload["cpucore"] == (psutil.cpu_count(logical=True) or 1)
+    assert "cpucore" not in payload["data"][0]

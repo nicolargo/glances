@@ -34,12 +34,18 @@ import logging
 import re
 from typing import Any, ClassVar
 
+import psutil
+
 from glances.config_v5 import GlancesConfigV5
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
 from glances.processes import glances_processes
 from glances.stats_store_v5 import StatsStoreV5
 
 logger = logging.getLogger(__name__)
+
+# The Irix-mode divisor (v4 `nb_log_core`). Read once: the core count of a
+# running host does not change under Glances.
+_LOGICAL_CORES: int = psutil.cpu_count(logical=True) or 1
 
 # Same ladder as processlist — a single program above 50% is noteworthy.
 # Note: a program's cpu_percent / memory_percent is the SUM across its child
@@ -131,6 +137,14 @@ class PluginModel(GlancesPluginBase[list]):
             "unit": "second",
             "internal": True,
         },
+        # Logical core count, published so the `0` key's Irix mode can divide
+        # each CPU% by it (v4 `disable_irix`, `nb_log_core`) in the TUI and the
+        # browser alike. `internal`: configuration the renderers need.
+        "cpucore": {
+            "description": "Number of logical CPU cores (divisor of the Irix-mode CPU%).",
+            "unit": "number",
+            "internal": True,
+        },
     }
 
     def __init__(self, store: StatsStoreV5, config: GlancesConfigV5) -> None:
@@ -140,6 +154,10 @@ class PluginModel(GlancesPluginBase[list]):
         # filter for both the per-process and per-program export views, and
         # measured v4 behaviour is zero columns from BOTH plugins by default.
         self._export_patterns: list[re.Pattern[str]] = self._compile_filter("export", section="processlist")
+
+    def _add_metadata(self) -> None:
+        super()._add_metadata()
+        self._metadata["cpucore"] = _LOGICAL_CORES
 
     def get_export(self) -> list[dict[str, Any]]:
         """Filtered export view (v4 parity, issue #794). See `processlist.get_export()`."""

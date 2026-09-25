@@ -44,7 +44,7 @@
 				<!-- The TUI's header literals (processlist/render_curses_v5.py:91,
 				`_FIXED_COL_KEYS` + `Command`) -- no separate title cell, unlike
 				`containers`: this renderer never puts one in its header row. -->
-				<th v-if="shows('CPU%')" class="gl-header gl-num" :class="{ 'gl-sorted': isSorted('CPU%') }">CPU%</th>
+				<th v-if="shows('CPU%')" class="gl-header gl-num" :class="{ 'gl-sorted': isSorted('CPU%') }">{{ cpuLabel }}</th>
 				<th v-if="shows('MEM%')" class="gl-header gl-num" :class="{ 'gl-sorted': isSorted('MEM%') }">MEM%</th>
 				<th v-if="shows('VIRT')" class="gl-header gl-num" :class="{ 'gl-sorted': isSorted('VIRT') }">VIRT</th>
 				<th v-if="shows('RES')" class="gl-header gl-num" :class="{ 'gl-sorted': isSorted('RES') }">RES</th>
@@ -89,7 +89,7 @@
 					@click="pin(item)"
 				>
 					<td v-if="shows('CPU%')" class="gl-num">
-						<span :class="cellClassFor(payload, item, 'cpu_percent')">{{ formatPercent(item.cpu_percent) }}</span>
+						<span :class="cellClassFor(payload, item, 'cpu_percent')">{{ formatCpu(item.cpu_percent) }}</span>
 					</td>
 					<td v-if="shows('MEM%')" class="gl-num">
 						<span :class="cellClassFor(payload, item, 'memory_percent')">{{
@@ -147,7 +147,11 @@ export default {
 	// fitBlockMixin owns the WIDTH cascade (`dropFlags`, the columns this block
 	// drops as it narrows); processBlockMixin owns everything this block shares
 	// with `programlist` (row ceilings, <colgroup> arithmetic, cell formatters).
-	mixins: [fitBlockMixin, processBlockMixin({ budgetKey: "processlist", columnWidth: (key) => WEBUI_COL_WIDTHS[key] })],
+	mixins: [fitBlockMixin, processBlockMixin({
+			budgetKey: "processlist",
+			columnWidth: (key) => WEBUI_COL_WIDTHS[key],
+			wideIrixLabel: "CPUi",
+		}),],
 	// Reads `serverArgs.sort_processes_key` for the sort underline (isSorted()).
 	// `degrade` is declared and left unused: this block owns its own width
 	// cascade, not the shell's zone-level one.

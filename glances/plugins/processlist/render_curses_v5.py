@@ -286,6 +286,34 @@ def _split_cmdline(item: dict[str, Any]) -> tuple[str, str, str]:
 # ----------------------------------------------------------- cell builders
 
 
+def irix_cores(payload: Any, view: dict[str, Any] | None) -> int | None:
+    """The divisor of the `0` key's Irix mode, or None when it is off.
+
+    v4 `disable_irix` divides each process' CPU% by the logical core count
+    (`processlist/__init__.py:361`); the model publishes that count as
+    `cpucore`. A payload without it (an older server) leaves the mode inert
+    rather than dividing by a guess.
+    """
+    if not (view or {}).get("load_irix") or not isinstance(payload, dict):
+        return None
+    cores = payload.get("cpucore")
+    return cores if isinstance(cores, int) and cores > 0 else None
+
+
+def irix_cpu_label(cores: int | None, wide: str) -> str:
+    """v4's CPU header: `CPU%/<n>` under ten cores, `wide` from ten up."""
+    if cores is None:
+        return "CPU%"
+    return f"CPU%/{cores}" if cores < 10 else wide
+
+
+def irix_value(value: Any, cores: int | None) -> Any:
+    """Divide a CPU% by the core count in Irix mode (colour stays the raw level's)."""
+    if cores is None or not isinstance(value, (int, float)):
+        return value
+    return value / cores
+
+
 def _percent_cell(value: Any, level_entry: dict[str, Any] | None, width: int) -> Cell:
     text = _format_percent(value, width)
     if isinstance(level_entry, dict):
@@ -645,9 +673,15 @@ def render(
     # Absent (export, tests, `--disable-cursor`) → no row is decorated, which
     # is the pre-2.X-b output byte for byte.
     cursor = (view or {}).get("cursor_position")
+    cores = irix_cores(payload, view)
 
-    def _header(label: str, width: int, *, ljust: bool = False, color: ColorRole = ColorRole.HEADER) -> Cell:
-        text = label.ljust(width) if ljust else label.rjust(width)
+    def _header(
+        label: str, width: int, *, ljust: bool = False, color: ColorRole = ColorRole.HEADER, text: str | None = None
+    ) -> Cell:
+        # `label` keys the sort underline; `text` (Irix's `CPU%/4`) only
+        # changes what is printed.
+        text = text if text is not None else label
+        text = text.ljust(width) if ljust else text.rjust(width)
         return Cell(
             text=text,
             color=color,
@@ -692,7 +726,7 @@ def render(
         return [cell for cell, key in zip(cells, _FIXED_COL_KEYS) if key in active_set]
 
     header_fixed = [
-        _header("CPU%", _W_CPU),
+        _header("CPU%", _W_CPU, text=irix_cpu_label(cores, "CPUi")),
         _header("MEM%", _W_MEM),
         _header("VIRT", _W_VIRT),
         _header("RES", _W_RES),
@@ -728,7 +762,7 @@ def render(
         nice_text = _format_nice(item.get("nice"))
 
         fixed_cells = [
-            _percent_cell(item.get("cpu_percent"), pid_levels.get("cpu_percent"), _W_CPU),
+            _percent_cell(irix_value(item.get("cpu_percent"), cores), pid_levels.get("cpu_percent"), _W_CPU),
             _percent_cell(item.get("memory_percent"), pid_levels.get("memory_percent"), _W_MEM),
             Cell(text=_format_bytes(_memory_info_field(item, "vms"), _W_VIRT)),
             Cell(text=_format_bytes(_memory_info_field(item, "rss"), _W_RES)),

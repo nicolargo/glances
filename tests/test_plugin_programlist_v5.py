@@ -210,3 +210,12 @@ async def test_get_export_invalid_regex_ignored_with_warning(tmp_path, monkeypat
     with patch("glances.plugins.programlist.model_v5.glances_processes.get_list", return_value=progs):
         await plugin.update()
     assert plugin.get_export() == []
+
+
+async def test_the_core_count_is_published_for_irix_mode(store, config):
+    import psutil
+
+    plugin = PluginModel(store, config)
+    with patch("glances.plugins.programlist.model_v5.glances_processes.get_list", return_value=[_program()]):
+        await plugin.update()
+    assert store.get("programlist")["cpucore"] == (psutil.cpu_count(logical=True) or 1)

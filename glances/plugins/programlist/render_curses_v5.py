@@ -52,6 +52,9 @@ from glances.plugins.processlist.render_curses_v5 import (
     _level_text_cell,
     _memory_info_field,
     _percent_cell,
+    irix_cores,
+    irix_cpu_label,
+    irix_value,
 )
 
 # Number-of-children column (v4 ``nprocs`` layout ``{:>7}``).
@@ -97,9 +100,15 @@ def render(
     sort_key = (view or {}).get("sort_key")
     short_name = (view or {}).get("process_short_name", True)
     command_offset = (view or {}).get("command_offset") or 0
+    cores = irix_cores(payload, view)
 
-    def _header(label: str, width: int, *, ljust: bool = False, color: ColorRole = ColorRole.HEADER) -> Cell:
-        text = label.ljust(width) if ljust else label.rjust(width)
+    def _header(
+        label: str, width: int, *, ljust: bool = False, color: ColorRole = ColorRole.HEADER, text: str | None = None
+    ) -> Cell:
+        # `label` keys the sort underline; `text` (Irix's `CPU%/4`) only
+        # changes what is printed.
+        text = text if text is not None else label
+        text = text.ljust(width) if ljust else text.rjust(width)
         return Cell(
             text=text,
             color=color,
@@ -122,7 +131,17 @@ def render(
     raw_levels = payload.get("_levels") if isinstance(payload, dict) else None
     levels_index = raw_levels if isinstance(raw_levels, dict) else {}
 
-    header_cells = [_header(key, _FIXED_COL_WIDTHS[key], ljust=(key == "USER")) for key in _FIXED_COL_KEYS] + [
+    # v4's programlist says `CPU%/C` from ten cores up (`_cpu_header_msg`),
+    # where processlist says `CPUi`.
+    header_cells = [
+        _header(
+            key,
+            _FIXED_COL_WIDTHS[key],
+            ljust=(key == "USER"),
+            text=irix_cpu_label(cores, "CPU%/C") if key == "CPU%" else None,
+        )
+        for key in _FIXED_COL_KEYS
+    ] + [
         _header("Command", len("Command")),
     ]
     rows: list[Row] = [Row(cells=header_cells)]
@@ -138,7 +157,7 @@ def render(
         nice_text = _format_nice(item.get("nice"))
 
         fixed_cells = [
-            _percent_cell(item.get("cpu_percent"), item_levels.get("cpu_percent"), _W_CPU),
+            _percent_cell(irix_value(item.get("cpu_percent"), cores), item_levels.get("cpu_percent"), _W_CPU),
             _percent_cell(item.get("memory_percent"), item_levels.get("memory_percent"), _W_MEM),
             Cell(text=_format_bytes(_memory_info_field(item, "vms"), _W_VIRT)),
             Cell(text=_format_bytes(_memory_info_field(item, "rss"), _W_RES)),
