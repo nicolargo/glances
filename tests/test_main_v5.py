@@ -44,8 +44,10 @@ from glances.main_v5 import (
     discover_plugin_classes,
     discover_plugins,
     main,
+    modules_list,
     serve,
     setup_logging,
+    validate_args,
 )
 from glances.stats_store_v5 import StatsStoreV5
 
@@ -1146,3 +1148,53 @@ def test_hide_kernel_threads_reaches_the_engine(config, monkeypatch):
     monkeypatch.setattr(glances_processes, "no_kernel_threads", False)
     assemble(build_parser().parse_args(["-s", "--hide-kernel-threads"]), config)
     assert glances_processes.no_kernel_threads is True
+
+
+# ------------------------------------------------ stdout outputs, --stop-after, --modules-list
+
+
+def test_stdout_mode_replaces_the_tui_with_the_printer(config):
+    from glances.outputs.stdout_v5 import StdoutV5
+
+    *_, tui = assemble(build_parser().parse_args(["--stdout", "cpu.total", "--stop-after", "2"]), config)
+    assert isinstance(tui, StdoutV5)
+    assert tui._stop_after == 2
+
+
+@pytest.mark.parametrize(
+    "argv",
+    [
+        ["-s", "--stdout", "cpu"],
+        ["--stdout", "cpu", "--stdout-json", "mem"],
+        ["--stop-after", "0"],
+    ],
+)
+def test_stdout_combinations_that_cannot_work_are_refused(argv):
+    with pytest.raises(SystemExit):
+        validate_args(build_parser().parse_args(argv))
+
+
+def test_stop_after_reaches_the_tui(config, monkeypatch):
+    captured = {}
+
+    class _FakeTui:
+        def __init__(self, **kwargs):
+            captured.update(kwargs)
+
+    monkeypatch.setattr("glances.outputs.glances_curses_v5.TuiV5", _FakeTui)
+    assemble(build_parser().parse_args(["--stop-after", "5"]), config)
+    assert captured["stop_after"] == 5
+
+
+def test_modules_list_names_every_plugin_and_v5_exporter():
+    """v4 `standalone.py:122-125`. An exporter whose client library is not
+    installed is still listed: the file exists, nothing is imported."""
+    text = modules_list()
+    plugins, exporters = text.splitlines()
+    assert plugins.startswith("Plugins list: ") and "cpu" in plugins and "processlist" in plugins
+    assert exporters.startswith("Exporters list: ") and "csv" in exporters and "prometheus" in exporters
+
+
+def test_modules_list_flag_prints_and_exits(capsys, monkeypatch):
+    assert main(["--modules-list"]) == 0
+    assert "Plugins list:" in capsys.readouterr().out

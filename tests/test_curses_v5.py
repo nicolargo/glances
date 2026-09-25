@@ -4871,3 +4871,13 @@ def test_style_switches_drop_the_badge_and_the_bold(monkeypatch):
         assert not tui_mod._attr_for(header) & curses.A_BOLD
     finally:
         tui_mod._set_style()
+
+
+def test_stop_after_counts_regular_paints(fake_store, fake_alerts, fake_config):
+    """`--stop-after N` (v4): the Nth cadence repaint ends the TUI."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config, stop_after=2)
+    assert tui._count_regular_paint() is False
+    assert tui._count_regular_paint() is True
+    assert _make_tui(tui_mod, fake_store, fake_alerts, fake_config)._count_regular_paint() is False

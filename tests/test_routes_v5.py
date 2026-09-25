@@ -1057,6 +1057,14 @@ def test_args_matches_the_real_v5_argument_set(config_factory, store):
         "disable_bold",
         "disable_bg",
         "disable_separator",
+        # The stdout outputs and their companions: selections of plugin names,
+        # a refresh count, a list-and-exit switch. Never set on a server
+        # (validate_args refuses --stdout* with -s), nothing sensitive.
+        "stdout",
+        "stdout_json",
+        "stdout_csv",
+        "stop_after",
+        "modules_list",
         "enable_mcp",
         "enable_plugin",
         "export",

@@ -76,6 +76,42 @@ _DEFAULT_PORT = 61208
 # --------------------------------------------------------------- argparse
 
 
+def stdout_requested(args: argparse.Namespace) -> bool:
+    """True when one of the `--stdout*` outputs replaces the TUI."""
+    return bool(
+        getattr(args, "stdout", None) or getattr(args, "stdout_json", None) or getattr(args, "stdout_csv", None)
+    )
+
+
+def _global_refresh(config: GlancesConfigV5) -> float:
+    """`[global] refresh`, else its `refresh_time` alias -- the scheduler's order."""
+    value = config.get("global", "refresh", -1.0)
+    if not (isinstance(value, (int, float)) and value > 0):
+        value = config.get("global", "refresh_time", 2.0)
+    return float(value)
+
+
+def modules_list() -> str:
+    """`--modules-list` (v4 `standalone.py:122-125`): every plugin and exporter, enabled or not.
+
+    Exporters are found by module name, without importing them: an optional
+    client library that is not installed must not hide the exporter from a
+    listing whose purpose is to say what exists.
+    """
+    from glances import exports as _exports_pkg
+
+    plugins = sorted(cls.plugin_name for _, cls in discover_plugin_classes())
+    exporters = sorted(
+        info.name.removeprefix("glances_")
+        for root in _exports_pkg.__path__
+        for info in pkgutil.iter_modules([root])
+        if info.ispkg
+        and info.name.startswith("glances_")
+        and os.path.isfile(os.path.join(root, info.name, "export_v5.py"))
+    )
+    return f"Plugins list: {', '.join(plugins)}\nExporters list: {', '.join(exporters)}"
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="glances-v5",
@@ -361,6 +397,43 @@ def build_parser() -> argparse.ArgumentParser:
         help="Disable the separator lines in the curses interface. Config fallback: [outputs] separator.",
     )
     parser.add_argument(
+        "--stdout",
+        dest="stdout",
+        default=None,
+        metavar="<plugin[.key].attr,...>",
+        help="Print stats to stdout, one line per stat and refresh (e.g. cpu.user,mem.percent,network,all). No TUI.",
+    )
+    parser.add_argument(
+        "--stdout-json",
+        dest="stdout_json",
+        default=None,
+        metavar="<plugin,...>",
+        help="Print the selected plugins' stats to stdout as one JSON object per refresh. No TUI.",
+    )
+    parser.add_argument(
+        "--stdout-csv",
+        dest="stdout_csv",
+        default=None,
+        metavar="<plugin[.attr],...>",
+        help="Print the selected stats to stdout as CSV: a header line, then one line per refresh. No TUI.",
+    )
+    parser.add_argument(
+        "--stop-after",
+        dest="stop_after",
+        type=int,
+        default=None,
+        metavar="<n>",
+        help="Stop after n refreshes (TUI and stdout modes).",
+    )
+    parser.add_argument(
+        "--modules-list",
+        "--module-list",
+        dest="modules_list",
+        action="store_true",
+        default=False,
+        help="Print the plugin and exporter lists and exit.",
+    )
+    parser.add_argument(
         "--sort-processes",
         dest="sort_processes_key",
         choices=sort_processes_stats_list,
@@ -491,6 +564,15 @@ def validate_args(args: argparse.Namespace) -> None:
         build_parser().error("--enable-mcp requires --server (-s). MCP is only mounted in REST server mode.")
     if args.server and args.no_tui:
         logger.info("--server (-s) already implies headless operation — the --quiet / --no-tui flag is redundant here.")
+    # The stdout outputs replace the TUI (v4: standalone only), so they cannot
+    # share a run with the server, and one run prints one format.
+    chosen = [name for name in ("stdout", "stdout_json", "stdout_csv") if getattr(args, name, None)]
+    if chosen and args.server:
+        build_parser().error("--stdout, --stdout-json and --stdout-csv cannot be combined with --server (-s).")
+    if len(chosen) > 1:
+        build_parser().error("Use only one of --stdout, --stdout-json and --stdout-csv.")
+    if getattr(args, "stop_after", None) is not None and args.stop_after <= 0:
+        build_parser().error("--stop-after needs a positive number of refreshes.")
 
 
 # --------------------------------------------------------------- logging
@@ -922,6 +1004,20 @@ def assemble(
             register_plugin(app, plugin)
         # Plugin registry is now populated — mount /mcp if the gate is on.
         attach_mcp(app, config=config, store=store, plugins=plugins, alerts=alerts)
+    elif stdout_requested(args):
+        # `--stdout*` (v4 `glances/outputs/glances_stdout*.py`): the printer
+        # takes the TUI's place and lifecycle, so `serve` needs no new branch.
+        from glances.outputs.stdout_v5 import StdoutV5
+
+        tui = StdoutV5(
+            plugins=plugins,
+            refresh_interval=_global_refresh(config),
+            stdout=args.stdout,
+            stdout_json=args.stdout_json,
+            stdout_csv=args.stdout_csv,
+            stop_after=getattr(args, "stop_after", None),
+            on_quit=lambda: os.kill(os.getpid(), signal.SIGINT),
+        )
     elif not getattr(args, "no_tui", False):
         # TUI mode: no FastAPI app, no uvicorn — only the curses thread
         # reading from the shared StatsStoreV5.
@@ -957,16 +1053,7 @@ def assemble(
         # set ``[outputs] tui_refresh_interval`` explicitly.
         # `[global] refresh` (v4 key) takes precedence over the `refresh_time`
         # alias, mirroring the scheduler's resolution.
-        global_refresh = config.get("global", "refresh", -1.0)
-        if not (isinstance(global_refresh, (int, float)) and global_refresh > 0):
-            global_refresh = config.get("global", "refresh_time", 2.0)
-        refresh = float(
-            config.get(
-                "outputs",
-                "tui_refresh_interval",
-                float(global_refresh),
-            )
-        )
+        refresh = float(config.get("outputs", "tui_refresh_interval", _global_refresh(config)))
         # When the user quits the TUI via `q`/ESC we must also stop the
         # scheduler, otherwise the process keeps running and the shell
         # prompt stays blocked. SIGINT is delivered to the main thread,
@@ -993,6 +1080,7 @@ def assemble(
             disable_bold=getattr(args, "disable_bold", False),
             disable_bg=getattr(args, "disable_bg", False),
             disable_separator=getattr(args, "disable_separator", False),
+            stop_after=getattr(args, "stop_after", None),
             process_short_name=getattr(args, "process_short_name", True),
             disable_unicode=getattr(args, "disable_unicode", False),
             disable_cursor=getattr(args, "disable_cursor", False),
@@ -1081,6 +1169,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.set_password:
         return cli_set_password()
+    if getattr(args, "modules_list", False):
+        print(modules_list())
+        return 0
 
     try:
         config = GlancesConfigV5(cli_config_path=args.config_path)

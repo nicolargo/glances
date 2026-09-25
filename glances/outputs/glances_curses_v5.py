@@ -493,6 +493,7 @@ class TuiV5(threading.Thread):
         disable_bold: bool = False,
         disable_bg: bool = False,
         disable_separator: bool = False,
+        stop_after: int | None = None,
         process_short_name: bool = True,
         disable_unicode: bool = False,
         programs: bool = False,
@@ -554,6 +555,9 @@ class TuiV5(threading.Thread):
         # --disable-bold / --disable-bg (+ `[outputs] disable_bg`, v4
         # `glances_curses.py:226`): applied when the colours are initialised.
         # Each flag can only turn its feature OFF, whatever the file says.
+        # `--stop-after N` (v4): quit after N regular refreshes, as `q` does.
+        self._stop_after = stop_after if stop_after and stop_after > 0 else None
+        self._regular_paints = 0
         self._disable_bold = bool(disable_bold)
         self._disable_bg = bool(disable_bg) or bool(self.config.get("outputs", "disable_bg", False))
         self._view.process_short_name = bool(process_short_name)
@@ -1256,6 +1260,20 @@ class TuiV5(threading.Thread):
         except Exception as e:  # pragma: no cover — defensive
             logger.warning("TUI v5 crashed: %s", e)
 
+    def _quit(self) -> None:
+        """Stop the loop and end the process (`q`, ESC, `--stop-after`)."""
+        self.stop()
+        if self._on_quit is not None:
+            try:
+                self._on_quit()
+            except Exception as e:  # pragma: no cover — defensive
+                logger.warning("TUI on_quit callback failed: %s", e)
+
+    def _count_regular_paint(self) -> bool:
+        """Count one cadence repaint; True once `--stop-after` is reached."""
+        self._regular_paints += 1
+        return self._stop_after is not None and self._regular_paints >= self._stop_after
+
     def _loop(self, stdscr) -> None:
         _init_colors(self._theme)
         _set_style(bold=not self._disable_bold, background=not self._disable_bg)
@@ -1311,12 +1329,7 @@ class TuiV5(threading.Thread):
                 if key != -1:
                     result = self._handle_key(key)
                     if result == "quit":
-                        self.stop()
-                        if self._on_quit is not None:
-                            try:
-                                self._on_quit()
-                            except Exception as e:  # pragma: no cover — defensive
-                                logger.warning("TUI on_quit callback failed: %s", e)
+                        self._quit()
                         break
                     if result == "modal":
                         # A popup: curses I/O, so it happens here and not in
@@ -1359,6 +1372,9 @@ class TuiV5(threading.Thread):
                     if change_due:
                         last_change_paint = now
                     dirty = False
+                    if regular_due and self._count_regular_paint():
+                        self._quit()
+                        break
                 if in_startup and self._startup_catchup_over(now, startup_deadline):
                     in_startup = False
         finally:
