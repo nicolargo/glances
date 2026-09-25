@@ -89,12 +89,14 @@ def build_parser() -> argparse.ArgumentParser:
         help="Path to an additional glances.conf file (overlays system/user defaults).",
     )
     parser.add_argument(
+        "-B",
         "--bind",
         dest="bind",
         metavar="<addr>",
         help="Bind address (overrides [outputs] bind_address; default 127.0.0.1).",
     )
     parser.add_argument(
+        "-p",
         "--port",
         dest="port",
         type=int,
@@ -117,13 +119,17 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "-s",
         "--server",
+        # v4's web server mode (`-w`, REST + Web UI) IS v5's server mode; v4's
+        # `-s` (XML-RPC) has no v5 equivalent, so both spellings land here.
+        "-w",
+        "--webserver",
         dest="server",
         action="store_true",
         help=(
             "Run as a REST API server (FastAPI on bind_address:port) and serve the "
             "Web UI. Headless — no curses TUI. Without this flag, Glances runs in "
             "TUI mode and does not bind any TCP socket. Use --disable-webui for a "
-            "headless REST-only deployment."
+            "headless REST-only deployment. -w/--webserver is the v4 spelling."
         ),
     )
     parser.add_argument(
@@ -188,6 +194,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Enable plugin (comma-separated list).",
     )
     parser.add_argument(
+        "-q",
         "--quiet",
         "--no-tui",
         dest="no_tui",
@@ -199,13 +206,16 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "-1",
         "--percpu",
+        "--per-cpu",
         dest="percpu",
         action="store_true",
         default=False,
         help="Start TUI with the per-CPU view in quicklook.",
     )
     parser.add_argument(
+        "-4",
         "--full-quicklook",
         dest="full_quicklook",
         action="store_true",
@@ -213,11 +223,48 @@ def build_parser() -> argparse.ArgumentParser:
         help="Start TUI with the full-width quicklook (hides cpu/mem/... top blocks).",
     )
     parser.add_argument(
+        "-6",
         "--meangpu",
         dest="meangpu",
         action="store_true",
         default=False,
         help="Show a single mean GPU summary instead of per-GPU lines.",
+    )
+    parser.add_argument(
+        "-t",
+        "--time",
+        dest="time",
+        type=float,
+        default=None,
+        metavar="<sec>",
+        help="Refresh rate in seconds (overrides [global] refresh; default 2).",
+    )
+    parser.add_argument(
+        "--strftime",
+        dest="strftime_format",
+        default=None,
+        metavar="<format>",
+        help="strftime format for the current date (overrides [global] strftime_format).",
+    )
+    parser.add_argument(
+        "--diskio-iops",
+        dest="diskio_iops",
+        action="store_true",
+        default=False,
+        help="Display disk I/O operations per second instead of byte rates. Toggle live with B.",
+    )
+    parser.add_argument(
+        "--process-short-name",
+        dest="process_short_name",
+        action="store_true",
+        default=True,
+        help="Show the short process name in the command column (default). Toggle live with /.",
+    )
+    parser.add_argument(
+        "--process-long-name",
+        dest="process_short_name",
+        action="store_false",
+        help="Show the full command line in the command column. Toggle live with /.",
     )
     parser.add_argument(
         "--sort-processes",
@@ -321,6 +368,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Generate a PBKDF2 password hash interactively and print it to stdout. Does NOT modify glances.conf.",
     )
     parser.add_argument(
+        "-V",
         "--version",
         action="version",
         version=f"Glances {_VERSION}",
@@ -692,6 +740,16 @@ def assemble(
         # One-way: the CLI can only harden, never relax a config that already
         # sets the key (CVE-2026-68519).
         config._merged.setdefault("global", {})["disable_config_exec"] = True
+    # `-t` / `--strftime`: the same overlay, before the scheduler and the
+    # plugins read them. `[global] refresh` is what the scheduler and the TUI
+    # cadence resolve first; `now` reads `strftime_format` at construction.
+    if getattr(args, "time", None) is not None:
+        if args.time > 0:
+            config._merged.setdefault("global", {})["refresh"] = float(args.time)
+        else:
+            logger.warning("Ignoring -t/--time %s: the refresh rate must be > 0", args.time)
+    if getattr(args, "strftime_format", None):
+        config._merged.setdefault("global", {})["strftime_format"] = args.strftime_format
     if getattr(args, "export_process_filter", None):
         # Same overlay mechanism as disable_config_exec / api_doc / enable_mcp.
         # CLI wins over `[processlist] export` from the config file (v4
@@ -821,6 +879,8 @@ def assemble(
             hide_public_info=getattr(args, "hide_public_info", False),
             byte=getattr(args, "byte", False),
             diskio_latency=getattr(args, "diskio_latency", False),
+            diskio_iops=getattr(args, "diskio_iops", False),
+            process_short_name=getattr(args, "process_short_name", True),
             disable_unicode=getattr(args, "disable_unicode", False),
             disable_cursor=getattr(args, "disable_cursor", False),
             arrow_keys_sort=getattr(args, "arrow_keys_sort", False),

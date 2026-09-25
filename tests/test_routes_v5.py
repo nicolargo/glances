@@ -1033,9 +1033,15 @@ def test_args_matches_the_real_v5_argument_set(config_factory, store):
         "disable_plugin",
         "disable_unicode",
         "disable_webui",
-        # `--diskio-latency`: a display mode the WebUI seeds `L` from, like
-        # `byte` and `fs_free_space`. Nothing sensitive.
+        # `--diskio-latency` / `--diskio-iops`: display modes the WebUI seeds
+        # `L` / `B` from, like `byte` and `fs_free_space`. Nothing sensitive.
         "diskio_latency",
+        "diskio_iops",
+        # `--process-short/long-name` (the `/` key's seed), `-t` (a refresh
+        # rate) and `--strftime` (a date format): display settings only.
+        "process_short_name",
+        "time",
+        "strftime_format",
         "enable_mcp",
         "enable_plugin",
         "export",

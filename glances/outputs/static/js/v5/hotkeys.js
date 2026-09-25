@@ -54,9 +54,9 @@ export const HIDE_SLOT_KEYS = {
 // viewer is overriding (`serverArgs`, from /api/5/args). `flag` is the key
 // that default lives under.
 //
-// `process_short_name` is the exception: the TUI defaults it to true
-// (`ViewState`) and no CLI option sets it, so the browser defaults it to true
-// as well and the server never has an opinion.
+// `process_short_name` defaults to TRUE, unlike the others: the TUI's
+// `ViewState` and `--process-short-name` both say so, and the browser seeds
+// it true for a server too old to publish it.
 export const VIEW_KEYS = {
 	"1": { desc: "Per-CPU / aggregated CPU", flag: "percpu" },
 	"4": { desc: "Full quicklook (hide the rest of the row)", flag: "full_quicklook" },

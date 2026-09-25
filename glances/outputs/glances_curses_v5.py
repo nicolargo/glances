@@ -470,6 +470,8 @@ class TuiV5(threading.Thread):
         hide_public_info: bool = False,
         byte: bool = False,
         diskio_latency: bool = False,
+        diskio_iops: bool = False,
+        process_short_name: bool = True,
         disable_unicode: bool = False,
         programs: bool = False,
         disable_cursor: bool = False,
@@ -519,6 +521,9 @@ class TuiV5(threading.Thread):
         self._view.byte = bool(byte)
         # Disk I/O latency mode, seeded from --diskio-latency, flipped by `L`.
         self._view.diskio_latency = bool(diskio_latency)
+        # --diskio-iops (`B`) and --process-short/long-name (`/`), same shape.
+        self._view.diskio_iops = bool(diskio_iops)
+        self._view.process_short_name = bool(process_short_name)
         # v4 parity for `--disable-unicode`: when set, renderers must emit
         # pure ASCII. v5 emitted no non-ASCII character at all until the
         # alert block's state glyphs (design §6.5), so this is the first

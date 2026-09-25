@@ -1036,3 +1036,58 @@ def test_the_process_focus_is_not_applied_in_server_mode(clean_focus, config):
     """Process-global, like `-f`: a server-wide focus would narrow every client."""
     assemble(build_parser().parse_args(["-s", "--process-focus", "sshd"]), config)
     assert _focus(clean_focus) == []
+
+
+# ------------------------------------------------ v4 short aliases and simple flags
+
+
+@pytest.mark.parametrize(
+    ("argv", "dest", "value"),
+    [
+        (["-B", "0.0.0.0"], "bind", "0.0.0.0"),
+        (["-p", "8080"], "port", 8080),
+        (["-w"], "server", True),
+        (["--webserver"], "server", True),
+        (["-q"], "no_tui", True),
+        (["-1"], "percpu", True),
+        (["--per-cpu"], "percpu", True),
+        (["-4"], "full_quicklook", True),
+        (["-6"], "meangpu", True),
+        (["-t", "5"], "time", 5.0),
+        (["--time", "0.5"], "time", 0.5),
+        (["--strftime", "%H:%M"], "strftime_format", "%H:%M"),
+        (["--diskio-iops"], "diskio_iops", True),
+        (["--process-long-name"], "process_short_name", False),
+        (["--process-short-name"], "process_short_name", True),
+        ([], "process_short_name", True),
+    ],
+)
+def test_v4_spellings_parse_onto_the_v5_destination(argv, dest, value):
+    assert getattr(build_parser().parse_args(argv), dest) == value
+
+
+def test_short_version_flag_prints_the_version(capsys):
+    with pytest.raises(SystemExit):
+        build_parser().parse_args(["-V"])
+    assert "Glances" in capsys.readouterr().out
+
+
+def test_time_flag_overlays_the_global_refresh(config):
+    """`-t` is v4's refresh rate; v5 keeps that in `[global] refresh`, which
+    the scheduler and the TUI cadence both resolve first."""
+    assemble(build_parser().parse_args(["-s", "-t", "7"]), config)
+    assert config._merged["global"]["refresh"] == 7.0
+
+
+def test_a_non_positive_time_is_ignored(config, caplog):
+    with caplog.at_level(logging.WARNING):
+        assemble(build_parser().parse_args(["-s", "-t", "0"]), config)
+    assert "refresh" not in config._merged.get("global", {})
+    assert any("-t/--time" in r.message for r in caplog.records)
+
+
+def test_strftime_flag_overlays_the_config_and_reaches_the_now_plugin(config):
+    _app, scheduler, *_ = assemble(build_parser().parse_args(["-s", "--strftime", "%H:%M"]), config)
+    assert config._merged["global"]["strftime_format"] == "%H:%M"
+    now = next(e.plugin for e in scheduler._entries if e.plugin.plugin_name == "now")
+    assert now._strftime == "%H:%M"

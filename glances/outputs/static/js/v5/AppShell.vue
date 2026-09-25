@@ -413,8 +413,10 @@ export default {
 		// would touch all 32 components for no behavioural gain; its meaning is
 		// "the effective view flags", and it is documented as such here.
 		//
-		// `process_short_name` has no server default (no CLI option sets it),
-		// so it is seeded true, matching `ViewState.process_short_name`.
+		// `process_short_name` is seeded true, matching
+		// `ViewState.process_short_name`, for a server that predates
+		// `--process-short-name` / `--process-long-name`; a current one sends
+		// it in `serverArgs`, which the spread lets win.
 		effectiveArgs() {
 			return {
 				process_short_name: true,

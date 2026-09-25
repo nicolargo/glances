@@ -4778,3 +4778,15 @@ def test_the_view_names_the_process_focus(fake_store, fake_alerts, fake_config, 
     assert "process_focus" not in tui._build_view(120)
     tui_mod.glances_processes.process_focus = "sshd,.*python.*"
     assert tui._build_view(120)["process_focus"] == ["sshd", ".*python.*"]
+
+
+@pytest.mark.parametrize(
+    ("kwarg", "attr", "value"),
+    [("diskio_iops", "diskio_iops", True), ("process_short_name", "process_short_name", False)],
+)
+def test_cli_flags_seed_their_view_state(kwarg, attr, value, fake_store, fake_alerts, fake_config):
+    """`--diskio-iops` and `--process-long-name` start the TUI in that mode."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config, **{kwarg: value})
+    assert getattr(tui._view, attr) is value
