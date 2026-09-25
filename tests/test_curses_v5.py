@@ -4766,3 +4766,15 @@ def test_every_arrow_the_tui_binds_is_resolvable(fake_store, fake_alerts, fake_c
     bound = set(tui._special_hotkeys()) & plain_arrows
 
     assert bound <= resolvable, f"bound but unresolvable: {sorted(bound - resolvable)}"
+
+
+def test_the_view_names_the_process_focus(fake_store, fake_alerts, fake_config, monkeypatch):
+    """`--process-focus` reaches the process block's banner through `view`."""
+    from glances.filter import GlancesFilterList
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    monkeypatch.setattr(tui_mod.glances_processes, "_filter_focus", GlancesFilterList(), raising=False)
+    assert "process_focus" not in tui._build_view(120)
+    tui_mod.glances_processes.process_focus = "sshd,.*python.*"
+    assert tui._build_view(120)["process_focus"] == ["sshd", ".*python.*"]

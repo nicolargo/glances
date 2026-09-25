@@ -1767,6 +1767,11 @@ class TuiV5(threading.Thread):
         summary = self._filter_summary()
         if summary is not None:
             view["filter_summary"] = summary
+        # `--process-focus` / `[processlist] focus`: the process block names
+        # the filters it is narrowed to (v4 `_msg_curse_header`).
+        focus = [f.filter for f in glances_processes.process_focus or [] if f.filter]
+        if focus:
+            view["process_focus"] = focus
         view["unicode"] = self._unicode
         # The user's own SHOW/HIDE set. A frozenset, so the per-cycle view
         # cannot be a back door onto the live ViewState (the fit loops copy

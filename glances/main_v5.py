@@ -285,6 +285,14 @@ def build_parser() -> argparse.ArgumentParser:
         help="set the process filter pattern (regular expression); TUI mode only",
     )
     parser.add_argument(
+        "--process-focus",
+        dest="process_focus",
+        default=None,
+        type=str,
+        help="set a process list to focus on (comma-separated list of Glances filters); TUI mode only. "
+        "Config fallback: [processlist] focus.",
+    )
+    parser.add_argument(
         "--arrow-keys-sort",
         dest="arrow_keys_sort",
         action="store_true",
@@ -765,6 +773,15 @@ def assemble(
             glances_processes.process_filter = args.process_filter
             if glances_processes.process_filter is None:
                 logger.error("Invalid --process-filter pattern (not a regular expression): %s", args.process_filter)
+        # `--process-focus`, else `[processlist] focus` (v4 `main.py:521-527`,
+        # `processlist/__init__.py:253-256`). TUI mode only for the reason the
+        # filter is: the engine is process-global, a server-wide focus would
+        # narrow what every REST client sees. The setter REPLACES the list, so
+        # the command line wins over the config rather than widening it.
+        focus = getattr(args, "process_focus", None) or config.get("processlist", "focus", "")
+        if focus:
+            glances_processes.process_focus = focus
+            logger.info("Process focus set to: %s", focus)
 
         registry = [(p.plugin_name, p.IS_COLLECTION) for p in plugins if p.DISPLAY_IN_TUI]
         fields_by_plugin = {p.plugin_name: p._fields for p in plugins if p.DISPLAY_IN_TUI}

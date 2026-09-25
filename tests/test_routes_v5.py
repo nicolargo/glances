@@ -1048,6 +1048,9 @@ def test_args_matches_the_real_v5_argument_set(config_factory, store):
         # It is also always None here: `--process-filter` is applied in TUI
         # mode, and TUI mode serves no REST API at all.
         "process_filter",
+        # `--process-focus`: the same kind of operator-typed patterns as
+        # `process_filter`, TUI mode only, so always None here too.
+        "process_focus",
         "fahrenheit",
         "fs_free_space",
         "full_quicklook",

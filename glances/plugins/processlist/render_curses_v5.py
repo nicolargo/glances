@@ -547,6 +547,8 @@ def process_extra_rows(view: dict[str, Any] | None) -> int:
     """
     view = view or {}
     height = extended_block_height(view.get("extended_process"))
+    if view.get("process_focus"):
+        height += 1
     summary = view.get("filter_summary")
     if isinstance(summary, dict) and summary:
         height += len(_summary_rows(summary, [], _W_PID_DEFAULT))
@@ -705,6 +707,12 @@ def render(
     ]
     header_cells = _filter_fixed(header_fixed) + [_header("Command", len("Command"))]
     rows: list[Row] = [*extended_rows, Row(cells=header_cells)]
+    # `--process-focus`: v4 names the filters above the column header
+    # (`processlist/__init__.py:844-847`), so a narrowed list never passes
+    # for the whole machine. Its row is declared in `process_extra_rows`.
+    focus = (view or {}).get("process_focus")
+    if focus:
+        rows.insert(len(extended_rows), Row(cells=[Cell(text="Focus on following processes: " + ", ".join(focus))]))
 
     # `_MAX_ROWS` is the nominal fallback; the TUI publishes a height-driven
     # budget in `view["row_budget"]` which may be lower (short terminal) or

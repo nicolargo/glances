@@ -1011,3 +1011,25 @@ def test_the_path_prefix_does_not_scroll_in_full_mode(fields, monkeypatch):
     text = _command_text(render(payload, fields, view={"command_offset": 2, "process_short_name": False}))
     assert text.startswith("/usr/bin/ python3")
     assert "…" in text
+
+
+# ---------------------------------------------------------------- --process-focus
+
+
+def test_the_focus_is_named_above_the_column_header():
+    """v4 `_msg_curse_header` (`processlist/__init__.py:844-847`)."""
+    from glances.plugins.processlist.render_curses_v5 import process_extra_rows, render
+
+    payload = {"data": [{"pid": 1, "name": "python", "cmdline": ["python"]}], "_levels": {}}
+    rows = render(payload, {}, view={"process_focus": [".*python.*", "sshd"]})
+    assert rows[0].cells[0].text == "Focus on following processes: .*python.*, sshd"
+    assert rows[1].cells[0].text.strip() == "CPU%"
+    assert process_extra_rows({"process_focus": ["sshd"]}) == 1
+    assert process_extra_rows({}) == 0
+
+
+def test_no_focus_no_banner():
+    from glances.plugins.processlist.render_curses_v5 import render
+
+    rows = render({"data": [], "_levels": {}}, {})
+    assert rows[0].cells[0].text.strip() == "CPU%"

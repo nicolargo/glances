@@ -995,3 +995,44 @@ def test_an_invalid_pattern_from_the_command_line_is_logged(clean_filter, config
 
     assert clean_filter.process_filter is None
     assert any("process-filter" in record.message for record in caplog.records)
+
+
+# ------------------------------------------------ --process-focus (v4 main.py:521-527)
+
+
+@pytest.fixture
+def clean_focus(monkeypatch):
+    from glances.filter import GlancesFilterList
+    from glances.processes import glances_processes
+
+    monkeypatch.setattr(glances_processes, "_filter_focus", GlancesFilterList(), raising=False)
+    return glances_processes
+
+
+def _focus(engine) -> list[str]:
+    return [f.filter for f in engine.process_focus]
+
+
+def test_the_process_focus_reaches_the_engine_in_tui_mode(clean_focus, config):
+    assemble(build_parser().parse_args(["--process-focus", ".*python.*,firefox"]), config)
+    assert _focus(clean_focus) == [".*python.*", "firefox"]
+
+
+def test_the_config_focus_applies_without_the_flag(clean_focus, tmp_path, monkeypatch):
+    """`[processlist] focus` (v4 `processlist/__init__.py:253-256`)."""
+    config = _config_with(tmp_path, monkeypatch, "[processlist]\nfocus=.*firefox.*,.*python.*\n")
+    assemble(build_parser().parse_args([]), config)
+    assert _focus(clean_focus) == [".*firefox.*", ".*python.*"]
+
+
+def test_the_flag_replaces_the_config_focus_rather_than_widening_it(clean_focus, tmp_path, monkeypatch):
+    """`GlancesFilterList.filter`'s setter replaces the list (filter.py:39-48)."""
+    config = _config_with(tmp_path, monkeypatch, "[processlist]\nfocus=.*firefox.*\n")
+    assemble(build_parser().parse_args(["--process-focus", "sshd"]), config)
+    assert _focus(clean_focus) == ["sshd"]
+
+
+def test_the_process_focus_is_not_applied_in_server_mode(clean_focus, config):
+    """Process-global, like `-f`: a server-wide focus would narrow every client."""
+    assemble(build_parser().parse_args(["-s", "--process-focus", "sshd"]), config)
+    assert _focus(clean_focus) == []
