@@ -166,3 +166,22 @@ def test_the_help_overlay_documents_every_bound_key():
     assert result.returncode == 0, result.stdout + result.stderr
     documented = sorted(json.loads(result.stdout))
     assert documented == sorted([*_python_hide_table(), *_python_view_table()])
+
+
+def test_the_startup_flags_press_the_same_keys_in_both_surfaces():
+    """`-2`/`-3`/`-5`/`--disable-process`/`--light`: in server mode only the
+    browser can honour them, so its table must be the TUI's."""
+    from glances.outputs.glances_curses_v5 import STARTUP_HIDE_KEYS
+
+    script = f"""
+    import('{_MODULE.as_posix()}').then((m) => process.stdout.write(JSON.stringify(m.STARTUP_HIDE_KEYS)));
+    """
+    result = subprocess.run(
+        ["node", "--no-warnings", "--input-type=module", "-e", script],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    js = json.loads(result.stdout)
+    assert js == {flag: list(keys) for flag, keys in STARTUP_HIDE_KEYS.items()}

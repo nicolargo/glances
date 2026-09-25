@@ -266,6 +266,100 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_false",
         help="Show the full command line in the command column. Toggle live with /.",
     )
+    # v4's startup visibility flags. Each one is a set of SHOW/HIDE keys
+    # pressed before the first frame (`TuiV5._STARTUP_HIDE_KEYS`, mirrored by
+    # the WebUI), so the key itself brings the block back, as in v4.
+    parser.add_argument(
+        "-2",
+        "--disable-left-sidebar",
+        dest="disable_left_sidebar",
+        action="store_true",
+        default=False,
+        help="Start with the left sidebar hidden (network, disk I/O, FS, sensors...). Toggle with 2.",
+    )
+    parser.add_argument(
+        "-3",
+        "--disable-quicklook",
+        dest="disable_quicklook",
+        action="store_true",
+        default=False,
+        help="Start with quicklook hidden. Toggle with 3.",
+    )
+    parser.add_argument(
+        "-5",
+        "--disable-top",
+        dest="disable_top",
+        action="store_true",
+        default=False,
+        help="Start with the top menu hidden (quicklook, CPU, MEM, SWAP, LOAD). Toggle with 5.",
+    )
+    parser.add_argument(
+        "--disable-process",
+        dest="disable_process",
+        action="store_true",
+        default=False,
+        help="Start with the process blocks hidden. Toggle with z. "
+        "Use --disable-plugin processcount to stop collecting them.",
+    )
+    parser.add_argument(
+        "--light",
+        "--enable-light",
+        dest="enable_light",
+        action="store_true",
+        default=False,
+        help="Light mode: start with only the top menu (hides the left sidebar, processes, alerts, AMPs, "
+        "containers and VMs).",
+    )
+    parser.add_argument(
+        "--enable-irq",
+        dest="enable_irq",
+        action="store_true",
+        default=False,
+        help="Enable the IRQ plugin (same as --enable-plugin irq).",
+    )
+    parser.add_argument(
+        "-0",
+        "--disable-irix",
+        dest="load_irix",
+        action="store_true",
+        default=False,
+        help="Irix mode: show the load average as a percentage of the CPU cores. Toggle with 0.",
+    )
+    parser.add_argument(
+        "--hide-kernel-threads",
+        dest="no_kernel_threads",
+        action="store_true",
+        default=False,
+        help="Hide kernel threads in the process list (not available on Windows).",
+    )
+    parser.add_argument(
+        "--diskio-show-ramfs",
+        dest="diskio_show_ramfs",
+        action="store_true",
+        default=False,
+        help="Show RAM disks (ram*) in the disk I/O plugin (hidden by default). Config: [diskio] show_ramfs.",
+    )
+    parser.add_argument(
+        "--disable-bold",
+        dest="disable_bold",
+        action="store_true",
+        default=False,
+        help="Disable bold text in the curses interface.",
+    )
+    parser.add_argument(
+        "--disable-bg",
+        dest="disable_bg",
+        action="store_true",
+        default=False,
+        help="Disable background colours in the curses interface. Config fallback: [outputs] disable_bg.",
+    )
+    parser.add_argument(
+        "--disable-separator",
+        dest="disable_separator",
+        action="store_true",
+        default=False,
+        help="Disable the separator lines in the curses interface. Config fallback: [outputs] separator.",
+    )
     parser.add_argument(
         "--sort-processes",
         dest="sort_processes_key",
@@ -591,6 +685,10 @@ def apply_plugin_flags(args: argparse.Namespace, config: GlancesConfigV5) -> Non
     divergence from v4: an unknown plugin name is FATAL here (v4 silently
     accepted typos and did nothing).
     """
+    # `--enable-irq` (v4 `main.py:320`) is `--enable-plugin irq` by another
+    # name: the plugin is disabled by default and this is its one switch.
+    if getattr(args, "enable_irq", False):
+        args.enable_plugin = ",".join(filter(None, [args.enable_plugin, "irq"]))
     if args.disable_plugin is None and args.enable_plugin is None:
         return
 
@@ -748,6 +846,15 @@ def assemble(
             config._merged.setdefault("global", {})["refresh"] = float(args.time)
         else:
             logger.warning("Ignoring -t/--time %s: the refresh rate must be > 0", args.time)
+    # `--diskio-show-ramfs` (v4 `diskio/__init__.py:154`): the plugin reads
+    # its own section, as `--fs-free-space` does for fs.
+    if getattr(args, "diskio_show_ramfs", False):
+        config._merged.setdefault("diskio", {})["show_ramfs"] = True
+    # `--hide-kernel-threads` (v4 `standalone.py:73-75`): an operator choice on
+    # what the engine collects, so it holds in server mode too (v4's webserver
+    # applies it as well) -- unlike the filters a TUI user types.
+    if getattr(args, "no_kernel_threads", False) and not sys.platform.startswith("win"):
+        glances_processes.disable_kernel_threads()
     if getattr(args, "strftime_format", None):
         config._merged.setdefault("global", {})["strftime_format"] = args.strftime_format
     if getattr(args, "export_process_filter", None):
@@ -819,6 +926,7 @@ def assemble(
         # TUI mode: no FastAPI app, no uvicorn — only the curses thread
         # reading from the shared StatsStoreV5.
         # Local import — curses is platform-dependent and only needed when the TUI is on.
+        from glances.outputs.glances_curses_v5 import STARTUP_HIDE_KEYS
         from glances.outputs.glances_curses_v5 import TuiV5 as _TuiV5
 
         # `-f/--process-filter` (v4 `main.py:513-519`). Applied here and not
@@ -880,6 +988,11 @@ def assemble(
             byte=getattr(args, "byte", False),
             diskio_latency=getattr(args, "diskio_latency", False),
             diskio_iops=getattr(args, "diskio_iops", False),
+            load_irix=getattr(args, "load_irix", False),
+            startup_hidden_flags={flag for flag in STARTUP_HIDE_KEYS if getattr(args, flag, False)},
+            disable_bold=getattr(args, "disable_bold", False),
+            disable_bg=getattr(args, "disable_bg", False),
+            disable_separator=getattr(args, "disable_separator", False),
             process_short_name=getattr(args, "process_short_name", True),
             disable_unicode=getattr(args, "disable_unicode", False),
             disable_cursor=getattr(args, "disable_cursor", False),

@@ -1042,6 +1042,21 @@ def test_args_matches_the_real_v5_argument_set(config_factory, store):
         "process_short_name",
         "time",
         "strftime_format",
+        # v4's startup/display flags: which blocks start hidden (the WebUI
+        # seeds its SHOW/HIDE set from them), the irix mode, and terminal
+        # rendering choices. All booleans, nothing sensitive.
+        "disable_left_sidebar",
+        "disable_quicklook",
+        "disable_top",
+        "disable_process",
+        "enable_light",
+        "enable_irq",
+        "load_irix",
+        "no_kernel_threads",
+        "diskio_show_ramfs",
+        "disable_bold",
+        "disable_bg",
+        "disable_separator",
         "enable_mcp",
         "enable_plugin",
         "export",

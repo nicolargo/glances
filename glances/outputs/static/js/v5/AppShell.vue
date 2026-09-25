@@ -135,7 +135,7 @@ import { visiblePlugins, groupBySlot } from "./layout.js";
 import { PLUGINS } from "./plugins/index.js";
 import { resolveDegrade, sameFlags, TOP_CASCADE, HEADER_CASCADE } from "./degrade.js";
 import { FULL_QUICKLOOK_HIDDEN } from "./full_quicklook.js";
-import { hideTargets, toggleHidden, helpRows, viewFlag, HELP_KEY } from "./hotkeys.js";
+import { hideTargets, toggleHidden, helpRows, viewFlag, startupHidden, HELP_KEY } from "./hotkeys.js";
 import { planRightColumn } from "./row_budget.js";
 import { ampsLineCount } from "./amps.js";
 
@@ -480,6 +480,9 @@ export default {
 		this.labels = markRaw(labels);
 		this.serverArgs = markRaw(serverArgs);
 		this.pluginNames = pluginNames;
+		// -2 / -3 / -5 / --disable-process / --light: the keys they stand for,
+		// pressed once before the first paint (TUI twin: `TuiV5.__init__`).
+		this.userHidden = [...startupHidden(serverArgs, this.plugins)];
 		this.version = version;
 		await this.tick();
 		await this.refit();

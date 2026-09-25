@@ -4790,3 +4790,84 @@ def test_cli_flags_seed_their_view_state(kwarg, attr, value, fake_store, fake_al
 
     tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config, **{kwarg: value})
     assert getattr(tui._view, attr) is value
+
+
+# ------------------------------------------------ startup flags (v4 -2 -3 -5 --light ...)
+
+
+@pytest.mark.parametrize(
+    ("flag", "hidden", "shown"),
+    [
+        ("disable_left_sidebar", {"network", "diskio", "fs", "sensors"}, {"quicklook", "processlist"}),
+        ("disable_quicklook", {"quicklook"}, {"cpu", "network"}),
+        ("disable_top", {"quicklook", "cpu", "mem", "load"}, {"network"}),
+        ("disable_process", {"processlist", "programlist", "processcount"}, {"cpu"}),
+        ("enable_light", {"network", "processlist", "alert", "amps", "containers", "vms"}, {"quicklook", "cpu"}),
+    ],
+)
+def test_a_startup_flag_presses_its_keys_once(flag, hidden, shown, fake_store, fake_alerts, fake_config):
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config, startup_hidden_flags={flag})
+    assert hidden <= tui._view.hidden_plugins
+    assert not (shown & tui._view.hidden_plugins)
+
+
+def test_the_key_brings_a_startup_hidden_block_back(fake_store, fake_alerts, fake_config):
+    """v4: `-3` then `3` shows quicklook again -- the flag IS the key."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config, startup_hidden_flags={"disable_quicklook"})
+    tui._handle_key(ord("3"))
+    assert "quicklook" not in tui._view.hidden_plugins
+
+
+def test_every_startup_key_is_a_show_hide_key():
+    from glances.outputs.glances_curses_v5 import TuiV5
+
+    for keys in TuiV5._STARTUP_HIDE_KEYS.values():
+        for key in keys:
+            assert "hide" in TuiV5._HOTKEYS[key], key
+
+
+def test_irix_flag_seeds_the_0_key(fake_store, fake_alerts, fake_config):
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config, load_irix=True)
+    assert tui._build_view(120)["load_irix"] is True
+
+
+def test_disable_separator_suppresses_the_rule(fake_store, fake_alerts, fake_config):
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    assert _make_tui(tui_mod, fake_store, fake_alerts, fake_config)._separator_enabled is True
+    assert _make_tui(tui_mod, fake_store, fake_alerts, fake_config, disable_separator=True)._separator_enabled is False
+
+
+def test_disable_bg_flag_or_config(fake_store, fake_alerts, fake_config):
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    assert _make_tui(tui_mod, fake_store, fake_alerts, fake_config, disable_bg=True)._disable_bg is True
+
+
+def test_style_switches_drop_the_badge_and_the_bold(monkeypatch):
+    """`--disable-bg`: a prominent level keeps its colour, not the badge.
+    `--disable-bold`: no A_BOLD anywhere, headers included."""
+    import curses
+
+    from glances.outputs import glances_curses_v5 as tui_mod
+    from glances.outputs.curses_renderer_v5 import Cell, ColorRole
+
+    monkeypatch.setattr(tui_mod, "_COLOR_PAIRS", {ColorRole.CRITICAL: 0x100, ColorRole.HEADER: 0x200})
+    monkeypatch.setattr(tui_mod, "_COLOR_PAIRS_REVERSE", {ColorRole.CRITICAL: 0x400})
+    badge = Cell(text="x", color=ColorRole.CRITICAL, prominent=True)
+    header = Cell(text="CPU", color=ColorRole.HEADER)
+    try:
+        tui_mod._set_style(bold=True, background=True)
+        assert tui_mod._attr_for(badge) & 0x400
+        tui_mod._set_style(bold=True, background=False)
+        assert not tui_mod._attr_for(badge) & 0x400 and tui_mod._attr_for(badge) & 0x100
+        tui_mod._set_style(bold=False, background=True)
+        assert not tui_mod._attr_for(header) & curses.A_BOLD
+    finally:
+        tui_mod._set_style()

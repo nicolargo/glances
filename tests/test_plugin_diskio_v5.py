@@ -407,3 +407,21 @@ def test_cumulative_fields_are_internal(store, config):
         ("write_count_cumul", "IOW"),
     ):
         assert fields[name]["internal"] is True and fields[name]["short_name"] == label
+
+
+# ---------------------------------------------------------- RAM disks (v4 --diskio-show-ramfs)
+
+
+async def test_ram_disks_are_hidden_by_default(store, config):
+    plugin = PluginModel(store, config)
+    with patch("glances.plugins.diskio.model_v5.psutil.disk_io_counters", return_value={"ram0": _io(), "sda": _io()}):
+        await plugin.update()
+    assert [d["disk_name"] for d in store.get("diskio")["data"]] == ["sda"]
+
+
+async def test_show_ramfs_keeps_the_ram_disks(tmp_path, monkeypatch, store):
+    config = _config_with(tmp_path, monkeypatch, "[diskio]\nshow_ramfs=True\n")
+    plugin = PluginModel(store, config)
+    with patch("glances.plugins.diskio.model_v5.psutil.disk_io_counters", return_value={"ram0": _io(), "sda": _io()}):
+        await plugin.update()
+    assert sorted(d["disk_name"] for d in store.get("diskio")["data"]) == ["ram0", "sda"]

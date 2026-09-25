@@ -1091,3 +1091,58 @@ def test_strftime_flag_overlays_the_config_and_reaches_the_now_plugin(config):
     assert config._merged["global"]["strftime_format"] == "%H:%M"
     now = next(e.plugin for e in scheduler._entries if e.plugin.plugin_name == "now")
     assert now._strftime == "%H:%M"
+
+
+# ------------------------------------------------ startup flags seeding existing toggles
+
+
+@pytest.mark.parametrize(
+    ("argv", "dest"),
+    [
+        (["-2"], "disable_left_sidebar"),
+        (["--disable-left-sidebar"], "disable_left_sidebar"),
+        (["-3"], "disable_quicklook"),
+        (["-5"], "disable_top"),
+        (["--disable-process"], "disable_process"),
+        (["--light"], "enable_light"),
+        (["--enable-light"], "enable_light"),
+        (["--enable-irq"], "enable_irq"),
+        (["-0"], "load_irix"),
+        (["--disable-irix"], "load_irix"),
+        (["--hide-kernel-threads"], "no_kernel_threads"),
+        (["--diskio-show-ramfs"], "diskio_show_ramfs"),
+        (["--disable-bold"], "disable_bold"),
+        (["--disable-bg"], "disable_bg"),
+        (["--disable-separator"], "disable_separator"),
+    ],
+)
+def test_v4_startup_flags_parse(argv, dest):
+    assert getattr(build_parser().parse_args(argv), dest) is True
+    assert getattr(build_parser().parse_args([]), dest) is False
+
+
+def test_enable_irq_is_enable_plugin_irq(config):
+    args = build_parser().parse_args(["-s", "--enable-irq"])
+    apply_plugin_flags(args, config)
+    assert config._merged["irq"]["disable"] is False
+
+
+def test_enable_irq_composes_with_enable_plugin(config):
+    args = build_parser().parse_args(["-s", "--enable-irq", "--enable-plugin", "sensors"])
+    apply_plugin_flags(args, config)
+    assert config._merged["irq"]["disable"] is False
+    assert config._merged["sensors"]["disable"] is False
+
+
+def test_diskio_show_ramfs_overlays_the_config(config):
+    assemble(build_parser().parse_args(["-s", "--diskio-show-ramfs"]), config)
+    assert config._merged["diskio"]["show_ramfs"] is True
+
+
+@pytest.mark.skipif(sys.platform.startswith("win"), reason="kernel threads are a POSIX notion")
+def test_hide_kernel_threads_reaches_the_engine(config, monkeypatch):
+    from glances.processes import glances_processes
+
+    monkeypatch.setattr(glances_processes, "no_kernel_threads", False)
+    assemble(build_parser().parse_args(["-s", "--hide-kernel-threads"]), config)
+    assert glances_processes.no_kernel_threads is True

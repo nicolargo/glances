@@ -106,6 +106,20 @@ _HEADER_DEGRADE_STEPS: list[tuple[str, Any]] = [
 
 # Map our renderer ColorRole → curses color pair index.
 # Filled in `_init_colors` once curses is initialised.
+# v4's startup visibility flags, each spelled as the SHOW/HIDE keys it presses
+# before the first frame -- so the key brings the block back, as in v4, and
+# the targets cannot drift from the keys'. `hotkeys.js` mirrors this table for
+# the browser (`STARTUP_HIDE_KEYS`). `enable_light` is v4 `main.py:850-857`:
+# left sidebar, process, alert, amps, containers and vms. Module-level so
+# `main_v5` reads it without depending on the class it constructs.
+STARTUP_HIDE_KEYS: dict[str, tuple[str, ...]] = {
+    "disable_left_sidebar": ("2",),
+    "disable_quicklook": ("3",),
+    "disable_top": ("5",),
+    "disable_process": ("z",),
+    "enable_light": ("2", "z", "l", "A", "D", "V"),
+}
+
 _COLOR_PAIRS: dict[ColorRole, int] = {}
 
 
@@ -344,6 +358,9 @@ class TuiV5(threading.Thread):
     # AMPs *and* moves the cursor up. `curses.wrapper` enables `keypad`, so
     # KEY_UP / KEY_DOWN arrive as themselves; the aliases buy nothing and
     # would cost two working hotkeys.
+    # See `STARTUP_HIDE_KEYS` at module level.
+    _STARTUP_HIDE_KEYS = STARTUP_HIDE_KEYS
+
     _SPECIAL_HOTKEYS: dict[int, dict[str, Any]] = {
         # v4 binds ENTER as the CHARACTER `'\n'` (`glances_curses.py:42`) and
         # v5 could too -- `chr(10)` is well defined. It lives here anyway so
@@ -471,6 +488,11 @@ class TuiV5(threading.Thread):
         byte: bool = False,
         diskio_latency: bool = False,
         diskio_iops: bool = False,
+        load_irix: bool = False,
+        startup_hidden_flags: set[str] | frozenset[str] = frozenset(),
+        disable_bold: bool = False,
+        disable_bg: bool = False,
+        disable_separator: bool = False,
         process_short_name: bool = True,
         disable_unicode: bool = False,
         programs: bool = False,
@@ -523,6 +545,17 @@ class TuiV5(threading.Thread):
         self._view.diskio_latency = bool(diskio_latency)
         # --diskio-iops (`B`) and --process-short/long-name (`/`), same shape.
         self._view.diskio_iops = bool(diskio_iops)
+        # -0 / --disable-irix seeds `0`.
+        self._view.load_irix = bool(load_irix)
+        # -2 / -3 / -5 / --disable-process / --light: their keys, pressed once.
+        for flag in startup_hidden_flags:
+            for key in self._STARTUP_HIDE_KEYS.get(flag, ()):
+                self._view.hidden_plugins.update(self._HOTKEYS[key]["hide"])
+        # --disable-bold / --disable-bg (+ `[outputs] disable_bg`, v4
+        # `glances_curses.py:226`): applied when the colours are initialised.
+        # Each flag can only turn its feature OFF, whatever the file says.
+        self._disable_bold = bool(disable_bold)
+        self._disable_bg = bool(disable_bg) or bool(self.config.get("outputs", "disable_bg", False))
         self._view.process_short_name = bool(process_short_name)
         # v4 parity for `--disable-unicode`: when set, renderers must emit
         # pure ASCII. v5 emitted no non-ASCII character at all until the
@@ -536,7 +569,10 @@ class TuiV5(threading.Thread):
         # ``--disable-unicode`` turns it off whatever the file says: ``─`` is
         # not ASCII, and the command line overrides the configuration file
         # (v4 main.py "Unicode => No separator", d2836579).
-        self._separator_enabled = self._unicode and bool(self.config.get("outputs", "separator", True))
+        # `--disable-separator` likewise (v4 `glances_curses.py:220`).
+        self._separator_enabled = (
+            self._unicode and not disable_separator and bool(self.config.get("outputs", "separator", True))
+        )
         # Vertical scroll offset of the help overlay (rows). Reset to 0 each
         # time the overlay is opened; clamped to the content in ``_paint_help``
         # (which is the only place that knows the terminal height).
@@ -1222,6 +1258,7 @@ class TuiV5(threading.Thread):
 
     def _loop(self, stdscr) -> None:
         _init_colors(self._theme)
+        _set_style(bold=not self._disable_bold, background=not self._disable_bg)
         cursor_was_hidden = False
         try:
             curses.curs_set(0)
@@ -2253,7 +2290,7 @@ class TuiV5(threading.Thread):
 
         title = f"Glances {__version__} help — h/q/Esc to close"
         try:
-            stdscr.addstr(0, 0, title[: max_x - 1], curses.A_BOLD)
+            stdscr.addstr(0, 0, title[: max_x - 1], curses.A_BOLD if _STYLE["bold"] else 0)
         except curses.error:
             pass
 
@@ -2308,6 +2345,16 @@ class TuiV5(threading.Thread):
 # Separate dict: for each alert role, the "white-on-color" curses pair
 # used when a cell is marked prominent. Filled in `_init_colors`.
 _COLOR_PAIRS_REVERSE: dict[ColorRole, int] = {}
+
+# `--disable-bold` / `--disable-bg`. Module state, like the pairs above,
+# because `_attr_for` is module-level and read on every painted cell.
+_STYLE: dict[str, bool] = {"bold": True, "background": True}
+
+
+def _set_style(*, bold: bool = True, background: bool = True) -> None:
+    """Apply `--disable-bold` / `--disable-bg` to every later `_attr_for`."""
+    _STYLE["bold"] = bool(bold)
+    _STYLE["background"] = bool(background)
 
 
 def _init_colors(theme: str = "dark") -> None:
@@ -2412,7 +2459,9 @@ def _attr_for(cell: Cell) -> int:
         ColorRole.WARNING,
         ColorRole.CRITICAL,
     )
-    if cell.prominent and is_alert_color:
+    # `--disable-bg`: no filled badge, the level keeps its foreground colour
+    # (v4 re-defines its `*_LOG` pairs with a default background).
+    if cell.prominent and is_alert_color and _STYLE["background"]:
         attr = _COLOR_PAIRS_REVERSE.get(cell.color)
         if attr is None:
             attr = _COLOR_PAIRS.get(cell.color, 0) | curses.A_REVERSE
@@ -2433,4 +2482,7 @@ def _attr_for(cell: Cell) -> int:
     # header sets `underline` (and is already bold).
     if cell.underline:
         attr |= curses.A_UNDERLINE
+    if not _STYLE["bold"]:
+        # `--disable-bold` (v4 `glances_colors.py:31`: `A_BOLD = 0`).
+        attr &= ~curses.A_BOLD
     return attr

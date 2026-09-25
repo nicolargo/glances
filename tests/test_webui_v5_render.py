@@ -4526,3 +4526,22 @@ def test_a_failing_endpoint_is_not_a_lost_connection():
 
     assert payload["offlineText"] is None, "no overlay for a server that answered"
     assert "HTTP 500" in payload["pluginText"].get("system", "")
+
+
+# ------------------------------------------------ v4 startup flags in the browser
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_light_mode_starts_with_only_the_top_menu():
+    """`--light` (v4 `main.py:850-857`): the viewer's SHOW/HIDE set starts with
+    the left sidebar, processes, alerts, AMPs, containers and VMs."""
+    slots = _run_render_probe("startup-light")["slots"]
+    assert not slots.get("left") and not slots.get("right")
+    assert {"quicklook", "cpu", "mem", "load"} <= set(slots["top"])
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_a_startup_hidden_block_comes_back_with_its_key():
+    """`-3` is the `3` key pressed once, so `3` brings quicklook back."""
+    assert "quicklook" not in _run_render_probe("startup-no-quicklook")["slots"]["top"]
+    assert "quicklook" in _run_render_probe("startup-no-quicklook", "3")["slots"]["top"]

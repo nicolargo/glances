@@ -542,6 +542,10 @@ const ARGS_FIXTURES = {
 	percpu: { percpu: true },
 	"percpu-cap-2": { percpu: true },
 	"percpu-levels": { percpu: true },
+	// v4's startup visibility flags, which in server mode only the browser
+	// can honour: `--light` and `-3`.
+	"startup-light": { enable_light: true },
+	"startup-no-quicklook": { disable_quicklook: true },
 	"percpu-empty": { percpu: true },
 	"percpu-loading": { percpu: true },
 	// The other half of `percpu-with-quicklook`: quicklook instantiated AND
@@ -1348,6 +1352,8 @@ ALL_FIXTURES["top-narrowest-quicklook"] = { quicklook: QUICKLOOK_FIXTURE };
 // PLUGINSLIST_FIXTURES is deliberately NOT overridden for either scenario:
 // the SERVER_PLUGINS default already instantiates both `cpu` and `percpu`,
 // so the exclusion under test can only be the shell's, never pluginslist's.
+ALL_FIXTURES["startup-light"] = ALL_FIXTURES.default;
+ALL_FIXTURES["startup-no-quicklook"] = ALL_FIXTURES.default;
 ALL_FIXTURES["cpu-percpu-on"] = { cpu: ALL_FIXTURES.cpu.cpu, percpu: PERCPU_FIXTURE };
 ALL_FIXTURES["cpu-percpu-off"] = ALL_FIXTURES["cpu-percpu-on"];
 

@@ -119,6 +119,31 @@ export function toggleHidden(hidden, names) {
 	return next;
 }
 
+// v4's startup visibility flags, each spelled as the SHOW/HIDE keys it
+// presses before the first frame. Mirrors `TuiV5._STARTUP_HIDE_KEYS`
+// (tests/test_webui_v5_hotkeys_drift.py): in server mode these flags have no
+// TUI to act on, the browser is the only place they mean anything.
+export const STARTUP_HIDE_KEYS = {
+	disable_left_sidebar: ["2"],
+	disable_quicklook: ["3"],
+	disable_top: ["5"],
+	disable_process: ["z"],
+	enable_light: ["2", "z", "l", "A", "D", "V"]
+};
+
+/**
+ * The plugin names hidden at startup by the flags `serverArgs` carries --
+ * the viewer's initial SHOW/HIDE set, so each key still brings its block back.
+ */
+export function startupHidden(serverArgs, plugins) {
+	const hidden = new Set();
+	for (const [flag, keys] of Object.entries(STARTUP_HIDE_KEYS)) {
+		if (!serverArgs?.[flag]) continue;
+		for (const key of keys) for (const name of hideTargets(key, plugins) || []) hidden.add(name);
+	}
+	return hidden;
+}
+
 /**
  * `[{ key, desc, group }]` for the help overlay, grouped the way the TUI
  * groups its own (`_HELP_GROUPS`: TOGGLE VIEW before SHOW/HIDE).

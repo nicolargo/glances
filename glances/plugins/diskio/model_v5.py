@@ -178,6 +178,12 @@ class PluginModel(GlancesPluginBase[list]):
         },
     }
 
+    def __init__(self, store: Any, config: Any) -> None:
+        super().__init__(store, config)
+        # RAM disks are hidden unless asked for (v4 `diskio/__init__.py:154`,
+        # `--diskio-show-ramfs`, which main_v5 overlays onto this key).
+        self.show_ramfs: bool = bool(self.config.get(self.plugin_name, "show_ramfs", False))
+
     def _expand_parameters(self) -> None:
         """Derive the per-operation latencies from this cycle's rates.
 
@@ -214,6 +220,8 @@ class PluginModel(GlancesPluginBase[list]):
 
         out: list[dict[str, Any]] = []
         for disk_name, counters in iomap.items():
+            if not self.show_ramfs and disk_name.startswith("ram"):
+                continue
             entry: dict[str, Any] = {
                 "disk_name": disk_name,
                 "read_count": counters.read_count,
