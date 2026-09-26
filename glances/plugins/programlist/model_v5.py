@@ -60,6 +60,8 @@ class PluginModel(GlancesPluginBase[list]):
 
     plugin_name: ClassVar[str] = "programlist"
     IS_COLLECTION: ClassVar[bool] = True
+    # Reads the process engine that `processcount` drives each cycle.
+    DEPENDS_ON: ClassVar[tuple[str, ...]] = ("processcount",)
     # Same rationale as processlist: per-program thresholds colour cells but
     # must not page or pile up events. See ``GlancesPluginBase.EMITS_ALERTS``.
     EMITS_ALERTS: ClassVar[bool] = False

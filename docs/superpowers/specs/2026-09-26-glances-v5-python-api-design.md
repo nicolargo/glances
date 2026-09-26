@@ -240,9 +240,12 @@ class PluginView(Mapping):        # collections.abc.Mapping: [], get, keys, item
   `gl.fs["/home"]`. Scalar plugins map the field to its value.
 - **Read-only.** The view and the dicts it returns are copies. Mutating them
   changes nothing Glances or a later read sees, which fixes defect 1.
-- **The data** is `get_export()`: no `_levels` in the items (they are
-  `.levels`), and no field declared `exportable: False`. That is the same
-  projection exporters get, and it is issue #3211's rule.
+- **The data** is what `/api/5/<plugin>` serves (`get_api_payload()`),
+  without its `_`-prefixed metadata: `_levels` becomes `.levels`.
+  *Changed while implementing, 2026-09-26.* The first draft said
+  `get_export()`, the exporters' projection. But for `processlist`, that
+  projection keeps only the processes matching `[processlist] export`,
+  which is none by default, so `gl.processlist` would have been empty.
 - **Shared with MCP.** `McpPluginView` already wraps one plugin for the MCP
   server. The read logic (payload, limits, history) moves into `PluginView`;
   `McpPluginView` keeps only its v4-shaped method names (`get_raw`,
@@ -338,8 +341,9 @@ No user-facing CLI option is added.
   - Collections are keyed by the primary key: `/home` for fs, an int PID
     for processlist.
   - Mutating a view does not reach the store.
-  - The data equals `get_export()`, and `.limits`, `.fields`, `.levels` and
-    `.history()` equal their REST counterparts for the same cycle.
+  - The data, `.limits`, `.fields`, `.levels` and `.history()` equal their
+    REST counterparts for the same cycle, and `processlist` is not narrowed
+    by the export filter.
 - **Construction.**
   - `sys.argv` is ignored: a test sets a hostile `sys.argv`.
   - `config_path` layers over the defaults.

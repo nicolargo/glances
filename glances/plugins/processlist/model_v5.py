@@ -57,6 +57,8 @@ class PluginModel(GlancesPluginBase[list]):
 
     plugin_name: ClassVar[str] = "processlist"
     IS_COLLECTION: ClassVar[bool] = True
+    # Reads the process engine that `processcount` drives each cycle.
+    DEPENDS_ON: ClassVar[tuple[str, ...]] = ("processcount",)
     # Per-process thresholds drive the TUI colouring (high-CPU procs in
     # warning/critical) but must NOT page or pile up events: v4 never raised
     # alerts on individual processes, only on aggregate signals (CPU%, MEM%,

@@ -98,6 +98,11 @@ class GlancesPluginBase(Generic[T], ABC):
     """Unique plugin identifier (used as StatsStore key and API path)."""
 
     IS_COLLECTION: ClassVar[bool] = False
+    # Plugins whose update must run first because this one reads what they
+    # leave behind (e.g. `processlist` reads the process engine `processcount`
+    # drives). The scheduler does not use it; the Python API updates plugins
+    # one by one and does (api_v5, design 2026-09-26 §5.2).
+    DEPENDS_ON: ClassVar[tuple[str, ...]] = ()
     """False for scalar plugins (cpu, mem), True for collection plugins (fs, network)."""
 
     EMITS_ALERTS: ClassVar[bool] = True
