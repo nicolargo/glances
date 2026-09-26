@@ -27,6 +27,7 @@ Coverage:
 from __future__ import annotations
 
 import asyncio
+import importlib.util
 import logging
 import subprocess
 import sys
@@ -140,6 +141,26 @@ def test_disable_history_flag_parses():
     parser = build_parser()
     assert parser.parse_args([]).disable_history is False
     assert parser.parse_args(["--disable-history"]).disable_history is True
+
+
+@pytest.mark.skipif(importlib.util.find_spec("shtab") is None, reason="shtab not installed")
+def test_print_completion_prints_a_script_and_exits(capsys):
+    """v4 parity (`main.py:188-189`): shtab prints the completion script."""
+    with pytest.raises(SystemExit) as excinfo:
+        build_parser().parse_args(["--print-completion", "bash"])
+    assert excinfo.value.code == 0
+    out = capsys.readouterr().out
+    assert "shtab" in out and "--config" in out
+
+
+def test_print_completion_is_absent_without_shtab(monkeypatch):
+    """shtab is not installed on Windows: the option is then simply absent."""
+    import glances.main_v5 as main_v5
+
+    monkeypatch.setattr(main_v5, "shtab", None)
+    with pytest.raises(SystemExit):
+        main_v5.build_parser().parse_args(["--print-completion", "bash"])
+    assert not hasattr(main_v5.build_parser().parse_args([]), "print_completion")
 
 
 def test_build_parser_version_exits(capsys):

@@ -1094,6 +1094,9 @@ def test_args_matches_the_real_v5_argument_set(config_factory, store):
         "no_tui",
         "percpu",
         "port",
+        # `--print-completion` (shtab): the shell whose completion script to
+        # print, None otherwise. Nothing sensitive.
+        "print_completion",
         "programs",
         "server",
         "set_password",

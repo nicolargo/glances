@@ -62,6 +62,13 @@ from glances.scheduler_v5 import AsyncScheduler
 from glances.security_v5 import hash_password, verify_password
 from glances.stats_store_v5 import StatsStoreV5
 
+# Shell completion (`--print-completion`), v4 parity (`main.py:17-22`). Optional:
+# shtab is not installed on Windows, and the option is then simply absent.
+try:
+    import shtab
+except ImportError:
+    shtab = None
+
 if TYPE_CHECKING:
     from fastapi import FastAPI
 
@@ -135,13 +142,18 @@ def build_parser() -> argparse.ArgumentParser:
         prog="glances-v5",
         description="Glances v5 — REST monitoring server (Phase 1 alpha).",
     )
-    parser.add_argument(
+    if shtab is not None:
+        shtab.add_argument_to(parser, ["--print-completion"])
+    config_arg = parser.add_argument(
         "-C",
         "--config",
         dest="config_path",
         metavar="<path>",
         help="Path to an additional glances.conf file (overlays system/user defaults).",
     )
+    if shtab is not None:
+        # Complete `-C` with file names, as v4 does.
+        config_arg.complete = shtab.FILE
     parser.add_argument(
         "-B",
         "--bind",
