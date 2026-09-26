@@ -24,7 +24,7 @@ try:
 except ImportError:
     pytest.skip("duckdb not installed", allow_module_level=True)
 
-from glances.exports.glances_duckdb import _quote_identifier
+from glances.exports.glances_duckdb import Export, _quote_identifier
 
 # ---------------------------------------------------------------------------
 # Tests – _quote_identifier
@@ -81,6 +81,13 @@ class TestDuckDBInjectionPrevention:
         conn = duckdb.connect(':memory:')
         yield conn
         conn.close()
+
+    @pytest.mark.parametrize('value,expected', [(['False'], False), (['True'], True)])
+    def test_export_normalized_boolean(self, db, value, expected):
+        exporter = Export.__new__(Export)
+        exporter.client = db
+        exporter.export('flags', ['"enabled" BOOLEAN'], [[exporter.normalize(value)]])
+        assert db.execute('SELECT enabled FROM flags').fetchone() == (expected,)
 
     def test_create_table_with_safe_names(self, db):
         """Normal table and column creation works with quoting."""

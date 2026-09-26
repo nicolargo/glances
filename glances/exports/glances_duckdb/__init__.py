@@ -88,7 +88,7 @@ class Export(GlancesExport):
     def normalize(self, value):
         # Nothing to do...
         if isinstance(value, list) and len(value) == 1 and value[0] in ['True', 'False']:
-            return bool(value[0])
+            return value[0] == 'True'
         return value
 
     def update(self, stats):
