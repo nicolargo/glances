@@ -52,7 +52,7 @@ httpx==0.28.1
     # via mcp
 httpx-sse==0.4.3
     # via mcp
-idna==3.19
+idna==3.20
     # via
     #   anyio
     #   httpx
@@ -138,7 +138,7 @@ six==1.17.0
     #   python-dateutil
 sse-starlette==3.4.11
     # via mcp
-starlette==1.6.0
+starlette==1.7.0
     # via
     #   fastapi
     #   mcp
@@ -164,12 +164,12 @@ typing-inspection==0.4.4
     #   mcp
     #   pydantic
     #   pydantic-settings
-urllib3==2.7.0
+urllib3==2.8.0
     # via
     #   docker
     #   podman
     #   requests
-uvicorn==0.52.4
+uvicorn==0.54.0
     # via
     #   glances
     #   mcp

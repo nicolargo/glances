@@ -66,7 +66,9 @@ colorama==0.4.6
     #   typer
 contourpy==1.3.2 ; python_full_version < '3.11'
     # via matplotlib
-contourpy==1.3.3 ; python_full_version >= '3.11'
+contourpy==1.3.3 ; python_full_version == '3.11.*'
+    # via matplotlib
+contourpy==1.4.0 ; python_full_version >= '3.12'
     # via matplotlib
 cryptography==50.0.1
     # via pyjwt
@@ -93,15 +95,17 @@ exceptiongroup==1.2.2
     #   trio-websocket
 face==26.0.1
     # via glom
-filelock==3.32.6
+filelock==4.0.3
     # via
     #   python-discovery
     #   virtualenv
-fonttools==4.65.0
+fonttools==4.65.0 ; python_full_version < '3.11'
+    # via matplotlib
+fonttools==4.66.0 ; python_full_version >= '3.11'
     # via matplotlib
 glom==25.12.0
     # via semgrep
-googleapis-common-protos==1.75.3
+googleapis-common-protos==1.75.4
     # via opentelemetry-exporter-otlp-proto-http
 gprof2dot==2025.4.14
 h11==0.16.0
@@ -117,7 +121,7 @@ httpx-sse==0.4.3
     # via mcp
 identify==2.6.19
     # via pre-commit
-idna==3.19
+idna==3.20
     # via
     #   anyio
     #   httpx
@@ -144,7 +148,7 @@ kiwisolver==1.5.1
     # via matplotlib
 license-expression==30.4.4
     # via reuse
-linkify-it-py==2.2.0
+linkify-it-py==2.2.0 ; sys_platform != 'win32'
     # via markdown-it-py
 markdown-it-py==4.2.0
     # via
@@ -154,7 +158,7 @@ markdown-it-py==4.2.0
 markupsafe==3.0.3
     # via jinja2
 matplotlib==3.10.9 ; python_full_version < '3.11'
-matplotlib==3.11.1 ; python_full_version >= '3.11'
+matplotlib==3.11.2 ; python_full_version >= '3.11'
 mcp==1.29.0
     # via semgrep
 mdit-py-plugins==0.6.1 ; sys_platform != 'win32'
@@ -232,7 +236,7 @@ peewee==3.19.0
     # via semgrep
 pillow==12.3.0
     # via matplotlib
-platformdirs==4.11.8
+platformdirs==4.11.15
     # via
     #   textual
     #   virtualenv
@@ -267,7 +271,7 @@ pyjwt==2.13.0
     # via
     #   mcp
     #   semgrep
-pyparsing==3.3.2
+pyparsing==3.3.3
     # via matplotlib
 pyright==1.1.414
 pysocks==1.7.1
@@ -279,7 +283,7 @@ python-dateutil==2.9.0.post0
     # via matplotlib
 python-debian==1.1.1
     # via reuse
-python-discovery==1.6.0
+python-discovery==1.6.1
     # via virtualenv
 python-dotenv==1.2.3
     # via
@@ -330,11 +334,11 @@ ruamel-yaml==0.19.1
     # via semgrep
 ruamel-yaml-clib==0.2.15
     # via semgrep
-ruff==0.16.6
+ruff==0.16.9
 selenium==4.49.0
 semantic-version==2.10.0
     # via semgrep
-semgrep==1.176.1
+semgrep==1.178.0
 setuptools==84.0.0
 shellingham==1.5.4
     # via typer
@@ -375,7 +379,7 @@ sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
 sse-starlette==3.4.11
     # via mcp
-starlette==1.6.0
+starlette==1.7.0
     # via
     #   mcp
     #   sse-starlette
@@ -423,14 +427,14 @@ typing-inspection==0.4.4
     #   mcp
     #   pydantic
     #   pydantic-settings
-urllib3==2.7.0
+urllib3==2.8.0
     # via
     #   requests
     #   selenium
     #   semgrep
-uvicorn==0.52.4 ; sys_platform != 'emscripten'
+uvicorn==0.54.0 ; sys_platform != 'emscripten'
     # via mcp
-virtualenv==21.7.9
+virtualenv==21.12.1
     # via pre-commit
 wcmatch==8.5.2
     # via semgrep
