@@ -81,6 +81,7 @@ Security patches:
 
 * Credentials leaked through the published plugin limits (REST, XML-RPC, MCP and exports) - GHSA-TODO
 * Unauthenticated credential disclosure via the ports plugin - GHSA-2jqf-3j6f-683p
+* Plugin config secrets disclosed unauthenticated via the limits endpoints (incomplete fix of GHSA-2jqf-3j6f-683p)
 * SQL Injection leading to Data Exfiltration via OOB (Out-of-Band) in Glances ClickHouse Export Module - GHSA-2hvx-g9v6-w29h
 * Argument Injection in On-Alert Action Commands via Unescaped Quote Characters in secure.py's Command Tokenizer - GHSA-56xw-p9qm-r437
 
