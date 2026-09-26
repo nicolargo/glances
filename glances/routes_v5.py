@@ -30,6 +30,7 @@ Route inventory:
 | ``/api/5/<plugin>``           | GET    | ``plugin.get_api_payload()`` (``_levels`` included) |
 | ``/api/5/<plugin>/info``      | GET    | ``plugin.fields_description``|
 | ``/api/5/<plugin>/limits``    | GET    | ``plugin.get_limits()``      |
+| ``/api/5/<plugin>/history``   | GET    | ``plugin.get_history()`` (``?nb=&field=&item=``) |
 
 A plugin that has registered but has not yet produced stats (scheduler
 cycle 0) returns ``200 null`` — not an error, just a transient. Clients
@@ -47,7 +48,7 @@ import hmac
 import logging
 from typing import TYPE_CHECKING, Any
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from starlette.concurrency import run_in_threadpool
@@ -78,6 +79,27 @@ _SENSITIVE_ARGS: frozenset[str] = frozenset({"config_path"})
 # ``WWW-Authenticate`` header. ``auto_error=True`` short-circuits before the
 # username comparison and produces a generic 403 — we want consistent 401s.
 _basic_security = HTTPBasic(auto_error=False)
+
+
+def _register_history_route(router: APIRouter) -> None:
+    """`GET /api/5/<plugin>/history` (history design 2026-09-26 §5.5).
+
+    Filters are query parameters, not path segments: an item can be `/home`.
+    """
+
+    @router.get("/{plugin_name}/history")
+    async def plugin_history(
+        plugin_name: str,
+        request: Request,
+        nb: int = Query(0, ge=0, description="Last nb points (0 = all)."),
+        field: str | None = Query(None, description="One historised field."),
+        item: str | None = Query(None, description="One item of a collection plugin (raw primary-key value)."),
+    ) -> dict[str, Any]:
+        plugin = _resolve_plugin(request, plugin_name)
+        try:
+            return plugin.get_history(nb=nb, field=field, item=item)
+        except KeyError as exc:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc.args[0])) from exc
 
 
 def _register_extended_process_routes(router: APIRouter) -> None:
@@ -257,6 +279,7 @@ def build_router() -> APIRouter:
         return _redact_args(getattr(request.app.state, "args", None))
 
     _register_extended_process_routes(router)
+    _register_history_route(router)
 
     @router.get("/{plugin_name}/info")
     async def plugin_info(plugin_name: str, request: Request) -> dict[str, Any]:

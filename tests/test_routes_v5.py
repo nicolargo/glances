@@ -41,6 +41,7 @@ from fastapi.testclient import TestClient
 
 from glances.alerts_v5 import GlancesAlerts, _AlertState
 from glances.config_v5 import GlancesConfigV5
+from glances.history_v5 import HistoryStoreV5
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
 from glances.security_v5 import hash_password
 from glances.stats_store_v5 import StatsStoreV5
@@ -1244,3 +1245,115 @@ def test_pinning_is_refused_when_nothing_has_been_published(engine, config_facto
 
     with TestClient(app) as client:
         assert client.post("/api/5/processes/extended/1").status_code == 404
+
+
+# ------------------------------------------------- /api/5/<plugin>/history
+#
+# History design 2026-09-26 §5.5: columnar, nested by field then raw item,
+# filters as query parameters (an item can be `/home`).
+
+
+class FakeHistScalar(GlancesPluginBase[dict]):
+    plugin_name: ClassVar[str] = "fakehistscalar"
+    IS_COLLECTION: ClassVar[bool] = False
+    fields_description: ClassVar[dict[str, dict[str, Any]]] = {
+        "percent": {"description": "Usage.", "unit": "percent", "history": True},
+        "total": {"description": "Total.", "unit": "bytes"},
+    }
+
+    async def _grab_stats(self) -> dict:
+        return {"percent": 42.0, "total": 1024}
+
+
+class FakeHistFs(GlancesPluginBase[list]):
+    plugin_name: ClassVar[str] = "fakehistfs"
+    IS_COLLECTION: ClassVar[bool] = True
+    fields_description: ClassVar[dict[str, dict[str, Any]]] = {
+        "mnt_point": {"description": "Mount point.", "unit": "string", "primary_key": True},
+        "percent": {"description": "Usage.", "unit": "percent", "history": True},
+        "free": {"description": "Free.", "unit": "bytes", "history": True},
+    }
+
+    async def _grab_stats(self) -> list:
+        return [{"mnt_point": "/home", "percent": 50.0, "free": 1}, {"mnt_point": "/", "percent": 10.0, "free": 2}]
+
+
+def _history_app(config, store, cycles=1, size=10):
+    scalar, fs = FakeHistScalar(store, config), FakeHistFs(store, config)
+    history = HistoryStoreV5(size)
+    for plugin in (scalar, fs):
+        plugin.history = history
+        for _ in range(cycles):
+            _populate(store, plugin)
+    return _make_app_with_plugins(config, store, plugins=[scalar, fs, FakeScalarPlugin(store, config)])
+
+
+def test_history_scalar_shape(config_factory, store):
+    app = _history_app(config_factory(), store, cycles=2)
+    with TestClient(app) as client:
+        body = client.get("/api/5/fakehistscalar/history").json()
+    assert len(body["timestamps"]) == 2
+    assert body["series"] == {"percent": [42.0, 42.0]}
+
+
+def test_history_collection_nests_by_field_then_raw_item(config_factory, store):
+    app = _history_app(config_factory(), store)
+    with TestClient(app) as client:
+        body = client.get("/api/5/fakehistfs/history").json()
+    assert body["series"] == {"percent": {"/home": [50.0], "/": [10.0]}, "free": {"/home": [1], "/": [2]}}
+
+
+def test_history_nb_field_and_an_item_with_a_slash(config_factory, store):
+    app = _history_app(config_factory(), store, cycles=3)
+    with TestClient(app) as client:
+        body = client.get("/api/5/fakehistfs/history", params={"nb": 2, "field": "percent", "item": "/home"}).json()
+    assert len(body["timestamps"]) == 2
+    assert body["series"] == {"percent": {"/home": [50.0, 50.0]}}
+
+
+def test_history_item_alone_keeps_every_field(config_factory, store):
+    app = _history_app(config_factory(), store)
+    with TestClient(app) as client:
+        body = client.get("/api/5/fakehistfs/history", params={"item": "/"}).json()
+    assert body["series"] == {"percent": {"/": [10.0]}, "free": {"/": [2]}}
+
+
+@pytest.mark.parametrize(
+    ("path", "params"),
+    [
+        ("/api/5/nope/history", {}),
+        ("/api/5/fakehistfs/history", {"field": "mnt_point"}),
+        ("/api/5/fakehistfs/history", {"item": "/nope"}),
+        ("/api/5/fakehistscalar/history", {"item": "x"}),
+    ],
+)
+def test_history_404s(path, params, config_factory, store):
+    app = _history_app(config_factory(), store)
+    with TestClient(app) as client:
+        assert client.get(path, params=params).status_code == 404
+
+
+def test_history_negative_nb_is_rejected(config_factory, store):
+    app = _history_app(config_factory(), store)
+    with TestClient(app) as client:
+        assert client.get("/api/5/fakehistscalar/history", params={"nb": -1}).status_code == 422
+
+
+def test_history_is_empty_not_an_error_when_there_is_none(config_factory, store):
+    """No history field, cycle 0, and history disabled all read the same."""
+    config = config_factory()
+    idle = FakeHistScalar(store, config)  # never updated, no store attached
+    app = _make_app_with_plugins(config, store, plugins=[idle, FakeScalarPlugin(store, config)])
+    empty = {"timestamps": [], "series": {}}
+    with TestClient(app) as client:
+        assert client.get("/api/5/fakehistscalar/history").json() == empty
+        assert client.get("/api/5/fakescalar/history").json() == empty
+
+
+def test_history_requires_auth_when_password_is_set(config_factory, store):
+    config = config_factory(password=hash_password("hunter2"))
+    app = _history_app(config, store)
+    with TestClient(app) as client:
+        assert client.get("/api/5/fakehistscalar/history").status_code == 401
+        ok = client.get("/api/5/fakehistscalar/history", headers=_basic_header("glances", "hunter2"))
+    assert ok.status_code == 200

@@ -1254,6 +1254,38 @@ class GlancesPluginBase(Generic[T], ABC):
                 out["_key"] = self._primary_key
         return out
 
+    def get_history(self, nb: int = 0, field: str | None = None, item: str | None = None) -> dict[str, Any]:
+        """This plugin's history, columnar (history design §5.5). REST and MCP both serve it.
+
+        ``{"timestamps": [...], "series": {field: [...]}}`` for a scalar
+        plugin; ``series`` nests ``{field: {item: [...]}}`` for a collection.
+        The last ``nb`` points (0 = all). ``field`` / ``item`` narrow
+        ``series`` and keep its shape.
+
+        Empty -- not an error -- when history is disabled, when the plugin
+        declares no history field, or before its first cycle. Raises
+        ``KeyError`` for a ``field`` the plugin does not historise, and for
+        an ``item`` no historised series is recorded for.
+        """
+        if field is not None and field not in self._history_fields:
+            raise KeyError(f"{self.plugin_name!r} keeps no history for field {field!r}")
+        if self.history is None:
+            return {"timestamps": [], "series": {}}
+        out = self.history.get(self.plugin_name, nb)
+        series = out["series"]
+        if field is not None:
+            series = {field: series[field]} if field in series else {}
+        if item is not None:
+            series = {
+                name: {item: values[item]}
+                for name, values in series.items()
+                if isinstance(values, dict) and item in values
+            }
+            if not series:
+                raise KeyError(f"{self.plugin_name!r} has no history for item {item!r}")
+        out["series"] = series
+        return out
+
     def _project(self, d: dict[str, Any], *, keep_internal: bool) -> dict[str, Any]:
         """Filter one payload dict for a consumer.
 

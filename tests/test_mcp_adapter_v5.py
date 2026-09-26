@@ -26,20 +26,10 @@ import pytest
 
 from glances.alerts_v5 import GlancesAlerts
 from glances.config_v5 import GlancesConfigV5
-from glances.outputs import mcp_adapter_v5
+from glances.history_v5 import HistoryStoreV5
 from glances.outputs.mcp_adapter_v5 import McpPluginView, McpStatsAdapter
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
 from glances.stats_store_v5 import StatsStoreV5
-
-
-@pytest.fixture(autouse=True)
-def _reset_history_warn_throttle():
-    """The history-WARN throttle is module-global — reset between tests
-    so per-test WARN-once assertions are deterministic."""
-    mcp_adapter_v5._HISTORY_WARN_SEEN.clear()
-    yield
-    mcp_adapter_v5._HISTORY_WARN_SEEN.clear()
-
 
 # ---------------------------------------------------------------- helpers
 
@@ -75,6 +65,7 @@ class _NetStub(GlancesPluginBase[list]):
         "bytes_recv": {
             "unit": "bytespers",
             "rate": True,
+            "history": True,
             "watched": True,
             "prominent": True,
             "default_thresholds": {"careful": 0.7, "warning": 0.8, "critical": 0.9},
@@ -214,35 +205,39 @@ def test_get_all_limits_as_dict_covers_every_plugin(adapter):
     assert all_limits["cpu"]["total"]["warning"] == 70.0
 
 
-# ---------------------------------------------------------------- history (deferred)
+# ---------------------------------------------------------------- history
 
 
-def test_plugin_view_get_raw_history_returns_empty_for_scalar(adapter):
-    """v5 has no history yet — adapter returns {} per the design contract."""
-    view = adapter.get_plugin("cpu")
-    assert view.get_raw_history() == {}
-
-
-def test_plugin_view_get_raw_history_emits_warn_once(adapter, caplog):
-    """Each plugin emits the WARN once to avoid log spam on repeated MCP polls."""
-    view = adapter.get_plugin("cpu")
+def test_plugin_view_history_is_empty_without_a_store(adapter, caplog):
+    """History disabled (no store attached): an empty columnar payload, and
+    no WARNING -- the gap the adapter used to log is closed."""
     with caplog.at_level(logging.WARNING):
-        view.get_raw_history()
-        view.get_raw_history()
-        view.get_raw_history()
-    warns = [r for r in caplog.records if r.levelno == logging.WARNING and "history" in r.message]
-    assert len(warns) == 1
-    assert "cpu" in warns[0].message
+        assert adapter.get_plugin("cpu").get_raw_history() == {"timestamps": [], "series": {}}
+    assert not [r for r in caplog.records if r.levelno >= logging.WARNING]
 
 
-def test_plugin_view_history_warn_is_per_plugin(adapter, caplog):
-    """Per-plugin throttling: cpu's WARN does not silence network's."""
-    with caplog.at_level(logging.WARNING):
-        adapter.get_plugin("cpu").get_raw_history()
-        adapter.get_plugin("network").get_raw_history()
-    targets = [r.message for r in caplog.records if r.levelno == logging.WARNING and "history" in r.message]
-    assert any("cpu" in m for m in targets)
-    assert any("network" in m for m in targets)
+def test_plugin_view_history_is_the_rest_payload(adapter, plugins):
+    """Same shape as /api/5/<plugin>/history: one helper serves both."""
+    net = plugins[1]
+    net.history = HistoryStoreV5(10)
+    net.history.record(
+        "network", [{"interface_name": "eth0", "bytes_recv": 5.0}], ["bytes_recv"], "interface_name", now=1.0
+    )
+    expected = {"timestamps": [1.0], "series": {"bytes_recv": {"eth0": [5.0]}}}
+    assert adapter.get_plugin("network").get_raw_history() == expected == net.get_history()
+
+
+def test_plugin_view_history_unknown_item_is_empty(adapter, plugins):
+    net = plugins[1]
+    net.history = HistoryStoreV5(10)
+    net.history.record(
+        "network", [{"interface_name": "eth0", "bytes_recv": 5.0}], ["bytes_recv"], "interface_name", now=1.0
+    )
+    assert adapter.get_plugin("network").get_raw_history(item="nope") == {"timestamps": [], "series": {}}
+
+
+def test_synthetic_alert_plugin_history_is_empty(adapter):
+    assert adapter.get_plugin("alert").get_raw_history() == {"timestamps": [], "series": {}}
 
 
 # ---------------------------------------------------------------- synthetic 'alert' plugin

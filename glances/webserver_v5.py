@@ -237,11 +237,6 @@ def attach_mcp(
             "MCP: v4 plugins not yet ported to v5 — requesting these via MCP returns 'Plugin not found': %s",
             ", ".join(missing_in_registry),
         )
-    # History is also unsupported — see McpPluginView.get_raw_history.
-    logger.info(
-        "MCP: history resources return empty datasets in v5 (no history buffer yet). "
-        "See docs/architecture/glances-v5-architecture-decisions.md §11."
-    )
     return True
 
 

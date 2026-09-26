@@ -420,8 +420,9 @@ def test_attach_mcp_does_not_log_gaps_when_registry_complete(config_factory, sto
     assert "not yet ported" not in msgs
 
 
-def test_attach_mcp_logs_history_limitation(config_factory, store, caplog):
-    """A single INFO line surfaces the deferred history semantic."""
+def test_attach_mcp_no_longer_announces_a_history_gap(config_factory, store, caplog):
+    """The INFO line announcing empty history datasets went with the history
+    store (design 2026-09-26 §5.6): MCP now serves real history."""
     from glances.webserver_v5 import attach_mcp
 
     config = config_factory(enable_mcp="true")
@@ -430,8 +431,7 @@ def test_attach_mcp_logs_history_limitation(config_factory, store, caplog):
         attach_mcp(app, config=config, store=store, plugins=[])
 
     msgs = " ".join(r.message for r in caplog.records if r.levelno == logging.INFO)
-    assert "history" in msgs.lower()
-    assert "empty" in msgs.lower()
+    assert "history" not in msgs.lower()
 
 
 def test_attach_mcp_logs_when_package_missing(config_factory, store, monkeypatch, caplog):

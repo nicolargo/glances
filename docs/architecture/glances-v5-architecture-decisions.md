@@ -784,6 +784,7 @@ Routes live in `glances/routes_v5.py` as a single `APIRouter(prefix="/api/5")`, 
 | `/api/5/config` | GET | per-config | `config.as_dict_secure()` | Redacted via `as_dict_secure()` — CVE-2026-32609 / 30928. |
 | `/api/5/<plugin>` | GET | per-config | `store.get(plugin)` | Raw payload **with `_levels`**. `200 null` if the plugin is registered but has not yet published (scheduler cycle 0). `404` if the plugin is not registered. |
 | `/api/5/<plugin>/info` | GET | per-config | `plugin.fields_description` | Schema for clients. 404 if the plugin is not registered. |
+| `/api/5/<plugin>/history` | GET | per-config | `plugin.get_history()` | The fields declared `history: True`, columnar: `{timestamps, series}`. `series` is `{field: [...]}` for a scalar plugin and `{field: {item: [...]}}` for a collection, keyed by the raw primary-key value. Query parameters `nb` (last N points, 0 = all), `field`, `item` (a query parameter because an item can be `/home`). `200` with empty `timestamps`/`series` when history is disabled, before the first cycle, or for a plugin with no history field; `404` for an unknown plugin, an unhistorised field or an unknown item. Not v4's `{"<item>_<field>": [[iso, v], ...]}`, nor its `/history/{nb}` and `/{item}/history` paths, and the default size is 1200 points (v4's code default: 28800) — breaking for v4 API clients, for the 5.0.0 release notes. Design: `docs/superpowers/specs/2026-09-26-glances-v5-history-store-design.md`. |
 
 **"per-config"** = the global Auth middleware applies its policy: when `[outputs] password` is set the request must carry Bearer or Basic credentials; otherwise the route is open.
 
@@ -797,7 +798,6 @@ A plugin registered but not yet updated returns `200 null` rather than `404` or 
 
 #### Deferred for follow-up
 - `/api/5/<plugin>/<field>` — single-field accessor (scalar convenience)
-- `/api/5/<plugin>/<field>/history` — plugin-level history buffer (Phase 2)
 - `/api/5/<plugin>/<pk_value>` — collection item lookup
 - `/api/5/args` — depends on the Phase 1.7 CLI args module
 - `/api/5/serverslist` — Phase 3 (browser mode, CVE-2026-32633)
@@ -1509,8 +1509,10 @@ curses surface — as its own owned group. No implementation in parity wave 1
     thresholds** (v4 has none) and `threshold_field: rx_latency / tx_latency`,
     so v4's keys — `[diskio] rx_latency_careful`, per disk
     `dm-0_tx_latency_warning`, and `dm-0_rx_latency_log` — work unchanged.
-  - `S` (quicklook bar ↔ sparkline) — no v5 history store
-    (`quicklook/model_v5.py`).
+  - `S` (quicklook bar ↔ sparkline) — **unblocked** by the history store
+    (2026-09-26), but set aside by the maintainer (2026-09-25). Which series
+    it draws per core is left to its own design: v4 historised
+    `quicklook.percpu` as a list, and v5 records numbers only.
 
   `F` needed a shape neither group had used: `[fs] free_space` is plugin
   CONFIG and reaches the renderer as payload metadata, so the TUI's ViewState
@@ -1568,6 +1570,8 @@ backport sweep of 2026-09-10 (develop `2bf3aadb`):
 | `[percpu] max_cpu_display` ignored by the `percpu` plugin | `percpu/__init__.py:119` and `quicklook/__init__.py:108` — v4 reads the same key from the same `[percpu]` section in both blocks and they stay in sync. | `quicklook/model_v5.py` now honours it (npu/quicklook/vms backport, 2026-09-10), but `percpu/render_curses_v5.py:35-37` still carries the open `TODO(G2+)` and its own `_DEFAULT_MAX_CPU_DISPLAY = 4` (line 48) — a user setting `max_cpu_display=8` sees 8 bars in quicklook and 4 in percpu. | Phase 2.X — apply the pattern quicklook just established: the model reads the config key and publishes it as an `internal` payload field. |
 | Threshold keys renamed, one of them re-scaled | `[network] rx_*` / `tx_*` (percent), `[processlist] cpu_*` / `mem_*`, `[fs] <mnt>_careful` | v5 reads `bytes_recv_*` / `bytes_sent_*` **as a ratio in [0,1]** (`normalize_by: bytes_speed_rate_per_sec`), `cpu_percent_*` / `memory_percent_*`, `<mnt>_percent_careful`. The v4 keys — the ones the shipped `conf/glances.conf` still documents — are silently ignored. | **Decided** (parity wave 1, 2026-09-10): rename kept, no v4 aliases; a startup WARNING now fires on any unrecognised threshold key (`base_v5.py::_warn_unknown_threshold_keys`, §3.2 above). The rename itself is still a breaking change to document in the 5.0.0 release notes. |
 | CLI — the options still missing (25, plus the set-aside `--sparkline`) | `glances/main.py` argparse | Shipped 2026-09-25, see the note below. Still absent — **Phase 3**: `-c`/`--client`, `--browser`, `--disable-autodiscover`, `--cached-time`, the SNMP family (`--snmp-*`), `-u`/`--username`/`--password` (client-side credentials). **Need a feature v5 does not have**: `--disable-check-update` (no PyPI check), `--export-graph-path` (no graph exporter), `-P`/`--plugins` (external plugins: the v5 plugin API needs its own design). **Need a decision**: `--enable-process-extended` (v4 follows the TOP process continuously; v5's `e` pins one pid), `--mcp-path` (a movable MCP mount touches the DNS-rebinding and auth surface), `--issue` / `--fetch` / `--fetch-template` / `--api-restful-doc` (diagnostic and doc printers to port), `--print-completion` (shtab dependency), `--trace-malloc` / `--memory-leak` (debug tooling). `--sparkline` is set aside by the maintainer (2026-09-25). `--disable-history` shipped 2026-09-26 with the history store. | Phase 3 for client/browser/SNMP; a decision per line for the rest. |
+| Trend arrows ↑↓ next to MEM, SWAP and LOAD (TUI) | `mem/__init__.py:304`, `memswap/__init__.py:166`, `load/__init__.py:157` → `get_trend()` (`plugins/plugin/model.py:413`): mean of the newer half of the last 30 history points minus the older half, shown when it exceeds 1 (`trend_msg`). Not a hotkey, so absent from Part 3 of the parity inventory. | Absent. **Unblocked** by the history store (2026-09-26): the three series are recorded (`mem.percent`, `memswap.percent`, `load.min1`). | Found by the history design survey (2026-09-26). Needs a read path from the TUI thread (`HistoryStoreV5.get` takes a lock, so it is safe) and a renderer cell. |
+| min/max/mean (`mmm`) | `plugins/plugin/model.py:195-290` — `mmm: True` publishes `<field>_min`, `_max`, `_mean` into the payload, on `cpu.total`, `load.min1`, `mem.percent`. | Absent from v5's payload. Architecture §3.2 once folded it into `history`; the history design (2026-09-26, §5.1) separated them. | Its own design: a schema key, and whether the mean is taken over the history window or since startup (v4 keeps a separate 28800-point list). |
 
 **2026-09-10 — parity wave 1 closures.** `hide_zero` + `hide_threshold_bytes`,
 `hide_no_up`/`hide_no_ip`, `[fs] allow`, `[fs] free_space` and the generic
@@ -1724,7 +1728,7 @@ adapter automatically picks them up via the dynamic registry.
 | `glances://plugins` | `StatsStoreV5.keys()` + synthetic `alert` | ✅ |
 | `glances://stats` | `StatsStoreV5.as_dict()` | ✅ |
 | `glances://stats/{plugin}` | `StatsStoreV5.get(plugin)` | ✅ for ported plugins; `ValueError("Plugin not found")` otherwise |
-| `glances://stats/{plugin}/history` | _(no history buffer yet)_ | ⚠ returns `{}` + WARN log (once per plugin) |
+| `glances://stats/{plugin}/history` | `GlancesPluginBase.get_history()` | ✅ (v5-native columnar shape, the same as `/api/5/<plugin>/history`) |
 | `glances://limits` | `plugin.get_limits()` — effective thresholds (config over schema defaults) | ✅ |
 | `glances://limits/{plugin}` | idem, per plugin | ✅ |
 | Prompt `system_health_summary` | cpu, mem, memswap, load, fs, network | partial (memswap, fs absent → empty dicts) |
@@ -1736,9 +1740,10 @@ adapter automatically picks them up via the dynamic registry.
 
 `KNOWN_V5_MISSING_PLUGINS` in `mcp_adapter_v5.py` lists the v4 plugins
 not yet ported (``processlist``, ``fs``, ``diskio``, ``memswap`` at
-the time of writing). When ``attach_mcp`` mounts the endpoint, two
-INFO log lines name (a) the missing plugins, (b) the deferred history
-semantic — so operators see the gap without having to read the source.
+the time of writing). When ``attach_mcp`` mounts the endpoint, an INFO
+log line names the missing plugins, so operators see the gap without
+having to read the source. (A second line announced the missing history;
+it went with the history store, 2026-09-26.)
 
 The list is a moving target: each future phase that ports a v4 plugin
 to v5 removes one entry. The adapter logic itself does not branch on
@@ -1794,9 +1799,8 @@ reverse proxy.
 
 ### 11.8 Out of scope
 
-1. **History storage in v5.** A real ring-buffer in `StatsStoreV5` or
-   `GlancesPluginBase` is its own design task. Until then,
-   `McpPluginView.get_raw_history` returns `{}`.
+1. ~~**History storage in v5.**~~ Shipped 2026-09-26 as its own design
+   (`glances/history_v5.py`); `McpPluginView.get_raw_history` serves it.
 2. **Porting v4 plugins to v5.** Each plugin in
    `KNOWN_V5_MISSING_PLUGINS` is its own plan-sized chunk.
 3. **WebSocket transport for MCP.** v5 keeps SSE.

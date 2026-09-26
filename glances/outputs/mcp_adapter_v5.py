@@ -19,9 +19,11 @@ APIs. The MCP module stays untouched.
 
 V5 limitations exposed by this adapter (all explicit, not silent):
 
-- **History is not stored in v5 yet.** ``McpPluginView.get_raw_history``
-  returns ``{}`` and logs a WARNING (throttled — one per plugin) so
-  the MCP client sees an empty dataset rather than a crash.
+- **History is v5-native.** ``McpPluginView.get_raw_history`` returns the
+  columnar ``{timestamps, series}`` payload ``/api/5/<plugin>/history``
+  serves (``GlancesPluginBase.get_history``), not v4's
+  ``{"<item>_<field>": [[ts, value], ...]}`` — same reasoning as the alert
+  schema below (history design 2026-09-26, §5.6).
 - **Plugins not yet ported to v5** are tracked in
   ``KNOWN_V5_MISSING_PLUGINS`` below — empty as of G4-processlist (every
   v4 plugin has a v5 model). Whenever a v4-only plugin is reintroduced,
@@ -39,14 +41,11 @@ See ``docs/superpowers/plans/2026-05-15-glances-v5-phase2-g3-mcp.md``.
 
 from __future__ import annotations
 
-import logging
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from glances.alerts_v5 import GlancesAlerts
     from glances.plugins.plugin.base_v5 import GlancesPluginBase
-
-logger = logging.getLogger(__name__)
 
 # v4 plugins that the v5 MCP adapter does not yet expose because the
 # underlying plugin is not ported yet. ``get_plugin(name)`` returns
@@ -56,11 +55,6 @@ logger = logging.getLogger(__name__)
 # Update this list as v5 absorbs v4 plugins; the adapter logic itself
 # does not need to change.
 KNOWN_V5_MISSING_PLUGINS: tuple[str, ...] = ()
-
-# Throttle the "history not supported" WARN so polling MCP clients don't
-# spam the log. Tracked per plugin name (including the synthetic 'alert')
-# and persists for the process lifetime.
-_HISTORY_WARN_SEEN: set[str] = set()
 
 
 class McpPluginView:
@@ -99,21 +93,19 @@ class McpPluginView:
             return {}
         return self._plugin.get_api_payload()
 
-    def get_raw_history(self, item: str | None = None, nb: int = 0) -> dict[str, list[Any]] | list:
-        """Return time-series history — **empty in v5** (see module docstring).
+    def get_raw_history(self, item: str | None = None, nb: int = 0) -> dict[str, Any]:
+        """Return the plugin's history, in the REST route's columnar shape.
 
-        The MCP resource ``glances://stats/{plugin}/history`` still
-        succeeds: the client receives an empty mapping instead of an
-        error. A WARN is logged once per plugin to make the limitation
-        visible without spamming.
+        ``item`` narrows a collection to one raw primary-key value. An unknown
+        item, a synthetic plugin and a disabled history all give the empty
+        payload rather than an error, as v4 gives an empty mapping.
         """
-        if self._plugin_name not in _HISTORY_WARN_SEEN:
-            logger.warning(
-                "MCP history not yet supported in v5; returning empty dataset for '%s'.",
-                self._plugin_name,
-            )
-            _HISTORY_WARN_SEEN.add(self._plugin_name)
-        return {}
+        if self._plugin is None:
+            return {"timestamps": [], "series": {}}
+        try:
+            return self._plugin.get_history(nb=nb, item=item)
+        except KeyError:
+            return {"timestamps": [], "series": {}}
 
     def get_limits(self) -> dict[str, Any]:
         """Return the plugin's **effective** thresholds.
