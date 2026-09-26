@@ -37,24 +37,22 @@ class Export(GlancesExport):
         logger.debug(f"Finalise export interface {self.export_name}")
         self.json_file.close()
 
+    def update(self, stats):
+        """Write each completed sample without waiting for the next refresh."""
+        self.buffer = {}
+        if not super().update(stats):
+            return False
+
+        logger.debug(f"Exporting stats ({listkeys(self.buffer)}) to JSON file ({self.json_filename})")
+        with open(self.json_filename, "wb") as self.json_file:
+            try:
+                self.json_file.write(json_dumps(self.buffer) + b'\n')
+            except Exception as e:
+                logger.error(f'Can not export data to JSON ({e})')
+                return False
+        return True
+
     def export(self, name, columns, points):
-        """Export the stats to the JSON file."""
-
-        # Check for completion of loop for all exports
-        if name == self.last_exported_list()[0] and self.buffer != {}:
-            # One whole loop has been completed
-            # Flush stats to file
-            logger.debug(f"Exporting stats ({listkeys(self.buffer)}) to JSON file ({self.json_filename})")
-
-            # Export stats to JSON file
-            with open(self.json_filename, "wb") as self.json_file:
-                try:
-                    self.json_file.write(json_dumps(self.buffer) + b'\n')
-                except Exception as e:
-                    logger.error(f'Can not export data to JSON ({e})')
-
-            # Reset buffer
-            self.buffer = {}
-
+        """Collect one plugin's stats for the current sample."""
         # Add current stat to the buffer
         self.buffer[name] = dict(zip(columns, points))
