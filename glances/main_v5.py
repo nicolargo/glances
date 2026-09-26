@@ -47,6 +47,7 @@ import os
 import pkgutil
 import signal
 import sys
+import tracemalloc
 from typing import TYPE_CHECKING
 
 import glances.exports as _exports_pkg
@@ -448,6 +449,16 @@ def build_parser() -> argparse.ArgumentParser:
         help="Print the selected stats to stdout as CSV: a header line, then one line per refresh. No TUI.",
     )
     parser.add_argument(
+        "--memory-leak",
+        dest="memory_leak",
+        action="store_true",
+        default=False,
+        help=(
+            "Test for memory leaks and exit: collect for --stop-after seconds (default 60) to warm up, "
+            "then as long again, and print the memory growth between the two."
+        ),
+    )
+    parser.add_argument(
         "--stop-after",
         dest="stop_after",
         type=int,
@@ -619,6 +630,8 @@ def validate_args(args: argparse.Namespace) -> None:
         build_parser().error("--open-web-browser requires --server (-s) with the Web UI enabled.")
     if getattr(args, "stop_after", None) is not None and args.stop_after <= 0:
         build_parser().error("--stop-after needs a positive number of refreshes.")
+    if getattr(args, "memory_leak", False) and (args.server or chosen):
+        build_parser().error("--memory-leak runs on its own: it cannot be combined with --server or --stdout*.")
 
 
 # --------------------------------------------------------------- logging
@@ -1151,6 +1164,60 @@ def assemble(
     return app, scheduler, host, int(port), tui
 
 
+# --------------------------------------------------------------- memory leak
+
+# v4 `main.py:882-887`: 60 refreshes of 1 s when --stop-after is not given.
+_MEMORY_LEAK_DEFAULT_CYCLES = 60
+
+
+def apply_memory_leak_flags(args: argparse.Namespace, config: GlancesConfigV5) -> int:
+    """Set up a `--memory-leak` run, as v4 does; return its cycle count.
+
+    No TUI, a 1 s refresh, and no stats history -- a history filling up
+    would read as a leak. Must run before `assemble()`.
+    """
+    args.no_tui = True
+    args.disable_history = True
+    config._merged.setdefault("global", {})["refresh"] = 1.0
+    return args.stop_after or _MEMORY_LEAK_DEFAULT_CYCLES
+
+
+async def measure_memory_leak(scheduler: AsyncScheduler, seconds: float) -> list[tracemalloc.StatisticDiff]:
+    """Collect for `seconds` to warm up, snapshot, collect as long again, diff.
+
+    The warm-up is what keeps one-off allocations (imports, caches, the first
+    psutil handles) out of the figure. `tracemalloc` must already be tracing.
+    Mirrors v4 `check_memleak` / `maybe_trace_memleak` (`glances/__init__.py`).
+    """
+    task = asyncio.create_task(scheduler.run_forever())
+    try:
+        await asyncio.sleep(seconds)
+        begin = tracemalloc.take_snapshot()
+        await asyncio.sleep(seconds)
+        end = tracemalloc.take_snapshot()
+    finally:
+        await scheduler.stop()
+        task.cancel()
+        with contextlib.suppress(asyncio.CancelledError, Exception):
+            await task
+    return end.compare_to(begin, "filename")
+
+
+def run_memory_leak(args: argparse.Namespace, config: GlancesConfigV5) -> int:
+    """`--memory-leak`: print the growth between two snapshots, log the top 5."""
+    tracemalloc.start()
+    cycles = apply_memory_leak_flags(args, config)
+    _app, scheduler, _host, _port, _tui = assemble(args, config)
+    print(f"Memory leak detection, please wait ~{2 * cycles} seconds...")
+    diff = asyncio.run(measure_memory_leak(scheduler, float(cycles)))
+    tracemalloc.stop()
+    print(f"Memory consumption: {sum(stat.size_diff for stat in diff) / 1000:.1f}KB (see log for details)")
+    logger.info("Memory consumption (top 5):")
+    for stat in diff[:5]:
+        logger.info(stat)
+    return 0
+
+
 # --------------------------------------------------------------- serve
 
 
@@ -1238,6 +1305,8 @@ def main(argv: list[str] | None = None) -> int:
     except ConfigFileError as e:
         logger.critical("%s", e)
         sys.exit(2)
+    if getattr(args, "memory_leak", False):
+        return run_memory_leak(args, config)
     app, scheduler, host, port, tui = assemble(args, config)
 
     if args.server:

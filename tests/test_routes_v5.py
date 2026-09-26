@@ -1068,6 +1068,8 @@ def test_args_matches_the_real_v5_argument_set(config_factory, store):
         "stdout_json",
         "stdout_csv",
         "stop_after",
+        # `--memory-leak`: a boolean run mode, nothing sensitive.
+        "memory_leak",
         "modules_list",
         # `--open-web-browser`: a startup convenience, boolean.
         "open_web_browser",

@@ -1276,3 +1276,68 @@ def test_open_web_ui_targets_a_reachable_url(host, url, monkeypatch):
 def test_open_web_browser_needs_a_served_web_ui(argv):
     with pytest.raises(SystemExit):
         validate_args(build_parser().parse_args(argv))
+
+
+# ----------------------------------------------------------- --memory-leak
+
+
+def test_memory_leak_flag_parses():
+    assert build_parser().parse_args([]).memory_leak is False
+    assert build_parser().parse_args(["--memory-leak"]).memory_leak is True
+
+
+@pytest.mark.parametrize("extra", [["-s"], ["--stdout", "cpu"]])
+def test_memory_leak_runs_on_its_own(extra):
+    from glances.main_v5 import validate_args
+
+    with pytest.raises(SystemExit):
+        validate_args(build_parser().parse_args(["--memory-leak", *extra]))
+
+
+def test_memory_leak_flags_follow_v4(config):
+    """v4 `main.py:882-887`: no TUI, 1 s refresh, no history, 60 cycles by default."""
+    from glances.main_v5 import apply_memory_leak_flags
+
+    args = build_parser().parse_args(["--memory-leak"])
+    assert apply_memory_leak_flags(args, config) == 60
+    assert args.no_tui is True and args.disable_history is True
+    assert config._merged["global"]["refresh"] == 1.0
+    assert apply_memory_leak_flags(build_parser().parse_args(["--memory-leak", "--stop-after", "5"]), config) == 5
+
+
+async def test_measure_memory_leak_diffs_the_second_window_only(monkeypatch):
+    """Allocations of the warm-up window are not counted; those of the second are."""
+    import tracemalloc
+
+    from glances.main_v5 import measure_memory_leak
+
+    kept: list[bytes] = []
+    phase = {"n": 0}
+
+    class _Scheduler:
+        stopped = False
+
+        async def run_forever(self):
+            await asyncio.Event().wait()
+
+        async def stop(self):
+            self.stopped = True
+
+    real_sleep = asyncio.sleep
+
+    async def fake_sleep(_seconds):
+        phase["n"] += 1
+        # 1st window: a one-off warm-up allocation; 2nd window: the "leak".
+        kept.append(bytes(200_000 if phase["n"] == 1 else 50_000))
+        await real_sleep(0)
+
+    monkeypatch.setattr("glances.main_v5.asyncio.sleep", fake_sleep)
+    scheduler = _Scheduler()
+    tracemalloc.start()
+    try:
+        diff = await measure_memory_leak(scheduler, 1.0)
+    finally:
+        tracemalloc.stop()
+    growth = sum(stat.size_diff for stat in diff)
+    assert 50_000 <= growth < 200_000
+    assert scheduler.stopped
