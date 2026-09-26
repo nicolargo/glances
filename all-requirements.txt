@@ -42,7 +42,7 @@ chevron==0.14.0
     # via glances
 click==8.4.2
     # via uvicorn
-clickhouse-connect==1.8.0
+clickhouse-connect==1.9.0
     # via glances
 colorama==0.4.6 ; sys_platform == 'win32'
     # via click
@@ -82,11 +82,11 @@ httpx-sse==0.4.3
     # via mcp
 humanfriendly==10.0
     # via pysmart
-ibm-cloud-sdk-core==3.26.0
+ibm-cloud-sdk-core==3.26.1
     # via ibmcloudant
-ibmcloudant==0.11.10
+ibmcloudant==0.11.11
     # via glances
-idna==3.19
+idna==3.20
     # via
     #   anyio
     #   httpx
@@ -119,9 +119,9 @@ mcp==1.29.0
     # via glances
 msgpack==1.2.2
     # via influxdb
-nats-py==2.15.0
+nats-py==2.16.0
     # via glances
-nvidia-ml-py==13.610.43
+nvidia-ml-py==13.615.71
     # via glances
 packaging==26.3
     # via glances
@@ -143,9 +143,9 @@ protobuf==6.33.6
     # via bernhard
 psutil==7.2.2
     # via glances
-psycopg==3.3.5
+psycopg==3.3.6
     # via glances
-psycopg-binary==3.3.5 ; implementation_name != 'pypy'
+psycopg-binary==3.3.6 ; implementation_name != 'pypy'
     # via psycopg
 pyarrow==25.0.1
     # via influxdb3-python
@@ -176,7 +176,7 @@ pylxd==2.4.2
     # via glances
 pymdstat==0.5.1
     # via glances
-pymongo==4.18.1
+pymongo==4.18.2
     # via glances
 pyreadline3==3.5.6 ; sys_platform == 'win32'
     # via humanfriendly
@@ -204,7 +204,7 @@ python-jose==3.5.0
     # via glances
 python-multipart==0.0.32
     # via mcp
-pytz==2026.3.post1
+pytz==2026.4
     # via influxdb
 pywin32==311 ; sys_platform == 'win32'
     # via
@@ -261,7 +261,7 @@ sparklines==1.0.0
     # via glances
 sse-starlette==3.4.11
     # via mcp
-starlette==1.6.0
+starlette==1.7.0
     # via
     #   fastapi
     #   mcp
@@ -294,11 +294,11 @@ typing-inspection==0.4.4
     #   mcp
     #   pydantic
     #   pydantic-settings
-tzdata==2026.3 ; sys_platform == 'win32'
+tzdata==2026.4 ; sys_platform == 'win32'
     # via
     #   clickhouse-connect
     #   psycopg
-urllib3==2.7.0
+urllib3==2.8.0
     # via
     #   clickhouse-connect
     #   docker
@@ -308,7 +308,7 @@ urllib3==2.7.0
     #   influxdb3-python
     #   podman
     #   requests
-uvicorn==0.52.4
+uvicorn==0.54.0
     # via
     #   glances
     #   mcp
