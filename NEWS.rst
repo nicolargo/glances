@@ -3,6 +3,101 @@
 ==============================================================================
 
 =============
+Version 4.5.7
+=============
+
+Bugs corrected:
+
+* processcount pid_max always 0, and status comparison uses `is` instead of `==` #3637
+* mcp extra allows mcp 2.0.0 which breaks --enable-mcp (No module named 'mcp.server.fastmcp') #3640
+* TypeError: string indices must be integers, not 'str' in smart plugin during _add_device_stats #3704
+* InfluxDB3 exports failing with 'Cannot export percpu stats to InfluxDB' ('time_precision') #3734
+* TimescaleDB export does not recover from failed transactions #3743
+* Guard cursor navigation in client/server mode #3221
+* Raw backspace (DEL) not handled in curses textboxes #1644
+* Init containers, vms and smart stats as a list #3582
+* Compare stats to the init value, not to the bound method #3665
+* Set disable_<plugin> for additional plugins so is_enabled() works for them #3736
+* Read a False config switch as False in get_conf_value #3729
+* Strip whitespace around comma-separated config values #3700
+* Let --disable-separator and --disable-bg override glances.conf #3730
+* Read web_x_ssl_verify as a boolean, not as a CA bundle path #3731
+* Replace the focus filter list on set instead of extending it #3728
+* Keep the whole filter regex when it contains a colon #3674
+* Read a missing sort value as zero instead of discarding the sort #3693
+* Fix return value in timeout permission fallback #3723
+* Initialise a rate stat that is new since the previous sample #3721
+* Keep hide_zero hiding a stat that never moves #3725
+* IP plugin: prefer the default-route address over interface order #3465
+* AMD GPU name resolution when the card is only listed in amdgpu.ids #3664
+* Containers: aggregate network stats over all container interfaces #3669
+* Containers: stop repeating a title fragment when several engines run #3678
+* Connections: count terminated connection states instead of counting initiated twice #3646
+* Connections: alert on the tracked percentage, not on 0 #3683
+* Connections: remember that a probe was disabled #3732
+* Disk I/O: alert on the bitrate, and decorate the field the WebUI reads #3684
+* Folders: honour folder_N_refresh instead of walking every cycle #3676
+* Network: use the TX alert for bytes_sent_rate_per_sec decoration #3660
+* Network: a rate of 0 in one direction must not mute the other #3694
+* Network: read the hide_threshold_bytes the plugin documents #3726
+* NPU: alert on the temperature both interfaces already ask for #3718
+* Per-CPU: report the guest nice CPU value #3685
+* Per-CPU: summarize the cores that are not displayed, not the ones that are #3687
+* Ports: send the ICMP timeout in the unit each ping expects #3677
+* Ports: scope the TCP scan timeout to the scanning socket #3701
+* Processlist: show Windows priority classes as labels in the NI column #3672
+* Processlist: index io_counters instead of testing membership in it #3675
+* Programs: keep zero-valued fields when aggregating processes into programs #3648
+* Programs: sum a program's io_counters instead of concatenating them #3692
+* Quicklook: colour each --percpu bar by that core's own load #3716
+* Quicklook: keep a history for gpu_mem and gpu_proc #3744
+* Sensors: alert on a reading of 0 instead of skipping it #3688
+* Sensors: stop reconnecting to hddtemp on every refresh and read the [hddtemp] section again #3745
+* VMs: colour the columns msg_curse already asks decorations for #3722
+* Wifi: honour a partially configured set of signal thresholds #3691
+* WebUI: show ? for a process whose nice value the OS will not report #3681
+* WebUI: match the RAID alert to raid_alert instead of a bare comparison #3690
+* WebUI: read the ports status as the API sends it, and use the web alert #3695
+* WebUI: match the AMP alert to the plugin's get_alert #3696
+* WebUI: match the VM status colour to the plugin's vm_alert #3697
+* WebUI: colour the per-CPU iowait cell by iowait, not system #3698
+* WebUI: colour the process MEM% cell by memory_percent, not cpu_percent #3699
+* WebUI: colour each DISK I/O column by the direction it prints #3717
+* WebUI: colour a container's CPU and MEM the way curses already does #3724
+* WebUI: keep a row while any of its hide_zero fields is visible #3727
+
+Enhancements:
+
+* Support MCP Python SDK 2.x #3643
+* Allow free-space display in the file system plugin configuration #3659
+* WebUI: make container IO and network columns sortable #3686
+* WebUI modernization: rebuild production bundles with Webpack 5 #3485 #3620
+* Build process views on demand instead of up front (performance)
+* Reuse the program aggregation until the process list changes (performance)
+* Make remove_non_running_procs O(n) instead of O(n^2) #3645
+* Reduce cyclomatic complexity of init_plugins #3460
+
+Security patches:
+
+* Credentials leaked through the published plugin limits (REST, XML-RPC, MCP and exports) - GHSA-TODO
+* Unauthenticated credential disclosure via the ports plugin - GHSA-2jqf-3j6f-683p
+* SQL Injection leading to Data Exfiltration via OOB (Out-of-Band) in Glances ClickHouse Export Module - GHSA-2hvx-g9v6-w29h
+* Argument Injection in On-Alert Action Commands via Unescaped Quote Characters in secure.py's Command Tokenizer - GHSA-56xw-p9qm-r437
+
+Continuous integration and documentation:
+
+* Run the unit tests on FreeBSD #3636
+* Reduce Docker images files #3653
+* Add Docker-compose for TUI
+* Remove pyinstrument from runtime dependencies #3650
+* Fix broken WebUI build: declare terser-webpack-plugin explicitly
+
+Thanks to all the contributors for this version: Nguyen Thanh Dat, Aditya Raj Singh, Mikhail Druzhinin,
+James C. Owens, Artem Lytkin, Thomas Sprayberry, Hassan Rady, Ryan Chou, Kerb Byqvist, Anand Hegde,
+Gabriel Changamire, PGray, Martin Rys, Qinhang Wu, Vincent, nightcityblade, siaklin99-gif, art22s,
+Yogendra Rautela, neil and namdamdoi68-oss.
+
+=============
 Version 4.5.6
 =============
 
