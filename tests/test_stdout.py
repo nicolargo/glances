@@ -27,4 +27,4 @@ from glances.outputs.glances_stdout import GlancesStdout
 )
 def test_stdout_selectors(selector, expected):
     output = GlancesStdout(args=SimpleNamespace(stdout=selector))
-    assert output.plugins_list == expected
+    assert output.plugins_list == expected  # nosec B101 - pytest regression assertion.
