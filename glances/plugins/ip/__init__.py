@@ -275,7 +275,11 @@ class ThreadPublicIpAddress(threading.Thread):
                 response = urlopen_auth(self.url, self.username, self.password, self.timeout).read()
             else:
                 response = urlopen(Request(self.url), timeout=self.timeout).read()
-            return json_loads(response)
+            info = json_loads(response)
+            if not isinstance(info, dict):
+                logger.debug("IP plugin - Public IP response is not a JSON object")
+                return None
+            return info
         except Exception as e:
             logger.debug(f"IP plugin - Cannot get public IP information from {self.url} ({e})")
             return None
