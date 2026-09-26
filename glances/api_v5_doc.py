@@ -67,6 +67,8 @@ notebook or a long-running tool.
 
 In both modes the API reads ``glances.conf`` as Glances does (``config_path``
 adds a file on top), never the command line of the script that uses it.
+``refresh=1`` overrides ``[global] refresh``, as ``-t`` does on the command
+line: the cache duration on demand, the collection cadence in the background.
 ``plugins=["cpu", "mem"]`` builds only those plugins, plus what they depend
 on. Alerts are recorded, but the actions ``glances.conf`` configures for them
 never run, and no exporter is started.

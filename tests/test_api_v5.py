@@ -380,3 +380,31 @@ def test_the_notebook_runs(monkeypatch):
         if cell["cell_type"] == "code":
             exec(compile("".join(cell["source"]), "glances.ipynb", "exec"), namespace)  # noqa: S102
     assert not _api_threads(), "the notebook closes what it opens"
+
+
+# ------------------------------------------------ refresh= (§10, decided)
+
+
+def test_refresh_sets_the_on_demand_ttl(conf):
+    with api.GlancesAPI(config_path=conf("[global]\nrefresh=7\n"), refresh=0.5, plugins=["mem"]) as gl:
+        assert gl._ttl == 0.5, "the argument wins over glances.conf, as -t does"
+
+
+def test_refresh_sets_the_background_cadence():
+    with api.GlancesAPI(background=True, refresh=0.5, plugins=["cpu"]) as gl:
+        before = len(gl.cpu.history()["timestamps"])
+        time.sleep(1.8)
+        assert len(gl.cpu.history()["timestamps"]) >= before + 3
+
+
+@pytest.mark.parametrize("refresh", [0, -1])
+def test_refresh_must_be_positive(refresh):
+    with pytest.raises(ValueError, match="refresh"):
+        api.GlancesAPI(refresh=refresh, plugins=["mem"])
+
+
+def test_a_view_has_no_get_raw():
+    """No v4 alias (maintainer, 2026-09-26): `.raw` replaces `get_raw()`."""
+    with api.GlancesAPI(plugins=["mem"]) as gl:
+        assert not hasattr(gl.mem, "get_raw")
+        assert gl.mem.raw["percent"] == gl.mem["percent"]

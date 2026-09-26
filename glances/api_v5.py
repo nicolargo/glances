@@ -139,6 +139,9 @@ class GlancesAPI:
             a plugin is updated when it is read.
         plugins: build only these plugins (and what they depend on), e.g.
             ``["cpu", "mem"]``. Default: every plugin ``glances.conf`` enables.
+        refresh: seconds, overriding ``[global] refresh`` as ``-t`` does: how
+            long a read stays cached on demand, and the scheduler's cadence in
+            the background (per-plugin ``[<plugin>] refresh`` keys still win).
 
     Use it as a context manager, or call ``close()``: some plugins hold
     background resources until then.
@@ -149,9 +152,16 @@ class GlancesAPI:
         config_path: str | None = None,
         background: bool = False,
         plugins: list[str] | None = None,
+        refresh: float | None = None,
     ) -> None:
         self.__version__ = _VERSION.split(".")[0]
         self._config = GlancesConfigV5(cli_config_path=config_path)
+        if refresh is not None:
+            if refresh <= 0:
+                raise ValueError(f"refresh must be > 0 seconds, got {refresh!r}")
+            # The overlay `-t` uses (`main_v5.assemble`), so the TTL below and
+            # the scheduler read the same value.
+            self._config._merged.setdefault("global", {})["refresh"] = float(refresh)
         self._store = StatsStoreV5()
         self._ttl = _global_refresh(self._config)
         self._background = background

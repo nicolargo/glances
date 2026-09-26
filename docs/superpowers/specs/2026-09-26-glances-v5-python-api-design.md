@@ -315,6 +315,7 @@ No user-facing CLI option is added.
 
 | v4 | v5 | Why |
 |---|---|---|
+| `gl.cpu.get_raw()` (a plugin method) | `gl.cpu.raw` | The view exposes no plugin method; no alias (§10). |
 | `from glances import api` | `from glances import api_v5` until the merge, then `api` again | Coexistence (decision 3). |
 | `gl.cpu` is the plugin object | A read-only `PluginView` snapshot | Defect 1; decision 2. |
 | `GlancesAPI(config, args)`, parses `sys.argv` | `GlancesAPI(config_path, background, plugins)` | Defect 2. |
@@ -393,15 +394,17 @@ with MCP, was dropped (§5.4).
 
 ---
 
-## 10. Open questions for the maintainer
+## 10. Questions for the maintainer — answered 2026-09-26
 
-None block commit 1.
-
-1. **Keep v4's `gl.cpu.get_raw()`?** Some v4 scripts may call plugin
+1. **Keep v4's `gl.cpu.get_raw()`?** **No** (maintainer). One documented
+   rename to `.raw`, listed in §6. Some v4 scripts may call plugin
    methods on the returned object. `PluginView.raw` covers the need;
    aliasing `get_raw()` onto it would keep those scripts running for the
    price of one line. Proposal: no alias, one documented rename.
-2. **Refresh in background mode.** It follows `[global] refresh` and the
+2. **Refresh in background mode.** **Yes, `refresh=`** (maintainer). It
+   overlays `[global] refresh`, as `-t` does in `main_v5.assemble`: the TTL
+   on demand, the scheduler's global cadence in the background. Per-plugin
+   `[<plugin>] refresh` keys still win there, as they do over `-t`. It follows `[global] refresh` and the
    per-plugin `refresh` keys, as Glances does. Should `GlancesAPI` also
    take a `refresh=` argument, for a notebook that wants 1 s without a
    config file? Proposal: yes. It is the API's equivalent of `-t`, the one
