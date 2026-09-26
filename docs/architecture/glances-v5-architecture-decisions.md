@@ -233,7 +233,7 @@ The `_transform()` method is itself a pipeline of four ordered steps, all implem
 | `description` | `str` | Human-readable field description. Used by `/api/5/<plugin>/info` and `--api-doc`. |
 | `unit` | `str` | Semantic unit: `bytes`, `percent`, `bytespers`, `string`, `seconds`, … Drives numeric formatting in all renderers. |
 | `label` | `str` | Short display label, renderer-neutral. Replaces v4 `short_name`. Single source of truth for compact labels across TUI and WebUI. |
-| `history` | `bool` | Whether this field is recorded into the stats history store (bounded in-memory time series, `glances/history_v5.py`). Replaces v4's per-plugin `items_history_list`. **Not** v4's `mmm` (min/max/mean fields in the payload): that is a separate mechanism, not ported yet. Design: `docs/superpowers/specs/2026-09-26-glances-v5-history-store-design.md`. |
+| `history` | `bool` | Whether this field is recorded into the stats history store (bounded in-memory time series, `glances/history_v5.py`). Replaces v4's per-plugin `items_history_list`. **Not** v4's `mmm` (min/max/mean fields in the payload), which v5 drops (§10, maintainer decision 2026-09-26). Design: `docs/superpowers/specs/2026-09-26-glances-v5-history-store-design.md`. |
 | `watched` | `bool` | If `True`, this field gets a `_levels` entry computed each cycle. Defaults to `False`. |
 | `watch_direction` | `"high"` / `"low"` | Threshold direction. `"high"` = alert when `value >= threshold` (e.g. mem percent used). `"low"` = alert when `value <= threshold` (e.g. fs free percent). Defaults to `"high"`. |
 | `prominent` | `bool` | When `True`, the field is rendered with **background highlight** in the TUI/WebUI and every level transition is tagged `prominent: True` in the alert event feed. When `False`, only the font color changes and the event is tagged `prominent: False`. Replaces v4 `log` **code default**; the user-facing `[<plugin>] <field>_log` config key is kept (§3.4). Defaults to `True` for watched fields (a watched field is meant to be visible by default). |
@@ -1570,7 +1570,6 @@ backport sweep of 2026-09-10 (develop `2bf3aadb`):
 | `[percpu] max_cpu_display` ignored by the `percpu` plugin | `percpu/__init__.py:119` and `quicklook/__init__.py:108` — v4 reads the same key from the same `[percpu]` section in both blocks and they stay in sync. | `quicklook/model_v5.py` now honours it (npu/quicklook/vms backport, 2026-09-10), but `percpu/render_curses_v5.py:35-37` still carries the open `TODO(G2+)` and its own `_DEFAULT_MAX_CPU_DISPLAY = 4` (line 48) — a user setting `max_cpu_display=8` sees 8 bars in quicklook and 4 in percpu. | Phase 2.X — apply the pattern quicklook just established: the model reads the config key and publishes it as an `internal` payload field. |
 | Threshold keys renamed, one of them re-scaled | `[network] rx_*` / `tx_*` (percent), `[processlist] cpu_*` / `mem_*`, `[fs] <mnt>_careful` | v5 reads `bytes_recv_*` / `bytes_sent_*` **as a ratio in [0,1]** (`normalize_by: bytes_speed_rate_per_sec`), `cpu_percent_*` / `memory_percent_*`, `<mnt>_percent_careful`. The v4 keys — the ones the shipped `conf/glances.conf` still documents — are silently ignored. | **Decided** (parity wave 1, 2026-09-10): rename kept, no v4 aliases; a startup WARNING now fires on any unrecognised threshold key (`base_v5.py::_warn_unknown_threshold_keys`, §3.2 above). The rename itself is still a breaking change to document in the 5.0.0 release notes. |
 | CLI — the options still missing (25, plus the set-aside `--sparkline`) | `glances/main.py` argparse | Shipped 2026-09-25, see the note below. Still absent — **Phase 3**: `-c`/`--client`, `--browser`, `--disable-autodiscover`, `--cached-time`, the SNMP family (`--snmp-*`), `-u`/`--username`/`--password` (client-side credentials). **Need a feature v5 does not have**: `--disable-check-update` (no PyPI check), `--export-graph-path` (no graph exporter), `-P`/`--plugins` (external plugins: the v5 plugin API needs its own design). **Need a decision**: `--enable-process-extended` (v4 follows the TOP process continuously; v5's `e` pins one pid), `--mcp-path` (a movable MCP mount touches the DNS-rebinding and auth surface), `--issue` / `--fetch` / `--fetch-template` / `--api-restful-doc` (diagnostic and doc printers to port), `--print-completion` (shtab dependency), `--trace-malloc` / `--memory-leak` (debug tooling). `--sparkline` is set aside by the maintainer (2026-09-25). `--disable-history` shipped 2026-09-26 with the history store. | Phase 3 for client/browser/SNMP; a decision per line for the rest. |
-| min/max/mean (`mmm`) | `plugins/plugin/model.py:195-290` — `mmm: True` publishes `<field>_min`, `_max`, `_mean` into the payload, on `cpu.total`, `load.min1`, `mem.percent`. | Absent from v5's payload. Architecture §3.2 once folded it into `history`; the history design (2026-09-26, §5.1) separated them. | Its own design: a schema key, and whether the mean is taken over the history window or since startup (v4 keeps a separate 28800-point list). |
 
 **2026-09-10 — parity wave 1 closures.** `hide_zero` + `hide_threshold_bytes`,
 `hide_no_up`/`hide_no_ip`, `[fs] allow`, `[fs] free_space` and the generic
@@ -1637,6 +1636,15 @@ maintainer notes); the table is the single list of "v4 has it, v5 does not yet".
 The table lists the *chantiers*. The line-by-line inventory they come from — every
 v4 CLI option, config key and TUI hotkey with its v5 status and a `file:line`
 proof — is `glances-v5-v4-parity-inventory.md`, alongside this document.
+
+**Dropped — min/max/mean `mmm` (maintainer decision, 2026-09-26).** v4
+publishes `<field>_min`, `_max` and `_mean` in the payload for `cpu.total`,
+`load.min1` and `mem.percent` (`plugins/plugin/model.py:188-300`, issue #3462,
+Glances 4.5.1). No v4 renderer reads them: only REST, MCP and the exporters
+carry them, as part of the payload. v5 does not port the mechanism; a new
+one will be designed if users ask for it. A removed v4 feature — nine
+payload fields `/api/4/{cpu,load,mem}` served that `/api/5` does not, and
+that no export carries any more — for the 5.0.0 release notes.
 
 **Dropped — the TUI trend arrows (maintainer decision, 2026-09-26).** v4
 draws ↑/↓ next to MEM, SWAP and LOAD from `get_trend()`

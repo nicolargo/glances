@@ -36,7 +36,7 @@ Out of scope, each unblocked by this chantier:
 | Trend arrows ↑↓ next to MEM, SWAP and LOAD in the TUI | `mem/__init__.py:304`, `memswap/__init__.py:166`, `load/__init__.py:157` → `get_trend()` (`plugins/plugin/model.py:413`) | Not asked for in this round. **Not in the parity inventory at all** (Part 3 lists hotkeys, and this is not one), so §7 adds it to the backlog. |
 | `S` / `--sparkline` quicklook mode | `quicklook/__init__.py:292-370` | Set aside by the maintainer on 2026-09-25. |
 | Graph exporter, `--export-graph-path` | `exports/glances_graph/__init__.py:87` → `get_export_history()` | Phase 3 (all remaining exporters). |
-| min/max/mean (`mmm`) | `plugins/plugin/model.py:195-290`, on `cpu.total`, `load.min1`, `mem.percent` | A different mechanism (§5.1). Separate parity chantier, §7. |
+| min/max/mean (`mmm`) | `plugins/plugin/model.py:195-290`, on `cpu.total`, `load.min1`, `mem.percent` | A different mechanism (§5.1). *Since dropped from v5 by maintainer decision (2026-09-26)*: architecture §10. |
 
 ---
 
