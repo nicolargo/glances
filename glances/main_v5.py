@@ -208,7 +208,15 @@ def build_parser() -> argparse.ArgumentParser:
         "--enable-mcp",
         dest="enable_mcp",
         action="store_true",
-        help="Mount the MCP endpoint at /mcp. Requires --server. Off by default.",
+        help="Mount the MCP endpoint (at /mcp, see --mcp-path). Requires --server. Off by default.",
+    )
+    parser.add_argument(
+        "--mcp-path",
+        dest="mcp_path",
+        default=None,
+        metavar="<path>",
+        help="Path the MCP endpoint is mounted at (default: /mcp). Requires --server. "
+        "Config fallback: [outputs] mcp_path.",
     )
     parser.add_argument(
         "--export",
@@ -617,6 +625,8 @@ def validate_args(args: argparse.Namespace) -> None:
     """
     if args.enable_mcp and not args.server:
         build_parser().error("--enable-mcp requires --server (-s). MCP is only mounted in REST server mode.")
+    if getattr(args, "mcp_path", None) and not args.server:
+        build_parser().error("--mcp-path requires --server (-s). MCP is only mounted in REST server mode.")
     if args.server and args.no_tui:
         logger.info("--server (-s) already implies headless operation — the --quiet / --no-tui flag is redundant here.")
     # The stdout outputs replace the TUI (v4: standalone only), so they cannot
@@ -953,6 +963,19 @@ def cli_set_password() -> int:
 # --------------------------------------------------------------- assemble
 
 
+def apply_mcp_flags(args: argparse.Namespace, config: GlancesConfigV5) -> None:
+    """`--enable-mcp` / `--mcp-path` as config overlays, the api_doc mechanism.
+
+    `attach_mcp` reads `[outputs] enable_mcp` and `[outputs] mcp_path` from
+    the merged config -- no need to pass the flags through the call chain.
+    The CLI wins over the config file (v4 `glances_restful_api.py:342`).
+    """
+    if args.enable_mcp:
+        config._merged.setdefault("outputs", {})["enable_mcp"] = True
+    if getattr(args, "mcp_path", None):
+        config._merged.setdefault("outputs", {})["mcp_path"] = args.mcp_path
+
+
 def attach_history(plugins: list[GlancesPluginBase], config: GlancesConfigV5, args: argparse.Namespace) -> None:
     """Give every plugin the one shared stats history store (design 2026-09-26).
 
@@ -1067,15 +1090,11 @@ def assemble(
 
         if args.api_doc is not None:
             config._merged.setdefault("outputs", {})["api_doc"] = bool(args.api_doc)
-        if args.enable_mcp:
-            # Flip the MCP gate via the same overlay mechanism used for api_doc.
-            # `attach_mcp` reads `[outputs] enable_mcp` from the merged config
-            # — no need to pass the flag explicitly through the call chain.
-            config._merged.setdefault("outputs", {})["enable_mcp"] = True
+        apply_mcp_flags(args, config)
         app = build_app(config=config, store=store, alerts=alerts, args=args)
         for plugin in plugins:
             register_plugin(app, plugin)
-        # Plugin registry is now populated — mount /mcp if the gate is on.
+        # Plugin registry is now populated — mount MCP if the gate is on.
         attach_mcp(app, config=config, store=store, plugins=plugins, alerts=alerts)
     elif stdout_requested(args):
         # `--stdout*` (v4 `glances/outputs/glances_stdout*.py`): the printer

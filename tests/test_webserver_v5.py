@@ -380,6 +380,73 @@ def test_attach_mcp_mounts_when_gate_on(config_factory, store):
     assert _has_mount(app, "/mcp")
 
 
+# --mcp-path / [outputs] mcp_path (v4 parity, decided 2026-09-26)
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [("/glances/mcp", "/glances/mcp"), ("glances/mcp/", "/glances/mcp"), ("", "/mcp")],
+)
+def test_mcp_path_is_normalised(raw, expected, config_factory):
+    """A leading `/` is added and a trailing one dropped, as in v4."""
+    from glances.webserver_v5 import resolve_mcp_path
+
+    assert resolve_mcp_path(config_factory(mcp_path=raw)) == expected
+
+
+def test_mcp_path_defaults_to_mcp(config_factory):
+    from glances.webserver_v5 import resolve_mcp_path
+
+    assert resolve_mcp_path(config_factory()) == "/mcp"
+
+
+@pytest.mark.parametrize("raw", ["/", "/api", "/api/5", "/api/5/mcp", "/docs", "/redoc", "/static/mcp", "/status"])
+def test_mcp_path_that_would_shadow_a_route_falls_back(raw, config_factory, caplog):
+    from glances.webserver_v5 import resolve_mcp_path
+
+    with caplog.at_level(logging.WARNING):
+        assert resolve_mcp_path(config_factory(mcp_path=raw)) == "/mcp"
+    assert "mcp_path" in caplog.text
+
+
+def test_attach_mcp_mounts_at_the_configured_path(config_factory, store):
+    from glances.webserver_v5 import attach_mcp
+
+    config = config_factory(enable_mcp="true", mcp_path="/glances/mcp")
+    app = build_app(config=config, store=store)
+    assert attach_mcp(app, config=config, store=store, plugins=[]) is True
+    assert _has_mount(app, "/glances/mcp")
+    assert not _has_mount(app, "/mcp")
+
+
+def test_a_custom_mcp_path_stays_behind_auth(config_factory, store):
+    """The auth middleware covers every path outside UNAUTH_PATHS, so moving
+    the mount does not move it out of reach of the password."""
+    from glances.webserver_v5 import attach_mcp
+
+    config = config_factory(enable_mcp="true", mcp_path="/glances/mcp", password=hash_password("hunter2"))
+    app = build_app(config=config, store=store)
+    attach_mcp(app, config=config, store=store, plugins=[])
+    with TestClient(app) as client:
+        assert client.get("/glances/mcp/sse").status_code == 401
+
+
+def test_a_custom_mcp_path_keeps_the_dns_rebinding_guard(config_factory, store):
+    """MCP's own TransportSecuritySettings do not depend on the mount path."""
+    from glances.webserver_v5 import attach_mcp
+
+    config = config_factory(enable_mcp="true", mcp_path="/glances/mcp")
+    app = build_app(config=config, store=store)
+    attach_mcp(app, config=config, store=store, plugins=[])
+    url = "/glances/mcp/messages/?session_id=" + "0" * 32
+    body = {"content": b"{}", "headers": {"content-type": "application/json"}}
+    with TestClient(app, raise_server_exceptions=False) as client:
+        evil = client.post(url, **{**body, "headers": {**body["headers"], "host": "evil.example"}})
+        local = client.post(url, **{**body, "headers": {**body["headers"], "host": "localhost:61208"}})
+    assert evil.status_code == 421
+    assert local.status_code != 421
+
+
 def test_attach_mcp_records_server_in_app_state(config_factory, store):
     """Successful attach exposes the MCP server via app.state for diagnostics."""
     from glances.webserver_v5 import attach_mcp

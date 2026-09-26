@@ -1341,3 +1341,30 @@ async def test_measure_memory_leak_diffs_the_second_window_only(monkeypatch):
     growth = sum(stat.size_diff for stat in diff)
     assert 50_000 <= growth < 200_000
     assert scheduler.stopped
+
+
+# ----------------------------------------------------------- --mcp-path
+
+
+def test_mcp_path_requires_server():
+    from glances.main_v5 import validate_args
+
+    with pytest.raises(SystemExit):
+        validate_args(build_parser().parse_args(["--mcp-path", "/glances/mcp"]))
+
+
+def test_mcp_path_flag_overlays_the_config(config):
+    """CLI wins over `[outputs] mcp_path`, as in v4."""
+    from glances.main_v5 import apply_mcp_flags
+
+    config._merged.setdefault("outputs", {})["mcp_path"] = "/from-conf"
+    apply_mcp_flags(build_parser().parse_args(["-s", "--mcp-path", "/glances/mcp"]), config)
+    assert config._merged["outputs"]["mcp_path"] == "/glances/mcp"
+
+
+def test_no_mcp_path_flag_leaves_the_config_alone(config):
+    from glances.main_v5 import apply_mcp_flags
+
+    config._merged.setdefault("outputs", {})["mcp_path"] = "/from-conf"
+    apply_mcp_flags(build_parser().parse_args(["-s"]), config)
+    assert config._merged["outputs"]["mcp_path"] == "/from-conf"

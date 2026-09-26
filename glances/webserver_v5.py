@@ -169,6 +169,37 @@ def register_plugin(app: FastAPI, plugin: GlancesPluginBase) -> None:
     plugins[plugin.plugin_name] = plugin
 
 
+_DEFAULT_MCP_PATH = "/mcp"
+# What the server itself serves. An MCP mount on one of these, below one, or
+# above one (`/api` would swallow `/api/5`) would shadow it.
+_RESERVED_PATHS = ("/api", "/docs", "/redoc", "/openapi.json", "/static", "/status", "/healthz")
+
+
+def resolve_mcp_path(config: GlancesConfigV5) -> str:
+    """`[outputs] mcp_path` (or `--mcp-path`), normalised; `/mcp` by default.
+
+    A leading `/` is added and a trailing one dropped, as in v4
+    (`glances_restful_api.py:409-411`). A path that would shadow a route the
+    server already serves -- the WebUI's `/` included -- falls back to `/mcp`
+    with a WARNING. The auth middleware and MCP's own DNS-rebinding guard do
+    not depend on the path.
+    """
+    raw = str(config.get("outputs", "mcp_path", _DEFAULT_MCP_PATH) or "").strip()
+    path = "/" + raw.strip("/")
+    clashes = path == "/" or any(
+        path == reserved or path.startswith(reserved + "/") or reserved.startswith(path + "/")
+        for reserved in _RESERVED_PATHS
+    )
+    if clashes:
+        logger.warning(
+            "[outputs] mcp_path %r would shadow a route the server already serves; mounting MCP at %s instead",
+            raw,
+            _DEFAULT_MCP_PATH,
+        )
+        return _DEFAULT_MCP_PATH
+    return path
+
+
 def attach_mcp(
     app: FastAPI,
     *,
@@ -177,7 +208,10 @@ def attach_mcp(
     plugins: list[GlancesPluginBase],
     alerts: GlancesAlerts | None = None,
 ) -> bool:
-    """Mount the MCP SSE endpoint at ``/mcp`` when the config gate is on.
+    """Mount the MCP SSE endpoint when the config gate is on.
+
+    At ``/mcp`` unless ``[outputs] mcp_path`` (or ``--mcp-path``) says
+    otherwise -- see ``resolve_mcp_path``.
 
     Gate: ``[outputs] enable_mcp`` (Boolean, default ``False``). The
     CLI flag ``--enable-mcp`` flips it via the config overlay in
@@ -224,9 +258,12 @@ def attach_mcp(
     # ``GlancesMcpServer`` stores ``args`` but never reads it (cf. v4 module).
     # An empty namespace keeps the constructor happy without leaking v4 CLI shape.
     mcp_server = GlancesMcpServer(stats=adapter, args=SimpleNamespace(), config=config)
-    app.mount("/mcp", mcp_server.get_asgi_app())
+    mcp_path = resolve_mcp_path(config)
+    # The MCP app needs no path of its own: Starlette hands it the mount
+    # prefix as `root_path`, from which the SSE transport builds its URLs.
+    app.mount(mcp_path, mcp_server.get_asgi_app(mount_path=mcp_path))
     app.state.mcp_server = mcp_server
-    logger.info("MCP endpoint mounted at /mcp")
+    logger.info("MCP endpoint mounted at %s", mcp_path)
 
     # Surface the v4↔v5 gap so operators know which MCP resources will
     # return "Plugin not found" (cf. McpStatsAdapter docstring). The
