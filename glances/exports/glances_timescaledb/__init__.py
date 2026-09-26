@@ -9,6 +9,7 @@
 """TimescaleDB interface class."""
 
 import sys
+import threading
 import time
 from datetime import datetime, timezone
 from platform import node
@@ -60,6 +61,10 @@ class Export(GlancesExport):
 
         # Init the TimescaleDB client
         self.client = self.init()
+        # A psycopg connection has a single transaction state. Glances may start
+        # another export thread before the previous one has completed, so keep
+        # transactions on this persistent connection strictly serialized.
+        self._client_lock = threading.Lock()
 
     def init(self):
         """Init the connection to the TimescaleDB server."""
@@ -171,66 +176,72 @@ class Export(GlancesExport):
         """Export the stats to the TimescaleDB server."""
         logger.debug(f"Export {plugin} stats to TimescaleDB")
 
-        with self.client.cursor() as cur:
-            # Is the table exists?
-            cur.execute(
-                "SELECT EXISTS(SELECT * FROM information_schema.tables WHERE table_name=%s)",
-                [plugin],
-            )
-            if not cur.fetchone()[0]:
-                # Create the table if it does not exist
-                # https://github.com/timescale/timescaledb/blob/main/README.md#create-a-hypertable
-                # Build CREATE TABLE using sql.Identifier for column names (prevents injection)
-                # Each item in creation_list is "colname TYPE [NULL|NOT NULL]"
-                fields = sql.SQL(', ').join(
-                    sql.SQL("{} {}").format(sql.Identifier(item.split(' ')[0]), sql.SQL(' '.join(item.split(' ')[1:])))
-                    for item in creation_list
-                )
-                create_query = sql.SQL(
-                    "CREATE TABLE {table} ({fields}) WITH ("
-                    "timescaledb.hypertable, "
-                    "timescaledb.partition_column='time', "
-                    "timescaledb.segmentby = {segmentby});"
-                ).format(
-                    table=sql.Identifier(plugin),
-                    fields=fields,
-                    segmentby=sql.Literal(', '.join(segmented_by)),
-                )
-                logger.debug(f"Create table: {create_query}")
-                try:
-                    cur.execute(create_query)
-                except Exception as e:
-                    logger.error(f"Cannot create table {plugin}: {e}")
-                    return
-
-            # Insert the data using parameterized queries (prevents injection)
-            # https://github.com/timescale/timescaledb/blob/main/README.md#insert-and-query-data
-            col_names = [item.split(' ')[0] for item in creation_list]
-            cols = sql.SQL(', ').join(sql.Identifier(c) for c in col_names)
-            placeholders = sql.SQL(', ').join(sql.Placeholder() for _ in col_names)
-            insert_query = sql.SQL("INSERT INTO {table} ({cols}) VALUES ({vals})").format(
-                table=sql.Identifier(plugin),
-                cols=cols,
-                vals=placeholders,
-            )
-            logger.debug(f"Insert data into table: {insert_query}")
+        operation = 'check table'
+        with self._client_lock:
             try:
-                cur.executemany(insert_query, values_list)
-            except Exception as e:
-                logger.error(f"Cannot insert data into table {plugin}: {e}")
-                return
+                # The transaction context commits on success and, critically,
+                # rolls back before propagating an error. Catch outside the
+                # context so a suppressed error cannot leave the connection in
+                # PostgreSQL's failed-transaction state.
+                with self.client.transaction():
+                    with self.client.cursor() as cur:
+                        cur.execute(
+                            "SELECT EXISTS(SELECT * FROM information_schema.tables WHERE table_name=%s)",
+                            [plugin],
+                        )
+                        if not cur.fetchone()[0]:
+                            operation = 'create table'
+                            # Create the table if it does not exist
+                            # https://github.com/timescale/timescaledb/blob/main/README.md#create-a-hypertable
+                            # Build CREATE TABLE using sql.Identifier for column names (prevents injection)
+                            # Each item in creation_list is "colname TYPE [NULL|NOT NULL]"
+                            fields = sql.SQL(', ').join(
+                                sql.SQL("{} {}").format(
+                                    sql.Identifier(item.split(' ')[0]), sql.SQL(' '.join(item.split(' ')[1:]))
+                                )
+                                for item in creation_list
+                            )
+                            create_query = sql.SQL(
+                                "CREATE TABLE {table} ({fields}) WITH ("
+                                "timescaledb.hypertable, "
+                                "timescaledb.partition_column='time', "
+                                "timescaledb.segmentby = {segmentby});"
+                            ).format(
+                                table=sql.Identifier(plugin),
+                                fields=fields,
+                                segmentby=sql.Literal(', '.join(segmented_by)),
+                            )
+                            logger.debug(f"Create table: {create_query}")
+                            cur.execute(create_query)
 
-        # Commit the changes (for every plugin or to be done at the end ?)
-        self.client.commit()
+                        operation = 'insert data into table'
+                        # Insert the data using parameterized queries (prevents injection)
+                        # https://github.com/timescale/timescaledb/blob/main/README.md#insert-and-query-data
+                        col_names = [item.split(' ')[0] for item in creation_list]
+                        cols = sql.SQL(', ').join(sql.Identifier(c) for c in col_names)
+                        placeholders = sql.SQL(', ').join(sql.Placeholder() for _ in col_names)
+                        insert_query = sql.SQL("INSERT INTO {table} ({cols}) VALUES ({vals})").format(
+                            table=sql.Identifier(plugin),
+                            cols=cols,
+                            vals=placeholders,
+                        )
+                        logger.debug(f"Insert data into table: {insert_query}")
+                        cur.executemany(insert_query, values_list)
+            except Exception as e:
+                logger.error(f"Cannot {operation} {plugin}: {e}")
+                return False
+
+        return True
 
     def exit(self):
         """Close the TimescaleDB export module."""
-        # Force last write
-        self.client.commit()
+        with self._client_lock:
+            # Force last write
+            self.client.commit()
 
-        # Close the TimescaleDB client
-        time.sleep(3)  # Wait a bit to ensure all data is written
-        self.client.close()
+            # Close the TimescaleDB client
+            time.sleep(3)  # Wait a bit to ensure all data is written
+            self.client.close()
 
         # Call the father method
         super().exit()
