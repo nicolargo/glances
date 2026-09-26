@@ -275,6 +275,15 @@ class GlancesAPI:
             raise AttributeError(f"Plugin {name!r} is disabled in glances.conf ([{name}] disable)")
         raise AttributeError(f"'{type(self).__name__}' object has no attribute {name!r}")
 
+    def _payload(self, name: str) -> dict[str, Any]:
+        """The full REST payload of `name` (envelope, metadata, `_levels`), refreshed as a read would.
+
+        Private: for `glances.outputs.fetch_v5`, whose TUI renderers take the
+        payload shape the TUI gets, not a PluginView.
+        """
+        getattr(self, name)
+        return copy.deepcopy(self._plugins[name].get_api_payload())
+
     def plugins(self) -> list[str]:
         """The plugins this API built (enabled in glances.conf, and in `plugins=` if given)."""
         return sorted(self._plugins)

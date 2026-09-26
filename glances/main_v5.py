@@ -457,6 +457,22 @@ def build_parser() -> argparse.ArgumentParser:
         help="Print the selected stats to stdout as CSV: a header line, then one line per refresh. No TUI.",
     )
     parser.add_argument(
+        "--fetch",
+        "--stdout-fetch",
+        dest="fetch",
+        action="store_true",
+        default=False,
+        help="Print a neofetch-like summary drawn with the TUI's blocks, then exit.",
+    )
+    parser.add_argument(
+        "--fetch-template",
+        "--stdout-fetch-template",
+        dest="fetch_template",
+        default=None,
+        metavar="<path>",
+        help="Jinja template for --fetch, rendered with `gl` (the Python API) and `ui` (TUI-styled blocks).",
+    )
+    parser.add_argument(
         "--issue",
         dest="issue",
         action="store_true",
@@ -653,6 +669,14 @@ def validate_args(args: argparse.Namespace) -> None:
         build_parser().error(
             "--issue runs on its own: it cannot be combined with --server, --stdout* or --memory-leak."
         )
+    if getattr(args, "fetch", False) and (
+        args.server or chosen or getattr(args, "memory_leak", False) or getattr(args, "issue", False)
+    ):
+        build_parser().error(
+            "--fetch runs on its own: it cannot be combined with --server, --stdout*, --memory-leak or --issue."
+        )
+    if getattr(args, "fetch_template", None) and not getattr(args, "fetch", False):
+        build_parser().error("--fetch-template requires --fetch.")
 
 
 # --------------------------------------------------------------- logging
@@ -1353,6 +1377,10 @@ def main(argv: list[str] | None = None) -> int:
         return run_memory_leak(args, config)
     if getattr(args, "issue", False):
         return run_issue(args, config)
+    if getattr(args, "fetch", False):
+        from glances.outputs import fetch_v5
+
+        return fetch_v5.run(args.config_path, args.fetch_template, unicode=not args.disable_unicode)
     app, scheduler, host, port, tui = assemble(args, config)
 
     if args.server:

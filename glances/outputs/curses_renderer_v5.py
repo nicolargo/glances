@@ -1198,6 +1198,35 @@ def _reset_plugin_renderer_cache() -> None:
     _RENDERER_ACCEPTS_VIEW.clear()
 
 
+def render_plugin_rows(
+    plugin_name: str,
+    payload: dict[str, Any],
+    fields_desc: dict[str, dict[str, Any]],
+    is_collection: bool,
+    view: dict[str, Any] | None = None,
+) -> list[Row]:
+    """One plugin's block: its own `render_curses_v5.render` if it has one, else the generic table.
+
+    Shared by `build_frame` and by `--fetch` (`glances/outputs/fetch_v5.py`),
+    so the two draw a plugin the same way by construction.
+    """
+    custom = _discover_plugin_renderer(plugin_name)
+    if custom is not None:
+        try:
+            if _RENDERER_ACCEPTS_VIEW.get(plugin_name):
+                return custom(payload, fields_desc, view=view)
+            return custom(payload, fields_desc)
+        except Exception as e:  # pragma: no cover — defensive
+            logger.warning(
+                "TUI: custom renderer for %r raised %s; using generic fallback this cycle",
+                plugin_name,
+                e,
+            )
+    if is_collection:
+        return render_collection_plugin(plugin_name, payload, fields_desc)
+    return render_scalar_plugin(plugin_name, payload, fields_desc)
+
+
 def build_frame(
     store_snapshot: dict[str, dict[str, Any]],
     fields_by_plugin: dict[str, dict[str, dict[str, Any]]],
@@ -1297,29 +1326,7 @@ def build_frame(
         if is_collection and not payload.get("data"):
             continue
         fields_desc = fields_by_plugin.get(plugin_name, {})
-
-        custom = _discover_plugin_renderer(plugin_name)
-        if custom is not None:
-            try:
-                if _RENDERER_ACCEPTS_VIEW.get(plugin_name):
-                    rows = custom(payload, fields_desc, view=view)
-                else:
-                    rows = custom(payload, fields_desc)
-            except Exception as e:  # pragma: no cover — defensive
-                logger.warning(
-                    "TUI: custom renderer for %r raised %s; using generic fallback this cycle",
-                    plugin_name,
-                    e,
-                )
-                rows = (
-                    render_collection_plugin(plugin_name, payload, fields_desc)
-                    if is_collection
-                    else render_scalar_plugin(plugin_name, payload, fields_desc)
-                )
-        elif is_collection:
-            rows = render_collection_plugin(plugin_name, payload, fields_desc)
-        else:
-            rows = render_scalar_plugin(plugin_name, payload, fields_desc)
+        rows = render_plugin_rows(plugin_name, payload, fields_desc, is_collection, view)
 
         # Skip empty blocks: any block with zero rows has nothing to paint and
         # must not reserve layout space (gap accounting in _paint_header et al).
