@@ -326,3 +326,57 @@ def test_top_process_leaves_out_this_process_and_kernel_threads(gl):
     assert all(p["cmdline"] for p in top)
     cpu = [p["cpu_percent"] for p in top]
     assert cpu == sorted(cpu, reverse=True)
+
+
+# ------------------------------------------------------------- §5.7 docs
+
+
+@pytest.fixture(scope="module")
+def rst():
+    from glances.api_v5_doc import render
+
+    with api.GlancesAPI(plugins=["cpu", "mem", "network", "fs", "load", "processlist"]) as gl:
+        return render(gl), gl.plugins()
+
+
+def test_the_generated_page_parses_without_a_docutils_warning(rst):
+    import io
+
+    import docutils.core
+
+    warnings = io.StringIO()
+    docutils.core.publish_doctree(rst[0], settings_overrides={"report_level": 2, "warning_stream": warnings})
+    assert warnings.getvalue() == ""
+
+
+def test_the_generated_page_has_one_section_per_plugin(rst):
+    page, plugins = rst
+    for name in plugins:
+        assert f"\nGlances {name}\n" in page, name
+
+
+def test_the_generated_page_documents_every_public_method(rst):
+    page = rst[0]
+    for name in ("plugins", "alerts", "auto_unit", "bar", "top_process", "close"):
+        assert f"GlancesAPI.{name}(" in page, name
+    assert "PluginView.history(" in page
+
+
+def test_free_text_is_escaped():
+    from glances.api_v5_doc import _escape
+
+    assert _escape("a *b* `c` d_ e|f") == r"a \*b\* \`c\` d\_ e\|f"
+
+
+def test_the_notebook_runs(monkeypatch):
+    """glances.ipynb is the API's most visible user: keep it runnable."""
+    import json
+    from pathlib import Path
+
+    monkeypatch.setattr(time, "sleep", lambda _s: None)
+    notebook = json.loads((Path(__file__).resolve().parent.parent / "glances.ipynb").read_text())
+    namespace: dict = {}
+    for cell in notebook["cells"]:
+        if cell["cell_type"] == "code":
+            exec(compile("".join(cell["source"]), "glances.ipynb", "exec"), namespace)  # noqa: S102
+    assert not _api_threads(), "the notebook closes what it opens"

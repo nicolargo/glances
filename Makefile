@@ -241,7 +241,7 @@ bandit: ## Run Bandit to find vulnerabilities
 # ===================================================================
 
 docs: ## Create the documentation
-	$(UV_RUN) run python -m glances -C $(CONF) --api-doc > ./docs/api/python.rst
+	$(UV_RUN) run python -m glances.api_v5_doc -C $(CONF) > ./docs/api/python.rst
 	$(UV_RUN) run python ./generate_openapi.py
 	$(UV_RUN) run python -m glances -C $(CONF) --api-restful-doc > ./docs/api/restful.rst
 	cd docs && ./build.sh && cd ..
