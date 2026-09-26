@@ -1068,6 +1068,8 @@ def test_args_matches_the_real_v5_argument_set(config_factory, store):
         "stdout_json",
         "stdout_csv",
         "stop_after",
+        # `--api-restful-doc`: a boolean run mode, nothing sensitive.
+        "api_restful_doc",
         # `--fetch` / `--fetch-template`: a run mode and a template path.
         "fetch",
         "fetch_template",

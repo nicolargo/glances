@@ -473,6 +473,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="Jinja template for --fetch, rendered with `gl` (the Python API) and `ui` (TUI-styled blocks).",
     )
     parser.add_argument(
+        "--api-restful-doc",
+        dest="api_restful_doc",
+        action="store_true",
+        default=False,
+        help="Print the REST API documentation (RST, real responses from this machine), then exit.",
+    )
+    parser.add_argument(
         "--issue",
         dest="issue",
         action="store_true",
@@ -677,6 +684,9 @@ def validate_args(args: argparse.Namespace) -> None:
         )
     if getattr(args, "fetch_template", None) and not getattr(args, "fetch", False):
         build_parser().error("--fetch-template requires --fetch.")
+    one_shot = [flag for flag in ("memory_leak", "issue", "fetch", "api_restful_doc") if getattr(args, flag, False)]
+    if getattr(args, "api_restful_doc", False) and (args.server or chosen or len(one_shot) > 1):
+        build_parser().error("--api-restful-doc runs on its own: it cannot be combined with another mode.")
 
 
 # --------------------------------------------------------------- logging
@@ -1377,6 +1387,10 @@ def main(argv: list[str] | None = None) -> int:
         return run_memory_leak(args, config)
     if getattr(args, "issue", False):
         return run_issue(args, config)
+    if getattr(args, "api_restful_doc", False):
+        from glances.outputs import restful_doc_v5
+
+        return restful_doc_v5.run(config)
     if getattr(args, "fetch", False):
         from glances.outputs import fetch_v5
 
