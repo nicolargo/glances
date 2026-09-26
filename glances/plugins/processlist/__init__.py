@@ -16,6 +16,12 @@ from glances.globals import WINDOWS, key_exist_value_not_none_not_v, replace_spe
 from glances.logger import logger
 from glances.outputs.glances_unicode import unicode_message
 from glances.plugins.core import CorePlugin
+from glances.plugins.gpu.cards.arm import get_mem_capacity_bytes
+from glances.plugins.gpu.cards.intel import (
+    get_per_pid_gpu_mem_bytes,
+    get_per_pid_gpu_percent,
+    intel_gpu_present,
+)
 from glances.plugins.plugin.model import GlancesPluginModel
 from glances.processes import glances_processes, sort_stats
 
@@ -75,6 +81,18 @@ fields_description = {
         'description': 'Process CPU consumption \
 (returned value can be > 100.0 in case of a process running multiple threads on different CPU cores)',
         'unit': 'percent',
+    },
+    'gpu_percent': {
+        'description': 'Process GPU consumption in % (Intel i915/xe only, 0 when idle or unavailable)',
+        'unit': 'percent',
+    },
+    'gpu_mem': {
+        'description': 'Process GPU memory consumption in % of system memory (Intel i915/xe only)',
+        'unit': 'percent',
+    },
+    'gpu_mem_bytes': {
+        'description': 'Process GPU-resident memory in bytes (Intel i915/xe only)',
+        'unit': 'byte',
     },
     'memory_percent': {
         'description': 'Process memory consumption',
@@ -170,7 +188,10 @@ class ProcesslistPlugin(GlancesPluginModel):
     # Define the header layout of the processes list columns
     layout_header = {
         'cpu': '{:<6} ',
+        'gpu': '{:<6} ',
+        'gmem': '{:<6} ',
         'mem': '{:<5} ',
+        'gmem_bytes': '{:<5} ',
         'virt': '{:<5} ',
         'res': '{:<5} ',
         'pid': '{:>{width}} ',
@@ -189,6 +210,9 @@ class ProcesslistPlugin(GlancesPluginModel):
     layout_stat = {
         'cpu': '{:<6.1f}',
         'cpu_no_digit': '{:<6.0f}',
+        'gpu': '{:<6.1f}',
+        'gmem': '{:<6.1f}',
+        'gmem_bytes': '{:<5} ',
         'mem': '{:<5.1f} ',
         'virt': '{:<5} ',
         'res': '{:<5} ',
@@ -281,6 +305,63 @@ class ProcesslistPlugin(GlancesPluginModel):
         # Get the max values (dict)
         # Use Deep copy to avoid change between update and display
         self.max_values = copy.deepcopy(glances_processes.max_values())
+
+        # Per-process GPU stats (Intel i915/xe only, same source as nvtop).
+        # Shown as GPU%/GMEM% columns next to CPU% plus a GMEM bytes column
+        # after MEM%; hidden when no Intel GPU is present or the user
+        # disabled the stat.
+        self.enable_stats = [
+            s for s in type(self).enable_stats if s not in ('gpu_percent', 'gpu_mem', 'gpu_mem_bytes')
+        ]
+        gpu_mem_map = None
+        gpu_mem_capacity = None
+        if intel_gpu_present():
+            try:
+                gpu_mem_map = get_per_pid_gpu_mem_bytes()
+                gpu_mem_capacity = get_mem_capacity_bytes('/proc/meminfo')
+            except Exception as e:
+                logger.debug(f'Per-process GPU memory unavailable: {e}')
+                gpu_mem_map = None
+                gpu_mem_capacity = None
+            if 'gpu_percent' not in glances_processes.disable_stats:
+                try:
+                    gpu_map = get_per_pid_gpu_percent()
+                except Exception as e:
+                    logger.debug(f'Per-process GPU stats unavailable: {e}')
+                    gpu_map = None
+                if gpu_map is not None:
+                    for proc in stats:
+                        proc['gpu_percent'] = gpu_map.get(proc['pid'], 0)
+                    self.enable_stats.insert(
+                        self.enable_stats.index('cpu_percent') + 1, 'gpu_percent'
+                    )
+                    self.max_values['gpu_percent'] = max(
+                        (p['gpu_percent'] for p in stats), default=0
+                    )
+            if gpu_mem_map is not None and gpu_mem_capacity:
+                if 'gpu_mem' not in glances_processes.disable_stats:
+                    for proc in stats:
+                        proc['gpu_mem'] = round(
+                            gpu_mem_map.get(proc['pid'], 0) / gpu_mem_capacity * 100, 1
+                        )
+                    anchor = (
+                        'gpu_percent'
+                        if 'gpu_percent' in self.enable_stats
+                        else 'cpu_percent'
+                    )
+                    self.enable_stats.insert(
+                        self.enable_stats.index(anchor) + 1, 'gpu_mem'
+                    )
+                    self.max_values['gpu_mem'] = max(
+                        (p['gpu_mem'] for p in stats), default=0
+                    )
+                if 'gpu_mem_bytes' not in glances_processes.disable_stats:
+                    for proc in stats:
+                        proc['gpu_mem_bytes'] = gpu_mem_map.get(proc['pid'], 0)
+                    if 'memory_percent' in self.enable_stats:
+                        self.enable_stats.insert(
+                            self.enable_stats.index('memory_percent') + 1, 'gpu_mem_bytes'
+                        )
 
         # Update the stats
         self.stats = stats
@@ -387,6 +468,48 @@ class ProcesslistPlugin(GlancesPluginModel):
             ret = self.curse_add_line(msg, alert)
         else:
             msg = self.layout_header['mem'].format('?')
+            ret = self.curse_add_line(msg)
+        return ret
+
+    def _get_process_curses_gpu_percent(self, p, selected, args):
+        """Return process GPU curses"""
+        if key_exist_value_not_none_not_v('gpu_percent', p, ''):
+            msg = self.layout_stat['gpu'].format(p['gpu_percent'])
+            alert = self.get_alert(
+                p['gpu_percent'],
+                highlight_zero=True,
+                is_max=(p['gpu_percent'] == self.max_values['gpu_percent']),
+                header="gpu",
+            )
+            ret = self.curse_add_line(msg, alert)
+        else:
+            msg = self.layout_header['gpu'].format('?')
+            ret = self.curse_add_line(msg)
+        return ret
+
+    def _get_process_curses_gpu_mem(self, p, selected, args):
+        """Return process GPU memory curses"""
+        if key_exist_value_not_none_not_v('gpu_mem', p, ''):
+            msg = self.layout_stat['gmem'].format(p['gpu_mem'])
+            alert = self.get_alert(
+                p['gpu_mem'],
+                highlight_zero=True,
+                is_max=(p['gpu_mem'] == self.max_values['gpu_mem']),
+                header="gmem",
+            )
+            ret = self.curse_add_line(msg, alert)
+        else:
+            msg = self.layout_header['gmem'].format('?')
+            ret = self.curse_add_line(msg)
+        return ret
+
+    def _get_process_curses_gpu_mem_bytes(self, p, selected, args):
+        """Return process GPU memory (bytes) curses"""
+        if key_exist_value_not_none_not_v('gpu_mem_bytes', p, ''):
+            msg = self.layout_stat['gmem_bytes'].format(self.auto_unit(p['gpu_mem_bytes'], low_precision=False))
+            ret = self.curse_add_line(msg, optional=True)
+        else:
+            msg = self.layout_header['gmem_bytes'].format('?')
             ret = self.curse_add_line(msg)
         return ret
 
@@ -849,7 +972,16 @@ class ProcesslistPlugin(GlancesPluginModel):
         display_stats = [i for i in self.enable_stats if i not in glances_processes.disable_stats]
         self._msg_curse_header_cpu(ret, process_sort_key, display_stats, args=args, sort_style=sort_style)
         self.msg_curse_header_common(
+            ret, process_sort_key, 'gpu_percent', display_stats, 'gpu', 'GPU%', sort_style=sort_style
+        )
+        self.msg_curse_header_common(
+            ret, process_sort_key, 'gpu_mem', display_stats, 'gmem', 'GMEM%', sort_style=sort_style
+        )
+        self.msg_curse_header_common(
             ret, process_sort_key, 'memory_percent', display_stats, 'mem', 'MEM%', sort_style=sort_style
+        )
+        self.msg_curse_header_common(
+            ret, process_sort_key, 'gpu_mem_bytes', display_stats, 'gmem_bytes', 'GMEM', sort_style=sort_style
         )
         if 'memory_info' in display_stats:
             if not self.get_conf_value('disable_virtual_memory', convert_bool=True, default=False):
