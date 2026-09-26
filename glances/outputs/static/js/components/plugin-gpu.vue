@@ -74,7 +74,7 @@
                             <td v-if="mean.proc != null" class="col" :class="getMeanDecoration('proc')">
                                 <span>{{ $filters.number(mean.proc, 0) }}%</span>
                             </td>
-                            <td v-if="mean.proc == null" class="col"><span>N/A</span>></td>
+                            <td v-if="mean.proc == null" class="col"><span>N/A</span></td>
                         </tr>
                         <tr>
                             <td class="col">mem mean:</td>

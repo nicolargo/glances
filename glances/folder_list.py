@@ -119,7 +119,7 @@ class FolderList:
         # Iter upon the folder list
         for i in range(len(self.get())):
             # Update folder size
-            if not self.first_grab and i in self.timer_folders and not self.timer_folders[i].finished():
+            if not self.first_grab and i < len(self.timer_folders) and not self.timer_folders[i].finished():
                 continue
             # Set the key (see issue #2327)
             self.__folder_list[i]['key'] = key
@@ -132,7 +132,7 @@ class FolderList:
                     )
                 )
             # Reset the timer
-            if i in self.timer_folders:
+            if i < len(self.timer_folders):
                 self.timer_folders[i].reset()
 
         # It is no more the first time...

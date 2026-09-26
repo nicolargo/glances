@@ -45,24 +45,22 @@ export default {
 		},
 	},
 	methods: {
+		// Mirrors AmpsPlugin.get_alert() in glances/plugins/amps/__init__.py,
+		// which is the authority: an unset bound defaults to the observed count,
+		// an out-of-range count is WARNING (not CAREFUL), and a configured
+		// minimum of 0 means a count of 0 is fine.
 		getNameDecoration(process) {
 			const count = process.count;
 			const countMin = process.countmin;
 			const countMax = process.countmax;
-			let decoration = "ok";
+
 			if (count > 0) {
-				if (
-					(countMin === null || count >= countMin) &&
-					(countMax === null || count <= countMax)
-				) {
-					decoration = "ok";
-				} else {
-					decoration = "careful";
-				}
-			} else {
-				decoration = countMin === null ? "ok" : "critical";
+				const min = countMin === null ? count : Number(countMin);
+				const max = countMax === null ? count : Number(countMax);
+				return min <= count && count <= max ? "ok" : "warning";
 			}
-			return decoration;
+
+			return countMin === null || Number(countMin) === 0 ? "ok" : "critical";
 		},
 	},
 };

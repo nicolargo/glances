@@ -1,9 +1,10 @@
+import curses
 from types import SimpleNamespace
 from unittest.mock import MagicMock, Mock
 
 import pytest
 
-from glances.outputs.glances_curses import _GlancesCurses
+from glances.outputs.glances_curses import GlancesTextbox, _GlancesCurses
 
 
 @pytest.fixture
@@ -169,3 +170,106 @@ class TestDisplayTopHelpers:
 
         assert result_widths == plugin_widths  # nosec B101
         assert result_stats_width == 0  # nosec B101
+
+
+class TestGlancesTextbox:
+    @pytest.mark.parametrize('key', [127, 8, curses.KEY_BACKSPACE])
+    @pytest.mark.parametrize('column', [1, 3])
+    def test_backspace_deletes_previous_character(self, key, column):
+        window = Mock(encoding='utf-8')
+        window.getmaxyx.return_value = (1, 20)
+        window.getyx.return_value = (0, column)
+        textbox = GlancesTextbox(window, insert_mode=True)
+
+        result = textbox.do_command(key)
+
+        window.move.assert_called_once_with(0, column - 1)
+        window.delch.assert_called_once_with()
+        assert result == 1  # nosec B101
+
+    def test_enter_finishes_editing(self):
+        window = Mock()
+        window.getmaxyx.return_value = (1, 20)
+        textbox = GlancesTextbox(window, insert_mode=True)
+
+        assert textbox.do_command(10) == 0  # nosec B101
+
+        window.delch.assert_not_called()
+
+
+class TestCursorDisable:
+    """Test cursor disabling in client/server mode (see issue #3221)."""
+
+    @pytest.fixture
+    def screen(self, glancescreen):
+        """Extend the lightweight screen with cursor-related state."""
+        glancescreen.args.disable_cursor = True
+        glancescreen.args.cursor_process_name_position = 3
+        glancescreen.args.arrow_keys_sort = False
+        return glancescreen
+
+    def _dispatch(self, screen, key):
+        """Invoke the dispatch table with a given pressed key."""
+        screen.pressedkey = key
+        screen.catch_other_actions_maybe_return_to_browser(return_to_browser=False)
+
+    def test_process_name_left_is_noop_when_cursor_disabled(self, screen):
+        """Left arrow must not scroll the process name when cursor is disabled."""
+        self._dispatch(screen, curses.KEY_LEFT)
+        assert screen.args.cursor_process_name_position == 3  # nosec B101
+
+    def test_process_name_right_is_noop_when_cursor_disabled(self, screen):
+        """Right arrow must not scroll the process name when cursor is disabled."""
+        self._dispatch(screen, curses.KEY_RIGHT)
+        assert screen.args.cursor_process_name_position == 3  # nosec B101
+
+    def test_process_name_right_advances_when_cursor_enabled(self, glancescreen):
+        """When cursor is enabled, right arrow advances the name position."""
+        glancescreen.args.disable_cursor = False
+        glancescreen.args.cursor_process_name_position = 3
+        glancescreen.args.arrow_keys_sort = False
+        self._dispatch(glancescreen, curses.KEY_RIGHT)
+        assert glancescreen.args.cursor_process_name_position == 4  # nosec B101
+
+    def test_process_name_left_decrements_when_cursor_enabled(self, glancescreen):
+        """When cursor is enabled, left arrow decrements the name position."""
+        glancescreen.args.disable_cursor = False
+        glancescreen.args.cursor_process_name_position = 3
+        glancescreen.args.arrow_keys_sort = False
+        self._dispatch(glancescreen, curses.KEY_LEFT)
+        assert glancescreen.args.cursor_process_name_position == 2  # nosec B101
+
+
+class TestLoadConfigPrecedence:
+    """docs/config.rst: options given on the command line override the file."""
+
+    @staticmethod
+    def load(outputs, **args):
+        from glances.config import Config
+
+        config = Config()
+        config.parser.read_dict({'outputs': outputs})
+        screen = _GlancesCurses.__new__(_GlancesCurses)
+        screen.args = SimpleNamespace(**args)
+        screen._left_sidebar = ['network']
+        screen.load_config(config)
+        return screen.args
+
+    def test_disable_separator_flag_beats_config(self):
+        # --disable-separator, or --disable-unicode via main.py, leaves it False.
+        args = self.load({'separator': 'True'}, enable_separator=False, disable_bg=False)
+        assert args.enable_separator is False
+
+    def test_disable_bg_flag_beats_config(self):
+        args = self.load({'disable_bg': 'False'}, enable_separator=True, disable_bg=True)
+        assert args.disable_bg is True
+
+    def test_config_applies_when_no_flag_is_given(self):
+        args = self.load({'separator': 'False', 'disable_bg': 'True'}, enable_separator=True, disable_bg=False)
+        assert args.enable_separator is False
+        assert args.disable_bg is True
+
+    def test_defaults_are_kept_when_the_keys_are_absent(self):
+        args = self.load({'left_menu': 'network'}, enable_separator=True, disable_bg=False)
+        assert args.enable_separator is True
+        assert args.disable_bg is False

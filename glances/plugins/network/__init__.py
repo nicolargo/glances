@@ -84,8 +84,10 @@ class NetworkPlugin(GlancesPluginModel):
         # Hide stats if it has never been != 0
         if config is not None:
             self.hide_zero = config.get_bool_value(self.plugin_name, 'hide_zero', default=False)
+            self.hide_threshold_bytes = config.get_int_value(self.plugin_name, 'hide_threshold_bytes', default=0)
         else:
             self.hide_zero = False
+            self.hide_threshold_bytes = 0
         self.hide_zero_fields = ['bytes_recv_rate_per_sec', 'bytes_sent_rate_per_sec']
 
         #  Add support for automatically hiding network interfaces that are down
@@ -210,13 +212,16 @@ class NetworkPlugin(GlancesPluginModel):
         for i in self.get_raw():
             if_real_name = i['interface_name'].split(':')[0]
 
-            # Skip alert if no timespan to measure
-            if not i.get('bytes_recv_rate_per_sec') or not i.get('bytes_sent_rate_per_sec'):
-                continue
-
-            # Convert rate to bps (to be able to compare to interface speed)
-            bps_rx = int(i['bytes_recv_rate_per_sec'] * 8)
-            bps_tx = int(i['bytes_sent_rate_per_sec'] * 8)
+            # Convert rate to bps (to be able to compare to interface speed).
+            # A missing rate defaults to 0 rather than skipping the interface:
+            # the guard here was `or`, so one idle direction suppressed the
+            # alert for BOTH. A send-only interface saturating its uplink went
+            # undecorated because its rx rate happened to be exactly 0, and a
+            # receive-only one (a monitor port) the same way. 0 is a real
+            # measurement, not a missing one. Same fix as the diskio plugin,
+            # which dropped this guard for the same reason (#3684).
+            bps_rx = int((i.get('bytes_recv_rate_per_sec') or 0) * 8)
+            bps_tx = int((i.get('bytes_sent_rate_per_sec') or 0) * 8)
 
             # Decorate the bitrate with the configuration file thresholds
             alert_rx = self.get_alert(bps_rx, header='rx', action_key=if_real_name)
@@ -233,7 +238,7 @@ class NetworkPlugin(GlancesPluginModel):
             self.views[i[self.get_key()]]['bytes_recv']['decoration'] = alert_rx
             self.views[i[self.get_key()]]['bytes_recv_rate_per_sec']['decoration'] = alert_rx
             self.views[i[self.get_key()]]['bytes_sent']['decoration'] = alert_tx
-            self.views[i[self.get_key()]]['bytes_sent_rate_per_sec']['decoration'] = alert_rx
+            self.views[i[self.get_key()]]['bytes_sent_rate_per_sec']['decoration'] = alert_tx
 
     def _msg_curse_header(self, args, name_max_width):
         """Return the header curse lines."""

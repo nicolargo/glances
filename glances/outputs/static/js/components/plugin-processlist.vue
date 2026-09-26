@@ -179,13 +179,11 @@
                         <td v-show="!getDisableStats().includes('cpu_times')" scope="row" class="">
                             {{ process.timeforhuman }}
                         </td>
-                        <td v-if="process.timeplus == '?'" v-show="!getDisableStats().includes('cpu_times')" scope="row"
-                            class="">?</td>
                         <td v-show="!getDisableStats().includes('num_threads')" scope="row" class="">
                             {{ process.num_threads == -1 ? '?' : process.num_threads }}
                         </td>
                         <td v-show="!getDisableStats().includes('nice')" scope="row" :class="{ nice: process.isNice }">
-                            {{ $filters.exclamation(process.nice) }}
+                            {{ $filters.exclamation(process.niceDisplay) }}
                         </td>
                         <td v-show="!getDisableStats().includes('status')" scope="row"
                             :class="{ status: process.status == 'R' }">
@@ -364,7 +362,7 @@
                             {{ process.num_threads == -1 ? '?' : process.num_threads }}
                         </td>
                         <td v-show="!getDisableStats().includes('nice')" scope="row" :class="{ nice: process.isNice }">
-                            {{ $filters.exclamation(process.nice) }}
+                            {{ $filters.exclamation(process.niceDisplay) }}
                         </td>
                         <td v-show="!getDisableStats().includes('status')" scope="row"
                             :class="{ status: process.status == 'R' }">
@@ -406,6 +404,28 @@ import {
 } from "../filters.js";
 import { GlancesHelper } from "../services.js";
 import { store } from "../store.js";
+
+// Windows has no nice ladder: the API carries the Win32 priority *class*, whose values
+// are neither ordered nor small (32 is normal, 32768 is above normal). Show the same
+// short labels Windows itself uses, matching the TUI. See issue #3672.
+const WINDOWS_NICE_LABELS = {
+	256: "RT", // REALTIME_PRIORITY_CLASS
+	128: "Hi", // HIGH_PRIORITY_CLASS
+	32768: "AN", // ABOVE_NORMAL_PRIORITY_CLASS
+	32: "No", // NORMAL_PRIORITY_CLASS
+	16384: "BN", // BELOW_NORMAL_PRIORITY_CLASS
+	64: "Lo", // IDLE_PRIORITY_CLASS
+};
+
+// Only the rendering changes: an unmapped value falls through to itself, so a priority
+// class Windows adds later stays visible as a number instead of disappearing.
+export function displayNice(nice, isWindows) {
+	if (!isWindows) {
+		return nice;
+	}
+	const label = WINDOWS_NICE_LABELS[nice];
+	return label === undefined ? nice : label;
+}
 
 export default {
 	props: {
@@ -531,6 +551,7 @@ export default {
 					process.nice !== undefined &&
 					((isWindows && process.nice != 32) ||
 						(!isWindows && process.nice != 0));
+				process.niceDisplay = displayNice(process.nice, isWindows);
 
 				if (Array.isArray(process.cmdline)) {
 					process.cmdline = process.cmdline.join(" ").replace(/\n/g, " ");
@@ -563,9 +584,22 @@ export default {
 			);
 		},
 		limit() {
-			return this.config.outputs !== undefined
-				? this.config.outputs.max_processes_display
-				: undefined;
+			if (this.config.processlist !== undefined && this.config.processlist.max !== undefined && this.config.processlist.max !== null) {
+				return parseInt(this.config.processlist.max, 10);
+			}
+			if (this.config.outputs !== undefined && this.config.outputs.max_processes_display !== undefined && this.config.outputs.max_processes_display !== null) {
+				return parseInt(this.config.outputs.max_processes_display, 10);
+			}
+			if (this.data.stats !== undefined && this.data.stats.processcount !== undefined && this.data.stats.processcount.max !== undefined) {
+				return parseInt(this.data.stats.processcount.max, 10);
+			}
+			if (this.args !== undefined && this.args.max_processes !== undefined && this.args.max_processes !== null) {
+				return parseInt(this.args.max_processes, 10);
+			}
+			if (this.args !== undefined && this.args.process_max !== undefined && this.args.process_max !== null) {
+				return parseInt(this.args.process_max, 10);
+			}
+			return undefined;
 		},
 		focus() {
 			return this.args !== undefined &&
@@ -642,6 +676,7 @@ export default {
 				process.nice !== undefined &&
 				((isWindows && process.nice != 32) ||
 					(!isWindows && process.nice != 0));
+			process.niceDisplay = displayNice(process.nice, isWindows);
 
 			if (Array.isArray(process.cmdline)) {
 				process.name =
@@ -667,7 +702,7 @@ export default {
 			return GlancesHelper.getAlert(
 				"processlist",
 				"processlist_mem_",
-				process.cpu_percent,
+				process.memory_percent,
 			);
 		},
 		getDisableStats() {

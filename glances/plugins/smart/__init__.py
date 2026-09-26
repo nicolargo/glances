@@ -187,13 +187,13 @@ def get_smart_data(hide_attributes):
 class SmartPlugin(GlancesPluginModel):
     """Glances' HDD SMART plugin."""
 
-    def __init__(self, args=None, config=None, stats_init_value=[]):
+    def __init__(self, args=None, config=None):
         """Init the plugin."""
         if not is_admin() and args:
             disable(args, "smart")
             logger.debug("Current user is not admin, HDD SMART plugin disabled.")
 
-        super().__init__(args=args, config=config)
+        super().__init__(args=args, config=config, stats_init_value=[])
 
         self.display_curse = True
         self.hide_attributes = self._parse_hide_attributes(config)
@@ -256,8 +256,9 @@ class SmartPlugin(GlancesPluginModel):
         return str(raw)
 
     def _get_sorted_stat_keys(self, device_stat):
-        """Get sorted attribute keys from device stats, excluding DeviceName."""
-        keys = [k for k in device_stat if k != 'DeviceName']
+        """Get sorted attribute keys from device stats, excluding the non attribute ones."""
+        # 'key' is the name of the identifier field, added by update() (see #3704)
+        keys = [k for k in device_stat if k not in ('DeviceName', 'key')]
         try:
             return sorted(keys, key=int)
         except ValueError:

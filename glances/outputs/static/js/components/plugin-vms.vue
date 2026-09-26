@@ -32,7 +32,7 @@
                 <tr v-for="(vm, vmId) in vms" :key="vmId">
                     <td v-show="showEngine">{{ vm.engine }}</td>
                     <td>{{ vm.name }}</td>
-                    <td :class="vm.status == 'stopped' ? 'careful' : 'ok'">
+                    <td :class="getStatusClass(vm.status)">
                         {{ vm.status }}
                     </td>
                     <td>
@@ -157,6 +157,20 @@ export default {
 					};
 				}
 			},
+		},
+	},
+	methods: {
+		// Mirrors VmsPlugin.vm_alert() in glances/plugins/vms/__init__.py,
+		// which is the authority — the TUI calls it directly. Statuses follow
+		// multipass' instance states.
+		getStatusClass(status) {
+			if (status === "running") {
+				return "ok";
+			}
+			if (["starting", "restarting", "delayed shutdown"].includes(status)) {
+				return "warning";
+			}
+			return "info";
 		},
 	},
 };

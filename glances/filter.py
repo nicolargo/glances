@@ -36,7 +36,14 @@ class GlancesFilterList:
 
     @filter.setter
     def filter(self, value):
-        """Add a comma separated list of filters"""
+        """Set the filter list from a comma separated list of filters"""
+        # The setter is the whole list, not an addition to it, the way
+        # GlancesFilter's is. glances.conf is read when the plugin loads and the
+        # command line is applied just after, so appending left both live and
+        # OR-ed together -- --process-focus could widen the list set in
+        # glances.conf but never narrow it, against the precedence config.rst
+        # documents.
+        self._filter = []
         for f in value.split(','):
             self._add_filter(f)
 
@@ -110,7 +117,11 @@ class GlancesFilter:
             self._filter = None
             self._filter_key = None
         else:
-            new_filter = value.split(':')
+            # Split once: everything after the first colon is the regex. Splitting on
+            # every colon dropped the rest, and the truncation is silent because the
+            # leading fragment usually still compiles -- `cmdline:C:\Program Files\.*`
+            # became the pattern `C`, which matches nothing and raises nothing.
+            new_filter = value.split(':', 1)
             if len(new_filter) == 1:
                 self._filter = new_filter[0]
                 self._filter_key = None

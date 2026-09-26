@@ -23,7 +23,7 @@
 				<tr v-for="(percpu, percpuId) in percpus" v-if="args.percpu" :key="percpuId">
 					<td scope="col">CPU{{ percpu.number }}</td>
 					<td scope="col" class="progress">
-						<div :class="`progress-bar progress-bar-${getDecoration('cpu')}`" role="progressbar"
+						<div :class="`progress-bar progress-bar-${getPercpuDecoration(percpu)}`" role="progressbar"
 							:aria-valuenow="percpu.total" aria-valuemin="0" aria-valuemax="100"
 							:style="`width: ${percpu.total}%;`">
 							&nbsp;
@@ -123,6 +123,18 @@ export default {
 				return;
 			}
 			return this.view[value].decoration.toLowerCase();
+		},
+		// A core's bar is coloured by that core's own load. Reading the aggregate
+		// 'cpu' style here painted a core pegged at 100% with the colour of the
+		// average. The "x" row averages the cores that are not shown, and the
+		// server styles it under 'other'.
+		getPercpuDecoration(percpu) {
+			const decorations = this.view.percpu_decoration || {};
+			const decoration =
+				decorations[percpu.number === "x" ? "other" : percpu.number];
+			return decoration === undefined
+				? this.getDecoration("cpu")
+				: decoration.toLowerCase();
 		},
 	},
 };

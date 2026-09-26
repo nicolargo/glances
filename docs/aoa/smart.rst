@@ -3,7 +3,7 @@
 SMART
 =====
 
-*Availability: all but Mac OS*
+*Availability: all but macOS*
 
 *Dependency: this plugin uses the optional pySMART Python lib*
 

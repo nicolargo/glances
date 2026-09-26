@@ -102,8 +102,12 @@ export default {
 						this.view[network.interfaceName]["bytes_recv_rate_per_sec"];
 					const bytesSentRate =
 						this.view[network.interfaceName]["bytes_sent_rate_per_sec"];
+					// An interface disappears only when every rate it is judged on has
+					// never moved -- the rule msg_curse applies. Requiring both to be
+					// visible instead hid an interface that has only ever received, or
+					// only ever sent.
 					return (
-						(!bytesRecvRate || bytesRecvRate.hidden === false) &&
+						(!bytesRecvRate || bytesRecvRate.hidden === false) ||
 						(!bytesSentRate || bytesSentRate.hidden === false)
 					);
 				});

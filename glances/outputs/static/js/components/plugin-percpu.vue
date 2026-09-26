@@ -11,7 +11,7 @@
                         <td scope="col">system</td>
                         <td scope="col">idle</td>
                         <td scope="col">iowait</td>
-                        <td scope="col">steel</td>
+                        <td scope="col">steal</td>
                     </tr>
                 </thead>
                 <tbody>
@@ -66,7 +66,7 @@ export default {
 			return GlancesHelper.getAlert("percpu", "percpu_system_", cpu.system);
 		},
 		getIOWaitAlert(cpu) {
-			return GlancesHelper.getAlert("percpu", "percpu_iowait_", cpu.system);
+			return GlancesHelper.getAlert("percpu", "percpu_iowait_", cpu.iowait);
 		},
 	},
 };

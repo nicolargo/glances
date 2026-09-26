@@ -65,7 +65,15 @@ export default {
 					used: diskData.used,
 					available: diskData.available,
 					status: diskData.status,
-					degraded: diskData.used < diskData.available,
+					// Mirrors RaidPlugin.raid_alert: raid0 has no redundancy, so
+					// used < available carries no meaning there, and an unknown
+					// device count is not a degradation. Guarding null matters in JS
+					// where `null < 5` is true, which flagged an unreadable array.
+					degraded:
+						diskData.type !== 'raid0' &&
+						diskData.used != null &&
+						diskData.available != null &&
+						diskData.used < diskData.available,
 					config:
 						diskData.config == null ? "" : diskData.config.replace("_", "A"),
 					inactive: diskData.status == "inactive",
@@ -80,10 +88,18 @@ export default {
 	},
 	methods: {
 		getAlert(disk) {
+			// Same order as RaidPlugin.raid_alert on the Python side: raid0 first,
+			// then inactive, then an unknown device count, then the comparison.
+			if (disk.type === 'raid0') {
+				return "ok";
+			}
 			if (disk.inactive) {
 				return "critical";
 			}
-			if (disk.degraded) {
+			if (disk.used == null || disk.available == null) {
+				return "";
+			}
+			if (disk.used < disk.available) {
 				return "warning";
 			}
 			return "ok";

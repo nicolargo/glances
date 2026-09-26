@@ -10,12 +10,16 @@
 """Tests for the Sensors plugin."""
 
 import json
+from argparse import Namespace
+from unittest.mock import patch
 
 import pytest
 
 from glances.config import Config
 from glances.globals import LINUX
 from glances.plugins.sensors import GlancesGrabSensors, SensorsPlugin
+from glances.plugins.sensors.sensor import glances_hddtemp
+from glances.plugins.sensors.sensor.glances_hddtemp import HddtempPlugin
 
 
 @pytest.fixture
@@ -179,6 +183,7 @@ class TestSensorsPluginMsgCurse:
     def test_msg_curse_returns_list(self, sensors_plugin):
         """Test that msg_curse returns a list."""
         sensors_plugin.update()
+        sensors_plugin.update_views()
         msg = sensors_plugin.msg_curse(max_width=80)
         assert isinstance(msg, list)
 
@@ -187,6 +192,25 @@ class TestSensorsPluginMsgCurse:
         sensors_plugin.update()
         msg = sensors_plugin.msg_curse()
         assert isinstance(msg, list)
+
+    def test_msg_curse_without_args(self, sensors_plugin):
+        """Test that msg_curse does not crash when args is None."""
+        stats = [
+            {
+                'label': 'CPU',
+                'unit': 'C',
+                'value': 42,
+                'warning': 60,
+                'critical': 80,
+                'type': 'temperature_core',
+                'key': 'label',
+            }
+        ]
+        with patch.object(sensors_plugin, 'stats', stats):
+            sensors_plugin.update_views()
+            msg = sensors_plugin.msg_curse(max_width=80)
+        assert isinstance(msg, list)
+        assert any('42C' in m['msg'] for m in msg)
 
 
 class TestSensorsPluginExport:
@@ -385,3 +409,103 @@ class TestSensorsPluginConfigThresholds:
         """Sensors without config and system thresholds are not decorated."""
         plugin = self.build_plugin(tmp_path, '')
         assert self.decoration(plugin, 95) == 'DEFAULT'
+
+
+class TestSensorsPluginZeroValue:
+    """A reading of 0 is a reading and must still be evaluated."""
+
+    LIMITS = {
+        'sensors_battery_careful': 70,
+        'sensors_battery_warning': 80,
+        'sensors_battery_critical': 90,
+        'sensors_fan_speed_careful': 60,
+        'sensors_fan_speed_warning': 70,
+        'sensors_fan_speed_critical': 80,
+    }
+
+    @staticmethod
+    def build_plugin(stats, limits):
+        from unittest.mock import MagicMock
+
+        plugin = SensorsPlugin(args=MagicMock(), config=None)
+        plugin._limits = dict(limits)
+        plugin.stats = stats
+        plugin.update_views()
+        return plugin
+
+    @classmethod
+    def decoration(cls, value, sensor_type, limits=None):
+        stats = [{'label': 'S', 'value': value, 'unit': '%', 'key': 'label', 'type': sensor_type}]
+        plugin = cls.build_plugin(stats, limits if limits is not None else cls.LIMITS)
+        return plugin.get_views(item='S', key='value', option='decoration')
+
+    def test_battery_at_zero_percent_is_critical(self):
+        # The battery alert is computed on 100 - value, so an empty battery is the
+        # most critical reading there is. `not i['value']` skipped it outright while
+        # 3% — a strictly better state — was flagged CRITICAL.
+        assert self.decoration(0, 'battery') == 'CRITICAL'
+
+    def test_battery_at_zero_is_not_less_alarming_than_a_small_charge(self):
+        for charge in (1, 3, 9):
+            assert self.decoration(0, 'battery') == self.decoration(charge, 'battery')
+
+    def test_stopped_fan_is_evaluated_rather_than_skipped(self):
+        # A stopped fan must go through the thresholds like any other reading; what
+        # the configured thresholds then say about it is a separate question.
+        assert self.decoration(0, 'fan_speed') != 'DEFAULT'
+
+    def test_absent_sensor_is_still_skipped(self):
+        # No battery detected is reported as an empty list, not as a number.
+        assert self.decoration([], 'battery') == 'DEFAULT'
+        assert self.decoration(None, 'battery') == 'DEFAULT'
+
+    def test_placeholder_reading_does_not_raise(self):
+        # hddtemp-style placeholders are not numbers; the battery branch subtracts
+        # from the value, so they must not reach it.
+        assert self.decoration(b'ERR', 'battery') == 'DEFAULT'
+        assert self.decoration(b'SLP', 'fan_speed') == 'DEFAULT'
+
+    def test_nonzero_readings_are_unaffected(self):
+        assert self.decoration(95, 'fan_speed') == 'CRITICAL'
+        assert self.decoration(50, 'fan_speed') == 'OK'
+
+
+class TestHddtempPlugin:
+    """Test the hddtemp sub-plugin (it polls the hddtemp daemon over TCP)."""
+
+    @pytest.fixture
+    def connects(self, monkeypatch):
+        """Make every connect fail and return the list of addresses tried."""
+        addresses = []
+
+        class RefusingSocket:
+            def __init__(self, *args, **kwargs):
+                pass
+
+            def connect(self, address):
+                addresses.append(address)
+                raise ConnectionRefusedError
+
+            def close(self):
+                pass
+
+        monkeypatch.setattr(glances_hddtemp.socket, 'socket', RefusingSocket)
+        return addresses
+
+    def test_refused_connect_is_not_retried(self, connects):
+        plugin = HddtempPlugin(args=Namespace(disable_history=True))
+        for _ in range(3):
+            assert plugin.update() == []
+        assert len(connects) == 1
+
+    def test_disabled_plugin_does_not_connect(self, connects):
+        plugin = HddtempPlugin(args=Namespace(disable_history=True, disable_hddtemp=True))
+        assert plugin.update() == []
+        assert connects == []
+
+    def test_host_and_port_come_from_the_hddtemp_section(self, tmp_path, connects):
+        config_file = tmp_path / 'glances.conf'
+        config_file.write_text('[hddtemp]\nhost=10.9.9.9\nport=9999\n', encoding='utf-8')
+        plugin = HddtempPlugin(args=Namespace(disable_history=True), config=Config(config_dir=str(config_file)))
+        plugin.update()
+        assert connects == [('10.9.9.9', 9999)]

@@ -348,3 +348,62 @@ class TestDiskioPluginAlias:
         for disk in stats:
             if 'alias' in disk:
                 assert disk['alias'] is None or isinstance(disk['alias'], str)
+
+
+class TestDiskioBitrateAlert:
+    """The rx/tx thresholds describe a bitrate, so they must be measured against one."""
+
+    # get_stat_name() builds plugin_name + action_key + header, so a per-disk threshold
+    # is named after the disk, exactly as the network plugin's docstring documents
+    # (network_wlan0_rx_careful).
+    LIMITS = {
+        'diskio_sda_rx_careful': 50,
+        'diskio_sda_rx_warning': 70,
+        'diskio_sda_rx_critical': 90,
+        'diskio_sda_tx_careful': 50,
+        'diskio_sda_tx_warning': 70,
+        'diskio_sda_tx_critical': 90,
+    }
+
+    def _views_for(self, plugin, read_rate, write_rate):
+        plugin._limits.update(self.LIMITS)
+        plugin.stats = [
+            {
+                'disk_name': 'sda',
+                # Lifetime counters, large as they are on any machine with uptime.
+                'read_bytes': 5_000_000_000,
+                'write_bytes': 5_000_000_000,
+                'read_bytes_rate_per_sec': read_rate,
+                'write_bytes_rate_per_sec': write_rate,
+                'read_latency': 0,
+                'write_latency': 0,
+            }
+        ]
+        plugin.update_views()
+        return plugin.views['sda']
+
+    def test_alert_follows_the_rate_not_the_lifetime_counter(self, diskio_plugin):
+        """A quiet disk with terabytes of history is quiet, whatever the counter reads."""
+        views = self._views_for(diskio_plugin, read_rate=10, write_rate=10)
+        assert views['read_bytes']['decoration'] == 'OK'
+        assert views['write_bytes']['decoration'] == 'OK'
+
+    def test_a_busy_disk_still_raises_the_alert(self, diskio_plugin):
+        views = self._views_for(diskio_plugin, read_rate=95, write_rate=95)
+        assert views['read_bytes']['decoration'] == 'CRITICAL'
+        assert views['write_bytes']['decoration'] == 'CRITICAL'
+
+    def test_the_rate_field_the_webui_reads_is_decorated_too(self, diskio_plugin):
+        """plugin-diskio.vue asks for *_rate_per_sec; nothing used to set it."""
+        views = self._views_for(diskio_plugin, read_rate=95, write_rate=10)
+        assert views['read_bytes_rate_per_sec']['decoration'] == 'CRITICAL'
+        assert views['write_bytes_rate_per_sec']['decoration'] == 'OK'
+
+    def test_a_missing_rate_on_the_first_sample_does_not_raise(self, diskio_plugin):
+        """Before the second sample there is no timespan, so no rate field exists yet."""
+        diskio_plugin._limits.update(self.LIMITS)
+        diskio_plugin.stats = [
+            {'disk_name': 'sda', 'read_bytes': 1, 'write_bytes': 1, 'read_latency': 0, 'write_latency': 0}
+        ]
+        diskio_plugin.update_views()
+        assert diskio_plugin.views['sda']['read_bytes']['decoration'] == 'OK'

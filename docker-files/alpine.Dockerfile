@@ -16,19 +16,22 @@ ARG PYTHON_VERSION=3.14
 # Base layer to be used for building dependencies and the release images
 FROM alpine:${IMAGE_VERSION} AS base
 
+RUN <<EOR
+set -e
+
 # Upgrade the system
-RUN apk update \
-  && apk upgrade --no-cache
+apk update
+apk upgrade --no-cache
 
 # Install the minimal set of packages
-RUN apk add --no-cache \
+apk add --no-cache \
   python3 \
   curl \
   lm-sensors \
-  wireless-tools \
   smartmontools \
   iputils \
   tzdata
+EOR
 
 ##############################################################################
 # BUILD Stages

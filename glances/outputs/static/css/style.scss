@@ -426,8 +426,8 @@ body {
 
 #processlist {
     overflow-y: auto;
-    height: 600px;
-    margin-top: 1em;
+    max-height: calc(100vh - 420px);
+    margin-top: 0.5em;
 
     .table {
         margin-bottom: 1em;
@@ -449,7 +449,6 @@ body {
     * > td:nth-child(6) {
         text-overflow: ellipsis;
         white-space: nowrap;
-        width: 6em;
     }
     // Time
     * > td:nth-child(7) {

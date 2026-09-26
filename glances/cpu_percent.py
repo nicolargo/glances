@@ -331,7 +331,7 @@ class CpuPercent:
                 'softirq': cpu_times.softirq if hasattr(cpu_times, 'softirq') else None,
                 'steal': cpu_times.steal if hasattr(cpu_times, 'steal') else None,
                 'guest': cpu_times.guest if hasattr(cpu_times, 'guest') else None,
-                'guest_nice': cpu_times.steal if hasattr(cpu_times, 'guest_nice') else None,
+                'guest_nice': cpu_times.guest_nice if hasattr(cpu_times, 'guest_nice') else None,
                 'dpc': cpu_times.dpc if hasattr(cpu_times, 'dpc') else None,
                 # In PsUtil 8+ the 'interrupt' field is renamed to 'irq' - See #3472
                 'interrupt': cpu_times.interrupt if hasattr(cpu_times, 'interrupt') else None,

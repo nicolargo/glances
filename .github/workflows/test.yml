@@ -135,37 +135,40 @@ jobs:
         run: |
           python -m pytest ./tests/test_core.py
 
-  # test-freebsd:
+  test-freebsd:
 
-  #   needs: source-code-checks
-  #   runs-on: ubuntu-latest
-  #   strategy:
-  #     matrix:
-  #       # Only test the latest stable version
-  #       python-version: ["3.14"]
-  #   steps:
+    needs: source-code-checks
+    # FreeBSD is not offered by the GitHub-hosted runners, so the tests run in
+    # a FreeBSD VM booted under QEMU/KVM on a Linux runner. The whole job has
+    # to live in a single vmactions step: each step starts its own VM, so
+    # installing dependencies in one step and running pytest in another would
+    # run pytest in a VM that never saw the dependencies.
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
 
-  #     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+    permissions:
+      contents: read
 
-  #     - name: Set up Python ${{ matrix.python-version }}
-  #       uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
-  #       with:
-  #         python-version: ${{ matrix.python-version }}
-  #         cache: 'pip'
+    steps:
 
-  #     - name: Install dependencies
-  #       uses: vmactions/freebsd-vm@v1
-  #       with:
-  #         usesh: true
-  #         run: |
-  #           pkg install -y python3 gcc devel/py-pip
-  #           python3 --version
-  #           if [ -f dev-requirements.txt ]; then python3 -m pip install -r dev-requirements.txt; fi
-  #           if [ -f requirements.txt ]; then python3 -m pip install -r requirements.txt; fi
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-  #     - name: Unitary tests
-  #       uses: vmactions/freebsd-vm@v1
-  #       with:
-  #         usesh: true
-  #         run: |
-  #           python3 -m pytest ./tests/test_core.py
+      - name: Unitary tests
+        uses: vmactions/freebsd-vm@77ed28d336d03fe19a3f4f7266c1d2c4714dd79d # v1.5.2
+        with:
+          usesh: true
+          cache-after-prepare: true
+          prepare: |
+            pkg install -y python3 gcc devel/py-pip devel/py-pytest sysutils/py-psutil
+          run: |
+            set -e
+            python3 --version
+            # Only the runtime requirements are installed here.
+            # dev-requirements.txt pulls in matplotlib's build chain (contourpy,
+            # cffi, ...), and FreeBSD has no wheels for those, so pip builds them
+            # from source and the job times out. tests/test_core.py does not need
+            # them.
+            python3 -m pip install --break-system-packages -r requirements.txt
+            # Request is needed for conftest.py
+            python3 -m pip install --break-system-packages requests
+            python3 -m pytest ./tests/test_core.py

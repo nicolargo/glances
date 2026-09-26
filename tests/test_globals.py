@@ -9,12 +9,30 @@
 
 """Tests for glances.globals helper functions."""
 
+import errno
 import socket
 from collections import OrderedDict
 from types import SimpleNamespace
+from unittest import TestCase
 from unittest.mock import patch
 
-from glances.globals import get_ip_address
+from glances.globals import exit_after, get_ip_address
+
+
+class TestExitAfter(TestCase):
+    def test_preserves_result_when_queue_is_denied(self):
+        # Strict Snap confinement can prevent creation of the timeout queue.
+        # The synchronous fallback must still return the wrapped function's result.
+        with (
+            patch('glances.globals.LINUX', True),
+            patch('glances.globals.ctx_mp_fork.Queue', side_effect=PermissionError(errno.EACCES, 'Permission denied')),
+        ):
+
+            @exit_after(2, default=None)
+            def calculate_free(total, *, used):
+                return total - used
+
+            self.assertEqual(calculate_free(100, used=40), 60)
 
 
 def _stat(isup=True):
@@ -25,8 +43,66 @@ def _addr(family, address, netmask='255.255.255.0'):
     return SimpleNamespace(family=family, address=address, netmask=netmask, broadcast=None, ptp=None)
 
 
+def _no_route(*args, **kwargs):
+    """Simulate a host without a default route (socket probe fails)."""
+    raise OSError("Network is unreachable")
+
+
+class _FakeSocket:
+    """A connected UDP socket whose kernel-chosen source address we control."""
+
+    def __init__(self, address):
+        self._address = address
+
+    def __call__(self, *args, **kwargs):
+        return self
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+    def connect(self, target):
+        pass
+
+    def getsockname(self):
+        return (self._address, 0)
+
+
 class TestGetIpAddress:
-    """get_ip_address() should return the FIRST up, non-loopback interface's address."""
+    """get_ip_address() should return the default-route interface's address,
+    falling back to the first up, non-loopback interface."""
+
+    def test_default_route_address_wins_over_interface_order(self):
+        # Regression test for #3465: the interface order must not matter.
+        # docker0 comes FIRST here; the kernel routes default traffic from
+        # eth0's address, so eth0's address must be returned.
+        addrs = {
+            'docker0': [_addr(socket.AF_INET, '172.18.0.1')],
+            'eth0': [_addr(socket.AF_INET, '192.168.0.150')],
+        }
+
+        with (
+            patch('glances.globals.socket.socket', _FakeSocket('192.168.0.150')),
+            patch('glances.globals.psutil.net_if_addrs', return_value=addrs),
+        ):
+            ip_address, ip_netmask = get_ip_address()
+
+        assert ip_address == '192.168.0.150'
+        assert ip_netmask == '255.255.255.0'
+
+    def test_routed_address_without_psutil_entry_returns_none_netmask(self):
+        # ip_to_cidr() handles a None netmask (#1528), so the correct address
+        # must not be discarded just because its netmask cannot be found.
+        with (
+            patch('glances.globals.socket.socket', _FakeSocket('10.9.8.7')),
+            patch('glances.globals.psutil.net_if_addrs', return_value={}),
+        ):
+            ip_address, ip_netmask = get_ip_address()
+
+        assert ip_address == '10.9.8.7'
+        assert ip_netmask is None
 
     def test_returns_first_matching_interface_not_last(self):
         # Regression test for #3617: on hosts with Docker, a virtual bridge
@@ -44,6 +120,24 @@ class TestGetIpAddress:
         }
 
         with (
+            patch('glances.globals.socket.socket', _no_route),
+            patch('glances.globals.psutil.net_if_stats', return_value=stats),
+            patch('glances.globals.psutil.net_if_addrs', return_value=addrs),
+        ):
+            ip_address, ip_netmask = get_ip_address()
+
+        assert ip_address == '192.168.0.150'
+        assert ip_netmask == '255.255.255.0'
+
+    def test_loopback_probe_result_falls_back_to_interface_scan(self):
+        # Hosts that locally blackhole documentation/bogon ranges can resolve
+        # the probe to a loopback source; that must never be reported as the
+        # primary address (nor used as the zeroconf bind address).
+        stats = OrderedDict([('eth0', _stat())])
+        addrs = {'eth0': [_addr(socket.AF_INET, '192.168.0.150')]}
+
+        with (
+            patch('glances.globals.socket.socket', _FakeSocket('127.0.0.1')),
             patch('glances.globals.psutil.net_if_stats', return_value=stats),
             patch('glances.globals.psutil.net_if_addrs', return_value=addrs),
         ):
@@ -67,6 +161,7 @@ class TestGetIpAddress:
         }
 
         with (
+            patch('glances.globals.socket.socket', _no_route),
             patch('glances.globals.psutil.net_if_stats', return_value=stats),
             patch('glances.globals.psutil.net_if_addrs', return_value=addrs),
         ):
@@ -79,6 +174,7 @@ class TestGetIpAddress:
         addrs = {'lo': [_addr(socket.AF_INET, '127.0.0.1')]}
 
         with (
+            patch('glances.globals.socket.socket', _no_route),
             patch('glances.globals.psutil.net_if_stats', return_value=stats),
             patch('glances.globals.psutil.net_if_addrs', return_value=addrs),
         ):

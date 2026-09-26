@@ -147,7 +147,11 @@ class ContainersPlugin(GlancesPluginModel):
     def __init__(self, args=None, config=None):
         """Init the plugin."""
         super().__init__(
-            args=args, config=config, items_history_list=items_history_list, fields_description=fields_description
+            args=args,
+            config=config,
+            items_history_list=items_history_list,
+            stats_init_value=[],
+            fields_description=fields_description,
         )
 
         # The plugin can be disabled using: args.disable_docker
@@ -340,8 +344,12 @@ class ContainersPlugin(GlancesPluginModel):
             msg = f' sorted by {sort_for_human[self.sort_key]}'
             ret.append(self.curse_add_line(msg))
         if not self.views['show_engine_name']:
+            # With several engines the name is a per-row column instead, so
+            # there is nothing to add here. The append has to stay inside the
+            # branch: `msg` still holds the previous fragment, and appending it
+            # again repeats it in the title.
             msg = f' (served by {self.stats[0].get("engine", "")})'
-        ret.append(self.curse_add_line(msg))
+            ret.append(self.curse_add_line(msg))
         ret.append(self.curse_new_line())
         return ret
 

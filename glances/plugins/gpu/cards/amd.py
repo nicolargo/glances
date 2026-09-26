@@ -46,7 +46,10 @@ import re
 
 DRM_ROOT_FOLDER: str = '/sys/class/drm'
 DEVICE_FOLDER_PATTERN: str = 'card[0-9]*/device'
-AMDGPU_IDS_FILE: str = '/usr/share/libdrm/amdgpu.ids'
+# Looked up in order, first match wins. The distribution list comes first so that an already
+# resolved name never changes; the list shipped by AMD (amdgpu-install / ROCm) is only consulted
+# for the cards the distribution does not know, typically the Instinct data center ones.
+AMDGPU_IDS_FILES: tuple[str, ...] = ('/usr/share/libdrm/amdgpu.ids', '/opt/amdgpu/share/libdrm/amdgpu.ids')
 PCI_DEVICE_ID: str = 'device'
 PCI_REVISION_ID: str = 'revision'
 GPU_PROC_PERCENT: str = 'gpu_busy_percent'
@@ -125,16 +128,17 @@ def get_device_name(device_folder: str) -> str:
     # Table source: https://cgit.freedesktop.org/drm/libdrm/tree/data/amdgpu.ids
     device_id = read_file(device_folder, PCI_DEVICE_ID)
     revision_id = read_file(device_folder, PCI_REVISION_ID)
-    amdgpu_ids = read_file(AMDGPU_IDS_FILE)
-    if device_id and revision_id and amdgpu_ids:
+    if device_id and revision_id:
         # Strip leading "0x" and convert to uppercase hexadecimal
         device_id = device_id[2:].upper()
         revision_id = revision_id[2:].upper()
         # Syntax:
         # device_id,	revision_id,	product_name        <-- single tab after comma
         pattern = re.compile(f'^{device_id},\\s{revision_id},\\s(?P<product_name>.+)$', re.MULTILINE)
-        if match := pattern.search(amdgpu_ids):
-            return match.group('product_name').removeprefix('AMD ').removesuffix(' Graphics')
+        for amdgpu_ids_file in AMDGPU_IDS_FILES:
+            amdgpu_ids = read_file(amdgpu_ids_file)
+            if amdgpu_ids and (match := pattern.search(amdgpu_ids)):
+                return match.group('product_name').removeprefix('AMD ').removesuffix(' Graphics')
 
     return 'AMD GPU'
 

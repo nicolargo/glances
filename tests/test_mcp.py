@@ -18,7 +18,6 @@ import time
 import unittest
 
 import requests
-from pydantic import AnyUrl
 
 from glances import __version__
 from glances.outputs.glances_restful_api import GlancesMcpAuthMiddleware
@@ -118,7 +117,9 @@ class TestGlancesMcp(unittest.TestCase):
                 async with ClientSession(read, write) as session:
                     await session.initialize()
                     result = await session.list_resource_templates()
-                    return [t.uriTemplate for t in result.resourceTemplates]
+                    # Dump with wire (camelCase) names: MCP SDK >= 2 renamed the attributes to snake_case
+                    templates = result.model_dump(by_alias=True)['resourceTemplates']
+                    return [t['uriTemplate'] for t in templates]
 
         templates = run_async(_run())
         print(f"Resource templates returned: {templates}")
@@ -134,7 +135,7 @@ class TestGlancesMcp(unittest.TestCase):
             async with sse_client(MCP_SSE_URL) as (read, write):
                 async with ClientSession(read, write) as session:
                     await session.initialize()
-                    result = await session.read_resource(AnyUrl('glances://plugins'))
+                    result = await session.read_resource('glances://plugins')
                     return result.contents
 
         contents = run_async(_run())
@@ -155,7 +156,7 @@ class TestGlancesMcp(unittest.TestCase):
             async with sse_client(MCP_SSE_URL) as (read, write):
                 async with ClientSession(read, write) as session:
                     await session.initialize()
-                    result = await session.read_resource(AnyUrl('glances://stats'))
+                    result = await session.read_resource('glances://stats')
                     return result.contents
 
         contents = run_async(_run())
@@ -175,7 +176,7 @@ class TestGlancesMcp(unittest.TestCase):
             async with sse_client(MCP_SSE_URL) as (read, write):
                 async with ClientSession(read, write) as session:
                     await session.initialize()
-                    result = await session.read_resource(AnyUrl('glances://stats/cpu'))
+                    result = await session.read_resource('glances://stats/cpu')
                     return result.contents
 
         contents = run_async(_run())
@@ -194,7 +195,7 @@ class TestGlancesMcp(unittest.TestCase):
             async with sse_client(MCP_SSE_URL) as (read, write):
                 async with ClientSession(read, write) as session:
                     await session.initialize()
-                    result = await session.read_resource(AnyUrl('glances://limits/cpu'))
+                    result = await session.read_resource('glances://limits/cpu')
                     return result.contents
 
         contents = run_async(_run())

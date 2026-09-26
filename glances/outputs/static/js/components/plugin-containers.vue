@@ -38,10 +38,12 @@
                         <td v-show="!getDisableStats().includes('status')" scope="row" :class="getStatusClass(container.status)">
                             {{ container.status }}
                         </td>
-                        <td v-show="!getDisableStats().includes('cpu')" scope="row">
+                        <td v-show="!getDisableStats().includes('cpu')" scope="row"
+                            :class="getDecoration(container.name, 'cpu')">
                             {{ $filters.number(container.cpu_percent, 1) }}
                         </td>
-                        <td v-show="!getDisableStats().includes('mem')" scope="row">
+                        <td v-show="!getDisableStats().includes('mem')" scope="row"
+                            :class="getDecoration(container.name, 'mem')">
                             {{
                                 isNaN(container.memory_usage ?? NaN)
                                     ? '-'
@@ -89,10 +91,38 @@
                             MEM
                         </td>
                         <td v-show="!getDisableStats().includes('mem')" scope="col">MAX</td>
-                        <td v-show="!getDisableStats().includes('diskio')" scope="col">IORps</td>
-                        <td v-show="!getDisableStats().includes('diskio')" scope="col">IOWps</td>
-                        <td v-show="!getDisableStats().includes('networkio')" scope="col">RXps</td>
-                        <td v-show="!getDisableStats().includes('networkio')" scope="col">TXps</td>
+                        <td
+                            v-show="!getDisableStats().includes('diskio')"
+                            scope="col"
+                            :class="['sortable', sorter.column === 'io_rx' && 'sort']"
+                            @click="args.sort_processes_key = 'io_rx'"
+                        >
+                            IORps
+                        </td>
+                        <td
+                            v-show="!getDisableStats().includes('diskio')"
+                            scope="col"
+                            :class="['sortable', sorter.column === 'io_wx' && 'sort']"
+                            @click="args.sort_processes_key = 'io_wx'"
+                        >
+                            IOWps
+                        </td>
+                        <td
+                            v-show="!getDisableStats().includes('networkio')"
+                            scope="col"
+                            :class="['sortable', sorter.column === 'network_rx' && 'sort']"
+                            @click="args.sort_processes_key = 'network_rx'"
+                        >
+                            RXps
+                        </td>
+                        <td
+                            v-show="!getDisableStats().includes('networkio')"
+                            scope="col"
+                            :class="['sortable', sorter.column === 'network_tx' && 'sort']"
+                            @click="args.sort_processes_key = 'network_tx'"
+                        >
+                            TXps
+                        </td>
                         <td v-show="!getDisableStats().includes('ports')" scope="col">Ports</td>
                         <td v-show="!getDisableStats().includes('command')" scope="col">Command</td>
                     </tr>
@@ -110,10 +140,12 @@
                         <td v-show="!getDisableStats().includes('uptime')" scope="row">
                             {{ container.uptime }}
                         </td>
-                        <td v-show="!getDisableStats().includes('cpu')" scope="row">
+                        <td v-show="!getDisableStats().includes('cpu')" scope="row"
+                            :class="getDecoration(container.name, 'cpu')">
                             {{ $filters.number(container.cpu_percent, 1) }}
                         </td>
-                        <td v-show="!getDisableStats().includes('mem')" scope="row">
+                        <td v-show="!getDisableStats().includes('mem')" scope="row"
+                            :class="getDecoration(container.name, 'mem')">
                             {{
                                 isNaN(container.memory_usage ?? NaN)
                                     ? '-'
@@ -255,7 +287,15 @@ export default {
 		sortProcessesKey: {
 			immediate: true,
 			handler(sortProcessesKey) {
-				const sortable = ["cpu_percent", "memory_percent", "name"];
+				const sortable = [
+					"cpu_percent",
+					"memory_percent",
+					"name",
+					"io_rx",
+					"io_wx",
+					"network_rx",
+					"network_tx",
+				];
 				function isReverseColumn(column) {
 					return !["name"].includes(column);
 				}
@@ -266,6 +306,10 @@ export default {
 						memory_usage: "memory consumption",
 						cpu_times: "uptime",
 						name: "container name",
+						io_rx: "disk read rate",
+						io_wx: "disk write rate",
+						network_rx: "network receive rate",
+						network_tx: "network transmit rate",
 						None: "None",
 					};
 					return labels[value] || value;
@@ -286,6 +330,20 @@ export default {
 			return (
 				GlancesHelper.getLimit("containers", "containers_disable_stats") || []
 			);
+		},
+		// The server decorates a container's cpu and mem against that
+		// container's own threshold from the config file, falling back to the
+		// global one. Curses reads it; this table did not, so a container over
+		// its limit was red in the terminal and plain black in the browser.
+		getDecoration(containerName, field) {
+			const containerViews = this.views[containerName];
+			if (containerViews == undefined || containerViews[field] == undefined) {
+				// A container seen in stats but not yet in views (they are
+				// published from the same snapshot, but a rename lands in one
+				// first). Leave it undecorated rather than throwing.
+				return;
+			}
+			return containerViews[field].decoration.toLowerCase();
 		},
 		getStatusClass(status) {
 			const lowerStatus = status.toLowerCase();

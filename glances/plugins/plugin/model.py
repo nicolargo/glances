@@ -17,6 +17,7 @@ import re
 from datetime import datetime
 
 from glances.actions import GlancesActions
+from glances.config import secure_option
 from glances.events_list import glances_events
 from glances.globals import (
     auto_unit,
@@ -122,7 +123,9 @@ class GlancesPluginModel:
         # Default is False, always display stats
         self.hide_zero = False
         # The threshold needed to display a value if hide_zero is true.
-        # Only hide a value if it is less than hide_threshold_bytes.
+        # A value less than or equal to hide_threshold_bytes stays hidden, so the
+        # default of 0 hides a stat that is exactly zero -- which is what hide_zero
+        # promises.
         self.hide_threshold_bytes = 0
         self.hide_zero_fields = []
 
@@ -646,7 +649,7 @@ class GlancesPluginModel:
             view['hidden'] = self.views[key][field]['hidden']
             if (
                 field in self.hide_zero_fields
-                and self.get_raw_stats_key(item=field, key=key).get(field) >= self.hide_threshold_bytes
+                and self.get_raw_stats_key(item=field, key=key).get(field) > self.hide_threshold_bytes
             ):
                 view['hidden'] = False
             # logger.info(f'{key=} {field=} {view["hidden"]=}')
@@ -742,7 +745,14 @@ class GlancesPluginModel:
                 try:
                     self._limits[limit] = config.get_float_value(self.plugin_name, level)
                 except ValueError:
-                    self._limits[limit] = config.get_value(self.plugin_name, level).split(",")
+                    # Strip each item: `list=cpu, mem, load` is how a comma-separated
+                    # value is normally written, and glances.conf writes it that way in
+                    # its own comments. A bare split kept the spaces, so ' mem' matched
+                    # nothing and plugins that validate their list against a set of
+                    # known names silently rejected a config the user got right.
+                    self._limits[limit] = [
+                        item.strip() for item in config.get_value(self.plugin_name, level).split(",")
+                    ]
                 logger.debug(f"Load limit: {limit} = {self._limits[limit]}")
 
         return True
@@ -777,9 +787,22 @@ class GlancesPluginModel:
         self._limits[f'{self.plugin_name}_{item}'] = value
 
     def get_limits(self, item=None):
-        """Return the limits object."""
+        """Return the limits object.
+
+        Without item, return a copy for publishing (API, exports): the
+        credentials a plugin section can hold are redacted.
+        """
         if item is None:
-            return self._limits
+            ret = {}
+            for key, value in self._limits.items():
+                # Match on the option name, `\buser\b` does not match `<plugin>_user`
+                option = key.removeprefix(f'{self.plugin_name}_')
+                if isinstance(value, list):
+                    # Rejoin the value load_limits() split on ',', a comma is valid in URL userinfo
+                    ret[key] = secure_option(option, ','.join(value)).split(',')
+                else:
+                    ret[key] = value if secure_option(option, str(value)) == str(value) else '********'
+            return ret
         return self._limits.get(f'{self.plugin_name}_{item}', None)
 
     def get_stats_action(self):
@@ -1015,9 +1038,14 @@ class GlancesPluginModel:
 
         try:
             ret = self._limits[plugin_name + '_' + value]
-            return bool(ret[0]) if convert_bool else ret
         except KeyError:
             return default
+        if not convert_bool:
+            return ret
+        # load_limits stores a key as a one-item list of strings, or as a float when
+        # it parses as a number. bool('False') is True and a float has no [0], so
+        # read the text the way the *_log check above and the WebUI already do.
+        return ret[0].lower() == 'true' if isinstance(ret, list) else bool(ret)
 
     def is_show(self, value, header=""):
         """Return True if the value is in the show configuration list.
@@ -1275,7 +1303,7 @@ class GlancesPluginModel:
         """
 
         def wrapper(self, *args, **kw):
-            if self.is_enabled() and (self.refresh_timer.finished() or self.stats == self.get_init_value):
+            if self.is_enabled() and (self.refresh_timer.finished() or self.stats == self.get_init_value()):
                 # Run the method
                 ret = fct(self, *args, **kw)
                 # Reset the timer
@@ -1345,9 +1373,17 @@ class GlancesPluginModel:
             key = self.get_key()
             previous_by_key = {s[key]: s for s in stats_previous}
             for stat in stats:
-                old = previous_by_key.get(stat[key])
-                if old is not None:
-                    compute_rate(self, stat, old)
+                # A stat that is new since the previous sample has no gauge to subtract,
+                # so give compute_rate an empty previous instead of skipping it. That
+                # takes the same first-sample path a dict stat takes: record the gauge,
+                # publish a rate of 0, and wait for the next sample to measure a delta.
+                #
+                # Skipping left the raw counter sitting in the delta field and produced
+                # no _gauge, no _rate_per_sec and no time_since_update at all, which is
+                # not the shape the rest of the plugin expects. Interfaces and disks
+                # appear at runtime -- a VPN comes up, a container starts, a disk is
+                # plugged in -- so this is not only a start-up case.
+                compute_rate(self, stat, previous_by_key.get(stat[key], {}))
             return stats
 
         def wrapper(self, *args, **kw):
