@@ -26,6 +26,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import re
+from types import SimpleNamespace
 from typing import Any, ClassVar
 
 from glances.globals import natural_keys
@@ -140,9 +141,12 @@ class PluginModel(GlancesPluginBase[list]):
             return
         self._grab_temp_core = GlancesGrabSensors(sensors_definition["cpu_temp"])
         self._grab_fan = GlancesGrabSensors(sensors_definition["fan_speed"])
-        host = self.config.get("sensors", "host", "127.0.0.1")
-        port = self.config.get("sensors", "port", 7634)
-        self._grab_hdd = GlancesGrabHDDTemp(host=host, port=port)
+        host = self.config.get("hddtemp", "host", "127.0.0.1")
+        port = self.config.get("hddtemp", "port", 7634)
+        # fetch() sets disable_hddtemp after a failed connect: the daemon is
+        # then not polled again until Glances is restarted (as v4 does).
+        self._hdd_args = SimpleNamespace(disable_hddtemp=self.config.get("hddtemp", "disable", False))
+        self._grab_hdd = GlancesGrabHDDTemp(host=host, port=port, args=self._hdd_args)
         self._grab_bat = GlancesGrabBat()
         self._grabbers_built = True
 
@@ -157,7 +161,8 @@ class PluginModel(GlancesPluginBase[list]):
         out: list[dict[str, Any]] = []
         out.extend(self._grab_typed(self._grab_temp_core.update, _TEMP_CORE))
         out.extend(self._grab_typed(self._grab_fan.update, _FAN_SPEED))
-        out.extend(self._grab_typed(self._grab_hdd.get, _TEMP_HDD))
+        if not self._hdd_args.disable_hddtemp:
+            out.extend(self._grab_typed(self._grab_hdd.get, _TEMP_HDD))
         out.extend(self._grab_typed(self._grab_battery, _BATTERY))
         return out
 

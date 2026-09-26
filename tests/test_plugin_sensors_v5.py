@@ -162,6 +162,44 @@ def _cfg_with(tmp_path, monkeypatch, body: str) -> GlancesConfigV5:
     return GlancesConfigV5()
 
 
+def test_hddtemp_reads_its_own_section(tmp_path, monkeypatch, store):
+    """host/port come from [hddtemp], the section glances.conf documents."""
+    config = _cfg_with(tmp_path, monkeypatch, "[hddtemp]\nhost=10.0.0.1\nport=7777\n")
+    p = PluginModel(store, config)
+    p._build_grabbers()
+    assert p._grab_hdd.host == "10.0.0.1"
+    assert p._grab_hdd.port == 7777
+
+
+def _count_hdd_fetches(p, monkeypatch) -> list:
+    p._build_grabbers()
+    calls = []
+    monkeypatch.setattr(p._grab_hdd, "fetch", lambda: calls.append(1) or "")
+    return calls
+
+
+def test_hddtemp_disable_is_honoured(tmp_path, monkeypatch, store):
+    config = _cfg_with(tmp_path, monkeypatch, "[hddtemp]\ndisable=True\n")
+    p = PluginModel(store, config)
+    calls = _count_hdd_fetches(p, monkeypatch)
+    p._collect()
+    assert calls == []
+
+
+def test_hddtemp_not_polled_again_after_failed_connect(tmp_path, monkeypatch, store):
+    """A refused connect disables hddtemp: the daemon is not reconnected on
+    every refresh (about 2 s each on Windows)."""
+    config = _cfg_with(tmp_path, monkeypatch, "[hddtemp]\nhost=127.0.0.1\nport=1\n")
+    p = PluginModel(store, config)
+    p._build_grabbers()
+    p._collect()  # nothing listens on port 1: fetch() fails and disables hddtemp
+    assert p._hdd_args.disable_hddtemp is True
+    calls = []
+    monkeypatch.setattr(p._grab_hdd, "fetch", lambda: calls.append(1) or "")
+    p._collect()
+    assert calls == []
+
+
 def test_alias_relabels(tmp_path, monkeypatch, store):
     config = _cfg_with(tmp_path, monkeypatch, "[sensors]\nalias=core 0:CPU Package\n")
     p = PluginModel(store, config)
