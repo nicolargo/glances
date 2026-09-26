@@ -14,6 +14,10 @@ CSV file description:
 - first line: Stats description (header)
 - others lines: Stats (data)
 
+Columns are fixed by the first sample. If a device disappears, its columns are
+left empty. Devices or fields first seen later are not added to the file; start
+a new export to include them. Existing columns stay aligned with their headers.
+
 By default, data will be append any existing CSV file (if header are compliant).
 
 If the header did not match with a previous one, an error is logged.

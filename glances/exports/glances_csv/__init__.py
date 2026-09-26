@@ -73,8 +73,7 @@ class Export(GlancesExport):
         all_stats = stats.getAllExportsAsDict(plugin_list=self.plugins_to_export(stats))
 
         # Init data with timestamp (issue#708)
-        if self.first_line:
-            csv_header = ['timestamp']
+        csv_header = ['timestamp']
         csv_data = [time.strftime('%Y-%m-%d %H:%M:%S')]
 
         # Loop over plugins to export
@@ -82,13 +81,13 @@ class Export(GlancesExport):
             export_names, export_values = self.build_export(all_stats[plugin])
             # Add the plugin name in the field
             export_names = [plugin + '.' + n for n in export_names]
-            if self.first_line:
-                csv_header += export_names
+            csv_header += export_names
             csv_data += export_values
 
         # Export to CSV
         # Manage header
         if self.first_line:
+            self.csv_header = csv_header
             if self.old_header is None:
                 # New file, write the header on top on the CSV file
                 self.writer.writerow(csv_header)
@@ -105,7 +104,8 @@ class Export(GlancesExport):
             self.first_line = False
         # Manage data
         if self.old_header is None:
-            self.writer.writerow(csv_data)
+            values_by_column = dict(zip(csv_header, csv_data))
+            self.writer.writerow([values_by_column.get(column, '') for column in self.csv_header])
             self.csv_file.flush()
 
     def export(self, name, columns, points):
