@@ -457,6 +457,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="Print the selected stats to stdout as CSV: a header line, then one line per refresh. No TUI.",
     )
     parser.add_argument(
+        "--issue",
+        dest="issue",
+        action="store_true",
+        default=False,
+        help="Test every plugin and print a Markdown report to paste into a bug report, then exit.",
+    )
+    parser.add_argument(
         "--memory-leak",
         dest="memory_leak",
         action="store_true",
@@ -642,6 +649,10 @@ def validate_args(args: argparse.Namespace) -> None:
         build_parser().error("--stop-after needs a positive number of refreshes.")
     if getattr(args, "memory_leak", False) and (args.server or chosen):
         build_parser().error("--memory-leak runs on its own: it cannot be combined with --server or --stdout*.")
+    if getattr(args, "issue", False) and (args.server or chosen or getattr(args, "memory_leak", False)):
+        build_parser().error(
+            "--issue runs on its own: it cannot be combined with --server, --stdout* or --memory-leak."
+        )
 
 
 # --------------------------------------------------------------- logging
@@ -1237,6 +1248,20 @@ def run_memory_leak(args: argparse.Namespace, config: GlancesConfigV5) -> int:
     return 0
 
 
+# --------------------------------------------------------------- issue
+
+
+def run_issue(args: argparse.Namespace, config: GlancesConfigV5) -> int:
+    """`--issue`: the plugins as glances-v5 would build them, tested and reported."""
+    from glances.outputs import issue_v5
+
+    apply_plugin_flags(args, config)
+    plugins = discover_plugins(StatsStoreV5(), config)
+    disabled = sorted(cls.plugin_name for _name, cls in discover_plugin_classes() if cls.is_disabled(config))
+    sources = [str(path) for path in config.loaded_sources]
+    return issue_v5.run(plugins, disabled, _VERSION, sources)
+
+
 # --------------------------------------------------------------- serve
 
 
@@ -1326,6 +1351,8 @@ def main(argv: list[str] | None = None) -> int:
         sys.exit(2)
     if getattr(args, "memory_leak", False):
         return run_memory_leak(args, config)
+    if getattr(args, "issue", False):
+        return run_issue(args, config)
     app, scheduler, host, port, tui = assemble(args, config)
 
     if args.server:
