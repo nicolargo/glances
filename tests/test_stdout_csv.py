@@ -15,6 +15,8 @@ computed on an interface's first sample) - the data rows must stay aligned with 
 header built on the first refresh.
 """
 
+from types import SimpleNamespace
+
 from glances.outputs.glances_stdout_csv import GlancesStdoutCsv
 
 
@@ -74,6 +76,19 @@ def test_list_plugin_steady_state():
     header = csv.build_header('network', None, stat)
     data = csv.build_data('network', None, stat)
     assert _ncols(data) == _ncols(header)
+
+
+def test_list_plugin_mixed_initial_field_sets():
+    """Each interface keeps the fields actually emitted in its own header block."""
+    csv = GlancesStdoutCsv(args=SimpleNamespace(stdout_csv='network'))
+    initial = [_iface_partial('eth0', 1, 2), _iface_full('wlan0', 3, 4)]
+    header = csv.build_header('network', None, initial)
+    data = csv.build_data('network', None, [_iface_full('wlan0', 5, 6), _iface_full('eth0', 7, 8)])
+    assert _ncols(data) == _ncols(header)
+    values = dict(zip(header.rstrip(',').split(','), data.rstrip(',').split(',')))
+    assert values['network.eth0.bytes_sent'] == '7'
+    assert values['network.wlan0.bytes_sent'] == '5'
+    assert values['network.wlan0.bytes_recv_rate_per_sec'] == '6.0'
 
 
 def test_list_plugin_interface_removed():
