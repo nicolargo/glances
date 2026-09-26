@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, Mock
 
 import pytest
 
-from glances.outputs.glances_curses import _GlancesCurses
+from glances.outputs.glances_curses import GlancesTextbox, _GlancesCurses
 
 
 @pytest.fixture
@@ -170,6 +170,31 @@ class TestDisplayTopHelpers:
 
         assert result_widths == plugin_widths  # nosec B101
         assert result_stats_width == 0  # nosec B101
+
+
+class TestGlancesTextbox:
+    @pytest.mark.parametrize('key', [127, 8, curses.KEY_BACKSPACE])
+    @pytest.mark.parametrize('column', [1, 3])
+    def test_backspace_deletes_previous_character(self, key, column):
+        window = Mock(encoding='utf-8')
+        window.getmaxyx.return_value = (1, 20)
+        window.getyx.return_value = (0, column)
+        textbox = GlancesTextbox(window, insert_mode=True)
+
+        result = textbox.do_command(key)
+
+        window.move.assert_called_once_with(0, column - 1)
+        window.delch.assert_called_once_with()
+        assert result == 1  # nosec B101
+
+    def test_enter_finishes_editing(self):
+        window = Mock()
+        window.getmaxyx.return_value = (1, 20)
+        textbox = GlancesTextbox(window, insert_mode=True)
+
+        assert textbox.do_command(10) == 0  # nosec B101
+
+        window.delch.assert_not_called()
 
 
 class TestCursorDisable:
