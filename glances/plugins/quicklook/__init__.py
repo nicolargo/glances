@@ -80,6 +80,8 @@ items_history_list = [
     {'name': 'mem', 'description': 'MEM percent usage', 'y_unit': '%'},
     {'name': 'swap', 'description': 'SWAP percent usage', 'y_unit': '%'},
     {'name': 'load', 'description': 'LOAD percent usage', 'y_unit': '%'},
+    {'name': 'gpu_mem', 'description': 'GPU memory percent usage', 'y_unit': '%'},
+    {'name': 'gpu_proc', 'description': 'GPU processor percent usage', 'y_unit': '%'},
 ]
 
 
