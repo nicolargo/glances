@@ -39,9 +39,9 @@ class GlancesStdout:
             elif len(pka) == 2:
                 # Plugin name and attribute is provided
                 new = (pka[0], None, pka[1])
-            elif len(pka) == 3:
+            else:
                 # Plugin name, key and attribute are provided
-                new = (pka[0], pka[1], pka[2])
+                new = (pka[0], '.'.join(pka[1:-1]), pka[-1])
             ret.append(new)
         return ret
 
