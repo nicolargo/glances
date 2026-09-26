@@ -63,6 +63,7 @@ class PluginModel(GlancesPluginBase[dict]):
         "percent": {
             "description": "Used swap memory as a percentage of total.",
             "unit": "percent",
+            "history": True,
             "watched": True,
             "watch_direction": "high",
             "prominent": True,

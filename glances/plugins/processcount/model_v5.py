@@ -47,18 +47,22 @@ class PluginModel(GlancesPluginBase[dict]):
         "total": {
             "description": "Total number of processes.",
             "unit": "number",
+            "history": True,
         },
         "running": {
             "description": "Number of running processes.",
             "unit": "number",
+            "history": True,
         },
         "sleeping": {
             "description": "Number of sleeping processes.",
             "unit": "number",
+            "history": True,
         },
         "thread": {
             "description": "Total number of threads across all processes.",
             "unit": "number",
+            "history": True,
         },
         "pid_max": {
             "description": "Maximum PID value supported by the kernel (Linux) or None.",

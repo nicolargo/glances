@@ -48,6 +48,7 @@ class PluginModel(GlancesPluginBase[dict]):
         "percent": {
             "description": "Percentage usage calculated as (total - available) / total * 100.",
             "unit": "percent",
+            "history": True,
             "watched": True,
             "watch_direction": "high",
             "prominent": True,

@@ -155,9 +155,14 @@ every declaration against the payload (D3).
 
 `glances/history_v5.py` holds `HistoryStoreV5`. It is created once in
 `main_v5.assemble`, or not created at all when history is disabled (§5.4).
-It reaches the plugins as an optional constructor argument:
-`GlancesPluginBase.__init__(store, config, history=None)`. The default of
-`None` keeps every existing test and call site valid.
+It reaches the plugins as an attribute, `plugin.history`, which `assemble`
+sets after construction. The base `__init__` initialises it to `None`.
+
+*Changed while implementing, 2026-09-26.* The first draft passed the store
+as a constructor argument, `__init__(store, config, history=None)`. That
+would have meant changing 22 signatures, because 22 plugins override
+`__init__(store, config)`. The attribute has the same default and costs the
+same `is not None` test per cycle.
 
 `update()` records right after `await self.store.set(...)`, inside the same
 `try`:

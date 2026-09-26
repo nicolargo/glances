@@ -91,6 +91,7 @@ class PluginModel(GlancesPluginBase[list]):
                 "the time spent running code in the operating system kernel."
             ),
             "unit": "percent",
+            "history": True,
             **_COLOURED,
             "default_thresholds": _DEFAULT_PERCENT_THRESHOLDS,
         },
@@ -100,6 +101,7 @@ class PluginModel(GlancesPluginBase[list]):
                 "time spent on the processor running the program's code."
             ),
             "unit": "percent",
+            "history": True,
             **_COLOURED,
             "default_thresholds": _DEFAULT_PERCENT_THRESHOLDS,
         },

@@ -99,7 +99,7 @@ class PluginModel(GlancesPluginBase[list]):
             "prominent": False,
             "threshold_field": "cpu",
         },
-        "memory_usage": {"description": "VM memory usage.", "unit": "byte"},
+        "memory_usage": {"description": "VM memory usage.", "unit": "byte", "history": True},
         "memory_total": {"description": "VM memory total.", "unit": "byte"},
         "memory_percent": {
             "description": "VM memory usage as a percentage of its own memory_total.",

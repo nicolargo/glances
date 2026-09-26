@@ -63,6 +63,7 @@ class PluginModel(GlancesPluginBase[list]):
         "load": {
             "description": "Engine load.",
             "unit": "percent",
+            "history": True,
             "watched": True,
             "watch_direction": "high",
             "prominent": True,

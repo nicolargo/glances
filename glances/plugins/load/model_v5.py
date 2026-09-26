@@ -61,6 +61,7 @@ class PluginModel(GlancesPluginBase[dict]):
                 "Average number of processes waiting in the run-queue plus those currently executing, over 1 minute."
             ),
             "unit": "float",
+            "history": True,
             "short_name": "1 min",
         },
         "min5": {
@@ -68,6 +69,7 @@ class PluginModel(GlancesPluginBase[dict]):
                 "Average number of processes waiting in the run-queue plus those currently executing, over 5 minutes."
             ),
             "unit": "float",
+            "history": True,
             "watched": True,
             "watch_direction": "high",
             "prominent": False,
@@ -80,6 +82,7 @@ class PluginModel(GlancesPluginBase[dict]):
                 "Average number of processes waiting in the run-queue plus those currently executing, over 15 minutes."
             ),
             "unit": "float",
+            "history": True,
             "watched": True,
             "watch_direction": "high",
             "prominent": True,

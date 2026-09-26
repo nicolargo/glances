@@ -1030,6 +1030,9 @@ def test_args_matches_the_real_v5_argument_set(config_factory, store):
         # sensitive, and the WebUI would read this key if the cursor ever
         # reaches the browser (2.X-b design 8.1).
         "disable_cursor",
+        # `--disable-history`: whether the stats history is kept. A boolean
+        # like its neighbours; nothing sensitive.
+        "disable_history",
         "disable_plugin",
         "disable_unicode",
         "disable_webui",

@@ -154,6 +154,7 @@ class PluginModel(GlancesPluginBase[list]):
             # Column label, TUI header and WebUI alike (field_label, prefer_short).
             "short_name": "R/s",
             "unit": "bytespers",
+            "history": True,
             "rate": True,
             # Opt-in alerts. No default thresholds — disk traffic is
             # host-specific (a database server may stream MB/s by design).
@@ -170,6 +171,7 @@ class PluginModel(GlancesPluginBase[list]):
             "description": "Bytes written per second (rate of psutil write_bytes counter).",
             "short_name": "W/s",
             "unit": "bytespers",
+            "history": True,
             "rate": True,
             "watched": True,
             "watch_direction": "high",

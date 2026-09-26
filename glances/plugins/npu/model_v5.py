@@ -68,6 +68,7 @@ class PluginModel(GlancesPluginBase[list]):
         "load": {
             "description": "NPU load.",
             "unit": "percent",
+            "history": True,
             "watched": True,
             "watch_direction": "high",
             "prominent": True,
@@ -76,6 +77,7 @@ class PluginModel(GlancesPluginBase[list]):
         "freq": {
             "description": "NPU frequency (current/max).",
             "unit": "percent",
+            "history": True,
             "watched": True,
             "watch_direction": "high",
             "prominent": False,
@@ -84,6 +86,7 @@ class PluginModel(GlancesPluginBase[list]):
         "mem": {
             "description": "NPU memory consumption.",
             "unit": "percent",
+            "history": True,
             "watched": True,
             "watch_direction": "high",
             "prominent": False,

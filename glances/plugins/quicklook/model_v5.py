@@ -139,6 +139,7 @@ class PluginModel(GlancesPluginBase[dict]):
         "cpu": {
             "description": "CPU percent usage.",
             "unit": "percent",
+            "history": True,
             "watched": True,
             "watch_direction": "high",
             "prominent": False,
@@ -147,6 +148,7 @@ class PluginModel(GlancesPluginBase[dict]):
         "mem": {
             "description": "MEM percent usage.",
             "unit": "percent",
+            "history": True,
             "watched": True,
             "watch_direction": "high",
             "prominent": False,
@@ -155,6 +157,7 @@ class PluginModel(GlancesPluginBase[dict]):
         "swap": {
             "description": "SWAP percent usage.",
             "unit": "percent",
+            "history": True,
             "watched": True,
             "watch_direction": "high",
             "prominent": False,
@@ -163,6 +166,7 @@ class PluginModel(GlancesPluginBase[dict]):
         "load": {
             "description": "LOAD percent usage (15 min, normalized by core count).",
             "unit": "percent",
+            "history": True,
             "watched": True,
             "watch_direction": "high",
             "prominent": False,
@@ -171,6 +175,7 @@ class PluginModel(GlancesPluginBase[dict]):
         "gpu_mem": {
             "description": "Average GPU memory consumption.",
             "unit": "percent",
+            "history": True,
             "watched": True,
             "watch_direction": "high",
             "prominent": False,
@@ -179,6 +184,7 @@ class PluginModel(GlancesPluginBase[dict]):
         "gpu_proc": {
             "description": "Average GPU processor consumption.",
             "unit": "percent",
+            "history": True,
             "watched": True,
             "watch_direction": "high",
             "prominent": False,

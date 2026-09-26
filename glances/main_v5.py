@@ -55,6 +55,7 @@ from glances.actions_v5 import discover_actions
 from glances.alerts_v5 import GlancesAlerts
 from glances.config_v5 import ConfigFileError, GlancesConfigV5
 from glances.exports.export_base_v5 import GlancesExportBase
+from glances.history_v5 import HistoryStoreV5, resolve_history_size
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
 from glances.processes import glances_processes, sort_processes_stats_list
 from glances.scheduler_v5 import AsyncScheduler
@@ -508,6 +509,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="Display filesystem free space instead of used space (default: used). Config fallback: [fs] free_space.",
     )
     parser.add_argument(
+        "--disable-history",
+        dest="disable_history",
+        action="store_true",
+        default=False,
+        help="disable the stats history (same as [global] history_size=0)",
+    )
+    parser.add_argument(
         "--disable-unicode",
         dest="disable_unicode",
         action="store_true",
@@ -920,6 +928,18 @@ def cli_set_password() -> int:
 # --------------------------------------------------------------- assemble
 
 
+def attach_history(plugins: list[GlancesPluginBase], config: GlancesConfigV5, args: argparse.Namespace) -> None:
+    """Give every plugin the one shared stats history store (design 2026-09-26).
+
+    No store at all when `[global] history_size=0` or `--disable-history`:
+    each plugin then skips recording outright.
+    """
+    size = resolve_history_size(config, getattr(args, "disable_history", False))
+    history = HistoryStoreV5(size) if size > 0 else None
+    for plugin in plugins:
+        plugin.history = history
+
+
 def assemble(
     args: argparse.Namespace, config: GlancesConfigV5
 ) -> tuple[FastAPI | None, AsyncScheduler, str, int, TuiV5 | None]:
@@ -996,6 +1016,8 @@ def assemble(
         )
     else:
         logger.info("Discovered %d v5 plugins: %s", len(plugins), ", ".join(p.plugin_name for p in plugins))
+
+    attach_history(plugins, config, args)
 
     scheduler = AsyncScheduler(store, config, alerts=alerts)
     for plugin in plugins:

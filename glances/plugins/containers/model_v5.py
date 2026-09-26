@@ -52,6 +52,7 @@ class PluginModel(GlancesPluginBase[list]):
         "cpu_percent": {
             "description": "Container CPU consumption.",
             "unit": "percent",
+            "history": True,
             "watched": True,
             "watch_direction": "high",
             "prominent": False,

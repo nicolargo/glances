@@ -93,6 +93,7 @@ class PluginModel(GlancesPluginBase[list]):
         "percent": {
             "description": "Filesystem usage as a percentage of total size.",
             "unit": "percent",
+            "history": True,
             "watched": True,
             "watch_direction": "high",
             # Explicit False — colour the Used value but do not reverse-video

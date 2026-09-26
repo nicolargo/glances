@@ -136,6 +136,12 @@ def test_fs_free_space_default_false():
     assert args.fs_free_space is False
 
 
+def test_disable_history_flag_parses():
+    parser = build_parser()
+    assert parser.parse_args([]).disable_history is False
+    assert parser.parse_args(["--disable-history"]).disable_history is True
+
+
 def test_build_parser_version_exits(capsys):
     parser = build_parser()
     with pytest.raises(SystemExit) as excinfo:
@@ -446,6 +452,28 @@ def test_fs_free_space_config_untouched_without_the_flag(config):
     args = build_parser().parse_args(["-s"])
     assemble(args, config)
     assert config._merged.get("fs", {}).get("free_space") is None
+
+
+def test_assemble_shares_one_history_store_across_plugins(config):
+    """Design 2026-09-26 §5.2/§5.4: one store, sized by `[global] history_size`."""
+    from glances.history_v5 import HistoryStoreV5
+
+    _app, scheduler, _host, _port, _tui = assemble(build_parser().parse_args(["--quiet"]), config)
+    stores = {id(entry.plugin.history) for entry in scheduler._entries}
+    assert len(stores) == 1
+    history = scheduler._entries[0].plugin.history
+    assert isinstance(history, HistoryStoreV5) and history.size == 1200
+
+
+def test_disable_history_attaches_no_store(config):
+    _app, scheduler, _host, _port, _tui = assemble(build_parser().parse_args(["--quiet", "--disable-history"]), config)
+    assert all(entry.plugin.history is None for entry in scheduler._entries)
+
+
+def test_history_size_zero_attaches_no_store(config):
+    config._merged.setdefault("global", {})["history_size"] = "0"
+    _app, scheduler, _host, _port, _tui = assemble(build_parser().parse_args(["--quiet"]), config)
+    assert all(entry.plugin.history is None for entry in scheduler._entries)
 
 
 def test_assemble_resolves_bind_and_port_from_cli(config):

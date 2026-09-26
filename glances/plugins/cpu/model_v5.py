@@ -67,7 +67,6 @@ class PluginModel(GlancesPluginBase[dict]):
         "total": {
             "description": "Sum of all CPU percentages (except idle).",
             "unit": "percent",
-            "history": True,
             "watched": True,
             "watch_direction": "high",
             "prominent": True,

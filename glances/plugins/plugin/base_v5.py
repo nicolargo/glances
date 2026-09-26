@@ -39,6 +39,7 @@ from typing import Any, ClassVar, Generic, TypeVar
 
 from glances.config_v5 import GlancesConfigV5
 from glances.globals import split_esc
+from glances.history_v5 import HistoryStoreV5
 from glances.plugins.plugin.thresholds_v5 import (
     compute_level,
     compute_level_categorical,
@@ -237,6 +238,14 @@ class GlancesPluginBase(Generic[T], ABC):
             (n, s) for n, s in self._fields.items() if s.get("watched")
         ]
         self._allowed_field_names: set[str] = set(self._fields.keys())
+        # `history: True` (v4 `items_history_list`): the fields recorded into
+        # the history store after each published cycle.
+        self._history_fields: list[str] = [n for n, s in self._fields.items() if s.get("history")]
+        # The history store, attached by `main_v5.assemble` after construction
+        # (an attribute rather than a constructor argument: 22 plugins
+        # override `__init__(store, config)`). None = history disabled, or a
+        # plugin built outside the CLI (tests).
+        self.history: HistoryStoreV5 | None = None
 
         self._warn_unknown_threshold_keys()
 
@@ -460,6 +469,10 @@ class GlancesPluginBase(Generic[T], ABC):
             self._add_metadata()
             self._transform()
             await self.store.set(self.plugin_name, self._build_store_payload())
+            # After the publish, inside the same `try`: what is recorded is
+            # what REST served, and a failed cycle records nothing.
+            if self.history is not None and self._history_fields:
+                self.history.record(self.plugin_name, self._stats, self._history_fields, self._primary_key)
             # Promote the snapshot only after a successful cycle so a failed
             # grab can't poison the next rate computation.
             self._raw_previous = new_raw
