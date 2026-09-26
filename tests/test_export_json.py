@@ -9,7 +9,7 @@
 """JSON export must write the completed sample without waiting for another one."""
 
 import json
-import subprocess
+import subprocess  # nosec B404 - exercise the real CLI with a fixed executable.
 import sys
 
 
@@ -17,7 +17,7 @@ def test_json_export_writes_a_single_sample(tmp_path):
     config = tmp_path / 'glances.conf'
     config.write_text('')
     output = tmp_path / 'stats.json'
-    result = subprocess.run(
+    result = subprocess.run(  # nosec B603 - fixed interpreter/arguments, no shell.
         [
             sys.executable,
             '-m',
@@ -40,7 +40,7 @@ def test_json_export_writes_a_single_sample(tmp_path):
         text=True,
         timeout=40,
     )
-    assert result.returncode == 0, result.stderr
+    assert result.returncode == 0, result.stderr  # nosec B101 - pytest regression assertion.
     stats = json.loads(output.read_text())
-    assert isinstance(stats['cpu'], dict)
-    assert stats['mem']['total'] > 0
+    assert isinstance(stats['cpu'], dict)  # nosec B101 - pytest regression assertion.
+    assert stats['mem']['total'] > 0  # nosec B101 - pytest regression assertion.
