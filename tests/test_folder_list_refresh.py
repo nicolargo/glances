@@ -39,14 +39,6 @@ def walks(monkeypatch):
     return calls
 
 
-@pytest.fixture(autouse=True)
-def _empty_list():
-    # The folder list is held on the class, so it survives between instances.
-    FolderList._FolderList__folder_list = []
-    yield
-    FolderList._FolderList__folder_list = []
-
-
 def test_folder_is_not_walked_again_before_its_refresh_delay(walks):
     folders = FolderList(FakeConfig('600'))
     for _ in range(4):
