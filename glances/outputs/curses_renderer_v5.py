@@ -1207,8 +1207,7 @@ def render_plugin_rows(
 ) -> list[Row]:
     """One plugin's block: its own `render_curses_v5.render` if it has one, else the generic table.
 
-    Shared by `build_frame` and by `--fetch` (`glances/outputs/fetch_v5.py`),
-    so the two draw a plugin the same way by construction.
+    Split out of `build_frame` so the choice has one home.
     """
     custom = _discover_plugin_renderer(plugin_name)
     if custom is not None:

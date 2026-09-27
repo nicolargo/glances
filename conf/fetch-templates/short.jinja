@@ -1,6 +1,13 @@
-{#- Glances v5 --fetch template: the TUI header, then its quicklook, MEM and LOAD blocks.
-    `ui` draws TUI blocks (ui.block, ui.row, ui.rule, ui.title, ui.color, ui.top);
-    `gl` is the Python API (e.g. gl.mem["percent"]). -#}
-{{ ui.row('system', 'ip', 'uptime', gap=3) }}
-{{ ui.rule() }}
-{{ ui.row('quicklook', 'mem', 'load') }}
+{#- Glances v5 --fetch template, in the v4 layout with the TUI's colours.
+    `gl` is the Python API (e.g. gl.mem['percent']); `ui` colours values by
+    their alert level: ui.bar / ui.percent / ui.number('mem', 'percent'),
+    ui.bits, ui.process, ui.title, ui.uptime, ui.rule, ui.pad, ui.visible. -#}
+✨ {{ ui.title(gl.system['hostname']) }}{{ ' | ' + gl.ip['address'] if gl.ip.get('address') else '' }} | Uptime: {{ ui.uptime() }}
+⚙️  {{ gl.system['hr_name'] }}
+
+💡 {{ ui.title('LOAD') }}     {{ ui.number('load', 'min1') }}/min1 | {{ ui.number('load', 'min5') }}/min5 | {{ ui.number('load', 'min15') }}/min15
+⚡ {{ ui.title('CPU') }}      {{ ui.bar('cpu', 'total') }} {{ ui.percent('cpu', 'total') }} of {{ gl.core['log'] }} cores
+🧠 {{ ui.title('MEM') }}      {{ ui.bar('mem', 'percent') }} {{ ui.percent('mem', 'percent') }} ({{ gl.auto_unit(gl.mem['used']) }} / {{ gl.auto_unit(gl.mem['total']) }})
+{% for fs in gl.fs.keys() %}💾 {% if loop.index == 1 %}{{ ui.title('DISK') }}{% else %}    {% endif %}     {{ ui.bar('fs', 'percent', fs) }} {{ ui.percent('fs', 'percent', fs) }} ({{ gl.auto_unit(gl.fs[fs]['used']) }} / {{ gl.auto_unit(gl.fs[fs]['size']) }}) for {{ fs }}
+{% endfor %}{% for net in ui.visible('network') %}📡 {% if loop.index == 1 %}{{ ui.title('NET') }}{% else %}   {% endif %}      ↓ {{ ui.bits('network', 'bytes_recv', net) }}/s ↑ {{ ui.bits('network', 'bytes_sent', net) }}/s for {{ net }}
+{% endfor %}

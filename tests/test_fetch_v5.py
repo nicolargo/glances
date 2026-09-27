@@ -6,7 +6,7 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
-"""Glances v5 — `--fetch` (mockups and decisions of 2026-09-26)."""
+"""Glances v5 — `--fetch`: v4's layout in the TUI's colours (maintainer, 2026-09-27)."""
 
 from __future__ import annotations
 
@@ -19,10 +19,10 @@ import pytest
 from glances import api_v5 as api
 from glances.config_v5 import GlancesConfigV5
 from glances.outputs import fetch_v5
-from glances.outputs.curses_renderer_v5 import Cell, ColorRole, Row, render_plugin_rows
 from glances.outputs.fetch_v5 import DEFAULT_TEMPLATE, FetchUI, render, visible_len
 
 _TEMPLATES = Path(__file__).resolve().parent.parent / "conf" / "fetch-templates"
+_PLUGINS = ["system", "ip", "uptime", "core", "cpu", "mem", "load", "network", "fs", "processlist"]
 
 
 @pytest.fixture(autouse=True)
@@ -36,100 +36,105 @@ def _hermetic_config(tmp_path, monkeypatch):
 
 @pytest.fixture(scope="module")
 def gl():
-    with api.GlancesAPI(
-        plugins=["system", "ip", "uptime", "quicklook", "mem", "load", "network", "fs", "processlist"]
-    ) as instance:
+    with api.GlancesAPI(plugins=_PLUGINS) as instance:
         yield instance
 
 
-# ------------------------------------------------------------- painting
+@pytest.fixture
+def critical_mem(tmp_path):
+    """MEM above its critical threshold whatever the host: the colour must follow."""
+    conf = tmp_path / "critical.conf"
+    conf.write_text("[mem]\ncareful=0.001\nwarning=0.002\ncritical=0.003\n")
+    with api.GlancesAPI(config_path=str(conf), plugins=["mem"]) as instance:
+        yield instance
 
 
-def test_the_tui_roles_become_the_tui_ansi_colours():
-    """Green, blue, magenta (the maintainer kept it), red; titles bold."""
-    ui = FetchUI(gl=None, color=True)
-    cells = [
-        Cell(text=role.value, color=role)
-        for role in (ColorRole.OK, ColorRole.CAREFUL, ColorRole.WARNING, ColorRole.CRITICAL, ColorRole.HEADER)
-    ]
-    painted = ui._paint(Row(cells=cells))
-    for code, text in (("32", "ok"), ("34", "careful"), ("35", "warning"), ("31", "critical"), ("1", "header")):
-        assert f"\x1b[{code}m{text}\x1b[0m" in painted
+# --------------------------------------------------------------- colours
 
 
-def test_prominent_is_the_filled_badge_and_glue_has_no_space():
-    ui = FetchUI(gl=None, color=True)
-    painted = ui._paint(
-        Row(cells=[Cell("/usr/bin/"), Cell("python3", glue=True), Cell("99%", ColorRole.CRITICAL, prominent=True)])
-    )
-    assert "/usr/bin/python3 " in painted
-    assert "\x1b[31;7m99%\x1b[0m" in painted
+def test_a_value_takes_the_colour_of_its_level(critical_mem):
+    ui = FetchUI(critical_mem, color=True)
+    assert ui.level("mem", "percent") == "critical"
+    assert ui.percent("mem", "percent").startswith("\x1b[31m")
+    assert ui.bar("mem", "percent").startswith("\x1b[31m")
 
 
-def test_no_colour_means_no_escape():
-    ui = FetchUI(gl=None, color=False)
-    assert ui._paint(Row(cells=[Cell("x", ColorRole.CRITICAL, bold=True)])) == "x"
-    assert ui.title("MEM") == "MEM" and ui.color("1", "critical") == "1"
+@pytest.mark.parametrize(("level", "code"), [("ok", "32"), ("careful", "34"), ("warning", "35"), ("critical", "31")])
+def test_the_levels_are_the_tui_ansi_colours(level, code):
+    """Green, blue, magenta (kept by the maintainer), red."""
+    assert FetchUI(None, color=True).color("x", level) == f"\x1b[{code}mx\x1b[0m"
 
 
-# ---------------------------------------------------------------- blocks
+def test_titles_are_bold_and_no_level_means_no_colour():
+    ui = FetchUI(None, color=True)
+    assert ui.title("MEM") == "\x1b[1mMEM\x1b[0m"
+    assert ui.color("x", None) == "x"
 
 
-def test_a_block_is_the_tui_block(gl):
-    """Drawn by the renderer the TUI uses, not by a copy of it."""
+def test_no_colour_means_no_escape(critical_mem):
+    ui = FetchUI(critical_mem, color=False)
+    assert "\x1b" not in ui.percent("mem", "percent") + ui.bar("mem", "percent") + ui.title("MEM")
+
+
+# ---------------------------------------------------------------- helpers
+
+
+def test_bar_is_v4s_bar_and_ascii_without_unicode(gl):
+    assert set(FetchUI(gl, color=False).bar("mem", "percent")) <= {"■", "□"}
+    assert set(FetchUI(gl, color=False, unicode=False).bar("mem", "percent")) <= {"#", "-"}
+    assert len(FetchUI(gl, color=False).bar("mem", "percent", size=10)) == 10
+
+
+def test_a_collection_value_is_read_per_item(gl):
     ui = FetchUI(gl, color=False)
-    payload = gl._payload("mem")
-    rows = render_plugin_rows("mem", payload, gl.mem.fields, False, {"unicode": True})
-    expected = "\n".join(ui._paint(row) for row in rows)
-    assert ui.block("mem").split("\n")[0].split()[0] == "MEM"
-    assert len(ui.block("mem").split("\n")) == len(expected.split("\n"))
+    mount = gl.fs.keys()[0]
+    assert ui.percent("fs", "percent", mount) == f"{gl.fs[mount]['percent']:.1f}%"
 
 
-def test_an_absent_plugin_is_an_empty_block(gl):
-    assert FetchUI(gl, color=False).block("cpu") == ""
+def test_bits_is_the_tui_network_unit(gl):
+    ui = FetchUI(gl, color=False)
+    iface = gl.network.keys()[0]
+    assert ui.bits("network", "bytes_recv", iface).endswith("b")
 
 
-def test_row_puts_blocks_side_by_side_and_leaves_out_what_does_not_fit(gl):
-    wide = FetchUI(gl, color=False, width=400).row("mem", "load")
-    assert "MEM" in wide.split("\n")[0] and "LOAD" in wide.split("\n")[0]
-    mem_width = max(visible_len(line) for line in FetchUI(gl, color=False).block("mem").split("\n"))
-    narrow = FetchUI(gl, color=False, width=mem_width + 3).row("mem", "load")
-    assert "LOAD" not in narrow
+def test_pad_ignores_colour_escapes():
+    ui = FetchUI(None, color=True)
+    padded = ui.pad(ui.color("12.3", "ok"), 8)
+    assert visible_len(padded) == 8
+    assert FetchUI(None, color=False).pad("a-very-long-process-name", 5) == "a-ver"
 
 
-def test_max_rows_cuts_a_long_block(gl):
-    assert len(FetchUI(gl, color=False).row("fs", max_rows=2).split("\n")) <= 2
+def test_rule_is_v4s_heavy_rule_or_ascii():
+    assert FetchUI(None).rule(3) == "━━━"
+    assert FetchUI(None, unicode=False).rule(3) == "==="
 
 
-def test_rule_is_the_tui_separator_or_ascii(gl):
-    assert FetchUI(gl, width=5).rule() == "─────"
-    assert FetchUI(gl, width=5, unicode=False).rule() == "-----"
-
-
-def test_ascii_mode_draws_ascii_quicklook_bars(gl):
-    text = FetchUI(gl, color=False, unicode=False).block("quicklook")
-    assert "▪" not in text and "[" in text
-
-
-def test_top_lists_processes_without_this_one(gl):
-    text = FetchUI(gl, color=False).top(limit=3)
-    assert text.split("\n")[0].startswith("TOP CPU")
-    assert "TOP MEM" in text.split("\n")[0]
-    assert len(text.split("\n")) <= 4
+def test_uptime_is_formatted_as_the_tui_header(gl):
+    assert FetchUI(gl, color=False).uptime()[-1] == "s"
 
 
 # -------------------------------------------------------------- templates
 
 
-def test_the_default_template_renders(gl):
+def test_the_default_template_is_v4s_layout(gl):
     text = render(DEFAULT_TEMPLATE, gl, FetchUI(gl, color=False))
-    assert "MEM" in text and "TOP CPU" in text and "─" in text
+    for marker in (
+        "✨",
+        "💡 LOAD",
+        "⚡ CPU",
+        "🧠 MEM",
+        "💾 DISK",
+        "📡 NET",
+        "🔥 TOP PROCESS by CPU",
+        "🔥 TOP PROCESS by MEM",
+    ):
+        assert marker in text, marker
+    assert text.startswith("━")
 
 
 @pytest.mark.parametrize("name", ["short.jinja", "with-logo.jinja"])
 def test_the_shipped_templates_render(name, gl):
-    text = render((_TEMPLATES / name).read_text(), gl, FetchUI(gl, color=False))
-    assert "LOAD" in text
+    assert "⚡ CPU" in render((_TEMPLATES / name).read_text(), gl, FetchUI(gl, color=False))
 
 
 def test_an_undefined_name_fails_loudly(gl):
@@ -142,11 +147,11 @@ def test_an_undefined_name_fails_loudly(gl):
 # -------------------------------------------------------------------- run
 
 
-def test_run_prints_the_default_summary_without_escapes_when_piped():
+def test_run_prints_the_summary_without_escapes_when_piped():
     out, err = io.StringIO(), io.StringIO()
     assert fetch_v5.run(None, None, out=out, err=err, wait=0) == 0
     assert "\x1b" not in out.getvalue()
-    assert "MEM" in out.getvalue()
+    assert "🧠 MEM" in out.getvalue()
 
 
 def test_a_v4_template_fails_with_a_hint(tmp_path):
