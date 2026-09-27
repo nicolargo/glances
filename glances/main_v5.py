@@ -223,6 +223,16 @@ def build_parser() -> argparse.ArgumentParser:
         help="With --client: prompt for the server's password (else [passwords] in glances.conf).",
     )
     parser.add_argument(
+        "--browser",
+        dest="browser",
+        action="store_true",
+        default=False,
+        help=(
+            "Browse the servers of [serverlist] in the TUI and open one as with --client. "
+            "With --server: serve that list on /api/5/serverslist."
+        ),
+    )
+    parser.add_argument(
         "--disable-webui",
         action="store_true",
         help="Serve the REST API without the Web UI (requires --server).",
@@ -707,6 +717,9 @@ def validate_args(args: argparse.Namespace) -> None:
         )
     if getattr(args, "fetch_template", None) and not getattr(args, "fetch", False):
         build_parser().error("--fetch-template requires --fetch.")
+    others = ("client", "memory_leak", "issue", "fetch", "api_restful_doc")
+    if getattr(args, "browser", False) and (chosen or any(getattr(args, flag, None) for flag in others)):
+        build_parser().error("--browser runs on its own, or with --server.")
     if getattr(args, "client", None):
         clashing = [
             flag
@@ -1206,6 +1219,12 @@ def assemble(
         app = build_app(config=config, store=store, alerts=alerts, args=args)
         for plugin in plugins:
             register_plugin(app, plugin)
+        if getattr(args, "browser", False):
+            # `-s --browser`: the server polls [serverlist] for /api/5/serverslist.
+            from glances.servers_list_v5 import build_poller
+
+            app.state.servers_poller = build_poller(config)
+            app.state.servers_poller.start(_global_refresh(config))
         # Plugin registry is now populated — mount MCP if the gate is on.
         attach_mcp(app, config=config, store=store, plugins=plugins, alerts=alerts)
     elif stdout_requested(args):

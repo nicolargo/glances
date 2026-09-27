@@ -268,6 +268,8 @@ def build_router() -> APIRouter:
     # in declaration order, so a dynamic route declared first would swallow
     # `alert` as a plugin name.
     router.add_api_route("/alert/incidents", _alert_incidents, methods=["GET"], name="alert_incidents")
+    # Same ordering reason: before /{plugin_name}.
+    router.add_api_route("/serverslist", _servers_list, methods=["GET"], name="servers_list")
 
     @router.get("/config")
     async def config_dump(request: Request) -> dict[str, Any]:
@@ -379,6 +381,19 @@ async def _alert_incidents(request: Request) -> dict[str, Any]:
     for incident in incidents:
         incident["duration"] = incident_duration(incident)
     return {"is_initializing": alerts.is_initializing(), "incidents": incidents}
+
+
+async def _servers_list(request: Request) -> list[dict[str, Any]]:
+    """The browser's server list (`-s --browser`), for the Web UI browser page.
+
+    CVE-2026-32633: v4 served each server's `uri`, which carried the
+    password hash. `ServerEntry.as_dict()` names every key it returns, and
+    an entry holds no credential to begin with (`glances/servers_list_v5.py`).
+    """
+    poller = getattr(request.app.state, "servers_poller", None)
+    if poller is None:
+        raise HTTPException(status_code=404, detail="Browser mode is off: start the server with --browser")
+    return [server.as_dict() for server in poller.servers]
 
 
 def _redact_args(args: argparse.Namespace | None) -> dict[str, Any]:

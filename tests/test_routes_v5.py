@@ -1040,6 +1040,8 @@ def test_args_matches_the_real_v5_argument_set(config_factory, store):
         "client",
         "username",
         "password_prompt",
+        # `--browser`: a boolean mode switch (P3-4).
+        "browser",
         "disable_plugin",
         "disable_unicode",
         "disable_webui",
