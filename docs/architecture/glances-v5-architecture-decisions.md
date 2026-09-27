@@ -1180,6 +1180,14 @@ _Goal: production-ready. Release `5.0.0rc1` then `5.0.0`._
 - **Full cybersecurity audit on the `develop-v5` branch** — release blocker. See §4.8 for the open items the audit must address (each CVE in §8 re-verified against actual v5 code, `/api/5/config` auth posture decision, `UNAUTH_PATHS` review, rate limiting wired, no v4 module leaks into v5 imports). Output: downloadable `.md` audit report.
 - Release notes documenting all breaking changes and datamodel differences
 - Merge `develop-v5 → develop`
+- **One version source** (maintainer, 2026-09-27): at the merge, v5 reads its
+  release and its API version from `glances/__init__.py` (`__version__`,
+  `__apiversion__`), and the v5-only copies go. Today they disagree:
+  `glances-v5 -V` and `GlancesAPI.__version__` read `main_v5._VERSION`
+  (`5.0.0a1`), `/status` reports `glances_version` from `__version__`
+  (still the v4 release) and hard-codes `"version": "5"`, and `/api/5` is
+  written out in `routes_v5.py` (router prefix) and
+  `outputs/restful_doc_v5.py` (`API_URL`).
 - PyPI, Docker, Snap, Helm packages published
 
 #### Phase 2.X — TUI interactive surface (owned group)
