@@ -934,6 +934,10 @@ The audit produces a downloadable `.md` report (per the contribution guidelines)
 
 ## 5. Browser / multi-server mode
 
+> **Designed 2026-09-27** in `docs/superpowers/specs/2026-09-27-glances-v5-phase3-design.md`
+> §4.5 to §4.7: TUI, Web UI and Zeroconf (maintainer decision), servers polled
+> sequentially with `requests`, and credentials never carried in a URI.
+
 - The `--browser` mode is **preserved** in v5, migrated to HTTP REST.
 - Static server list defined in `glances.conf [serverlist]`, contacted via HTTP REST (replacing XML-RPC polling).
 - CVE-2026-32633 and CVE-2026-32634 fixes are **mandatory** (browser mode is not removed).
@@ -942,6 +946,16 @@ The audit produces a downloadable `.md` report (per the contribution guidelines)
 ---
 
 ## 6. Remote client — GlancesPluginRemote
+
+> **Revised 2026-09-27** by `docs/superpowers/specs/2026-09-27-glances-v5-phase3-design.md`
+> §4.1 to §4.4 (maintainer decisions):
+> - The client reads **one `/api/5/all` per cycle** into its store, instead of
+>   running one remote plugin per plugin.
+> - The HTTP library is **`requests`**, which closes the OPEN item below.
+> - The **SNMP fallback is dropped**: `--snmp-*` and `pysnmp`, a removed v4
+>   feature for the 5.0.0 release notes.
+>
+> The timeout and stale-data rules below stand.
 
 - Implemented with **httpx async**. Supports both Bearer token and Basic Auth, matching whatever the target server requires.
 - Credentials read from `glances.conf [passwords]` keyed by hostname, same as the v4 client.
