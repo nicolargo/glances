@@ -50,7 +50,12 @@ under the ``[containers]`` section:
     # By default, Glances only display running containers
     # Set the following key to True to display all containers
     all=False
-    # Define Podman sock
+    # Comma-separated list of URLs / socket endpoints for each engine
+    # Setting a key to empty (e.g. docker_urls=) explicitly disables that engine
+    #docker_urls=unix:///var/run/docker.sock,tcp://192.168.1.100:2375
+    #podman_urls=unix:///run/user/1000/podman/podman.sock
+    #lxd_urls=unix:///var/snap/lxd/common/lxd/unix.socket
+    # Define Podman sock (legacy fallback if podman_urls is not set)
     #podman_sock=unix:///run/user/1000/podman/podman.sock
 
 You can use all the variables ({{foo}}) available in the containers plugin.

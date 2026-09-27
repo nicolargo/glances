@@ -51,11 +51,14 @@ class FakeContainer:
 
 def make_monitor(containers, url=None):
     """Build a DockerEngineMonitor without connecting to a real daemon."""
+    from glances.config import secure_option
 
     monitor = docker_engine.DockerEngineMonitor.__new__(docker_engine.DockerEngineMonitor)
     monitor.disable = False
     monitor.display_error = True
     monitor.ext_name = "containers (Docker)"
+    monitor.url = url
+    monitor.engine_url = secure_option('url', url) if url else None
     monitor.stats_fetchers = {}
     monitor.image_cache = {}
     monitor.client = MagicMock()
@@ -101,6 +104,30 @@ def test_image_field_format_preserved():
     with patch.object(docker_engine, "DockerStatsFetcher", MagicMock()):
         _, stats = monitor.update(all_tag=True)
     assert stats[0]["image"] == ("redis:7",)
+
+
+def test_engine_url_in_stats():
+    """Custom url is recorded in container stats, and credentials are redacted."""
+    containers = [FakeContainer("a")]
+    monitor = make_monitor(containers, url="tcp://127.0.0.1:2375")
+    with patch.object(docker_engine, "DockerStatsFetcher", MagicMock()):
+        _, stats = monitor.update(all_tag=True)
+    assert stats[0]["engine"] == "docker"
+    assert stats[0]["engine_url"] == "tcp://127.0.0.1:2375"
+
+    monitor = make_monitor(containers, url="https://user:secret@127.0.0.1:2375")
+    with patch.object(docker_engine, "DockerStatsFetcher", MagicMock()):
+        _, stats = monitor.update(all_tag=True)
+    assert stats[0]["engine_url"] == "https://********@127.0.0.1:2375"
+
+
+def test_connect_with_url():
+    """Connect uses DockerClient(base_url=...) when url is set."""
+    with patch.object(docker_engine, "docker", MagicMock(), create=True) as mock_docker:
+        monitor = docker_engine.DockerEngineMonitor.__new__(docker_engine.DockerEngineMonitor)
+        monitor.url = "tcp://10.0.0.1:2375"
+        monitor.connect()
+        mock_docker.DockerClient.assert_called_once_with(base_url="tcp://10.0.0.1:2375")
 
 
 def test_image_cache_evicts_removed_containers():

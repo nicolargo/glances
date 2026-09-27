@@ -13,6 +13,7 @@ from typing import Any
 
 import psutil
 
+from glances.config import secure_option
 from glances.globals import nativestr, pretty_date, replace_special_chars, string_value_to_float
 from glances.logger import logger
 from glances.stats_streamer import ThreadedIterableStreamer
@@ -280,9 +281,10 @@ class PodmanPodStatsFetcher:
 class PodmanEngineMonitor:
     """Glances' Containers Plugin's Podman Engine Monitoring unit"""
 
+    ENGINE = "podman"
     CONTAINER_ACTIVE_STATUS = ["running", "healthy", "paused"]
 
-    def __init__(self, podman_sock):
+    def __init__(self, url: str):
         self.disable = disable_plugin_podman
         if self.disable:
             raise Exception("Missing libs required to run PodmanEngineMonitor (Containers)")
@@ -291,7 +293,8 @@ class PodmanEngineMonitor:
 
         self.client = None
         self.ext_name = "containers (Podman)"
-        self.podman_sock = podman_sock
+        self.url = url
+        self.engine_url = secure_option('url', self.url)
         self.pods_stats_fetcher = None
         self.container_stats_fetchers = {}
 
@@ -304,7 +307,7 @@ class PodmanEngineMonitor:
     def connect(self):
         """Connect to Podman."""
         try:
-            self.client = PodmanClient(base_url=self.podman_sock)
+            self.client = PodmanClient(base_url=self.url)
             # PodmanClient works lazily, so make a ping to determine if socket is open
             self.client.ping()
         except Exception as e:
@@ -404,7 +407,8 @@ class PodmanEngineMonitor:
         # Init the stats for the current container
         stats = {
             "key": self.key,
-            "engine": "podman",
+            "engine": self.ENGINE,
+            "engine_url": self.engine_url,
             "name": nativestr(container.name),
             "id": container.id,
             "image": self._get_image(container),

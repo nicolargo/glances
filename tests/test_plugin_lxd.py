@@ -204,6 +204,8 @@ class TestLxdEngineMonitorGenerateStats:
             monitor.ext_name = "containers (LXD)"
             monitor.stats_fetchers = {}
             monitor.CONTAINER_ACTIVE_STATUS = ['Running']
+            monitor.url = None
+            monitor.engine_url = None
             return monitor
 
     def test_stopped_instance_returns_minimal_stats(self):
@@ -213,8 +215,26 @@ class TestLxdEngineMonitorGenerateStats:
 
         assert stats['name'] == 'test-container'
         assert stats['status'] == 'stopped'
+        assert stats['engine'] == 'lxd'
+        assert stats['engine_url'] is None
         assert stats['cpu_percent'] is None
         assert 'memory_usage' not in stats
+
+    def test_url_in_stats(self):
+        monitor = self._make_monitor()
+        monitor.url = "https://10.0.0.1:8443"
+        monitor.engine_url = "https://10.0.0.1:8443"
+        instance = make_mock_instance(status="Stopped")
+        stats = monitor.generate_stats(instance)
+        assert stats['engine'] == 'lxd'
+        assert stats['engine_url'] == "https://10.0.0.1:8443"
+
+        monitor.url = "https://user:secret@10.0.0.1:8443"
+        from glances.config import secure_option
+
+        monitor.engine_url = secure_option('url', monitor.url)
+        stats = monitor.generate_stats(instance)
+        assert stats['engine_url'] == "https://********@10.0.0.1:8443"
 
     def test_running_instance_with_fetcher(self):
         monitor = self._make_monitor()
@@ -294,6 +314,8 @@ class TestLxdEngineMonitorUpdate:
             monitor.disable = False
             monitor.poll_interval = 999
             monitor.local_node = local_node
+            monitor.url = None
+            monitor.engine_url = None
             monitor.client = MagicMock()
             monitor.client.instances.all.return_value = instances
             return monitor
@@ -375,7 +397,7 @@ class TestLxdEngineMonitorConnect:  # noqa: D203
         with patch.object(LxdEngineMonitor, '__init__', lambda self, **kwargs: None):
             monitor = LxdEngineMonitor.__new__(LxdEngineMonitor)
             monitor.ext_name = "containers (LXD)"
-            monitor.endpoint = None
+            monitor.url = None
             monitor.local_node = None
             monitor.disable = False
 

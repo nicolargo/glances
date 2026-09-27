@@ -12,6 +12,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
+from glances.config import secure_option
 from glances.globals import nativestr, pretty_date, replace_special_chars
 from glances.logger import logger
 from glances.stats_streamer import ThreadedIterableStreamer
@@ -240,9 +241,10 @@ class DockerStatsFetcher:
 class DockerEngineMonitor:
     """Glances' Containers Plugin's Docker Engine Monitoring unit"""
 
+    ENGINE = "docker"
     CONTAINER_ACTIVE_STATUS = ['running', 'healthy', 'paused']
 
-    def __init__(self):
+    def __init__(self, url: str | None = None):
         self.disable = disable_plugin_docker
         if self.disable:
             raise Exception("Missing libs required to run DockerEngineMonitor (Containers) ")
@@ -251,6 +253,8 @@ class DockerEngineMonitor:
 
         self.client = None
         self.ext_name = "containers (Docker)"
+        self.url = url
+        self.engine_url = secure_option('url', self.url)
         self.stats_fetchers = {}
 
         # Issue #3559: cache the (immutable) image tags per container id to avoid
@@ -264,7 +268,7 @@ class DockerEngineMonitor:
         # Init the Docker API Client
         try:
             # Do not use the timeout option (see issue #1878)
-            self.client = docker.from_env()
+            self.client = docker.DockerClient(base_url=self.url) if self.url else docker.from_env()
         except Exception as e:
             logger.error(f"{self.ext_name} plugin - Can't connect to Docker ({e})")
             self.client = None
@@ -395,7 +399,8 @@ class DockerEngineMonitor:
         status = container.attrs['State'].get('Health', container.attrs['State']).get('Status', '')
         stats = {
             'key': self.key,
-            'engine': 'docker',
+            'engine': self.ENGINE,
+            'engine_url': self.engine_url,
             'name': nativestr(container.name),
             'id': container.id,
             'image': self._get_image(container),

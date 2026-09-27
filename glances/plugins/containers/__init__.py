@@ -92,6 +92,9 @@ fields_description = {
     'engine': {
         'description': 'Container engine (Docker, Podman, and LXD are currently supported)',
     },
+    'engine_url': {
+        'description': 'Container engine base URL / socket endpoint (credentials are hidden)',
+    },
     'pod_name': {
         'description': 'Pod name (only with Podman)',
     },
@@ -166,15 +169,36 @@ class ContainersPlugin(GlancesPluginModel):
 
         # Init the Docker API
         if not disable_plugin_docker:
-            self.monitors.append(DockerEngineMonitor())
+            docker_urls = self._parse_urls('docker_urls')
+            if docker_urls is None:
+                self.monitors.append(DockerEngineMonitor())
+            elif docker_urls:
+                for url in docker_urls:
+                    self.monitors.append(DockerEngineMonitor(url=url))
+            else:
+                logger.debug("containers plugin - Docker engine monitor disabled via configuration")
 
         # Init the Podman API
         if not disable_plugin_podman:
-            self.monitors.append(PodmanEngineMonitor(podman_sock=self._podman_sock()))
+            podman_urls = self._parse_urls('podman_urls')
+            if podman_urls is None:
+                self.monitors.append(PodmanEngineMonitor(url=self._podman_sock()))
+            elif podman_urls:
+                for url in podman_urls:
+                    self.monitors.append(PodmanEngineMonitor(url=url))
+            else:
+                logger.debug("containers plugin - Podman engine monitor disabled via configuration")
 
         # Init the LXD API
         if not disable_plugin_lxd:
-            self.monitors.append(LxdEngineMonitor(poll_interval=self.get_refresh()))
+            lxd_urls = self._parse_urls('lxd_urls')
+            if lxd_urls is None:
+                self.monitors.append(LxdEngineMonitor(poll_interval=self.get_refresh()))
+            elif lxd_urls:
+                for url in lxd_urls:
+                    self.monitors.append(LxdEngineMonitor(url=url, poll_interval=self.get_refresh()))
+            else:
+                logger.debug("containers plugin - LXD engine monitor disabled via configuration")
 
         # Sort key
         self.sort_key = None
@@ -186,6 +210,15 @@ class ContainersPlugin(GlancesPluginModel):
         self.update()
         self.refresh_timer.set(0)
 
+    def _parse_urls(self, key: str) -> list[str] | None:
+        """Returns a list of configured URLs, or None if the option is not present in config or set empty"""
+        raw = self.get_conf_value(key, default=None)
+        if raw is None:
+            return None
+
+        return [url.strip("'\"") for url in raw if url.strip("'\"")]
+
+    # TODO: To be removed from the next major version of glances
     def _podman_sock(self) -> str:
         """Return the podman sock.
         Could be defined in the [docker] section thanks to the podman_sock option.
@@ -217,7 +250,7 @@ class ContainersPlugin(GlancesPluginModel):
         try:
             ret = deepcopy(self.stats)
         except KeyError as e:
-            logger.debug(f"docker plugin - Docker export error {e}")
+            logger.debug(f"containers plugin - Export error: {e}")
             ret = []
 
         # Remove fields uses to compute rate
