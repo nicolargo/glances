@@ -100,7 +100,9 @@ class ServerEntry:
 
     @property
     def key(self) -> str:
-        return self.target
+        """The poller's key for its connection, and so its credentials: per source,
+        so a discovered server announcing a static one's address never shares its password."""
+        return f"{self.source}:{self.target}"
 
     def as_dict(self) -> dict[str, Any]:
         """The `/api/5/serverslist` item: built field by field, never from `vars()`."""

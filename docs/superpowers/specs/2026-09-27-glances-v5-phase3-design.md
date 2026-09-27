@@ -275,6 +275,19 @@ any order, or in parallel.
      holds no credential; a regression test checks the response for
      CVE-2026-32633. The TUI's server list refresh is `[global] refresh`.
 5. **P3-5 Zeroconf**: the announcement, discovery and CVE-2026-32634 (D6).
+   **Shipped 2026-09-27** (`glances/zeroconf_v5.py`):
+   - `-s` announces `_glances._tcp.local.` with `api=5` (and
+     `protocol=rest` for v4 browsers), on the address the LAN can reach; a
+     server bound to loopback (v5's default) announces nothing, and says so;
+   - `--browser` and `-s --browser` add the `api=5` announcements, as
+     `source: zeroconf`, and drop them when they leave;
+   - CVE-2026-32634: a discovered entry connects to the address it was seen
+     at, shows the announced name as its alias (printable, 64 characters at
+     most), and gets no configured credential; its connection is never
+     shared with a static entry at the same address. Regression tests
+     check that no token request and no `Authorization` header is sent;
+   - `--disable-autodiscover` turns both sides off; without the `zeroconf`
+     library (extra `browser`) both sides log it at INFO and go on.
 6. **P3-6 Web UI browser page** (D7).
 7. **P3-7 CVE verification pass**: every row of §8 marked Phase 3 is checked
    against the code, and §8 is updated. This is the phase's own exit

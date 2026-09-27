@@ -1042,6 +1042,8 @@ def test_args_matches_the_real_v5_argument_set(config_factory, store):
         "password_prompt",
         # `--browser`: a boolean mode switch (P3-4).
         "browser",
+        # `--disable-autodiscover`: Zeroconf off (P3-5). A boolean.
+        "disable_autodiscover",
         "disable_plugin",
         "disable_unicode",
         "disable_webui",

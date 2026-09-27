@@ -233,6 +233,13 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--disable-autodiscover",
+        dest="disable_autodiscover",
+        action="store_true",
+        default=False,
+        help="Zeroconf off: a server does not announce itself, a browser lists [serverlist] only.",
+    )
+    parser.add_argument(
         "--disable-webui",
         action="store_true",
         help="Serve the REST API without the Web UI (requires --server).",
@@ -1226,6 +1233,7 @@ def assemble(
             from glances.servers_list_v5 import build_poller
 
             app.state.servers_poller = build_poller(config)
+            start_discovery(app.state.servers_poller, args)
             app.state.servers_poller.start(_global_refresh(config))
         # Plugin registry is now populated — mount MCP if the gate is on.
         attach_mcp(app, config=config, store=store, plugins=plugins, alerts=alerts)
@@ -1403,6 +1411,7 @@ def run_browser(args: argparse.Namespace, config: GlancesConfigV5) -> int:
     from glances.servers_list_v5 import PROTECTED, build_poller
 
     poller = build_poller(config)
+    discovery = start_discovery(poller, args)
     poller.start(_global_refresh(config))
     options = tui_view_options(args)
     browser = BrowserTui(
@@ -1428,7 +1437,19 @@ def run_browser(args: argparse.Namespace, config: GlancesConfigV5) -> int:
         pass
     finally:
         poller.stop()
+        if discovery is not None:
+            discovery.close()
     return 0
+
+
+def start_discovery(poller: Any, args: argparse.Namespace) -> Any:
+    """Add the v5 servers announced on the LAN to the browser's list (P3-5), unless `--disable-autodiscover`."""
+    if getattr(args, "disable_autodiscover", False):
+        return None
+    from glances.zeroconf_v5 import Discovery
+
+    discovery = Discovery(poller.servers)
+    return discovery if discovery.start() else None
 
 
 def open_client(
@@ -1610,6 +1631,14 @@ async def serve(
     if tui is not None:
         tui.start()
 
+    announcer = None
+    if args.server and not getattr(args, "disable_autodiscover", False):
+        # Zeroconf (P3-5): browsers on the LAN list this server.
+        from glances.zeroconf_v5 import Announcer
+
+        announcer = Announcer()
+        await asyncio.to_thread(announcer.start, host, port)
+
     try:
         if args.server:
             assert app is not None, "assemble() must return a FastAPI app when args.server is True"
@@ -1638,6 +1667,8 @@ async def serve(
                 with contextlib.suppress(asyncio.CancelledError):
                     await asyncio.Event().wait()
     finally:
+        if announcer is not None:
+            await asyncio.to_thread(announcer.close)
         if tui is not None:
             tui.stop()
             # Join in a thread executor — never block the event loop.
