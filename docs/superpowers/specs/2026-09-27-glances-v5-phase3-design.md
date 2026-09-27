@@ -288,7 +288,19 @@ any order, or in parallel.
      check that no token request and no `Authorization` header is sent;
    - `--disable-autodiscover` turns both sides off; without the `zeroconf`
      library (extra `browser`) both sides log it at INFO and go on.
-6. **P3-6 Web UI browser page** (D7).
+6. **P3-6 Web UI browser page** (D7). **Shipped 2026-09-27**:
+   - `/browser`, served by `-s --browser` only (and reserved against
+     `mcp_path`): `templates/browser_v5.html`, the main page's CSP, and its
+     own bundle `browser5.js` (`js/browser_v5.js`,
+     `js/v5/BrowserPage.vue`), so the main page's bundle is unchanged;
+   - it polls `/api/5/serverslist` at `[global] refresh`, in the WebUI's
+     theme and tier tokens, laid out as the TUI browser: NAME, STATUS, then
+     the `[serverlist] columns` on two header rows;
+   - a click opens the server's own Web UI. `js/v5/browser.js` builds the
+     link from the name and port, and only an http(s) URL or a plain host
+     becomes one (no `javascript:`, no credentials, no path smuggled in a
+     host);
+   - a failed poll keeps the last list on screen and says why.
 7. **P3-7 CVE verification pass**: every row of §8 marked Phase 3 is checked
    against the code, and §8 is updated. This is the phase's own exit
    criterion.

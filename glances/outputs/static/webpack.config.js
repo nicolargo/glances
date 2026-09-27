@@ -121,6 +121,8 @@ module.exports = (_, env) => {
 		mode,
 		entry: {
 			glances5: "./js/app_v5.js",
+			// The browser page (P3-6), served at /browser by `-s --browser`.
+			browser5: "./js/browser_v5.js",
 		},
 		// index_v5.html loads the bundle as "static/glances5.js" -- the path
 		// the Python server mounts it on. In dev the bundle lives in the dev

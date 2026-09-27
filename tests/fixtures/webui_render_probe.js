@@ -397,8 +397,26 @@ async function fakeFetch(url) {
 	if (path === "status") {
 		return { ok: true, status: 200, json: async () => ({ status: "ok", version: "5", glances_version: "5.0.0" }) };
 	}
+	// The browser page (browser5.js, P3-6): one server per status the list
+	// colours, and a name that must not become a link.
+	if (path.includes("api/5/serverslist")) {
+		return { ok: true, status: 200, json: async () => SERVERS_LIST_FIXTURE };
+	}
 	return { ok: true, status: 200, json: async () => ({}) };
 }
+
+const SERVERS_LIST_FIXTURE = [
+	{
+		name: "10.0.0.1",
+		alias: "nas",
+		port: 61208,
+		status: "ONLINE",
+		source: "zeroconf",
+		columns: { "cpu:total": { value: 91.34, level: "critical" }, "mem:percent": { value: 40.0, level: "ok" } },
+	},
+	{ name: "beta", alias: null, port: 61237, status: "OFFLINE", source: "static", columns: {} },
+	{ name: "javascript:alert(1)", alias: "evil", port: 61208, status: "PROTECTED", source: "static", columns: {} },
+];
 
 // Vue's mount() does `instanceof Element` / `instanceof SVGElement` checks
 // on the container node. Map the globals to our fake classes so those
@@ -448,6 +466,8 @@ const sandbox = {
 	// AppShell.measureBodyRows() reads window.innerHeight. 0 means "cannot
 	// measure", which is the safe answer (design section 4.8).
 	innerHeight: 0,
+	// The browser page builds each server's link with it (js/v5/browser.js).
+	URL,
 };
 sandbox.window = sandbox;
 sandbox.globalThis = sandbox;
@@ -555,6 +575,18 @@ function collect() {
 		// The disconnected overlay: whether it is up, and the text it shows.
 		// [] / null when the server is answering.
 		offlineText: null,
+		// The browser page's table (browser5.js): per <tbody> row, each cell's
+		// text and class, and the row's link. [] on the main page.
+		browserRows: findAllByTag(appDiv, "TBODY").flatMap((tbody) =>
+			findAllByTag(tbody, "TR").map((tr) => ({
+				cells: findAllByTag(tr, "TD").map((td) => ({
+					text: td.textContent.replace(/\s+/g, " ").trim(),
+					className: (findDescendantTag(td, "SPAN") || td).className,
+				})),
+				href: (findDescendantTag(tr, "A") || { getAttribute: () => null }).getAttribute("href"),
+			})),
+		),
+		browserText: (findDescendantByClass(appDiv, "gl-browser") || { textContent: "" }).textContent.replace(/\s+/g, " ").trim(),
 		// What that overlay showed after each attempt of the ladder script
 		// below -- null for the attempt that found the server back. [] for
 		// every scenario that does not run it.

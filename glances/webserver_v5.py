@@ -145,7 +145,7 @@ def build_app(
     app.include_router(build_router())
 
     if args is not None and not getattr(args, "disable_webui", False):
-        _wire_webui(app)
+        _wire_webui(app, browser=bool(getattr(args, "browser", False)))
 
     if not _auth_is_configured(config):
         logger.warning(
@@ -172,7 +172,7 @@ def register_plugin(app: FastAPI, plugin: GlancesPluginBase) -> None:
 _DEFAULT_MCP_PATH = "/mcp"
 # What the server itself serves. An MCP mount on one of these, below one, or
 # above one (`/api` would swallow `/api/5`) would shadow it.
-_RESERVED_PATHS = ("/api", "/docs", "/redoc", "/openapi.json", "/static", "/status", "/healthz")
+_RESERVED_PATHS = ("/api", "/docs", "/redoc", "/openapi.json", "/static", "/status", "/healthz", "/browser")
 
 
 def resolve_mcp_path(config: GlancesConfigV5) -> str:
@@ -280,7 +280,7 @@ def attach_mcp(
 # ---------------------------------------------------------- WebUI
 
 
-def _wire_webui(app: FastAPI) -> None:
+def _wire_webui(app: FastAPI, browser: bool = False) -> None:
     """Mount the WebUI assets and the root document.
 
     No route-collision guard is needed: the v5 router carries
@@ -314,6 +314,15 @@ def _wire_webui(app: FastAPI) -> None:
     @app.get("/", response_class=FileResponse, include_in_schema=False)
     async def index_page() -> FileResponse:
         return FileResponse(index, media_type="text/html")
+
+    if browser:
+        # `-s --browser` (P3-6): the server list, from /api/5/serverslist.
+        # Same middlewares as `/`: a configured password protects it too.
+        browser_page = _TEMPLATE_PATH / "browser_v5.html"
+
+        @app.get("/browser", response_class=FileResponse, include_in_schema=False)
+        async def browser_index() -> FileResponse:
+            return FileResponse(browser_page, media_type="text/html")
 
     logger.info("Glances Web User Interface enabled at /")
 
