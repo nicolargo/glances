@@ -213,7 +213,7 @@ def build_parser() -> argparse.ArgumentParser:
         dest="username",
         default=None,
         metavar="<name>",
-        help="With --client: the server's username (default: glances).",
+        help="With --client or --browser: the server's username (default: glances).",
     )
     parser.add_argument(
         "--password",
@@ -735,8 +735,10 @@ def validate_args(args: argparse.Namespace) -> None:
         ]
         if clashing:
             build_parser().error(f"--client cannot be combined with {', '.join(clashing)}.")
-    elif getattr(args, "username", None) or getattr(args, "password_prompt", False):
-        build_parser().error("-u/--username and --password require --client.")
+    elif getattr(args, "password_prompt", False):
+        build_parser().error("--password requires --client.")
+    elif getattr(args, "username", None) and not getattr(args, "browser", False):
+        build_parser().error("-u/--username requires --client or --browser.")
     one_shot = [flag for flag in ("memory_leak", "issue", "fetch", "api_restful_doc") if getattr(args, flag, False)]
     if getattr(args, "api_restful_doc", False) and (args.server or chosen or len(one_shot) > 1):
         build_parser().error("--api-restful-doc runs on its own: it cannot be combined with another mode.")
@@ -1369,6 +1371,75 @@ def run_client(args: argparse.Namespace, config: GlancesConfigV5) -> int:
     message, before the TUI starts. An unreachable server is not (§6): the TUI
     starts, says "Disconnected from <host>", and the client keeps trying.
     """
+    from glances.client_v5 import parse_target
+
+    try:
+        host = parse_target(args.client)[1]
+    except ValueError as e:
+        build_parser().error(f"--client: {e}")
+    username = args.username or "glances"
+    if args.password_prompt:
+        password = getpass.getpass(f"Password for {username}@{host}: ")
+    else:
+        # v4 `[passwords]`: a per-host entry, else `default`.
+        password = config.get_value("passwords", host) or config.get_value("passwords", "default")
+    error = open_client(args, config, args.client, username, password or None)
+    if error is not None:
+        logger.critical("%s", error)
+        print(f"glances-v5: {error}", file=sys.stderr)
+        return 2
+    return 0
+
+
+def run_browser(args: argparse.Namespace, config: GlancesConfigV5) -> int:
+    """`--browser`: the servers of `[serverlist]` in the TUI (Phase 3, P3-4).
+
+    ENTER opens the selected server as `-c` would, and quitting that client
+    comes back to the list (v4 parity). A PROTECTED server with no password
+    in `[passwords]` asks for one; a password that works is kept for the
+    rest of the session, in the poller only.
+    """
+    from glances.outputs.browser_curses_v5 import BrowserTui
+    from glances.servers_list_v5 import PROTECTED, build_poller
+
+    poller = build_poller(config)
+    poller.start(_global_refresh(config))
+    options = tui_view_options(args)
+    browser = BrowserTui(
+        poller,
+        theme=str(config.get("outputs", "theme", "dark")).strip().lower(),
+        disable_bold=options["disable_bold"],
+        disable_bg=options["disable_bg"],
+    )
+    username = args.username or "glances"
+    message = None
+    try:
+        while (server := browser.select(message)) is not None:
+            message = None
+            password = poller.password_for(server)
+            if password is None and server.status == PROTECTED:
+                password = getpass.getpass(f"Password for {username}@{server.alias or server.name}: ") or None
+            error = open_client(args, config, server.target, username, password)
+            if error is not None:
+                message = f"{server.alias or server.name}: {error}"
+            elif password is not None:
+                poller.set_password(server, password)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        poller.stop()
+    return 0
+
+
+def open_client(
+    args: argparse.Namespace, config: GlancesConfigV5, target: str, username: str, password: str | None
+) -> str | None:
+    """The client TUI on `target`, until the user quits it (`q`, ESC) or Ctrl-C.
+
+    Returns why it could not open (a refused password, not a Glances v5
+    server), or None. `-c` exits on that message; the browser shows it and
+    goes back to its list.
+    """
     from glances.client_v5 import (
         DEFAULT_TIMEOUT,
         AuthError,
@@ -1381,20 +1452,11 @@ def run_client(args: argparse.Namespace, config: GlancesConfigV5) -> int:
     )
     from glances.outputs.glances_curses_v5 import TuiV5
 
-    try:
-        base_url, host = parse_target(args.client)
-    except ValueError as e:
-        build_parser().error(f"--client: {e}")
-    username = args.username or "glances"
-    if args.password_prompt:
-        password = getpass.getpass(f"Password for {username}@{host}: ")
-    else:
-        # v4 `[passwords]`: a per-host entry, else `default`.
-        password = config.get("passwords", host, None) or config.get("passwords", "default", None)
+    base_url, host = parse_target(target)
     connection = RemoteConnection(
         base_url,
         username=username,
-        password=password or None,
+        password=password,
         timeout=float(config.get("client", "timeout", DEFAULT_TIMEOUT)),
         verify=_client_ssl_verify(config),
     )
@@ -1410,9 +1472,7 @@ def run_client(args: argparse.Namespace, config: GlancesConfigV5) -> int:
     try:
         source.connect()
     except (AuthError, NotAGlancesV5Server) as e:
-        logger.critical("%s", e)
-        print(f"glances-v5: {e}", file=sys.stderr)
-        return 2
+        return str(e)
     except RemoteError as e:
         logger.warning("%s is unreachable (%s); retrying every refresh", base_url, e)
 
@@ -1431,7 +1491,6 @@ def run_client(args: argparse.Namespace, config: GlancesConfigV5) -> int:
         registry=source.registry,
         fields_by_plugin=source.fields_by_plugin,
         refresh_interval=float(config.get("outputs", "tui_refresh_interval", refresh)),
-        on_quit=lambda: os.kill(os.getpid(), signal.SIGINT),
         # `e` pins on the server; `k`, `+` and `-` are refused (they would
         # act on this machine); the process filter applies locally.
         remote=source,
@@ -1456,18 +1515,22 @@ def run_client(args: argparse.Namespace, config: GlancesConfigV5) -> int:
             with contextlib.suppress(OSError):
                 sys.stdout.write("\x1b[?25h")
                 sys.stdout.flush()
-    return 0
+    return None
 
 
 async def _serve_client(source: Any, tui: Any, refresh: float, exports: Any = None) -> None:
-    """The client's poller, its exports and the TUI thread, until SIGINT (the TUI's `q`, or Ctrl-C)."""
+    """The client's poller, its exports and the TUI thread, until the TUI ends (`q`, ESC) or Ctrl-C.
+
+    The TUI thread's end is the signal, not a SIGINT: the browser opens one
+    client after the other in the same process, and quitting one returns to
+    its list (v4 parity).
+    """
     tasks = [asyncio.create_task(source.run_forever(refresh))]
     if exports is not None:
         tasks.append(asyncio.create_task(exports))
     tui.start()
     try:
-        with contextlib.suppress(asyncio.CancelledError):
-            await asyncio.gather(*tasks)
+        await asyncio.to_thread(tui.join)
     finally:
         tui.stop()
         await asyncio.to_thread(tui.join, 2.0)
@@ -1610,6 +1673,8 @@ def main(argv: list[str] | None = None) -> int:
         return run_memory_leak(args, config)
     if getattr(args, "client", None):
         return run_client(args, config)
+    if getattr(args, "browser", False) and not args.server:
+        return run_browser(args, config)
     if getattr(args, "issue", False):
         return run_issue(args, config)
     if getattr(args, "api_restful_doc", False):

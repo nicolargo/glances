@@ -718,3 +718,19 @@ def test_against_a_real_v5_app(tmp_path, monkeypatch):
     assert ("mem", False) in source.registry
     assert source.store.get("mem")["percent"] == server_store.get("mem")["percent"]
     assert "_levels" in source.store.get("mem"), "the server's levels colour the client"
+
+
+def test_run_client_reads_passwords_from_a_real_config(tmp_path, monkeypatch):
+    """P3-1 regression: `[passwords] <host>` set in the file made `config.get(..., None)` raise."""
+    from glances import main_v5
+    from glances.config_v5 import GlancesConfigV5
+
+    monkeypatch.setattr(GlancesConfigV5, "SYSTEM_CONFIG_PATH", tmp_path / "none.conf")
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+    conf = tmp_path / "glances.conf"
+    conf.write_text("[passwords]\nsrv=pw\n")
+    seen = []
+    monkeypatch.setattr(main_v5, "open_client", lambda args, config, target, user, password: seen.append(password))
+    args = main_v5.build_parser().parse_args(["-c", "srv"])
+    assert main_v5.run_client(args, GlancesConfigV5(str(conf))) == 0
+    assert seen == ["pw"]

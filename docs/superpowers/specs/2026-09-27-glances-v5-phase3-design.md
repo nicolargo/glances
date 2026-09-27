@@ -261,7 +261,19 @@ any order, or in parallel.
 3. **P3-3 exporters, waves A to E** (D8). Independent: they can start at any
    time.
 4. **P3-4 TUI browser, static list**: `[serverlist]`, polling,
-   `/api/5/serverslist` and CVE-2026-32633 (D5).
+   `/api/5/serverslist` and CVE-2026-32633 (D5). **Shipped 2026-09-27**:
+   - `glances/servers_list_v5.py`: the static list, `[serverlist] columns`,
+     and a poller thread visiting the servers one after the other;
+     statuses UNKNOWN, ONLINE, OFFLINE, PROTECTED and UNSUPPORTED (a v4
+     server, which has no `/status`);
+   - `glances/outputs/browser_curses_v5.py`: v4's layout in the TUI's
+     colours, keys UP/DOWN, ENTER, `1`/`2`/`3` (order), `q`/ESC;
+   - ENTER opens the client (`open_client`), and quitting it comes back to
+     the list. A PROTECTED server with no `[passwords]` entry asks for one;
+     a password that works is kept for the session, in the poller only;
+   - `/api/5/serverslist` with `-s --browser`, 404 otherwise. An entry
+     holds no credential; a regression test checks the response for
+     CVE-2026-32633. The TUI's server list refresh is `[global] refresh`.
 5. **P3-5 Zeroconf**: the announcement, discovery and CVE-2026-32634 (D6).
 6. **P3-6 Web UI browser page** (D7).
 7. **P3-7 CVE verification pass**: every row of §8 marked Phase 3 is checked

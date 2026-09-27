@@ -121,7 +121,7 @@ def load_static_servers(config: Any) -> list[ServerEntry]:
         name = str(config.get(SECTION, f"server_{n}_name", "") or "").strip()
         if not name:
             continue
-        if config.get(SECTION, f"server_{n}_protocol", None) is not None:
+        if config.get_value(SECTION, f"server_{n}_protocol") is not None:
             # v4 had `rpc` and `rest`; v5 speaks REST only.
             logger.warning("[%s] server_%d_protocol is ignored: v5 servers speak REST only", SECTION, n)
         raw_port = str(config.get(SECTION, f"server_{n}_port", "") or "").strip()
@@ -183,7 +183,7 @@ class ServersPoller:
         if server.source != "static":
             return None
         host = parse_target(server.target)[1]
-        return self._config.get("passwords", host, None) or self._config.get("passwords", "default", None) or None
+        return self._config.get_value("passwords", host) or self._config.get_value("passwords", "default") or None
 
     def set_password(self, server: ServerEntry, password: str) -> None:
         """A password the user typed for `server`: used from the next round on."""
@@ -240,7 +240,11 @@ class ServersPoller:
 
         def loop() -> None:
             while not self._stop.is_set():
-                self.poll_round()
+                try:
+                    self.poll_round()
+                except Exception:
+                    # A thread that dies says nothing: the list would freeze at UNKNOWN.
+                    logger.exception("Browser: a polling round failed")
                 self._stop.wait(interval)
 
         self._thread = threading.Thread(target=loop, name="glances-browser-poller", daemon=True)

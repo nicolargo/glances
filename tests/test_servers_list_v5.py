@@ -28,6 +28,9 @@ class _Config:
     def get(self, section, key, default=None):
         return self._sections.get(section, {}).get(key, default)
 
+    def get_value(self, section, key):
+        return self._sections.get(section, {}).get(key)
+
 
 class _Response:
     def __init__(self, status: int, body: Any = None) -> None:
@@ -267,3 +270,150 @@ def test_browser_runs_on_its_own_or_with_server(extra):
         validate_args(build_parser().parse_args(["--browser", *extra]))
     validate_args(build_parser().parse_args(["--browser"]))
     validate_args(build_parser().parse_args(["-s", "--browser"]))
+
+
+def test_username_goes_with_client_or_browser_and_password_with_client_only():
+    from glances.main_v5 import build_parser, validate_args
+
+    validate_args(build_parser().parse_args(["--browser", "-u", "admin"]))
+    with pytest.raises(SystemExit):
+        validate_args(build_parser().parse_args(["--browser", "--password"]))
+
+
+# ---------------------------------------------------------- the screen
+
+
+def _entries():
+    return [
+        ServerEntry(
+            name="alpha",
+            port=61208,
+            alias="Alpha box",
+            status=sl.ONLINE,
+            columns={"cpu:total": {"value": 92.25, "level": "critical"}},
+        ),
+        ServerEntry(name="beta", port=61208, status=sl.OFFLINE),
+        ServerEntry(name="gamma", port=61208, status=sl.PROTECTED),
+    ]
+
+
+def test_the_screen_is_v4s_layout_in_the_tuis_colours():
+    from glances.outputs.browser_curses_v5 import build_lines
+    from glances.outputs.curses_renderer_v5 import ColorRole
+
+    lines = build_lines(_entries(), [Column("cpu", "total"), Column("sensors", "value", "Ambient")], cursor=1)
+    text = ["".join(c.text for c in line).rstrip() for line in lines]
+    assert text[0] == "3 Glances servers available"
+    assert text[1] == "ONLINE: 1  OFFLINE: 1  PROTECTED: 1"
+    assert text[2].split() == ["CPU", "SENSORS"]
+    assert text[3].split() == ["NAME", "STATUS", "TOTAL", "VALUE", "AMBIENT"]
+    assert text[4].split() == ["Alpha", "box", "ONLINE", "92.2", "?"], "the alias, else the name"
+    assert text[5].startswith("> beta"), "the cursor"
+    cells = {c.text.strip(): c.color for c in lines[4]}
+    assert cells["ONLINE"] == ColorRole.OK and cells["92.2"] == ColorRole.CRITICAL
+    assert {c.text.strip(): c.color for c in lines[5]}["OFFLINE"] == ColorRole.CRITICAL
+    assert {c.text.strip(): c.color for c in lines[6]}["PROTECTED"] == ColorRole.WARNING
+
+
+def test_an_empty_list_and_a_message():
+    from glances.outputs.browser_curses_v5 import build_lines
+
+    lines = build_lines([], [], cursor=0, message="alpha: refused")
+    assert [c.text for c in lines[0]] == ["No Glances server available"]
+    assert lines[1][-1].text == "alpha: refused"
+
+
+def test_the_browser_keys():
+    import curses
+
+    from glances.outputs.browser_curses_v5 import BrowserTui, order_servers
+
+    servers = _entries()
+    tui = BrowserTui(poller=None)
+    assert tui.handle_key(curses.KEY_UP, servers) is None and tui.cursor == 0
+    for _ in range(5):
+        tui.handle_key(curses.KEY_DOWN, servers)
+    assert tui.cursor == 2
+    assert tui.handle_key(10, servers) == "open"
+    assert tui.handle_key(ord("q"), servers) == "quit"
+    assert tui.handle_key(27, servers) == "quit"
+    assert tui.handle_key(10, []) is None, "nothing to open"
+    tui.handle_key(ord("2"), servers)
+    assert (tui.order, tui.cursor) == ("status", 0)
+    assert [s.status for s in order_servers(servers, "status")] == [sl.OFFLINE, sl.PROTECTED, sl.ONLINE]
+    assert [s.status for s in order_servers(servers, "status-reversed")] == [sl.ONLINE, sl.PROTECTED, sl.OFFLINE]
+    assert order_servers(servers, "list") == servers
+
+
+def test_run_browser_opens_servers_and_comes_back_to_the_list(monkeypatch):
+    from glances import main_v5
+    from glances.outputs import browser_curses_v5
+
+    entries = _entries()
+    alpha, gamma = entries[0], entries[2]
+    poller = sl.ServersPoller(entries, _Config(passwords={"alpha": "pw-alpha"}), [])
+    monkeypatch.setattr(sl, "build_poller", lambda config: poller)
+    monkeypatch.setattr(poller, "start", lambda interval: None)
+    picks = iter([alpha, gamma, gamma, None])
+    messages = []
+
+    def select(self, message=None):
+        messages.append(message)
+        return next(picks)
+
+    monkeypatch.setattr(browser_curses_v5.BrowserTui, "select", select)
+    typed = iter(["wrong", "right"])
+    monkeypatch.setattr(main_v5.getpass, "getpass", lambda prompt: next(typed))
+    opened = []
+
+    def open_client(args, config, target, username, password):
+        opened.append((target, username, password))
+        return "refused the username or password" if password == "wrong" else None
+
+    monkeypatch.setattr(main_v5, "open_client", open_client)
+    args = main_v5.build_parser().parse_args(["--browser"])
+    assert main_v5.run_browser(args, _Config()) == 0
+    assert opened == [
+        ("alpha:61208", "glances", "pw-alpha"),  # [passwords], no prompt
+        ("gamma:61208", "glances", "wrong"),  # PROTECTED, nothing configured: asked
+        ("gamma:61208", "glances", "right"),
+    ]
+    assert messages == [None, None, "gamma: refused the username or password", None]
+    assert poller.password_for(gamma) == "right", "kept for the session, in the poller"
+    assert poller._stop.is_set()
+
+
+def test_an_arrow_key_sent_as_a_bare_escape_does_not_quit():
+    """ncurses may not translate `\\x1b[B`: the browser reads it as the TUI does."""
+    import curses
+
+    from glances.outputs.browser_curses_v5 import BrowserTui
+
+    class _Window:
+        def __init__(self, keys):
+            self.keys = list(keys)
+
+        def getch(self):
+            return self.keys.pop(0) if self.keys else -1
+
+        def nodelay(self, flag):
+            pass
+
+    assert BrowserTui(poller=None)._read_key(_Window([27, ord("["), ord("B")])) == curses.KEY_DOWN
+    assert BrowserTui(poller=None)._read_key(_Window([27])) == 27
+
+
+def test_a_real_config_file_with_passwords_and_protocols(tmp_path, monkeypatch, caplog):
+    """`GlancesConfigV5.get(..., None)` raises on a value that IS set: read raw values with `get_value`."""
+    from glances.config_v5 import GlancesConfigV5
+
+    monkeypatch.setattr(GlancesConfigV5, "SYSTEM_CONFIG_PATH", tmp_path / "none.conf")
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+    conf = tmp_path / "glances.conf"
+    conf.write_text("[serverlist]\nserver_1_name=alpha\nserver_1_protocol=rest\n[passwords]\nalpha=pw\ndefault=dflt\n")
+    config = GlancesConfigV5(str(conf))
+    with caplog.at_level(logging.WARNING, logger="glances.servers_list_v5"):
+        poller = sl.build_poller(config)
+    assert "protocol is ignored" in caplog.text
+    assert poller.password_for(poller.servers[0]) == "pw"
+    assert poller.password_for(ServerEntry(name="beta", port=61208)) == "dflt"
