@@ -10,7 +10,6 @@
 
 from copy import deepcopy
 from functools import partial, reduce
-from itertools import chain
 from typing import Any
 
 from glances.globals import nativestr
@@ -189,7 +188,7 @@ class ContainersPlugin(GlancesPluginModel):
 
     def _podman_sock(self) -> str:
         """Return the podman sock.
-        Could be desfined in the [docker] section thanks to the podman_sock option.
+        Could be defined in the [docker] section thanks to the podman_sock option.
         Default value: unix:///run/user/1000/podman/podman.sock
         """
         conf_podman_sock = self.get_conf_value('podman_sock')
@@ -254,21 +253,11 @@ class ContainersPlugin(GlancesPluginModel):
         def is_key_in_container_and_hidden(container):
             return (key := container.get('key')) in container and self.is_hide(nativestr(container.get(key)))
 
-        def get_containers_from_updated_watcher(watcher):
-            _, containers = watcher.update(all_tag=self._all_tag())
-            return containers
-
         # Update stats
-        stats = list(
-            chain.from_iterable(
-                (
-                    container
-                    for container in get_containers_from_updated_watcher(monitor)
-                    if not is_key_in_container_and_hidden(container)
-                )
-                for monitor in self.monitors
-            )
-        )
+        stats = []
+        for monitor in self.monitors:
+            _, containers = monitor.update(all_tag=self._all_tag())
+            stats.extend(container for container in containers if not is_key_in_container_and_hidden(container))
 
         # Sort and update the stats
         # @TODO: Have a look because sort did not work for the moment (need memory stats ?)
