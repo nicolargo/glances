@@ -25,6 +25,7 @@ import requests
 from glances.client_v5 import (
     AuthError,
     NotAGlancesV5Server,
+    RemoteAlerts,
     RemoteConnection,
     RemoteError,
     RemoteSource,
@@ -348,6 +349,111 @@ def test_a_wrong_password_is_fatal_before_the_tui(monkeypatch, capsys, tmp_path)
     args = main_v5.build_parser().parse_args(["-c", "srv"])
     assert main_v5.run_client(args, GlancesConfigV5()) == 2
     assert "refused the username or password" in capsys.readouterr().err
+
+
+# ------------------------------------------------------ alerts (P3-2)
+
+
+def _server_incidents(history, ongoing, since, top):
+    """What `/api/5/alert/incidents` serves for this engine state (routes_v5)."""
+    from glances.alerts_incidents_v5 import derive_incidents, incident_duration
+
+    incidents = derive_incidents(history, ongoing=ongoing, ongoing_since=since, ongoing_top=top)
+    for incident in incidents:
+        incident["duration"] = incident_duration(incident)
+    return {"is_initializing": False, "incidents": incidents}
+
+
+def test_the_mirrored_alerts_derive_the_servers_incidents():
+    """The TUI derives its block from the adapter: it must find the server's own incidents,
+    including the cases the engine's maps exist for (an evicted opening, a live top)."""
+    from glances.alerts_incidents_v5 import derive_incidents
+
+    history = [
+        # resolved
+        {
+            "plugin": "mem",
+            "key": None,
+            "field": "percent",
+            "level": "warning",
+            "previous_level": "ok",
+            "ts": "2026-09-27T10:00:00+00:00",
+            "top": ["a"],
+        },
+        {
+            "plugin": "mem",
+            "key": None,
+            "field": "percent",
+            "level": "ok",
+            "previous_level": "warning",
+            "ts": "2026-09-27T10:05:00+00:00",
+        },
+        # ongoing, its opening evicted: only an escalation survives
+        {
+            "plugin": "fs",
+            "key": "/",
+            "field": "percent",
+            "level": "critical",
+            "previous_level": "warning",
+            "ts": "2026-09-27T10:10:00+00:00",
+        },
+        # ongoing, opening kept
+        {
+            "plugin": "load",
+            "key": None,
+            "field": "min5",
+            "level": "careful",
+            "previous_level": "ok",
+            "ts": "2026-09-27T10:20:00+00:00",
+            "top": ["x"],
+        },
+    ]
+    ongoing = {("fs", "/", "percent"): "critical", ("load", None, "min5"): "warning", ("cpu", None, "total"): "careful"}
+    since = {("load", None, "min5"): "2026-09-27T10:20:00+00:00"}
+    top = {("load", None, "min5"): {"top": ["x", "y"], "top_sort": "cpu_percent"}}
+    served = _server_incidents(history, ongoing, since, top)
+
+    alerts = RemoteAlerts()
+    alerts.update(history, served)
+    mirrored = derive_incidents(
+        alerts.get_history(),
+        ongoing=alerts.get_ongoing(),
+        ongoing_since=alerts.get_ongoing_since(),
+        ongoing_top=alerts.get_ongoing_top(),
+    )
+    assert mirrored == [{k: v for k, v in i.items() if k != "duration"} for i in served["incidents"]]
+    assert not alerts.is_initializing()
+
+
+def test_a_poll_mirrors_the_servers_alerts():
+    session = _FakeSession()
+    history = [
+        {
+            "plugin": "mem",
+            "key": None,
+            "field": "percent",
+            "level": "warning",
+            "previous_level": "ok",
+            "ts": "2026-09-27T10:00:00+00:00",
+        }
+    ]
+    session.routes["/api/5/alert"] = history
+    session.routes["/api/5/alert/incidents"] = _server_incidents(
+        history, {("mem", None, "percent"): "warning"}, {}, {}
+    ) | {"is_initializing": True}
+    source = _source(session)
+    asyncio.run(source.poll_once())
+    assert source.alerts.get_history() == history
+    assert source.alerts.get_ongoing() == {("mem", None, "percent"): "warning"}
+    assert source.alerts.is_initializing()
+
+
+def test_a_server_without_alerts_is_still_connected():
+    """Alerts disabled on the server: 404 on its alert routes. An empty block, not a failure."""
+    source = _source(_FakeSession())
+    asyncio.run(source.poll_once())
+    assert source.status()[0] == "connected"
+    assert source.alerts.get_history() == [] and source.alerts.get_ongoing() == {}
 
 
 # ------------------------------------------------ process keys (P3-2)

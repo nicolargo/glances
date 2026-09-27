@@ -18,6 +18,9 @@ to §4.4 (chantier P3-1).
 - The client polls at its own ``[global] refresh``. A server that collects less
   often answers with the same data until it has new data; that is not a
   failure, only a failed request counts toward ``DISCONNECTED``.
+- The alert block mirrors the server's (``/api/5/alert`` and
+  ``/api/5/alert/incidents``, same cycle): the client runs no alert engine,
+  so no alert actions either; the server is the one that acts.
 - A disconnected client keeps showing the last values it received, with
   the time they were received (maintainer, 2026-09-27): the store is never
   cleared.
@@ -53,6 +56,10 @@ class AuthError(RemoteError):
 
 class NotAGlancesV5Server(RemoteError):
     """Something answered, but not the Glances v5 API."""
+
+
+class NotFound(RemoteError):
+    """The server answered 404: a route it does not serve (alerts disabled, unknown pid)."""
 
 
 def parse_target(target: str) -> tuple[str, str]:
@@ -144,6 +151,8 @@ class RemoteConnection:
                     self._authenticate()  # the token may have expired: one new one, then give up
                     continue
                 raise AuthError(f"{self.base_url} requires a password: use --password, or [passwords] in glances.conf")
+            if response.status_code == 404:
+                raise NotFound(f"{self.base_url}{path} answered HTTP 404")
             if not response.ok:
                 raise RemoteError(f"{self.base_url}{path} answered HTTP {response.status_code}")
             try:
@@ -151,6 +160,57 @@ class RemoteConnection:
             except ValueError as e:
                 raise NotAGlancesV5Server(f"{self.base_url}{path} did not answer JSON") from e
         raise AuthError(f"{self.base_url} refused the new token")  # pragma: no cover -- loop always returns or raises
+
+
+class RemoteAlerts:
+    """The server's alert engine, read-only: the methods the TUI calls on `GlancesAlerts`.
+
+    Built from `/api/5/alert` (the transition log) and `/api/5/alert/incidents`.
+    The incidents' ongoing rows give back the engine's `ongoing`, `since` and
+    `top` maps, so the TUI derives exactly the incidents the server does.
+    Each `update` replaces whole objects: the TUI thread never sees a half.
+    """
+
+    def __init__(self) -> None:
+        self._history: list[dict[str, Any]] = []
+        self._initializing = False
+        self._ongoing: dict[tuple[str, Any, str], str] = {}
+        self._since: dict[tuple[str, Any, str], str] = {}
+        self._top: dict[tuple[str, Any, str], dict[str, Any]] = {}
+
+    def update(self, history: Any, incidents: Any) -> None:
+        if not isinstance(history, list) or not isinstance(incidents, dict):
+            raise NotAGlancesV5Server("the alert routes did not answer as Glances v5 does")
+        ongoing, since, top = {}, {}, {}
+        for incident in incidents.get("incidents") or []:
+            if not isinstance(incident, dict) or not incident.get("ongoing"):
+                continue
+            state_key = (str(incident.get("plugin", "")), incident.get("key"), str(incident.get("field", "")))
+            ongoing[state_key] = str(incident.get("level", ""))
+            if incident.get("begin") and not incident.get("partial"):
+                since[state_key] = incident["begin"]
+            top[state_key] = {"top": list(incident.get("top") or []), "top_sort": incident.get("top_sort")}
+        self._history, self._ongoing, self._since, self._top = history, ongoing, since, top
+        self._initializing = bool(incidents.get("is_initializing"))
+
+    def clear(self) -> None:
+        """The server runs no alert engine: nothing to mirror."""
+        self.update([], {})
+
+    def get_history(self) -> list[dict[str, Any]]:
+        return list(self._history)
+
+    def is_initializing(self) -> bool:
+        return self._initializing
+
+    def get_ongoing(self) -> dict[tuple[str, Any, str], str]:
+        return dict(self._ongoing)
+
+    def get_ongoing_since(self) -> dict[tuple[str, Any, str], str]:
+        return dict(self._since)
+
+    def get_ongoing_top(self) -> dict[tuple[str, Any, str], dict[str, Any]]:
+        return dict(self._top)
 
 
 class RemoteSource:
@@ -176,6 +236,7 @@ class RemoteSource:
         self.registry: list[tuple[str, bool]] = [("system", False)]
         self.fields_by_plugin: dict[str, dict[str, Any]] = {"system": {}}
         self._hidden = hidden_plugins or set()
+        self.alerts = RemoteAlerts()
         self._schema_loaded = False
         self._last_error: str | None = None
         self.connected = False
@@ -225,6 +286,7 @@ class RemoteSource:
             for name, payload in payloads.items():
                 if isinstance(payload, (dict, list)):
                     await self.store.set(name, payload)
+            await asyncio.to_thread(self._poll_alerts)
         except RemoteError as e:
             # The store keeps the last values: the TUI goes on showing them.
             self._failed(str(e))
@@ -234,6 +296,15 @@ class RemoteSource:
         self.connected = True
         self.last_update = time.time()
         self._last_error = None
+
+    def _poll_alerts(self) -> None:
+        try:
+            history = self.connection.get_json("/api/5/alert")
+            incidents = self.connection.get_json("/api/5/alert/incidents")
+        except NotFound:
+            self.alerts.clear()
+            return
+        self.alerts.update(history, incidents)
 
     def _failed(self, error: str) -> None:
         self.connected = False

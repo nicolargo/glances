@@ -1400,9 +1400,8 @@ def run_client(args: argparse.Namespace, config: GlancesConfigV5) -> int:
     options = tui_view_options(args)
     tui = TuiV5(
         store=store,
-        # Local alerts would only duplicate the server's; mirroring the
-        # server's alert history comes with the client TUI chantier (P3-2).
-        alerts=None,
+        # The server's alert block, mirrored: no local engine, no actions.
+        alerts=source.alerts,
         config=config,
         registry=source.registry,
         fields_by_plugin=source.fields_by_plugin,
