@@ -113,7 +113,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install ".[all]" pytest pytest-asyncio
+          python -m pip install ".[all]" pytest pytest-asyncio docutils
 
       - name: Unitary tests (v5)
         run: |
