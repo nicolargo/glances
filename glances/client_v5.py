@@ -123,12 +123,20 @@ class RemoteConnection:
 
     def get_json(self, path: str) -> Any:
         """`GET base_url + path` as JSON. Takes a token first if a password is set."""
+        return self._request("get", path)
+
+    def post_json(self, path: str) -> Any:
+        """`POST base_url + path`, no body, as JSON: the server's pin routes."""
+        return self._request("post", path)
+
+    def _request(self, method: str, path: str) -> Any:
         if self._password and not self._auth_checked:
             self._authenticate()
+        send = getattr(self._session, method)
         for attempt in (1, 2):
             headers = {"Authorization": f"Bearer {self._token}"} if self._token else {}
             try:
-                response = self._session.get(f"{self.base_url}{path}", headers=headers, timeout=self._timeout)
+                response = send(f"{self.base_url}{path}", headers=headers, timeout=self._timeout)
             except requests.RequestException as e:
                 raise RemoteError(f"{self.base_url}: {e}") from e
             if response.status_code == 401:
@@ -233,6 +241,17 @@ class RemoteSource:
             # Once per distinct error, not once per cycle.
             logger.warning("Cannot read %s: %s", self.connection.base_url, error)
             self._last_error = error
+
+    def pin_extended(self, pid: int | None) -> None:
+        """Pin `pid` for extended stats on the SERVER, or unpin (None). Synchronous.
+
+        The pin is global to the server, as the Web UI's is: the server
+        collects one pinned process' extended stats and publishes them in
+        `processlist`'s `extended`. Raises `RemoteError`.
+        """
+        self.connection.post_json(
+            "/api/5/processes/extended/disable" if pid is None else f"/api/5/processes/extended/{pid}"
+        )
 
     async def run_forever(self, refresh: float) -> None:
         """Poll every `refresh` seconds, the client's own cadence, until cancelled."""

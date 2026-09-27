@@ -89,8 +89,12 @@ class _FakeSession:
         self.down = False
         self.expired = False
 
-    def post(self, url, auth=None, timeout=None):
+    def post(self, url, auth=None, headers=None, timeout=None):
         self.requests.append(("POST", url, auth))
+        if "/processes/extended/" in url:
+            # The pin routes: 404 for a pid the server does not list, as it does.
+            target = url.rsplit("/", 1)[1]
+            return _Response(200, True) if target in ("disable", "1000", "1001") else _Response(404, {})
         if self.token_status:
             return _Response(self.token_status)
         if self.password is None:
@@ -346,6 +350,104 @@ def test_a_wrong_password_is_fatal_before_the_tui(monkeypatch, capsys, tmp_path)
     assert "refused the username or password" in capsys.readouterr().err
 
 
+# ------------------------------------------------ process keys (P3-2)
+
+
+def test_pin_extended_posts_to_the_servers_pin_routes():
+    session = _FakeSession()
+    source = _source(session)
+    source.pin_extended(1000)
+    source.pin_extended(None)
+    assert [r[1] for r in session.requests if r[0] == "POST"] == [
+        "http://srv:61208/api/5/processes/extended/1000",
+        "http://srv:61208/api/5/processes/extended/disable",
+    ]
+    with pytest.raises(RemoteError, match="404"):
+        source.pin_extended(4242)
+
+
+def _client_tui(monkeypatch, source):
+    from unittest.mock import MagicMock
+
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    engine = tui_mod.glances_processes
+    for attr, value in (("extended_pid", None), ("extended_process", None), ("disable_extended_tag", True)):
+        monkeypatch.setattr(engine, attr, value, raising=False)
+    monkeypatch.setattr(engine, "process_filter", None)
+    config = MagicMock()
+    config.get.side_effect = lambda section, key, default=None: default
+    tui = tui_mod.TuiV5(store=source.store, alerts=None, config=config, registry=[], fields_by_plugin={}, remote=source)
+    tui._cursor_items = [{"pid": 1000, "name": "nginx"}, {"pid": 1001, "name": "python"}]
+    tui._cursor_max = 2
+    popups: list[str] = []
+    monkeypatch.setattr(tui, "_popup_info", lambda stdscr, message: popups.append(message))
+    monkeypatch.setattr(tui, "_popup_yesno", lambda stdscr, message: pytest.fail("no confirmation expected"))
+    return tui, popups
+
+
+@pytest.mark.parametrize("key", ["k", "+", "-"])
+def test_client_mode_refuses_the_keys_that_would_act_on_this_machine(monkeypatch, key):
+    """v4 #3221: `k`, `+`, `-` would hit the CLIENT's pids. Refused, and said."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    for action in ("kill", "nice_increase", "nice_decrease"):
+        monkeypatch.setattr(tui_mod.glances_processes, action, lambda pid: pytest.fail("acted locally"))
+    tui, popups = _client_tui(monkeypatch, _source(_FakeSession()))
+    assert tui._handle_key(ord(key)) == "modal"
+    tui._run_pending(None)
+    assert popups and "client mode" in popups[0]
+
+
+def test_client_mode_e_pins_on_the_server_and_shows_its_extended_stats(monkeypatch):
+    session = _FakeSession()
+    source = _source(session)
+    tui, popups = _client_tui(monkeypatch, source)
+    assert tui._handle_key(ord("e")) == "modal"
+    tui._run_pending(None)
+    assert popups == []
+    assert ("POST", "http://srv:61208/api/5/processes/extended/1000", None) in session.requests
+    assert tui._view.extended
+    assert tui._extended_payload() is None, "until the server publishes it"
+    extended = {"pid": 1000, "name": "nginx", "extended_stats": True}
+    asyncio.run(source.store.set("processlist", {"data": [], "extended": extended}))
+    assert tui._extended_payload() == extended
+    # `e` again unpins, on the server.
+    tui._handle_key(ord("e"))
+    tui._run_pending(None)
+    assert ("POST", "http://srv:61208/api/5/processes/extended/disable", None) in session.requests
+    assert not tui._view.extended
+
+
+def test_client_mode_e_reports_a_refusal_from_the_server(monkeypatch):
+    tui, popups = _client_tui(monkeypatch, _source(_FakeSession()))
+    tui._cursor_items = [{"pid": 4242, "name": "gone"}]
+    tui._handle_key(ord("e"))
+    tui._run_pending(None)
+    assert popups and "refused" in popups[0]
+    assert not tui._view.extended
+
+
+def test_client_mode_filters_the_received_list_locally(monkeypatch):
+    """The server's engine filter is global to every client: untouched (§4.1)."""
+    tui, _ = _client_tui(monkeypatch, _source(_FakeSession()))
+    tui._set_filter(".*python.*")
+    snapshot = {
+        "processlist": {
+            "data": [
+                {"pid": 1, "name": "nginx", "cmdline": ["nginx"]},
+                {"pid": 2, "name": "python3", "cmdline": ["python3"]},
+            ]
+        },
+    }
+    tui._apply_client_filter(snapshot)
+    assert [p["pid"] for p in snapshot["processlist"]["data"]] == [2]
+    tui._set_filter(None)
+    snapshot = {"processlist": {"data": [{"pid": 1, "name": "nginx"}]}}
+    tui._apply_client_filter(snapshot)
+    assert len(snapshot["processlist"]["data"]) == 1
+
+
 # ------------------------------------------------- against a real v5 app
 
 
@@ -365,8 +467,8 @@ class _TestClientSession:
     def get(self, url: str, headers: dict | None = None, timeout: float | None = None) -> _Response:
         return self._wrap(self._http.get(url, headers=headers))
 
-    def post(self, url: str, auth: Any = None, timeout: float | None = None) -> _Response:
-        return self._wrap(self._http.post(url, auth=auth))
+    def post(self, url: str, auth: Any = None, headers: dict | None = None, timeout: float | None = None) -> _Response:
+        return self._wrap(self._http.post(url, auth=auth, headers=headers))
 
 
 def test_against_a_real_v5_app(tmp_path, monkeypatch):

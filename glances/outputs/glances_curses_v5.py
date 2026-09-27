@@ -35,6 +35,8 @@ from typing import TYPE_CHECKING, Any, ClassVar
 import psutil
 
 from glances import __version__
+from glances.client_v5 import RemoteError, RemoteSource
+from glances.filter import GlancesFilter
 from glances.outputs.curses_renderer_v5 import (
     HEADER_SLOT_RIGHT,
     LEFT_SLOT,
@@ -497,7 +499,7 @@ class TuiV5(threading.Thread):
         process_short_name: bool = True,
         disable_unicode: bool = False,
         programs: bool = False,
-        client_status: Callable[[], tuple[str, str, float | None]] | None = None,
+        remote: RemoteSource | None = None,
         disable_cursor: bool = False,
         arrow_keys_sort: bool = False,
     ) -> None:
@@ -507,10 +509,13 @@ class TuiV5(threading.Thread):
         self.config = config
         self.registry = registry
         self.fields_by_plugin = fields_by_plugin
-        # Client mode (`-c`): a callable returning `(status, host)` for the
-        # header's "Connected to" / "Disconnected from" (v4 parity). None in
-        # standalone mode, where there is no connection to report.
-        self._client_status = client_status
+        # Client mode (`-c`): the source filling the store from a server. It
+        # gives the header's "Connected to" / "Disconnected from" (v4 parity)
+        # and pins `e` on the server. None in standalone mode.
+        self._remote = remote
+        # Client mode filters the list it received, locally: the server's
+        # engine filter is global to every client (Phase 3 design §4.1).
+        self._client_filter = GlancesFilter()
         self.refresh_interval = refresh_interval
         # Fired once when the user quits the TUI via `q`/ESC, so the main
         # asyncio loop (uvicorn) can shut down too. Without this, closing
@@ -936,7 +941,13 @@ class TuiV5(threading.Thread):
         """
         if not self._view.extended:
             return None
-        payload = getattr(glances_processes, "extended_process", None)
+        if self._remote is not None:
+            # The server collects the pinned process and publishes it in
+            # `processlist`'s `extended`; the pid guard below still applies.
+            processlist = self.store.get("processlist")
+            payload = processlist.get("extended") if isinstance(processlist, dict) else None
+        else:
+            payload = getattr(glances_processes, "extended_process", None)
         if not isinstance(payload, dict):
             return None
         if payload.get("pid") != getattr(glances_processes, "extended_pid", None):
@@ -1024,6 +1035,10 @@ class TuiV5(threading.Thread):
         TUI, never both, so a filter typed here cannot reach a browser.
         """
         glances_processes.process_filter = pattern
+        # Client mode filters the list it received (`_apply_client_filter`).
+        # The engine above is only this machine's, idle in client mode; it
+        # still holds the pattern, so the prompt and summary read it as usual.
+        self._client_filter.filter = pattern
         self._view.filter_mmm = {"min": {}, "max": {}}
 
     def _run_pending(self, stdscr) -> None:
@@ -1037,6 +1052,13 @@ class TuiV5(threading.Thread):
         """
         verb, self._pending = self._pending, None
         if verb is None:  # pragma: no cover — defensive
+            return
+        if self._remote is not None and verb in self._MUTATING_VERBS:
+            # v4 refuses them too (#3221): run here, they would act on THIS
+            # machine's pids, not on the server's.
+            self._popup_info(
+                stdscr, "Not available in client mode.\n\nIt would act on this machine, not on the server."
+            )
             return
         if verb == "edit_filter":
             self._edit_filter(stdscr)
@@ -1053,7 +1075,7 @@ class TuiV5(threading.Thread):
         if verb == "extended" and self._view.extended:
             # Turning it OFF needs no selection at all -- and must not be
             # refused by one, or `e` would be a trap in the program view.
-            self._set_extended(None)
+            self._report_pin_error(stdscr, self._set_extended(None))
             return
         process, refusal = self._selected_process(mutating=verb in self._MUTATING_VERBS)
         if refusal is not None:
@@ -1064,13 +1086,17 @@ class TuiV5(threading.Thread):
         pid = int(process["pid"])
         name = str(process.get("name") or "?")
         if verb == "extended":
-            self._set_extended(pid)
+            self._report_pin_error(stdscr, self._set_extended(pid))
             return
         if verb == "kill_process" and not self._popup_yesno(stdscr, f"Kill {name} (pid {pid})?"):
             return
         self._apply_process_action(stdscr, verb, pid, name)
 
-    def _set_extended(self, pid: int | None) -> None:
+    def _report_pin_error(self, stdscr, error: str | None) -> None:
+        if error is not None:
+            self._popup_info(stdscr, f"The server refused the extended stats:\n\n{error}")
+
+    def _set_extended(self, pid: int | None) -> str | None:
         """Turn extended stats on for `pid`, or off when it is None.
 
         Two divergences from v4, both in `enable_extended` / `disable_extended`
@@ -1085,12 +1111,22 @@ class TuiV5(threading.Thread):
           `extended_process` being set (`processes.py:663-669`), not on
           `disable_extended_tag`. v4 leaves it set and keeps paying for it
           after `e` is pressed again; only its renderer stops looking.
+
+        In client mode the server is asked to pin (`RemoteSource.pin_extended`);
+        the local engine, idle, only remembers the pid for the guards. Returns
+        the server's refusal, or None.
         """
+        if self._remote is not None:
+            try:
+                self._remote.pin_extended(pid)
+            except RemoteError as e:
+                return str(e)
         self._view.extended = pid is not None
         glances_processes.extended_pid = pid
         glances_processes.disable_extended_tag = pid is None
         if pid is None:
             glances_processes.extended_process = None
+        return None
 
     _FILTER_PROMPT = "Process filter (regex, empty to clear): "
     _FILTER_HELP = (
@@ -1507,6 +1543,7 @@ class TuiV5(threading.Thread):
         # so a key change is reflected on the very next repaint, without
         # waiting for the engine's next update cycle to re-sort the store.
         self._apply_live_sort(snapshot)
+        self._apply_client_filter(snapshot)
         # The ordered list the process block is about to render, kept so that
         # `k` / `+` / `-` resolve the cursor against THE FRAME ON SCREEN and
         # not against a fresher snapshot taken at keypress time. Between a
@@ -1765,6 +1802,21 @@ class TuiV5(threading.Thread):
                 continue
             snapshot[name] = {**payload, "data": ordered}
 
+    def _apply_client_filter(self, snapshot: dict[str, Any]) -> None:
+        """Client mode: keep the processes the local filter matches, on the snapshot.
+
+        Same rule as the engine's own filter (`processes.update_list`), on the
+        list received. Like `_apply_live_sort`, the snapshot's entry is
+        replaced, never the store's payload.
+        """
+        if self._remote is None or self._client_filter.filter is None:
+            return
+        for name in self._LIVE_SORT_PLUGINS:
+            payload = snapshot.get(name)
+            if isinstance(payload, dict) and isinstance(payload.get("data"), list):
+                data = [p for p in payload["data"] if isinstance(p, dict) and self._client_filter.is_filtered(p)]
+                snapshot[name] = {**payload, "data": data}
+
     def _render_view(self) -> dict[str, Any]:
         """Snapshot the view state the per-plugin renderers may consult.
 
@@ -1803,8 +1855,8 @@ class TuiV5(threading.Thread):
         per-core bars, ``quicklook_width`` sizes them). ``max_x`` is the
         terminal width, known only at paint time."""
         view = self._render_view()
-        if self._client_status is not None:
-            view["client_status"], view["client_host"], view["client_last_update"] = self._client_status()
+        if self._remote is not None:
+            view["client_status"], view["client_host"], view["client_last_update"] = self._remote.status()
         view["full_quicklook"] = self._full_quicklook
         view["percpu"] = self._percpu
         view["meangpu"] = self._view.meangpu

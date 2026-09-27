@@ -1398,9 +1398,6 @@ def run_client(args: argparse.Namespace, config: GlancesConfigV5) -> int:
         config._merged.setdefault("global", {})["refresh"] = float(args.time)
     refresh = _global_refresh(config)
     options = tui_view_options(args)
-    # No cursor: `k`, `+` and `-` would act on the CLIENT's processes (v4
-    # refuses them in client mode too, #3221).
-    options["disable_cursor"] = True
     tui = TuiV5(
         store=store,
         # Local alerts would only duplicate the server's; mirroring the
@@ -1411,7 +1408,9 @@ def run_client(args: argparse.Namespace, config: GlancesConfigV5) -> int:
         fields_by_plugin=source.fields_by_plugin,
         refresh_interval=float(config.get("outputs", "tui_refresh_interval", refresh)),
         on_quit=lambda: os.kill(os.getpid(), signal.SIGINT),
-        client_status=source.status,
+        # `e` pins on the server; `k`, `+` and `-` are refused (they would
+        # act on this machine); the process filter applies locally.
+        remote=source,
         **options,
     )
     try:
