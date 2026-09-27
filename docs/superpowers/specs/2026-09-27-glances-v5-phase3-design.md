@@ -133,10 +133,9 @@ is no v4 compatibility layer.
   TLS reverse proxy, since v5 serves no HTTPS itself. TLS verification is on
   by default, with `[client] ssl_verify` to turn it off or to point at a CA
   bundle.
-- **`requests` is not a core dependency today**: only the `cloud` and `web`
-  extras bring it. A `pip install glances` user would have a `-c` that fails,
-  where v4's client (stdlib XML-RPC) worked out of the box. Open question 1
-  (§6).
+- **`requests` is a core dependency** (maintainer, 2026-09-27, §6.1): a
+  plain `pip install glances` gives a working `-c`, as v4's stdlib XML-RPC
+  client did.
 
 ### 4.3 D3 — authentication: one token per connection, never a URI
 
@@ -235,15 +234,17 @@ any order, or in parallel.
 | `--disable-autodiscover` | Ported, on both the server and the browser side. |
 | `-u/--username`, `--password` | Ported, client side (§4.3). |
 | `--snmp-*`, `--snmp-force` | Dropped (decision 3). |
-| `--cached-time` | Proposed for dropping: the v5 server always collects, so there is no cache to size. Open question 2. |
+| `--cached-time` | **Dropped** (maintainer, 2026-09-27, §6.2): the v5 server always collects, so there is no cache to size. `[<plugin>] refresh` is the v5 lever for server CPU. |
 
 ---
 
 ## 5. Chantiers, in order
 
-1. **P3-1 client core**: `RemoteSource`, `RemotePlugin`, transport and auth
-   (D1 to D3), stale data and the banner (D4), the CLI options for `-c`.
-   This is the foundation.
+1. **P3-1 client core**: `RemoteSource`, transport and auth (D1 to D3),
+   stale data and the banner (D4), the CLI options for `-c`. This is the
+   foundation. **Shipped 2026-09-27** (`glances/client_v5.py`);
+   `RemotePlugin`, which only exporters need, moves to P3-2 with
+   `--export` under `-c`.
 2. **P3-2 client TUI**: the mirrored alert block, the process keys (D1), and
    the version check message.
 3. **P3-3 exporters, waves A to E** (D8). Independent: they can start at any
@@ -260,15 +261,22 @@ Each chantier updates the parity inventory and the backlog row it closes.
 
 ---
 
-## 6. Open questions for the maintainer
+## 6. Open questions for the maintainer — answered 2026-09-27
 
-1. **Is `requests` a core dependency?** Without it, `glances-v5 -c` does not
+The maintainer accepted the three proposals.
+
+1. **Is `requests` a core dependency?** **Yes.** Without it, `glances-v5 -c` does not
    work after a plain `pip install glances`, where v4's did. Proposal: make
    it core. It is pure Python, small, and already pulled in by the `cloud`
    and `web` extras.
-2. **Drop `--cached-time`?** It sized v4's cache of a passive server, which
+2. **Drop `--cached-time`?** **Yes.** It sized v4's cache of a passive server, which
    v5 does not have. Proposal: drop it, with a recorded decision, and point
    to `[<plugin>] refresh`, the v5 lever for server CPU.
 3. **Client refresh cadence.** The poller runs at the client's
    `[global] refresh` (or `-t`), whatever the server's. Proposal: yes, as in
-   v4, where the client paced its own requests.
+   v4, where the client paced its own requests. **Yes**, with the
+   maintainer's precision: when the server refreshes less often, it answers
+   with data it has not refreshed yet. With a client at 2 s and a server at
+   4 s, the client gets new data at 2 s and the same data again at 4 s.
+   That repeat is normal: only a failed request counts toward
+   `DISCONNECTED` (§4.4).

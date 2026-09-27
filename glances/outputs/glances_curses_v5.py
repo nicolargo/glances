@@ -497,6 +497,7 @@ class TuiV5(threading.Thread):
         process_short_name: bool = True,
         disable_unicode: bool = False,
         programs: bool = False,
+        client_status: Callable[[], tuple[str, str]] | None = None,
         disable_cursor: bool = False,
         arrow_keys_sort: bool = False,
     ) -> None:
@@ -506,6 +507,10 @@ class TuiV5(threading.Thread):
         self.config = config
         self.registry = registry
         self.fields_by_plugin = fields_by_plugin
+        # Client mode (`-c`): a callable returning `(status, host)` for the
+        # header's "Connected to" / "Disconnected from" (v4 parity). None in
+        # standalone mode, where there is no connection to report.
+        self._client_status = client_status
         self.refresh_interval = refresh_interval
         # Fired once when the user quits the TUI via `q`/ESC, so the main
         # asyncio loop (uvicorn) can shut down too. Without this, closing
@@ -1798,6 +1803,8 @@ class TuiV5(threading.Thread):
         per-core bars, ``quicklook_width`` sizes them). ``max_x`` is the
         terminal width, known only at paint time."""
         view = self._render_view()
+        if self._client_status is not None:
+            view["client_status"], view["client_host"] = self._client_status()
         view["full_quicklook"] = self._full_quicklook
         view["percpu"] = self._percpu
         view["meangpu"] = self._view.meangpu

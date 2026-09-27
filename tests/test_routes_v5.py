@@ -1034,6 +1034,12 @@ def test_args_matches_the_real_v5_argument_set(config_factory, store):
         # `--disable-history`: whether the stats history is kept. A boolean
         # like its neighbours; nothing sensitive.
         "disable_history",
+        # `-c/--client`, `-u/--username`, `--password`: client mode (P3-1).
+        # On a server they are None/False. `--password` is a boolean asking
+        # for a getpass() prompt, never the password itself.
+        "client",
+        "username",
+        "password_prompt",
         "disable_plugin",
         "disable_unicode",
         "disable_webui",

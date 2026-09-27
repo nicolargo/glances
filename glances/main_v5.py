@@ -48,7 +48,7 @@ import pkgutil
 import signal
 import sys
 import tracemalloc
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import glances.exports as _exports_pkg
 import glances.plugins as _plugins_pkg
@@ -198,6 +198,29 @@ def build_parser() -> argparse.ArgumentParser:
             "TUI mode and does not bind any TCP socket. Use --disable-webui for a "
             "headless REST-only deployment. -w/--webserver is the v4 spelling."
         ),
+    )
+    parser.add_argument(
+        "-c",
+        "--client",
+        dest="client",
+        default=None,
+        metavar="<server>",
+        help="Show a remote Glances v5 server in the TUI: host, host:port or an http(s):// URL (default port 61208).",
+    )
+    parser.add_argument(
+        "-u",
+        "--username",
+        dest="username",
+        default=None,
+        metavar="<name>",
+        help="With --client: the server's username (default: glances).",
+    )
+    parser.add_argument(
+        "--password",
+        dest="password_prompt",
+        action="store_true",
+        default=False,
+        help="With --client: prompt for the server's password (else [passwords] in glances.conf).",
     )
     parser.add_argument(
         "--disable-webui",
@@ -684,6 +707,24 @@ def validate_args(args: argparse.Namespace) -> None:
         )
     if getattr(args, "fetch_template", None) and not getattr(args, "fetch", False):
         build_parser().error("--fetch-template requires --fetch.")
+    if getattr(args, "client", None):
+        clashing = [
+            flag
+            for flag, on in (
+                ("--server", args.server),
+                ("--stdout*", chosen),
+                ("--export", getattr(args, "export", None)),
+                ("--memory-leak", getattr(args, "memory_leak", False)),
+                ("--issue", getattr(args, "issue", False)),
+                ("--fetch", getattr(args, "fetch", False)),
+                ("--api-restful-doc", getattr(args, "api_restful_doc", False)),
+            )
+            if on
+        ]
+        if clashing:
+            build_parser().error(f"--client cannot be combined with {', '.join(clashing)} (yet, for --export).")
+    elif getattr(args, "username", None) or getattr(args, "password_prompt", False):
+        build_parser().error("-u/--username and --password require --client.")
     one_shot = [flag for flag in ("memory_leak", "issue", "fetch", "api_restful_doc") if getattr(args, flag, False)]
     if getattr(args, "api_restful_doc", False) and (args.server or chosen or len(one_shot) > 1):
         build_parser().error("--api-restful-doc runs on its own: it cannot be combined with another mode.")
@@ -1033,6 +1074,33 @@ def attach_history(plugins: list[GlancesPluginBase], config: GlancesConfigV5, ar
         plugin.history = history
 
 
+def tui_view_options(args: argparse.Namespace) -> dict[str, Any]:
+    """The TUI's display options from the command line, shared by the local and the client TUI."""
+    from glances.outputs.glances_curses_v5 import STARTUP_HIDE_KEYS
+
+    return {
+        "full_quicklook": getattr(args, "full_quicklook", False),
+        "percpu": getattr(args, "percpu", False),
+        "meangpu": getattr(args, "meangpu", False),
+        "fahrenheit": getattr(args, "fahrenheit", False),
+        "hide_public_info": getattr(args, "hide_public_info", False),
+        "byte": getattr(args, "byte", False),
+        "diskio_latency": getattr(args, "diskio_latency", False),
+        "diskio_iops": getattr(args, "diskio_iops", False),
+        "load_irix": getattr(args, "load_irix", False),
+        "startup_hidden_flags": {flag for flag in STARTUP_HIDE_KEYS if getattr(args, flag, False)},
+        "disable_bold": getattr(args, "disable_bold", False),
+        "disable_bg": getattr(args, "disable_bg", False),
+        "disable_separator": getattr(args, "disable_separator", False),
+        "stop_after": getattr(args, "stop_after", None),
+        "process_short_name": getattr(args, "process_short_name", True),
+        "disable_unicode": getattr(args, "disable_unicode", False),
+        "disable_cursor": getattr(args, "disable_cursor", False),
+        "arrow_keys_sort": getattr(args, "arrow_keys_sort", False),
+        "programs": getattr(args, "programs", False),
+    }
+
+
 def assemble(
     args: argparse.Namespace, config: GlancesConfigV5
 ) -> tuple[FastAPI | None, AsyncScheduler, str, int, TuiV5 | None]:
@@ -1159,7 +1227,6 @@ def assemble(
         # TUI mode: no FastAPI app, no uvicorn — only the curses thread
         # reading from the shared StatsStoreV5.
         # Local import — curses is platform-dependent and only needed when the TUI is on.
-        from glances.outputs.glances_curses_v5 import STARTUP_HIDE_KEYS
         from glances.outputs.glances_curses_v5 import TuiV5 as _TuiV5
 
         # `-f/--process-filter` (v4 `main.py:513-519`). Applied here and not
@@ -1204,25 +1271,7 @@ def assemble(
             fields_by_plugin=fields_by_plugin,
             refresh_interval=refresh,
             on_quit=lambda: os.kill(os.getpid(), signal.SIGINT),
-            full_quicklook=getattr(args, "full_quicklook", False),
-            percpu=getattr(args, "percpu", False),
-            meangpu=getattr(args, "meangpu", False),
-            fahrenheit=getattr(args, "fahrenheit", False),
-            hide_public_info=getattr(args, "hide_public_info", False),
-            byte=getattr(args, "byte", False),
-            diskio_latency=getattr(args, "diskio_latency", False),
-            diskio_iops=getattr(args, "diskio_iops", False),
-            load_irix=getattr(args, "load_irix", False),
-            startup_hidden_flags={flag for flag in STARTUP_HIDE_KEYS if getattr(args, flag, False)},
-            disable_bold=getattr(args, "disable_bold", False),
-            disable_bg=getattr(args, "disable_bg", False),
-            disable_separator=getattr(args, "disable_separator", False),
-            stop_after=getattr(args, "stop_after", None),
-            process_short_name=getattr(args, "process_short_name", True),
-            disable_unicode=getattr(args, "disable_unicode", False),
-            disable_cursor=getattr(args, "disable_cursor", False),
-            arrow_keys_sort=getattr(args, "arrow_keys_sort", False),
-            programs=getattr(args, "programs", False),
+            **tui_view_options(args),
         )
 
     return app, scheduler, host, int(port), tui
@@ -1280,6 +1329,123 @@ def run_memory_leak(args: argparse.Namespace, config: GlancesConfigV5) -> int:
     for stat in diff[:5]:
         logger.info(stat)
     return 0
+
+
+# --------------------------------------------------------------- client
+
+
+def _client_ssl_verify(config: GlancesConfigV5) -> bool | str:
+    """`[client] ssl_verify`: true (default), false, or the path to a CA bundle."""
+    raw = str(config.get("client", "ssl_verify", "") or "").strip()
+    if raw.lower() in ("", "true", "yes", "1", "on"):
+        return True
+    if raw.lower() in ("false", "no", "0", "off"):
+        return False
+    return raw
+
+
+def run_client(args: argparse.Namespace, config: GlancesConfigV5) -> int:
+    """`-c <server>`: the TUI on a remote v5 server's stats (Phase 3, P3-1).
+
+    A wrong password or a server that is not Glances v5 is fatal, with a clear
+    message, before the TUI starts. An unreachable server is not (§6): the TUI
+    starts, says "Disconnected from <host>", and the client keeps trying.
+    """
+    from glances.client_v5 import (
+        DEFAULT_STALE_MAX_CYCLES,
+        DEFAULT_TIMEOUT,
+        AuthError,
+        NotAGlancesV5Server,
+        RemoteConnection,
+        RemoteError,
+        RemoteSource,
+        parse_target,
+    )
+    from glances.outputs.glances_curses_v5 import TuiV5
+
+    try:
+        base_url, host = parse_target(args.client)
+    except ValueError as e:
+        build_parser().error(f"--client: {e}")
+    username = args.username or "glances"
+    if args.password_prompt:
+        password = getpass.getpass(f"Password for {username}@{host}: ")
+    else:
+        # v4 `[passwords]`: a per-host entry, else `default`.
+        password = config.get("passwords", host, None) or config.get("passwords", "default", None)
+    connection = RemoteConnection(
+        base_url,
+        username=username,
+        password=password or None,
+        timeout=float(config.get("client", "timeout", DEFAULT_TIMEOUT)),
+        verify=_client_ssl_verify(config),
+    )
+    store = StatsStoreV5()
+    hidden = {cls.plugin_name for _name, cls in discover_plugin_classes() if not cls.DISPLAY_IN_TUI}
+    source = RemoteSource(
+        connection,
+        store,
+        host,
+        hidden_plugins=hidden,
+        stale_max_cycles=int(config.get("client", "stale_max_cycles", DEFAULT_STALE_MAX_CYCLES)),
+    )
+    try:
+        source.connect()
+    except (AuthError, NotAGlancesV5Server) as e:
+        logger.critical("%s", e)
+        print(f"glances-v5: {e}", file=sys.stderr)
+        return 2
+    except RemoteError as e:
+        logger.warning("%s is unreachable (%s); retrying every refresh", base_url, e)
+
+    # The client's own cadence (maintainer, 2026-09-27): `-t`, else
+    # `[global] refresh`. A server that collects less often answers with the
+    # same data until it has new data.
+    if getattr(args, "time", None) is not None and args.time > 0:
+        config._merged.setdefault("global", {})["refresh"] = float(args.time)
+    refresh = _global_refresh(config)
+    options = tui_view_options(args)
+    # No cursor: `k`, `+` and `-` would act on the CLIENT's processes (v4
+    # refuses them in client mode too, #3221).
+    options["disable_cursor"] = True
+    tui = TuiV5(
+        store=store,
+        # Local alerts would only duplicate the server's; mirroring the
+        # server's alert history comes with the client TUI chantier (P3-2).
+        alerts=None,
+        config=config,
+        registry=source.registry,
+        fields_by_plugin=source.fields_by_plugin,
+        refresh_interval=float(config.get("outputs", "tui_refresh_interval", refresh)),
+        on_quit=lambda: os.kill(os.getpid(), signal.SIGINT),
+        client_status=source.status,
+        **options,
+    )
+    try:
+        asyncio.run(_serve_client(source, tui, refresh))
+    except KeyboardInterrupt:
+        pass
+    finally:
+        if sys.stdout.isatty():
+            with contextlib.suppress(OSError):
+                sys.stdout.write("\x1b[?25h")
+                sys.stdout.flush()
+    return 0
+
+
+async def _serve_client(source: Any, tui: Any, refresh: float) -> None:
+    """The client's poller and the TUI thread, until SIGINT (the TUI's `q`, or Ctrl-C)."""
+    task = asyncio.create_task(source.run_forever(refresh))
+    tui.start()
+    try:
+        with contextlib.suppress(asyncio.CancelledError):
+            await task
+    finally:
+        tui.stop()
+        await asyncio.to_thread(tui.join, 2.0)
+        task.cancel()
+        with contextlib.suppress(asyncio.CancelledError, Exception):
+            await task
 
 
 # --------------------------------------------------------------- issue
@@ -1385,6 +1551,8 @@ def main(argv: list[str] | None = None) -> int:
         sys.exit(2)
     if getattr(args, "memory_leak", False):
         return run_memory_leak(args, config)
+    if getattr(args, "client", None):
+        return run_client(args, config)
     if getattr(args, "issue", False):
         return run_issue(args, config)
     if getattr(args, "api_restful_doc", False):

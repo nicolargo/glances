@@ -1,0 +1,377 @@
+#
+# Glances - An eye on your system
+#
+# SPDX-FileCopyrightText: 2026 Nicolas Hennion <nicolas@nicolargo.com>
+#
+# SPDX-License-Identifier: LGPL-3.0-only
+#
+
+"""Glances v5 — the remote client, core (Phase 3, P3-1).
+
+The transport is tested against a fake `requests` session; the whole path
+(RemoteSource -> store -> TUI header) against a real v5 app in the last
+section. Design: docs/superpowers/specs/2026-09-27-glances-v5-phase3-design.md.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import logging
+from typing import Any
+
+import pytest
+import requests
+
+from glances.client_v5 import (
+    AuthError,
+    NotAGlancesV5Server,
+    RemoteConnection,
+    RemoteError,
+    RemoteSource,
+    parse_target,
+)
+from glances.stats_store_v5 import StatsStoreV5
+
+# ------------------------------------------------------------ addresses
+
+
+@pytest.mark.parametrize(
+    ("target", "base", "host"),
+    [
+        ("myhost", "http://myhost:61208", "myhost"),
+        ("myhost:1234", "http://myhost:1234", "myhost"),
+        ("https://proxy.example/glances/", "https://proxy.example:61208/glances", "proxy.example"),
+        ("http://[::1]:9000", "http://[::1]:9000", "::1"),
+    ],
+)
+def test_parse_target(target, base, host):
+    assert parse_target(target) == (base, host)
+
+
+def test_parse_target_rejects_other_schemes():
+    with pytest.raises(ValueError):
+        parse_target("ftp://host")
+
+
+# ------------------------------------------------------ a fake server
+
+
+class _Response:
+    def __init__(self, status: int, body: Any = None) -> None:
+        self.status_code = status
+        self.ok = 200 <= status < 300
+        self._body = body
+
+    def json(self) -> Any:
+        if self._body is ValueError:
+            raise ValueError("not JSON")
+        return self._body
+
+
+class _FakeSession:
+    """Answers like a v5 server; records what the client sent."""
+
+    def __init__(self, password: str | None = None, token_status: int | None = None) -> None:
+        self.verify = True
+        self.password = password
+        self.token_status = token_status
+        self.requests: list[tuple[str, str, Any]] = []
+        self.routes: dict[str, Any] = {
+            "/status": {"status": "ok", "version": "5"},
+            "/api/5/all/info": {
+                "system": {"hostname": {"unit": "string"}},
+                "cpu": {"total": {"unit": "percent"}},
+                "network": {"interface_name": {"unit": "string", "primary_key": True}},
+                "version": {"version": {"unit": "string"}},
+            },
+            "/api/5/all": {"system": {"hostname": "srv"}, "cpu": {"total": 12.5, "_levels": {}}},
+        }
+        self.down = False
+        self.expired = False
+
+    def post(self, url, auth=None, timeout=None):
+        self.requests.append(("POST", url, auth))
+        if self.token_status:
+            return _Response(self.token_status)
+        if self.password is None:
+            return _Response(404)
+        if auth and auth[1] == self.password:
+            self.expired = False
+            return _Response(200, {"access_token": "tok", "token_type": "bearer"})
+        return _Response(401)
+
+    def get(self, url, headers=None, timeout=None):
+        self.requests.append(("GET", url, headers))
+        if self.down:
+            raise requests.ConnectionError("connection refused")
+        if self.password is not None and (headers or {}).get("Authorization") != "Bearer tok" or self.expired:
+            return _Response(401)
+        path = url.split("61208", 1)[1]
+        return _Response(200, self.routes[path]) if path in self.routes else _Response(404)
+
+
+def _connection(session: _FakeSession, password: str | None = None) -> RemoteConnection:
+    conn = RemoteConnection("http://srv:61208", password=password)
+    conn._session = session
+    return conn
+
+
+# --------------------------------------------------------------- transport
+
+
+def test_no_password_no_token_request():
+    session = _FakeSession()
+    assert _connection(session).get_json("/status")["version"] == "5"
+    assert [r[0] for r in session.requests] == ["GET"]
+
+
+def test_a_password_is_traded_for_one_token():
+    """PBKDF2 once, then an HMAC-checked bearer on every poll (§4.3)."""
+    session = _FakeSession(password="s3cret")
+    conn = _connection(session, "s3cret")
+    for _ in range(3):
+        conn.get_json("/api/5/all")
+    posts = [r for r in session.requests if r[0] == "POST"]
+    assert len(posts) == 1
+    assert all(r[2] == {"Authorization": "Bearer tok"} for r in session.requests if r[0] == "GET")
+
+
+def test_the_password_never_goes_into_a_url():
+    session = _FakeSession(password="s3cret")
+    _connection(session, "s3cret").get_json("/api/5/all")
+    assert all("s3cret" not in url for _m, url, _x in session.requests)
+
+
+def test_a_server_without_auth_is_read_without_a_token():
+    """`/api/5/token` answers 404 when auth is not configured: go on without."""
+    session = _FakeSession(token_status=404)
+    session.password = None
+    conn = _connection(session, "unused")
+    assert conn.get_json("/status")["version"] == "5"
+
+
+def test_a_wrong_password_is_an_auth_error():
+    with pytest.raises(AuthError, match="refused"):
+        _connection(_FakeSession(password="right"), "wrong").get_json("/status")
+
+
+def test_a_missing_password_is_an_auth_error_that_says_how_to_fix_it():
+    with pytest.raises(AuthError, match="--password"):
+        _connection(_FakeSession(password="right")).get_json("/status")
+
+
+def test_an_expired_token_is_renewed_once():
+    session = _FakeSession(password="s3cret")
+    conn = _connection(session, "s3cret")
+    conn.get_json("/status")
+    session.expired = True
+    assert conn.get_json("/status")["version"] == "5"
+    assert len([r for r in session.requests if r[0] == "POST"]) == 2
+
+
+def test_a_network_failure_is_a_remote_error():
+    session = _FakeSession()
+    session.down = True
+    with pytest.raises(RemoteError, match="refused"):
+        _connection(session).get_json("/status")
+
+
+def test_plain_http_with_credentials_to_a_remote_host_warns(caplog):
+    with caplog.at_level(logging.WARNING, logger="glances.client_v5"):
+        RemoteConnection("http://10.0.0.5:61208", password="x")
+        RemoteConnection("http://localhost:61208", password="x")
+        RemoteConnection("https://10.0.0.5:61208", password="x")
+    assert caplog.text.count("plain HTTP") == 1
+
+
+# ------------------------------------------------------------------ source
+
+
+def _source(session: _FakeSession, **kw) -> RemoteSource:
+    return RemoteSource(_connection(session), StatsStoreV5(), "srv", **kw)
+
+
+def test_connect_loads_the_servers_schema_into_the_tui_registry():
+    source = _source(_FakeSession(), hidden_plugins={"version"})
+    registry = source.registry  # the object the TUI holds
+    source.connect()
+    assert source.registry is registry
+    assert registry == [("system", False), ("cpu", False), ("network", True)]
+    assert source.fields_by_plugin["network"]["interface_name"]["primary_key"] is True
+    assert source.status() == ("connected", "srv")
+
+
+def test_before_any_connection_the_registry_holds_system_alone():
+    """So the header can say "Disconnected from <host>" with no payload."""
+    source = _source(_FakeSession())
+    assert source.registry == [("system", False)]
+    assert source.status() == ("disconnected", "srv")
+
+
+def test_a_non_v5_server_is_refused():
+    session = _FakeSession()
+    session.routes["/status"] = {"status": "ok", "version": "4"}
+    with pytest.raises(NotAGlancesV5Server, match="not a Glances v5 server"):
+        _source(session).connect()
+
+
+def test_a_poll_publishes_every_payload_as_served():
+    source = _source(_FakeSession())
+    asyncio.run(source.poll_once())
+    assert source.store.get("cpu") == {"total": 12.5, "_levels": {}}
+    assert source.store.get("system") == {"hostname": "srv"}
+
+
+def test_failed_polls_keep_the_last_data_then_clear_it():
+    """§6: stale data stays for `stale_max_cycles` failures, then goes."""
+    session = _FakeSession()
+    source = _source(session, stale_max_cycles=3)
+    asyncio.run(source.poll_once())
+    session.down = True
+    for _ in range(2):
+        asyncio.run(source.poll_once())
+    assert source.status()[0] == "disconnected"
+    assert source.store.get("cpu") == {"total": 12.5, "_levels": {}}
+    asyncio.run(source.poll_once())
+    assert source.store.get("cpu") == {}
+
+
+def test_the_same_answer_twice_is_not_a_failure():
+    """A server slower than the client serves the same data again: still connected
+    (maintainer, 2026-09-27)."""
+    source = _source(_FakeSession())
+    for _ in range(4):
+        asyncio.run(source.poll_once())
+    assert source.status()[0] == "connected"
+
+
+def test_a_failure_is_logged_once_not_every_cycle(caplog):
+    session = _FakeSession()
+    session.down = True
+    source = _source(session)
+    with caplog.at_level(logging.WARNING, logger="glances.client_v5"):
+        for _ in range(5):
+            asyncio.run(source.poll_once())
+    assert caplog.text.count("Cannot read") == 1
+
+
+def test_it_reconnects_when_the_server_comes_back():
+    session = _FakeSession()
+    session.down = True
+    source = _source(session)
+    asyncio.run(source.poll_once())
+    session.down = False
+    asyncio.run(source.poll_once())
+    assert source.status()[0] == "connected"
+    assert source.store.get("cpu")["total"] == 12.5
+
+
+# ------------------------------------------------------------- the header
+
+
+def test_the_system_header_shows_the_client_status():
+    from glances.outputs.curses_renderer_v5 import ColorRole
+    from glances.plugins.system.render_curses_v5 import render
+
+    rows = render({"hostname": "srv", "hr_name": "Linux"}, {}, view={"client_status": "connected"})
+    assert [(c.text, c.color) for c in rows[0].cells][:2] == [("Connected to", ColorRole.OK), ("srv", ColorRole.HEADER)]
+    rows = render({}, {}, view={"client_status": "disconnected", "client_host": "srv"})
+    assert [(c.text, c.color) for c in rows[0].cells] == [
+        ("Disconnected from", ColorRole.CRITICAL),
+        ("srv", ColorRole.HEADER),
+    ]
+    assert render({}, {}) == [], "standalone, no payload: nothing, as before"
+
+
+# --------------------------------------------------------------------- CLI
+
+
+def test_client_flags_parse():
+    from glances.main_v5 import build_parser
+
+    args = build_parser().parse_args(["-c", "srv:61208", "-u", "admin", "--password"])
+    assert (args.client, args.username, args.password_prompt) == ("srv:61208", "admin", True)
+
+
+@pytest.mark.parametrize("extra", [["-s"], ["--stdout", "cpu"], ["--export", "csv"], ["--fetch"], ["--issue"]])
+def test_client_runs_on_its_own(extra):
+    from glances.main_v5 import build_parser, validate_args
+
+    with pytest.raises(SystemExit):
+        validate_args(build_parser().parse_args(["-c", "srv", *extra]))
+
+
+@pytest.mark.parametrize("flags", [["-u", "admin"], ["--password"]])
+def test_credentials_need_client(flags):
+    from glances.main_v5 import build_parser, validate_args
+
+    with pytest.raises(SystemExit):
+        validate_args(build_parser().parse_args(flags))
+
+
+def test_a_wrong_password_is_fatal_before_the_tui(monkeypatch, capsys, tmp_path):
+    """A clear message and exit 2, not a TUI saying "Disconnected"."""
+    from glances import client_v5, main_v5
+    from glances.config_v5 import GlancesConfigV5
+
+    monkeypatch.setattr(GlancesConfigV5, "SYSTEM_CONFIG_PATH", tmp_path / "none.conf")
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+
+    def refuse(self):
+        raise client_v5.AuthError("http://srv:61208 refused the username or password")
+
+    monkeypatch.setattr(client_v5.RemoteSource, "connect", refuse)
+    args = main_v5.build_parser().parse_args(["-c", "srv"])
+    assert main_v5.run_client(args, GlancesConfigV5()) == 2
+    assert "refused the username or password" in capsys.readouterr().err
+
+
+# ------------------------------------------------- against a real v5 app
+
+
+class _TestClientSession:
+    """A TestClient behind `requests.Session`'s surface: `timeout=` dropped, `.ok` added."""
+
+    def __init__(self, http: Any) -> None:
+        self._http = http
+
+    def _wrap(self, response: Any) -> _Response:
+        try:
+            body = response.json()
+        except ValueError:
+            body = ValueError
+        return _Response(response.status_code, body)
+
+    def get(self, url: str, headers: dict | None = None, timeout: float | None = None) -> _Response:
+        return self._wrap(self._http.get(url, headers=headers))
+
+    def post(self, url: str, auth: Any = None, timeout: float | None = None) -> _Response:
+        return self._wrap(self._http.post(url, auth=auth))
+
+
+def test_against_a_real_v5_app(tmp_path, monkeypatch):
+    """The source reads what a real `build_app` serves, through `requests`' API."""
+    from fastapi.testclient import TestClient
+
+    from glances.config_v5 import GlancesConfigV5
+    from glances.plugins.mem.model_v5 import PluginModel as Mem
+    from glances.webserver_v5 import build_app, register_plugin
+
+    monkeypatch.setattr(GlancesConfigV5, "SYSTEM_CONFIG_PATH", tmp_path / "none.conf")
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+    config = GlancesConfigV5()
+    server_store = StatsStoreV5()
+    mem = Mem(server_store, config)
+    asyncio.run(mem.update())
+    app = build_app(config=config, store=server_store)
+    register_plugin(app, mem)
+
+    with TestClient(app, base_url="http://srv:61208") as http:
+        conn = RemoteConnection("http://srv:61208")
+        conn._session = _TestClientSession(http)
+        source = RemoteSource(conn, StatsStoreV5(), "srv")
+        source.connect()
+        asyncio.run(source.poll_once())
+    assert ("mem", False) in source.registry
+    assert source.store.get("mem")["percent"] == server_store.get("mem")["percent"]
+    assert "_levels" in source.store.get("mem"), "the server's levels colour the client"
