@@ -192,24 +192,24 @@ class TestLxdStatsFetcher:
         assert not fetcher._thread.is_alive()
 
 
-class TestLxdExtensionGenerateStats:
-    """Test LxdExtension.generate_stats with mock instances."""
+class TestLxdEngineMonitorGenerateStats:
+    """Test LxdEngineMonitor.generate_stats with mock instances."""
 
-    def _make_extension(self):
-        """Create an LxdExtension without connecting to a real server."""
-        from glances.plugins.containers.engines.lxd import LxdExtension
+    def _make_monitor(self):
+        """Create an LxdEngineMonitor without connecting to a real server."""
+        from glances.plugins.containers.engines.lxd import LxdEngineMonitor
 
-        with patch.object(LxdExtension, '__init__', lambda self, **kwargs: None):
-            ext = LxdExtension.__new__(LxdExtension)
-            ext.ext_name = "containers (LXD)"
-            ext.stats_fetchers = {}
-            ext.CONTAINER_ACTIVE_STATUS = ['Running']
-            return ext
+        with patch.object(LxdEngineMonitor, '__init__', lambda self, **kwargs: None):
+            monitor = LxdEngineMonitor.__new__(LxdEngineMonitor)
+            monitor.ext_name = "containers (LXD)"
+            monitor.stats_fetchers = {}
+            monitor.CONTAINER_ACTIVE_STATUS = ['Running']
+            return monitor
 
     def test_stopped_instance_returns_minimal_stats(self):
-        ext = self._make_extension()
+        monitor = self._make_monitor()
         instance = make_mock_instance(status="Stopped")
-        stats = ext.generate_stats(instance)
+        stats = monitor.generate_stats(instance)
 
         assert stats['name'] == 'test-container'
         assert stats['status'] == 'stopped'
@@ -217,7 +217,7 @@ class TestLxdExtensionGenerateStats:
         assert 'memory_usage' not in stats
 
     def test_running_instance_with_fetcher(self):
-        ext = self._make_extension()
+        monitor = self._make_monitor()
         instance = make_mock_instance()
 
         fetcher = MagicMock()
@@ -227,9 +227,9 @@ class TestLxdExtensionGenerateStats:
             "io": {"ior": 100, "iow": 50, "time_since_update": 2},
             "network": {"rx": 5000, "tx": 3000, "time_since_update": 2},
         }
-        ext.stats_fetchers["test-container"] = fetcher
+        monitor.stats_fetchers["test-container"] = fetcher
 
-        stats = ext.generate_stats(instance)
+        stats = monitor.generate_stats(instance)
 
         assert stats['cpu_percent'] == 50.0
         assert stats['cpu_limit'] == 2.0
@@ -241,7 +241,7 @@ class TestLxdExtensionGenerateStats:
         assert stats['network_tx'] == 1500
 
     def test_proxy_device_ports(self):
-        ext = self._make_extension()
+        monitor = self._make_monitor()
         instance = make_mock_instance(
             expanded_devices={
                 "http": {"type": "proxy", "listen": "tcp:0.0.0.0:80", "connect": "tcp:127.0.0.1:8080"},
@@ -252,59 +252,59 @@ class TestLxdExtensionGenerateStats:
 
         fetcher = MagicMock()
         fetcher.activity_stats = {"cpu": {}, "memory": {}, "io": {}, "network": {}}
-        ext.stats_fetchers["test-container"] = fetcher
+        monitor.stats_fetchers["test-container"] = fetcher
 
-        stats = ext.generate_stats(instance)
+        stats = monitor.generate_stats(instance)
 
         assert "80->8080/tcp" in stats['ports']
         assert "443->8443/tcp" in stats['ports']
 
     def test_no_proxy_devices_empty_ports(self):
-        ext = self._make_extension()
+        monitor = self._make_monitor()
         instance = make_mock_instance(
             expanded_devices={"root": {"type": "disk", "path": "/", "pool": "default"}},
         )
 
         fetcher = MagicMock()
         fetcher.activity_stats = {"cpu": {}, "memory": {}, "io": {}, "network": {}}
-        ext.stats_fetchers["test-container"] = fetcher
+        monitor.stats_fetchers["test-container"] = fetcher
 
-        stats = ext.generate_stats(instance)
+        stats = monitor.generate_stats(instance)
         assert stats['ports'] == ''
 
     def test_image_from_config(self):
-        ext = self._make_extension()
+        monitor = self._make_monitor()
         instance = make_mock_instance(config={"image.description": "Alpine 3.19"})
-        stats = ext.generate_stats(instance)
+        stats = monitor.generate_stats(instance)
         assert stats['image'] == 'Alpine 3.19'
 
 
-class TestLxdExtensionUpdate:
-    """Test LxdExtension.update with mock client."""
+class TestLxdEngineMonitorUpdate:
+    """Test LxdEngineMonitor.update with mock client."""
 
-    def _make_extension_with_client(self, instances, local_node=None):
-        from glances.plugins.containers.engines.lxd import LxdExtension
+    def _make_monitor_with_client(self, instances, local_node=None):
+        from glances.plugins.containers.engines.lxd import LxdEngineMonitor
 
-        with patch.object(LxdExtension, '__init__', lambda self, **kwargs: None):
-            ext = LxdExtension.__new__(LxdExtension)
-            ext.ext_name = "containers (LXD)"
-            ext.stats_fetchers = {}
-            ext.CONTAINER_ACTIVE_STATUS = ['Running']
-            ext.display_error = True
-            ext.disable = False
-            ext.poll_interval = 999
-            ext.local_node = local_node
-            ext.client = MagicMock()
-            ext.client.instances.all.return_value = instances
-            return ext
+        with patch.object(LxdEngineMonitor, '__init__', lambda self, **kwargs: None):
+            monitor = LxdEngineMonitor.__new__(LxdEngineMonitor)
+            monitor.ext_name = "containers (LXD)"
+            monitor.stats_fetchers = {}
+            monitor.CONTAINER_ACTIVE_STATUS = ['Running']
+            monitor.display_error = True
+            monitor.disable = False
+            monitor.poll_interval = 999
+            monitor.local_node = local_node
+            monitor.client = MagicMock()
+            monitor.client.instances.all.return_value = instances
+            return monitor
 
     def test_filters_to_running_only(self):
         running = make_mock_instance(name="web", status="Running")
         stopped = make_mock_instance(name="db", status="Stopped")
-        ext = self._make_extension_with_client([running, stopped])
+        monitor = self._make_monitor_with_client([running, stopped])
 
         with patch('glances.plugins.containers.engines.lxd.LxdStatsFetcher'):
-            _, container_stats = ext.update(all_tag=False)
+            _, container_stats = monitor.update(all_tag=False)
 
         assert len(container_stats) == 1
         assert container_stats[0]['name'] == 'web'
@@ -312,20 +312,20 @@ class TestLxdExtensionUpdate:
     def test_all_tag_includes_stopped(self):
         running = make_mock_instance(name="web", status="Running")
         stopped = make_mock_instance(name="db", status="Stopped")
-        ext = self._make_extension_with_client([running, stopped])
+        monitor = self._make_monitor_with_client([running, stopped])
 
         with patch('glances.plugins.containers.engines.lxd.LxdStatsFetcher'):
-            _, container_stats = ext.update(all_tag=True)
+            _, container_stats = monitor.update(all_tag=True)
 
         assert len(container_stats) == 2
 
     def test_cluster_filters_to_local_node(self):
         local = make_mock_instance(name="web", location="node1")
         remote = make_mock_instance(name="db", location="node2")
-        ext = self._make_extension_with_client([local, remote], local_node="node1")
+        monitor = self._make_monitor_with_client([local, remote], local_node="node1")
 
         with patch('glances.plugins.containers.engines.lxd.LxdStatsFetcher'):
-            _, container_stats = ext.update(all_tag=True)
+            _, container_stats = monitor.update(all_tag=True)
 
         assert len(container_stats) == 1
         assert container_stats[0]['name'] == 'web'
@@ -335,58 +335,58 @@ class TestLxdExtensionUpdate:
         # local_node stays None, so every instance must pass through.
         a = make_mock_instance(name="web", location="")
         b = make_mock_instance(name="db", location=None)
-        ext = self._make_extension_with_client([a, b], local_node=None)
+        monitor = self._make_monitor_with_client([a, b], local_node=None)
 
         with patch('glances.plugins.containers.engines.lxd.LxdStatsFetcher'):
-            _, container_stats = ext.update(all_tag=True)
+            _, container_stats = monitor.update(all_tag=True)
 
         assert {c['name'] for c in container_stats} == {"web", "db"}  # nosec B101
 
     def test_cleans_up_removed_instances(self):
         instance = make_mock_instance(name="web")
-        ext = self._make_extension_with_client([instance])
+        monitor = self._make_monitor_with_client([instance])
 
         mock_fetcher = MagicMock()
-        ext.stats_fetchers["old-container"] = mock_fetcher
+        monitor.stats_fetchers["old-container"] = mock_fetcher
 
         with patch('glances.plugins.containers.engines.lxd.LxdStatsFetcher'):
-            ext.update(all_tag=True)
+            monitor.update(all_tag=True)
 
         mock_fetcher.stop.assert_called_once()
-        assert "old-container" not in ext.stats_fetchers
+        assert "old-container" not in monitor.stats_fetchers
 
     def test_disabled_returns_empty(self):
-        ext = self._make_extension_with_client([])
-        ext.disable = True
-        version, containers = ext.update(all_tag=True)
+        monitor = self._make_monitor_with_client([])
+        monitor.disable = True
+        version, containers = monitor.update(all_tag=True)
         assert version == {}
         assert containers == []
 
 
-class TestLxdExtensionConnect:  # noqa: D203
-    """Test LxdExtension.connect detection of cluster membership."""
+class TestLxdEngineMonitorConnect:  # noqa: D203
+    """Test LxdEngineMonitor.connect detection of cluster membership."""
 
-    def _make_extension_for_connect(self, host_info):
-        from glances.plugins.containers.engines.lxd import LxdExtension
+    def _make_monitor_for_connect(self, host_info):
+        from glances.plugins.containers.engines.lxd import LxdEngineMonitor
 
         mock_client = MagicMock()
         mock_client.host_info = host_info
 
-        with patch.object(LxdExtension, '__init__', lambda self, **kwargs: None):
-            ext = LxdExtension.__new__(LxdExtension)
-            ext.ext_name = "containers (LXD)"
-            ext.endpoint = None
-            ext.local_node = None
-            ext.disable = False
+        with patch.object(LxdEngineMonitor, '__init__', lambda self, **kwargs: None):
+            monitor = LxdEngineMonitor.__new__(LxdEngineMonitor)
+            monitor.ext_name = "containers (LXD)"
+            monitor.endpoint = None
+            monitor.local_node = None
+            monitor.disable = False
 
             with patch('glances.plugins.containers.engines.lxd.LxdClient', return_value=mock_client, create=True):
-                ext.connect()
-        return ext
+                monitor.connect()
+        return monitor
 
     def test_standalone_leaves_local_node_unset(self):
-        ext = self._make_extension_for_connect({"environment": {"server_name": "zfs01", "server_clustered": False}})
-        assert ext.local_node is None  # nosec B101
+        monitor = self._make_monitor_for_connect({"environment": {"server_name": "zfs01", "server_clustered": False}})
+        assert monitor.local_node is None  # nosec B101
 
     def test_cluster_sets_local_node(self):
-        ext = self._make_extension_for_connect({"environment": {"server_name": "node1", "server_clustered": True}})
-        assert ext.local_node == "node1"  # nosec B101
+        monitor = self._make_monitor_for_connect({"environment": {"server_name": "node1", "server_clustered": True}})
+        assert monitor.local_node == "node1"  # nosec B101

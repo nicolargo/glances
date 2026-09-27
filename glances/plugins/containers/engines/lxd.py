@@ -5,7 +5,7 @@
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 
-"""LXD Extension unit for Glances' Containers plugin."""
+"""LXD Engine Monitoring unit for Glances' Containers plugin."""
 
 import threading
 import time
@@ -191,15 +191,15 @@ class LxdStatsFetcher:
         return stats
 
 
-class LxdExtension:
-    """Glances' Containers Plugin's LXD Extension unit"""
+class LxdEngineMonitor:
+    """Glances' Containers Plugin's LXD Engine Monitoring unit"""
 
     CONTAINER_ACTIVE_STATUS = ['Running']
 
     def __init__(self, endpoint=None, poll_interval=2):
         self.disable = disable_plugin_lxd
         if self.disable:
-            raise Exception("Missing libs required to run LXD Extension (Containers)")
+            raise Exception("Missing libs required to run LxdEngineMonitor (Containers)")
 
         self.display_error = True
         self.client = None

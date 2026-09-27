@@ -15,10 +15,10 @@ from typing import Any
 
 from glances.globals import nativestr
 from glances.logger import logger
-from glances.plugins.containers.engines import ContainersExtension
-from glances.plugins.containers.engines.docker import DockerExtension, disable_plugin_docker
-from glances.plugins.containers.engines.lxd import LxdExtension, disable_plugin_lxd
-from glances.plugins.containers.engines.podman import PodmanExtension, disable_plugin_podman
+from glances.plugins.containers.engines import ContainerEngineMonitor
+from glances.plugins.containers.engines.docker import DockerEngineMonitor, disable_plugin_docker
+from glances.plugins.containers.engines.lxd import LxdEngineMonitor, disable_plugin_lxd
+from glances.plugins.containers.engines.podman import PodmanEngineMonitor, disable_plugin_podman
 from glances.plugins.plugin.model import GlancesPluginModel
 from glances.processes import glances_processes
 from glances.processes import sort_stats as sort_stats_processes
@@ -163,19 +163,19 @@ class ContainersPlugin(GlancesPluginModel):
         # We want to display the stat in the curse interface
         self.display_curse = True
 
-        self.watchers: dict[str, ContainersExtension] = {}
+        self.monitors: dict[str, ContainerEngineMonitor] = {}
 
         # Init the Docker API
         if not disable_plugin_docker:
-            self.watchers['docker'] = DockerExtension()
+            self.monitors['docker'] = DockerEngineMonitor()
 
         # Init the Podman API
         if not disable_plugin_podman:
-            self.watchers['podman'] = PodmanExtension(podman_sock=self._podman_sock())
+            self.monitors['podman'] = PodmanEngineMonitor(podman_sock=self._podman_sock())
 
         # Init the LXD API
         if not disable_plugin_lxd:
-            self.watchers['lxd'] = LxdExtension(poll_interval=self.get_refresh())
+            self.monitors['lxd'] = LxdEngineMonitor(poll_interval=self.get_refresh())
 
         # Sort key
         self.sort_key = None
@@ -199,8 +199,8 @@ class ContainersPlugin(GlancesPluginModel):
 
     def exit(self) -> None:
         """Overwrite the exit method to close threads."""
-        for watcher in self.watchers.values():
-            watcher.stop()
+        for m in self.monitors.values():
+            m.stop()
 
         # Call the father class
         super().exit()
@@ -245,7 +245,7 @@ class ContainersPlugin(GlancesPluginModel):
     def update(self) -> list[dict]:
         """Update Docker and podman stats using the input method."""
         # Connection should be ok
-        if not self.watchers:
+        if not self.monitors:
             return self.get_init_value()
 
         if self.input_method != 'local':
@@ -266,10 +266,10 @@ class ContainersPlugin(GlancesPluginModel):
             chain.from_iterable(
                 (
                     add_engine_into_container(engine, container)
-                    for container in get_containers_from_updated_watcher(watcher)
+                    for container in get_containers_from_updated_watcher(monitor)
                     if not is_key_in_container_and_hidden(container)
                 )
-                for engine, watcher in self.watchers.items()
+                for engine, monitor in self.monitors.items()
             )
         )
 

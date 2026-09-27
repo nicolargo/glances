@@ -6,7 +6,7 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
-"""Docker Extension unit for Glances' Containers plugin."""
+"""Docker Engine Monitoring unit for Glances' Containers plugin."""
 
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -237,15 +237,15 @@ class DockerStatsFetcher:
         return stats
 
 
-class DockerExtension:
-    """Glances' Containers Plugin's Docker Extension unit"""
+class DockerEngineMonitor:
+    """Glances' Containers Plugin's Docker Engine Monitoring unit"""
 
     CONTAINER_ACTIVE_STATUS = ['running', 'healthy', 'paused']
 
     def __init__(self):
         self.disable = disable_plugin_docker
         if self.disable:
-            raise Exception("Missing libs required to run Docker Extension (Containers) ")
+            raise Exception("Missing libs required to run DockerEngineMonitor (Containers) ")
 
         self.display_error = True
 

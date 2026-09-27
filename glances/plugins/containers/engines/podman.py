@@ -5,7 +5,7 @@
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 
-"""Podman Extension unit for Glances' Containers plugin."""
+"""Podman Engine Monitoring unit for Glances' Containers plugin."""
 
 import time
 from datetime import datetime
@@ -154,7 +154,7 @@ class PodmanPodStatsFetcher:
         self._pod_manager = pod_manager
 
         # Threaded Streamer
-        # Temporary patch to get podman extension working
+        # Temporary patch to get podman monitor working
         stats_iterable = (pod_manager.stats(decode=True) for _ in iter(int, 1))
         # WARNING: Podman API doesn't specify the rate at which stats are sent, so we set it to 1 second
         # to avoid overloading the system with stats calculations. With a lot of pods, this can cause some
@@ -277,15 +277,15 @@ class PodmanPodStatsFetcher:
         return {"ior": ior, "iow": iow, "time_since_update": 1}
 
 
-class PodmanExtension:
-    """Glances' Containers Plugin's Docker Extension unit"""
+class PodmanEngineMonitor:
+    """Glances' Containers Plugin's Podman Engine Monitoring unit"""
 
     CONTAINER_ACTIVE_STATUS = ["running", "healthy", "paused"]
 
     def __init__(self, podman_sock):
         self.disable = disable_plugin_podman
         if self.disable:
-            raise Exception("Missing libs required to run Podman Extension (Containers)")
+            raise Exception("Missing libs required to run PodmanEngineMonitor (Containers)")
 
         self.display_error = True
 
