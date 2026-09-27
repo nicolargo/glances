@@ -290,6 +290,7 @@ class LxdEngineMonitor:
     def generate_stats(self, instance) -> dict[str, Any]:
         stats = {
             'key': self.key,
+            "engine": 'lxd',
             'name': nativestr(instance.name),
             'id': instance.name,
             'image': instance.config.get('image.description', ''),

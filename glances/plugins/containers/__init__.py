@@ -163,19 +163,19 @@ class ContainersPlugin(GlancesPluginModel):
         # We want to display the stat in the curse interface
         self.display_curse = True
 
-        self.monitors: dict[str, ContainerEngineMonitor] = {}
+        self.monitors: list[ContainerEngineMonitor] = []
 
         # Init the Docker API
         if not disable_plugin_docker:
-            self.monitors['docker'] = DockerEngineMonitor()
+            self.monitors.append(DockerEngineMonitor())
 
         # Init the Podman API
         if not disable_plugin_podman:
-            self.monitors['podman'] = PodmanEngineMonitor(podman_sock=self._podman_sock())
+            self.monitors.append(PodmanEngineMonitor(podman_sock=self._podman_sock()))
 
         # Init the LXD API
         if not disable_plugin_lxd:
-            self.monitors['lxd'] = LxdEngineMonitor(poll_interval=self.get_refresh())
+            self.monitors.append(LxdEngineMonitor(poll_interval=self.get_refresh()))
 
         # Sort key
         self.sort_key = None
@@ -199,7 +199,7 @@ class ContainersPlugin(GlancesPluginModel):
 
     def exit(self) -> None:
         """Overwrite the exit method to close threads."""
-        for m in self.monitors.values():
+        for m in self.monitors:
             m.stop()
 
         # Call the father class
@@ -254,9 +254,6 @@ class ContainersPlugin(GlancesPluginModel):
         def is_key_in_container_and_hidden(container):
             return (key := container.get('key')) in container and self.is_hide(nativestr(container.get(key)))
 
-        def add_engine_into_container(engine, container):
-            return container | {"engine": engine}
-
         def get_containers_from_updated_watcher(watcher):
             _, containers = watcher.update(all_tag=self._all_tag())
             return containers
@@ -265,11 +262,11 @@ class ContainersPlugin(GlancesPluginModel):
         stats = list(
             chain.from_iterable(
                 (
-                    add_engine_into_container(engine, container)
+                    container
                     for container in get_containers_from_updated_watcher(monitor)
                     if not is_key_in_container_and_hidden(container)
                 )
-                for engine, monitor in self.monitors.items()
+                for monitor in self.monitors
             )
         )
 

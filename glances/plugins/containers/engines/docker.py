@@ -395,8 +395,10 @@ class DockerEngineMonitor:
         status = container.attrs['State'].get('Health', container.attrs['State']).get('Status', '')
         stats = {
             'key': self.key,
+            'engine': 'docker',
             'name': nativestr(container.name),
             'id': container.id,
+            'image': self._get_image(container),
             'status': status,
             'created': container.attrs['Created'],
             'command': [],
@@ -413,9 +415,6 @@ class DockerEngineMonitor:
             'ports': '',
             'uptime': None,
         }
-
-        # Container Image
-        stats['image'] = self._get_image(container)
 
         if container.attrs['Config'].get('Entrypoint', None):
             stats['command'].extend(container.attrs['Config'].get('Entrypoint', []))

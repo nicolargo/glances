@@ -404,6 +404,7 @@ class PodmanEngineMonitor:
         # Init the stats for the current container
         stats = {
             "key": self.key,
+            "engine": "podman",
             "name": nativestr(container.name),
             "id": container.id,
             "image": self._get_image(container),
