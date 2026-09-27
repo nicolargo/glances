@@ -424,6 +424,17 @@ It is also possible to use a simple Docker compose file to:
     wget https://raw.githubusercontent.com/nicolargo/glances/refs/heads/develop/docker-compose/glances.conf
     docker compose -f ./docker-compose-tui.yml run glances
 
+Easypanel: one-click Docker deployment
+---------------------------------------
+
+`Easypanel`_ is a self-hosted Docker deployment platform, and Glances has a
+one-click deployment template there. Deploy it from
+https://easypanel.io/templates/glances - Easypanel handles the container
+configuration for you, exposing the Web UI on the domain it assigns to the
+service.
+
+.. _Easypanel: https://easypanel.io
+
 Brew: The missing package manager
 ---------------------------------
 
