@@ -18,6 +18,9 @@ to §4.4 (chantier P3-1).
 - The client polls at its own ``[global] refresh``. A server that collects less
   often answers with the same data until it has new data; that is not a
   failure, only a failed request counts toward ``DISCONNECTED``.
+- A disconnected client keeps showing the last values it received, with
+  the time they were received (maintainer, 2026-09-27): the store is never
+  cleared.
 - Authentication: one token per connection (``POST /api/5/token``), not Basic
   credentials on every poll, because the server checks a password with PBKDF2,
   which is slow by design. Credentials never go into a URL.
@@ -28,6 +31,7 @@ from __future__ import annotations
 import asyncio
 import ipaddress
 import logging
+import time
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -37,7 +41,6 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_PORT = 61208
 DEFAULT_TIMEOUT = 3.0
-DEFAULT_STALE_MAX_CYCLES = 3
 
 
 class RemoteError(Exception):
@@ -158,7 +161,6 @@ class RemoteSource:
         store: Any,
         host: str,
         hidden_plugins: set[str] | None = None,
-        stale_max_cycles: int = DEFAULT_STALE_MAX_CYCLES,
     ) -> None:
         self.connection = connection
         self.store = store
@@ -166,16 +168,16 @@ class RemoteSource:
         self.registry: list[tuple[str, bool]] = [("system", False)]
         self.fields_by_plugin: dict[str, dict[str, Any]] = {"system": {}}
         self._hidden = hidden_plugins or set()
-        self._stale_max_cycles = stale_max_cycles
         self._schema_loaded = False
-        self._failures = 0
-        self._cleared = False
         self._last_error: str | None = None
         self.connected = False
+        # When the values in the store were received (epoch seconds), None
+        # before the first. Shown in the header while disconnected.
+        self.last_update: float | None = None
 
-    def status(self) -> tuple[str, str]:
-        """`("connected" | "disconnected", host)`, for the TUI's header."""
-        return ("connected" if self.connected else "disconnected", self.host)
+    def status(self) -> tuple[str, str, float | None]:
+        """`("connected" | "disconnected", host, last_update)`, for the TUI's header."""
+        return ("connected" if self.connected else "disconnected", self.host, self.last_update)
 
     def connect(self) -> None:
         """Check the server speaks API 5, then load its schema. Synchronous."""
@@ -216,31 +218,21 @@ class RemoteSource:
                 if isinstance(payload, (dict, list)):
                     await self.store.set(name, payload)
         except RemoteError as e:
+            # The store keeps the last values: the TUI goes on showing them.
             self._failed(str(e))
-            await self._clear_if_stale()
             return
         if not self.connected and self._last_error:
             logger.info("Reconnected to %s", self.connection.base_url)
         self.connected = True
-        self._failures = 0
-        self._cleared = False
+        self.last_update = time.time()
         self._last_error = None
 
     def _failed(self, error: str) -> None:
-        self._failures += 1
         self.connected = False
         if error != self._last_error:
             # Once per distinct error, not once per cycle.
             logger.warning("Cannot read %s: %s", self.connection.base_url, error)
             self._last_error = error
-
-    async def _clear_if_stale(self) -> None:
-        """After `stale_max_cycles` failed cycles, stop showing the last known values (§6)."""
-        if self._cleared or self._failures < self._stale_max_cycles:
-            return
-        for name in self.store.keys():
-            await self.store.set(name, {})
-        self._cleared = True
 
     async def run_forever(self, refresh: float) -> None:
         """Poll every `refresh` seconds, the client's own cadence, until cancelled."""

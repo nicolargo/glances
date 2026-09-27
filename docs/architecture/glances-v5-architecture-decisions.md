@@ -974,13 +974,11 @@ The audit produces a downloadable `.md` report (per the contribution guidelines)
 - TUI displays `N/A`. Scheduler retries at every refresh cycle.
 
 **Stale data (server disappears after successful connection):**
-- Last known data is preserved in the StatsStore with `"stale": true` at root level.
-- TUI displays a `DISCONNECTED` banner at the top of the screen, reproducing v4 behaviour.
-- Data is cleared after N consecutive failed cycles. N is configurable:
-  ```ini
-  [client]
-  stale_max_cycles=3
-  ```
+- **Revised (maintainer, 2026-09-27, P3-2):** the last values received stay
+  in the store and on screen for as long as the server is unreachable; they
+  are never cleared, and `[client] stale_max_cycles` is gone. The header
+  reads `Disconnected from <host> (last update HH:MM:SS)` in red, so every
+  value on screen is dated. Shipped in `glances/client_v5.py`.
 
 ---
 

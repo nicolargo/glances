@@ -497,7 +497,7 @@ class TuiV5(threading.Thread):
         process_short_name: bool = True,
         disable_unicode: bool = False,
         programs: bool = False,
-        client_status: Callable[[], tuple[str, str]] | None = None,
+        client_status: Callable[[], tuple[str, str, float | None]] | None = None,
         disable_cursor: bool = False,
         arrow_keys_sort: bool = False,
     ) -> None:
@@ -1804,7 +1804,7 @@ class TuiV5(threading.Thread):
         terminal width, known only at paint time."""
         view = self._render_view()
         if self._client_status is not None:
-            view["client_status"], view["client_host"] = self._client_status()
+            view["client_status"], view["client_host"], view["client_last_update"] = self._client_status()
         view["full_quicklook"] = self._full_quicklook
         view["percpu"] = self._percpu
         view["meangpu"] = self._view.meangpu

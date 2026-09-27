@@ -160,8 +160,10 @@ is no v4 compatibility layer.
 
 - A failed poll keeps the last payloads in the store and marks the source
   stale. The TUI shows v4's `DISCONNECTED` banner.
-- After `[client] stale_max_cycles=3` failed cycles, the payloads are
-  cleared.
+- **Revised (maintainer, 2026-09-27, P3-2):** the payloads are never
+  cleared. The TUI goes on showing the last values received, and the
+  header dates them: `Disconnected from <host> (last update 14:02:31)`.
+  `[client] stale_max_cycles` is gone.
 - An unreachable server at startup is not fatal: the TUI shows `N/A` and
   the client retries every cycle.
 

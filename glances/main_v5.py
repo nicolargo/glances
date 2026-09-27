@@ -1352,7 +1352,6 @@ def run_client(args: argparse.Namespace, config: GlancesConfigV5) -> int:
     starts, says "Disconnected from <host>", and the client keeps trying.
     """
     from glances.client_v5 import (
-        DEFAULT_STALE_MAX_CYCLES,
         DEFAULT_TIMEOUT,
         AuthError,
         NotAGlancesV5Server,
@@ -1382,13 +1381,7 @@ def run_client(args: argparse.Namespace, config: GlancesConfigV5) -> int:
     )
     store = StatsStoreV5()
     hidden = {cls.plugin_name for _name, cls in discover_plugin_classes() if not cls.DISPLAY_IN_TUI}
-    source = RemoteSource(
-        connection,
-        store,
-        host,
-        hidden_plugins=hidden,
-        stale_max_cycles=int(config.get("client", "stale_max_cycles", DEFAULT_STALE_MAX_CYCLES)),
-    )
+    source = RemoteSource(connection, store, host, hidden_plugins=hidden)
     try:
         source.connect()
     except (AuthError, NotAGlancesV5Server) as e:

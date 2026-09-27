@@ -198,14 +198,14 @@ def test_connect_loads_the_servers_schema_into_the_tui_registry():
     assert source.registry is registry
     assert registry == [("system", False), ("cpu", False), ("network", True)]
     assert source.fields_by_plugin["network"]["interface_name"]["primary_key"] is True
-    assert source.status() == ("connected", "srv")
+    assert source.status() == ("connected", "srv", None)
 
 
 def test_before_any_connection_the_registry_holds_system_alone():
     """So the header can say "Disconnected from <host>" with no payload."""
     source = _source(_FakeSession())
     assert source.registry == [("system", False)]
-    assert source.status() == ("disconnected", "srv")
+    assert source.status() == ("disconnected", "srv", None)
 
 
 def test_a_non_v5_server_is_refused():
@@ -222,18 +222,20 @@ def test_a_poll_publishes_every_payload_as_served():
     assert source.store.get("system") == {"hostname": "srv"}
 
 
-def test_failed_polls_keep_the_last_data_then_clear_it():
-    """§6: stale data stays for `stale_max_cycles` failures, then goes."""
+def test_failed_polls_keep_the_last_data_and_its_time():
+    """Disconnected, the TUI shows the last values received, never cleared
+    (maintainer, 2026-09-27), and when they were received."""
     session = _FakeSession()
-    source = _source(session, stale_max_cycles=3)
+    source = _source(session)
+    assert source.status()[2] is None, "nothing received yet"
     asyncio.run(source.poll_once())
+    received = source.status()[2]
+    assert received is not None
     session.down = True
-    for _ in range(2):
+    for _ in range(10):
         asyncio.run(source.poll_once())
-    assert source.status()[0] == "disconnected"
+    assert source.status() == ("disconnected", "srv", received)
     assert source.store.get("cpu") == {"total": 12.5, "_levels": {}}
-    asyncio.run(source.poll_once())
-    assert source.store.get("cpu") == {}
 
 
 def test_the_same_answer_twice_is_not_a_failure():
@@ -281,6 +283,24 @@ def test_the_system_header_shows_the_client_status():
         ("srv", ColorRole.HEADER),
     ]
     assert render({}, {}) == [], "standalone, no payload: nothing, as before"
+
+
+def test_the_disconnected_header_says_when_the_values_are_from():
+    import time
+
+    from glances.outputs.curses_renderer_v5 import ColorRole
+    from glances.plugins.system.render_curses_v5 import render
+
+    received = time.mktime((2026, 9, 27, 14, 2, 31, 0, 0, -1))
+    view = {"client_status": "disconnected", "client_host": "srv", "client_last_update": received}
+    cells = [(c.text, c.color) for c in render({"hostname": "srv", "hr_name": "Linux"}, {}, view=view)[0].cells]
+    assert cells[:3] == [
+        ("Disconnected from", ColorRole.CRITICAL),
+        ("srv", ColorRole.HEADER),
+        ("(last update 14:02:31)", ColorRole.CRITICAL),
+    ]
+    view["client_status"] = "connected"
+    assert "(last update 14:02:31)" not in [c.text for c in render({"hostname": "srv"}, {}, view=view)[0].cells]
 
 
 # --------------------------------------------------------------------- CLI
