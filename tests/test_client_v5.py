@@ -567,6 +567,26 @@ def test_pin_extended_posts_to_the_servers_pin_routes():
         source.pin_extended(4242)
 
 
+def test_leaving_the_client_drops_its_pin_on_the_server(caplog):
+    session = _FakeSession()
+    source = _source(session)
+    source.unpin_on_exit()
+    assert not [r for r in session.requests if r[0] == "POST"], "nothing pinned: nothing sent"
+    source.pin_extended(1000)
+    source.unpin_on_exit()
+    assert session.requests[-1][1].endswith("/api/5/processes/extended/disable")
+    assert source.pinned is None
+    source.pin_extended(1001)
+
+    def refused(*args, **kwargs):
+        raise requests.ConnectionError("refused")
+
+    session.post = refused
+    with caplog.at_level(logging.WARNING, logger="glances.client_v5"):
+        source.unpin_on_exit()  # the server is gone: a warning, not a crash
+    assert "Cannot unpin pid 1001" in caplog.text
+
+
 def _client_tui(monkeypatch, source):
     from unittest.mock import MagicMock
 

@@ -296,6 +296,8 @@ class RemoteSource:
         self._schema_loaded = False
         self._last_error: str | None = None
         self.connected = False
+        # The pid this client pinned on the server (`e`), None otherwise.
+        self.pinned: int | None = None
         # When the values in the store were received (epoch seconds), None
         # before the first. Shown in the header while disconnected.
         self.last_update: float | None = None
@@ -380,6 +382,16 @@ class RemoteSource:
         self.connection.post_json(
             "/api/5/processes/extended/disable" if pid is None else f"/api/5/processes/extended/{pid}"
         )
+        self.pinned = pid
+
+    def unpin_on_exit(self) -> None:
+        """Leaving the client: drop the pin it set, or the server keeps paying for it. Never raises."""
+        if self.pinned is None:
+            return
+        try:
+            self.pin_extended(None)
+        except RemoteError as e:
+            logger.warning("Cannot unpin pid %s on %s: %s", self.pinned, self.connection.base_url, e)
 
     async def run_forever(self, refresh: float) -> None:
         """Poll every `refresh` seconds, the client's own cadence, until cancelled."""

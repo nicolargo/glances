@@ -1456,6 +1456,7 @@ async def _serve_client(source: Any, tui: Any, refresh: float, exports: Any = No
             task.cancel()
             with contextlib.suppress(asyncio.CancelledError, Exception):
                 await task
+        await asyncio.to_thread(source.unpin_on_exit)
 
 
 async def _client_exports(source: Any, exporters: list[Any], build_plugins: Any, interval: float) -> None:
