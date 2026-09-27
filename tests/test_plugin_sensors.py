@@ -10,6 +10,7 @@
 """Tests for the Sensors plugin."""
 
 import json
+from argparse import Namespace
 from unittest.mock import patch
 
 import pytest
@@ -17,6 +18,8 @@ import pytest
 from glances.config import Config
 from glances.globals import LINUX
 from glances.plugins.sensors import GlancesGrabSensors, SensorsPlugin
+from glances.plugins.sensors.sensor import glances_hddtemp
+from glances.plugins.sensors.sensor.glances_hddtemp import HddtempPlugin
 
 
 @pytest.fixture
@@ -465,3 +468,44 @@ class TestSensorsPluginZeroValue:
     def test_nonzero_readings_are_unaffected(self):
         assert self.decoration(95, 'fan_speed') == 'CRITICAL'
         assert self.decoration(50, 'fan_speed') == 'OK'
+
+
+class TestHddtempPlugin:
+    """Test the hddtemp sub-plugin (it polls the hddtemp daemon over TCP)."""
+
+    @pytest.fixture
+    def connects(self, monkeypatch):
+        """Make every connect fail and return the list of addresses tried."""
+        addresses = []
+
+        class RefusingSocket:
+            def __init__(self, *args, **kwargs):
+                pass
+
+            def connect(self, address):
+                addresses.append(address)
+                raise ConnectionRefusedError
+
+            def close(self):
+                pass
+
+        monkeypatch.setattr(glances_hddtemp.socket, 'socket', RefusingSocket)
+        return addresses
+
+    def test_refused_connect_is_not_retried(self, connects):
+        plugin = HddtempPlugin(args=Namespace(disable_history=True))
+        for _ in range(3):
+            assert plugin.update() == []
+        assert len(connects) == 1
+
+    def test_disabled_plugin_does_not_connect(self, connects):
+        plugin = HddtempPlugin(args=Namespace(disable_history=True, disable_hddtemp=True))
+        assert plugin.update() == []
+        assert connects == []
+
+    def test_host_and_port_come_from_the_hddtemp_section(self, tmp_path, connects):
+        config_file = tmp_path / 'glances.conf'
+        config_file.write_text('[hddtemp]\nhost=10.9.9.9\nport=9999\n', encoding='utf-8')
+        plugin = HddtempPlugin(args=Namespace(disable_history=True), config=Config(config_dir=str(config_file)))
+        plugin.update()
+        assert connects == [('10.9.9.9', 9999)]

@@ -26,6 +26,10 @@ class HddtempPlugin(GlancesPluginModel):
         """Init the plugin."""
         super().__init__(args=args, config=config, stats_init_value=[])
 
+        # The module path gives 'sensors', but the settings live in [hddtemp]
+        self.plugin_name = 'hddtemp'
+        self.load_limits(config)
+
         # Init the sensor class
         hddtemp_host = self.get_conf_value("host", default=["127.0.0.1"])[0]
         hddtemp_port = int(self.get_conf_value("port", default="7634"))
@@ -42,7 +46,8 @@ class HddtempPlugin(GlancesPluginModel):
         # Init new stats
         stats = self.get_init_value()
 
-        if self.input_method == 'local':
+        # disable_hddtemp comes from the config, --disable-plugin or a failed connect in fetch()
+        if self.input_method == 'local' and not getattr(self.args, 'disable_hddtemp', False):
             # Update stats using the standard system lib
             stats = self.hddtemp.get()
 

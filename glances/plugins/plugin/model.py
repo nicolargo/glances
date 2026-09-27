@@ -17,6 +17,7 @@ import re
 from datetime import datetime
 
 from glances.actions import GlancesActions
+from glances.config import secure_option
 from glances.events_list import glances_events
 from glances.globals import (
     auto_unit,
@@ -786,9 +787,22 @@ class GlancesPluginModel:
         self._limits[f'{self.plugin_name}_{item}'] = value
 
     def get_limits(self, item=None):
-        """Return the limits object."""
+        """Return the limits object.
+
+        Without item, return a copy for publishing (API, exports): the
+        credentials a plugin section can hold are redacted.
+        """
         if item is None:
-            return self._limits
+            ret = {}
+            for key, value in self._limits.items():
+                # Match on the option name, `\buser\b` does not match `<plugin>_user`
+                option = key.removeprefix(f'{self.plugin_name}_')
+                if isinstance(value, list):
+                    # Rejoin the value load_limits() split on ',', a comma is valid in URL userinfo
+                    ret[key] = secure_option(option, ','.join(value)).split(',')
+                else:
+                    ret[key] = value if secure_option(option, str(value)) == str(value) else '********'
+            return ret
         return self._limits.get(f'{self.plugin_name}_{item}', None)
 
     def get_stats_action(self):

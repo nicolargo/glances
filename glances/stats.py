@@ -421,7 +421,7 @@ please rename it to "{plugin_path.capitalize()}Plugin"'
         if plugin_list is None:
             # All enabled plugins should be exported
             plugin_list = self.getPluginsList()
-        return [self._plugins[p].limits for p in plugin_list]
+        return [self._plugins[p].get_limits() for p in plugin_list]
 
     def getAllLimitsAsDict(self, plugin_list=None):
         """Return all the stats limits (dict).
@@ -432,7 +432,7 @@ please rename it to "{plugin_path.capitalize()}Plugin"'
         if plugin_list is None:
             # All enabled plugins should be exported
             plugin_list = self.getPluginsList()
-        return {p: self._plugins[p].limits for p in plugin_list}
+        return {p: self._plugins[p].get_limits() for p in plugin_list}
 
     def getAllViews(self, plugin_list=None):
         """Return the plugins views.
