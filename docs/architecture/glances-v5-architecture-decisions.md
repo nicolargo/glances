@@ -986,6 +986,12 @@ The audit produces a downloadable `.md` report (per the contribution guidelines)
 
 ### 7.1 Enabled in all modes (issue #1527)
 
+> **Client mode shipped 2026-09-27 (P3-2).** `glances-v5 -c <host> --export
+> <name>` exports the server's stats through one `RemotePlugin` per server
+> plugin (`glances/client_v5.py`), built from `/api/5/all/info`; the
+> `[processlist] export` filter applies as on a server. Nothing is exported
+> while the server is unreachable.
+
 - Export is available in **all modes**: standalone, server, and client.
 - In v4, the server was passive (data collected only on client request). In v5, the asyncio scheduler always runs plugins at their `refresh_time` regardless of connected clients — this is a fundamental architectural change required for a responsive REST API. Export and `GlancesAlerts` are lightweight consumers of already-computed StatsStore data; their marginal CPU overhead is small.
 - The primary lever for CPU control in server mode is `refresh_time` per plugin. A headless server with no TUI should use longer refresh intervals.

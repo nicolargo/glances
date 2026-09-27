@@ -21,6 +21,9 @@ to §4.4 (chantier P3-1).
 - The alert block mirrors the server's (``/api/5/alert`` and
   ``/api/5/alert/incidents``, same cycle): the client runs no alert engine,
   so no alert actions either; the server is the one that acts.
+- ``--export`` works under ``-c`` (issue #1527): a ``RemotePlugin`` per server
+  plugin, built from the server's schema, answers ``get_export()`` from the
+  local store.
 - A disconnected client keeps showing the last values it received, with
   the time they were received (maintainer, 2026-09-27): the store is never
   cleared.
@@ -39,6 +42,9 @@ from typing import Any
 from urllib.parse import urlsplit
 
 import requests
+
+from glances.plugins.plugin.base_v5 import GlancesPluginBase
+from glances.plugins.processlist.model_v5 import PluginModel as _Processlist
 
 logger = logging.getLogger(__name__)
 
@@ -213,6 +219,54 @@ class RemoteAlerts:
         return dict(self._top)
 
 
+class RemotePlugin(GlancesPluginBase):
+    """A server's plugin, for the exporters: `get_export()` from the local store.
+
+    Built from the server's `fields_description` (`remote_plugins`), never
+    from the local plugin class: some do real work in `__init__` (`ports`
+    starts a scan thread), and a newer client must export an older server's
+    fields as the server has them. It never collects.
+    """
+
+    # `[processlist] export` (or `--export-process-filter`) applies here as
+    # on a server: by default no process is exported (v4 #794).
+    _PROCESS_LISTS = ("processlist", "programlist")
+
+    def __init__(self, store: Any, config: Any) -> None:
+        super().__init__(store, config)
+        self._export_patterns = (
+            self._compile_filter("export", section="processlist") if self.plugin_name in self._PROCESS_LISTS else []
+        )
+
+    async def _grab_stats(self) -> Any:  # pragma: no cover -- never scheduled
+        raise RuntimeError("a remote plugin never collects")
+
+    def get_export(self) -> dict[str, Any] | list[dict[str, Any]]:
+        export = super().get_export()
+        if self.plugin_name not in self._PROCESS_LISTS:
+            return export
+        if not self._export_patterns:
+            return []
+        # The processlist model's own rule, not a copy: it reads `_export_patterns` only.
+        return [item for item in export if _Processlist._matches_export(self, item)]  # type: ignore[arg-type]
+
+
+def remote_plugins(schema: dict[str, Any], store: Any, config: Any, not_exportable: set[str]) -> list[RemotePlugin]:
+    """One `RemotePlugin` per plugin of the server's schema (`/api/5/all/info`), for the exporters."""
+    plugins = []
+    for name, fields in schema.items():
+        if name in not_exportable or not isinstance(fields, dict):
+            continue
+        is_collection = any(isinstance(f, dict) and f.get("primary_key") for f in fields.values())
+        cls = type(
+            f"Remote_{name}",
+            (RemotePlugin,),
+            {"plugin_name": name, "fields_description": fields, "IS_COLLECTION": is_collection},
+        )
+        plugins.append(cls(store, config))
+    return plugins
+
+
 class RemoteSource:
     """Fills a store from one server, and tells the TUI what to show.
 
@@ -235,6 +289,8 @@ class RemoteSource:
         self.host = host
         self.registry: list[tuple[str, bool]] = [("system", False)]
         self.fields_by_plugin: dict[str, dict[str, Any]] = {"system": {}}
+        # Every plugin's schema, hidden ones included: what the exporters get.
+        self.schema: dict[str, Any] = {}
         self._hidden = hidden_plugins or set()
         self.alerts = RemoteAlerts()
         self._schema_loaded = False
@@ -258,6 +314,7 @@ class RemoteSource:
         info = self.connection.get_json("/api/5/all/info")
         if not isinstance(info, dict):
             raise NotAGlancesV5Server(f"{self.connection.base_url}/api/5/all/info is not a schema")
+        self.schema = info
         registry = []
         for name, fields in info.items():
             if not isinstance(fields, dict) or name in self._hidden:

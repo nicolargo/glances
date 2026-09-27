@@ -22,6 +22,7 @@ from typing import Any
 import pytest
 import requests
 
+from glances import client_v5
 from glances.client_v5 import (
     AuthError,
     NotAGlancesV5Server,
@@ -318,12 +319,19 @@ def test_client_flags_parse():
     assert (args.client, args.username, args.password_prompt) == ("srv:61208", "admin", True)
 
 
-@pytest.mark.parametrize("extra", [["-s"], ["--stdout", "cpu"], ["--export", "csv"], ["--fetch"], ["--issue"]])
+@pytest.mark.parametrize("extra", [["-s"], ["--stdout", "cpu"], ["--fetch"], ["--issue"]])
 def test_client_runs_on_its_own(extra):
     from glances.main_v5 import build_parser, validate_args
 
     with pytest.raises(SystemExit):
         validate_args(build_parser().parse_args(["-c", "srv", *extra]))
+
+
+def test_client_accepts_export():
+    """Issue #1527: the client exports the server's stats (P3-2)."""
+    from glances.main_v5 import build_parser, validate_args
+
+    validate_args(build_parser().parse_args(["-c", "srv", "--export", "csv"]))
 
 
 @pytest.mark.parametrize("flags", [["-u", "admin"], ["--password"]])
@@ -454,6 +462,93 @@ def test_a_server_without_alerts_is_still_connected():
     asyncio.run(source.poll_once())
     assert source.status()[0] == "connected"
     assert source.alerts.get_history() == [] and source.alerts.get_ongoing() == {}
+
+
+# ------------------------------------------------------ exports (P3-2)
+
+
+def _config(**sections):
+    from unittest.mock import MagicMock
+
+    config = MagicMock()
+    config.get.side_effect = lambda section, key, default=None: sections.get(section, {}).get(key, default)
+    config.section_keys.return_value = []
+    return config
+
+
+_SCHEMA = {
+    "mem": {"percent": {"unit": "percent"}, "total": {"unit": "bytes"}, "secret": {"exportable": False}},
+    "network": {"interface_name": {"primary_key": True}, "bytes_recv": {"unit": "bytes"}},
+    "processlist": {"pid": {"primary_key": True}, "name": {}, "cmdline": {}},
+    "version": {"version": {}},
+}
+
+
+def _remote_store():
+    store = StatsStoreV5()
+    asyncio.run(store.set("mem", {"percent": 42.0, "total": 16, "_levels": {"percent": {"level": "ok"}}}))
+    asyncio.run(
+        store.set("network", {"data": [{"interface_name": "eth0", "bytes_recv": 10}], "_key": "interface_name"})
+    )
+    procs = [{"pid": 1, "name": "nginx", "cmdline": ["nginx"]}, {"pid": 2, "name": "python3", "cmdline": ["python3"]}]
+    asyncio.run(store.set("processlist", {"data": procs}))
+    return store
+
+
+def test_remote_plugins_export_what_the_server_published():
+    plugins = {p.plugin_name: p for p in client_v5.remote_plugins(_SCHEMA, _remote_store(), _config(), {"version"})}
+    assert set(plugins) == {"mem", "network", "processlist"}, "a plugin not exportable locally is not either here"
+    assert plugins["mem"].get_export() == {"percent": 42.0, "total": 16}, "no `_levels`"
+    assert plugins["network"].IS_COLLECTION and plugins["network"]._primary_key == "interface_name"
+    assert plugins["network"].get_export() == [{"interface_name": "eth0", "bytes_recv": 10}]
+    assert plugins["processlist"].get_export() == [], "no process exported by default (v4 #794)"
+
+
+def test_remote_processlist_export_follows_the_export_filter():
+    config = _config(processlist={"export": "python.*"})
+    plugins = {p.plugin_name: p for p in client_v5.remote_plugins(_SCHEMA, _remote_store(), config, set())}
+    assert [p["pid"] for p in plugins["processlist"].get_export()] == [2]
+
+
+def test_client_exports_only_while_connected_and_exits_the_exporters():
+    from glances.main_v5 import _client_exports
+
+    class _Exporter:
+        export_name = "fake"
+
+        def __init__(self):
+            self.ticks, self.exited = [], False
+
+        def update(self, plugins):
+            self.ticks.append([p.plugin_name for p in plugins])
+
+        def exit(self):
+            self.exited = True
+
+    class _Source:
+        connected = False
+
+    source, exporter, store = _Source(), _Exporter(), _remote_store()
+    built = []
+
+    def build():
+        built.append(1)
+        return client_v5.remote_plugins(_SCHEMA, store, _config(), set())
+
+    async def scenario():
+        task = asyncio.create_task(_client_exports(source, [exporter], build, 0.01))
+        await asyncio.sleep(0.05)
+        assert exporter.ticks == [], "disconnected: the last values are shown, not exported again"
+        source.connected = True
+        await asyncio.sleep(0.05)
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+
+    asyncio.run(scenario())
+    assert exporter.ticks and "mem" in exporter.ticks[0]
+    assert len(built) == 1, "the plugins are built once, from the schema"
+    assert exporter.exited
 
 
 # ------------------------------------------------ process keys (P3-2)

@@ -248,7 +248,16 @@ any order, or in parallel.
    `RemotePlugin`, which only exporters need, moves to P3-2 with
    `--export` under `-c`.
 2. **P3-2 client TUI**: the mirrored alert block, the process keys (D1), and
-   the version check message.
+   the version check message. **Shipped 2026-09-27**:
+   - the last values stay on screen while disconnected, dated in the header
+     (D4, revised by the maintainer);
+   - `e` pins on the server, `k`/`+`/`-` are refused with a popup, the
+     filter applies locally;
+   - the alert block is rebuilt from `/api/5/alert` and
+     `/api/5/alert/incidents` (`RemoteAlerts`), no local engine, no actions;
+   - `--export` under `-c` through `RemotePlugin`; nothing is exported
+     while disconnected, so a backend never records the last values twice;
+   - the version check shipped with P3-1 (`NotAGlancesV5Server`).
 3. **P3-3 exporters, waves A to E** (D8). Independent: they can start at any
    time.
 4. **P3-4 TUI browser, static list**: `[serverlist]`, polling,

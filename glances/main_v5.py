@@ -713,7 +713,6 @@ def validate_args(args: argparse.Namespace) -> None:
             for flag, on in (
                 ("--server", args.server),
                 ("--stdout*", chosen),
-                ("--export", getattr(args, "export", None)),
                 ("--memory-leak", getattr(args, "memory_leak", False)),
                 ("--issue", getattr(args, "issue", False)),
                 ("--fetch", getattr(args, "fetch", False)),
@@ -722,7 +721,7 @@ def validate_args(args: argparse.Namespace) -> None:
             if on
         ]
         if clashing:
-            build_parser().error(f"--client cannot be combined with {', '.join(clashing)} (yet, for --export).")
+            build_parser().error(f"--client cannot be combined with {', '.join(clashing)}.")
     elif getattr(args, "username", None) or getattr(args, "password_prompt", False):
         build_parser().error("-u/--username and --password require --client.")
     one_shot = [flag for flag in ("memory_leak", "issue", "fetch", "api_restful_doc") if getattr(args, flag, False)]
@@ -1359,6 +1358,7 @@ def run_client(args: argparse.Namespace, config: GlancesConfigV5) -> int:
         RemoteError,
         RemoteSource,
         parse_target,
+        remote_plugins,
     )
     from glances.outputs.glances_curses_v5 import TuiV5
 
@@ -1382,6 +1382,12 @@ def run_client(args: argparse.Namespace, config: GlancesConfigV5) -> int:
     store = StatsStoreV5()
     hidden = {cls.plugin_name for _name, cls in discover_plugin_classes() if not cls.DISPLAY_IN_TUI}
     source = RemoteSource(connection, store, host, hidden_plugins=hidden)
+    if getattr(args, "export_process_filter", None):
+        # As in `assemble`: the CLI wins over `[processlist] export`.
+        config._merged.setdefault("processlist", {})["export"] = args.export_process_filter
+    apply_export_flags(args)
+    exporters = discover_exporters(config, args)
+    not_exportable = {cls.plugin_name for _name, cls in discover_plugin_classes() if not cls.EXPORTABLE}
     try:
         source.connect()
     except (AuthError, NotAGlancesV5Server) as e:
@@ -1412,8 +1418,18 @@ def run_client(args: argparse.Namespace, config: GlancesConfigV5) -> int:
         remote=source,
         **options,
     )
+    exports = None
+    if exporters:
+        from glances.exports.export_base_v5 import resolve_export_refresh
+
+        exports = _client_exports(
+            source,
+            exporters,
+            lambda: remote_plugins(source.schema, store, config, not_exportable),
+            resolve_export_refresh(config, refresh),
+        )
     try:
-        asyncio.run(_serve_client(source, tui, refresh))
+        asyncio.run(_serve_client(source, tui, refresh, exports))
     except KeyboardInterrupt:
         pass
     finally:
@@ -1424,19 +1440,49 @@ def run_client(args: argparse.Namespace, config: GlancesConfigV5) -> int:
     return 0
 
 
-async def _serve_client(source: Any, tui: Any, refresh: float) -> None:
-    """The client's poller and the TUI thread, until SIGINT (the TUI's `q`, or Ctrl-C)."""
-    task = asyncio.create_task(source.run_forever(refresh))
+async def _serve_client(source: Any, tui: Any, refresh: float, exports: Any = None) -> None:
+    """The client's poller, its exports and the TUI thread, until SIGINT (the TUI's `q`, or Ctrl-C)."""
+    tasks = [asyncio.create_task(source.run_forever(refresh))]
+    if exports is not None:
+        tasks.append(asyncio.create_task(exports))
     tui.start()
     try:
         with contextlib.suppress(asyncio.CancelledError):
-            await task
+            await asyncio.gather(*tasks)
     finally:
         tui.stop()
         await asyncio.to_thread(tui.join, 2.0)
-        task.cancel()
-        with contextlib.suppress(asyncio.CancelledError, Exception):
-            await task
+        for task in tasks:
+            task.cancel()
+            with contextlib.suppress(asyncio.CancelledError, Exception):
+                await task
+
+
+async def _client_exports(source: Any, exporters: list[Any], build_plugins: Any, interval: float) -> None:
+    """`--export` under `-c` (issue #1527): the server's stats, exported from the client.
+
+    The plugins are built from the server's schema once it is known (the
+    server may be unreachable at startup). Nothing is exported while
+    disconnected: the store then holds the last values received, which the
+    TUI shows but a backend must not record again as new points.
+    """
+    plugins: list[Any] = []
+    try:
+        while True:
+            await asyncio.sleep(interval)
+            if not source.connected:
+                continue
+            if not plugins:
+                plugins = build_plugins()
+            for exporter in exporters:
+                try:
+                    await asyncio.to_thread(exporter.update, plugins)
+                except Exception as e:
+                    logger.warning("Export %s failed: %s", exporter.export_name or type(exporter).__name__, e)
+    finally:
+        for exporter in exporters:
+            with contextlib.suppress(Exception):
+                await asyncio.to_thread(exporter.exit)
 
 
 # --------------------------------------------------------------- issue
