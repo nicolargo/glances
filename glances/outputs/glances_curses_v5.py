@@ -619,6 +619,12 @@ class TuiV5(threading.Thread):
         # The ordered process items of the frame currently on screen; see
         # `_frame_for_view`.
         self._cursor_items: list[dict[str, Any]] = []
+        # `_build_fitted_frame` rebuilds the frame up to three times per
+        # repaint. Within one fit the live-sorted store snapshot is taken
+        # once: `(key, snapshot)`, or None outside a fit (see
+        # `_live_snapshot`).
+        self._fit_snapshot: tuple[tuple[Any, ...], dict[str, Any]] | None = None
+        self._in_fit = False
 
     # ----------------------------------------------------------- control
 
@@ -1552,12 +1558,7 @@ class TuiV5(threading.Thread):
         loop can call it repeatedly with escalating degradation flags to
         measure the resulting TOP-row width.
         """
-        snapshot = self.store.as_dict()
-        # Re-sort the process collections by the engine's *current* sort key
-        # so a key change is reflected on the very next repaint, without
-        # waiting for the engine's next update cycle to re-sort the store.
-        self._apply_live_sort(snapshot)
-        self._apply_client_filter(snapshot)
+        snapshot = self._live_snapshot()
         # The ordered list the process block is about to render, kept so that
         # `k` / `+` / `-` resolve the cursor against THE FRAME ON SCREEN and
         # not against a fresher snapshot taken at keypress time. Between a
@@ -1579,10 +1580,18 @@ class TuiV5(threading.Thread):
         # ring-buffer argument as `ongoing_since`: the engine outlives the
         # history entry that carries them.
         ongoing_top = self.alerts.get_ongoing_top() if self.alerts is not None else {}
-        frame = build_frame(
+        # CPU ↔ perCPU mutual exclusion (v4 parity, hotkey '1') and
+        # threads ↔ programs mutual exclusion (v4 parity, hotkey 'j'): show
+        # exactly one of each pair. Dropped from the registry rather than from
+        # the built frame, so the hidden block is never rendered at all.
+        hidden = (
+            "cpu" if self._view.show_percpu else "percpu",
+            "processlist" if self._view.programs else "programlist",
+        )
+        return build_frame(
             store_snapshot=snapshot,
             fields_by_plugin=self.fields_by_plugin,
-            registry=self.registry,
+            registry=[entry for entry in self.registry if entry[0] not in hidden],
             alerts_history=history,
             alerts_ongoing=ongoing,
             alerts_ongoing_since=ongoing_since,
@@ -1590,14 +1599,29 @@ class TuiV5(threading.Thread):
             alerts_initializing=initializing,
             view=view,
         )
-        # CPU ↔ perCPU mutual exclusion (v4 parity, hotkey '1').
-        hidden_top = "cpu" if self._view.show_percpu else "percpu"
-        frame.top = [b for b in frame.top if b.name != hidden_top]
-        # Threads ↔ programs mutual exclusion (v4 parity, hotkey 'j'):
-        # show exactly one of processlist / programlist.
-        hidden_right = "processlist" if self._view.programs else "programlist"
-        frame.right = [b for b in frame.right if b.name != hidden_right]
-        return frame
+
+    def _live_snapshot(self) -> dict[str, Any]:
+        """The store snapshot, process collections re-sorted by the engine's
+        *current* sort key so a key change is reflected on the very next
+        repaint, without waiting for the engine's next update cycle to
+        re-sort the store, then narrowed by the client-mode filter.
+
+        Inside a fit (`_build_fitted_frame`) it is computed once and reused by
+        every rebuild, as long as neither the store nor the sort changed.
+        """
+        key = (
+            getattr(self.store, "revision", None),
+            getattr(glances_processes, "sort_key", None),
+            getattr(glances_processes, "sort_reverse", True),
+        )
+        if self._fit_snapshot is not None and self._fit_snapshot[0] == key:
+            return self._fit_snapshot[1]
+        snapshot = self.store.as_dict()
+        self._apply_live_sort(snapshot)
+        self._apply_client_filter(snapshot)
+        if self._in_fit:
+            self._fit_snapshot = (key, snapshot)
+        return snapshot
 
     def _top_fits(self, frame: Frame, max_x: int) -> bool:
         """True iff the painter can lay the TOP row out without clipping.
@@ -1640,6 +1664,15 @@ class TuiV5(threading.Thread):
         ``max_y is None`` skips it entirely (headless callers that only care
         about the width fit).
         """
+        self._in_fit = True
+        try:
+            return self._fit_frame(max_x, max_y)
+        finally:
+            self._in_fit = False
+            self._fit_snapshot = None
+
+    def _fit_frame(self, max_x: int, max_y: int | None) -> Frame:
+        """Body of `_build_fitted_frame`, run with the snapshot cache on."""
         view = self._build_view(max_x)
         frame = self._frame_for_view(view)
         if self._full_quicklook:

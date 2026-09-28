@@ -242,7 +242,35 @@ class GlancesPluginBase(Generic[T], ABC):
         self._watched_fields: list[tuple[str, dict[str, Any]]] = [
             (n, s) for n, s in self._fields.items() if s.get("watched")
         ]
-        self._allowed_field_names: set[str] = set(self._fields.keys())
+        # `_remove_parameters` keeps the declared fields minus every `_*`
+        # key; excluding those here saves a `startswith` per key per item.
+        self._allowed_field_names: frozenset[str] = frozenset(n for n in self._fields if not n.startswith("_"))
+        # Per-field static inputs of `_compute_levels_for_item`, read once
+        # here instead of 4-5 schema lookups per item per cycle:
+        # (name, schema, categorical, normalize_by, watch_direction, prominent).
+        self._watched_specs: list[tuple[str, dict[str, Any], bool, Any, str, bool]] = [
+            (
+                n,
+                s,
+                s.get("threshold_type") == "categorical",
+                s.get("normalize_by"),
+                s.get("watch_direction", "high"),
+                bool(s.get("prominent", True)),
+            )
+            for n, s in self._watched_fields
+        ]
+        # Keys `_project()` drops (see its docstring for the two views).
+        # REST/MCP: a declared, non-underscore field that is neither
+        # `internal` nor `exportable`. Export: any field not `exportable`
+        # (every `_*` key is dropped there too, tested per key).
+        self._api_drop_fields: frozenset[str] = frozenset(
+            n
+            for n, s in self._fields.items()
+            if not n.startswith("_") and not s.get("internal", False) and not s.get("exportable", True)
+        )
+        self._export_drop_fields: frozenset[str] = frozenset(
+            n for n, s in self._fields.items() if not s.get("exportable", True)
+        )
         # `history: True` (v4 `items_history_list`): the fields recorded into
         # the history store after each published cycle.
         self._history_fields: list[str] = [n for n, s in self._fields.items() if s.get("history")]
@@ -1066,14 +1094,14 @@ class GlancesPluginBase(Generic[T], ABC):
         ``None`` — the function falls back to the original eager-read
         behaviour.
         """
-        for field_name, schema in self._watched_fields:
+        for field_name, schema, categorical, normalize_field, direction, prominent in self._watched_specs:
             value = item.get(field_name)
             if value is None:
                 continue
 
             # Categorical fields (status, nice, etc.) take a separate
             # path — value sets, no normalisation, no numeric comparison.
-            if schema.get("threshold_type") == "categorical":
+            if categorical:
                 mapping = self._resolve_categorical_mapping(
                     field_name,
                     pk_value,
@@ -1091,11 +1119,10 @@ class GlancesPluginBase(Generic[T], ABC):
                     continue
                 target[field_name] = {
                     "level": level,
-                    "prominent": bool(schema.get("prominent", True)),
+                    "prominent": prominent,
                 }
                 continue
 
-            normalize_field = schema.get("normalize_by")
             if normalize_field:
                 divisor = item.get(normalize_field)
                 if divisor in (None, 0):
@@ -1116,10 +1143,9 @@ class GlancesPluginBase(Generic[T], ABC):
             )
             if not thresholds:
                 continue
-            direction = schema.get("watch_direction", "high")
             target[field_name] = {
                 "level": compute_level(value, thresholds, direction),
-                "prominent": bool(schema.get("prominent", True)),
+                "prominent": prominent,
             }
 
     def _resolve_categorical_mapping(
@@ -1182,8 +1208,9 @@ class GlancesPluginBase(Generic[T], ABC):
             self._stats = self._filter_dict(self._stats, allowed)  # type: ignore[assignment]
 
     @staticmethod
-    def _filter_dict(d: dict[str, Any], allowed: set[str]) -> dict[str, Any]:
-        return {k: v for k, v in d.items() if k in allowed and not k.startswith("_")}
+    def _filter_dict(d: dict[str, Any], allowed: frozenset[str]) -> dict[str, Any]:
+        # `allowed` never holds a `_*` name (see `__init__`).
+        return {k: v for k, v in d.items() if k in allowed}
 
     # ----------------------------------------------------- store payload
 
@@ -1310,9 +1337,11 @@ class GlancesPluginBase(Generic[T], ABC):
         One helper, two views, so the REST and export projections cannot drift
         apart (issue #3211).
         """
-        return {
-            k: v
-            for k, v in d.items()
-            if (keep_internal and (k.startswith("_") or self._fields.get(k, {}).get("internal", False)))
-            or (not k.startswith("_") and self._fields.get(k, {}).get("exportable", True))
-        }
+        # Both drop sets are precomputed in `__init__` from the per-field
+        # flags, so the per-key test is a single set lookup: `/api/5/all`
+        # projects every process of the list on each request.
+        if keep_internal:
+            drop = self._api_drop_fields
+            return {k: v for k, v in d.items() if k not in drop}
+        drop = self._export_drop_fields
+        return {k: v for k, v in d.items() if k not in drop and not k.startswith("_")}
