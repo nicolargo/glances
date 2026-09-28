@@ -480,6 +480,9 @@ def test_cassandra_binds_every_value(monkeypatch):
         ("table", "x; DROP TABLE y"),
         ("keyspace", "glances'"),
         ("keyspace", "1glances"),
+        # `$` alone also matches before a trailing newline.
+        ("keyspace", "glances\n"),
+        ("table", "host\n"),
         ("replication_factor", "1}; DROP"),
         ("replication_factor", "0"),
         ("protocol_version", "3 OR 1"),

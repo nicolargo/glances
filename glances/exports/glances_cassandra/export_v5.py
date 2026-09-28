@@ -78,14 +78,16 @@ class Export(GlancesExportBase):
 
     def _validate(self) -> None:
         """Refuse any config value that would be interpolated into CQL unchecked."""
+        # `fullmatch`, not `match`: `$` also matches before a trailing newline,
+        # so `match` let `"glances\n"` through into the DDL.
         for key in ("keyspace", "table"):
-            if not _CQL_IDENTIFIER_RE.match(str(getattr(self, key))):
+            if not _CQL_IDENTIFIER_RE.fullmatch(str(getattr(self, key))):
                 logger.critical(
                     "Invalid cassandra config: %s=%r must match %s", key, getattr(self, key), _CQL_IDENTIFIER_RE.pattern
                 )
                 sys.exit(2)
         for key in ("port", "replication_factor", "protocol_version"):
-            if not _POSITIVE_INT_RE.match(str(getattr(self, key)).strip()):
+            if not _POSITIVE_INT_RE.fullmatch(str(getattr(self, key)).strip()):
                 logger.critical("Invalid cassandra config: %s=%r must be a positive integer", key, getattr(self, key))
                 sys.exit(2)
         self.replication_factor = int(self.replication_factor)
