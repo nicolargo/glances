@@ -625,6 +625,9 @@ class TuiV5(threading.Thread):
         # `_live_snapshot`).
         self._fit_snapshot: tuple[tuple[Any, ...], dict[str, Any]] | None = None
         self._in_fit = False
+        # `(max_x, right_width)` the last fit settled on, seeded into the next
+        # fit's view so `_fit_right_width` only rebuilds when it changes.
+        self._last_right_width: tuple[int, int] | None = None
 
     # ----------------------------------------------------------- control
 
@@ -1674,6 +1677,8 @@ class TuiV5(threading.Thread):
     def _fit_frame(self, max_x: int, max_y: int | None) -> Frame:
         """Body of `_build_fitted_frame`, run with the snapshot cache on."""
         view = self._build_view(max_x)
+        if self._last_right_width is not None and self._last_right_width[0] == max_x:
+            view["right_width"] = self._last_right_width[1]
         frame = self._frame_for_view(view)
         if self._full_quicklook:
             frame = self._fit_full_quicklook(view, frame, max_x)
@@ -1750,9 +1755,13 @@ class TuiV5(threading.Thread):
         prior ``right_width``, so the comparison below is always a change and
         this extra rebuild fires on every repaint, not just on resize — it is
         cheap and pure (idempotent), but unlike ``_fit_right_column`` it does
-        not short-circuit on an unchanged value. Seeding a cached width into
-        ``view`` the way ``row_budget`` is seeded (see ``_PREFIT_ROW_BUDGET``)
-        is what would let it do so.
+        not short-circuit on an unchanged value — unless ``_fit_frame`` seeded
+        the width the previous fit settled on for the same terminal width, in
+        which case the rebuild only fires when it changed.
+
+        Only the RIGHT-column renderers read ``right_width``, and
+        ``left_width`` does not depend on them, so a seeded frame whose width
+        matches is the frame this rebuild would produce.
         """
         if not frame.right:
             return frame
@@ -1760,6 +1769,13 @@ class TuiV5(threading.Thread):
         if right_width and view.get("right_width") != right_width:
             view["right_width"] = right_width
             frame = self._frame_for_view(view)
+        elif not right_width and "right_width" in view:
+            # A seeded width that no longer applies: rebuild without it,
+            # exactly as an unseeded fit would have left the frame.
+            del view["right_width"]
+            frame = self._frame_for_view(view)
+        if right_width:
+            self._last_right_width = (max_x, right_width)
         return frame
 
     # RIGHT-column blocks whose height the vertical budget controls. Anything

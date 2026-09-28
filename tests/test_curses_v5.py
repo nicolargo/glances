@@ -2188,16 +2188,10 @@ def test_alert_block_never_overflows_the_right_column(make_tui_with_body):
         assert block.width <= view["right_width"]
 
 
-def test_right_width_rebuild_fires_every_repaint_not_just_on_resize(make_tui_with_body, monkeypatch):
-    """Pins CURRENT behaviour — does not endorse it.
-
-    ``_build_view`` never seeds a prior ``right_width`` into the view it
-    returns, so ``_fit_right_width``'s "did the value change" check is always
-    true and its extra ``build_frame`` call fires on EVERY repaint, even at
-    an unchanged width — unlike ``_fit_right_column``'s cached
-    ``row_budget``, which short-circuits once the plan stops changing. If
-    width caching is added later to close this gap, the call counts below
-    will drop and this test must be updated deliberately, not silently."""
+def test_right_width_rebuild_skipped_at_unchanged_width(make_tui_with_body, monkeypatch):
+    """The fit seeds the ``right_width`` the previous fit settled on for the
+    same terminal width, so ``_fit_right_width``'s extra ``build_frame`` call
+    only fires on the first repaint and on a resize — not on every repaint."""
     from glances.outputs import glances_curses_v5 as tui_mod
 
     tui = make_tui_with_body()
@@ -2215,11 +2209,26 @@ def test_right_width_rebuild_fires_every_repaint_not_just_on_resize(make_tui_wit
     calls.clear()
     tui._build_fitted_frame(max_x=95)  # same width again — no resize
     second_frame_calls = len(calls)
+    calls.clear()
+    tui._build_fitted_frame(max_x=120)  # resize — the seed no longer applies
+    resized_frame_calls = len(calls)
 
-    # Both frames pay the extra rebuild — the count does NOT drop to 1 on the
-    # second, unchanged-width call. This is the exact defect the review found.
     assert first_frame_calls == 2
-    assert second_frame_calls == 2
+    assert second_frame_calls == 1
+    assert resized_frame_calls == 2
+
+
+def test_seeded_right_width_frame_matches_unseeded(make_tui_with_body):
+    """Skipping the rebuild must not change what is painted: the seeded frame
+    is the one a fresh, unseeded fit produces at the same width."""
+    import dataclasses
+
+    seeded = make_tui_with_body()
+    seeded._build_fitted_frame(max_x=95)
+    frame_seeded = seeded._build_fitted_frame(max_x=95)
+    frame_fresh = make_tui_with_body()._build_fitted_frame(max_x=95)
+
+    assert dataclasses.asdict(frame_seeded) == dataclasses.asdict(frame_fresh)
 
 
 def test_hide_gpu_is_last_cascade_step():
