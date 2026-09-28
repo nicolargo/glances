@@ -173,8 +173,21 @@ class Export(GlancesExportBase):
     def export(self, name: str, columns: list[str], points: list[Any]) -> None:
         """Unused — rows are built from the structured payload in update()."""
 
+    def _identifier(self, name: str) -> Any:
+        """`sql.Identifier`, with `%` doubled.
+
+        psycopg reads `%s` / `%(x)s` placeholders in the whole query text, a
+        quoted identifier included (found in P3-7 on a real PostgreSQL). A
+        field name carrying one could not inject -- the placeholder count
+        would no longer match and the statement fails -- but it made that
+        plugin's export fail every cycle. Every statement below is run WITH
+        a parameter sequence, so psycopg turns `%%` back into `%`.
+        """
+        return self.sql.Identifier(name.replace("%", "%%"))
+
     def _write(self, table: str, columns: list[tuple[str, str]], segmented_by: list[str], rows: list[list]) -> None:
         sql = self.sql
+        ident = self._identifier
         # The transaction commits on success and rolls back before the error
         # propagates, so a failure never leaves the connection aborted.
         with self.client.transaction(), self.client.cursor() as cur:
@@ -186,7 +199,7 @@ class Export(GlancesExportBase):
                 # https://github.com/timescale/timescaledb/blob/main/README.md#create-a-hypertable
                 # The column type comes from convert_types, never from the data.
                 fields = sql.SQL(", ").join(
-                    sql.SQL("{} {}").format(sql.Identifier(column), sql.SQL(kind)) for column, kind in columns
+                    sql.SQL("{} {}").format(ident(column), sql.SQL(kind)) for column, kind in columns
                 )
                 cur.execute(
                     sql.SQL(
@@ -195,14 +208,16 @@ class Export(GlancesExportBase):
                         "timescaledb.partition_column='time', "
                         "timescaledb.segmentby = {segmentby});"
                     ).format(
-                        table=sql.Identifier(table),
+                        table=ident(table),
                         fields=fields,
                         segmentby=sql.Literal(", ".join(segmented_by)),
-                    )
+                    ),
+                    # Empty, not None: psycopg then undoubles `%%` here too.
+                    (),
                 )
             insert = sql.SQL("INSERT INTO {table} ({cols}) VALUES ({vals})").format(
-                table=sql.Identifier(table),
-                cols=sql.SQL(", ").join(sql.Identifier(column) for column, _ in columns),
+                table=ident(table),
+                cols=sql.SQL(", ").join(ident(column) for column, _ in columns),
                 vals=sql.SQL(", ").join(sql.Placeholder() for _ in columns),
             )
             cur.executemany(insert, rows)

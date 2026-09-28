@@ -321,7 +321,16 @@ any order, or in parallel.
    - a failed poll keeps the last list on screen and says why.
 7. **P3-7 CVE verification pass**: every row of §8 marked Phase 3 is checked
    against the code, and §8 is updated. This is the phase's own exit
-   criterion.
+   criterion. **Done 2026-09-28**:
+   - `tests/test_phase3_cve_v5.py` attacks every Phase 3 row with the real
+     libraries: DuckDB and PostgreSQL 16 (psycopg 3.3, when
+     `GLANCES_TEST_PG` names a server) with nine hostile names, the
+     Cassandra allowlist fuzzed, the new routes behind auth, the client's
+     URLs;
+   - two findings, both fixed: `/api/5/config` served `[passwords]` in
+     clear (a v5 port gap; v4 blocks the section), and psycopg reads `%s`
+     inside quoted identifiers (no injection, but an export failure);
+   - §8 of the architecture document records each row as verified.
 
 Each chantier updates the parity inventory and the backlog row it closes.
 

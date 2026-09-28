@@ -134,6 +134,14 @@ class GlancesConfigV5:
         "login",
     }
 
+    # Sections left out of the redacted view entirely, as v4 does
+    # (`glances/config.py`, `_SECURE_BLOCKED_SECTIONS`). `[passwords]` maps a
+    # host name to that server's clear password (read by `-c` and
+    # `--browser`): its keys are host names, which no key pattern can
+    # recognise, and even they are not the caller's business. The v5 port had
+    # dropped this block; the P3-7 verification pass found it.
+    BLOCKED_SECTIONS: set[str] = {"passwords"}
+
     SECRET_REDACTED: str = "***"
 
     # Class-level paths, indirected for testability (patch.object friendly).
@@ -358,9 +366,12 @@ class GlancesConfigV5:
         - A secret-like option name is redacted entirely (CVE-2026-32609).
         - Credentials embedded in an URL value are redacted even when the
           option name looks innocuous (CVE-2026-68520).
+        - A `BLOCKED_SECTIONS` section (`[passwords]`) is left out, as in v4.
         """
         result: dict[str, dict[str, Any]] = {}
         for section, options in self._merged.items():
+            if section.lower() in self.BLOCKED_SECTIONS:
+                continue
             result[section] = {key: self._secure_value(key, value) for key, value in options.items()}
         return result
 
