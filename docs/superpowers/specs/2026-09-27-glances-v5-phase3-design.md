@@ -258,8 +258,26 @@ any order, or in parallel.
    - `--export` under `-c` through `RemotePlugin`; nothing is exported
      while disconnected, so a backend never records the last values twice;
    - the version check shipped with P3-1 (`NotAGlancesV5Server`).
-3. **P3-3 exporters, waves A to E** (D8). Independent: they can start at any
-   time.
+3. **P3-3 exporters, waves A to E** (D8). **Shipped 2026-09-28**: every
+   v4 exporter has its `export_v5.py`, same sections and keys, tests in
+   `tests/test_export_wave_{a..e}_v5.py` over shared fakes
+   (`tests/export_fakes_v5.py`) that include a hostile name drawn from
+   monitored data.
+   - A: graphite, statsd, opentsdb, riemann. B: kafka, mqtt, nats (its own
+     event loop in a thread, as v4), rabbitmq, zeromq. C: mongodb, couchdb,
+     elasticsearch, clickhouse. D: timescaledb, duckdb, cassandra, with
+     their CVEs (see §8 of the architecture document). E: restful (one
+     POST per cycle, the current one) and graph (from the history store,
+     every `generate_every` seconds or on the TUI's `g` key).
+   - Credentials never reach a log line or a logged URL; a failing write is
+     a warning, at most once per plugin and cycle.
+   - Known limit: each `glances_<name>/__init__.py` is still the v4 module
+     and imports its library on load, so without the library `--export
+     <name>` stops with "requested but unavailable (No module named ...)"
+     from `discover_exporters`, as the existing v5 exporters already do.
+   - Kept from v4 on purpose, worth knowing: elasticsearch still sends
+     `_type`, which Elasticsearch 8 rejects; timescaledb and clickhouse
+     store the key field's NAME in `key_id`.
 4. **P3-4 TUI browser, static list**: `[serverlist]`, polling,
    `/api/5/serverslist` and CVE-2026-32633 (D5). **Shipped 2026-09-27**:
    - `glances/servers_list_v5.py`: the static list, `[serverlist] columns`,
