@@ -285,6 +285,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="File path for the JSON exporter (default ./glances.json).",
     )
     parser.add_argument(
+        "--export-graph-path",
+        dest="export_graph_path",
+        default=None,
+        metavar="<folder>",
+        help="Folder for the graph exporter's SVG files (default: [graph] path, else <tmp>/glances).",
+    )
+    parser.add_argument(
         "--export-process-filter",
         default=None,
         type=str,
@@ -1206,8 +1213,11 @@ def assemble(
         scheduler.register(plugin)
 
     apply_export_flags(args)
-    for exporter in discover_exporters(config, args):
+    exporters = discover_exporters(config, args)
+    for exporter in exporters:
         scheduler.register_exporter(exporter)
+    # The TUI's `g` key asks the graph exporter for its charts (v4 parity).
+    graph = next((e for e in exporters if e.export_name == "graph"), None)
 
     host = args.bind or config.get("outputs", "bind_address", _DEFAULT_BIND_ADDRESS)
     port = args.port or config.get("outputs", "port", _DEFAULT_PORT)
@@ -1299,6 +1309,7 @@ def assemble(
             fields_by_plugin=fields_by_plugin,
             refresh_interval=refresh,
             on_quit=lambda: os.kill(os.getpid(), signal.SIGINT),
+            generate_graph=graph.request if graph is not None else None,
             **tui_view_options(args),
         )
 

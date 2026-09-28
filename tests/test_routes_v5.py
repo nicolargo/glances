@@ -1044,6 +1044,9 @@ def test_args_matches_the_real_v5_argument_set(config_factory, store):
         "browser",
         # `--disable-autodiscover`: Zeroconf off (P3-5). A boolean.
         "disable_autodiscover",
+        # `--export-graph-path`: the graph exporter's output folder (P3-3).
+        # A local path, like the CSV/JSON export files already listed.
+        "export_graph_path",
         "disable_plugin",
         "disable_unicode",
         "disable_webui",

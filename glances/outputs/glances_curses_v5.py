@@ -315,6 +315,11 @@ class TuiV5(threading.Thread):
             "group": "MISCELLANEOUS",
             "desc": "Extended stats for the selected process",
         },
+        "g": {
+            "action": "generate_graph",
+            "group": "MISCELLANEOUS",
+            "desc": "Generate graphs (--export graph)",
+        },
         "k": {
             "action": "kill_process",
             "cursor": True,
@@ -500,6 +505,7 @@ class TuiV5(threading.Thread):
         disable_unicode: bool = False,
         programs: bool = False,
         remote: RemoteSource | None = None,
+        generate_graph: Callable[[], str] | None = None,
         disable_cursor: bool = False,
         arrow_keys_sort: bool = False,
     ) -> None:
@@ -516,6 +522,8 @@ class TuiV5(threading.Thread):
         # Client mode filters the list it received, locally: the server's
         # engine filter is global to every client (Phase 3 design §4.1).
         self._client_filter = GlancesFilter()
+        # `g` (v4 parity): the graph exporter's `request`, None when it is off.
+        self._generate_graph = generate_graph
         self.refresh_interval = refresh_interval
         # Fired once when the user quits the TUI via `q`/ESC, so the main
         # asyncio loop (uvicorn) can shut down too. Without this, closing
@@ -700,7 +708,7 @@ class TuiV5(threading.Thread):
     # Verbs that need the terminal, so they are deferred to `_run_pending`
     # rather than executed in this pure function (design 5.4).
     _MODAL_VERBS = frozenset(
-        {"kill_process", "nice_increase", "nice_decrease", "extended", "edit_filter", "reset_minmax"}
+        {"kill_process", "nice_increase", "nice_decrease", "extended", "edit_filter", "reset_minmax", "generate_graph"}
     )
     # Of those, the ones that CHANGE the process. `e` only looks at it, which
     # is why it is allowed to look at Glances itself (`_selected_process`).
@@ -1062,6 +1070,12 @@ class TuiV5(threading.Thread):
             return
         if verb == "edit_filter":
             self._edit_filter(stdscr)
+            return
+        if verb == "generate_graph":
+            if self._generate_graph is None:
+                self._popup_info(stdscr, "The graph export is off.\n\nStart Glances with --export graph.")
+            else:
+                self._popup_info(stdscr, self._generate_graph())
             return
         if verb == "reset_minmax":
             if glances_processes.process_filter is None:
