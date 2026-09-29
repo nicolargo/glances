@@ -10,9 +10,10 @@
 """The container CPU and MEM views carry the decoration both front ends read.
 
 The curses view reads these through get_views(item=..., key='cpu'|'mem',
-option='decoration'), and plugin-containers.vue reads the same two entries. A
-missing decoration is silent in both: get_views() answers 'DEFAULT' for a key it
-cannot find, so an over-threshold container simply renders in plain text.
+option='decoration'), and plugin-containers.vue reads the same two entries. In
+curses a missing decoration is silent: get_views() answers 'DEFAULT' for a key it
+cannot find. The WebUI calls toLowerCase() on it, so an entry without one breaks
+the whole container table.
 """
 
 import os
@@ -82,3 +83,14 @@ class TestContainerDecorationViews:
         plugin.stats = [container('named-thing', 10.0, 100)]
         plugin.update_views()
         assert 'named-thing' in plugin.views
+
+    def test_a_container_without_cpu_or_memory_stats_still_has_a_decoration(self, plugin):
+        # A restarting container comes back with empty cpu and memory dicts. The
+        # WebUI calls toLowerCase() on the decoration, so a missing one threw and
+        # the whole container table disappeared.
+        restarting = container('restarting', 0, 0) | {'status': 'restarting', 'cpu': {}, 'memory': {}}
+        plugin.stats = [restarting]
+        plugin.update_views()
+
+        assert plugin.views['restarting']['cpu']['decoration'] == 'DEFAULT'
+        assert plugin.views['restarting']['mem']['decoration'] == 'DEFAULT'
