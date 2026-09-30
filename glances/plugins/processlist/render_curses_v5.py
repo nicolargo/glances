@@ -445,7 +445,11 @@ def _pinned_title(payload: dict[str, Any]) -> str:
     return str(payload.get("name") or "?")
 
 
-def _extended_rows(payload: dict[str, Any]) -> list[Row]:
+_PINNED_LABEL = "Pinned task:"
+_UNPIN_HINT = "('e' to unpin)"
+
+
+def _extended_rows(payload: dict[str, Any], width: int | None = None) -> list[Row]:
     """The `e` block (2.X-b3), mirroring v4's four lines.
 
     v4: `_msg_curse_extended_process_thread`
@@ -454,12 +458,18 @@ def _extended_rows(payload: dict[str, Any]) -> list[Row]:
     then the Open counters.
     """
     name = _pinned_title(payload)
+    if isinstance(width, int):
+        # Keep the unpin hint on screen: the command gives way, not the hint
+        # (two cells of one-space separators between the three).
+        room = width - len(_PINNED_LABEL) - len(_UNPIN_HINT) - 2
+        if len(name) > room:
+            name = name[: room - 1] + "…" if room > 1 else ""
     rows: list[Row] = [
         Row(
             cells=[
-                Cell(text="Pinned thread", color=ColorRole.HEADER),
+                Cell(text=_PINNED_LABEL, color=ColorRole.HEADER),
                 Cell(text=name, underline=True),
-                Cell(text="('e' to unpin)"),
+                Cell(text=_UNPIN_HINT),
             ]
         )
     ]
@@ -723,7 +733,7 @@ def render(
     # nothing is subtracted from the budget here: the budget the solver hands
     # back has already paid for these rows.
     extended = (view or {}).get("extended_process")
-    extended_rows = _extended_rows(extended) if isinstance(extended, dict) and extended else []
+    extended_rows = _extended_rows(extended, available) if isinstance(extended, dict) and extended else []
 
     raw_levels = payload.get("_levels") if isinstance(payload, dict) else None
     levels_index = raw_levels if isinstance(raw_levels, dict) else {}
