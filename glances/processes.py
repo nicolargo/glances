@@ -692,6 +692,11 @@ class GlancesProcesses:
         pids_running = {p['pid'] for p in processlist}
         for pid in [pid for pid in self.processlist_cache if pid not in pids_running]:
             self.processlist_cache.pop(pid, None)
+        # Same for the IO counters kept for the rate computation: without it,
+        # io_old grows by one entry per pid ever seen (a slow leak on hosts
+        # that spawn many short-lived processes).
+        for pid in [pid for pid in self.io_old if pid not in pids_running]:
+            self.io_old.pop(pid, None)
 
     def update_list(self, processlist):
         """Return the process list after filtering and transformation (namedtuple to dict)."""
