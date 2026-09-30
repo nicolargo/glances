@@ -432,6 +432,11 @@ def _mmm(payload: dict[str, Any], prefix: str) -> str:
     )
 
 
+def _mmm_bytes(payload: dict[str, Any], prefix: str) -> str:
+    """The min/max/mean triple for a byte count (RES)."""
+    return "".join(_format_bytes(payload.get(f"{prefix}_{k}") or 0, 7) for k in ("min", "max", "mean"))
+
+
 def _extended_rows(payload: dict[str, Any]) -> list[Row]:
     """The `e` block (2.X-b3), mirroring v4's four lines.
 
@@ -460,7 +465,7 @@ def _extended_rows(payload: dict[str, Any]) -> list[Row]:
         cpu += [Cell(text="IO nice:"), Cell(text=ionice, color=ColorRole.OK)]
     rows.append(Row(cells=cpu))
 
-    mem: list[Cell] = [Cell(text=" MEM Min/Max/Mean:"), Cell(text=_mmm(payload, "memory"), color=ColorRole.OK)]
+    mem: list[Cell] = [Cell(text=" RES Min/Max/Mean:"), Cell(text=_mmm_bytes(payload, "memory"), color=ColorRole.OK)]
     info = payload.get("memory_info")
     if isinstance(info, dict) and info:
         mem.append(Cell(text="Memory info:"))

@@ -165,3 +165,64 @@ def test_access_denied_reports_no_figure_too(processes):
     """Already handled before this chantier; pinned here so the three paths
     are one decision rather than two guarded and one not."""
     assert processes._GlancesProcesses__get_extended_memory_swap(_SwapProc(raises=psutil.AccessDenied(1))) is None
+
+
+def _fake_proc(pid, cpu, rss):
+    return {
+        "pid": pid,
+        "name": "pinned",
+        "cmdline": ["pinned"],
+        "cpu_percent": cpu,
+        "memory_percent": 1.0,
+        "memory_info": {"rss": rss, "vms": rss * 2},
+        "status": "S",
+        "num_threads": 1,
+        "nice": 0,
+        "username": "root",
+        "cpu_times": {"user": 0.0, "system": 0.0},
+        "io_counters": [0, 0, 0, 0, 0],
+        "gids": {"real": 0},
+    }
+
+
+def test_min_max_mean_accumulate_while_pinned(monkeypatch):
+    """Min/Max/Mean are initialised at pin time and updated on every cycle
+    until unpin. They used to be rebuilt from the current sample alone on each
+    cycle, so Min == Max == Mean == current value. The MEM triple is the RES
+    (RSS) in bytes, not the memory percentage."""
+    import os
+
+    pid = os.getpid()
+    engine = GlancesProcesses()
+    engine.extended_pid = pid
+    engine.disable_extended_tag = False
+    samples = iter([(10.0, 1000), (30.0, 3000), (20.0, 2000)])
+    monkeypatch.setattr(engine, "build_process_list", lambda attrs: [_fake_proc(pid, *next(samples))])
+
+    for _ in range(3):
+        engine.update()
+
+    p = engine.extended_process
+    assert (p["cpu_min"], p["cpu_max"], p["cpu_mean"]) == (10.0, 30.0, 20.0)
+    assert (p["memory_min"], p["memory_max"], p["memory_mean"]) == (1000, 3000, 2000)
+
+
+def test_a_new_pin_starts_from_fresh_min_max_mean(monkeypatch):
+    """Unpin then pin again: the triple restarts from the current sample."""
+    import os
+
+    pid = os.getpid()
+    engine = GlancesProcesses()
+    engine.extended_pid = pid
+    engine.disable_extended_tag = False
+    samples = iter([(50.0, 5000), (10.0, 1000)])
+    monkeypatch.setattr(engine, "build_process_list", lambda attrs: [_fake_proc(pid, *next(samples))])
+
+    engine.update()
+    # What the TUI's `e` and the REST pin route do on a (re)pin.
+    engine.extended_process = None
+    engine.update()
+
+    p = engine.extended_process
+    assert (p["cpu_min"], p["cpu_max"], p["cpu_mean"]) == (10.0, 10.0, 10.0)
+    assert (p["memory_min"], p["memory_max"], p["memory_mean"]) == (1000, 1000, 1000)

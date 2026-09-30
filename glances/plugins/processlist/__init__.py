@@ -770,9 +770,9 @@ class ProcesslistPlugin(GlancesPluginModel):
 
     def add_memory_line(self, ret, prog):
         ret.append(self.curse_new_line())
-        ret.append(self.curse_add_line(' MEM Min/Max/Mean: '))
-        msg = '{: >7.1f}{: >7.1f}{: >7.1f}%'.format(
-            prog.get('memory_min', 0), prog.get('memory_max', 0), prog.get('memory_mean', 0)
+        ret.append(self.curse_add_line(' RES Min/Max/Mean: '))
+        msg = '{: >7}{: >7}{: >7}'.format(
+            *[self.auto_unit(prog.get(k, 0), low_precision=False) for k in ('memory_min', 'memory_max', 'memory_mean')]
         )
         ret.append(self.curse_add_line(msg, decoration='INFO'))
         if 'memory_info' in prog and prog['memory_info'] is not None:

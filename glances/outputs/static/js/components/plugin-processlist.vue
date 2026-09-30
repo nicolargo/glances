@@ -18,11 +18,9 @@
                 <span class="careful">{{ extended_stats.cpu_affinity | length }}</span>
             </div>
             <div>
-                <span>MEM Min/Max/Mean: </span>
-                <span class="careful">{{ $filters.number(extended_stats.memory_min, 1) }}% / {{
-                    $filters.number(extended_stats.memory_max, 1) }}% / {{ $filters.number(extended_stats.memory_mean,
-                        1)
-                    }}%</span>
+                <span>RES Min/Max/Mean: </span>
+                <span class="careful">{{ $filters.bytes(extended_stats.memory_min) }} / {{
+                    $filters.bytes(extended_stats.memory_max) }} / {{ $filters.bytes(extended_stats.memory_mean) }}</span>
                 <span>Memory info: </span>
                 <span class="careful">
                     {{ $filters.dictToString(extended_stats.memory_info) }}

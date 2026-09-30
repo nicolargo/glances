@@ -59,6 +59,12 @@ function mmm(payload, prefix) {
 	return `${at("min")}% / ${at("max")}% / ${at("mean")}%`;
 }
 
+function mmmBytes(payload, prefix) {
+	// `_mmm_bytes`: the RES triple, a byte count.
+	const at = (suffix) => formatProcessBytes(payload[`${prefix}_${suffix}`] || 0);
+	return `${at("min")} / ${at("max")} / ${at("mean")}`;
+}
+
 export function extendedLines(payload) {
 	if (!payload || typeof payload !== "object" || !Object.keys(payload).length) return [];
 
@@ -73,8 +79,8 @@ export function extendedLines(payload) {
 	if (ionice) cpu.push({ text: "IO nice:" }, { text: ionice, value: true });
 
 	const mem = [
-		{ text: "MEM Min/Max/Mean:" },
-		{ text: mmm(payload, "memory"), value: true },
+		{ text: "RES Min/Max/Mean:" },
+		{ text: mmmBytes(payload, "memory"), value: true },
 	];
 	const info = payload.memory_info;
 	if (info && typeof info === "object" && Object.keys(info).length) {

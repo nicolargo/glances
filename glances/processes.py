@@ -399,7 +399,7 @@ class GlancesProcesses:
             self.extended_process = None
             ret['extended_stats'] = False
         else:
-            # Compute CPU and MEM min/max/mean
+            # Compute CPU (%) and MEM (RES, bytes) min/max/mean
             # Merge the returned dict with the current on
             ret.update(self.__get_min_max_mean(proc))
             self.extended_process = ret
@@ -416,26 +416,41 @@ class GlancesProcesses:
                 return p
         return None
 
-    def __get_min_max_mean(self, proc, prefix=['cpu', 'memory']):
-        """Return the min/max/mean for the given process"""
+    def __get_min_max_mean(self, proc):
+        """Return the min/max/mean for the given process.
+
+        CPU is in percent, MEMORY is the RES (RSS) in bytes.
+        The accumulators live in self.extended_process and are reset on (re)pin.
+        """
         ret = {}
-        for stat_prefix in prefix:
+        memory_info = proc.get('memory_info')
+        if isinstance(memory_info, dict):
+            rss = memory_info.get('rss')
+        else:
+            rss = getattr(memory_info, 'rss', None)
+        for stat_prefix, value in (('cpu', proc.get('cpu_percent')), ('memory', rss)):
             min_key = stat_prefix + '_min'
             max_key = stat_prefix + '_max'
             mean_sum_key = stat_prefix + '_mean_sum'
             mean_counter_key = stat_prefix + '_mean_counter'
+            if value is None:
+                # Not available this cycle (e.g. access denied): keep the previous values
+                for k in (min_key, max_key, mean_sum_key, mean_counter_key, stat_prefix + '_mean'):
+                    if k in self.extended_process:
+                        ret[k] = self.extended_process[k]
+                continue
             if min_key not in self.extended_process:
-                ret[min_key] = proc[stat_prefix + '_percent']
+                ret[min_key] = value
             else:
-                ret[min_key] = min(proc[stat_prefix + '_percent'], self.extended_process[min_key])
+                ret[min_key] = min(value, self.extended_process[min_key])
             if max_key not in self.extended_process:
-                ret[max_key] = proc[stat_prefix + '_percent']
+                ret[max_key] = value
             else:
-                ret[max_key] = max(proc[stat_prefix + '_percent'], self.extended_process[max_key])
+                ret[max_key] = max(value, self.extended_process[max_key])
             if mean_sum_key not in self.extended_process:
-                ret[mean_sum_key] = proc[stat_prefix + '_percent']
+                ret[mean_sum_key] = value
             else:
-                ret[mean_sum_key] = self.extended_process[mean_sum_key] + proc[stat_prefix + '_percent']
+                ret[mean_sum_key] = self.extended_process[mean_sum_key] + value
             if mean_counter_key not in self.extended_process:
                 ret[mean_counter_key] = 1
             else:
@@ -673,13 +688,17 @@ class GlancesProcesses:
             # Extended stats
             ################
 
-            # Get the selected process when the 'e' key is pressed
-            if self.is_selected_extended_process(position) or self.is_extended_pid(proc.get('pid')):
+            # Get the selected process when the 'e' key is pressed.
+            # Only on a new selection: replacing it on every cycle would wipe
+            # the min/max/mean accumulators, leaving Min == Max == Mean.
+            if (self.is_selected_extended_process(position) or self.is_extended_pid(proc.get('pid'))) and (
+                self.extended_process is None or self.extended_process['pid'] != proc['pid']
+            ):
                 self.extended_process = proc
 
             # Grab extended stats only for the selected process (see issue #2225)
             if self.extended_process is not None and proc['pid'] == self.extended_process['pid']:
-                proc.update(self.set_extended_stats(self.extended_process))
+                proc.update(self.set_extended_stats(proc))
                 self.extended_process = namedtuple_to_dict(proc)
                 extended_seen = True
 

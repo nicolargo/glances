@@ -695,9 +695,9 @@ def _extended_payload(**overrides):
         "cpu_min": 0.5,
         "cpu_max": 78.4,
         "cpu_mean": 12.25,
-        "memory_min": 1.0,
-        "memory_max": 12.5,
-        "memory_mean": 6.0,
+        "memory_min": 16 * 1024**2,
+        "memory_max": 64 * 1024**2,
+        "memory_mean": 32 * 1024**2,
         "cpu_affinity": [0, 1, 2, 3],
         "ionice": {"ioclass": 2, "value": 4},
         "memory_info": {"rss": 32 * 1024**2, "vms": 120 * 1024**2},
@@ -728,7 +728,7 @@ def test_the_extended_block_renders_v4s_four_lines(payload, fields):
 
     assert "Pinned thread" in lines[0] and "hot" in lines[0] and "'e' to unpin" in lines[0]
     assert "CPU Min/Max/Mean" in lines[1]
-    assert "MEM Min/Max/Mean" in lines[2]
+    assert "RES Min/Max/Mean" in lines[2]
     assert lines[3].startswith(" Open:")
     # ... and the process table still follows.
     assert "CPU%" in lines[4]
@@ -767,6 +767,13 @@ def test_the_mem_line_carries_the_memory_breakdown_and_swap(payload, fields):
     assert "rss" in line and "vms" in line
     assert "32.0M" in line and "120M" in line
     assert "4.0M" in line and "swap" in line
+
+
+def test_the_mem_line_carries_res_min_max_mean_in_bytes(payload, fields):
+    line = _flat(render(payload, fields, view={"extended_process": _extended_payload()}))[2]
+    assert "RES Min/Max/Mean:" in line
+    assert "16.0M" in line and "64.0M" in line and "32.0M" in line
+    assert "%" not in line
 
 
 def test_the_open_line_counts_only_what_the_platform_reports(payload, fields):

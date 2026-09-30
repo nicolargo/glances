@@ -17,9 +17,9 @@ const PAYLOAD = {
 	cpu_min: 0.5,
 	cpu_max: 78.4,
 	cpu_mean: 12.25,
-	memory_min: 1.0,
-	memory_max: 12.5,
-	memory_mean: 6.0,
+	memory_min: 16777216,
+	memory_max: 67108864,
+	memory_mean: 33554432,
 	cpu_affinity: [0, 1, 2, 3],
 	ionice: { ioclass: 2, value: 4 },
 	memory_info: { rss: 33554432, vms: 125829120 },
@@ -42,7 +42,7 @@ test("three lines, in the terminal's order", () => {
 	const lines = flat(PAYLOAD);
 	assert.equal(lines.length, 3);
 	assert.match(lines[0], /^CPU Min\/Max\/Mean:/);
-	assert.match(lines[1], /^MEM Min\/Max\/Mean:/);
+	assert.match(lines[1], /^RES Min\/Max\/Mean:/);
 	assert.match(lines[2], /^Open:/);
 });
 
@@ -54,6 +54,10 @@ test("a missing min/max/mean reads zero rather than NaN", () => {
 	// The engine publishes nothing until it has grabbed once; `undefined`
 	// through `toFixed` would render "NaN%" on the first frame after a pin.
 	assert.match(flat({ pid: 1, name: "x" })[0], /0\.0% \/ 0\.0% \/ 0\.0%/);
+});
+
+test("RES min/max/mean is a byte count, not a percentage", () => {
+	assert.match(flat(PAYLOAD)[1], /^RES Min\/Max\/Mean: 16\.0M \/ 64\.0M \/ 32\.0M /);
 });
 
 test("affinity counts the cores, it does not list them", () => {
