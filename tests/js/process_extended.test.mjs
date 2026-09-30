@@ -60,6 +60,15 @@ test("RES min/max/mean is a byte count, not a percentage", () => {
 	assert.match(flat(PAYLOAD)[1], /^RES Min\/Max\/Mean: 16\.0M \/ 64\.0M \/ 32\.0M /);
 });
 
+test("each group of stats, not each segment, starts a wider gap", () => {
+	const seps = extendedLines(PAYLOAD).map((line) => line.filter((s) => s.sep).map((s) => s.text));
+	assert.deepEqual(seps, [
+		["Affinity:", "IO nice:"],
+		["Memory info:", "120M", "4.0M"],
+		["45", "3", "1"],
+	]);
+});
+
 test("affinity counts the cores, it does not list them", () => {
 	assert.match(flat(PAYLOAD)[0], /Affinity: 4 cores/);
 });
@@ -109,11 +118,11 @@ test("Windows reads its own class table", () => {
 	assert.equal(ioniceText({ ioclass: 0 }, true), "Class is Very Low");
 });
 
-test("the title is the process name, as the terminal titles it", () => {
-	// Not the command line: the engine's accumulator carries no `cmdline`
-	// (it is added after the extended grab), so preferring it would render
-	// the fallback every time while pretending not to.
-	assert.equal(pinnedTitle(PAYLOAD), "hot");
+test("the title is the command line with its arguments, as the terminal titles it", () => {
+	assert.equal(pinnedTitle(PAYLOAD), "/bin/hot --go");
+	assert.equal(pinnedTitle({ name: "python", cmdline: ["python", "-m", "glances"] }), "python -m glances");
+	// No command line (kernel thread, access denied): the name.
+	assert.equal(pinnedTitle({ name: "kworker/0:1", cmdline: [] }), "kworker/0:1");
 	assert.equal(pinnedTitle({ name: "kthreadd" }), "kthreadd");
 	assert.equal(pinnedTitle({}), "?");
 	assert.equal(pinnedTitle(null), "?");

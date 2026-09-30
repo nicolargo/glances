@@ -21,7 +21,7 @@
 					<button type="button" class="gl-pin-button" @click="unpin">Unpin</button>
 				</div>
 				<div v-for="(line, i) in extendedLines(extended)" :key="i" class="gl-pinned-line">
-					<span v-for="(seg, j) in line" :key="j" :class="{ 'gl-level-ok': seg.value }">{{ seg.text }}</span>
+					<span v-for="(seg, j) in line" :key="j" :class="{ 'gl-level-ok': seg.value, 'gl-pinned-sep': seg.sep }">{{ seg.text }}</span>
 				</div>
 			</div>
 		</template>
@@ -253,6 +253,11 @@ export default {
 	gap: 0.5ch;
 	align-items: baseline;
 	flex-wrap: wrap;
+}
+/* A new group of stats (`sep` in process_extended.js): wider than the gap
+ * inside a group, so "134M rss" and "1.6G vms" read as two pairs. */
+.gl-pinned-sep {
+	margin-left: 1.5ch;
 }
 /* The command line can be arbitrarily long; it must not push the Unpin
  * button off the row. */

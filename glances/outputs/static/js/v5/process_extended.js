@@ -68,15 +68,18 @@ function mmmBytes(payload, prefix) {
 export function extendedLines(payload) {
 	if (!payload || typeof payload !== "object" || !Object.keys(payload).length) return [];
 
+	// `sep: true` marks the first segment of a group (a `Label:` and its
+	// value, or a value and its unit), which the browser spaces out more than
+	// the segments inside a group.
 	const cpu = [
 		{ text: "CPU Min/Max/Mean:" },
 		{ text: mmm(payload, "cpu"), value: true },
 	];
 	if (Array.isArray(payload.cpu_affinity)) {
-		cpu.push({ text: "Affinity:" }, { text: `${payload.cpu_affinity.length} cores`, value: true });
+		cpu.push({ text: "Affinity:", sep: true }, { text: `${payload.cpu_affinity.length} cores`, value: true });
 	}
 	const ionice = ioniceText(payload.ionice);
-	if (ionice) cpu.push({ text: "IO nice:" }, { text: ionice, value: true });
+	if (ionice) cpu.push({ text: "IO nice:", sep: true }, { text: ionice, value: true });
 
 	const mem = [
 		{ text: "RES Min/Max/Mean:" },
@@ -84,20 +87,20 @@ export function extendedLines(payload) {
 	];
 	const info = payload.memory_info;
 	if (info && typeof info === "object" && Object.keys(info).length) {
-		mem.push({ text: "Memory info:" });
-		for (const [key, val] of Object.entries(info)) {
-			mem.push({ text: formatProcessBytes(val), value: true }, { text: String(key) });
-		}
+		mem.push({ text: "Memory info:", sep: true });
+		Object.entries(info).forEach(([key, val], i) => {
+			mem.push({ text: formatProcessBytes(val), value: true, sep: i > 0 }, { text: String(key) });
+		});
 	}
 	if (Number.isInteger(payload.memory_swap)) {
-		mem.push({ text: formatProcessBytes(payload.memory_swap), value: true }, { text: "swap" });
+		mem.push({ text: formatProcessBytes(payload.memory_swap), value: true, sep: true }, { text: "swap" });
 	}
 
 	const open = [{ text: "Open:" }];
 	for (const key of OPEN_KEYS) {
 		const val = payload[key];
 		if (val !== null && val !== undefined) {
-			open.push({ text: String(val), value: true }, { text: key.replace("num_", "") });
+			open.push({ text: String(val), value: true, sep: open.length > 1 }, { text: key.replace("num_", "") });
 		}
 	}
 
@@ -105,12 +108,8 @@ export function extendedLines(payload) {
 }
 
 export function pinnedTitle(payload) {
-	// `name`, as the terminal titles it. NOT the command line, which v4's web
-	// UI uses (plugin-processlist.vue:8): v4 reads the published LIST ITEM,
-	// which carries one, while this block is built from the engine's
-	// accumulator -- and that has no `cmdline` at all, because the engine adds
-	// it after the extended grab. Measured, not assumed. The pinned ROW is
-	// underlined in the table below, so the full command is a glance away.
+	// `_pinned_title`: the command line with its arguments, else `name`.
 	if (!payload) return "?";
+	if (Array.isArray(payload.cmdline) && payload.cmdline.length) return payload.cmdline.join(" ");
 	return String(payload.name || "?");
 }

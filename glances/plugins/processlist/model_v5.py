@@ -189,15 +189,13 @@ class PluginModel(GlancesPluginBase[list]):
     # publishing it whole would duplicate a dozen fields already in `data[]`
     # for the same pid.
     #
-    # NO `cmdline`: the engine has not added it yet when it captures
-    # `extended_process` (it arrives later, through `maybe_add_cached_stats`),
-    # so the key is simply absent — measured against the live engine, not
-    # assumed. v4's web UI titles its block with a command line because it
-    # reads the PUBLISHED LIST ITEM, which does carry one; here the block is
-    # titled with `name`, exactly as the terminal titles it.
+    # `cmdline` titles the block, with its arguments, on both surfaces. The
+    # engine merges it into the process after the extended grab, so it copies
+    # it into `extended_process` separately (`GlancesProcesses.update`).
     _EXTENDED_KEYS: ClassVar[tuple[str, ...]] = (
         "pid",
         "name",
+        "cmdline",
         "extended_stats",
         "cpu_min",
         "cpu_max",

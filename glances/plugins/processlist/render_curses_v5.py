@@ -437,6 +437,14 @@ def _mmm_bytes(payload: dict[str, Any], prefix: str) -> str:
     return "".join(_format_bytes(payload.get(f"{prefix}_{k}") or 0, 7) for k in ("min", "max", "mean"))
 
 
+def _pinned_title(payload: dict[str, Any]) -> str:
+    """The pinned process' command line (with its arguments), else its name."""
+    cmdline = payload.get("cmdline")
+    if isinstance(cmdline, list) and cmdline:
+        return " ".join(str(a) for a in cmdline)
+    return str(payload.get("name") or "?")
+
+
 def _extended_rows(payload: dict[str, Any]) -> list[Row]:
     """The `e` block (2.X-b3), mirroring v4's four lines.
 
@@ -445,7 +453,7 @@ def _extended_rows(payload: dict[str, Any]) -> list[Row]:
     affinity and IO nice, MEM min/max/mean with the memory breakdown and swap,
     then the Open counters.
     """
-    name = str(payload.get("name") or "?")
+    name = _pinned_title(payload)
     rows: list[Row] = [
         Row(
             cells=[

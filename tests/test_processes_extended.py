@@ -226,3 +226,21 @@ def test_a_new_pin_starts_from_fresh_min_max_mean(monkeypatch):
     p = engine.extended_process
     assert (p["cpu_min"], p["cpu_max"], p["cpu_mean"]) == (10.0, 10.0, 10.0)
     assert (p["memory_min"], p["memory_max"], p["memory_mean"]) == (1000, 1000, 1000)
+
+
+def test_the_pinned_process_carries_its_command_line(monkeypatch):
+    """`cmdline` is merged into the process after the extended grab; the
+    pinned process must still carry it, as it titles the block."""
+    import os
+
+    pid = os.getpid()
+    engine = GlancesProcesses()
+    engine.extended_pid = pid
+    engine.disable_extended_tag = False
+    proc = _fake_proc(pid, 1.0, 1000)
+    proc["cmdline"] = ["python", "-m", "glances"]
+    monkeypatch.setattr(engine, "build_process_list", lambda attrs: [dict(proc)])
+
+    engine.update()
+
+    assert engine.extended_process["cmdline"] == ["python", "-m", "glances"]

@@ -726,12 +726,19 @@ def test_the_extended_block_renders_v4s_four_lines(payload, fields):
     rows = render(payload, fields, view={"extended_process": _extended_payload()})
     lines = _flat(rows)
 
-    assert "Pinned thread" in lines[0] and "hot" in lines[0] and "'e' to unpin" in lines[0]
+    assert "Pinned thread" in lines[0] and "'e' to unpin" in lines[0]
     assert "CPU Min/Max/Mean" in lines[1]
     assert "RES Min/Max/Mean" in lines[2]
     assert lines[3].startswith(" Open:")
     # ... and the process table still follows.
     assert "CPU%" in lines[4]
+
+
+def test_the_pinned_title_is_the_command_line_with_its_arguments(payload, fields):
+    extended = _extended_payload(cmdline=["python", "-m", "glances"])
+    assert "python -m glances" in _flat(render(payload, fields, view={"extended_process": extended}))[0]
+    # No command line (kernel thread, access denied): the name.
+    assert "hot" in _flat(render(payload, fields, view={"extended_process": _extended_payload()}))[0]
 
 
 def test_the_cpu_line_carries_min_max_mean_affinity_and_io_nice(payload, fields):

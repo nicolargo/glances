@@ -439,9 +439,15 @@ def test_only_the_extended_keys_are_published(pin, plugin_and_store):
     assert "username" not in extended
     assert "status" not in extended
     assert "cpu_percent" not in extended
-    # And `cmdline` is not even offered: the engine has not added it yet when
-    # it captures the accumulator. Measured against the live engine.
-    assert "cmdline" not in PluginModel._EXTENDED_KEYS
+
+
+def test_the_pinned_command_line_is_published(pin, plugin_and_store):
+    """`cmdline` titles the block, arguments included."""
+    plugin, store = plugin_and_store
+    pin.extended_pid = 42
+    pin.extended_process = _extended(42, cmdline=["python", "-m", "glances"])
+
+    assert _metadata_of(plugin, store)["extended"]["cmdline"] == ["python", "-m", "glances"]
 
 
 def test_a_stale_accumulation_is_not_published(pin, plugin_and_store):
