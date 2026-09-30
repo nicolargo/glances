@@ -10,10 +10,9 @@
 """The container CPU and MEM views carry the decoration both front ends read.
 
 The curses view reads these through get_views(item=..., key='cpu'|'mem',
-option='decoration'), and plugin-containers.vue reads the same two entries. In
-curses a missing decoration is silent: get_views() answers 'DEFAULT' for a key it
-cannot find. The WebUI calls toLowerCase() on it, so an entry without one breaks
-the whole container table.
+option='decoration'), and plugin-containers.vue reads the same two entries. A
+missing decoration is silent in both: get_views() answers 'DEFAULT' for a key it
+cannot find, so an over-threshold container simply renders in plain text.
 """
 
 import os
