@@ -329,8 +329,16 @@ let alertIncidentsSequenceIndex = 0;
 // about what happens ACROSS attempts, which a fixed answer cannot express.
 let serverDown = SERVER_DOWN_SCENARIOS.has(scenario);
 
-async function fakeFetch(url) {
+// Every POST the page made, in order: the pin and the process sort are the
+// only writes, and a test asserts on the path a key or a click produced.
+const postedPaths = [];
+
+async function fakeFetch(url, init) {
 	const path = String(url);
+	if (init && init.method === "POST" && !serverDown) {
+		postedPaths.push(path);
+		return { ok: true, status: 200, json: async () => true };
+	}
 	// A stopped server answers NOTHING, so this rejects before any per-path
 	// branch below -- `fetch` rejecting is the browser's only signal that
 	// there is no server, as opposed to one returning an error (the
@@ -602,6 +610,8 @@ function collect() {
 		// formatted values a plugin actually rendered (e.g. the eight mem
 		// statistics) without a second, per-plugin harness.
 		pluginText: {},
+		// The paths the page POSTed to (see `postedPaths`).
+		posts: postedPaths,
 		// The <th> texts of each rendered collection plugin, keyed by its
 		// data-plugin (registry name) -- lets a test observe the resolved
 		// column HEADERS specifically, rather than searching the whole

@@ -31,6 +31,7 @@ Route inventory:
 | ``/api/5/<plugin>/info``      | GET    | ``plugin.fields_description``|
 | ``/api/5/<plugin>/limits``    | GET    | ``plugin.get_limits()``      |
 | ``/api/5/<plugin>/history``   | GET    | ``plugin.get_history()`` (``?nb=&field=&item=``) |
+| ``/api/5/processes/sort/<key>`` | POST | ``glances_processes.set_sort_key()`` |
 
 A plugin that has registered but has not yet produced stats (scheduler
 cycle 0) returns ``200 null`` — not an error, just a transient. Clients
@@ -55,7 +56,7 @@ from starlette.concurrency import run_in_threadpool
 
 from glances.alerts_incidents_v5 import derive_incidents, incident_duration
 from glances.config_v5 import GlancesConfigV5
-from glances.processes import glances_processes
+from glances.processes import glances_processes, sort_processes_stats_list
 from glances.security_v5 import verify_password
 
 if TYPE_CHECKING:
@@ -171,6 +172,36 @@ def _register_extended_process_routes(router: APIRouter) -> None:
         return True
 
 
+# `auto` hands the key back to the alerts (`GlancesAlerts._update_auto_sort`),
+# as the TUI's `a` does.
+_SORT_KEYS: tuple[str, ...] = ("auto", *sort_processes_stats_list)
+
+
+def _register_sort_route(router: APIRouter) -> None:
+    """`POST /api/5/processes/sort/{key}` (shared sort design, 2026-09-30).
+
+    The engine's sort key is the ONE sort of the server: the WebUI, a client
+    TUI and the alerts all set the same `glances_processes` key, and
+    `processcount` publishes it back every cycle. Containers and VMs sort on
+    it too (`containers/model_v5.py::_sort`, `vms/model_v5.py`).
+
+    Same security posture as the pin routes above: what an unauthenticated
+    caller changes is the ORDER of a list it can already read.
+    """
+
+    @router.post("/processes/sort/{key}")
+    async def sort_processes(key: str, request: Request) -> bool:
+        """Sort the processes (and the containers and VMs) by `key`, or `auto`."""
+        if key not in _SORT_KEYS:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Unknown sort key {key!r}, expected one of: {', '.join(_SORT_KEYS)}",
+            )
+        # A manual key turns auto-sort off; `auto` turns it back on (v4 contract).
+        glances_processes.set_sort_key(key, key == "auto")
+        return True
+
+
 def build_router() -> APIRouter:
     """Return an ``APIRouter`` carrying the v5 REST routes.
 
@@ -281,6 +312,7 @@ def build_router() -> APIRouter:
         return _redact_args(getattr(request.app.state, "args", None))
 
     _register_extended_process_routes(router)
+    _register_sort_route(router)
     _register_history_route(router)
 
     @router.get("/{plugin_name}/info")

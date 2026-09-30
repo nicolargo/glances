@@ -564,9 +564,11 @@ const ARGS_FIXTURES = {
 	"cpu-percpu-on": { percpu: true },
 	// "cpu-percpu-off" is deliberately absent here: a scenario absent from
 	// this map gets `{}`, i.e. no flag set -- exactly the state under test.
-	// processlist/render_curses_v5.py `_HEADER_SORT_KEY`: the WebUI reflects
-	// the key the server was STARTED with (no live re-sort, unlike the TUI).
+	// processlist/render_curses_v5.py `_HEADER_SORT_KEY`: with no live key in
+	// `processcount`, the WebUI falls back on the key the server was STARTED
+	// with (`--sort-processes`).
 	"processlist-sorted": { sort_processes_key: "cpu_percent" },
+	"processlist-sorted-live": { sort_processes_key: "cpu_percent" },
 	// Task 8: processlist/programlist exclusivity (AppShell.vue `slots()`,
 	// mirroring `cpu`/`percpu`) and the programlist block's own rendering are
 	// both gated on `serverArgs.programs` -- the same CLI flag
@@ -1486,6 +1488,12 @@ const PROCESSLIST_ORDER_FIXTURE = {
 
 ALL_FIXTURES["processlist"] = { processlist: PROCESSLIST_FIXTURE };
 ALL_FIXTURES["processlist-sorted"] = { processlist: PROCESSLIST_FIXTURE };
+// Shared sort (2026-09-30): the LIVE key `processcount` publishes wins over the
+// `--sort-processes` startup key (ARGS_FIXTURES says cpu_percent).
+ALL_FIXTURES["processlist-sorted-live"] = {
+	processlist: PROCESSLIST_FIXTURE,
+	processcount: { ...PROCESSCOUNT_FIXTURE, sort_key: "name", auto_sort: false },
+};
 ALL_FIXTURES["processlist-cap"] = { processlist: PROCESSLIST_ORDER_FIXTURE };
 ALL_FIXTURES["processlist-narrow"] = { processlist: PROCESSLIST_FIXTURE };
 
@@ -1612,6 +1620,22 @@ ALL_FIXTURES["processcount-cut"] = { processcount: PROCESSCOUNT_FIXTURE };
 ALL_FIXTURES["processcount-cut-programs"] = { processcount: PROCESSCOUNT_FIXTURE };
 ALL_FIXTURES["processcount-sorted-threads"] = { processcount: PROCESSCOUNT_FIXTURE };
 ALL_FIXTURES["processcount-sorted-programs"] = { processcount: PROCESSCOUNT_FIXTURE };
+// The live key and flag, published by `processcount` itself (shared sort).
+ALL_FIXTURES["processcount-live-auto"] = {
+	processcount: { ...PROCESSCOUNT_FIXTURE, sort_key: "cpu_percent", auto_sort: true },
+};
+ALL_FIXTURES["processcount-live-manual"] = {
+	processcount: { ...PROCESSCOUNT_FIXTURE, sort_key: "io_counters", auto_sort: false },
+};
+// Containers and VMs follow the one process key, and underline it.
+ALL_FIXTURES["containers-sorted-live"] = {
+	containers: CONTAINERS_FIXTURE,
+	processcount: { ...PROCESSCOUNT_FIXTURE, sort_key: "memory_percent", auto_sort: false },
+};
+ALL_FIXTURES["vms-sorted-live"] = {
+	vms: VMS_FIXTURE,
+	processcount: { ...PROCESSCOUNT_FIXTURE, sort_key: "name", auto_sort: false },
+};
 
 // Zone widths per scenario, keyed by the `data-slot` the shell renders. The
 // numbers are what a browser would report: `available` is clientWidth,

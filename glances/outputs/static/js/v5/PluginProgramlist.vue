@@ -30,24 +30,24 @@
 				renderer never imports processlist's `_DROP_ORDER`/`_MIN_COMMAND_WIDTH`,
 				so every column below is unconditional -- no `shows()`/`v-if` per
 				column, unlike processlist's own template. -->
-				<th class="gl-header gl-num" :class="{ 'gl-sorted': isSorted('CPU%') }">{{ cpuLabel }}</th>
-				<th class="gl-header gl-num" :class="{ 'gl-sorted': isSorted('MEM%') }">MEM%</th>
-				<th class="gl-header gl-num" :class="{ 'gl-sorted': isSorted('VIRT') }">VIRT</th>
-				<th class="gl-header gl-num" :class="{ 'gl-sorted': isSorted('RES') }">RES</th>
-				<th class="gl-header gl-num" :class="{ 'gl-sorted': isSorted('NPROCS') }">NPROCS</th>
-				<th class="gl-header" :class="{ 'gl-sorted': isSorted('USER') }">USER</th>
-				<th class="gl-header gl-num" :class="{ 'gl-sorted': isSorted('THR') }">THR</th>
-				<th class="gl-header gl-num" :class="{ 'gl-sorted': isSorted('NI') }">NI</th>
-				<th class="gl-header gl-num" :class="{ 'gl-sorted': isSorted('S') }">S</th>
-				<th class="gl-header gl-num" :class="{ 'gl-sorted': isSorted('TIME+') }">TIME+</th>
-				<th class="gl-header gl-num" :class="{ 'gl-sorted': isSorted('R/s') }">R/s</th>
+				<th class="gl-header gl-num" v-bind="sortAttrs('CPU%')">{{ cpuLabel }}</th>
+				<th class="gl-header gl-num" v-bind="sortAttrs('MEM%')">MEM%</th>
+				<th class="gl-header gl-num" v-bind="sortAttrs('VIRT')">VIRT</th>
+				<th class="gl-header gl-num" v-bind="sortAttrs('RES')">RES</th>
+				<th class="gl-header gl-num" v-bind="sortAttrs('NPROCS')">NPROCS</th>
+				<th class="gl-header" v-bind="sortAttrs('USER')">USER</th>
+				<th class="gl-header gl-num" v-bind="sortAttrs('THR')">THR</th>
+				<th class="gl-header gl-num" v-bind="sortAttrs('NI')">NI</th>
+				<th class="gl-header gl-num" v-bind="sortAttrs('S')">S</th>
+				<th class="gl-header gl-num" v-bind="sortAttrs('TIME+')">TIME+</th>
+				<th class="gl-header gl-num" v-bind="sortAttrs('R/s')">R/s</th>
 				<!-- gl-num-left: a deliberate WebUI-only divergence, not TUI parity,
 				shared with PluginProcesslist.vue's identical rule (see its own
 				comment for the full reasoning). The maintainer asked for W/s
 				left-aligned in the browser even though the terminal right-aligns
 				it like every other numeric column -- do not "fix" this back. -->
-				<th class="gl-header gl-num gl-num-left" :class="{ 'gl-sorted': isSorted('W/s') }">W/s</th>
-				<th class="gl-header" :class="{ 'gl-sorted': isSorted('Command') }">Command</th>
+				<th class="gl-header gl-num gl-num-left" v-bind="sortAttrs('W/s')">W/s</th>
+				<th class="gl-header" v-bind="sortAttrs('Command')">Command</th>
 			</tr>
 		</template>
 		<template #body>
@@ -90,6 +90,8 @@
 import CollectionBlock from "./CollectionBlock.vue";
 import { PLUGIN_PROPS } from "./plugin_props.js";
 import { processBlockMixin } from "./process_block.js";
+import { HEADER_SORT_KEY } from "./process_shared.js";
+import { sortHeadersMixin } from "./sort_headers.js";
 // The character-column widths (process_widths.js), so the <colgroup> and CSS
 // derive from the same numbers the terminal renderer uses -- never a literal
 // copied by hand.
@@ -110,8 +112,12 @@ export default {
 	// No fitBlockMixin, unlike processlist: programlist's own renderer never
 	// imports processlist's `_DROP_ORDER`, so this block has no width cascade
 	// and every column is unconditional.
-	mixins: [processBlockMixin({ budgetKey: "programlist", columnWidth, wideIrixLabel: "CPU%/C" })],
-	// Reads `serverArgs.sort_processes_key` for the sort underline (isSorted()).
+	mixins: [
+		processBlockMixin({ budgetKey: "programlist", columnWidth, wideIrixLabel: "CPU%/C" }),
+		sortHeadersMixin(HEADER_SORT_KEY),
+	],
+	// Reads `serverArgs.sort_processes_key` -- the LIVE key, seeded from
+	// `processcount` by AppShell -- for the sort underline (sortAttrs()).
 	// `degrade` is declared and left unused: this block has no width cascade to
 	// feed it to.
 	props: { ...PLUGIN_PROPS },
@@ -126,11 +132,6 @@ export default {
 </script>
 
 <style scoped>
-/* Same reasoning as PluginProcesslist.vue's own scoped rule: no existing
- * global class underlines a sorted header, and this is a single consumer. */
-.gl-table th.gl-sorted {
-	text-decoration: underline;
-}
 /* W/s is left-aligned in the browser, a DELIBERATE divergence from the
  * terminal -- see PluginProcesslist.vue's identical rule for the full
  * reasoning (confirmed by the maintainer knowing the two disagree). Do not

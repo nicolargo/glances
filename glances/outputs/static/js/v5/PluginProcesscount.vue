@@ -39,7 +39,7 @@ export default {
 		maxProcessesDisplay: { default: null },
 	},
 	// Reads `serverArgs.programs` (truncation counter) and
-	// `serverArgs.sort_processes_key` (sort indicator).
+	// `serverArgs.sort_processes_key` / `.auto_sort` (sort indicator).
 	props: { ...PLUGIN_PROPS },
 	computed: {
 		TITLE: () => TITLE,
@@ -62,25 +62,20 @@ export default {
 			return `${cap}/${total}`;
 		},
 		// `_sort_indicator_cell` (processcount/render_curses_v5.py:58-70),
-		// browser equivalent. The TUI cell also reflects `glances_processes
-		// .auto_sort` (an ENGINE runtime flag: true unless a sort key was ever
-		// set), which has NO server-args mirror -- `serverArgs` is the static
-		// CLI args snapshot, not a live engine read, so the browser cannot
-		// honestly tell "auto, currently resolved to cpu_percent" apart from
-		// "manually pinned to cpu_percent" once a key is known. Decision: only
-		// render the indicator when `sort_processes_key` was actually passed on
-		// the CLI (main_v5.py:423-424 always calls `set_sort_key(key, False)`
-		// in that case, so "sorted by X" -- never "automatically" -- is always
-		// true then); when no CLI key was given the engine may be auto-sorting
-		// by a key that changes over time and this component has no way to
-		// read it, so it renders nothing here, same as the TUI's own "no view
-		// supplied" branch (:61-62).
+		// browser equivalent. `serverArgs` is AppShell's `effectiveArgs`, whose
+		// `sort_processes_key` / `auto_sort` are the LIVE engine values
+		// `processcount` publishes (shared sort design, 2026-09-30). A server
+		// that predates them only gives the `--sort-processes` startup key, and
+		// no `auto_sort`: "sorted by X" is still true then, because that flag
+		// is always applied with auto off (main_v5.py `apply_process_flags`).
 		sortIndicatorText() {
 			const key = this.serverArgs && this.serverArgs.sort_processes_key;
 			if (!key) return null;
 			const prefix = this.serverArgs.programs ? "Programs" : "Threads";
 			const sortHuman = Object.prototype.hasOwnProperty.call(SORT_FOR_HUMAN, key) ? SORT_FOR_HUMAN[key] : key;
-			return `${prefix} sorted by ${sortHuman}`;
+			return this.serverArgs.auto_sort
+				? `${prefix} sorted automatically by ${sortHuman}`
+				: `${prefix} sorted by ${sortHuman}`;
 		},
 		// One string, built exactly as the TUI concatenates its cells
 		// (:88-110), plus the indicator appended as its own trailing cell --

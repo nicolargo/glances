@@ -118,3 +118,45 @@ async def test_update_handles_get_count_non_dict(store, config):
     payload = store.get("processcount")
     for name in ("total", "running", "sleeping", "thread", "pid_max"):
         assert name not in payload, name
+
+
+# ------------------------------------------ the live sort key (shared sort)
+
+
+async def _update_with_sort(plugin, key, auto):
+    count = {"total": 1, "running": 0, "sleeping": 1, "thread": 1, "pid_max": 32768}
+    with (
+        patch("glances.plugins.processcount.model_v5.glances_processes.update"),
+        patch("glances.plugins.processcount.model_v5.glances_processes.get_count", return_value=count),
+        patch("glances.plugins.processcount.model_v5.glances_processes._sort_key", key),
+        patch("glances.plugins.processcount.model_v5.glances_processes.auto_sort", auto),
+    ):
+        await plugin.update()
+
+
+async def test_the_live_sort_key_is_published(store, config):
+    """The key this cycle's list was sorted with -- what the WebUI underlines
+    and what a client TUI follows."""
+    plugin = PluginModel(store, config)
+    await _update_with_sort(plugin, "memory_percent", False)
+    payload = plugin.get_api_payload()
+    assert payload["sort_key"] == "memory_percent"
+    assert payload["auto_sort"] is False
+
+
+async def test_the_auto_sort_flag_is_published(store, config):
+    plugin = PluginModel(store, config)
+    await _update_with_sort(plugin, "cpu_percent", True)
+    payload = plugin.get_api_payload()
+    assert payload["sort_key"] == "cpu_percent"
+    assert payload["auto_sort"] is True
+
+
+async def test_the_sort_key_is_not_exported(store, config):
+    """A string column in InfluxDB/CSV would be noise: API yes, export no."""
+    plugin = PluginModel(store, config)
+    await _update_with_sort(plugin, "name", False)
+    export = plugin.get_export()
+    assert "sort_key" not in export
+    assert "auto_sort" not in export
+    assert export["total"] == 1

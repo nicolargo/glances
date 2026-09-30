@@ -31,6 +31,7 @@ import sys
 from typing import Any, TextIO
 
 from glances.api_v5_doc import _escape
+from glances.processes import sort_processes_stats_list
 
 API_URL = "http://localhost:61208/api/5"
 # A collection example keeps this many items; the rest is summarised.
@@ -163,6 +164,21 @@ def render(client: Any, schema: dict[str, Any]) -> str:
         "",
         f"    # curl -X POST {API_URL}/processes/extended/<pid>",
         f"    # curl -X POST {API_URL}/processes/extended/disable",
+        "",
+    ]
+    lines += _title("Sort the processes")
+    lines += [
+        "Sort the processes, the containers and the VMs by one key, or ``auto`` to let the",
+        "alerts choose it. The sort is the server's: every Web UI and client TUI attached to it",
+        "follows. The key in effect is published as ``sort_key`` / ``auto_sort`` in",
+        "``/api/5/processcount``:",
+        "",
+        ".. code-block:: bash",
+        "",
+        f"    # curl -X POST {API_URL}/processes/sort/memory_percent",
+        f"    # curl -X POST {API_URL}/processes/sort/auto",
+        "",
+        "Keys: ``auto``, " + ", ".join(f"``{k}``" for k in sort_processes_stats_list) + ".",
         "",
     ]
     for name in plugins:

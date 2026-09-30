@@ -128,14 +128,14 @@
 
 <script>
 import { computed, markRaw } from "vue";
-import { fetchAll, resolveConfig, resolveArgs, resolvePluginNames, resolveVersion, getJson } from "./api.js";
+import { fetchAll, resolveConfig, resolveArgs, resolvePluginNames, resolveVersion, getJson, requestSort } from "./api.js";
 import { REFRESH_STEPS, stepRefresh, loadRefresh, saveRefresh } from "./refresh.js";
 import { resolveAllLabels } from "./labels.js";
 import { visiblePlugins, groupBySlot } from "./layout.js";
 import { PLUGINS } from "./plugins/index.js";
 import { resolveDegrade, sameFlags, TOP_CASCADE, HEADER_CASCADE } from "./degrade.js";
 import { FULL_QUICKLOOK_HIDDEN } from "./full_quicklook.js";
-import { hideTargets, toggleHidden, helpRows, viewFlag, startupHidden, HELP_KEY } from "./hotkeys.js";
+import { hideTargets, toggleHidden, helpRows, viewFlag, sortKeyFor, startupHidden, HELP_KEY } from "./hotkeys.js";
 import { planRightColumn } from "./row_budget.js";
 import { ampsLineCount } from "./amps.js";
 
@@ -429,8 +429,20 @@ export default {
 				// config-set `true`. Letting `serverArgs` win here would make
 				// `F` start from the wrong side on such a server.
 				fs_free_space: !!this.results.fs?.free_space,
+				// The LIVE process sort, same reasoning: `processcount` publishes
+				// the key the engine sorted this cycle with, while /api/5/args
+				// only knows `--sort-processes`. A server that predates the
+				// shared sort publishes neither, and keeps the startup key.
+				...this.liveSort,
 				...this.viewOverrides,
 			};
+		},
+		// `{ sort_processes_key, auto_sort }` from `processcount`, or `{}` when
+		// it does not publish them (an older server, or processcount disabled).
+		liveSort() {
+			const count = this.results.processcount;
+			if (!count || typeof count.sort_key !== "string") return {};
+			return { sort_processes_key: count.sort_key, auto_sort: !!count.auto_sort };
 		},
 		refreshLabel() {
 			return this.refresh === null ? "…" : `${this.refresh}s`;
@@ -719,6 +731,13 @@ export default {
 				// a server started with `--full-quicklook`.
 				this.viewOverrides = { ...this.viewOverrides, [flag]: !this.effectiveArgs[flag] };
 				this.scheduleRefit();
+				return true;
+			}
+			const sortKey = sortKeyFor(key);
+			if (sortKey) {
+				// Server state, not a view override: every viewer re-sorts, and
+				// the next tick shows the new order (api.js `requestSort`).
+				requestSort(sortKey);
 				return true;
 			}
 			const names = hideTargets(key, this.plugins);

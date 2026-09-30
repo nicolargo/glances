@@ -90,9 +90,13 @@ class _FakeSession:
         }
         self.down = False
         self.expired = False
+        self.refuse_sort = False
 
     def post(self, url, auth=None, headers=None, timeout=None):
         self.requests.append(("POST", url, auth))
+        if "/processes/sort/" in url:
+            # The shared sort route; `refuse_sort` plays an older v5 server.
+            return _Response(404, {}) if self.refuse_sort else _Response(200, True)
         if "/processes/extended/" in url:
             # The pin routes: 404 for a pid the server does not list, as it does.
             target = url.rsplit("/", 1)[1]
@@ -667,6 +671,94 @@ def test_client_mode_filters_the_received_list_locally(monkeypatch):
     snapshot = {"processlist": {"data": [{"pid": 1, "name": "nginx"}]}}
     tui._apply_client_filter(snapshot)
     assert len(snapshot["processlist"]["data"]) == 1
+
+
+# ------------------------------------------- shared sort (2026-09-30)
+
+
+@pytest.fixture
+def sort_state(monkeypatch):
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    engine = tui_mod.glances_processes
+    monkeypatch.setattr(engine, "_sort_key", "cpu_percent", raising=False)
+    monkeypatch.setattr(engine, "auto_sort", True, raising=False)
+    return engine
+
+
+def _sort_posts(session):
+    return [r[1].rsplit("/", 1)[1] for r in session.requests if r[0] == "POST" and "/processes/sort/" in r[1]]
+
+
+def test_set_sort_posts_to_the_servers_sort_route():
+    session = _FakeSession()
+    _source(session).set_sort("memory_percent")
+    assert ("POST", "http://srv:61208/api/5/processes/sort/memory_percent", None) in session.requests
+
+
+def test_client_mode_a_sort_key_sorts_here_and_on_the_server(monkeypatch, sort_state):
+    session = _FakeSession()
+    tui, popups = _client_tui(monkeypatch, _source(session))
+    assert tui._handle_key(ord("m")) == "changed"
+    assert sort_state.sort_key == "memory_percent" and sort_state.auto_sort is False
+    tui._handle_key(ord("a"))
+    assert sort_state.auto_sort is True
+    assert _sort_posts(session) == ["memory_percent", "auto"]
+    assert popups == []
+
+
+def test_client_mode_the_arrows_sort_on_the_server_too(monkeypatch, sort_state):
+    session = _FakeSession()
+    tui, _ = _client_tui(monkeypatch, _source(session))
+    tui._step_sort(1)
+    assert _sort_posts(session) == [sort_state.sort_key]
+
+
+def test_client_mode_a_refused_sort_still_sorts_here(monkeypatch, sort_state, caplog):
+    """An older v5 server has no sort route: the key keeps its local effect."""
+    session = _FakeSession()
+    session.refuse_sort = True
+    tui, popups = _client_tui(monkeypatch, _source(session))
+    with caplog.at_level(logging.INFO, logger="glances.outputs.glances_curses_v5"):
+        tui._handle_key(ord("p"))
+    assert sort_state.sort_key == "name"
+    assert popups == []
+    assert "did not take the sort" in caplog.text
+
+
+def test_client_mode_follows_a_sort_set_by_another_viewer(monkeypatch, sort_state):
+    source = _source(_FakeSession())
+    tui, _ = _client_tui(monkeypatch, source)
+    asyncio.run(source.store.set("processcount", {"total": 1, "sort_key": "username", "auto_sort": False}))
+    tui._follow_server_sort()
+    assert sort_state.sort_key == "username" and sort_state.auto_sort is False
+    asyncio.run(source.store.set("processcount", {"total": 1, "sort_key": "cpu_percent", "auto_sort": True}))
+    tui._follow_server_sort()
+    assert sort_state.sort_key == "cpu_percent" and sort_state.auto_sort is True
+
+
+def test_client_mode_a_stale_snapshot_does_not_revert_a_key_just_pressed(monkeypatch, sort_state):
+    """The server published (cpu_percent, auto) before this client's POST
+    landed: the snapshot still says so, and must not undo the `m`."""
+    source = _source(_FakeSession())
+    tui, _ = _client_tui(monkeypatch, source)
+    asyncio.run(source.store.set("processcount", {"total": 1, "sort_key": "cpu_percent", "auto_sort": True}))
+    tui._follow_server_sort()
+    tui._handle_key(ord("m"))
+    tui._follow_server_sort()  # same (stale) server pair
+    assert sort_state.sort_key == "memory_percent"
+    asyncio.run(source.store.set("processcount", {"total": 1, "sort_key": "memory_percent", "auto_sort": False}))
+    tui._follow_server_sort()
+    assert sort_state.sort_key == "memory_percent"
+
+
+def test_client_mode_an_older_server_leaves_the_sort_local(monkeypatch, sort_state):
+    source = _source(_FakeSession())
+    tui, _ = _client_tui(monkeypatch, source)
+    tui._handle_key(ord("t"))
+    asyncio.run(source.store.set("processcount", {"total": 1}))
+    tui._follow_server_sort()
+    assert sort_state.sort_key == "cpu_times"
 
 
 # ------------------------------------------------- against a real v5 app

@@ -4,7 +4,7 @@
 // The two blocks differ in exactly three places: the budget key they draw
 // from, their fixed column set, and the width of the one column they do not
 // share (PID vs NPROCS). Everything else -- the two composed ceilings, the
-// zero-quota hide rule, the <colgroup> arithmetic, the sort underline, the
+// zero-quota hide rule, the <colgroup> arithmetic, the
 // cell formatters -- is identical, and was duplicated byte-for-byte across
 // the two components. process_shared.js already extracted the pure helpers
 // for the same reason; this extracts the component options.
@@ -19,7 +19,7 @@
 
 import { cellClassFor } from "./columns.js";
 import { dashIfBlank, formatCpuTime, formatPercent, formatProcessBytes, formatUsername } from "./format.js";
-import { HEADER_SORT_KEY, commandText, ioRate } from "./process_shared.js";
+import { commandText, ioRate } from "./process_shared.js";
 import { COL_SEPARATOR, MIN_COMMAND_WIDTH } from "./process_widths.js";
 
 export function processBlockMixin({ budgetKey, columnWidth, wideIrixLabel }) {
@@ -127,10 +127,6 @@ export function processBlockMixin({ budgetKey, columnWidth, wideIrixLabel }) {
 			formatUsername,
 			ioRate,
 			fmt: dashIfBlank,
-			isSorted(label) {
-				const key = this.serverArgs?.sort_processes_key;
-				return !!key && HEADER_SORT_KEY[label] === key;
-			},
 			memField(item, field) {
 				return item?.memory_info ? item.memory_info[field] : undefined;
 			},

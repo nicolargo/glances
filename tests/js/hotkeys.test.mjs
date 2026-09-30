@@ -4,7 +4,9 @@ import test from "node:test";
 import {
 	HIDE_KEYS,
 	HIDE_SLOT_KEYS,
+	SORT_KEYS,
 	VIEW_KEYS,
+	sortKeyFor,
 	hideTargets,
 	toggleHidden,
 	helpRows,
@@ -83,10 +85,31 @@ test("an empty target list is a no-op", () => {
 
 test("every bound key is documented, and nothing else is", () => {
 	const documented = helpRows().map((row) => row.key).sort();
-	const bound = [...Object.keys(HIDE_KEYS), ...Object.keys(HIDE_SLOT_KEYS), ...Object.keys(VIEW_KEYS)].sort();
+	const bound = [
+		...Object.keys(HIDE_KEYS),
+		...Object.keys(HIDE_SLOT_KEYS),
+		...Object.keys(VIEW_KEYS),
+		...Object.keys(SORT_KEYS),
+	].sort();
 	assert.deepEqual(documented, bound);
 	assert.equal(Object.keys(HIDE_KEYS).length + Object.keys(HIDE_SLOT_KEYS).length, 24);
 	for (const row of helpRows()) assert.ok(row.desc, `${row.key} has no description`);
+});
+
+// -------------------------------------------------------- SORT PROCESSES
+
+test("a SORT key names the engine key it asks the server for", () => {
+	assert.equal(sortKeyFor("a"), "auto");
+	assert.equal(sortKeyFor("c"), "cpu_percent");
+	assert.equal(sortKeyFor("m"), "memory_percent");
+	assert.equal(sortKeyFor("p"), "name");
+	assert.equal(sortKeyFor("z"), null);
+});
+
+test("no SORT key is already bound to something else", () => {
+	for (const key of Object.keys(SORT_KEYS)) {
+		assert.ok(!(key in HIDE_KEYS) && !(key in HIDE_SLOT_KEYS) && !(key in VIEW_KEYS), key);
+	}
 });
 
 // ----------------------------------------------------------- TOGGLE VIEW
@@ -110,8 +133,9 @@ test("every TOGGLE VIEW key is documented, grouped apart from SHOW/HIDE", () => 
 	const rows = helpRows();
 	const view = rows.filter((row) => row.group === "TOGGLE VIEW").map((row) => row.key);
 	assert.deepEqual(view.sort(), Object.keys(VIEW_KEYS).sort());
-	// The TUI lists TOGGLE VIEW before SHOW/HIDE (`_HELP_GROUPS`); the overlay
-	// reads top to bottom, so the order is the grouping.
-	assert.equal(rows[0].group, "TOGGLE VIEW");
-	assert.equal(rows[rows.length - 1].group, "SHOW/HIDE");
+	// The TUI lists SORT PROCESSES, then TOGGLE VIEW, then SHOW/HIDE
+	// (`_HELP_GROUPS`); the overlay reads top to bottom, so the order is the
+	// grouping.
+	const groups = [...new Set(rows.map((row) => row.group))];
+	assert.deepEqual(groups, ["SORT PROCESSES", "TOGGLE VIEW", "SHOW/HIDE"]);
 });

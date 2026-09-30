@@ -51,8 +51,9 @@ export async function getJson(path) {
 }
 
 export async function postJson(path) {
-	// The only WRITE this UI makes: pinning / unpinning the process whose
-	// extended stats the server collects (2.X-b3-web). Same OfflineError
+	// The only WRITES this UI makes: pinning / unpinning the process whose
+	// extended stats the server collects (2.X-b3-web), and the process sort
+	// (`requestSort` below). Same OfflineError
 	// discrimination as `getJson` -- a rejected fetch is a gone server, an
 	// HTTP error is a live one answering badly -- because a click that fails
 	// silently is exactly the defect the TUI chantiers kept finding.
@@ -66,6 +67,18 @@ export async function postJson(path) {
 		throw new Error(`${path}: HTTP ${response.status}`);
 	}
 	return response.json();
+}
+
+/**
+ * Ask the server to sort by `key` (an engine sort key, or "auto").
+ *
+ * The sort is GLOBAL server state -- the TUI's keys set the same one -- so
+ * there is no optimistic update, as for the pin: the next tick brings the new
+ * order and the new underline together, and a failed POST leaves the page
+ * showing the truth.
+ */
+export function requestSort(key) {
+	return postJson(`api/5/processes/sort/${encodeURIComponent(key)}`).catch(() => {});
 }
 
 export function validate(payload, spec) {

@@ -44,17 +44,17 @@
 				<!-- The TUI's header literals (processlist/render_curses_v5.py:91,
 				`_FIXED_COL_KEYS` + `Command`) -- no separate title cell, unlike
 				`containers`: this renderer never puts one in its header row. -->
-				<th v-if="shows('CPU%')" class="gl-header gl-num" :class="{ 'gl-sorted': isSorted('CPU%') }">{{ cpuLabel }}</th>
-				<th v-if="shows('MEM%')" class="gl-header gl-num" :class="{ 'gl-sorted': isSorted('MEM%') }">MEM%</th>
-				<th v-if="shows('VIRT')" class="gl-header gl-num" :class="{ 'gl-sorted': isSorted('VIRT') }">VIRT</th>
-				<th v-if="shows('RES')" class="gl-header gl-num" :class="{ 'gl-sorted': isSorted('RES') }">RES</th>
-				<th v-if="shows('PID')" class="gl-header gl-num" :class="{ 'gl-sorted': isSorted('PID') }">PID</th>
-				<th v-if="shows('USER')" class="gl-header" :class="{ 'gl-sorted': isSorted('USER') }">USER</th>
-				<th v-if="shows('THR')" class="gl-header gl-num" :class="{ 'gl-sorted': isSorted('THR') }">THR</th>
-				<th v-if="shows('NI')" class="gl-header gl-num" :class="{ 'gl-sorted': isSorted('NI') }">NI</th>
-				<th v-if="shows('S')" class="gl-header gl-num" :class="{ 'gl-sorted': isSorted('S') }">S</th>
-				<th v-if="shows('TIME+')" class="gl-header gl-num" :class="{ 'gl-sorted': isSorted('TIME+') }">TIME+</th>
-				<th v-if="shows('R/s')" class="gl-header gl-num" :class="{ 'gl-sorted': isSorted('R/s') }">R/s</th>
+				<th v-if="shows('CPU%')" class="gl-header gl-num" v-bind="sortAttrs('CPU%')">{{ cpuLabel }}</th>
+				<th v-if="shows('MEM%')" class="gl-header gl-num" v-bind="sortAttrs('MEM%')">MEM%</th>
+				<th v-if="shows('VIRT')" class="gl-header gl-num" v-bind="sortAttrs('VIRT')">VIRT</th>
+				<th v-if="shows('RES')" class="gl-header gl-num" v-bind="sortAttrs('RES')">RES</th>
+				<th v-if="shows('PID')" class="gl-header gl-num" v-bind="sortAttrs('PID')">PID</th>
+				<th v-if="shows('USER')" class="gl-header" v-bind="sortAttrs('USER')">USER</th>
+				<th v-if="shows('THR')" class="gl-header gl-num" v-bind="sortAttrs('THR')">THR</th>
+				<th v-if="shows('NI')" class="gl-header gl-num" v-bind="sortAttrs('NI')">NI</th>
+				<th v-if="shows('S')" class="gl-header gl-num" v-bind="sortAttrs('S')">S</th>
+				<th v-if="shows('TIME+')" class="gl-header gl-num" v-bind="sortAttrs('TIME+')">TIME+</th>
+				<th v-if="shows('R/s')" class="gl-header gl-num" v-bind="sortAttrs('R/s')">R/s</th>
 				<!-- gl-num-left: a deliberate WebUI-only divergence, not TUI parity
 				(unlike `containers`' own use of this class, which mirrors its
 				renderer). The terminal right-aligns W/s exactly like every other
@@ -63,7 +63,7 @@
 				maintainer asked for W/s left-aligned in the browser anyway --
 				confirmed knowing the terminal disagrees. Do not "fix" this back to
 				match the TUI. -->
-				<th v-if="shows('W/s')" class="gl-header gl-num gl-num-left" :class="{ 'gl-sorted': isSorted('W/s') }">W/s</th>
+				<th v-if="shows('W/s')" class="gl-header gl-num gl-num-left" v-bind="sortAttrs('W/s')">W/s</th>
 				<!-- "Command", like the terminal and like `programlist` -- NOT
 				v4's "Command (click to pin)" (plugin-processlist.vue:59).
 				Measured in Chromium: this column is the elastic remainder and
@@ -74,8 +74,7 @@
 				of which costs a pixel of layout. -->
 				<th
 					class="gl-header"
-					:class="{ 'gl-sorted': isSorted('Command') }"
-					title="Click a process to pin its extended stats"
+					v-bind="sortAttrs('Command', 'Click a process to pin its extended stats.')"
 				>Command</th>
 			</tr>
 		</template>
@@ -138,6 +137,8 @@ import { FIXED_COL_KEYS, WEBUI_COL_WIDTHS } from "./process_widths.js";
 // test rather than through a second hand-written copy.
 import { extendedLines, pinnedTitle } from "./process_extended.js";
 import { postJson } from "./api.js";
+import { HEADER_SORT_KEY } from "./process_shared.js";
+import { sortHeadersMixin } from "./sort_headers.js";
 
 const TITLE = "PROCESSES";
 
@@ -151,8 +152,9 @@ export default {
 			budgetKey: "processlist",
 			columnWidth: (key) => WEBUI_COL_WIDTHS[key],
 			wideIrixLabel: "CPUi",
-		}),],
-	// Reads `serverArgs.sort_processes_key` for the sort underline (isSorted()).
+		}), sortHeadersMixin(HEADER_SORT_KEY),],
+	// Reads `serverArgs.sort_processes_key` -- the LIVE key, seeded from
+	// `processcount` by AppShell -- for the sort underline (sortAttrs()).
 	// `degrade` is declared and left unused: this block owns its own width
 	// cascade, not the shell's zone-level one.
 	props: { ...PLUGIN_PROPS },
@@ -218,14 +220,6 @@ export default {
 </script>
 
 <style scoped>
-/* The active sort column's header, underlined -- the TUI's 'SORT' decoration
- * (processlist/render_curses_v5.py `_header`, `underline=...`). No existing
- * global class does this (no WebUI collection before this one underlines a
- * header), so it is scoped here rather than added to css/v5.css for a single
- * consumer. */
-.gl-table th.gl-sorted {
-	text-decoration: underline;
-}
 /* W/s is left-aligned in the browser, a DELIBERATE divergence from the
  * terminal, not parity -- the terminal right-aligns W/s like every other
  * numeric column (render_curses_v5.py:435-445 gives every header
@@ -242,8 +236,8 @@ export default {
 	text-align: left;
 }
 
-/* The `e` block (2.X-b3-web). Scoped here for the same reason `.gl-sorted`
- * is: one consumer, and nothing in css/v5.css describes a pinned process. */
+/* The `e` block (2.X-b3-web). Scoped here: one consumer, and nothing in
+ * css/v5.css describes a pinned process. */
 .gl-pinned {
 	margin-bottom: 0.35rem;
 }

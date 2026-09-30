@@ -384,6 +384,14 @@ class RemoteSource:
         )
         self.pinned = pid
 
+    def set_sort(self, key: str) -> None:
+        """Sort the SERVER's processes (and containers, VMs) by `key`, or "auto". Synchronous.
+
+        The sort is global to the server, as the pin is: every Web UI and
+        client attached to it follows. Raises `RemoteError`.
+        """
+        self.connection.post_json(f"/api/5/processes/sort/{key}")
+
     def unpin_on_exit(self) -> None:
         """Leaving the client: drop the pin it set, or the server keeps paying for it. Never raises."""
         if self.pinned is None:

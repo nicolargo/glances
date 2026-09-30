@@ -68,6 +68,22 @@ class PluginModel(GlancesPluginBase[dict]):
             "description": "Maximum PID value supported by the kernel (Linux) or None.",
             "unit": "number",
         },
+        # The live process sort, published so the WebUI and a client TUI read
+        # the key the engine sorted this cycle's list with (shared sort design,
+        # 2026-09-30). `internal`: the API keeps it; `exportable: False`: a
+        # string column in a time-series backend would be noise.
+        "sort_key": {
+            "description": "Key the processes, containers and VMs are sorted by.",
+            "unit": "string",
+            "internal": True,
+            "exportable": False,
+        },
+        "auto_sort": {
+            "description": "True when the sort key is chosen automatically (from the alerts).",
+            "unit": "bool",
+            "internal": True,
+            "exportable": False,
+        },
     }
 
     async def _grab_stats(self) -> dict[str, Any]:
@@ -82,3 +98,10 @@ class PluginModel(GlancesPluginBase[dict]):
         # Engine returns a live dict ref — copy so downstream consumers
         # can't mutate the engine's state.
         return dict(count)
+
+    def _add_metadata(self) -> None:
+        # Read right after `engine.update()` (`_grab_stats`), which is what
+        # sorts the list: the key published is the one this cycle used.
+        super()._add_metadata()
+        self._metadata["sort_key"] = glances_processes.sort_key
+        self._metadata["auto_sort"] = bool(glances_processes.auto_sort)

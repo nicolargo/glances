@@ -28,11 +28,11 @@
 				in spec D6. -->
 				<th v-if="shows('engine')" class="gl-header">Engine</th>
 				<th v-if="shows('pod')" class="gl-header">Pod</th>
-				<th v-if="shows('name')" class="gl-header">{{ TITLE }}</th>
+				<th v-if="shows('name')" class="gl-header" v-bind="sortAttrs('CONTAINER')">{{ TITLE }}</th>
 				<th v-if="shows('status')" class="gl-header gl-num">Status</th>
 				<th v-if="shows('uptime')" class="gl-header gl-num">Uptime</th>
-				<th v-if="shows('cpu')" class="gl-header gl-num">CPU%</th>
-				<th v-if="shows('mem')" class="gl-header gl-num">MEM</th>
+				<th v-if="shows('cpu')" class="gl-header gl-num" v-bind="sortAttrs('CPU%')">CPU%</th>
+				<th v-if="shows('mem')" class="gl-header gl-num" v-bind="sortAttrs('MEM')">MEM</th>
 				<th v-if="shows('memory_max')" class="gl-header">/MAX</th>
 				<template v-if="shows('diskio')">
 					<th class="gl-header gl-num">IOR/s</th>
@@ -116,6 +116,7 @@ import {
 import { fitBlockMixin } from "./fit_block.js";
 import { PLUGIN_PROPS } from "./plugin_props.js";
 import { COL_SEPARATOR } from "./process_widths.js";
+import { CONTAINERS_HEADER_SORT_KEY, sortHeadersMixin } from "./sort_headers.js";
 
 const TITLE = "CONTAINER";
 
@@ -139,7 +140,9 @@ const STATUS_TIER = {
 export default {
 	name: "PluginContainers",
 	components: { CollectionBlock },
-	mixins: [fitBlockMixin],
+	// The headers the TUI underlines (`_HEADER_SORT_KEY`) are clickable: the
+	// containers follow the one process sort key, server-side.
+	mixins: [fitBlockMixin, sortHeadersMixin(CONTAINERS_HEADER_SORT_KEY)],
 	// The vertical row quota AppShell's refitVertical() pass allots this
 	// block (row_budget.js), handed down via provide()/inject -- same
 	// reasoning as PluginProcesslist.vue's own `rowBudget` inject

@@ -519,6 +519,9 @@ class TuiV5(threading.Thread):
         # gives the header's "Connected to" / "Disconnected from" (v4 parity)
         # and pins `e` on the server. None in standalone mode.
         self._remote = remote
+        # Client mode: the last (sort_key, auto_sort) the server published
+        # (`_follow_server_sort`).
+        self._server_sort: tuple[str, bool] | None = None
         # Client mode filters the list it received, locally: the server's
         # engine filter is global to every client (Phase 3 design §4.1).
         self._client_filter = GlancesFilter()
@@ -704,13 +707,7 @@ class TuiV5(threading.Thread):
                 self._view.hidden_plugins.update(names)
             return "changed"
         if "sort" in action:
-            sort_key = action["sort"]
-            # v4 contract: pressing a manual key turns auto-sort OFF;
-            # 'auto' turns it ON (set_sort_key resets the key to cpu_percent).
-            try:
-                glances_processes.set_sort_key(sort_key, sort_key == "auto")
-            except Exception as e:  # pragma: no cover — defensive
-                logger.warning("TUI: set_sort_key(%s) failed: %s", sort_key, e)
+            self._set_sort(action["sort"])
             return "changed"
         return "ignored"
 
@@ -1037,10 +1034,50 @@ class TuiV5(threading.Thread):
         loop = list(sort_processes_stats_list)
         current = getattr(glances_processes, "sort_key", None)
         position = loop.index(current) if current in loop else 0
+        self._set_sort(loop[(position + step) % len(loop)])
+
+    def _set_sort(self, sort_key: str) -> None:
+        """Sort the processes by `sort_key`, or "auto".
+
+        v4 contract: a manual key turns auto-sort OFF; 'auto' turns it ON
+        (set_sort_key resets the key to cpu_percent). The local engine is set
+        first, so the next repaint re-sorts at once (`_apply_live_sort`).
+
+        In client mode the server is asked too: its sort is the one every Web
+        UI and client attached to it shows (shared sort design, 2026-09-30).
+        A server without the route (an older v5) refuses; the sort still
+        applies here, as before, and the refusal is only logged.
+        """
         try:
-            glances_processes.set_sort_key(loop[(position + step) % len(loop)], False)
+            glances_processes.set_sort_key(sort_key, sort_key == "auto")
         except Exception as e:  # pragma: no cover — defensive
-            logger.warning("TUI: set_sort_key failed: %s", e)
+            logger.warning("TUI: set_sort_key(%s) failed: %s", sort_key, e)
+        if self._remote is not None:
+            try:
+                self._remote.set_sort(sort_key)
+            except RemoteError as e:
+                logger.info("TUI: the server did not take the sort %s: %s", sort_key, e)
+
+    def _follow_server_sort(self) -> None:
+        """Client mode: adopt the server's sort when it changes.
+
+        Another viewer (a Web UI, another client) may re-sort the server.
+        The pair is compared with the last one seen FROM THE SERVER, not with
+        the local key: a snapshot published before this client's own POST
+        landed still carries the old pair, and must not revert a key the user
+        has just pressed.
+        """
+        if self._remote is None:
+            return
+        payload = self.store.get("processcount", {})
+        key = payload.get("sort_key") if isinstance(payload, dict) else None
+        if not isinstance(key, str):
+            return  # an older server: the local sort stays the client's own
+        pair = (key, bool(payload.get("auto_sort")))
+        if pair == self._server_sort:
+            return
+        self._server_sort = pair
+        glances_processes.set_sort_key(key, pair[1])
 
     def _set_filter(self, pattern: str | None) -> None:
         """Apply a process filter, or clear it, and reset the summary memory.
@@ -1612,6 +1649,7 @@ class TuiV5(threading.Thread):
         Inside a fit (`_build_fitted_frame`) it is computed once and reused by
         every rebuild, as long as neither the store nor the sort changed.
         """
+        self._follow_server_sort()
         key = (
             getattr(self.store, "revision", None),
             getattr(glances_processes, "sort_key", None),

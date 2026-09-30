@@ -1384,3 +1384,58 @@ def test_history_requires_auth_when_password_is_set(config_factory, store):
         assert client.get("/api/5/fakehistscalar/history").status_code == 401
         ok = client.get("/api/5/fakehistscalar/history", headers=_basic_header("glances", "hunter2"))
     assert ok.status_code == 200
+
+
+# ------------------------------------------- the shared sort (2026-09-30)
+
+
+@pytest.fixture
+def sort_engine(monkeypatch):
+    """The process engine's sort state, isolated per test."""
+    from glances.processes import glances_processes
+
+    monkeypatch.setattr(glances_processes, "_sort_key", "cpu_percent", raising=False)
+    monkeypatch.setattr(glances_processes, "auto_sort", True, raising=False)
+    return glances_processes
+
+
+@pytest.mark.parametrize(
+    "key", ["cpu_percent", "memory_percent", "username", "cpu_times", "io_counters", "name", "cpu_num"]
+)
+def test_sorting_sets_a_manual_engine_key(sort_engine, config_factory, store, key):
+    """The same `set_sort_key(key, False)` the TUI's letter keys call."""
+    app = _make_app_with_plugins(config_factory(), store)
+    with TestClient(app) as client:
+        response = client.post(f"/api/5/processes/sort/{key}")
+    assert response.status_code == 200
+    assert response.json() is True
+    assert sort_engine.sort_key == key
+    assert sort_engine.auto_sort is False
+
+
+def test_sorting_auto_restores_the_automatic_sort(sort_engine, config_factory, store):
+    sort_engine.set_sort_key("name", False)
+    app = _make_app_with_plugins(config_factory(), store)
+    with TestClient(app) as client:
+        assert client.post("/api/5/processes/sort/auto").status_code == 200
+    assert sort_engine.auto_sort is True
+    assert sort_engine.sort_key == "cpu_percent"
+
+
+def test_an_unknown_sort_key_is_refused_and_changes_nothing(sort_engine, config_factory, store):
+    sort_engine.set_sort_key("name", False)
+    app = _make_app_with_plugins(config_factory(), store)
+    with TestClient(app) as client:
+        response = client.post("/api/5/processes/sort/pid")
+    assert response.status_code == 400
+    assert "memory_percent" in response.json()["detail"]
+    assert sort_engine.sort_key == "name"
+    assert sort_engine.auto_sort is False
+
+
+def test_sorting_requires_auth_when_a_password_is_set(sort_engine, config_factory, store):
+    app = _make_app_with_plugins(config_factory(password=hash_password("hunter2")), store)
+    with TestClient(app) as client:
+        response = client.post("/api/5/processes/sort/name")
+    assert response.status_code == 401
+    assert sort_engine.sort_key == "cpu_percent"

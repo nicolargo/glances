@@ -6,11 +6,11 @@
 				schema labels: the renderer hardcodes them too, and the vms schema
 				declares no short_name. -->
 				<th v-if="showEngine" class="gl-header">Engine</th>
-				<th class="gl-header">Name</th>
+				<th class="gl-header" v-bind="sortAttrs('Name')">Name</th>
 				<th class="gl-header gl-num">Status</th>
 				<th class="gl-header gl-num">Core</th>
-				<th class="gl-header gl-num">CPU%</th>
-				<th class="gl-header gl-num">MEM/MAX</th>
+				<th class="gl-header gl-num" v-bind="sortAttrs('CPU%')">CPU%</th>
+				<th class="gl-header gl-num" v-bind="sortAttrs('MEM/MAX')">MEM/MAX</th>
 				<th v-if="showLoad" class="gl-header gl-num">LOAD 1/5/15min</th>
 				<th class="gl-header">Release</th>
 			</tr>
@@ -51,6 +51,7 @@ import { levelClass } from "./levels.js";
 import { displayName } from "./rows.js";
 import CollectionBlock from "./CollectionBlock.vue";
 import { PLUGIN_PROPS } from "./plugin_props.js";
+import { VMS_HEADER_SORT_KEY, sortHeadersMixin } from "./sort_headers.js";
 
 const TITLE = "VMS";
 
@@ -68,6 +69,9 @@ const STATUS_TIER = {
 export default {
 	name: "PluginVms",
 	components: { CollectionBlock },
+	// The headers the TUI underlines (`_HEADER_SORT_FIELD`) are clickable: the
+	// VMs follow the one process sort key, server-side.
+	mixins: [sortHeadersMixin(VMS_HEADER_SORT_KEY)],
 	// The vertical row quota AppShell's refitVertical() pass allots this
 	// block (row_budget.js), handed down via provide()/inject -- same
 	// reasoning as PluginProcesslist.vue's own `rowBudget` inject

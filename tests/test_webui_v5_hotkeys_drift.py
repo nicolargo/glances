@@ -165,7 +165,42 @@ def test_the_help_overlay_documents_every_bound_key():
     )
     assert result.returncode == 0, result.stdout + result.stderr
     documented = sorted(json.loads(result.stdout))
-    assert documented == sorted([*_python_hide_table(), *_python_view_table()])
+    assert documented == sorted([*_python_hide_table(), *_python_view_table(), *_python_sort_table()])
+
+
+# ------------------------------------------ SORT PROCESSES (shared sort, 2026-09-30)
+
+
+def _python_sort_table() -> dict[str, dict[str, str]]:
+    """The TUI's SORT PROCESSES group: key -> {sort, desc}."""
+    return {key: {"sort": spec["sort"], "desc": spec["desc"]} for key, spec in TuiV5._HOTKEYS.items() if "sort" in spec}
+
+
+def _js_sort_table() -> dict[str, dict[str, str]]:
+    script = f"""
+    import('{_MODULE.as_posix()}').then((m) => process.stdout.write(JSON.stringify(m.SORT_KEYS)));
+    """
+    result = subprocess.run(
+        ["node", "--no-warnings", "--input-type=module", "-e", script],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    return json.loads(result.stdout)
+
+
+def test_the_js_copy_binds_the_same_sort_keys_to_the_same_engine_keys():
+    """A key bound to a different engine key would sort the browser by one
+    column while the terminal's help screen names another."""
+    assert _js_sort_table() == _python_sort_table()
+
+
+def test_every_sort_key_is_one_the_server_route_accepts():
+    from glances.routes_v5 import _SORT_KEYS
+
+    for key, entry in _js_sort_table().items():
+        assert entry["sort"] in _SORT_KEYS, key
 
 
 def test_the_startup_flags_press_the_same_keys_in_both_surfaces():

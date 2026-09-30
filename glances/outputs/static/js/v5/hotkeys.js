@@ -72,6 +72,28 @@ export const VIEW_KEYS = {
 	U: { desc: "Network and disk I/O rate or cumulative", flag: "network_cumul" }
 };
 
+// The SORT PROCESSES keys: the `sort` entries of `TuiV5._HOTKEYS`, same keys
+// and descriptions (the drift test compares both). Unlike the two groups above
+// they change SERVER state -- the engine's sort key, through
+// `POST /api/5/processes/sort/{key}` -- so they re-sort every viewer, as the
+// pin does (shared sort design, 2026-09-30).
+export const SORT_KEYS = {
+	a: { desc: "Automatically", sort: "auto" },
+	c: { desc: "By CPU consumption", sort: "cpu_percent" },
+	m: { desc: "By MEM consumption", sort: "memory_percent" },
+	i: { desc: "By disk I/O rate", sort: "io_counters" },
+	t: { desc: "By CPU time", sort: "cpu_times" },
+	p: { desc: "By process name", sort: "name" },
+	u: { desc: "By user name", sort: "username" },
+	o: { desc: "By CPU core number", sort: "cpu_num" }
+};
+
+/** The engine sort key `key` selects, or null when `key` is not a SORT key. */
+export function sortKeyFor(key) {
+	const entry = SORT_KEYS[key];
+	return entry ? entry.sort : null;
+}
+
 /** The view flag `key` flips, or null when `key` is not a TOGGLE VIEW key. */
 export function viewFlag(key) {
 	const entry = VIEW_KEYS[key];
@@ -155,6 +177,7 @@ export function startupHidden(serverArgs, plugins) {
 export function helpRows() {
 	const rows = (table, group) => Object.entries(table).map(([key, entry]) => ({ key, desc: entry.desc, group }));
 	return [
+		...rows(SORT_KEYS, "SORT PROCESSES"),
 		...rows(VIEW_KEYS, "TOGGLE VIEW"),
 		...rows(HIDE_KEYS, "SHOW/HIDE"),
 		...rows(HIDE_SLOT_KEYS, "SHOW/HIDE")

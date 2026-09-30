@@ -388,6 +388,20 @@ body {
   text-align: left;
 }
 
+/* The live sort column's header, underlined -- the TUI's 'SORT' decoration
+ * (`_header(..., underline=...)` in the processlist, programlist, containers
+ * and vms renderers). `.gl-sortable`: a header with an engine sort key, which
+ * sorts every one of those blocks on click (js/v5/sort_headers.js). */
+.gl-table th.gl-sorted {
+  text-decoration: underline;
+}
+.gl-table th.gl-sortable {
+  cursor: pointer;
+}
+.gl-table th.gl-sortable:hover {
+  color: var(--gl-fg);
+}
+
 /* `.gl-table { width: 100% }` above equalises the LEFT column's blocks, which
  * is what it was introduced for. In the RIGHT column the slot is the body
  * grid's `1fr`, so that same rule spread the width across whatever columns the

@@ -2489,13 +2489,11 @@ def test_processcount_omits_the_counter_in_the_programs_view_even_when_cut():
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
 def test_processcount_sort_indicator_reads_threads_in_the_default_view():
-    """`_sort_indicator_cell` (processcount/render_curses_v5.py:58-70):
-    `serverArgs.sort_processes_key` is the only half of its input the
-    browser can honestly read (see PluginProcesscount.vue's
-    `sortIndicatorText` comment for why `auto_sort` is not reproduced) --
-    when a key WAS passed on the CLI, main_v5.py:423-424 always applies it
-    with `auto=False`, so "sorted by X", never "automatically", is always
-    correct in that case."""
+    """`_sort_indicator_cell` (processcount/render_curses_v5.py:58-70), for a
+    server that does not publish the live key (the fixture's `processcount`
+    carries no `sort_key`): the `--sort-processes` startup key is the
+    fallback, and main_v5.py always applies it with `auto=False`, so "sorted
+    by X", never "automatically", is correct in that case."""
     payload = _run_render_probe("processcount-sorted-threads")
     text = " ".join((payload["pluginText"].get("processcount") or "").split())
     assert "Threads sorted by CPU consumption" in text, f"got {text!r}"
@@ -4131,10 +4129,11 @@ def test_the_help_overlay_renders_every_bound_key():
     bound = {
         key: spec["desc"]
         for key, spec in TuiV5._HOTKEYS.items()
-        if "hide" in spec or spec.get("group") == "TOGGLE VIEW"
+        if "hide" in spec or "sort" in spec or spec.get("group") == "TOGGLE VIEW"
     }
-    # One row per bound key (24 SHOW/HIDE + 12 TOGGLE VIEW), plus `h` itself.
-    assert len(rendered) == len(bound) + 1 == 37
+    # One row per bound key (24 SHOW/HIDE + 12 TOGGLE VIEW + 8 SORT
+    # PROCESSES), plus `h` itself.
+    assert len(rendered) == len(bound) + 1 == 45
 
     joined = " ".join(rendered)
     for key, desc in bound.items():
@@ -4568,3 +4567,69 @@ def test_key_0_divides_the_program_cpu_too():
     after = _run_render_probe("programlist", "0")
     assert after["pluginHeaderCells"]["programlist"][0] == "CPU%/4"
     assert after["pluginTableCells"]["programlist"][0]["text"] == "19.6%"
+
+
+# ------------------------------------------------- shared sort (2026-09-30)
+
+
+def _sorted_headers(payload: dict, plugin: str) -> list[str]:
+    headers = payload["pluginColumnHeaders"][plugin]
+    classes = payload["pluginColumnClasses"][plugin]
+    return [h.strip() for h, cls in zip(headers, classes) if "gl-sorted" in cls.split()]
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_processlist_underlines_the_live_key_not_the_startup_one():
+    """`processcount` publishes the key the engine sorted with (`name`); the
+    `--sort-processes` startup key (`cpu_percent`) is only the fallback."""
+    payload = _run_render_probe("processlist-sorted-live")
+    assert _sorted_headers(payload, "processlist") == ["Command"]
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_processlist_marks_only_the_headers_with_an_engine_key_as_clickable():
+    payload = _run_render_probe("processlist-sorted-live")
+    headers = [h.strip() for h in payload["pluginColumnHeaders"]["processlist"]]
+    classes = payload["pluginColumnClasses"]["processlist"]
+    sortable = {h for h, cls in zip(headers, classes) if "gl-sortable" in cls.split()}
+    expected = {"CPU%", "MEM%", "USER", "TIME+", "R/s", "W/s", "Command"} & set(headers)
+    assert sortable == expected, f"got {sortable!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_processcount_indicator_says_automatically_when_the_engine_does():
+    """`_sort_indicator_cell` (processcount/render_curses_v5.py): the live
+    `auto_sort` flag is what adds `automatically` (divergence #4, closed)."""
+    payload = _run_render_probe("processcount-live-auto")
+    text = " ".join((payload["pluginText"].get("processcount") or "").split())
+    assert "Threads sorted automatically by CPU consumption" in text, f"got {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_processcount_indicator_follows_a_live_manual_key():
+    payload = _run_render_probe("processcount-live-manual")
+    text = " ".join((payload["pluginText"].get("processcount") or "").split())
+    assert "Threads sorted by disk IO" in text, f"got {text!r}"
+    assert "automatically" not in text, f"got {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_containers_underline_the_live_process_key():
+    """containers/render_curses_v5.py `_HEADER_SORT_KEY`: MEM <-> memory_percent."""
+    payload = _run_render_probe("containers-sorted-live")
+    assert _sorted_headers(payload, "containers") == ["MEM"]
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_vms_underline_the_live_process_key():
+    """vms/render_curses_v5.py `_HEADER_SORT_FIELD`: Name <-> name."""
+    payload = _run_render_probe("vms-sorted-live")
+    assert _sorted_headers(payload, "vms") == ["Name"]
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_a_sort_key_posts_to_the_sort_route():
+    """`m` -> the TUI's own binding, sent to the server rather than applied
+    locally: the sort is the server's, shared by every viewer."""
+    payload = _run_render_probe("processlist", keys="m,a")
+    assert payload["posts"] == ["api/5/processes/sort/memory_percent", "api/5/processes/sort/auto"]
