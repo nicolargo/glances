@@ -68,15 +68,19 @@ class NotFound(RemoteError):
     """The server answered 404: a route it does not serve (alerts disabled, unknown pid)."""
 
 
-def parse_target(target: str) -> tuple[str, str]:
-    """`host`, `host:port`, `[v6]:port` or an `http(s)://` URL -> (base URL, host)."""
+def parse_target(target: str, default_port: int = DEFAULT_PORT) -> tuple[str, str]:
+    """`host`, `host:port`, `[v6]:port` or an `http(s)://` URL -> (base URL, host).
+
+    `default_port` applies when the target names none (`-c host --port N`);
+    a port written in the target wins.
+    """
     if "://" not in target:
         target = f"http://{target}"
     parts = urlsplit(target)
     if parts.scheme not in ("http", "https") or not parts.hostname:
         raise ValueError(f"not a server address: {target!r}")
     host = parts.hostname
-    port = parts.port or DEFAULT_PORT
+    port = parts.port or default_port
     netloc = f"[{host}]:{port}" if ":" in host else f"{host}:{port}"
     return f"{parts.scheme}://{netloc}{parts.path.rstrip('/')}", host
 

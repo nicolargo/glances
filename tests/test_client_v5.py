@@ -826,3 +826,37 @@ def test_run_client_reads_passwords_from_a_real_config(tmp_path, monkeypatch):
     args = main_v5.build_parser().parse_args(["-c", "srv"])
     assert main_v5.run_client(args, GlancesConfigV5(str(conf))) == 0
     assert seen == ["pw"]
+
+
+# ------------------------------------------------ -c honours --port
+
+
+def test_parse_target_takes_the_default_port_it_is_given():
+    assert parse_target("myhost", 9000) == ("http://myhost:9000", "myhost")
+    # A port written in the target wins: it is the more specific of the two.
+    assert parse_target("myhost:1234", 9000) == ("http://myhost:1234", "myhost")
+    assert parse_target("http://[::1]", 9000) == ("http://[::1]:9000", "::1")
+
+
+@pytest.mark.parametrize(
+    ("argv", "expected"),
+    [
+        (["-c", "srv", "--port", "61299"], "http://srv:61299"),
+        (["-c", "srv", "-p", "61299"], "http://srv:61299"),
+        (["-c", "srv:1234", "--port", "61299"], "http://srv:1234"),
+        (["-c", "srv"], "http://srv:61208"),
+    ],
+)
+def test_run_client_connects_to_the_port_given_with_port(tmp_path, monkeypatch, argv, expected):
+    """`-c host --port N` used to ignore N and connect to 61208."""
+    from glances import main_v5
+    from glances.config_v5 import GlancesConfigV5
+
+    monkeypatch.setattr(GlancesConfigV5, "SYSTEM_CONFIG_PATH", tmp_path / "none.conf")
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+    seen = []
+    monkeypatch.setattr(
+        main_v5, "open_client", lambda args, config, target, user, password: seen.append(parse_target(target)[0])
+    )
+    assert main_v5.run_client(main_v5.build_parser().parse_args(argv), GlancesConfigV5()) == 0
+    assert seen == [expected]

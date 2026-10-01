@@ -168,7 +168,7 @@ def build_parser() -> argparse.ArgumentParser:
         dest="port",
         type=int,
         metavar="<n>",
-        help="Listening port (overrides [outputs] port; default 61208).",
+        help="Listening port (overrides [outputs] port; default 61208). With --client: the server's port.",
     )
     parser.add_argument(
         "--api-doc",
@@ -205,7 +205,10 @@ def build_parser() -> argparse.ArgumentParser:
         dest="client",
         default=None,
         metavar="<server>",
-        help="Show a remote Glances v5 server in the TUI: host, host:port or an http(s):// URL (default port 61208).",
+        help=(
+            "Show a remote Glances v5 server in the TUI: host, host:port or an http(s):// URL "
+            "(default port: --port, else 61208)."
+        ),
     )
     parser.add_argument(
         "-u",
@@ -1390,10 +1393,12 @@ def run_client(args: argparse.Namespace, config: GlancesConfigV5) -> int:
     message, before the TUI starts. An unreachable server is not (§6): the TUI
     starts, says "Disconnected from <host>", and the client keeps trying.
     """
-    from glances.client_v5 import parse_target
+    from glances.client_v5 import DEFAULT_PORT, parse_target
 
     try:
-        host = parse_target(args.client)[1]
+        # `--port` is the server's port when the target names none, as in v4
+        # (`glances -c host -p N`). The base URL carries it from here on.
+        target, host = parse_target(args.client, args.port or DEFAULT_PORT)
     except ValueError as e:
         build_parser().error(f"--client: {e}")
     username = args.username or "glances"
@@ -1402,7 +1407,7 @@ def run_client(args: argparse.Namespace, config: GlancesConfigV5) -> int:
     else:
         # v4 `[passwords]`: a per-host entry, else `default`.
         password = config.get_value("passwords", host) or config.get_value("passwords", "default")
-    error = open_client(args, config, args.client, username, password or None)
+    error = open_client(args, config, target, username, password or None)
     if error is not None:
         logger.critical("%s", error)
         print(f"glances-v5: {error}", file=sys.stderr)
