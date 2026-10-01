@@ -603,6 +603,7 @@ function collect() {
 		// per `<li>`. [] when the overlay is closed, which is itself an
 		// assertion a test makes.
 		helpRows: [],
+		helpGroups: [],
 		// The footer's items, in order, skipping the aria-hidden separators.
 		footerAbout: [],
 		// Full textContent of each rendered <article class="gl-plugin">, keyed
@@ -748,6 +749,7 @@ function collect() {
 			const help = findDescendantByClass(first, "gl-help-list");
 			if (help) {
 				result.helpRows = findAllByTag(help, "LI").map((li) => li.textContent.replace(/\s+/g, " ").trim());
+				result.helpGroups = findAllByTag(help, "H3").map((h3) => h3.textContent.trim());
 			}
 			const header = findDescendantTag(first, "HEADER");
 			const footer = findDescendantTag(first, "FOOTER");
