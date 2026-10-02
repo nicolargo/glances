@@ -5,7 +5,7 @@
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 
-"""LXD Extension unit for Glances' Containers plugin."""
+"""LXD Engine Monitoring unit for Glances' Containers plugin."""
 
 import threading
 import time
@@ -14,6 +14,7 @@ from typing import Any
 
 import psutil
 
+from glances.config import secure_option
 from glances.globals import nativestr, pretty_date
 from glances.logger import logger
 
@@ -191,20 +192,22 @@ class LxdStatsFetcher:
         return stats
 
 
-class LxdExtension:
-    """Glances' Containers Plugin's LXD Extension unit"""
+class LxdEngineMonitor:
+    """Glances' Containers Plugin's LXD Engine Monitoring unit"""
 
+    ENGINE = "lxd"
     CONTAINER_ACTIVE_STATUS = ['Running']
 
-    def __init__(self, endpoint=None, poll_interval=2):
+    def __init__(self, url: str | None = None, poll_interval: int = 2):
         self.disable = disable_plugin_lxd
         if self.disable:
-            raise Exception("Missing libs required to run LXD Extension (Containers)")
+            raise Exception("Missing libs required to run LxdEngineMonitor (Containers)")
 
         self.display_error = True
         self.client = None
         self.ext_name = "containers (LXD)"
-        self.endpoint = endpoint
+        self.url = url
+        self.engine_url = secure_option('url', self.url)
         self.poll_interval = poll_interval
         self.stats_fetchers = {}
         self.local_node = None
@@ -214,10 +217,7 @@ class LxdExtension:
     def connect(self) -> None:
         """Connect to the LXD server."""
         try:
-            if self.endpoint:
-                self.client = LxdClient(endpoint=self.endpoint)
-            else:
-                self.client = LxdClient()
+            self.client = LxdClient(endpoint=self.url) if self.url else LxdClient()
             # Verify connectivity
             self.client.has_api_extension('instances')
             # In a cluster, determine local member name so we can filter to instances
@@ -290,6 +290,8 @@ class LxdExtension:
     def generate_stats(self, instance) -> dict[str, Any]:
         stats = {
             'key': self.key,
+            "engine": self.ENGINE,
+            'engine_url': self.engine_url,
             'name': nativestr(instance.name),
             'id': instance.name,
             'image': instance.config.get('image.description', ''),

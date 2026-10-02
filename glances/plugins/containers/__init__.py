@@ -10,15 +10,14 @@
 
 from copy import deepcopy
 from functools import partial, reduce
-from itertools import chain
 from typing import Any
 
 from glances.globals import nativestr
 from glances.logger import logger
-from glances.plugins.containers.engines import ContainersExtension
-from glances.plugins.containers.engines.docker import DockerExtension, disable_plugin_docker
-from glances.plugins.containers.engines.lxd import LxdExtension, disable_plugin_lxd
-from glances.plugins.containers.engines.podman import PodmanExtension, disable_plugin_podman
+from glances.plugins.containers.engines import ContainerEngineMonitor
+from glances.plugins.containers.engines.docker import DockerEngineMonitor, disable_plugin_docker
+from glances.plugins.containers.engines.lxd import LxdEngineMonitor, disable_plugin_lxd
+from glances.plugins.containers.engines.podman import PodmanEngineMonitor, disable_plugin_podman
 from glances.plugins.plugin.model import GlancesPluginModel
 from glances.processes import glances_processes
 from glances.processes import sort_stats as sort_stats_processes
@@ -93,6 +92,9 @@ fields_description = {
     'engine': {
         'description': 'Container engine (Docker, Podman, and LXD are currently supported)',
     },
+    'engine_url': {
+        'description': 'Container engine base URL / socket endpoint (credentials are hidden)',
+    },
     'pod_name': {
         'description': 'Pod name (only with Podman)',
     },
@@ -163,19 +165,40 @@ class ContainersPlugin(GlancesPluginModel):
         # We want to display the stat in the curse interface
         self.display_curse = True
 
-        self.watchers: dict[str, ContainersExtension] = {}
+        self.monitors: list[ContainerEngineMonitor] = []
 
         # Init the Docker API
         if not disable_plugin_docker:
-            self.watchers['docker'] = DockerExtension()
+            docker_urls = self._parse_urls('docker_urls')
+            if docker_urls is None:
+                self.monitors.append(DockerEngineMonitor())
+            elif docker_urls:
+                for url in docker_urls:
+                    self.monitors.append(DockerEngineMonitor(url=url))
+            else:
+                logger.debug("containers plugin - Docker engine monitor disabled via configuration")
 
         # Init the Podman API
         if not disable_plugin_podman:
-            self.watchers['podman'] = PodmanExtension(podman_sock=self._podman_sock())
+            podman_urls = self._parse_urls('podman_urls')
+            if podman_urls is None:
+                self.monitors.append(PodmanEngineMonitor(url=self._podman_sock()))
+            elif podman_urls:
+                for url in podman_urls:
+                    self.monitors.append(PodmanEngineMonitor(url=url))
+            else:
+                logger.debug("containers plugin - Podman engine monitor disabled via configuration")
 
         # Init the LXD API
         if not disable_plugin_lxd:
-            self.watchers['lxd'] = LxdExtension(poll_interval=self.get_refresh())
+            lxd_urls = self._parse_urls('lxd_urls')
+            if lxd_urls is None:
+                self.monitors.append(LxdEngineMonitor(poll_interval=self.get_refresh()))
+            elif lxd_urls:
+                for url in lxd_urls:
+                    self.monitors.append(LxdEngineMonitor(url=url, poll_interval=self.get_refresh()))
+            else:
+                logger.debug("containers plugin - LXD engine monitor disabled via configuration")
 
         # Sort key
         self.sort_key = None
@@ -187,9 +210,18 @@ class ContainersPlugin(GlancesPluginModel):
         self.update()
         self.refresh_timer.set(0)
 
+    def _parse_urls(self, key: str) -> list[str] | None:
+        """Returns a list of configured URLs, or None if the option is not present in config or set empty"""
+        raw = self.get_conf_value(key, default=None)
+        if raw is None:
+            return None
+
+        return [url.strip("'\"") for url in raw if url.strip("'\"")]
+
+    # TODO: To be removed from the next major version of glances
     def _podman_sock(self) -> str:
         """Return the podman sock.
-        Could be desfined in the [docker] section thanks to the podman_sock option.
+        Could be defined in the [docker] section thanks to the podman_sock option.
         Default value: unix:///run/user/1000/podman/podman.sock
         """
         conf_podman_sock = self.get_conf_value('podman_sock')
@@ -199,8 +231,8 @@ class ContainersPlugin(GlancesPluginModel):
 
     def exit(self) -> None:
         """Overwrite the exit method to close threads."""
-        for watcher in self.watchers.values():
-            watcher.stop()
+        for m in self.monitors:
+            m.stop()
 
         # Call the father class
         super().exit()
@@ -218,7 +250,7 @@ class ContainersPlugin(GlancesPluginModel):
         try:
             ret = deepcopy(self.stats)
         except KeyError as e:
-            logger.debug(f"docker plugin - Docker export error {e}")
+            logger.debug(f"containers plugin - Export error: {e}")
             ret = []
 
         # Remove fields uses to compute rate
@@ -245,7 +277,7 @@ class ContainersPlugin(GlancesPluginModel):
     def update(self) -> list[dict]:
         """Update Docker and podman stats using the input method."""
         # Connection should be ok
-        if not self.watchers:
+        if not self.monitors:
             return self.get_init_value()
 
         if self.input_method != 'local':
@@ -254,24 +286,11 @@ class ContainersPlugin(GlancesPluginModel):
         def is_key_in_container_and_hidden(container):
             return (key := container.get('key')) in container and self.is_hide(nativestr(container.get(key)))
 
-        def add_engine_into_container(engine, container):
-            return container | {"engine": engine}
-
-        def get_containers_from_updated_watcher(watcher):
-            _, containers = watcher.update(all_tag=self._all_tag())
-            return containers
-
         # Update stats
-        stats = list(
-            chain.from_iterable(
-                (
-                    add_engine_into_container(engine, container)
-                    for container in get_containers_from_updated_watcher(watcher)
-                    if not is_key_in_container_and_hidden(container)
-                )
-                for engine, watcher in self.watchers.items()
-            )
-        )
+        stats = []
+        for monitor in self.monitors:
+            _, containers = monitor.update(all_tag=self._all_tag())
+            stats.extend(container for container in containers if not is_key_in_container_and_hidden(container))
 
         # Sort and update the stats
         # @TODO: Have a look because sort did not work for the moment (need memory stats ?)
