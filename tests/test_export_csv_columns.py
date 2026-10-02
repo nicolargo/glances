@@ -37,9 +37,10 @@ def test_csv_columns_remain_aligned_when_interfaces_change(tmp_path):
 
     with path.open(newline='') as file:
         rows = list(csv.reader(file))
-    assert all(len(row) == len(rows[0]) for row in rows[1:])
+    # Pytest regression assertions are not runtime security checks.
+    assert all(len(row) == len(rows[0]) for row in rows[1:])  # nosec B101
     counter = rows[0].index('network.z0.bytes_recv')
-    assert [row[counter] for row in rows[1:]] == ['10', '20', '']
+    assert [row[counter] for row in rows[1:]] == ['10', '20', '']  # nosec B101
 
 
 @pytest.mark.parametrize('compatible', [True, False])
@@ -62,7 +63,7 @@ def test_existing_header_compatibility_is_preserved(tmp_path, compatible):
     if compatible:
         with path.open(newline='') as file:
             rows = list(csv.reader(file))
-        assert len(rows) == 3
-        assert rows[-1][1] == '2'
+        assert len(rows) == 3  # nosec B101
+        assert rows[-1][1] == '2'  # nosec B101
     else:
-        assert path.read_bytes() == original
+        assert path.read_bytes() == original  # nosec B101
