@@ -20,7 +20,8 @@ def test_invalid_response_preserves_last_public_info(monkeypatch, payload):
 
     worker.run()
 
-    assert worker.public_info == {'ip': '192.0.2.1'}
+    # Pytest regression assertions are not runtime security checks.
+    assert worker.public_info == {'ip': '192.0.2.1'}  # nosec B101
 
 
 def test_valid_response_updates_public_info(monkeypatch):
@@ -30,4 +31,4 @@ def test_valid_response_updates_public_info(monkeypatch):
 
     worker.run()
 
-    assert worker.public_info == {'ip': '192.0.2.2'}
+    assert worker.public_info == {'ip': '192.0.2.2'}  # nosec B101
