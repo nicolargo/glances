@@ -295,8 +295,10 @@ class ContainersPlugin(GlancesPluginModel):
         # Add specifics information
         # Alert
         for i in self.stats:
-            # Init the views for the current container (key = container name)
-            self.views[i[self.get_key()]] = {'cpu': {}, 'mem': {}}
+            # Init the views for the current container (key = container name).
+            # A container without stats (e.g. restarting) keeps the DEFAULT
+            # decoration, both front ends expect one.
+            self.views[i[self.get_key()]] = {'cpu': {'decoration': 'DEFAULT'}, 'mem': {'decoration': 'DEFAULT'}}
             # CPU alert
             if 'cpu' in i and 'total' in i['cpu']:
                 # Looking for specific CPU container threshold in the conf file
