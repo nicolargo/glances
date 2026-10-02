@@ -220,3 +220,17 @@ def test_the_startup_flags_press_the_same_keys_in_both_surfaces():
     assert result.returncode == 0, result.stdout + result.stderr
     js = json.loads(result.stdout)
     assert js == {flag: list(keys) for flag, keys in STARTUP_HIDE_KEYS.items()}
+
+
+def test_the_help_overlay_links_the_same_documentation():
+    script = f"""
+    import('{_MODULE.as_posix()}').then((m) => process.stdout.write(m.HELP_DOC_URL));
+    """
+    result = subprocess.run(
+        ["node", "--no-warnings", "--input-type=module", "-e", script],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert result.stdout == TuiV5._HELP_DOC_URL

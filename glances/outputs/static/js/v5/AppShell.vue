@@ -125,6 +125,33 @@
 						</ul>
 					</section>
 				</div>
+				<!-- Under the keys, as in the TUI (`_help_visual_rows`): the doc
+				link, then the colour legend drawn with the classes the plugins
+				use, so each sample is exactly what it explains. -->
+				<div class="gl-help-extra">
+					<p>
+						For an exhaustive list of key bindings:
+						<a :href="helpDocUrl" target="_blank" rel="noopener noreferrer">{{ helpDocUrl }}</a>
+					</p>
+					<h3 class="gl-header">Color binding:</h3>
+					<ul class="gl-help-legend">
+						<li>
+							<span v-for="level in helpLevels" :key="level" :class="'gl-level-' + level">{{ level.toUpperCase() }}</span>
+							<span>= stat severity (vs thresholds)</span>
+						</li>
+						<li>
+							<span v-for="level in helpLevels" :key="level" :class="['gl-prominent', 'gl-level-' + level]">{{
+								level.toUpperCase()
+							}}</span>
+							<span>= same, highlighted: an event is ongoing</span>
+						</li>
+						<li>
+							<span class="gl-header">Title</span>
+							<span class="gl-header gl-help-sorted">Sort</span>
+							<span>= section title / active sort column</span>
+						</li>
+					</ul>
+				</div>
 			</div>
 		</div>
 	</main>
@@ -139,7 +166,7 @@ import { visiblePlugins, groupBySlot } from "./layout.js";
 import { PLUGINS } from "./plugins/index.js";
 import { resolveDegrade, sameFlags, TOP_CASCADE, HEADER_CASCADE } from "./degrade.js";
 import { FULL_QUICKLOOK_HIDDEN } from "./full_quicklook.js";
-import { hideTargets, toggleHidden, helpRows, viewFlag, sortKeyFor, startupHidden, HELP_KEY } from "./hotkeys.js";
+import { hideTargets, toggleHidden, helpRows, viewFlag, sortKeyFor, startupHidden, HELP_KEY, HELP_DOC_URL } from "./hotkeys.js";
 import { planRightColumn } from "./row_budget.js";
 import { ampsLineCount } from "./amps.js";
 
@@ -405,6 +432,12 @@ export default {
 		// requires empty slots to render nothing.
 		zones() {
 			return ZONES;
+		},
+		helpDocUrl() {
+			return HELP_DOC_URL;
+		},
+		helpLevels() {
+			return ["ok", "careful", "warning", "critical"];
 		},
 		// helpRows() grouped in its own order, plus MISCELLANEOUS for `h`.
 		helpGroups() {
@@ -1334,6 +1367,9 @@ export default {
 .gl-help-group {
 	margin-bottom: calc(var(--gl-row) * 1em);
 }
+.gl-help-group:last-child {
+	margin-bottom: 0;
+}
 .gl-help-group h3 {
 	margin: 0;
 	font-size: inherit;
@@ -1358,6 +1394,38 @@ export default {
 	font-weight: var(--gl-weight-bold);
 	text-align: right;
 	padding-right: calc(2 * var(--gl-col));
+}
+/* A row's gap under the columns: the last section's own margin is swallowed
+ * by its column. */
+.gl-help-extra {
+	margin-top: calc(var(--gl-row) * 1em);
+}
+.gl-help-extra p {
+	margin: 0 0 calc(var(--gl-row) * 1em);
+}
+/* The TUI paints this link CAREFUL and underlined. */
+.gl-help-extra a {
+	color: var(--gl-level-careful);
+	overflow-wrap: anywhere;
+}
+.gl-help-extra h3 {
+	margin: 0;
+	font-size: inherit;
+}
+.gl-help-legend {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+.gl-help-legend li {
+	display: flex;
+	flex-wrap: wrap;
+	column-gap: var(--gl-col);
+	line-height: var(--gl-row);
+}
+/* The active sort column's decoration, `.gl-table th.gl-sorted`. */
+.gl-help-sorted {
+	text-decoration: underline;
 }
 
 /* The -/+ steppers: text, not chrome. No border, no background, the same
