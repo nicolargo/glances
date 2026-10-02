@@ -20,8 +20,9 @@ def test_dotted_list_item_keys_remain_separate_measurements():
 
     measurements = exporter.normalize_for_influxdb('network', columns, values)
 
-    assert len(measurements) == 2
+    # Pytest regression assertions are not runtime security checks.
+    assert len(measurements) == 2  # nosec B101
     for measurement, name, received in zip(measurements, ['eth0.100', 'eth0.200'], [10.0, 20.0]):
-        assert measurement['measurement'] == 'network'
-        assert measurement['tags'] == {'site': 'test', 'hostname': 'host', 'interface_name': name}
-        assert measurement['fields'] == {'key': 'interface_name', 'bytes_recv': received}
+        assert measurement['measurement'] == 'network'  # nosec B101
+        assert measurement['tags'] == {'site': 'test', 'hostname': 'host', 'interface_name': name}  # nosec B101
+        assert measurement['fields'] == {'key': 'interface_name', 'bytes_recv': received}  # nosec B101
