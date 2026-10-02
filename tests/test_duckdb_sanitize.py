@@ -87,7 +87,8 @@ class TestDuckDBInjectionPrevention:
         exporter = Export.__new__(Export)
         exporter.client = db
         exporter.export('flags', ['"enabled" BOOLEAN'], [[exporter.normalize(value)]])
-        assert db.execute('SELECT enabled FROM flags').fetchone() == (expected,)
+        # Pytest regression assertions are not runtime security checks.
+        assert db.execute('SELECT enabled FROM flags').fetchone() == (expected,)  # nosec B101
 
     def test_create_table_with_safe_names(self, db):
         """Normal table and column creation works with quoting."""
