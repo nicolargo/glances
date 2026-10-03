@@ -113,3 +113,18 @@ export function pinnedTitle(payload) {
 	if (Array.isArray(payload.cmdline) && payload.cmdline.length) return payload.cmdline.join(" ");
 	return String(payload.name || "?");
 }
+
+/**
+ * A pin the browser has asked for but the server has not published yet, or
+ * null once it no longer needs showing: the payload's `extended` names it
+ * (confirmed), or the process left the list (it will never be).
+ *
+ * The pending pin is what lets the "Pinned task:" line appear on the click
+ * itself, before the server's next cycle carries the extended stats.
+ */
+export function settlePendingPin(pending, payload) {
+	if (!pending) return null;
+	if (payload?.extended?.pid === pending.pid) return null;
+	if (Array.isArray(payload?.data) && !payload.data.some((item) => item?.pid === pending.pid)) return null;
+	return pending;
+}

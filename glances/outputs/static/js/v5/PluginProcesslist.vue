@@ -14,13 +14,13 @@
 			of this version describe a pinned process identically
 			(process_extended.js, held to the Python by
 			tests/test_webui_v5_extended_drift.py). -->
-			<div v-if="extended" class="gl-pinned">
+			<div v-if="pinned" class="gl-pinned">
 				<div class="gl-pinned-head">
 					<span class="gl-header">Pinned task:</span>
-					<span class="gl-truncate" :title="pinnedTitle(extended)">{{ pinnedTitle(extended) }}</span>
+					<span class="gl-truncate" :title="pinnedTitle(pinned)">{{ pinnedTitle(pinned) }}</span>
 					<button type="button" class="gl-pin-button" @click="unpin">Unpin</button>
 				</div>
-				<div v-for="(line, i) in extendedLines(extended)" :key="i" class="gl-pinned-line">
+				<div v-for="(line, i) in pendingPin ? [] : extendedLines(extended)" :key="i" class="gl-pinned-line">
 					<span v-for="(seg, j) in line" :key="j" :class="{ 'gl-level-ok': seg.value, 'gl-pinned-sep': seg.sep }">{{ seg.text }}</span>
 				</div>
 			</div>
@@ -135,7 +135,7 @@ import { processBlockMixin } from "./process_block.js";
 import { FIXED_COL_KEYS, WEBUI_COL_WIDTHS } from "./process_widths.js";
 // The `e` block's segments, shared with the terminal renderer through a drift
 // test rather than through a second hand-written copy.
-import { extendedLines, pinnedTitle } from "./process_extended.js";
+import { extendedLines, pinnedTitle, settlePendingPin } from "./process_extended.js";
 import { postJson } from "./api.js";
 import { HEADER_SORT_KEY } from "./process_shared.js";
 import { sortHeadersMixin } from "./sort_headers.js";
@@ -160,6 +160,11 @@ export default {
 	// `degrade` is declared and left unused: this block owns its own width
 	// cascade, not the shell's zone-level one.
 	props: { ...PLUGIN_PROPS },
+	data() {
+		// The row just clicked, shown as the "Pinned task:" line until the
+		// server publishes its extended stats (settlePendingPin()).
+		return { pendingPin: null };
+	},
 	computed: {
 		TITLE: () => TITLE,
 		// The cascade the fit mixin resolves: the TUI's drop order, as steps. A
@@ -184,12 +189,18 @@ export default {
 			const payload = this.payload;
 			return payload && payload.extended ? payload.extended : null;
 		},
+		// What the "Pinned task:" line names: the click, until the server
+		// confirms it, then the server's pin.
+		pinned() {
+			return this.pendingPin || this.extended;
+		},
 	},
 	watch: {
 		// A new process, a longer command line or a wider PID changes the natural
 		// width, so the cascade must be re-resolved -- the ResizeObserver does not
 		// fire when only the CONTENT changes.
 		payload() {
+			this.pendingPin = settlePendingPin(this.pendingPin, this.payload);
 			this.fitBlock().catch(() => {});
 		},
 	},
@@ -200,22 +211,28 @@ export default {
 		extendedLines,
 		pinnedTitle,
 		isPinned(item) {
-			return !!this.extended && this.extended.pid === item.pid;
+			return !!this.pinned && this.pinned.pid === item.pid;
 		},
 		// Clicking the pinned row again unpins it: the affordance is one
 		// gesture, and a row you cannot un-click is a trap.
 		pin(item) {
-			const path = this.isPinned(item)
-				? "api/5/processes/extended/disable"
-				: `api/5/processes/extended/${item.pid}`;
-			// No optimistic update and no `$forceUpdate` (v4 does both): a
-			// poll forced once the POST is accepted re-reads the payload from
-			// the server, which is where the pin actually lives. A failed POST
-			// therefore leaves the UI showing the truth rather than a pin that
-			// was never set.
-			postJson(path).then(() => this.refreshNow()).catch(() => {});
+			if (this.isPinned(item)) {
+				this.unpin();
+				return;
+			}
+			// The title line shows at once, from the clicked row; the extended
+			// lines follow once the server has collected them. A failed POST
+			// drops it again, so the UI never keeps a pin that was not set.
+			const pending = { pid: item.pid, name: item.name, cmdline: item.cmdline };
+			this.pendingPin = pending;
+			postJson(`api/5/processes/extended/${item.pid}`)
+				.then(() => this.refreshNow())
+				.catch(() => {
+					if (this.pendingPin === pending) this.pendingPin = null;
+				});
 		},
 		unpin() {
+			this.pendingPin = null;
 			postJson("api/5/processes/extended/disable").then(() => this.refreshNow()).catch(() => {});
 		},
 	},

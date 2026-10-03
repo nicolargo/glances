@@ -6,6 +6,7 @@ import {
 	extendedLines,
 	ioniceText,
 	pinnedTitle,
+	settlePendingPin,
 } from "../../glances/outputs/static/js/v5/process_extended.js";
 
 // The shape the live engine publishes (verified in
@@ -126,4 +127,17 @@ test("the title is the command line with its arguments, as the terminal titles i
 	assert.equal(pinnedTitle({ name: "kthreadd" }), "kthreadd");
 	assert.equal(pinnedTitle({}), "?");
 	assert.equal(pinnedTitle(null), "?");
+});
+
+test("settlePendingPin keeps a click until the server publishes it", () => {
+	const pending = { pid: 7, name: "hot" };
+	assert.equal(settlePendingPin(null, { data: [] }), null);
+	assert.equal(settlePendingPin(pending, null), pending);
+	// The server still shows the previous pin (or none): keep waiting.
+	assert.equal(settlePendingPin(pending, { data: [{ pid: 7 }], extended: { pid: 3 } }), pending);
+	assert.equal(settlePendingPin(pending, { data: [{ pid: 7 }] }), pending);
+	// Confirmed: the server's own block takes over.
+	assert.equal(settlePendingPin(pending, { data: [{ pid: 7 }], extended: { pid: 7 } }), null);
+	// The process left the list: the pin will never come.
+	assert.equal(settlePendingPin(pending, { data: [{ pid: 3 }] }), null);
 });
