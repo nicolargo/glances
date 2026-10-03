@@ -32,9 +32,16 @@ Les fonctions paramétrées comptent pour une. Le détail par test suit, groupe 
 
 ## Portage — fait le 2026-10-03
 
-Les 108 tests PORT sont portés (commits `9e2ddc8` et suivant), sauf les scripts
-`tests/test_export_*.sh`, débloqués par `f18b64a` (`--stop-after` sous `--quiet`)
-mais pas encore réécrits pour `glances-v5`. Aucun portage n'a révélé de bug v5 ;
+Les 108 tests PORT sont portés (commits `9e2ddc8` et suivants). Les 9 scripts
+`tests/test_export_*.sh` ont leur copie `tests/test_export_*_v5.sh`, qui lance
+`glances.main_v5` (`make test-exports-v5`, les 9 exécutés avec Docker le
+2026-10-03). Trois attendus changent, parce que la v5 exporte aussi le premier
+cycle, sans les champs encore vides, là où la v4 le sautait : 10 cycles donnent
+10 points CPU (InfluxDB v1 et v3, TimescaleDB, ClickHouse) au lieu de 9. Le CSV
+en donne 8 (premier cycle sans écriture, en-tête au deuxième), et le script
+vérifie qu'aucun fichier `-NNN.csv` n'apparaît. JSON vérifie ses champs avec
+`jq -e`, et InfluxDB v3 lit son jeton par motif (`apiv3_…`), le format de sortie
+de `influxdb3 create token` ayant changé : le script v4 échoue là-dessus. Aucun portage n'a révélé de bug v5 ;
 aucun test n'est marqué `skip`/`xfail`. Un test v4 peut aboutir dans un test v5
 existant, étendu ou paramétré : c'est lui qui est cité.
 

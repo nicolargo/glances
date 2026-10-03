@@ -146,7 +146,10 @@ test-export-clickhouse: ## Run interface tests with ClickHouse
 	/bin/bash ./tests/test_export_clickhouse.sh
 
 test-exports: ## Tests all exports
-	@for f in ./tests/test_export_*.sh; do /bin/bash "$$f"; done
+	@for f in ./tests/test_export_*.sh; do case "$$f" in *_v5.sh) ;; *) /bin/bash "$$f" ;; esac; done
+
+test-exports-v5: ## Tests all exports with glances-v5
+	@for f in ./tests/test_export_*_v5.sh; do /bin/bash "$$f"; done
 
 # ===================================================================
 # Linters, profilers and cyber security
