@@ -160,3 +160,17 @@ async def test_the_sort_key_is_not_exported(store, config):
     assert "sort_key" not in export
     assert "auto_sort" not in export
     assert export["total"] == 1
+
+
+# ---------------------------------------------------------- real-host cycle
+
+
+async def test_real_host_counts_are_consistent(store, config):
+    """One unpatched update on the real machine: the counts must hold together."""
+    await PluginModel(store, config).update()
+    payload = store.get("processcount")
+    assert payload["total"] > 0
+    for name in ("total", "running", "sleeping", "thread"):
+        assert payload[name] >= 0, name
+    assert payload["running"] + payload["sleeping"] <= payload["total"]
+    assert payload["thread"] >= payload["total"]

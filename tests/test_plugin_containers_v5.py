@@ -86,6 +86,33 @@ def test_per_container_cpu_override(store_with, config_with):
     assert p._levels["web"]["cpu_percent"]["level"] == "warning"
 
 
+def test_mem_cell_coloured_by_memory_percent_level():
+    from glances.outputs.curses_renderer_v5 import ColorRole
+    from glances.plugins.containers.render_curses_v5 import _cpu_mem_cells
+
+    c = {"name": "web", "cpu_percent": 5.0, "memory_usage_no_cache": 900, "memory_percent": 95.0}
+    levels = {"memory_percent": {"level": "critical", "prominent": False}}
+    cpu_cell, mem_cell = _cpu_mem_cells(c, set(), levels, show_mem_max=False)
+    assert mem_cell.color == ColorRole.CRITICAL
+    assert cpu_cell.color == ColorRole.DEFAULT
+
+
+def test_container_without_cpu_or_memory_stats(store_with, config_with):
+    # A restarting container: no cpu_percent / memory_percent, memory={}.
+    from glances.plugins.containers.render_curses_v5 import render
+
+    p = _mk(store_with, config_with, {"cpu_critical": "90", "mem_critical": "90"})
+    c = {"name": "web", "engine": "docker", "status": "restarting", "memory": {}}
+    PluginModel._reconcile_memory(c)
+    p._stats = [c]
+    p._derived_parameters()
+    item_levels = p._levels.get("web", {})
+    assert "cpu_percent" not in item_levels
+    assert "memory_percent" not in item_levels
+    rows = render({"data": [c], "_levels": p._levels, "disable_stats": [], "max_name_size": 20}, None, {})
+    assert len(rows) == 2  # header + the container row
+
+
 class _FakeMonitor:
     def __init__(self, containers, engine="docker", engine_url=None, raises=False):
         self._containers = containers

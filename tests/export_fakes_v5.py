@@ -69,6 +69,15 @@ def plugins(config: GlancesConfigV5) -> list[GlancesPluginBase]:
     return built
 
 
+def assert_plugins_untouched(built: list[GlancesPluginBase]) -> None:
+    """Exporting never writes limits, `history_size` or `key` back (v4 #3767)."""
+    for plugin in built:
+        for payload in (plugin.get_export(), plugin.store.get(plugin.plugin_name)):
+            for item in payload if isinstance(payload, list) else [payload]:
+                assert "key" not in item and "history_size" not in item
+                assert not any(name.startswith(f"{plugin.plugin_name}_") for name in item)
+
+
 def fake_module(monkeypatch, name: str, **attributes: Any) -> types.ModuleType:
     """Install `name` (dotted names too) in `sys.modules` for the test."""
     module = types.ModuleType(name)

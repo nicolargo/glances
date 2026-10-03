@@ -722,6 +722,9 @@ async def test_non_repeat_action_fires_on_entry(tmp_path, monkeypatch, store):
     # One non-repeat call (entry) — repeat key isn't set so no repeat call.
     assert [c["repeat"] for c in action.calls] == [False]
     assert action.calls[0]["action_value"] == "echo hi"
+    # Second cycle at the same level: no new entry, so no second call.
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
+    assert [c["repeat"] for c in action.calls] == [False]
 
 
 async def test_repeat_action_fires_every_cycle_while_committed_non_ok(tmp_path, monkeypatch, store):

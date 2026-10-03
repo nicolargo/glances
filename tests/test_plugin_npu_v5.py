@@ -10,9 +10,14 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from glances.config_v5 import GlancesConfigV5
+from glances.plugins.npu.cards.amd import AmdNPU
+from glances.plugins.npu.cards.intel import IntelNPU
+from glances.plugins.npu.cards.rockchip import RockchipNPU
 from glances.plugins.npu.model_v5 import PluginModel
 from glances.stats_store_v5 import StatsStoreV5
 
@@ -105,6 +110,24 @@ def test_temperature_critical_config_override_wins_over_default(store_with, conf
     assert p._levels["intel_1"]["temperature"]["level"] == "critical"
 
 
+def test_temperature_none_gets_no_temperature_level(store, config):
+    # AMD/Rockchip cards report no temperature: no decoration for that field.
+    p = PluginModel(store, config)
+    p._stats = [{"npu_id": "amd_1", "load": 20, "temperature": None}]
+    p._derived_parameters()
+    assert "temperature" not in p._levels.get("amd_1", {})
+
+
+def test_load_freq_and_temperature_levels_in_one_pass(store, config):
+    p = PluginModel(store, config)
+    p._stats = [{"npu_id": "intel_1", "load": 95, "freq": 10, "temperature": 20}]
+    p._derived_parameters()
+    lv = p._levels["intel_1"]
+    assert lv["load"]["level"] == "critical"
+    assert lv["freq"]["level"] == "ok"
+    assert lv["temperature"]["level"] == "ok"
+
+
 @pytest.mark.asyncio
 async def test_grab_stats_collects_available_cards(store, config, monkeypatch):
     p = PluginModel(store, config)
@@ -129,3 +152,62 @@ def test_npu_disabled_by_default(config):
     # plugin whose `is_disabled()` is True.
     assert PluginModel.DISABLED_BY_DEFAULT is True
     assert PluginModel.is_disabled(config) is True
+
+
+# ---------------------------------------------------------- shared card drivers on tests-data
+_NPU_DATA = Path(__file__).resolve().parent.parent / "tests-data" / "plugins" / "npu"
+
+
+def _npu_expected(**kw):
+    base = dict.fromkeys(
+        ("load", "freq", "freq_current", "freq_max", "mem", "memory_used", "memory_total", "temperature", "power")
+    )
+    return {**base, **kw}
+
+
+@pytest.mark.parametrize(
+    ("vendor", "card_cls", "expected"),
+    [
+        (
+            "amd",
+            AmdNPU,
+            _npu_expected(
+                npu_id="amd_1", name="AMD NPU (Strix Point)", freq=53, freq_current=800000000, freq_max=1500000000
+            ),
+        ),
+        (
+            "intel",
+            IntelNPU,
+            _npu_expected(
+                npu_id="intel_1",
+                name="Intel NPU (Meteor Lake)",
+                freq=57,
+                freq_current=800000000,
+                freq_max=1400000000,
+                temperature=45.0,
+                power=2.5,
+            ),
+        ),
+        (
+            "rockchip",
+            RockchipNPU,
+            _npu_expected(
+                npu_id="rockship_1",
+                name="Orange Pi 5 Plus",
+                load=25,
+                freq=60,
+                freq_current=600000000,
+                freq_max=1000000000,
+            ),
+        ),
+    ],
+)
+@pytest.mark.asyncio
+async def test_card_drivers_parse_tests_data(store, config, vendor, card_cls, expected):
+    # Same expectations as v4 tests/test_core.py::test_025_npu, read through
+    # the v5 collection path.
+    card = card_cls(npu_root_folder=str(_NPU_DATA / vendor))
+    p = PluginModel(store, config)
+    p._backends = [card]
+    out = await p._grab_stats()
+    assert out[0] == expected

@@ -20,6 +20,7 @@ from glances.config_v5 import GlancesConfigV5
 from glances.exports.export_base_v5 import GlancesExportBase
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
 from glances.stats_store_v5 import StatsStoreV5
+from tests.export_fakes_v5 import assert_plugins_untouched, plugins
 
 
 class FakeScalarPlugin(GlancesPluginBase[dict]):
@@ -353,6 +354,32 @@ async def test_merge_limits_applies_to_every_item_of_a_collection():
 
 
 @pytest.mark.asyncio
+async def test_merge_limits_and_inject_key_build_new_objects():
+    """Port of v4 #3767: the payload a plugin handed over is never mutated."""
+    config = make_config({"fakescalar": {"careful": "50"}, "fakecollection": {"rx_careful": "60"}})
+    store = StatsStoreV5()
+    scalar = FakeScalarPlugin(store, config)
+    collection = FakeCollectionPlugin(store, config)
+    await scalar.update()
+    await collection.update()
+    exporter = FakeExport(config, args=None)
+
+    scalar_in, collection_in = scalar.get_export(), collection.get_export()
+    scalar_before, collection_before = dict(scalar_in), [dict(item) for item in collection_in]
+
+    merged = exporter._merge_limits(scalar, scalar_in)
+    keyed = exporter._inject_key(collection, collection_in)
+    keyed_merged = exporter._merge_limits(collection, keyed)
+
+    assert merged is not scalar_in and "fakescalar_careful" in merged
+    assert keyed is not collection_in and keyed_merged is not keyed
+    assert all(new is not old for new, old in zip(keyed + keyed_merged, collection_in * 2))
+    assert scalar_in == scalar_before
+    assert collection_in == collection_before
+    assert keyed == [{**item, "key": "name"} for item in collection_before]
+
+
+@pytest.mark.asyncio
 async def test_update_exports_one_call_per_plugin():
     store = StatsStoreV5()
     config = make_config({})
@@ -434,6 +461,19 @@ async def test_update_output_carries_stats_limits_and_key():
     assert row["eth0.rx"] == 10
     assert row["eth0.key"] == "name"
     assert row["eth0.fakecollection_rx_careful"] == 60.0
+
+
+def test_update_leaves_the_plugin_view_and_the_store_untouched():
+    """Port of v4 #3767: limits, history_size and key exist only in the export."""
+    config = make_config({"fakecollection": {"rx_careful": "60"}})
+    built = plugins(config)
+    exporter = FakeExport(config, args=None)
+
+    exporter.update(built)
+
+    _, names, _ = exporter.exported[1]
+    assert {"eth0.key", "eth0.history_size", "eth0.fakecollection_rx_careful"} <= set(names)
+    assert_plugins_untouched(built)
 
 
 # ------------------------------------------------------- normalize_for_influxdb

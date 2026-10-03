@@ -286,7 +286,19 @@ def test_discover_plugins_finds_concrete_v5_plugins(config):
     names = {p.plugin_name for p in plugins}
     # Phase 1.1..1.3 shipped these; the test must continue to pass when
     # new plugins are added.
-    assert {"cpu", "mem", "load", "network", "percpu"}.issubset(names)
+    assert {
+        "system",
+        "cpu",
+        "mem",
+        "memswap",
+        "load",
+        "network",
+        "diskio",
+        "fs",
+        "sensors",
+        "processcount",
+        "percpu",
+    }.issubset(names)
 
 
 def test_discover_plugins_empty_when_no_modules(config, monkeypatch):

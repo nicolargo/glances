@@ -246,6 +246,24 @@ async def test_triple_mustache_stays_one_argument(shell_action):
     assert argv_list == [["argv_logger.py", _POC_VALUE, "92"]]
 
 
+@pytest.mark.parametrize(
+    "template",
+    [
+        'argv_logger.py "{{mnt_point}}" {{percent}}',
+        "argv_logger.py {{&mnt_point}} {{percent}}",
+    ],
+)
+async def test_double_quoted_and_ampersand_fields_stay_one_argument(shell_action, template):
+    argv_list = await _capture_argv(
+        shell_action,
+        "fs",
+        "critical",
+        {"mnt_point": _POC_VALUE, "percent": "92"},
+        template,
+    )
+    assert argv_list == [["argv_logger.py", _POC_VALUE, "92"]]
+
+
 async def test_empty_value_yields_an_empty_argument(shell_action):
     """An empty field keeps its argv slot, so emptying a value cannot shift the
     positional arguments of the invoked script."""
@@ -318,6 +336,11 @@ async def test_enabled_still_interprets_operators(config_with, tmp_path):
     assert sentinel.exists()
     # …and the templated value reaches the file whole, spaces included
     assert sentinel.read_text() == "disk 1"
+
+
+async def test_templated_redirect_target_is_expanded(shell_action, tmp_path):
+    await shell_action.execute("fs", "critical", {"name": "disk1"}, f"echo -n ALERT > {tmp_path}/gl_{{{{name}}}}.alert")
+    assert (tmp_path / "gl_disk1.alert").read_text() == "ALERT"
 
 
 async def test_enabled_still_pipes(config_with):

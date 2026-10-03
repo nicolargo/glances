@@ -137,6 +137,15 @@ async def test_total_is_one_hundred_minus_idle(store, config):
     assert data[1]["total"] == 80.0
 
 
+async def test_steal_and_guest_nice_land_in_their_own_fields(store, config):
+    plugin = PluginModel(store, config)
+    with _patch_sampler([_core()._replace(steal=8.0, guest_nice=10.0)]):
+        await plugin.update()
+    data = store.get("percpu")["data"]
+    assert data[0]["steal"] == 8.0
+    assert data[0]["guest_nice"] == 10.0
+
+
 async def test_update_drops_undeclared_fields(store, config):
     """Each per-core entry is filtered against fields_description."""
     Future = namedtuple("scputimes_percent", ["user", "system", "idle", "future_attr"])

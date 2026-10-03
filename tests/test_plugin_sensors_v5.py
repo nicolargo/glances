@@ -485,6 +485,58 @@ def test_battery_alerts_on_inverse(tmp_path, monkeypatch, store):
     assert lv["Battery"]["value"]["level"] == "critical"
 
 
+def _battery_row(value):
+    return {
+        "label": "Battery",
+        "unit": "%",
+        "value": value,
+        "warning": None,
+        "critical": None,
+        "type": "battery",
+        "status": "Discharging",
+    }
+
+
+def test_battery_at_zero_percent_is_critical(tmp_path, monkeypatch, store):
+    """A value of 0 is a real reading, not 'unset': 100 - 0 >= 90."""
+    config = _cfg_with(tmp_path, monkeypatch, "[sensors]\nbattery_critical=90\n")
+    p = PluginModel(store, config)
+    assert _levels(p, [_battery_row(0)])["Battery"]["value"]["level"] == "critical"
+
+
+@pytest.mark.parametrize("value", [1, 3, 9])
+def test_battery_at_zero_matches_a_small_charge(tmp_path, monkeypatch, store, value):
+    config = _cfg_with(tmp_path, monkeypatch, "[sensors]\nbattery_critical=90\n")
+    p = PluginModel(store, config)
+    zero = _levels(p, [_battery_row(0)])["Battery"]["value"]["level"]
+    assert _levels(p, [_battery_row(value)])["Battery"]["value"]["level"] == zero
+
+
+def test_stopped_fan_is_evaluated(tmp_path, monkeypatch, store):
+    config = _cfg_with(tmp_path, monkeypatch, "[sensors]\nfan_speed_critical=5000\n")
+    p = PluginModel(store, config)
+    lv = _levels(p, _rows_fan(0))
+    assert lv["fan 0"]["value"]["level"] == "ok"
+
+
+@pytest.mark.parametrize("value", [[], None, b"ERR", b"SLP", "ERR"])
+def test_absent_or_placeholder_value_gets_no_level(store, config, value):
+    p = PluginModel(store, config)
+    assert _levels(p, [_temp_row("Core 0", value, warning=80, critical=90)]) == {}
+
+
+@pytest.mark.parametrize(
+    ("status", "expected"),
+    [("Charging", "ARROW_UP"), ("Full", "CHECK"), (None, None)],
+)
+def test_battery_trend(status, expected):
+    from glances.outputs.glances_unicode import unicode_message
+    from glances.plugins.sensors.render_curses_v5 import _battery_trend
+
+    row = {} if status is None else {"status": status}
+    assert _battery_trend(row) == (unicode_message(expected) if expected else "")
+
+
 def test_thresholds_resolved_from_single_coherent_tier(tmp_path, monkeypatch, store):
     """v4 parity: the tier that wins on `critical` also supplies `warning`;
     config critical must NOT be mixed with a hardware warning."""

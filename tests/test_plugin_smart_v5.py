@@ -121,6 +121,12 @@ def test_hide_attributes_ignores_whitespace_around_items(tmp_path, monkeypatch, 
     assert PluginModel(store, config)._hide_attributes == ["Self-tests", "Errors"]
 
 
+@pytest.mark.parametrize("body", ["[smart]\nhide_attributes=\n", "[smart]\n"])
+def test_empty_or_absent_hide_attributes_hides_nothing(tmp_path, monkeypatch, store, body):
+    config = _cfg_with(tmp_path, monkeypatch, body)
+    assert PluginModel(store, config)._hide_attributes == []
+
+
 @pytest.mark.asyncio
 async def test_grab_empty_when_not_root(store, config, monkeypatch):
     p = PluginModel(store, config)

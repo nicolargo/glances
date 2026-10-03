@@ -99,6 +99,12 @@ async def test_update_writes_psutil_fields_to_store(store, config):
     assert payload["percent"] == 50.0
     assert payload["total"] == 16_000_000_000
     assert payload["available"] == 8_000_000_000
+    assert payload["used"] == 8_000_000_000
+    assert payload["free"] == 4_000_000_000
+    assert payload["active"] == 3_000_000_000
+    assert payload["inactive"] == 1_000_000_000
+    assert payload["buffers"] == 500_000_000
+    assert payload["cached"] == 2_000_000_000
 
 
 async def test_update_drops_undeclared_fields(store, config):

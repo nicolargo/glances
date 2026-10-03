@@ -25,7 +25,14 @@ import pytest
 
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
 from glances.stats_store_v5 import StatsStoreV5
-from tests.export_fakes_v5 import HOSTILE_NAME, fake_module, make_config, missing_module, plugins
+from tests.export_fakes_v5 import (
+    HOSTILE_NAME,
+    assert_plugins_untouched,
+    fake_module,
+    make_config,
+    missing_module,
+    plugins,
+)
 
 
 class HostileFieldPlugin(GlancesPluginBase[dict]):
@@ -206,6 +213,25 @@ def test_timescaledb_binds_every_value_and_quotes_every_identifier(monkeypatch):
     assert conn.events.count("commit") == 3
 
 
+def test_timescaledb_collection_rows_match_their_columns(monkeypatch):
+    """Port of v4 #3592: one value per column, `key` only as key_id, no field dropped."""
+    _fake_psycopg(monkeypatch)
+    from glances.exports.glances_timescaledb.export_v5 import Export
+
+    config = make_config({"timescaledb": {**TIMESCALE, "hostname": "box"}})
+    Export(config).update(plugins(config))
+    statements = _PgConnection.instances[0].statements
+    create = next(t for t, _ in statements if t.startswith('CREATE TABLE "fakecollection"'))
+    insert, rows = next((t, p) for t, p in statements if t.startswith('INSERT INTO "fakecollection"'))
+    columns = [c.strip('"') for c in insert.split(" (", 1)[1].split(") VALUES")[0].split(", ")]
+    assert '"key" ' not in create and "key" not in columns
+    assert all(len(row) == len(columns) for row in rows)
+    assert [dict(zip(columns[1:], row[1:])) for row in rows] == [
+        {"hostname_id": "box", "key_id": "name", "name": name, "rx": rx, "history_size": 28800.0}
+        for name, rx in (("eth0", 10), (HOSTILE_NAME, 20))
+    ]
+
+
 def test_timescaledb_does_not_recreate_an_existing_table(monkeypatch):
     _fake_psycopg(monkeypatch)
     from glances.exports.glances_timescaledb.export_v5 import Export
@@ -346,6 +372,30 @@ def test_duckdb_normalize_keeps_false_values(monkeypatch):
     assert normalize(["True"]) is True
 
 
+@pytest.mark.parametrize(
+    ("name", "quoted"),
+    [('a"b"c', '"a""b""c"'), ("", '""'), (42, '"42"')],
+)
+def test_duckdb_quote_identifier(name, quoted):
+    from glances.exports.glances_duckdb.export_v5 import quote_identifier
+
+    assert quote_identifier(name) == quoted
+
+
+@pytest.mark.parametrize("table", ["x (a INT); DROP TABLE important; --", HOSTILE_NAME, "my-plugin"])
+def test_duckdb_quotes_the_table_name(monkeypatch, table):
+    _fake_duckdb(monkeypatch)
+    from glances.exports.glances_duckdb.export_v5 import Export, quote_identifier
+
+    Export(make_config({"duckdb": {"database": ":memory:"}}))._write(table, ['"a" INTEGER'], [[1]])
+    quoted = '"' + table.replace('"', '""') + '"'
+    assert quote_identifier(table) == quoted
+    assert _DuckConnection.instances[0].statements[1:] == [
+        (f'CREATE TABLE {quoted} ("a" INTEGER);', None),
+        (f"INSERT INTO {quoted} VALUES (?);", [[1]]),
+    ]
+
+
 def test_duckdb_exit_closes(monkeypatch):
     _fake_duckdb(monkeypatch)
     from glances.exports.glances_duckdb.export_v5 import Export
@@ -379,6 +429,42 @@ def test_duckdb_real_database_stores_hostile_strings_as_data(monkeypatch, tmp_pa
     columns = [row[0] for row in check.sql("DESCRIBE \"fakehostilefield\"").fetchall()]
     assert HOSTILE_NAME in columns, "the hostile field name is a column, not SQL"
     check.close()
+
+
+def test_duckdb_real_database_hostile_table_name_keeps_the_canary(tmp_path):
+    duckdb = pytest.importorskip("duckdb")
+    from glances.exports.glances_duckdb.export_v5 import Export
+
+    path = str(tmp_path / "glances.duckdb")
+    setup = duckdb.connect(path)
+    setup.execute("CREATE TABLE canary (a INT)")
+    setup.close()
+
+    exporter = Export(make_config({"duckdb": {"database": path}}))
+    for table in ("x (a INT); DROP TABLE canary; --", "my-plugin"):
+        exporter._write(table, ['"a" INTEGER'], [[1]])
+    exporter.exit()
+
+    check = duckdb.connect(path)
+    tables = sorted(t[0] for t in check.sql("SHOW TABLES").fetchall())
+    assert tables == ["canary", "my-plugin", "x (a INT); DROP TABLE canary; --"]
+    assert check.sql('SELECT "a" FROM "my-plugin"').fetchall() == [(1,)]
+    check.close()
+
+
+@pytest.mark.parametrize("name", ["duckdb", "timescaledb"])
+def test_update_leaves_the_plugin_view_and_the_store_untouched(monkeypatch, name):
+    """Port of v4 #3767."""
+    _fake_duckdb(monkeypatch)
+    _fake_psycopg(monkeypatch)
+    module = importlib.import_module(f"glances.exports.glances_{name}.export_v5")
+    section = {"duckdb": {"database": ":memory:"}, "timescaledb": TIMESCALE}[name]
+    config = make_config({name: section, "fakecollection": {"rx_careful": "60"}})
+    built = plugins(config)
+    module.Export(config).update(built)
+    connection = {"duckdb": _DuckConnection, "timescaledb": _PgConnection}[name].instances[0]
+    assert sum(text.startswith("INSERT INTO") for text, _ in connection.statements) == 2
+    assert_plugins_untouched(built)
 
 
 # ============================================================= cassandra
