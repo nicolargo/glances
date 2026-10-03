@@ -19,10 +19,12 @@ import asyncio
 import tracemalloc
 
 from glances.config_v5 import GlancesConfigV5
-from glances.main_v5 import apply_memory_leak_flags, assemble, build_parser, measure_memory_leak
+from glances.main_v5 import _MEMORY_LEAK_REFRESH, apply_memory_leak_flags, assemble, build_parser, measure_memory_leak
 
-# Refreshes in each window: the warm-up, then the measured one.
-_CYCLES = 5
+# Refreshes in each window: the warm-up, then the measured one. Five is too
+# short: on Python 3.10, psutil allocates ~1 KB per process once, at the 7th
+# refresh, which reads as ~130 KB per refresh with 600 processes.
+_CYCLES = 10
 # Bytes per refresh, as in v4.
 _THRESHOLD = 15000
 
@@ -36,7 +38,7 @@ def test_memoryleak_no_history(tmp_path, monkeypatch):
 
     tracemalloc.start()
     try:
-        diff = asyncio.run(measure_memory_leak(scheduler, float(cycles)))
+        diff = asyncio.run(measure_memory_leak(scheduler, cycles, _MEMORY_LEAK_REFRESH))
     finally:
         tracemalloc.stop()
 

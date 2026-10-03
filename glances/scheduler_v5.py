@@ -267,6 +267,31 @@ class AsyncScheduler:
 
     # ------------------------------------------------------------ internals
 
+    async def run_cycle(self) -> None:
+        """Update every registered plugin once, concurrently, then return.
+
+        For `--memory-leak`: once this returns no plugin work is in flight, so
+        a `tracemalloc` snapshot taken then is comparable to the next one. The
+        per-plugin loops of `run_forever()` never offer such a point.
+        """
+        await asyncio.gather(*(self._update_once(entry) for entry in self._entries))
+
+    async def _update_once(self, entry: _PluginEntry) -> None:
+        """One `update()` of `entry`'s plugin, then the optional alerts ingest."""
+        plugin_name = entry.plugin.plugin_name
+        try:
+            await entry.plugin.update()
+        except Exception as e:
+            # Defensive: GlancesPluginBase.update() already swallows.
+            # This catches anything a future plugin override might leak.
+            logger.warning("Scheduler caught exception from %s: %s", plugin_name, e)
+        if self.alerts is not None:
+            try:
+                await self.alerts.ingest_plugin(entry.plugin)
+            except Exception as e:
+                # Defensive: alerts must never tear down the loop either.
+                logger.warning("Alerts ingest failed for %s: %s", plugin_name, e)
+
     async def _plugin_loop(self, entry: _PluginEntry) -> None:
         """Per-plugin loop: `update()` → optional alerts ingest → `sleep`, forever.
 
@@ -286,21 +311,9 @@ class AsyncScheduler:
         plugin configured *faster* than the global refresh is never slowed
         down by this.
         """
-        plugin_name = entry.plugin.plugin_name
         first_cycle = True
         while True:
-            try:
-                await entry.plugin.update()
-            except Exception as e:
-                # Defensive: GlancesPluginBase.update() already swallows.
-                # This catches anything a future plugin override might leak.
-                logger.warning("Scheduler caught exception from %s: %s", plugin_name, e)
-            if self.alerts is not None:
-                try:
-                    await self.alerts.ingest_plugin(entry.plugin)
-                except Exception as e:
-                    # Defensive: alerts must never tear down the loop either.
-                    logger.warning("Alerts ingest failed for %s: %s", plugin_name, e)
+            await self._update_once(entry)
             if first_cycle:
                 sleep_time = min(self._global_refresh_time(), entry.refresh_time)
                 first_cycle = False

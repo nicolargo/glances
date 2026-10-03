@@ -1323,6 +1323,7 @@ def assemble(
 
 # v4 `main.py:882-887`: 60 refreshes of 1 s when --stop-after is not given.
 _MEMORY_LEAK_DEFAULT_CYCLES = 60
+_MEMORY_LEAK_REFRESH = 1.0
 
 
 def apply_memory_leak_flags(args: argparse.Namespace, config: GlancesConfigV5) -> int:
@@ -1333,28 +1334,38 @@ def apply_memory_leak_flags(args: argparse.Namespace, config: GlancesConfigV5) -
     """
     args.no_tui = True
     args.disable_history = True
-    config._merged.setdefault("global", {})["refresh"] = 1.0
+    config._merged.setdefault("global", {})["refresh"] = _MEMORY_LEAK_REFRESH
     return args.stop_after or _MEMORY_LEAK_DEFAULT_CYCLES
 
 
-async def measure_memory_leak(scheduler: AsyncScheduler, seconds: float) -> list[tracemalloc.StatisticDiff]:
-    """Collect for `seconds` to warm up, snapshot, collect as long again, diff.
+async def measure_memory_leak(
+    scheduler: AsyncScheduler, cycles: int, interval: float
+) -> list[tracemalloc.StatisticDiff]:
+    """Run `cycles` refreshes to warm up, snapshot, as many again, diff.
 
     The warm-up is what keeps one-off allocations (imports, caches, the first
     psutil handles) out of the figure. `tracemalloc` must already be tracing.
     Mirrors v4 `check_memleak` / `maybe_trace_memleak` (`glances/__init__.py`).
+
+    Every plugin is refreshed in lock-step (`run_cycle`), never through
+    `run_forever()`: a snapshot of the running loops counts whatever the
+    plugins hold at that instant, which swamps any real growth.
     """
-    task = asyncio.create_task(scheduler.run_forever())
+
+    async def refresh() -> None:
+        for _ in range(cycles):
+            await scheduler.run_cycle()
+            await asyncio.sleep(interval)
+
+    # The `begin` snapshot is itself traced memory alive at `end`: not a leak.
+    own = [tracemalloc.Filter(False, tracemalloc.__file__)]
     try:
-        await asyncio.sleep(seconds)
-        begin = tracemalloc.take_snapshot()
-        await asyncio.sleep(seconds)
-        end = tracemalloc.take_snapshot()
+        await refresh()
+        begin = tracemalloc.take_snapshot().filter_traces(own)
+        await refresh()
+        end = tracemalloc.take_snapshot().filter_traces(own)
     finally:
         await scheduler.stop()
-        task.cancel()
-        with contextlib.suppress(asyncio.CancelledError, Exception):
-            await task
     return end.compare_to(begin, "filename")
 
 
@@ -1364,7 +1375,7 @@ def run_memory_leak(args: argparse.Namespace, config: GlancesConfigV5) -> int:
     cycles = apply_memory_leak_flags(args, config)
     _app, scheduler, _host, _port, _tui = assemble(args, config)
     print(f"Memory leak detection, please wait ~{2 * cycles} seconds...")
-    diff = asyncio.run(measure_memory_leak(scheduler, float(cycles)))
+    diff = asyncio.run(measure_memory_leak(scheduler, cycles, _MEMORY_LEAK_REFRESH))
     tracemalloc.stop()
     print(f"Memory consumption: {sum(stat.size_diff for stat in diff) / 1000:.1f}KB (see log for details)")
     logger.info("Memory consumption (top 5):")
