@@ -32,8 +32,9 @@ from typing import Any, TextIO
 
 from glances.api_v5_doc import _escape
 from glances.processes import sort_processes_stats_list
+from glances.version_v5 import __apiversion__
 
-API_URL = "http://localhost:61208/api/5"
+API_URL = f"http://localhost:61208/api/{__apiversion__}"
 # A collection example keeps this many items; the rest is summarised.
 _EXAMPLE_ITEMS = 2
 

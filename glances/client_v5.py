@@ -45,6 +45,7 @@ import requests
 
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
 from glances.plugins.processlist.model_v5 import PluginModel as _Processlist
+from glances.version_v5 import __apiversion__
 
 logger = logging.getLogger(__name__)
 
@@ -313,7 +314,7 @@ class RemoteSource:
     def connect(self) -> None:
         """Check the server speaks API 5, then load its schema. Synchronous."""
         status = self.connection.get_json("/status")
-        if not isinstance(status, dict) or str(status.get("version")) != "5":
+        if not isinstance(status, dict) or str(status.get("version")) != __apiversion__:
             raise NotAGlancesV5Server(
                 f"{self.connection.base_url} is not a Glances v5 server (its /status says {status!r})"
             )

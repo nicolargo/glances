@@ -58,6 +58,7 @@ from glances.alerts_incidents_v5 import derive_incidents, incident_duration
 from glances.config_v5 import GlancesConfigV5
 from glances.processes import glances_processes, sort_processes_stats_list
 from glances.security_v5 import verify_password
+from glances.version_v5 import __apiversion__
 
 if TYPE_CHECKING:
     import argparse
@@ -209,7 +210,7 @@ def build_router() -> APIRouter:
     router into its own factory keeps the routes testable in isolation and
     keeps ``webserver_v5.py`` focused on middlewares.
     """
-    router = APIRouter(prefix="/api/5", tags=["v5"])
+    router = APIRouter(prefix=f"/api/{__apiversion__}", tags=["v5"])
 
     @router.post("/token", tags=["auth"])
     async def issue_token(

@@ -62,6 +62,7 @@ from glances.processes import glances_processes, sort_processes_stats_list
 from glances.scheduler_v5 import AsyncScheduler
 from glances.security_v5 import hash_password, verify_password
 from glances.stats_store_v5 import StatsStoreV5
+from glances.version_v5 import __version__
 
 # Shell completion (`--print-completion`), v4 parity (`main.py:17-22`). Optional:
 # shtab is not installed on Windows, and the option is then simply absent.
@@ -77,7 +78,6 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-_VERSION = "5.0.0a1"
 _DEFAULT_BIND_ADDRESS = "127.0.0.1"
 _DEFAULT_PORT = 61208
 
@@ -681,7 +681,7 @@ def build_parser() -> argparse.ArgumentParser:
         "-V",
         "--version",
         action="version",
-        version=f"Glances {_VERSION}",
+        version=f"Glances {__version__}",
     )
     return parser
 
@@ -1616,7 +1616,7 @@ def run_issue(args: argparse.Namespace, config: GlancesConfigV5) -> int:
     plugins = discover_plugins(StatsStoreV5(), config)
     disabled = sorted(cls.plugin_name for _name, cls in discover_plugin_classes() if cls.is_disabled(config))
     sources = [str(path) for path in config.loaded_sources]
-    return issue_v5.run(plugins, disabled, _VERSION, sources)
+    return issue_v5.run(plugins, disabled, __version__, sources)
 
 
 # --------------------------------------------------------------- serve

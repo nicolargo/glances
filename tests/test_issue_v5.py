@@ -22,6 +22,7 @@ from glances.outputs import issue_v5
 from glances.outputs.issue_v5 import REDACTED, Environment, PluginResult, excerpt, redact, render
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
 from glances.stats_store_v5 import StatsStoreV5
+from glances.version_v5 import __version__
 
 # ---------------------------------------------------------------- redaction
 
@@ -198,4 +199,4 @@ def test_run_issue_builds_what_glances_v5_builds(config, monkeypatch):
     assert main_v5.run_issue(main_v5.build_parser().parse_args(["--issue", "--disable-plugin", "cpu"]), config) == 0
     assert "mem" in seen["plugins"] and "cpu" not in seen["plugins"]
     assert "cpu" in seen["disabled"]
-    assert seen["version"] == main_v5._VERSION
+    assert seen["version"] == __version__

@@ -33,6 +33,7 @@ import socket
 from typing import Any
 
 from glances.servers_list_v5 import ServerEntry
+from glances.version_v5 import __apiversion__
 
 try:
     from zeroconf import IPVersion, ServiceBrowser, ServiceInfo, ServiceStateChange, Zeroconf
@@ -42,7 +43,7 @@ except ImportError:  # the `browser` extra is not installed
 logger = logging.getLogger(__name__)
 
 SERVICE_TYPE = "_glances._tcp.local."
-API_VERSION = b"5"
+API_VERSION = __apiversion__.encode()
 # An announced name is shown in the TUI and served by /api/5/serverslist:
 # printable characters only, and not a screenful.
 _ALIAS_MAX = 64

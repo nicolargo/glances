@@ -16,8 +16,8 @@ from __future__ import annotations
 
 from typing import Any, ClassVar
 
-from glances import __version__ as _GLANCES_VERSION
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
+from glances.version_v5 import __version__ as _GLANCES_VERSION
 
 
 class PluginModel(GlancesPluginBase[dict]):

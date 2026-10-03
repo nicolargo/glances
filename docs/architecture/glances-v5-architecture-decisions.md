@@ -1201,12 +1201,20 @@ _Goal: production-ready. Release `5.0.0rc1` then `5.0.0`._
 - Merge `develop-v5 → develop`
 - **One version source** (maintainer, 2026-09-27): at the merge, v5 reads its
   release and its API version from `glances/__init__.py` (`__version__`,
-  `__apiversion__`), and the v5-only copies go. Today they disagree:
-  `glances-v5 -V` and `GlancesAPI.__version__` read `main_v5._VERSION`
-  (`5.0.0a1`), `/status` reports `glances_version` from `__version__`
-  (still the v4 release) and hard-codes `"version": "5"`, and `/api/5` is
-  written out in `routes_v5.py` (router prefix) and
-  `outputs/restful_doc_v5.py` (`API_URL`).
+  `__apiversion__`), and the v5-only copies go. **Intermediate step shipped
+  2026-10-03** (maintainer's choice): until the merge, every v5 surface reads
+  one v5-only pair, `glances/version_v5.py` (`__version__ = "5.0.0a1"`,
+  `__apiversion__ = "5"`), because `glances/__init__.py` still serves v4 on
+  this branch (its `__apiversion__` mounts `/api/4`). That covers `-V`,
+  `--issue`, `GlancesAPI.__version__`, `/status`, the OpenAPI version, the
+  router prefix, `UNAUTH_PATHS`, `API_URL`, the Zeroconf `api=` TXT, the
+  client's and the browser's version check, the `version` plugin and the TUI
+  help title (the last two showed the v4 release). `tests/test_version_v5.py`
+  holds them together. At the merge, the two lines move into
+  `glances/__init__.py`, the `glances.version_v5` imports are re-pointed and
+  the module goes. Still written out as `/api/5/...`: the request paths of
+  `client_v5.py`, `servers_list_v5.py` and `restful_doc_v5.py`'s examples,
+  and the WebUI's JavaScript.
 - PyPI, Docker, Snap, Helm packages published
 
 #### Phase 2.X — TUI interactive surface (owned group)

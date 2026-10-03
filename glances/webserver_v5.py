@@ -50,13 +50,13 @@ from starlette.concurrency import run_in_threadpool
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
-from glances import __version__
 from glances.alerts_v5 import GlancesAlerts
 from glances.config_v5 import GlancesConfigV5
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
 from glances.routes_v5 import build_router
 from glances.security_v5 import JWTHandler, verify_password
 from glances.stats_store_v5 import StatsStoreV5
+from glances.version_v5 import __apiversion__, __version__
 
 if TYPE_CHECKING:
     import argparse
@@ -69,7 +69,7 @@ logger = logging.getLogger(__name__)
 #   itself; it cannot live behind the Bearer-or-Basic middleware because
 #   the very purpose of the call is to *obtain* the Bearer token.
 # Hardcoded — deliberately not configurable so the surface stays predictable.
-UNAUTH_PATHS: frozenset[str] = frozenset({"/status", "/healthz", "/api/5/token"})
+UNAUTH_PATHS: frozenset[str] = frozenset({"/status", "/healthz", f"/api/{__apiversion__}/token"})
 
 # Loopback addresses that suppress the "no TrustedHost configured" warning.
 _LOOPBACK_HOSTS: frozenset[str] = frozenset({"127.0.0.1", "::1", "localhost"})
@@ -121,7 +121,7 @@ def build_app(
 
     app = FastAPI(
         title="Glances REST API",
-        version="5",
+        version=__apiversion__,
         docs_url="/docs" if api_doc_enabled else None,
         redoc_url="/redoc" if api_doc_enabled else None,
         lifespan=lifespan,
@@ -465,7 +465,7 @@ def _register_health_endpoints(app: FastAPI) -> None:
         # `glances_version` is the release the server runs, which the WebUI
         # footer shows. Kept on the probe rather than on a route of its own:
         # v4 already serves the release from its own /status.
-        return {"status": "ok", "version": "5", "glances_version": __version__}
+        return {"status": "ok", "version": __apiversion__, "glances_version": __version__}
 
     app.add_api_route("/status", status_handler, methods=["GET"], tags=["health"])
     app.add_api_route("/healthz", status_handler, methods=["GET"], tags=["health"])

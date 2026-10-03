@@ -34,10 +34,10 @@ import logging
 import pytest
 from fastapi.testclient import TestClient
 
-from glances import __version__
 from glances.config_v5 import GlancesConfigV5
 from glances.security_v5 import hash_password
 from glances.stats_store_v5 import StatsStoreV5
+from glances.version_v5 import __version__
 from glances.webserver_v5 import build_app
 
 # ----------------------------------------------------------------- fixtures

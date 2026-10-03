@@ -50,12 +50,13 @@ from typing import Any
 from glances.alerts_v5 import GlancesAlerts
 from glances.config_v5 import GlancesConfigV5
 from glances.globals import auto_unit
-from glances.main_v5 import _VERSION, _global_refresh, attach_history, discover_plugin_classes
+from glances.main_v5 import _global_refresh, attach_history, discover_plugin_classes
 from glances.outputs.glances_bars import Bar
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
 from glances.processes import sort_stats
 from glances.scheduler_v5 import AsyncScheduler
 from glances.stats_store_v5 import StatsStoreV5
+from glances.version_v5 import __version__
 
 # How long `close()` waits for the loop thread and the scheduler.
 _SHUTDOWN_TIMEOUT = 5.0
@@ -154,7 +155,7 @@ class GlancesAPI:
         plugins: list[str] | None = None,
         refresh: float | None = None,
     ) -> None:
-        self.__version__ = _VERSION.split(".")[0]
+        self.__version__ = __version__.split(".")[0]
         self._config = GlancesConfigV5(cli_config_path=config_path)
         if refresh is not None:
             if refresh <= 0:
