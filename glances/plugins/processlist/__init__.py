@@ -764,7 +764,8 @@ class ProcesslistPlugin(GlancesPluginModel):
         # Loop over processes (sorted by the sort key previously compute)
         # This is a Glances bottleneck (see flame graph),
         # TODO: get_process_curses_data should be optimized
-        for position, process in enumerate(processes_list_sorted):
+        # The curses UI sets process_rows so the rows below the screen are not built
+        for position, process in enumerate(processes_list_sorted[: getattr(args, 'process_rows', None)]):
             ret.extend(self.get_process_curses_data(process, position == args.cursor_position, args))
 
         # A filter is set Display the stats summaries

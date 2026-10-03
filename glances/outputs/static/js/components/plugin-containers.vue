@@ -337,11 +337,16 @@ export default {
 		// its limit was red in the terminal and plain black in the browser.
 		getDecoration(containerName, field) {
 			const containerViews = this.views[containerName];
-			if (containerViews == undefined || containerViews[field] == undefined) {
+			if (
+				containerViews == undefined ||
+				containerViews[field] == undefined ||
+				containerViews[field].decoration == undefined
+			) {
 				// A container seen in stats but not yet in views (they are
 				// published from the same snapshot, but a rename lands in one
-				// first). Leave it undecorated rather than throwing.
-				return;
+				// first), or a view without a decoration. Fall back to DEFAULT
+				// like curses does rather than throwing.
+				return 'default';
 			}
 			return containerViews[field].decoration.toLowerCase();
 		},
