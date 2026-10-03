@@ -319,9 +319,11 @@ def test_fetch_uses_basic_auth_when_credentials_set(tmp_path, monkeypatch):
     assert requests[0].get_header("Authorization") == "Basic YWxpY2U6c2VjcmV0"
 
 
-@pytest.mark.parametrize("body", [b'["1.2.3.4"]', b'"1.2.3.4"', b"42"])
-def test_fetch_ignores_a_non_object_response(tmp_path, monkeypatch, body):
-    """Port of v4 #3759 -- a non-object JSON body must not reach info.get()."""
+@pytest.mark.parametrize("body", [b'["1.2.3.4"]', b'"1.2.3.4"', b"42", b"true", b"null"])
+@pytest.mark.parametrize("cache", [{}, {"ip": "192.0.2.1"}])
+def test_fetch_ignores_a_non_object_response(tmp_path, monkeypatch, body, cache):
+    """Port of v4 #3759 -- a non-object JSON body must not reach info.get(),
+    and keeps the last good public info instead of wiping it."""
     config = _cfg_with(
         tmp_path,
         monkeypatch,
@@ -335,8 +337,9 @@ def test_fetch_ignores_a_non_object_response(tmp_path, monkeypatch, body):
             return body
 
     monkeypatch.setattr(p._opener, "open", lambda request, timeout=None: _Response())
+    p._public_cache = cache
 
-    assert p._fetch_public_ip_info() == {}
+    assert p._fetch_public_ip_info() == cache
 
 
 def test_hide_public_info_flag_parses():

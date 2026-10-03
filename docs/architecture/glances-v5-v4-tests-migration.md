@@ -847,7 +847,7 @@ v5 `ip/model_v5.py` replaces `ThreadPublicIpAddress` with an in-model fetch and 
 
 | v4 test | verdict | evidence / what to port |
 |---|---|---|
-| test_invalid_response_preserves_last_public_info (7 payloads) | GAP (bug) | When the body is not a JSON object, `_fetch_public_ip_info` returns `{}`, not `self._public_cache`. `_grab_stats` then assigns that result to `_public_cache`, so one malformed response (`[]`, `"error"`, `42`, `true`, `null`) **wipes the last good public IP**. v4 keeps it. test_plugin_ip_v5.py::test_fetch_ignores_a_non_object_response only checks for no crash, with an empty cache. Fix: return `self._public_cache` on a non-object body. Then test with a pre-filled cache |
+| test_invalid_response_preserves_last_public_info (7 payloads) | COVERED (bug corrigé le 2026-10-03) | Une réponse qui n'est pas un objet JSON effaçait la dernière IP publique connue ; `_fetch_public_ip_info` rend désormais `self._public_cache`, comme la v4. `tests/test_plugin_ip_v5.py::test_fetch_ignores_a_non_object_response`, paramétré sur `[]`, une chaîne, `42`, `true`, `null`, cache vide ou rempli. |
 | test_valid_response_updates_public_info | COVERED | test_plugin_ip_v5.py::test_fetch_uses_basic_auth_when_credentials_set (returns the parsed dict), ::test_public_fetch_merges |
 
 ### tests/test_ports_no_credential_leak.py (security, GHSA-2jqf-3j6f-683p)
