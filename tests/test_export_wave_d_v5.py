@@ -337,6 +337,15 @@ def test_duckdb_failing_write_is_one_warning_per_plugin(monkeypatch, caplog):
     assert caplog.text.count("Cannot export fakescalar stats to DuckDB") == 1
 
 
+def test_duckdb_normalize_keeps_false_values(monkeypatch):
+    """Port of v4 #3755 -- bool('False') is True."""
+    _fake_duckdb(monkeypatch)
+    from glances.exports.glances_duckdb.export_v5 import normalize
+
+    assert normalize(["False"]) is False
+    assert normalize(["True"]) is True
+
+
 def test_duckdb_exit_closes(monkeypatch):
     _fake_duckdb(monkeypatch)
     from glances.exports.glances_duckdb.export_v5 import Export

@@ -67,7 +67,7 @@ def quote_identifier(name: str) -> str:
 def normalize(value: Any) -> Any:
     """v4, verbatim: a one-item `['True']`/`['False']` list is a boolean."""
     if isinstance(value, list) and len(value) == 1 and value[0] in ["True", "False"]:
-        return bool(value[0])
+        return value[0] == "True"
     return value
 
 

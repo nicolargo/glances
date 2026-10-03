@@ -283,7 +283,11 @@ class PluginModel(GlancesPluginBase[dict]):
             headers["Authorization"] = f"Basic {token}"
         try:
             response = self._opener.open(Request(self.public_api, headers=headers), timeout=_FETCH_TIMEOUT).read()
-            return json_loads(response)
+            info = json_loads(response)
+            if not isinstance(info, dict):
+                logger.debug("IP plugin - public IP response from %s is not a JSON object", self.public_api)
+                return {}
+            return info
         except URLError as e:
             # A redirect or a re-resolution landed on a forbidden address.
             if isinstance(e.reason, _ForbiddenAddressError):

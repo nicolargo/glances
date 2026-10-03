@@ -654,6 +654,19 @@ def test_the_v5_bundle_is_served(config_factory, store):
     assert len(response.content) > 0
 
 
+def test_the_v5_bundle_is_revalidated_by_the_browser(config_factory, store):
+    """Port of v4 #3770 -- an upgrade must not leave the browser on a stale bundle."""
+    app = build_app(config=config_factory(), store=store, args=_args())
+
+    with TestClient(app) as client:
+        first = client.get("/static/glances5.js")
+        again = client.get("/static/glances5.js", headers={"If-None-Match": first.headers["etag"]})
+
+    assert first.headers["cache-control"] == "no-cache"
+    assert again.status_code == 304
+    assert again.headers["cache-control"] == "no-cache"
+
+
 def _off_loop_spy(calls: list[bool], real):
     """Wrap verify_password, recording whether it ran on the event loop thread."""
 

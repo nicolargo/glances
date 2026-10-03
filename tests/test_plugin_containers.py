@@ -10,9 +10,13 @@
 """Tests for the Containers plugin engines (issue #3669 network aggregation)."""
 
 from types import SimpleNamespace
+from unittest.mock import MagicMock, call, patch
+
+import pytest
 
 from glances.plugins.containers import ContainersPlugin
 from glances.plugins.containers.engines.docker import DockerStatsFetcher
+from glances.plugins.plugin.model import GlancesPluginModel
 
 
 def build_fetcher(networks, old_stats=None):
@@ -167,3 +171,131 @@ class TestContainersTitle:
             assert title.count('CONTAINERS') == 1, title
             assert title.count('sorted by') <= 1, title
             assert title.count('served by') <= 1, title
+
+
+@pytest.mark.parametrize(
+    ("conf_value", "expected"),
+    [
+        (None, None),
+        ([''], []),
+        (
+            ['"unix:///var/run/docker.sock"', '', "'tcp://remote:2375'"],
+            ['unix:///var/run/docker.sock', 'tcp://remote:2375'],
+        ),
+    ],
+)
+def test_parse_urls(conf_value, expected):
+    """Test ContainersPlugin._parse_urls configuration parsing."""
+    plugin = ContainersPlugin.__new__(ContainersPlugin)
+    plugin.get_conf_value = lambda key, default=None: conf_value
+    assert plugin._parse_urls('docker_urls') == expected
+
+
+class TestContainersMonitors:
+    """Integration tests for ContainersPlugin.monitors management, update aggregation, and exit shutdown."""
+
+    def test_init_monitors_with_custom_urls(self):
+        """Plugin instantiates monitors per URL and respects empty string disablement."""
+        import glances.plugins.containers as containers_mod
+
+        with (
+            patch.object(containers_mod, 'DockerEngineMonitor') as mock_docker,
+            patch.object(containers_mod, 'PodmanEngineMonitor') as mock_podman,
+            patch.object(containers_mod, 'LxdEngineMonitor') as mock_lxd,
+            patch.object(containers_mod, 'disable_plugin_docker', False),
+            patch.object(containers_mod, 'disable_plugin_podman', False),
+            patch.object(containers_mod, 'disable_plugin_lxd', False),
+        ):
+            config = MagicMock()
+            config.has_section.return_value = True
+            config.items.return_value = []
+
+            plugin = ContainersPlugin.__new__(ContainersPlugin)
+            plugin.config = config
+            plugin._limits = {}
+            urls_map = {
+                'docker_urls': ['unix:///d1.sock', 'unix:///d2.sock'],
+                'podman_urls': ['unix:///p1.sock'],
+                'lxd_urls': [],
+            }
+            plugin.get_conf_value = lambda key, default=None: urls_map.get(key, default)
+            plugin.refresh_timer = MagicMock()
+            plugin.update = MagicMock()
+            ContainersPlugin.__init__(plugin, config=config)
+
+            assert mock_docker.call_args_list == [call(url='unix:///d1.sock'), call(url='unix:///d2.sock')]
+            assert mock_podman.call_args_list == [call(url='unix:///p1.sock')]
+            assert mock_lxd.call_count == 0
+            assert len(plugin.monitors) == 3
+
+    def test_init_monitors_all_disabled(self):
+        """When all *_urls are explicitly empty, zero monitors are instantiated."""
+        import glances.plugins.containers as containers_mod
+
+        with (
+            patch.object(containers_mod, 'DockerEngineMonitor') as mock_docker,
+            patch.object(containers_mod, 'PodmanEngineMonitor') as mock_podman,
+            patch.object(containers_mod, 'LxdEngineMonitor') as mock_lxd,
+            patch.object(containers_mod, 'disable_plugin_docker', False),
+            patch.object(containers_mod, 'disable_plugin_podman', False),
+            patch.object(containers_mod, 'disable_plugin_lxd', False),
+        ):
+            config = MagicMock()
+            config.has_section.return_value = True
+            config.items.return_value = []
+
+            plugin = ContainersPlugin.__new__(ContainersPlugin)
+            plugin.config = config
+            plugin._limits = {}
+            urls_map = {
+                'docker_urls': [],
+                'podman_urls': [],
+                'lxd_urls': [],
+            }
+            plugin.get_conf_value = lambda key, default=None: urls_map.get(key, default)
+            plugin.refresh_timer = MagicMock()
+            plugin.update = MagicMock()
+            ContainersPlugin.__init__(plugin, config=config)
+
+            assert mock_docker.call_count == 0
+            assert mock_podman.call_count == 0
+            assert mock_lxd.call_count == 0
+            assert len(plugin.monitors) == 0
+
+    def test_update_aggregates_stats_across_monitors(self):
+        """ContainersPlugin.update aggregates container stats returned by all monitors."""
+        plugin = ContainersPlugin.__new__(ContainersPlugin)
+        plugin.stats = []
+        plugin.get_init_value = lambda: []
+        plugin.is_enabled = lambda: True
+        plugin.refresh_timer = MagicMock(finished=lambda: True)
+        plugin.get_refresh = lambda: 2
+        plugin.input_method = 'local'
+        plugin.is_hide = lambda _: False
+        plugin._all_tag = lambda: False
+
+        m1 = MagicMock()
+        m1.update.return_value = ({}, [{'name': 'c1', 'key': 'name', 'engine': 'docker'}])
+        m2 = MagicMock()
+        m2.update.return_value = ({}, [{'name': 'c2', 'key': 'name', 'engine': 'podman'}])
+        plugin.monitors = [m1, m2]
+
+        stats = plugin.update()
+        assert len(stats) == 2
+        assert stats[0]['name'] == 'c1'
+        assert stats[0]['engine'] == 'docker'
+        assert stats[1]['name'] == 'c2'
+        assert stats[1]['engine'] == 'podman'
+
+    def test_exit_stops_all_monitors(self):
+        """ContainersPlugin.exit calls stop() on each monitor."""
+        plugin = ContainersPlugin.__new__(ContainersPlugin)
+        m1 = MagicMock()
+        m2 = MagicMock()
+        plugin.monitors = [m1, m2]
+
+        with patch.object(GlancesPluginModel, 'exit'):
+            plugin.exit()
+
+        m1.stop.assert_called_once()
+        m2.stop.assert_called_once()

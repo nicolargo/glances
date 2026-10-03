@@ -11,8 +11,11 @@
 
 from __future__ import annotations
 
+from unittest.mock import call, patch
+
 import pytest
 
+import glances.plugins.containers.model_v5 as model_mod
 from glances.plugins.containers.model_v5 import PluginModel
 
 
@@ -51,6 +54,7 @@ def test_fields_present(store_with, config_with):
         "ports",
         "uptime",
         "engine",
+        "engine_url",
         "pod_name",
         "pod_id",
     ):
@@ -82,9 +86,11 @@ def test_per_container_cpu_override(store_with, config_with):
     assert p._levels["web"]["cpu_percent"]["level"] == "warning"
 
 
-class _FakeWatcher:
-    def __init__(self, containers, raises=False):
+class _FakeMonitor:
+    def __init__(self, containers, engine="docker", engine_url=None, raises=False):
         self._containers = containers
+        self.ENGINE = engine
+        self.engine_url = engine_url
         self._raises = raises
         self.stopped = False
 
@@ -97,9 +103,9 @@ class _FakeWatcher:
         self.stopped = True
 
 
-def _model_with_watchers(store_with, config_with, watchers, section=None):
+def _model_with_monitors(store_with, config_with, monitors, section=None):
     p = PluginModel(store_with(), config_with({"containers": section or {}}))
-    p.watchers = watchers
+    p.monitors = monitors
     return p
 
 
@@ -113,7 +119,7 @@ async def test_grab_merges_engines_and_injects_engine_field(store_with, config_w
         "memory_usage": 250,
         "memory": {"usage": 300, "inactive_file": 100, "limit": 1000},
     }
-    p = _model_with_watchers(store_with, config_with, {"docker": _FakeWatcher([d])})
+    p = _model_with_monitors(store_with, config_with, [_FakeMonitor([d], engine="docker")])
     out = await p._grab_stats()
     assert len(out) == 1
     assert out[0]["engine"] == "docker"
@@ -126,18 +132,18 @@ async def test_grab_merges_engines_and_injects_engine_field(store_with, config_w
 @pytest.mark.asyncio
 async def test_grab_partial_failure_keeps_other_engine(store_with, config_with):
     ok = {"name": "web", "memory": {}}
-    p = _model_with_watchers(
+    p = _model_with_monitors(
         store_with,
         config_with,
-        {"bad": _FakeWatcher([], raises=True), "docker": _FakeWatcher([ok])},
+        [_FakeMonitor([], raises=True), _FakeMonitor([ok])],
     )
     out = await p._grab_stats()
     assert [c["name"] for c in out] == ["web"]
 
 
 @pytest.mark.asyncio
-async def test_grab_empty_when_no_watcher(store_with, config_with):
-    p = _model_with_watchers(store_with, config_with, {})
+async def test_grab_empty_when_no_monitors(store_with, config_with):
+    p = _model_with_monitors(store_with, config_with, [])
     assert await p._grab_stats() == []
 
 
@@ -145,7 +151,7 @@ async def test_grab_empty_when_no_watcher(store_with, config_with):
 async def test_grab_memory_percent_none_when_limit_zero(store_with, config_with):
     # limit=0 → no meaningful percent, no divide-by-zero: memory_percent is None.
     d = {"name": "web", "memory": {"usage": 300, "inactive_file": 100, "limit": 0}}
-    p = _model_with_watchers(store_with, config_with, {"docker": _FakeWatcher([d])})
+    p = _model_with_monitors(store_with, config_with, [_FakeMonitor([d])])
     out = await p._grab_stats()
     assert out[0]["memory_usage_no_cache"] == 200
     assert out[0]["memory_percent"] is None
@@ -155,22 +161,22 @@ async def test_grab_memory_percent_none_when_limit_zero(store_with, config_with)
 async def test_grab_memory_percent_none_when_limit_missing(store_with, config_with):
     # No limit key → memory_percent is None (guarded), no exception.
     d = {"name": "web", "memory": {"usage": 300, "inactive_file": 100}}
-    p = _model_with_watchers(store_with, config_with, {"docker": _FakeWatcher([d])})
+    p = _model_with_monitors(store_with, config_with, [_FakeMonitor([d])])
     out = await p._grab_stats()
     assert out[0]["memory_usage_no_cache"] == 200
     assert out[0]["memory_percent"] is None
 
 
 @pytest.mark.asyncio
-async def test_grab_all_tag_forwarded_to_watcher(store_with, config_with):
+async def test_grab_all_tag_forwarded_to_monitor(store_with, config_with):
     seen = {}
 
-    class _Capturing(_FakeWatcher):
+    class _Capturing(_FakeMonitor):
         def update(self, all_tag):
             seen["all_tag"] = all_tag
             return {}, []
 
-    p = _model_with_watchers(store_with, config_with, {"docker": _Capturing([])}, section={"all": "True"})
+    p = _model_with_monitors(store_with, config_with, [_Capturing([])], section={"all": "True"})
     await p._grab_stats()
     assert seen["all_tag"] is True
 
@@ -183,7 +189,7 @@ async def test_grab_sort_follows_glances_processes_sort_key(store_with, config_w
         {"name": "a", "cpu_percent": 1.0, "memory": {}},
         {"name": "b", "cpu_percent": 9.0, "memory": {}},
     ]
-    p = _model_with_watchers(store_with, config_with, {"docker": _FakeWatcher(cs)})
+    p = _model_with_monitors(store_with, config_with, [_FakeMonitor(cs)])
     saved = glances_processes.sort_key
     try:
         glances_processes.set_sort_key("cpu_percent", auto=False)
@@ -199,20 +205,20 @@ async def test_grab_sort_follows_glances_processes_sort_key(store_with, config_w
         glances_processes.set_sort_key(saved, auto=False)
 
 
-def test_stop_calls_each_watcher(store_with, config_with):
-    w1, w2 = _FakeWatcher([]), _FakeWatcher([])
-    p = _model_with_watchers(store_with, config_with, {"docker": w1, "podman": w2})
+def test_stop_calls_each_monitor(store_with, config_with):
+    m1, m2 = _FakeMonitor([]), _FakeMonitor([])
+    p = _model_with_monitors(store_with, config_with, [m1, m2])
     p.stop()
-    assert w1.stopped and w2.stopped
+    assert m1.stopped and m2.stopped
 
 
-def test_stop_one_raising_watcher_does_not_block_others(store_with, config_with):
-    class _Boom(_FakeWatcher):
+def test_stop_one_raising_monitor_does_not_block_others(store_with, config_with):
+    class _Boom(_FakeMonitor):
         def stop(self):
             raise RuntimeError("boom")
 
-    good = _FakeWatcher([])
-    p = _model_with_watchers(store_with, config_with, {"bad": _Boom([]), "docker": good})
+    good = _FakeMonitor([])
+    p = _model_with_monitors(store_with, config_with, [_Boom([]), good])
     p.stop()  # must not raise
     assert good.stopped
 
@@ -222,3 +228,101 @@ def test_metadata_carries_disable_stats_and_max_name_size(store_with, config_wit
     p._add_metadata()
     assert "command" in p._metadata["disable_stats"]
     assert p._metadata["max_name_size"] == 12
+
+
+@pytest.mark.parametrize(
+    ("conf_value", "expected"),
+    [
+        (None, None),
+        ("", []),
+        ("unix:///var/run/docker.sock", ["unix:///var/run/docker.sock"]),
+        (
+            '"unix:///var/run/docker.sock", tcp://remote:2375',
+            ["unix:///var/run/docker.sock", "tcp://remote:2375"],
+        ),
+        (
+            "'unix:///var/run/docker.sock', '', \"tcp://remote:2375\"",
+            ["unix:///var/run/docker.sock", "tcp://remote:2375"],
+        ),
+    ],
+)
+def test_parse_urls_from_config(store_with, config_with, conf_value, expected):
+    cfg = config_with({"containers": {"docker_urls": conf_value}} if conf_value is not None else {})
+    p = PluginModel(store_with(), cfg)
+    assert p._parse_urls("docker_urls") == expected
+
+
+def test_parse_urls_from_list(store_with, config_with):
+    p = PluginModel(store_with(), config_with({}))
+    p.config = type("MockConfig", (), {"get_value": lambda self, sec, key, default=None: ['"unix:///d1.sock"', '', "'unix:///d2.sock'"]})()
+    assert p._parse_urls("docker_urls") == ["unix:///d1.sock", "unix:///d2.sock"]
+
+
+def test_init_monitors_with_custom_urls(store_with, config_with):
+    with (
+        patch.object(model_mod, "DockerEngineMonitor") as mock_docker,
+        patch.object(model_mod, "PodmanEngineMonitor") as mock_podman,
+        patch.object(model_mod, "LxdEngineMonitor") as mock_lxd,
+        patch.object(model_mod, "disable_plugin_docker", False),
+        patch.object(model_mod, "disable_plugin_podman", False),
+        patch.object(model_mod, "disable_plugin_lxd", False),
+    ):
+        cfg = config_with(
+            {
+                "containers": {
+                    "docker_urls": "unix:///d1.sock, unix:///d2.sock",
+                    "podman_urls": "unix:///p1.sock",
+                    "lxd_urls": "",
+                }
+            }
+        )
+        p = PluginModel(store_with(), cfg)
+
+        assert mock_docker.call_args_list == [call(url="unix:///d1.sock"), call(url="unix:///d2.sock")]
+        assert mock_podman.call_args_list == [call(url="unix:///p1.sock")]
+        assert mock_lxd.call_count == 0
+        assert len(p.monitors) == 3
+
+
+def test_init_monitors_all_disabled(store_with, config_with):
+    with (
+        patch.object(model_mod, "DockerEngineMonitor") as mock_docker,
+        patch.object(model_mod, "PodmanEngineMonitor") as mock_podman,
+        patch.object(model_mod, "LxdEngineMonitor") as mock_lxd,
+        patch.object(model_mod, "disable_plugin_docker", False),
+        patch.object(model_mod, "disable_plugin_podman", False),
+        patch.object(model_mod, "disable_plugin_lxd", False),
+    ):
+        cfg = config_with(
+            {
+                "containers": {
+                    "docker_urls": "",
+                    "podman_urls": "",
+                    "lxd_urls": "",
+                }
+            }
+        )
+        p = PluginModel(store_with(), cfg)
+
+        assert mock_docker.call_count == 0
+        assert mock_podman.call_count == 0
+        assert mock_lxd.call_count == 0
+        assert len(p.monitors) == 0
+
+
+@pytest.mark.asyncio
+async def test_grab_aggregates_multiple_monitors_for_same_engine(store_with, config_with):
+    c1 = {"name": "c1", "key": "name", "engine": "docker", "engine_url": "unix:///d1.sock", "memory": {}}
+    c2 = {"name": "c2", "key": "name", "engine": "docker", "engine_url": "unix:///d2.sock", "memory": {}}
+    m1 = _FakeMonitor([c1])
+    m2 = _FakeMonitor([c2])
+
+    p = PluginModel(store_with(), config_with({}))
+    p.monitors = [m1, m2]
+
+    out = await p._grab_stats()
+    assert len(out) == 2
+    names = {c["name"] for c in out}
+    assert names == {"c1", "c2"}
+    urls = {c["engine_url"] for c in out}
+    assert urls == {"unix:///d1.sock", "unix:///d2.sock"}

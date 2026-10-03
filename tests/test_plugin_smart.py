@@ -93,3 +93,16 @@ def test_msg_curse_renders_the_device_attributes(plugin):
     displayed = [line['msg'].strip() for line in plugin.msg_curse(max_width=40)]
     assert 'Raw Read Error Rate' in displayed
     assert 'Throughput Performance' in displayed
+
+
+def test_missing_smartctl_returns_no_device(monkeypatch):
+    """pySMART >= 1.4 raises FileNotFoundError when smartctl is not installed:
+    it must not crash the Glances update (it killed the Web server at startup)."""
+
+    def no_smartctl():
+        raise FileNotFoundError("Command smartctl doesn't exist!")
+
+    monkeypatch.setattr(smart_mod, 'DeviceList', no_smartctl)
+    monkeypatch.setattr(smart_mod, 'import_error_tag', False)
+    assert smart_mod.get_smart_data([]) == []
+    assert smart_mod.import_error_tag is True
