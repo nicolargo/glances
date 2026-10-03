@@ -14,12 +14,13 @@ from typing import Any
 
 import psutil
 
-from glances.globals import natural_keys, to_fahrenheit
+from glances.globals import WINDOWS, natural_keys, to_fahrenheit
 from glances.logger import logger
 from glances.outputs.glances_unicode import unicode_message
 from glances.plugins.plugin.model import GlancesPluginModel
 from glances.plugins.sensors.sensor.glances_batpercent import BatpercentPlugin
 from glances.plugins.sensors.sensor.glances_hddtemp import HddtempPlugin
+from glances.plugins.sensors.sensor.glances_librehardwaremonitor import LibrehardwaremonitorPlugin
 from glances.timer import Counter
 
 # Define all kind of sensors available in Glances
@@ -95,13 +96,29 @@ class SensorsPlugin(GlancesPluginModel):
 
         self.sensors_grab_map = {}
 
+        librehardwaremonitor_hdd_plugin = None
         if glances_grab_sensors_cpu_temp.init:
             self.sensors_grab_map[sensors_definition.get('cpu_temp').get('type')] = glances_grab_sensors_cpu_temp
+        elif WINDOWS:
+            # On Windows, psutil does not provide temperatures (see issue #3265)
+            # Grab them from the LibreHardwareMonitor web server (if available):
+            # one instance for the CPU/motherboard/GPU temperatures and one for
+            # the disks ones (displayed as temperature_hdd, see below)
+            start_duration.reset()
+            librehardwaremonitor_plugin = LibrehardwaremonitorPlugin(args=args, config=config)
+            librehardwaremonitor_hdd_plugin = LibrehardwaremonitorPlugin(args=args, config=config, storage=True)
+            logger.debug(f"LibreHardwareMonitor sensor plugin init duration: {start_duration.get()} seconds")
+            self.sensors_grab_map[sensors_definition.get('cpu_temp').get('type')] = librehardwaremonitor_plugin
 
         if glances_grab_sensors_fan_speed.init:
             self.sensors_grab_map[sensors_definition.get('fan_speed').get('type')] = glances_grab_sensors_fan_speed
 
-        self.sensors_grab_map[sensors_definition.get('hdd_temp').get('type')] = hddtemp_plugin
+        if librehardwaremonitor_hdd_plugin is not None:
+            # On Windows, the hddtemp daemon is not available: grab the disks
+            # temperatures from the LibreHardwareMonitor web server too
+            self.sensors_grab_map[sensors_definition.get('hdd_temp').get('type')] = librehardwaremonitor_hdd_plugin
+        else:
+            self.sensors_grab_map[sensors_definition.get('hdd_temp').get('type')] = hddtemp_plugin
         self.sensors_grab_map[sensors_definition.get('battery').get('type')] = batpercent_plugin
 
         # We want to display the stat in the curse interface
@@ -242,6 +259,17 @@ class SensorsPlugin(GlancesPluginModel):
             elif i['type'] == sensors_definition.get('battery').get('type'):
                 # Battery is in %
                 alert = self.get_alert(current=100 - i['value'], header=i['type'])
+            elif (
+                i['type'] == sensors_definition.get('hdd_temp').get('type')
+                and i.get('critical') is not None
+                and not self.is_limit('critical', stat_name=i['type'] + '_' + i['label'])
+            ):
+                # Disks sensors may carry their own thresholds (e.g. NVMe drives
+                # through LibreHardwareMonitor, see #3265): prefer them over the
+                # generic temperature_hdd limits (which are always set, see the
+                # set_default_cwc call in config.py), but not over a limit set
+                # for this specific sensor in the glances.conf file
+                alert = self.__get_system_thresholds(i)
             else:
                 alert = self.get_alert(current=i['value'], header=i['type'])
             # Set the alert in the view
