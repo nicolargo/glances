@@ -1632,7 +1632,7 @@ All nine launch **v4**: `.venv/bin/python -m glances … --stop-after N --quiet`
 
 Makefile: `test-export-csv`, `-json`, `-influxdb-v1`, `-influxdb-v3`, `-timescaledb`, `-nats` and `-clickhouse` each run one script. **duckdb and prometheus have no dedicated target** and run only through `test-exports` (a loop over `tests/test_export_*.sh`). No GitHub workflow runs them; `make test` (pytest) does not either.
 
-**Blocker for every port except prometheus:** `glances-v5 --quiet` does not honour `--stop-after` (see the json note). The scripts rely on it to terminate. Expected counts (`csvcheck -l 9`, `SERIE_COUNT -eq 9`) also need re-tuning. v5 exports on its own `[export] refresh` loop, and the v5 CSV defers its header by one warm-up cycle.
+**Former blocker, fixed 2026-10-03:** `glances-v5 --quiet` did not honour `--stop-after` (see the json note). It now stops after n export cycles (`AsyncScheduler.run_forever(stop_after=)`, `tests/test_export_loop_v5.py::test_quiet_mode_honours_stop_after`). The scripts rely on it to terminate. Expected counts (`csvcheck -l 9`, `SERIE_COUNT -eq 9`) also need re-tuning. v5 exports on its own `[export] refresh` loop, and the v5 CSV defers its header by one warm-up cycle.
 
 | script | verdict | how it launches / what it checks / what to port |
 |---|---|---|

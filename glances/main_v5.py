@@ -552,7 +552,7 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=None,
         metavar="<n>",
-        help="Stop after n refreshes (TUI and stdout modes).",
+        help="Stop after n refreshes (TUI, stdout and --quiet modes; under --quiet, n export cycles).",
     )
     parser.add_argument(
         "--open-web-browser",
@@ -1641,8 +1641,11 @@ async def serve(
       SIGINT (raised by the TUI's ``on_quit`` callback or Ctrl-C).
     """
     scheduler_task: asyncio.Task[None] | None = None
+    # `--stop-after` under `--quiet`: nothing else counts the refreshes (the
+    # TUI and the stdout printer stop themselves), so the scheduler does.
+    stop_after = getattr(args, "stop_after", None) if not args.server and tui is None else None
     if scheduler._entries:  # type: ignore[attr-defined]
-        scheduler_task = asyncio.create_task(scheduler.run_forever())
+        scheduler_task = asyncio.create_task(scheduler.run_forever(stop_after=stop_after))
 
     if tui is not None:
         tui.start()
