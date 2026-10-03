@@ -624,11 +624,11 @@ def test_client_mode_refuses_the_keys_that_would_act_on_this_machine(monkeypatch
     assert popups and "client mode" in popups[0]
 
 
-def test_client_mode_e_pins_on_the_server_and_shows_its_extended_stats(monkeypatch):
+def test_client_mode_enter_pins_on_the_server_and_shows_its_extended_stats(monkeypatch):
     session = _FakeSession()
     source = _source(session)
     tui, popups = _client_tui(monkeypatch, source)
-    assert tui._handle_key(ord("e")) == "modal"
+    assert tui._handle_key(10) == "modal"
     tui._run_pending(None)
     assert popups == []
     assert ("POST", "http://srv:61208/api/5/processes/extended/1000", None) in session.requests
@@ -637,17 +637,17 @@ def test_client_mode_e_pins_on_the_server_and_shows_its_extended_stats(monkeypat
     extended = {"pid": 1000, "name": "nginx", "extended_stats": True}
     asyncio.run(source.store.set("processlist", {"data": [], "extended": extended}))
     assert tui._extended_payload() == extended
-    # `e` again unpins, on the server.
-    tui._handle_key(ord("e"))
+    # ENTER again unpins, on the server.
+    tui._handle_key(10)
     tui._run_pending(None)
     assert ("POST", "http://srv:61208/api/5/processes/extended/disable", None) in session.requests
     assert not tui._view.extended
 
 
-def test_client_mode_e_reports_a_refusal_from_the_server(monkeypatch):
+def test_client_mode_enter_reports_a_refusal_from_the_server(monkeypatch):
     tui, popups = _client_tui(monkeypatch, _source(_FakeSession()))
     tui._cursor_items = [{"pid": 4242, "name": "gone"}]
-    tui._handle_key(ord("e"))
+    tui._handle_key(10)
     tui._run_pending(None)
     assert popups and "refused" in popups[0]
     assert not tui._view.extended
