@@ -241,3 +241,23 @@ def test_the_table_stays_bounded(clock, monkeypatch):
     for i in range(10):
         buckets.take(f"192.0.2.{i}")
     assert len(buckets) <= 3
+
+
+# ---------------------------------------------------------------- logging
+
+
+def test_a_lockout_is_logged_once(config_factory, clock, caplog):
+    """One WARNING when an address runs out of tries, naming it (for fail2ban)."""
+    client = _client(config_factory(password=PASSWORD_HASH, auth_fail_per_minute=2), ip="192.0.2.66")
+    with caplog.at_level("WARNING", logger="glances.ratelimit_v5"):
+        for _ in range(5):
+            client.get("/api/5/pluginslist", headers=_basic("glances", "guess"))
+    lockouts = [r.getMessage() for r in caplog.records if r.name == "glances.ratelimit_v5"]
+    assert lockouts == ["Too many failed authentications from 192.0.2.66: refused for 30 s"]
+
+
+def test_failed_logins_short_of_the_limit_log_nothing(config_factory, clock, caplog):
+    client = _client(config_factory(password=PASSWORD_HASH, auth_fail_per_minute=2))
+    with caplog.at_level("WARNING", logger="glances.ratelimit_v5"):
+        client.get("/api/5/pluginslist", headers=_basic("glances", "guess"))
+    assert not [r for r in caplog.records if r.name == "glances.ratelimit_v5"]

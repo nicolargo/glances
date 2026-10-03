@@ -20,7 +20,7 @@ between TrustedHost and CORS, so outside authentication:
   credentials reach PBKDF2. Reserving up front is what keeps parallel guesses
   from all getting through while the first ones are still being checked. A
   request without credentials is a browser's first visit, not a guess: it is
-  not counted.
+  not counted. The try that locks an address out logs one WARNING naming it.
 
 `/status` and `/healthz` are never limited. `/api/5/token` is: it is where a
 password is guessed.
@@ -35,11 +35,14 @@ reset its limit.
 from __future__ import annotations
 
 import ipaddress
+import logging
 import math
 import time
 from typing import Any
 
 from starlette.responses import JSONResponse
+
+logger = logging.getLogger(__name__)
 
 # Monotonic clock, a module attribute so tests can move it.
 _now = time.monotonic
@@ -87,6 +90,12 @@ class Buckets:
             return 0.0
         self._store(key, tokens, now)
         return (1.0 - tokens) / self._rate
+
+    def wait(self, key: str) -> float:
+        """Seconds until `key` has a token, without spending or storing anything."""
+        now = _now()
+        tokens, last = self._table.get(key, (self._capacity, now))
+        return max(0.0, 1.0 - min(self._capacity, tokens + (now - last) * self._rate)) / self._rate
 
     def give_back(self, key: str) -> None:
         now = _now()
@@ -146,6 +155,12 @@ class RateLimitMiddleware:
         finally:
             if status[:1] != [401]:
                 self._auth.give_back(key)
+            elif wait := self._auth.wait(key):
+                # The try that emptied the bucket: once per lockout, naming the
+                # address, so a log watcher (fail2ban) can act on it.
+                logger.warning(
+                    "Too many failed authentications from %s: refused for %d s", key, max(1, math.ceil(wait))
+                )
 
 
 def _has_credentials(scope: dict[str, Any]) -> bool:

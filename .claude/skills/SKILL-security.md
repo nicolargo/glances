@@ -191,7 +191,8 @@ auth_fail_per_minute = 10       # failed authentications per address, 0 = off
 ```
 
 - A request with an `Authorization` header that ends in a 401 spends a try;
-  with none left the address gets 429 before PBKDF2 runs.
+  with none left the address gets 429 before PBKDF2 runs. The try that
+  empties the bucket logs one WARNING naming the address (fail2ban).
 - Exempt: `/status` and `/healthz` only. `/api/5/token` is limited.
 - Never read `X-Forwarded-For` in Glances: uvicorn already trusts it from
   127.0.0.1 only. IPv6 clients count per /64.
