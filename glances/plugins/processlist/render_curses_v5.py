@@ -446,7 +446,7 @@ def _pinned_title(payload: dict[str, Any]) -> str:
 
 
 _PINNED_LABEL = "Pinned task:"
-_UNPIN_HINT = "('e' to unpin)"
+_UNPIN_HINT = "(ENTER to unpin)"
 
 
 def _extended_rows(payload: dict[str, Any], width: int | None = None) -> list[Row]:

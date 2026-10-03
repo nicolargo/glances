@@ -3897,12 +3897,21 @@ def engine(monkeypatch):
     return tui_mod.glances_processes
 
 
-def test_e_defers_to_the_loop_like_the_other_selection_keys(fake_store, fake_alerts, fake_config):
+def test_enter_defers_to_the_loop_like_the_other_selection_keys(fake_store, fake_alerts, fake_config):
     from glances.outputs import glances_curses_v5 as tui_mod
 
     tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config)
-    assert tui._handle_key(ord("e")) == "modal"
+    assert tui._handle_key(10) == "modal"
     assert tui._pending == "extended"
+
+
+def test_e_no_longer_pins(fake_store, fake_alerts, fake_config):
+    """ENTER replaced `e` as the pin/unpin key."""
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config)
+    assert tui._handle_key(ord("e")) == "ignored"
+    assert tui._pending is None
 
 
 def test_e_pins_the_selected_pid_on_the_engine(engine, fake_store, fake_alerts, fake_config):
@@ -4202,16 +4211,15 @@ def _answer(monkeypatch, tui_mod, text):
 
 
 def test_enter_is_keyed_by_code_so_the_help_can_name_it(fake_store, fake_alerts, fake_config):
-    """`chr(10)` is well defined and v4 binds ENTER as a character
-    (`glances_curses.py:42`). It lives in the keycode table anyway, so the
+    """`chr(10)` is well defined, but ENTER lives in the keycode table so the
     overlay prints "ENTER" instead of a line break."""
     from glances.outputs import glances_curses_v5 as tui_mod
 
-    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config)
     assert 10 in tui_mod.TuiV5._SPECIAL_HOTKEYS
     assert "\n" not in tui_mod.TuiV5._HOTKEYS
     assert tui._handle_key(10) == "modal"
-    assert tui._pending == "edit_filter"
+    assert tui._pending == "extended"
 
 
 def test_the_keypad_enter_is_an_alias(fake_store, fake_alerts, fake_config):
@@ -4221,10 +4229,21 @@ def test_the_keypad_enter_is_an_alias(fake_store, fake_alerts, fake_config):
 
     from glances.outputs import glances_curses_v5 as tui_mod
 
-    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config)
     assert tui._handle_key(_curses.KEY_ENTER) == "modal"
-    assert tui._pending == "edit_filter"
+    assert tui._pending == "extended"
     assert " ".join(c.text for row in tui._help_lines() for c in row.cells).count("ENTER") == 1
+
+
+def test_f4_opens_the_process_filter(fake_store, fake_alerts, fake_config):
+    import curses as _curses
+
+    from glances.outputs import glances_curses_v5 as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    assert tui._handle_key(_curses.KEY_F4) == "modal"
+    assert tui._pending == "edit_filter"
+    assert any("F4" in c.text and "process filter" in c.text for row in tui._help_lines() for c in row.cells)
 
 
 def test_a_filter_typed_at_the_prompt_reaches_the_engine(monkeypatch, filtered, fake_store, fake_alerts, fake_config):

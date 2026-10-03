@@ -144,7 +144,7 @@ class ViewState:
     - ``hidden_plugins=set()`` — nothing hidden by the user (SHOW/HIDE keys).
     - ``cursor_position=0`` — the process list's first row (UP / DOWN).
     - ``extended=False`` — no extended stats block (hotkey ``e``).
-    - ``filter_mmm`` — empty min/max accumulators (hotkeys ``ENTER``, ``M``).
+    - ``filter_mmm`` — empty min/max accumulators (hotkeys ``F4``, ``M``).
     - ``command_offset=0`` — the command column unscrolled (LEFT / RIGHT).
 
     ``hidden_plugins`` is deliberately a namespace of its own, NOT the
@@ -309,12 +309,6 @@ class TuiV5(threading.Thread):
             "group": "MISCELLANEOUS",
             "desc": "Reset the filtered summary's min/max",
         },
-        "e": {
-            "action": "extended",
-            "cursor": True,
-            "group": "MISCELLANEOUS",
-            "desc": "Extended stats for the selected process",
-        },
         "g": {
             "action": "generate_graph",
             "group": "MISCELLANEOUS",
@@ -369,17 +363,25 @@ class TuiV5(threading.Thread):
     _STARTUP_HIDE_KEYS = STARTUP_HIDE_KEYS
 
     _SPECIAL_HOTKEYS: dict[int, dict[str, Any]] = {
-        # v4 binds ENTER as the CHARACTER `'\n'` (`glances_curses.py:42`) and
-        # v5 could too -- `chr(10)` is well defined. It lives here anyway so
-        # the help overlay prints "ENTER" rather than a line break.
-        # `curses.KEY_ENTER` is the keypad variant some terminals send.
+        # ENTER pins/unpins the selected process (v4 used `e`). `chr(10)` is
+        # well defined, but it lives here so the help overlay prints "ENTER"
+        # rather than a line break. `curses.KEY_ENTER` is the keypad variant
+        # some terminals send.
         10: {
+            "action": "extended",
+            "cursor": True,
+            "group": "MISCELLANEOUS",
+            "desc": "Extended stats for the selected process",
+            "label": "ENTER",
+        },
+        curses.KEY_ENTER: {"action": "extended", "cursor": True},
+        # The process filter (v4 used ENTER).
+        curses.KEY_F4: {
             "action": "edit_filter",
             "group": "MISCELLANEOUS",
             "desc": "Set the process filter (a regular expression)",
-            "label": "ENTER",
+            "label": "F4",
         },
-        curses.KEY_ENTER: {"action": "edit_filter"},
         curses.KEY_UP: {
             "action": "cursor_up",
             "cursor": True,
@@ -1128,13 +1130,13 @@ class TuiV5(threading.Thread):
                 # v4 reads this flag INSIDE `if process_filter is not None`
                 # (`processlist/__init__.py:648-650`), so without a filter the
                 # key does nothing at all and says nothing either.
-                self._popup_info(stdscr, "No process filter is set.\n\nPress ENTER to set one.")
+                self._popup_info(stdscr, "No process filter is set.\n\nPress F4 to set one.")
                 return
             self._view.filter_mmm = {"min": {}, "max": {}}
             return
         if verb == "extended" and self._view.extended:
             # Turning it OFF needs no selection at all -- and must not be
-            # refused by one, or `e` would be a trap in the program view.
+            # refused by one, or ENTER would be a trap in the program view.
             self._report_pin_error(stdscr, self._set_extended(None))
             return
         process, refusal = self._selected_process(mutating=verb in self._MUTATING_VERBS)

@@ -726,7 +726,7 @@ def test_the_extended_block_renders_v4s_four_lines(payload, fields):
     rows = render(payload, fields, view={"extended_process": _extended_payload()})
     lines = _flat(rows)
 
-    assert "Pinned task:" in lines[0] and "'e' to unpin" in lines[0]
+    assert "Pinned task:" in lines[0] and "ENTER to unpin" in lines[0]
     assert "CPU Min/Max/Mean" in lines[1]
     assert "RES Min/Max/Mean" in lines[2]
     assert lines[3].startswith(" Open:")
@@ -747,13 +747,13 @@ def test_a_long_command_line_is_cut_so_the_unpin_hint_stays_on_screen(payload, f
     line = " ".join(c.text for c in title.cells)
     assert len(line) == 60
     assert line.startswith("Pinned task: python -m glances")
-    assert line.endswith("… ('e' to unpin)")
+    assert line.endswith("… (ENTER to unpin)")
 
 
 def test_a_short_command_line_is_not_cut(payload, fields):
     extended = _extended_payload(cmdline=["python", "-m", "glances"])
     title = render(payload, fields, view={"extended_process": extended, "right_width": 60})[0]
-    assert " ".join(c.text for c in title.cells) == "Pinned task: python -m glances ('e' to unpin)"
+    assert " ".join(c.text for c in title.cells) == "Pinned task: python -m glances (ENTER to unpin)"
 
 
 def test_the_cpu_line_carries_min_max_mean_affinity_and_io_nice(payload, fields):
