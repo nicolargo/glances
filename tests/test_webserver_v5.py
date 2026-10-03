@@ -29,6 +29,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import base64
+import contextlib
 import logging
 
 import pytest
@@ -270,6 +271,26 @@ def test_cors_multi_origin_allowlist_with_wildcard_downgrades(config_factory, st
     assert r.headers.get("access-control-allow-credentials") is None
 
 
+@pytest.mark.parametrize("origin", ["https://a.example", "https://b.example"])
+def test_cors_echoes_each_origin_of_a_multi_origin_allowlist(origin, config_factory, store):
+    """v4 `test_xmlrpc` 031/032 (CVE-2026-46608): the matching origin is
+    echoed, never `*`, and the answer varies by Origin for caches."""
+    config = config_factory(cors_origins="https://a.example,https://b.example")
+    app = build_app(config=config, store=store)
+    with TestClient(app) as client:
+        r = client.get("/status", headers={"Origin": origin})
+    assert r.headers.get("access-control-allow-origin") == origin
+    assert "Origin" in r.headers.get("vary", "")
+
+
+def test_cors_no_origin_header_gets_no_allow_origin(config_factory, store):
+    config = config_factory(cors_origins="https://a.example,https://b.example")
+    app = build_app(config=config, store=store)
+    with TestClient(app) as client:
+        r = client.get("/status")
+    assert "access-control-allow-origin" not in r.headers
+
+
 def test_cors_absent_by_default(config_factory, store):
     config = config_factory()
     app = build_app(config=config, store=store)
@@ -289,6 +310,52 @@ def test_trusted_host_allowlist_enforced(config_factory, store):
         assert r.status_code == 200
         r = client.get("/status", headers={"Host": "evil.example"})
         assert r.status_code == 400
+
+
+@pytest.mark.parametrize(
+    ("allowed", "host", "status"),
+    [
+        ("*.glances.test", "node1.glances.test", 200),
+        # The wildcard needs a subdomain: the bare domain is not let through.
+        ("*.glances.test", "glances.test", 400),
+        # The port is not part of the match.
+        ("127.0.0.1", "127.0.0.1:61208", 200),
+    ],
+)
+def test_trusted_host_wildcard_and_port(allowed, host, status, config_factory, store):
+    app = build_app(config=config_factory(webui_allowed_hosts=allowed), store=store)
+    with TestClient(app) as client:
+        assert client.get("/status", headers={"Host": host}).status_code == status
+
+
+def test_trusted_host_rejects_a_request_without_host(config_factory, store):
+    """An HTTP/1.0 request may omit Host; TestClient always sends one, so the
+    ASGI scope is built by hand."""
+    app = build_app(config=config_factory(webui_allowed_hosts="127.0.0.1"), store=store)
+    scope = {
+        "type": "http",
+        "http_version": "1.0",
+        "method": "GET",
+        "scheme": "http",
+        "path": "/status",
+        "raw_path": b"/status",
+        "root_path": "",
+        "query_string": b"",
+        "headers": [],
+        "client": ("127.0.0.1", 50000),
+        "server": ("127.0.0.1", 61208),
+    }
+    sent = []
+
+    async def receive():
+        return {"type": "http.request", "body": b"", "more_body": False}
+
+    async def send(message):
+        sent.append(message)
+
+    asyncio.run(app(scope, receive, send))
+    assert sent[0]["type"] == "http.response.start"
+    assert sent[0]["status"] == 400
 
 
 def test_trusted_host_warning_when_bind_non_loopback(config_factory, store, caplog):
@@ -447,6 +514,71 @@ def test_a_custom_mcp_path_keeps_the_dns_rebinding_guard(config_factory, store):
     assert local.status_code != 421
 
 
+def test_mcp_sse_endpoint_streams_events(config_factory, store):
+    """v4 `test_mcp::test_001`: the SSE stream never ends, so the ASGI app is
+    driven by hand and cancelled once the response has started."""
+    pytest.importorskip("mcp")
+    from glances.webserver_v5 import attach_mcp
+
+    config = config_factory(enable_mcp="true")
+    app = build_app(config=config, store=store)
+    attach_mcp(app, config=config, store=store, plugins=[])
+    scope = {
+        "type": "http",
+        "http_version": "1.1",
+        "method": "GET",
+        "scheme": "http",
+        "path": "/mcp/sse",
+        "raw_path": b"/mcp/sse",
+        "root_path": "",
+        "query_string": b"",
+        "headers": [(b"host", b"localhost:61208")],
+        "client": ("127.0.0.1", 50000),
+        "server": ("127.0.0.1", 61208),
+    }
+
+    async def drive():
+        started = asyncio.get_running_loop().create_future()
+
+        async def receive():
+            await asyncio.Event().wait()  # the client never disconnects
+
+        async def send(message):
+            if message["type"] == "http.response.start" and not started.done():
+                started.set_result(message)
+
+        task = asyncio.create_task(app(scope, receive, send))
+        try:
+            return await asyncio.wait_for(started, 5)
+        finally:
+            task.cancel()
+            with contextlib.suppress(BaseException):
+                await task
+
+    start = asyncio.run(drive())
+    assert start["status"] == 200
+    assert "text/event-stream" in dict(start["headers"])[b"content-type"].decode()
+
+
+@pytest.mark.parametrize("path", ["/api/5/pluginslist", "/mcp/sse"])
+def test_cors_preflight_is_answered_before_auth(path, config_factory, store):
+    """v4 `test_mcp::test_auth_options_preflight_bypasses_auth`: a browser
+    sends no credentials on a preflight, so CORS (outside Auth) answers it."""
+    pytest.importorskip("mcp")
+    from glances.webserver_v5 import attach_mcp
+
+    config = config_factory(
+        enable_mcp="true", password=hash_password("hunter2"), cors_origins="https://trusted.example"
+    )
+    app = build_app(config=config, store=store)
+    attach_mcp(app, config=config, store=store, plugins=[])
+    headers = {"Origin": "https://trusted.example", "Access-Control-Request-Method": "GET"}
+    with TestClient(app) as client:
+        r = client.options(path, headers=headers)
+    assert r.status_code == 200
+    assert r.headers.get("access-control-allow-origin") == "https://trusted.example"
+
+
 def test_attach_mcp_records_server_in_app_state(config_factory, store):
     """Successful attach exposes the MCP server via app.state for diagnostics."""
     from glances.webserver_v5 import attach_mcp
@@ -545,6 +677,7 @@ def test_index_is_served_when_the_webui_is_enabled(config_factory, store):
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/html")
     assert "glances5.js" in response.text
+    assert "<title>Glances</title>" in response.text
 
 
 def test_static_directory_is_mounted(config_factory, store):

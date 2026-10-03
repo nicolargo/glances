@@ -393,3 +393,64 @@ def test_top_processes_prompt_accepts_the_collection_envelope(config):
     text = result.messages[0].content.text
     top = text[text.index("[") :]
     assert [p["name"] for p in json.loads(top)] == ["busy", "mid"]
+
+
+@pytest.fixture
+def mcp_server(adapter, config):
+    pytest.importorskip("mcp")
+    from glances.outputs.glances_mcp import GlancesMcpServer
+
+    return GlancesMcpServer(stats=adapter, args=None, config=config)
+
+
+def test_mcp_lists_the_resources_and_templates(mcp_server):
+    """v4 `test_mcp` 010/011, over the v5 facade instead of a live server."""
+    uris = [str(r.uri) for r in asyncio.run(mcp_server._mcp.list_resources())]
+    # Wire (camelCase) names: MCP SDK >= 2 renamed the attributes to snake_case.
+    raw_templates = asyncio.run(mcp_server._mcp.list_resource_templates())
+    templates = {t.model_dump(by_alias=True)["uriTemplate"] for t in raw_templates}
+    assert {"glances://plugins", "glances://stats", "glances://limits"} <= set(uris)
+    assert {"glances://stats/{plugin}", "glances://stats/{plugin}/history", "glances://limits/{plugin}"} <= templates
+
+
+def test_mcp_lists_the_four_prompts(mcp_server):
+    names = [p.name for p in asyncio.run(mcp_server._mcp.list_prompts())]
+    assert {"system_health_summary", "alert_analysis", "top_processes_report", "storage_health"} <= set(names)
+
+
+def test_system_health_prompt_carries_the_v5_payloads(mcp_server):
+    result = asyncio.run(mcp_server._mcp.get_prompt("system_health_summary"))
+    text = result.messages[0].content.text
+    assert "Glances" in text
+    assert '"cpu"' in text and "12.5" in text
+
+
+class _HotCpu(_CpuStub):
+    async def _grab_stats(self) -> dict:
+        return {"total": 95.0, "user": 90.0}
+
+
+def test_alert_analysis_prompt_takes_the_level_over_v5_alerts(config, monkeypatch):
+    """v4 `test_mcp::test_022`: a real critical alert from the v5 engine."""
+    pytest.importorskip("mcp")
+    from glances.outputs.glances_mcp import GlancesMcpServer
+
+    monkeypatch.setenv("GLANCES_ALERTS__WARMUP_CYCLES", "0")
+    monkeypatch.setenv("GLANCES_ALERTS__MIN_DURATION_SECONDS", "0")
+    config = GlancesConfigV5()
+    cpu = _HotCpu(StatsStoreV5(), config)
+    alerts = GlancesAlerts(config)
+
+    async def one_cycle():
+        await cpu.update()
+        await alerts.ingest_plugin(cpu)
+
+    asyncio.run(one_cycle())
+    server = GlancesMcpServer(stats=McpStatsAdapter(plugins=[cpu], alerts=alerts), args=None, config=config)
+
+    result = asyncio.run(server._mcp.get_prompt("alert_analysis", {"level": "critical"}))
+
+    text = result.messages[0].content.text
+    assert "severity filter: 'critical'" in text
+    [event] = json.loads(text[text.index("[") :])
+    assert (event["plugin"], event["field"], event["level"]) == ("cpu", "total", "critical")

@@ -30,6 +30,71 @@ ils testent du code v4 encore présent sur cette branche, et la fusion hebdomada
 
 Les fonctions paramétrées comptent pour une. Le détail par test suit, groupe par groupe.
 
+## Portage — fait le 2026-10-03
+
+Les 108 tests PORT sont portés (commits `9e2ddc8` et suivant), sauf les scripts
+`tests/test_export_*.sh`, débloqués par `f18b64a` (`--stop-after` sous `--quiet`)
+mais pas encore réécrits pour `glances-v5`. Aucun portage n'a révélé de bug v5 ;
+aucun test n'est marqué `skip`/`xfail`. Un test v4 peut aboutir dans un test v5
+existant, étendu ou paramétré : c'est lui qui est cité.
+
+| Test(s) v4 | Test v5 |
+|---|---|
+| test_core::test_001_plugins, test_plugin_{memswap,diskio,fs}::test_plugin_is_enabled | test_main_v5::test_discover_plugins_finds_concrete_v5_plugins |
+| test_plugin_{mem,memswap,load,cpu,processcount}::test_field_has_description / _unit | test_fields_description_v5::test_every_field_has_a_description_and_a_unit |
+| test_plugin_mem::test_update_contains_mandatory_keys, test_active_inactive_memory, test_buffers_cached_memory, test_mandatory_fields_described | test_plugin_mem_v5::test_update_writes_psutil_fields_to_store |
+| test_plugin_load::test_load_average_percent_mode | test_plugin_quicklook_v5::test_collect_sync_load_is_load15_per_core_percent |
+| test_plugin_cpu::test_the_summary_row_is_styled_by_the_cores_it_averages | test_plugin_quicklook_v5::TestPercpuLevels::test_percpu_other_is_the_mean_and_level_of_the_hidden_cores |
+| test_plugin_quicklook::test_a_hide_pattern_written_with_spaces_still_hides | test_plugin_base_v5::test_collection_hide_drops_matching_items |
+| test_plugin_quicklook::test_internal_spaces_are_kept | test_plugin_base_v5::test_collection_alias_strips_spaces_around_commas_keeps_internal_ones |
+| test_plugin_network::test_saturated_tx_is_flagged_while_rx_is_idle, test_a_fully_idle_interface_is_ok_not_undecorated | test_plugin_network_v5::test_bandwidth_levels_are_per_direction |
+| test_plugin_diskio::test_alert_follows_the_rate_not_the_lifetime_counter | test_plugin_diskio_v5::test_level_follows_the_rate_not_the_lifetime_counter |
+| test_plugin_fs::test_alias_matches_mixed_case_mount_point | test_plugin_fs_v5::test_alias_matches_mixed_case_mount_point |
+| test_cpu_percent::test_percpu_uses_guest_nice_value | test_plugin_percpu_v5::test_steal_and_guest_nice_land_in_their_own_fields |
+| test_rate_on_list::test_a_new_stat_measures_from_its_own_gauge_on_the_next_sample | test_plugin_base_v5::test_collection_rate_none_for_newly_appearing_item |
+| test_hide_zero_row_visibility::test_a_write_only_disk_is_still_displayed | test_plugin_base_v5::test_hide_zero_row_visible_when_one_field_unhides |
+| test_actions_sanitize::test_run_does_not_execute_when_already_triggered | test_alerts_v5::test_non_repeat_action_fires_on_entry |
+| test_actions_sanitize::test_double_quoted_field_stays_one_argument, test_ampersand_mustache_stays_one_argument | test_action_shell_v5::test_double_quoted_and_ampersand_fields_stay_one_argument |
+| test_actions_sanitize::test_templated_redirect_target_is_expanded | test_action_shell_v5::test_templated_redirect_target_is_expanded |
+| test_plugin_sensors (battery trend ×3) | test_plugin_sensors_v5::test_battery_trend |
+| test_plugin_sensors::test_battery_at_zero_percent_is_critical | test_plugin_sensors_v5::test_battery_at_zero_percent_is_critical |
+| test_plugin_sensors::test_battery_at_zero_is_not_less_alarming_than_a_small_charge | test_plugin_sensors_v5::test_battery_at_zero_matches_a_small_charge |
+| test_plugin_sensors::test_stopped_fan_is_evaluated_rather_than_skipped | test_plugin_sensors_v5::test_stopped_fan_is_evaluated |
+| test_plugin_sensors::test_absent_sensor_is_still_skipped, test_placeholder_reading_does_not_raise | test_plugin_sensors_v5::test_absent_or_placeholder_value_gets_no_level |
+| test_plugin_npu (temperature None ; autres champs) | test_plugin_npu_v5::test_temperature_none_gets_no_temperature_level, ::test_load_freq_and_temperature_levels_in_one_pass |
+| test_core::test_025_npu | test_plugin_npu_v5::test_card_drivers_parse_tests_data |
+| test_plugin_smart::test_an_empty_value_hides_nothing | test_plugin_smart_v5::test_empty_or_absent_hide_attributes_hides_nothing |
+| test_plugin_containers_views (×2) | test_plugin_containers_v5::test_mem_cell_coloured_by_memory_percent_level, ::test_container_without_cpu_or_memory_stats |
+| test_vms_decorations::test_a_column_reaches_critical_from_its_own_threshold | test_plugin_vms_v5::test_load_level_uses_load_prefix_thresholds |
+| test_plugin_processcount (total, non négatifs, running+sleeping, threads) | test_plugin_processcount_v5::test_real_host_counts_are_consistent |
+| test_duckdb_sanitize (quote_identifier ×3) | test_export_wave_d_v5::test_duckdb_quote_identifier |
+| test_duckdb_sanitize::test_injection_in_table_name_is_neutralized, test_insert_with_quoted_table | test_export_wave_d_v5::test_duckdb_quotes_the_table_name, ::test_duckdb_real_database_hostile_table_name_keeps_the_canary |
+| test_clickhouse_sanitize::test_injection_in_plugin_name_is_neutralized | test_export_wave_c_v5::test_clickhouse_hostile_table_name_sends_no_sql |
+| test_export_snapshot_isolation::test_prepared_payloads_are_detached_from_plugin_stats | test_export_base_v5::test_merge_limits_and_inject_key_build_new_objects |
+| test_export_snapshot_isolation::test_export_preparation_does_not_mutate_live_stats | test_export_base_v5, test_export_csv_v5, test_export_wave_c_v5, test_export_wave_d_v5 : `*_update_leaves_the_plugin_view_and_the_store_untouched` |
+| test_export_timescaledb_list (×3) | test_export_wave_d_v5::test_timescaledb_collection_rows_match_their_columns |
+| test_restful::test_003_plugins | test_routes_v5::test_every_real_plugin_answers_through_rest |
+| test_api::test_glances_api_plugins | test_api_v5::test_the_default_builds_every_enabled_plugin |
+| test_api_secure::test_args_login_is_redacted, test_args_hardcoded_sensitive_keys_are_still_redacted | test_routes_v5::test_args_redacts_the_username |
+| test_xmlrpc::test_013, 014, 015 | test_webserver_v5::test_trusted_host_wildcard_and_port |
+| test_xmlrpc::test_016 | test_webserver_v5::test_trusted_host_rejects_a_request_without_host |
+| test_xmlrpc::test_031, 032 | test_webserver_v5::test_cors_echoes_each_origin_of_a_multi_origin_allowlist |
+| test_xmlrpc::test_034 | test_webserver_v5::test_cors_no_origin_header_gets_no_allow_origin |
+| test_mcp::test_001 | test_webserver_v5::test_mcp_sse_endpoint_streams_events |
+| test_mcp::test_auth_options_preflight_bypasses_auth | test_webserver_v5::test_cors_preflight_is_answered_before_auth |
+| test_mcp::test_010, 011 | test_mcp_adapter_v5::test_mcp_lists_the_resources_and_templates |
+| test_mcp::test_020, 021, 022 | test_mcp_adapter_v5::test_mcp_lists_the_four_prompts, ::test_system_health_prompt_carries_the_v5_payloads, ::test_alert_analysis_prompt_takes_the_level_over_v5_alerts |
+| test_browser_restful::test_repeated_calls_consistent, test_repeated_calls_never_leak_credentials | test_servers_list_v5::test_serverslist_stays_stable_and_clean_over_rounds |
+| test_browser_tui::test_server_initial_status | test_servers_list_v5::test_the_static_list_reads_v4s_layout |
+| test_browser_tui::test_server_default_username | test_servers_list_v5::test_a_configured_password_opens_a_protected_server |
+| test_browser_tui::test_no_password_without_default | test_servers_list_v5::test_without_a_default_password_an_unlisted_host_gets_none |
+| test_glances_curses (cursor disabled, left/right) | test_curses_v5::test_disable_cursor_neutralises_every_key_that_needs_a_target |
+| test_glances_curses::test_config_applies_when_no_flag_is_given | test_curses_v5::test_disable_bg_flag_or_config |
+| test_webui::test_title, test_screenshot, test_loading_time | test_webserver_v5::test_index_is_served_when_the_webui_is_enabled ; test_webui_browser_v5 (Playwright, sauté sans le paquet `playwright`) |
+| test_stdout_csv (×3) | test_stdout_v5::test_csv_pads_a_partial_item_and_keeps_existing_columns_in_place, ::test_csv_whole_dict_plugin_gives_one_column_per_field |
+| test_json_serializer (liste vide ; erreurs désactivées) | test_stdout_v5::test_json_is_one_object_keyed_by_plugin, ::test_a_failing_plugin_is_dropped_from_the_json_output |
+| test_memoryleak::test_memoryleak_no_history | test_memoryleak_v5::test_memoryleak_no_history |
+
 
 ## v4 → v5 test migration audit, group 1 (core metrics, network/disk/fs, hide_zero, views)
 

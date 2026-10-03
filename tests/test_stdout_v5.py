@@ -69,6 +69,7 @@ def test_plain_skips_an_unknown_plugin_and_attribute():
 
 def test_json_is_one_object_keyed_by_plugin():
     assert json.loads(render_json(["cpu", "nope"], EXPORTS)) == {"cpu": EXPORTS["cpu"]}
+    assert render_json([], {}) == "{}"
 
 
 def test_csv_prints_the_header_first_then_aligned_data():
@@ -110,6 +111,30 @@ def test_csv_keeps_each_item_own_fields():
     assert row["network.wlan0.bytes_recv_rate_per_sec"] == "6.0"
 
 
+def test_csv_pads_a_partial_item_and_keeps_existing_columns_in_place():
+    """v4 `test_stdout_csv`: an item back with fewer fields gets one N/A per
+    missing field, and an item inserted between two others moves no column."""
+    csv = CsvRenderer([("network", None)])
+    header = csv.render(EXPORTS, PKS).split(",")
+    later = {
+        "network": [
+            {"interface_name": "eth0", "bytes_recv": 7, "bytes_sent": 8},
+            {"interface_name": "ppp0", "bytes_recv": 9, "bytes_sent": 9},
+            {"interface_name": "lo", "bytes_recv": 3},
+        ]
+    }
+    row = csv.render(later, PKS).split(",")
+    assert len(row) == len(header)
+    assert row == ["eth0", "7", "8", "lo", "3", "N/A"]
+
+
+def test_csv_whole_dict_plugin_gives_one_column_per_field():
+    csv = CsvRenderer([("cpu", None)])
+    cpu = {"cpu": {"user": 1.2, "system": 0.8, "idle": 98.0}}
+    assert csv.render(cpu, PKS) == "cpu.user,cpu.system,cpu.idle"
+    assert csv.render(cpu, PKS) == "1.2,0.8,98.0"
+
+
 def test_output_once_writes_the_selected_format():
     written = []
     printer = StdoutV5(plugins=_plugins(), refresh_interval=1, stdout_json="cpu", write=written.append)
@@ -145,3 +170,20 @@ def test_a_failing_plugin_does_not_end_the_stream():
     )
     printer.output_once()
     assert written == ["cpu.total: 12.5"]
+
+
+def test_a_failing_plugin_is_dropped_from_the_json_output():
+    class _Broken(_Plugin):
+        def get_export(self):
+            raise RuntimeError("boom")
+
+    written = []
+    printer = StdoutV5(
+        plugins=[_Broken("mem", None), *_plugins()], refresh_interval=1, stdout_json="mem,cpu", write=written.append
+    )
+    printer.output_once()
+    assert json.loads(written[0]) == {"cpu": EXPORTS["cpu"]}
+    # Every selected plugin failing still prints valid JSON.
+    written.clear()
+    StdoutV5(plugins=[_Broken("mem", None)], refresh_interval=1, stdout_json="mem", write=written.append).output_once()
+    assert written == ["{}"]
