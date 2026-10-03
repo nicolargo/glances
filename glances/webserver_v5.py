@@ -92,6 +92,21 @@ _STATIC_PATH = _WEBUI_ROOT / "public"
 _TEMPLATE_PATH = _WEBUI_ROOT / "templates"
 
 
+class _NoCacheStaticFiles(StaticFiles):
+    """Static files the browser has to revalidate (port of v4 #3770).
+
+    glances5.js has no version in its URL: without Cache-Control the browser
+    caches it heuristically from Last-Modified and can keep running the old
+    WebUI after an upgrade. With no-cache it checks the ETag first (a 304 when
+    nothing changed).
+    """
+
+    async def get_response(self, path, scope):
+        response = await super().get_response(path, scope)
+        response.headers["Cache-Control"] = "no-cache"
+        return response
+
+
 def build_app(
     *,
     config: GlancesConfigV5,
@@ -309,7 +324,7 @@ def _wire_webui(app: FastAPI, browser: bool = False) -> None:
         )
         return
 
-    app.mount("/static", StaticFiles(directory=_STATIC_PATH), name="static")
+    app.mount("/static", _NoCacheStaticFiles(directory=_STATIC_PATH), name="static")
 
     @app.get("/", response_class=FileResponse, include_in_schema=False)
     async def index_page() -> FileResponse:
