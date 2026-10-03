@@ -327,6 +327,15 @@ def test_per_vm_mem_override(store, tmp_path, monkeypatch):
     assert p._levels["vm-a"]["memory_percent"]["level"] == "careful"
 
 
+@pytest.mark.parametrize(("load", "expected"), [(600.0, "critical"), (10.0, "ok")])
+def test_load_level_uses_load_prefix_thresholds(store, tmp_path, monkeypatch, load, expected):
+    config = _cfg_with(tmp_path, monkeypatch, "[vms]\ndisable=False\nload_critical=500\n")
+    p = PluginModel(store, config)
+    p._stats = [{"name": "vm-a", "load_1min": load}]
+    p._derived_parameters()
+    assert p._levels["vm-a"]["load_1min"]["level"] == expected
+
+
 def test_no_threshold_configured_no_level_produced(store, tmp_path, monkeypatch):
     # Shipped default: [vms] cpu_*/mem_*/load_* are commented out.
     config = _cfg_with(tmp_path, monkeypatch, "[vms]\ndisable=False\n")

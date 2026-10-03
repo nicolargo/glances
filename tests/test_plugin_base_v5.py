@@ -674,6 +674,13 @@ async def test_collection_rate_none_for_newly_appearing_item(store, config, monk
     assert "rx" in items["wlan0"]
     assert items["wlan0"]["rx"] is None  # first appearance — not computable yet
 
+    fake_now[0] = 102.0
+    plugin._payload = [{"name": "eth0", "rx": 2000}, {"name": "wlan0", "rx": 900}]
+    await plugin.update()
+
+    items = {item["name"]: item for item in store.get("fakecollection")["data"]}
+    assert items["wlan0"]["rx"] == 400.0  # measured from its own cycle-2 gauge
+
 
 async def test_collection_disappearing_item_does_not_poison_others(store, config, monkeypatch):
     """An interface present in cycle N but absent in N+1 doesn't break rates for others."""
@@ -763,8 +770,9 @@ def _write_config(tmp_path, monkeypatch, body: str) -> GlancesConfigV5:
     return GlancesConfigV5()
 
 
-async def test_collection_hide_drops_matching_items(tmp_path, monkeypatch, store):
-    config = _write_config(tmp_path, monkeypatch, "[fakecollection]\nhide=lo,docker.*\n")
+@pytest.mark.parametrize("hide", ["lo,docker.*", "lo, docker.*"])
+async def test_collection_hide_drops_matching_items(tmp_path, monkeypatch, store, hide):
+    config = _write_config(tmp_path, monkeypatch, f"[fakecollection]\nhide={hide}\n")
     plugin = FakeCollectionPlugin(
         store,
         config,
@@ -837,6 +845,15 @@ async def test_collection_alias_published_when_pk_matches(tmp_path, monkeypatch,
     data = {item["name"]: item for item in store.get("fakecollection")["data"]}
     assert data["eth0"]["alias"] == "WAN Interface"
     assert "alias" not in data["lo"]
+
+
+async def test_collection_alias_strips_spaces_around_commas_keeps_internal_ones(tmp_path, monkeypatch, store):
+    config = _write_config(tmp_path, monkeypatch, "[fakecollection]\nalias=sda1:System Disk , sdb1:Data Disk\n")
+    plugin = FakeCollectionPlugin(store, config, payload=[{"name": "sda1", "rx": 0}, {"name": "sdb1", "rx": 0}])
+    await plugin.update()
+    data = {item["name"]: item for item in store.get("fakecollection")["data"]}
+    assert data["sda1"]["alias"] == "System Disk"
+    assert data["sdb1"]["alias"] == "Data Disk"
 
 
 async def test_collection_alias_absent_by_default(store, config):
@@ -1414,7 +1431,8 @@ async def test_hide_zero_boundary_equal_threshold_does_not_unhide(tmp_path, monk
     assert store.get("fakecollection")["data"][0]["hidden"] is False
 
 
-async def test_hide_zero_row_visible_when_one_field_unhides(tmp_path, monkeypatch, store):
+@pytest.mark.parametrize("rx, tx", [(500, 0), (0, 500)])  # rx-only, then tx/write-only
+async def test_hide_zero_row_visible_when_one_field_unhides(tmp_path, monkeypatch, store, rx, tx):
     """A row stays visible while any of its fields is un-hidden (v4 ff80c903)."""
     config = _write_config(tmp_path, monkeypatch, "[fakecollection]\nhide_zero=True\n")
     plugin = _HideZeroCollection(store, config, payload=[{"name": "eth0", "rx": 0, "tx": 0}])
@@ -1423,7 +1441,7 @@ async def test_hide_zero_row_visible_when_one_field_unhides(tmp_path, monkeypatc
     await plugin.update()
 
     now[0] = 101.0
-    plugin._payload = [{"name": "eth0", "rx": 500, "tx": 0}]  # rx un-hides, tx stays at 0
+    plugin._payload = [{"name": "eth0", "rx": rx, "tx": tx}]  # one field un-hides, the other stays at 0
     await plugin.update()
     assert store.get("fakecollection")["data"][0]["hidden"] is False
 

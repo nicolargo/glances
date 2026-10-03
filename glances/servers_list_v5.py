@@ -38,6 +38,7 @@ from glances.client_v5 import (
     RemoteError,
     parse_target,
 )
+from glances.version_v5 import __apiversion__
 
 logger = logging.getLogger(__name__)
 
@@ -205,7 +206,7 @@ class ServersPoller:
         conn = self._connection(server)
         try:
             status = conn.get_json("/status")
-            if not isinstance(status, dict) or str(status.get("version")) != "5":
+            if not isinstance(status, dict) or str(status.get("version")) != __apiversion__:
                 raise NotAGlancesV5Server(f"{server.target} is not a Glances v5 server")
             cells: dict[str, dict[str, Any]] = {}
             for plugin in dict.fromkeys(c.plugin for c in self.columns):

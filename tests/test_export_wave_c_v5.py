@@ -20,7 +20,14 @@ from datetime import datetime
 
 import pytest
 
-from tests.export_fakes_v5 import HOSTILE_NAME, fake_module, make_config, missing_module, plugins
+from tests.export_fakes_v5 import (
+    HOSTILE_NAME,
+    assert_plugins_untouched,
+    fake_module,
+    make_config,
+    missing_module,
+    plugins,
+)
 
 USER, PASSWORD = "the-db-user", "s3cr3t:p@ss/word"
 
@@ -255,6 +262,27 @@ def test_clickhouse_hostile_names_never_reach_the_sql(backend):
     rows = [row for doc in backend.writes for row in doc["rows"]]
     assert any(HOSTILE_NAME in row for row in rows), "the hostile name arrives as a value"
     assert all(hostile_option not in doc["columns"] for doc in backend.writes)
+
+
+def test_clickhouse_hostile_table_name_sends_no_sql(backend):
+    """Port of GHSA-2hvx-g9v6-w29h: a table name with a backtick is refused, not escaped."""
+    exporter = run("clickhouse")
+    backend.sql.clear()
+    backend.writes.clear()
+    injection = "x` ENGINE = MergeTree() AS SELECT * FROM url('http://evil"
+    exporter.export(injection, ["time", "hostname_id"], [[datetime.now(), "h"]])
+    assert backend.sql == [] and backend.writes == []
+    exporter.export("my plugin", ["time", "hostname_id"], [[datetime.now(), "h"]])
+    assert backend.sql[0].startswith("CREATE TABLE IF NOT EXISTS `my plugin` (")
+
+
+def test_clickhouse_update_leaves_the_plugin_view_and_the_store_untouched(backend):
+    """Port of v4 #3767."""
+    config = make_config({"clickhouse": SECTIONS["clickhouse"], "fakecollection": {"rx_careful": "60"}})
+    built = plugins(config)
+    importlib.import_module("glances.exports.glances_clickhouse.export_v5").Export(config).update(built)
+    assert {"key_id", "history_size", "fakecollection_rx_careful"} <= set(backend.writes[1]["columns"])
+    assert_plugins_untouched(built)
 
 
 # ------------------------------------------------------------------ common

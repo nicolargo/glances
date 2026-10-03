@@ -274,6 +274,34 @@ async def test_bandwidth_level_uses_full_link_speed_per_direction(store, config,
     assert store.get("network")["_levels"]["eth0"]["bytes_recv"]["level"] == "ok"
 
 
+_SATURATED = 118_750_000  # 0.95 * 125_000_000 B/s on a 1 Gbit link
+
+
+@pytest.mark.parametrize(
+    "rx, tx, recv_level, sent_level",
+    [
+        (0, _SATURATED, "ok", "critical"),
+        (_SATURATED, 0, "critical", "ok"),
+        (0, 0, "ok", "ok"),  # fully idle known-speed link: decorated 'ok', not absent
+        (_SATURATED, _SATURATED, "critical", "critical"),
+    ],
+)
+async def test_bandwidth_levels_are_per_direction(store, config, monkeypatch, rx, tx, recv_level, sent_level):
+    plugin = PluginModel(store, config)
+    now = _fake_now(monkeypatch)
+
+    with _patch_psutil(io_counters={"eth0": _io(rx=0, tx=0)}, if_stats={"eth0": _stats(speed=1000)}):
+        await plugin.update()
+
+    now[0] = 101.0
+    with _patch_psutil(io_counters={"eth0": _io(rx=rx, tx=tx)}, if_stats={"eth0": _stats(speed=1000)}):
+        await plugin.update()
+
+    levels = store.get("network")["_levels"]["eth0"]
+    assert levels["bytes_recv"]["level"] == recv_level
+    assert levels["bytes_sent"]["level"] == sent_level
+
+
 async def test_levels_skip_bandwidth_for_unknown_speed(store, config, monkeypatch):
     """An interface whose speed is 0 (lo) gets no bandwidth level — but errors still do."""
     plugin = PluginModel(store, config)

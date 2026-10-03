@@ -111,16 +111,47 @@
 					<span>Keyboard shortcuts</span>
 					<button type="button" class="gl-step" aria-label="Close" @click="showHelp = false">×</button>
 				</div>
-				<ul class="gl-help-list">
-					<li v-for="row in helpKeys" :key="row.key" :data-group="row.group">
-						<kbd>{{ row.key }}</kbd>
-						<span>{{ row.desc }}</span>
-					</li>
-					<li data-group="MISCELLANEOUS">
-						<kbd>h</kbd>
-						<span>Show / hide this help</span>
-					</li>
-				</ul>
+				<!-- One section per group, a title then its keys, flowed top to
+				bottom across as many columns as the width holds -- the TUI's
+				layout (`_help_lines` + `_help_visual_rows`). -->
+				<div class="gl-help-list">
+					<section v-for="group in helpGroups" :key="group.name" class="gl-help-group">
+						<h3 class="gl-header">{{ group.name }}</h3>
+						<ul>
+							<li v-for="row in group.rows" :key="row.key" :data-group="group.name">
+								<kbd>{{ row.key }}</kbd>
+								<span>{{ row.desc }}</span>
+							</li>
+						</ul>
+					</section>
+				</div>
+				<!-- Under the keys, as in the TUI (`_help_visual_rows`): the doc
+				link, then the colour legend drawn with the classes the plugins
+				use, so each sample is exactly what it explains. -->
+				<div class="gl-help-extra">
+					<p>
+						For an exhaustive list of key bindings:
+						<a :href="helpDocUrl" target="_blank" rel="noopener noreferrer">{{ helpDocUrl }}</a>
+					</p>
+					<h3 class="gl-header">Color binding:</h3>
+					<ul class="gl-help-legend">
+						<li>
+							<span v-for="level in helpLevels" :key="level" :class="'gl-level-' + level">{{ level.toUpperCase() }}</span>
+							<span>= stat severity (vs thresholds)</span>
+						</li>
+						<li>
+							<span v-for="level in helpLevels" :key="level" :class="['gl-prominent', 'gl-level-' + level]">{{
+								level.toUpperCase()
+							}}</span>
+							<span>= same, highlighted: an event is ongoing</span>
+						</li>
+						<li>
+							<span class="gl-header">Title</span>
+							<span class="gl-header gl-help-sorted">Sort</span>
+							<span>= section title / active sort column</span>
+						</li>
+					</ul>
+				</div>
 			</div>
 		</div>
 	</main>
@@ -135,7 +166,7 @@ import { visiblePlugins, groupBySlot } from "./layout.js";
 import { PLUGINS } from "./plugins/index.js";
 import { resolveDegrade, sameFlags, TOP_CASCADE, HEADER_CASCADE } from "./degrade.js";
 import { FULL_QUICKLOOK_HIDDEN } from "./full_quicklook.js";
-import { hideTargets, toggleHidden, helpRows, viewFlag, sortKeyFor, startupHidden, HELP_KEY } from "./hotkeys.js";
+import { hideTargets, toggleHidden, helpRows, viewFlag, sortKeyFor, startupHidden, HELP_KEY, HELP_DOC_URL } from "./hotkeys.js";
 import { planRightColumn } from "./row_budget.js";
 import { ampsLineCount } from "./amps.js";
 
@@ -402,8 +433,21 @@ export default {
 		zones() {
 			return ZONES;
 		},
-		helpKeys() {
-			return helpRows();
+		helpDocUrl() {
+			return HELP_DOC_URL;
+		},
+		helpLevels() {
+			return ["ok", "careful", "warning", "critical"];
+		},
+		// helpRows() grouped in its own order, plus MISCELLANEOUS for `h`.
+		helpGroups() {
+			const groups = [];
+			for (const row of helpRows()) {
+				if (groups.at(-1)?.name !== row.group) groups.push({ name: row.group, rows: [] });
+				groups.at(-1).rows.push(row);
+			}
+			groups.push({ name: "MISCELLANEOUS", rows: [{ key: HELP_KEY, desc: "Show / hide this help" }] });
+			return groups;
 		},
 		// What the server reported, with this viewer's TOGGLE VIEW keys applied
 		// on top. This -- not the raw `serverArgs` -- is what goes down to the
@@ -1288,9 +1332,9 @@ export default {
 	align-items: center;
 	justify-content: center;
 	/* The scrim leans on the page background rather than a black literal, so it
-	 * stays correct in the light theme too. */
-	background: var(--gl-bg);
-	opacity: 0.98;
+	 * stays correct in the light theme too. Translucent through the background
+	 * alone: an `opacity` here would let the page show through the panel too. */
+	background: color-mix(in srgb, var(--gl-bg) 98%, transparent);
 	z-index: 10;
 	padding: var(--gl-gap);
 }
@@ -1298,9 +1342,13 @@ export default {
 	background: var(--gl-surface);
 	border: 1px solid var(--gl-border);
 	padding: var(--gl-gap);
+	/* Wide enough for three columns of keys; the columns, not the panel,
+	 * give way on a narrower screen. */
+	width: min(100%, calc(150 * var(--gl-col)));
 	max-height: 90vh;
 	overflow-y: auto;
 	min-width: 0;
+	box-sizing: border-box;
 }
 .gl-help-title {
 	display: flex;
@@ -1310,30 +1358,74 @@ export default {
 	font-weight: var(--gl-weight-bold);
 	margin-bottom: var(--gl-gap);
 }
+/* Newspaper columns, like the TUI: the groups read top to bottom, then
+ * continue in the next column. As many columns as fit, one on a phone. */
 .gl-help-list {
+	column-width: calc(44 * var(--gl-col));
+	column-gap: calc(4 * var(--gl-col));
+}
+.gl-help-group {
+	margin-bottom: calc(var(--gl-row) * 1em);
+}
+.gl-help-group:last-child {
+	margin-bottom: 0;
+}
+.gl-help-group h3 {
+	margin: 0;
+	font-size: inherit;
+	line-height: var(--gl-row);
+	/* Never a title alone at the foot of a column. */
+	break-after: avoid;
+}
+.gl-help-group ul {
 	list-style: none;
 	margin: 0;
 	padding: 0;
-	/* Two columns where there is room, one on a phone. The key column is sized
-	 * in `--gl-col` like every other character-width in this UI. */
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
-	column-gap: calc(2 * var(--gl-gap));
 }
-.gl-help-list li {
+.gl-help-group li {
 	display: grid;
-	grid-template-columns: calc(3 * var(--gl-col)) 1fr;
-	gap: var(--gl-gap);
+	grid-template-columns: calc(6 * var(--gl-col)) 1fr;
 	align-items: baseline;
 	line-height: var(--gl-row);
+	break-inside: avoid;
 }
-.gl-help-list kbd {
+.gl-help-group kbd {
 	font: inherit;
 	font-weight: var(--gl-weight-bold);
-	text-align: center;
+	text-align: right;
+	padding-right: calc(2 * var(--gl-col));
 }
-.gl-help-list span {
-	color: var(--gl-muted);
+/* A row's gap under the columns: the last section's own margin is swallowed
+ * by its column. */
+.gl-help-extra {
+	margin-top: calc(var(--gl-row) * 1em);
+}
+.gl-help-extra p {
+	margin: 0 0 calc(var(--gl-row) * 1em);
+}
+/* The TUI paints this link CAREFUL and underlined. */
+.gl-help-extra a {
+	color: var(--gl-level-careful);
+	overflow-wrap: anywhere;
+}
+.gl-help-extra h3 {
+	margin: 0;
+	font-size: inherit;
+}
+.gl-help-legend {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+.gl-help-legend li {
+	display: flex;
+	flex-wrap: wrap;
+	column-gap: var(--gl-col);
+	line-height: var(--gl-row);
+}
+/* The active sort column's decoration, `.gl-table th.gl-sorted`. */
+.gl-help-sorted {
+	text-decoration: underline;
 }
 
 /* The -/+ steppers: text, not chrome. No border, no background, the same

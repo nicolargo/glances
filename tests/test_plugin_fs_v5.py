@@ -272,6 +272,17 @@ async def test_alias_published_for_matching_mountpoint(tmp_path, monkeypatch, st
     assert data["/"]["mnt_point"] == "/"  # primary key untouched
 
 
+async def test_alias_matches_mixed_case_mount_point(tmp_path, monkeypatch, store):
+    config = _config_with(tmp_path, monkeypatch, "[fs]\nalias=/Volumes/SSD:SSD\n")
+    plugin = PluginModel(store, config)
+    ssd = Partition("/dev/disk2s1", "/Volumes/SSD", "apfs", "rw"), DiskUsage(100, 50, 50, 50.0)
+    with _patch_psutil([ssd]):
+        await plugin.update()
+    item = store.get("fs")["data"][0]
+    assert item["alias"] == "SSD"
+    assert item["mnt_point"] == "/Volumes/SSD"
+
+
 # ---------------------------------------------------------- free_space (design §5.4)
 
 

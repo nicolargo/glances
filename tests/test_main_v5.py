@@ -286,7 +286,19 @@ def test_discover_plugins_finds_concrete_v5_plugins(config):
     names = {p.plugin_name for p in plugins}
     # Phase 1.1..1.3 shipped these; the test must continue to pass when
     # new plugins are added.
-    assert {"cpu", "mem", "load", "network", "percpu"}.issubset(names)
+    assert {
+        "system",
+        "cpu",
+        "mem",
+        "memswap",
+        "load",
+        "network",
+        "diskio",
+        "fs",
+        "sensors",
+        "processcount",
+        "percpu",
+    }.issubset(names)
 
 
 def test_discover_plugins_empty_when_no_modules(config, monkeypatch):
@@ -1305,42 +1317,57 @@ def test_memory_leak_flags_follow_v4(config):
     assert apply_memory_leak_flags(build_parser().parse_args(["--memory-leak", "--stop-after", "5"]), config) == 5
 
 
-async def test_measure_memory_leak_diffs_the_second_window_only(monkeypatch):
-    """Allocations of the warm-up window are not counted; those of the second are."""
+class _LeakScheduler:
+    """`run_cycle()` keeps `kept_per_cycle[n]` bytes per cycle, after holding
+    `in_flight` bytes across an await, the way a plugin update does."""
+
+    def __init__(self, kept_per_cycle, in_flight=0):
+        self.kept_per_cycle = kept_per_cycle
+        self.in_flight = in_flight
+        self.kept: list[bytes] = []
+        self.cycles = 0
+        self.stopped = False
+
+    async def run_cycle(self):
+        transient = bytes(self.in_flight)  # noqa: F841 -- alive across the await
+        await asyncio.sleep(0)
+        self.kept.append(bytes(self.kept_per_cycle[self.cycles]))
+        self.cycles += 1
+
+    async def stop(self):
+        self.stopped = True
+
+
+async def _measure(scheduler, cycles):
     import tracemalloc
 
     from glances.main_v5 import measure_memory_leak
 
-    kept: list[bytes] = []
-    phase = {"n": 0}
-
-    class _Scheduler:
-        stopped = False
-
-        async def run_forever(self):
-            await asyncio.Event().wait()
-
-        async def stop(self):
-            self.stopped = True
-
-    real_sleep = asyncio.sleep
-
-    async def fake_sleep(_seconds):
-        phase["n"] += 1
-        # 1st window: a one-off warm-up allocation; 2nd window: the "leak".
-        kept.append(bytes(200_000 if phase["n"] == 1 else 50_000))
-        await real_sleep(0)
-
-    monkeypatch.setattr("glances.main_v5.asyncio.sleep", fake_sleep)
-    scheduler = _Scheduler()
     tracemalloc.start()
     try:
-        diff = await measure_memory_leak(scheduler, 1.0)
+        diff = await measure_memory_leak(scheduler, cycles, 0)
     finally:
         tracemalloc.stop()
-    growth = sum(stat.size_diff for stat in diff)
-    assert 50_000 <= growth < 200_000
+    return sum(stat.size_diff for stat in diff)
+
+
+async def test_measure_memory_leak_diffs_the_second_window_only():
+    """Allocations of the warm-up window are not counted; those of the second are."""
+    scheduler = _LeakScheduler([100_000, 100_000, 25_000, 25_000])
+    growth = await _measure(scheduler, 2)
+    assert 50_000 <= growth < 100_000
+    assert scheduler.cycles == 4
     assert scheduler.stopped
+
+
+async def test_measure_memory_leak_ignores_memory_of_an_update_in_flight():
+    """Snapshots fall between two cycles: an update's working set is gone by then.
+
+    The previous design snapshotted the running scheduler, so the figure was
+    whatever plugins held at that instant (-144 KB to +197 KB per cycle).
+    """
+    growth = await _measure(_LeakScheduler([0] * 4, in_flight=1_000_000), 2)
+    assert abs(growth) < 10_000
 
 
 # ----------------------------------------------------------- --mcp-path

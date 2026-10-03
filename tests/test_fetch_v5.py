@@ -13,6 +13,7 @@ from __future__ import annotations
 import io
 import os
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -109,8 +110,10 @@ def test_rule_is_v4s_heavy_rule_or_ascii():
     assert FetchUI(None, unicode=False).rule(3) == "==="
 
 
-def test_uptime_is_formatted_as_the_tui_header(gl):
-    assert FetchUI(gl, color=False).uptime()[-1] == "s"
+def test_uptime_is_formatted_as_the_tui_header():
+    # A fixed uptime: the host's real one ends in "m" past the first hour.
+    gl = SimpleNamespace(uptime={"seconds": 2283})
+    assert FetchUI(gl, color=False).uptime() == "38m03s"
 
 
 # -------------------------------------------------------------- templates

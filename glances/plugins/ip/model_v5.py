@@ -272,7 +272,8 @@ class PluginModel(GlancesPluginBase[dict]):
 
         Runs in a worker thread (getaddrinfo + urlopen are blocking). A
         blocked host returns {} (public IP left empty) and logs once; a
-        network error keeps the last good cache (v4 parity).
+        network error or a reply that is not a JSON object keeps the last
+        good cache (v4 parity).
         """
         if not _public_api_allowed(self.public_api, self.allow_internal):
             self._log_blocked()
@@ -283,7 +284,11 @@ class PluginModel(GlancesPluginBase[dict]):
             headers["Authorization"] = f"Basic {token}"
         try:
             response = self._opener.open(Request(self.public_api, headers=headers), timeout=_FETCH_TIMEOUT).read()
-            return json_loads(response)
+            info = json_loads(response)
+            if not isinstance(info, dict):
+                logger.debug("IP plugin - public IP response from %s is not a JSON object", self.public_api)
+                return self._public_cache
+            return info
         except URLError as e:
             # A redirect or a re-resolution landed on a forbidden address.
             if isinstance(e.reason, _ForbiddenAddressError):

@@ -44,7 +44,7 @@ def test_psutilversion_identity(store, config):
 
 
 async def test_version_reports_glances_version(store, config):
-    from glances import __version__
+    from glances.version_v5 import __version__
 
     plugin = VersionPlugin(store, config)
     await plugin.update()

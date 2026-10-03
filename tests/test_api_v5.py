@@ -276,6 +276,11 @@ def test_plugins_builds_only_those_and_their_dependencies():
             gl.cpu
 
 
+def test_the_default_builds_every_enabled_plugin():
+    with api.GlancesAPI() as gl:
+        assert {"cpu", "network", "processcount", "processlist"} <= set(gl.plugins())
+
+
 def test_an_unknown_plugin_is_rejected():
     with pytest.raises(ValueError, match="nope"):
         api.GlancesAPI(plugins=["nope"])

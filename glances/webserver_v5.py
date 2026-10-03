@@ -50,13 +50,14 @@ from starlette.concurrency import run_in_threadpool
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
-from glances import __version__
 from glances.alerts_v5 import GlancesAlerts
 from glances.config_v5 import GlancesConfigV5
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
+from glances.ratelimit_v5 import RateLimitMiddleware
 from glances.routes_v5 import build_router
 from glances.security_v5 import JWTHandler, verify_password
 from glances.stats_store_v5 import StatsStoreV5
+from glances.version_v5 import __apiversion__, __version__
 
 if TYPE_CHECKING:
     import argparse
@@ -69,7 +70,7 @@ logger = logging.getLogger(__name__)
 #   itself; it cannot live behind the Bearer-or-Basic middleware because
 #   the very purpose of the call is to *obtain* the Bearer token.
 # Hardcoded — deliberately not configurable so the surface stays predictable.
-UNAUTH_PATHS: frozenset[str] = frozenset({"/status", "/healthz", "/api/5/token"})
+UNAUTH_PATHS: frozenset[str] = frozenset({"/status", "/healthz", f"/api/{__apiversion__}/token"})
 
 # Loopback addresses that suppress the "no TrustedHost configured" warning.
 _LOOPBACK_HOSTS: frozenset[str] = frozenset({"127.0.0.1", "::1", "localhost"})
@@ -83,6 +84,9 @@ _DEFAULT_USERNAME = "glances"
 # Default JWT token lifetime in minutes — matches v4.
 _DEFAULT_JWT_EXPIRE_MINUTES = 60
 
+# Failed authentications allowed per client address and minute (§4.5).
+_DEFAULT_AUTH_FAIL_PER_MINUTE = 10
+
 # WebUI assets. `public/` holds the webpack output and is committed; the
 # templates directory holds the root documents. Both are package data, not
 # user-writable paths -- a UI served from a config-specified directory would
@@ -90,6 +94,21 @@ _DEFAULT_JWT_EXPIRE_MINUTES = 60
 _WEBUI_ROOT = Path(__file__).parent / "outputs" / "static"
 _STATIC_PATH = _WEBUI_ROOT / "public"
 _TEMPLATE_PATH = _WEBUI_ROOT / "templates"
+
+
+class _NoCacheStaticFiles(StaticFiles):
+    """Static files the browser has to revalidate (port of v4 #3770).
+
+    glances5.js has no version in its URL: without Cache-Control the browser
+    caches it heuristically from Last-Modified and can keep running the old
+    WebUI after an upgrade. With no-cache it checks the ETag first (a 304 when
+    nothing changed).
+    """
+
+    async def get_response(self, path, scope):
+        response = await super().get_response(path, scope)
+        response.headers["Cache-Control"] = "no-cache"
+        return response
 
 
 def build_app(
@@ -121,7 +140,7 @@ def build_app(
 
     app = FastAPI(
         title="Glances REST API",
-        version="5",
+        version=__apiversion__,
         docs_url="/docs" if api_doc_enabled else None,
         redoc_url="/redoc" if api_doc_enabled else None,
         lifespan=lifespan,
@@ -139,6 +158,7 @@ def build_app(
     # Register from inner to outer — Starlette applies middlewares in reverse.
     _wire_auth(app, config)
     _wire_cors(app, config)
+    _wire_rate_limit(app, config)
     _wire_trusted_hosts(app, config, args)
 
     _register_health_endpoints(app)
@@ -309,7 +329,7 @@ def _wire_webui(app: FastAPI, browser: bool = False) -> None:
         )
         return
 
-    app.mount("/static", StaticFiles(directory=_STATIC_PATH), name="static")
+    app.mount("/static", _NoCacheStaticFiles(directory=_STATIC_PATH), name="static")
 
     @app.get("/", response_class=FileResponse, include_in_schema=False)
     async def index_page() -> FileResponse:
@@ -377,6 +397,24 @@ def _wire_cors(app: FastAPI, config: GlancesConfigV5) -> None:
         allow_credentials=allow_credentials,
         allow_methods=["GET", "POST"],
         allow_headers=["Authorization", "Content-Type"],
+    )
+
+
+def _wire_rate_limit(app: FastAPI, config: GlancesConfigV5) -> None:
+    """Limit requests per client address, between TrustedHost and CORS (§4.5).
+
+    The general limit is off unless ``rate_limit_per_minute`` is set; the
+    failed-authentication one is on (``auth_fail_per_minute``, 0 turns it off).
+    """
+    per_minute = config.get("outputs", "rate_limit_per_minute", 0)
+    auth_fail_per_minute = config.get("outputs", "auth_fail_per_minute", _DEFAULT_AUTH_FAIL_PER_MINUTE)
+    if per_minute <= 0 and auth_fail_per_minute <= 0:
+        return
+    app.add_middleware(
+        RateLimitMiddleware,
+        per_minute=per_minute,
+        burst=config.get("outputs", "rate_limit_burst", 0),
+        auth_fail_per_minute=auth_fail_per_minute,
     )
 
 
@@ -465,7 +503,7 @@ def _register_health_endpoints(app: FastAPI) -> None:
         # `glances_version` is the release the server runs, which the WebUI
         # footer shows. Kept on the probe rather than on a route of its own:
         # v4 already serves the release from its own /status.
-        return {"status": "ok", "version": "5", "glances_version": __version__}
+        return {"status": "ok", "version": __apiversion__, "glances_version": __version__}
 
     app.add_api_route("/status", status_handler, methods=["GET"], tags=["health"])
     app.add_api_route("/healthz", status_handler, methods=["GET"], tags=["health"])

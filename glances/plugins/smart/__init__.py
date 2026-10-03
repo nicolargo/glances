@@ -169,7 +169,7 @@ def get_smart_data(hide_attributes):
     stats = []
     try:
         devlist = DeviceList()
-    except TypeError as e:
+    except (TypeError, FileNotFoundError) as e:
         logger.debug(f'Smart plugin error - Can not grab device list ({e})')
         global import_error_tag
         import_error_tag = True

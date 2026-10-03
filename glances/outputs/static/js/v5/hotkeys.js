@@ -104,6 +104,10 @@ export function viewFlag(key) {
 // `h`. Not a `hide` entry, so it is not part of the drift comparison.
 export const HELP_KEY = "h";
 
+// The help overlay's documentation link, the TUI's `_HELP_DOC_URL`
+// (tests/test_webui_v5_hotkeys_drift.py).
+export const HELP_DOC_URL = "https://glances.readthedocs.io/en/latest/cmds.html#interactive-commands";
+
 /**
  * The plugin names `key` hides, or null when `key` is not a SHOW/HIDE key.
  *

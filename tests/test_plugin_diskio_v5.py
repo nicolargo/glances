@@ -233,6 +233,17 @@ async def test_read_bytes_threshold_from_config_triggers_level(tmp_path, monkeyp
     assert sda["read_bytes"]["prominent"] is False
 
 
+async def test_level_follows_the_rate_not_the_lifetime_counter(tmp_path, monkeypatch, store):
+    """A 5 GB lifetime counter growing by 10 B/s is far under critical=90 B/s:
+    the level is computed on the rate, not on the raw counter."""
+    config = _config_with(tmp_path, monkeypatch, "[diskio]\nsda_read_bytes_critical=90\n")
+    plugin = PluginModel(store, config)
+    await _two_cycles(plugin, monkeypatch, {"sda": _io(rb=5_000_000_000)}, {"sda": _io(rb=5_000_000_010)})
+
+    assert store.get("diskio")["data"][0]["read_bytes"] == 10.0
+    assert store.get("diskio")["_levels"]["sda"]["read_bytes"]["level"] == "ok"
+
+
 # ---------------------------------------------------------- alias (design §5.5)
 
 

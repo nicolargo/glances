@@ -5,7 +5,7 @@
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 
-"""Podman Extension unit for Glances' Containers plugin."""
+"""Podman Engine Monitoring unit for Glances' Containers plugin."""
 
 import time
 from datetime import datetime
@@ -13,6 +13,7 @@ from typing import Any
 
 import psutil
 
+from glances.config import secure_option
 from glances.globals import nativestr, pretty_date, replace_special_chars, string_value_to_float
 from glances.logger import logger
 from glances.stats_streamer import ThreadedIterableStreamer
@@ -154,7 +155,7 @@ class PodmanPodStatsFetcher:
         self._pod_manager = pod_manager
 
         # Threaded Streamer
-        # Temporary patch to get podman extension working
+        # Temporary patch to get podman monitor working
         stats_iterable = (pod_manager.stats(decode=True) for _ in iter(int, 1))
         # WARNING: Podman API doesn't specify the rate at which stats are sent, so we set it to 1 second
         # to avoid overloading the system with stats calculations. With a lot of pods, this can cause some
@@ -277,21 +278,23 @@ class PodmanPodStatsFetcher:
         return {"ior": ior, "iow": iow, "time_since_update": 1}
 
 
-class PodmanExtension:
-    """Glances' Containers Plugin's Docker Extension unit"""
+class PodmanEngineMonitor:
+    """Glances' Containers Plugin's Podman Engine Monitoring unit"""
 
+    ENGINE = "podman"
     CONTAINER_ACTIVE_STATUS = ["running", "healthy", "paused"]
 
-    def __init__(self, podman_sock):
+    def __init__(self, url: str):
         self.disable = disable_plugin_podman
         if self.disable:
-            raise Exception("Missing libs required to run Podman Extension (Containers)")
+            raise Exception("Missing libs required to run PodmanEngineMonitor (Containers)")
 
         self.display_error = True
 
         self.client = None
         self.ext_name = "containers (Podman)"
-        self.podman_sock = podman_sock
+        self.url = url
+        self.engine_url = secure_option('url', self.url)
         self.pods_stats_fetcher = None
         self.container_stats_fetchers = {}
 
@@ -304,7 +307,7 @@ class PodmanExtension:
     def connect(self):
         """Connect to Podman."""
         try:
-            self.client = PodmanClient(base_url=self.podman_sock)
+            self.client = PodmanClient(base_url=self.url)
             # PodmanClient works lazily, so make a ping to determine if socket is open
             self.client.ping()
         except Exception as e:
@@ -404,6 +407,8 @@ class PodmanExtension:
         # Init the stats for the current container
         stats = {
             "key": self.key,
+            "engine": self.ENGINE,
+            "engine_url": self.engine_url,
             "name": nativestr(container.name),
             "id": container.id,
             "image": self._get_image(container),

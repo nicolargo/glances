@@ -32,8 +32,9 @@ from typing import Any, TextIO
 
 from glances.api_v5_doc import _escape
 from glances.processes import sort_processes_stats_list
+from glances.version_v5 import __apiversion__
 
-API_URL = "http://localhost:61208/api/5"
+API_URL = f"http://localhost:61208/api/{__apiversion__}"
 # A collection example keeps this many items; the rest is summarised.
 _EXAMPLE_ITEMS = 2
 
@@ -83,6 +84,15 @@ The API is open by default. Set ``[outputs] password`` to a hash made with
 
     # curl -u glances:<password> -X POST {API_URL}/token
     # curl -H "Authorization: Bearer <access_token>" {API_URL}/cpu
+
+Rate limiting
+-------------
+
+A client address that fails authentication ``[outputs] auth_fail_per_minute``
+times (10 by default) gets ``429 Too Many Requests``, with ``Retry-After``,
+until a try comes back. ``[outputs] rate_limit_per_minute`` and
+``rate_limit_burst`` limit every request the same way; they are off by
+default. ``/status`` and ``/healthz`` are never limited.
 """
 
 

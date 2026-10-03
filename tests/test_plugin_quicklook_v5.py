@@ -11,6 +11,7 @@
 
 from __future__ import annotations
 
+from types import SimpleNamespace
 from unittest.mock import mock_open
 
 import pytest
@@ -158,6 +159,14 @@ def test_collect_sync_smoke():
     out = _collect_sync()
     assert isinstance(out, dict)
     assert "cpu_name" in out  # always set, even when other metrics fail
+
+
+def test_collect_sync_load_is_load15_per_core_percent(monkeypatch):
+    import glances.plugins.quicklook.model_v5 as mod
+
+    monkeypatch.setattr(mod, "sampler", SimpleNamespace(cpu_count=4))
+    monkeypatch.setattr(mod.psutil, "getloadavg", lambda: (9.0, 5.0, 3.0))
+    assert _collect_sync()["load"] == round(3.0 / 4 * 100, 1)  # 75.0
 
 
 class _NoGpuSampler:
@@ -371,14 +380,25 @@ class TestPercpuLevels:
         assert cores[1]["level"] == "ok"
 
     @pytest.mark.asyncio
-    async def test_percpu_other_is_the_mean_and_level_of_the_hidden_cores(self, tmp_path, monkeypatch, store):
+    @pytest.mark.parametrize(
+        "totals, expected",
+        [
+            # max_cpu_display=4 (default) keeps the 4 highest [95, 10, 5, 2]; the
+            # single hidden core is the smallest, 1.0.
+            ([95.0, 10.0, 5.0, 2.0, 1.0], {"total": 1.0, "level": "ok"}),
+            # The summary row gets its own level ('careful' at 60), neither the
+            # shown cores' ('critical') nor the aggregate's ('ok').
+            ([95.0, 95.0, 95.0, 95.0, 60.0, 60.0], {"total": 60.0, "level": "careful"}),
+        ],
+    )
+    async def test_percpu_other_is_the_mean_and_level_of_the_hidden_cores(
+        self, tmp_path, monkeypatch, store, totals, expected
+    ):
         cfg = _cfg_with(tmp_path, monkeypatch, "")
         p = PluginModel(store, cfg)
-        self._patch_cores(monkeypatch, [95.0, 10.0, 5.0, 2.0, 1.0])
+        self._patch_cores(monkeypatch, totals)
         await p.update()
-        # max_cpu_display=4 (default) keeps the 4 highest [95, 10, 5, 2]; the
-        # single hidden core is the smallest, 1.0.
-        assert store.get("quicklook")["percpu_other"] == {"total": 1.0, "level": "ok"}
+        assert store.get("quicklook")["percpu_other"] == expected
 
     @pytest.mark.asyncio
     async def test_percpu_other_is_none_at_or_under_max_cpu_display(self, tmp_path, monkeypatch, store):

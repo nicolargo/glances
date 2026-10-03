@@ -4142,6 +4142,30 @@ def test_the_help_overlay_renders_every_bound_key():
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_help_overlay_titles_its_groups_like_the_tui():
+    """Each group gets its title, in the TUI's order (`_HELP_GROUPS`), so the
+    keys read as sections rather than one flat list."""
+    from glances.outputs.glances_curses_v5 import TuiV5
+
+    rendered = _run_render_probe("default", "h")["helpGroups"]
+    assert rendered == [g for g in TuiV5._HELP_GROUPS if g != "SELECT PROCESS"]
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_help_overlay_ends_with_the_doc_link_and_the_colour_legend():
+    """The TUI's help closes on the documentation link and the colour legend;
+    the browser's does too."""
+    from glances.outputs.glances_curses_v5 import TuiV5
+
+    # Compared without spaces: the probe joins sibling spans with none.
+    extra = _run_render_probe("default", "h")["helpExtra"].replace(" ", "")
+    assert TuiV5._HELP_DOC_URL in extra
+    assert "Colorbinding:" in extra
+    assert extra.count("OKCAREFULWARNINGCRITICAL=") == 2
+    assert "TitleSort=sectiontitle/activesortcolumn" in extra
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
 def test_the_help_overlay_is_absent_until_asked_for():
     """v-if, not v-show: a closed overlay must not sit in the DOM, where the
     degradation cascade would measure it."""

@@ -918,6 +918,31 @@ def test_all_still_excludes_a_collection_plugin_that_never_published(config_fact
     assert single.json() is None
 
 
+def test_every_real_plugin_answers_through_rest(config_factory):
+    """v4 `test_restful::test_003_plugins`: the fake plugins above stand in for
+    the real ones everywhere else. One update each, then every listed plugin
+    serves a scalar dict or the collection envelope."""
+    from glances.main_v5 import assemble, build_parser
+
+    app, *_ = assemble(build_parser().parse_args(["-s"]), config_factory())
+
+    async def update_all():
+        for plugin in app.state.plugins.values():
+            await plugin.update()
+
+    asyncio.run(update_all())
+    with TestClient(app) as client:
+        names = client.get("/api/5/pluginslist").json()
+        assert names
+        for name in names:
+            response = client.get(f"/api/5/{name}")
+            assert response.status_code == 200, name
+            payload = response.json()
+            assert isinstance(payload, dict), name
+            if app.state.plugins[name].IS_COLLECTION:
+                assert all(isinstance(item, dict) for item in payload["data"]), name
+
+
 # ------------------------------------------------------------------ /args
 
 
@@ -993,6 +1018,16 @@ def test_args_redacts_the_config_file_path(config_factory, store):
 
     assert payload["config_path"] == "***"
     assert "alice" not in payload["config_path"]
+
+
+def test_args_redacts_the_username(config_factory, store):
+    """v4 `test_api_secure`: `-u` names the account a password opens."""
+    app = _make_app_with_args(config_factory(), store, argparse.Namespace(username="alice"))
+
+    with TestClient(app) as client:
+        payload = client.get("/api/5/args").json()
+
+    assert payload["username"] == "***"
 
 
 def test_args_matches_the_real_v5_argument_set(config_factory, store):

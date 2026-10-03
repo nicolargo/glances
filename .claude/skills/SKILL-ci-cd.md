@@ -7,19 +7,24 @@ tested, and released.
 ## Branch model (architecture §10)
 
 ```
-main          ──────────────────────────────────────────────────► (v4 stable releases)
-develop       ──────────────────────────────────────────────────► (v4 bugfixes & security)
-develop-v5    ──┬──────┬──────┬──────┬──────────────────────────► (v5 development)
-                │      │      │      │
-             weekly  alpha  alpha  alpha  …→ beta → rc → merge develop
-             merge   0.1    0.2    0.3
+main               ───────────────────────────────────────────────► stable releases (v4, then v5)
+support/glancesv4          (1) ┌──────────────────────────────────► v4 hotfixes (4.5.x)
+develop            ────────────┴──────┬──── 5.0.0b1 → rc → 5.0.0 ─► v4 fixes, then v5
+                     │ weekly merge   ▲ (2) merge
+develop-v5         ──▼────────────────┘                             v5 development, nothing published
 ```
 
 | Branch | Purpose | PR target |
 |---|---|---|
-| `main` | Tagged v4 stable releases only — never merge directly | — |
-| `develop` | v4 bugfixes and security fixes | v4 PRs |
-| `develop-v5` | v5 development (Phase 0 → v5.0.0-rc) | **v5 PRs** |
+| `main` | Tagged stable releases only — never merge directly | — |
+| `develop` | v4 bugfixes and security fixes until the merge; v5 after it | v4 PRs, then v5 PRs |
+| `develop-v5` | v5 development, until the merge into `develop` | **v5 PRs** |
+| `support/glancesv4` | v4 hotfixes, branched from `develop` just before the merge | v4 PRs, after the merge |
+
+**Sequence (maintainer, 2026-10-03):** 1) branch `develop` to
+`support/glancesv4`; 2) merge `develop-v5 → develop`. From then on a v4
+bugfix or security fix targets `support/glancesv4`, and the weekly merge
+job stops.
 
 ## PR routing rule
 
@@ -54,13 +59,15 @@ and resolves within 48 hours of the cron run.
 
 | Stage | Tag format | Source branch | PyPI |
 |---|---|---|---|
-| Alpha | `5.0.0a1`, `5.0.0a2`, … | `develop-v5` | Yes (early feedback) |
-| Beta | `5.0.0b1`, `5.0.0b2`, … | `develop-v5` | Yes |
-| Release candidate | `5.0.0rc1`, … | `develop-v5` | Yes |
-| Final | `5.0.0` | `develop` (after `develop-v5 → develop` merge) | Yes |
+| Alpha | — | — | **No** (maintainer, 2026-10-03) |
+| Beta | `5.0.0b1`, `5.0.0b2`, … | `develop` (after the merge) | Yes — the first published v5 |
+| Release candidate | `5.0.0rc1`, … | `develop` | Yes |
+| Final | `5.0.0` | `develop` | Yes |
+| v4 hotfix | `4.5.x` | `support/glancesv4` | Yes |
 
-The final merge `develop-v5 → develop` happens at v5.0.0-rc stage, after
-all plugins, exporters, and migrated tests are green.
+Nothing is published from `develop-v5`. The merge `develop-v5 → develop`
+happens once Phase 4's hardening is done: all plugins, exporters and
+migrated tests green, security audit passed.
 
 ## GitHub Actions guards — known pitfalls
 
@@ -133,7 +140,7 @@ targets and local development commands.
 
 ## What's deferred
 
-- **Concrete CI workflow for the v5 alpha PyPI release** — Phase 1 (when first alpha ships)
+- **Concrete CI workflow for the v5 beta PyPI release** — from `develop`, after the merge (no alpha is published)
 - **`glances-v5` Docker image** — Phase 2 (when v5 has feature parity for standalone mode)
 - **Helm chart for v5** — Phase 3 (when v5 has feature parity for server mode)
 

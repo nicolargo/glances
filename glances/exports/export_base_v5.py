@@ -251,15 +251,13 @@ class GlancesExportBase(ABC):
         data_dict = dict(zip(columns, points))
 
         # issue1871 — a '<x>.key' column marks '<x>' as a measurement identity.
-        keys_list = [k.split(".")[0] for k in columns if k.endswith(".key")]
+        keys_list = [k.rsplit(".", 1)[0] for k in columns if k.endswith(".key")]
         if not keys_list:
             keys_list = [None]
 
         for measurement in keys_list:
             if measurement is not None:
-                fields = {
-                    k.replace(f"{measurement}.", ""): data_dict[k] for k in data_dict if k.startswith(f"{measurement}.")
-                }
+                fields = {k[len(measurement) + 1 :]: data_dict[k] for k in data_dict if k.startswith(f"{measurement}.")}
             else:
                 fields = data_dict
             # A field with no value is not a measurement. v4 never met this

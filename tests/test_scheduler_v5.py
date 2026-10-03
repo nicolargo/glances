@@ -607,3 +607,34 @@ async def test_steady_state_sleep_still_equals_plugin_refresh_time(store, config
     await _run_until(scheduler, recorded, minimum=5)
 
     assert all(delay == 0.01 for delay in recorded)
+
+
+# ---------------------------------------------------------- run_cycle
+
+
+async def test_run_cycle_updates_every_plugin_once_then_returns(store, config):
+    """`--memory-leak` snapshots between two cycles: nothing may still run."""
+    alerts = _RecordingAlerts()
+    scheduler = AsyncScheduler(store, config, alerts=alerts)  # type: ignore[arg-type]
+    fast, slow = FastPlugin(store, config), SlowPlugin(store, config)
+    scheduler.register(fast, refresh_time=60)
+    scheduler.register(slow, refresh_time=60)
+
+    await scheduler.run_cycle()
+
+    assert (fast.calls, slow.calls) == (1, 1)
+    assert sorted(alerts.ingested) == ["fast", "slow"]
+    assert store.get("fast") is not None and store.get("slow") is not None
+
+
+async def test_run_cycle_survives_a_raising_plugin(store, config, caplog):
+    scheduler = AsyncScheduler(store, config)
+    raising, fast = RaisingPlugin(store, config), FastPlugin(store, config)
+    scheduler.register(raising, refresh_time=60)
+    scheduler.register(fast, refresh_time=60)
+
+    with caplog.at_level(logging.WARNING):
+        await scheduler.run_cycle()
+
+    assert (raising.calls, fast.calls) == (1, 1)
+    assert "boom from update override" in caplog.text

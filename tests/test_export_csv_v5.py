@@ -19,6 +19,7 @@ import pytest
 from glances.config_v5 import GlancesConfigV5
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
 from glances.stats_store_v5 import StatsStoreV5
+from tests.export_fakes_v5 import assert_plugins_untouched, plugins
 
 
 class FakeScalarPlugin(GlancesPluginBase[dict]):
@@ -130,6 +131,22 @@ async def test_csv_never_writes_limit_columns(tmp_path):
 
     header = list(csv_module.reader(path.open()))[0]
     assert not [column for column in header if "careful" in column or "warning" in column]
+
+
+def test_csv_update_leaves_the_plugin_view_and_the_store_untouched(tmp_path):
+    """Port of v4 #3767: the injected `key` stays in the CSV row."""
+    from glances.exports.glances_csv.export_v5 import Export
+
+    config = make_config({"fakecollection": {"rx_careful": "60"}})
+    built = plugins(config)
+    path = tmp_path / "glances.csv"
+    exporter = Export(config, make_args(path))
+    exporter.update(built)
+    exporter.update(built)
+    exporter.exit()
+
+    assert "fakecollection.eth0.key" in list(csv_module.reader(path.open()))[0]
+    assert_plugins_untouched(built)
 
 
 @pytest.mark.asyncio

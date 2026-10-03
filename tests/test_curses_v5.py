@@ -3472,10 +3472,13 @@ def test_disable_cursor_neutralises_every_key_that_needs_a_target(fake_store, fa
     from glances.outputs import glances_curses_v5 as tui_mod
 
     tui = _tui_with_processes(tui_mod, fake_store, fake_alerts, fake_config, disable_cursor=True)
+    # Off 0, so a LEFT that got through would show as a move.
+    tui._view.command_offset = 1
 
-    for key in (curses.KEY_UP, curses.KEY_DOWN, ord("k"), ord("+"), ord("-")):
+    for key in (curses.KEY_UP, curses.KEY_DOWN, ord("k"), ord("+"), ord("-"), curses.KEY_LEFT, curses.KEY_RIGHT):
         assert tui._handle_key(key) == "ignored", key
     assert tui._view.cursor_position == 0
+    assert tui._view.command_offset == 1
     assert tui._pending is None
     # ... and the renderer is told nothing, so no row is decorated.
     assert "cursor_position" not in tui._build_view(120)
@@ -4876,6 +4879,11 @@ def test_disable_bg_flag_or_config(fake_store, fake_alerts, fake_config):
     from glances.outputs import glances_curses_v5 as tui_mod
 
     assert _make_tui(tui_mod, fake_store, fake_alerts, fake_config, disable_bg=True)._disable_bg is True
+    assert _make_tui(tui_mod, fake_store, fake_alerts, fake_config)._disable_bg is False
+    fake_config.get.side_effect = lambda section, key, default=None: (
+        True if (section, key) == ("outputs", "disable_bg") else default
+    )
+    assert _make_tui(tui_mod, fake_store, fake_alerts, fake_config)._disable_bg is True
 
 
 def test_style_switches_drop_the_badge_and_the_bold(monkeypatch):

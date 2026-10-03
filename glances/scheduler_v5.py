@@ -199,12 +199,16 @@ class AsyncScheduler:
 
     # ------------------------------------------------------------ run/stop
 
-    async def run_forever(self) -> None:
+    async def run_forever(self, stop_after: int | None = None) -> None:
         """Start one task per registered plugin and block until cancelled.
 
         Returns cleanly when `stop()` is called from another coroutine.
         Raises only on programmer error (e.g. running with zero plugins
         registered).
+
+        `stop_after` (`--stop-after` under `--quiet`, where no TUI or stdout
+        printer counts the refreshes): return after that many export cycles,
+        or that many global refreshes when no exporter is registered.
         """
         if self._running:
             raise RuntimeError("Scheduler is already running")
@@ -214,11 +218,22 @@ class AsyncScheduler:
         self._running = True
         self._tasks = [asyncio.create_task(self._plugin_loop(entry)) for entry in self._entries]
         if self._exporters:
-            self._tasks.append(asyncio.create_task(self._export_loop()))
+            self._tasks.append(asyncio.create_task(self._export_loop(stop_after)))
         try:
-            # return_exceptions=True so a single task raising does not
-            # propagate out of gather and tear the rest down.
-            await asyncio.gather(*self._tasks, return_exceptions=True)
+            if stop_after is None:
+                # return_exceptions=True so a single task raising does not
+                # propagate out of gather and tear the rest down.
+                await asyncio.gather(*self._tasks, return_exceptions=True)
+            else:
+                if self._exporters:
+                    await asyncio.gather(self._tasks[-1], return_exceptions=True)
+                else:
+                    await asyncio.sleep(stop_after * self._global_refresh_time())
+                # Cancelled here, while `_tasks` still holds them: `stop()`
+                # finds the list empty once this returns.
+                for task in self._tasks:
+                    task.cancel()
+                await asyncio.gather(*self._tasks, return_exceptions=True)
         finally:
             self._running = False
             self._tasks = []
@@ -252,6 +267,31 @@ class AsyncScheduler:
 
     # ------------------------------------------------------------ internals
 
+    async def run_cycle(self) -> None:
+        """Update every registered plugin once, concurrently, then return.
+
+        For `--memory-leak`: once this returns no plugin work is in flight, so
+        a `tracemalloc` snapshot taken then is comparable to the next one. The
+        per-plugin loops of `run_forever()` never offer such a point.
+        """
+        await asyncio.gather(*(self._update_once(entry) for entry in self._entries))
+
+    async def _update_once(self, entry: _PluginEntry) -> None:
+        """One `update()` of `entry`'s plugin, then the optional alerts ingest."""
+        plugin_name = entry.plugin.plugin_name
+        try:
+            await entry.plugin.update()
+        except Exception as e:
+            # Defensive: GlancesPluginBase.update() already swallows.
+            # This catches anything a future plugin override might leak.
+            logger.warning("Scheduler caught exception from %s: %s", plugin_name, e)
+        if self.alerts is not None:
+            try:
+                await self.alerts.ingest_plugin(entry.plugin)
+            except Exception as e:
+                # Defensive: alerts must never tear down the loop either.
+                logger.warning("Alerts ingest failed for %s: %s", plugin_name, e)
+
     async def _plugin_loop(self, entry: _PluginEntry) -> None:
         """Per-plugin loop: `update()` → optional alerts ingest → `sleep`, forever.
 
@@ -271,21 +311,9 @@ class AsyncScheduler:
         plugin configured *faster* than the global refresh is never slowed
         down by this.
         """
-        plugin_name = entry.plugin.plugin_name
         first_cycle = True
         while True:
-            try:
-                await entry.plugin.update()
-            except Exception as e:
-                # Defensive: GlancesPluginBase.update() already swallows.
-                # This catches anything a future plugin override might leak.
-                logger.warning("Scheduler caught exception from %s: %s", plugin_name, e)
-            if self.alerts is not None:
-                try:
-                    await self.alerts.ingest_plugin(entry.plugin)
-                except Exception as e:
-                    # Defensive: alerts must never tear down the loop either.
-                    logger.warning("Alerts ingest failed for %s: %s", plugin_name, e)
+            await self._update_once(entry)
             if first_cycle:
                 sleep_time = min(self._global_refresh_time(), entry.refresh_time)
                 first_cycle = False
@@ -293,7 +321,7 @@ class AsyncScheduler:
                 sleep_time = entry.refresh_time
             await asyncio.sleep(sleep_time)
 
-    async def _export_loop(self) -> None:
+    async def _export_loop(self, stop_after: int | None = None) -> None:
         """Single loop driving every registered exporter, forever.
 
         One `to_thread` handoff per exporter per tick — never per plugin.
@@ -315,6 +343,7 @@ class AsyncScheduler:
         once at `register()` rather than on every iteration.
         """
         sleep_time = self._export_refresh_time()
+        cycles = 0
         while True:
             plugins = [entry.plugin for entry in self._entries]
             for exporter in self._exporters:
@@ -322,6 +351,9 @@ class AsyncScheduler:
                     await asyncio.to_thread(exporter.update, plugins)
                 except Exception as e:
                     logger.warning("Export %s failed: %s", exporter.export_name or type(exporter).__name__, e)
+            cycles += 1
+            if stop_after is not None and cycles >= stop_after:
+                return
             await asyncio.sleep(sleep_time)
 
 

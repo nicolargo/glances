@@ -179,17 +179,23 @@ Implemented via Starlette's `TrustedHostMiddleware`. Default behaviour matches v
 
 The MCP endpoint already enforces equivalent protection via `mcp_allowed_hosts` + `TransportSecuritySettings` in `glances/outputs/glances_mcp.py` (v4 codebase, kept untouched in v5).
 
-## Rate limiting — reserved keys, deferred
+## Rate limiting (architecture §4.5)
 
-Rate limiting is in scope for v5 but **not delivered in Phase 1.5**. Reserved keys:
+`glances/ratelimit_v5.py`, a pure ASGI middleware between TrustedHost and CORS:
 
 ```ini
 [outputs]
-rate_limit_per_minute = 0       # default 0 = disabled (Phase 2+)
-rate_limit_burst = 0
+rate_limit_per_minute = 0       # general limit per client address, 0 = off (default)
+rate_limit_burst = 0            # 0 = one minute's worth
+auth_fail_per_minute = 10       # failed authentications per address, 0 = off
 ```
 
-Implementation will land as a Starlette middleware between TrustedHost and CORS. Probes (`/status`, `/healthz`) will always be exempt.
+- A request with an `Authorization` header that ends in a 401 spends a try;
+  with none left the address gets 429 before PBKDF2 runs. The try that
+  empties the bucket logs one WARNING naming the address (fail2ban).
+- Exempt: `/status` and `/healthz` only. `/api/5/token` is limited.
+- Never read `X-Forwarded-For` in Glances: uvicorn already trusts it from
+  127.0.0.1 only. IPv6 clients count per /64.
 
 ## Sensitive endpoints — checklist before merging an API change
 
@@ -251,7 +257,6 @@ Output: downloadable `.md` audit report. Release blocker for `5.0.0`.
 
 - **`glances-v5 --set-password` CLI** — Phase 1.7 (regenerate hash for `[outputs] password`).
 - **`--disable-config-exec` for AMP commands** — the `ShellAction` gate shipped (GHSA-59fj-m2j6-hcxh, see the CVE table); the AMP side lands with the amps port, which has its own cycle.
-- **Rate limiting middleware** (`rate_limit_per_minute`, `rate_limit_burst`) — Phase 2+.
 - **IP plugin SSRF mitigation** (CVE-2026-35587) — Phase 2 (`ip` plugin migration). New v5 mitigation, not present in v4.
 - **Curses escape sanitization in alerts** (GHSA-mcm7-fmh3-v6v3 — draft) — Phase 2 (alerts plugin / curses TUI)
 - **DDL parameterization** in SQL/CQL exporters (CVE-2026-32611, -30930, -35588) — Phase 3 (DuckDB, TimescaleDB, Cassandra)

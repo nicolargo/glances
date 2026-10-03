@@ -62,6 +62,7 @@ from glances.processes import glances_processes, sort_processes_stats_list
 from glances.scheduler_v5 import AsyncScheduler
 from glances.security_v5 import hash_password, verify_password
 from glances.stats_store_v5 import StatsStoreV5
+from glances.version_v5 import __version__
 
 # Shell completion (`--print-completion`), v4 parity (`main.py:17-22`). Optional:
 # shtab is not installed on Windows, and the option is then simply absent.
@@ -77,7 +78,6 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-_VERSION = "5.0.0a1"
 _DEFAULT_BIND_ADDRESS = "127.0.0.1"
 _DEFAULT_PORT = 61208
 
@@ -552,7 +552,7 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=None,
         metavar="<n>",
-        help="Stop after n refreshes (TUI and stdout modes).",
+        help="Stop after n refreshes (TUI, stdout and --quiet modes; under --quiet, n export cycles).",
     )
     parser.add_argument(
         "--open-web-browser",
@@ -681,7 +681,7 @@ def build_parser() -> argparse.ArgumentParser:
         "-V",
         "--version",
         action="version",
-        version=f"Glances {_VERSION}",
+        version=f"Glances {__version__}",
     )
     return parser
 
@@ -1207,7 +1207,7 @@ def assemble(
             "plugins can be activated later via the REST API (issue #3548)."
         )
     else:
-        logger.info("Discovered %d v5 plugins: %s", len(plugins), ", ".join(p.plugin_name for p in plugins))
+        logger.debug("Discovered %d v5 plugins: %s", len(plugins), ", ".join(p.plugin_name for p in plugins))
 
     attach_history(plugins, config, args)
 
@@ -1323,6 +1323,7 @@ def assemble(
 
 # v4 `main.py:882-887`: 60 refreshes of 1 s when --stop-after is not given.
 _MEMORY_LEAK_DEFAULT_CYCLES = 60
+_MEMORY_LEAK_REFRESH = 1.0
 
 
 def apply_memory_leak_flags(args: argparse.Namespace, config: GlancesConfigV5) -> int:
@@ -1333,28 +1334,38 @@ def apply_memory_leak_flags(args: argparse.Namespace, config: GlancesConfigV5) -
     """
     args.no_tui = True
     args.disable_history = True
-    config._merged.setdefault("global", {})["refresh"] = 1.0
+    config._merged.setdefault("global", {})["refresh"] = _MEMORY_LEAK_REFRESH
     return args.stop_after or _MEMORY_LEAK_DEFAULT_CYCLES
 
 
-async def measure_memory_leak(scheduler: AsyncScheduler, seconds: float) -> list[tracemalloc.StatisticDiff]:
-    """Collect for `seconds` to warm up, snapshot, collect as long again, diff.
+async def measure_memory_leak(
+    scheduler: AsyncScheduler, cycles: int, interval: float
+) -> list[tracemalloc.StatisticDiff]:
+    """Run `cycles` refreshes to warm up, snapshot, as many again, diff.
 
     The warm-up is what keeps one-off allocations (imports, caches, the first
     psutil handles) out of the figure. `tracemalloc` must already be tracing.
     Mirrors v4 `check_memleak` / `maybe_trace_memleak` (`glances/__init__.py`).
+
+    Every plugin is refreshed in lock-step (`run_cycle`), never through
+    `run_forever()`: a snapshot of the running loops counts whatever the
+    plugins hold at that instant, which swamps any real growth.
     """
-    task = asyncio.create_task(scheduler.run_forever())
+
+    async def refresh() -> None:
+        for _ in range(cycles):
+            await scheduler.run_cycle()
+            await asyncio.sleep(interval)
+
+    # The `begin` snapshot is itself traced memory alive at `end`: not a leak.
+    own = [tracemalloc.Filter(False, tracemalloc.__file__)]
     try:
-        await asyncio.sleep(seconds)
-        begin = tracemalloc.take_snapshot()
-        await asyncio.sleep(seconds)
-        end = tracemalloc.take_snapshot()
+        await refresh()
+        begin = tracemalloc.take_snapshot().filter_traces(own)
+        await refresh()
+        end = tracemalloc.take_snapshot().filter_traces(own)
     finally:
         await scheduler.stop()
-        task.cancel()
-        with contextlib.suppress(asyncio.CancelledError, Exception):
-            await task
     return end.compare_to(begin, "filename")
 
 
@@ -1364,7 +1375,7 @@ def run_memory_leak(args: argparse.Namespace, config: GlancesConfigV5) -> int:
     cycles = apply_memory_leak_flags(args, config)
     _app, scheduler, _host, _port, _tui = assemble(args, config)
     print(f"Memory leak detection, please wait ~{2 * cycles} seconds...")
-    diff = asyncio.run(measure_memory_leak(scheduler, float(cycles)))
+    diff = asyncio.run(measure_memory_leak(scheduler, cycles, _MEMORY_LEAK_REFRESH))
     tracemalloc.stop()
     print(f"Memory consumption: {sum(stat.size_diff for stat in diff) / 1000:.1f}KB (see log for details)")
     logger.info("Memory consumption (top 5):")
@@ -1616,7 +1627,7 @@ def run_issue(args: argparse.Namespace, config: GlancesConfigV5) -> int:
     plugins = discover_plugins(StatsStoreV5(), config)
     disabled = sorted(cls.plugin_name for _name, cls in discover_plugin_classes() if cls.is_disabled(config))
     sources = [str(path) for path in config.loaded_sources]
-    return issue_v5.run(plugins, disabled, _VERSION, sources)
+    return issue_v5.run(plugins, disabled, __version__, sources)
 
 
 # --------------------------------------------------------------- serve
@@ -1641,8 +1652,11 @@ async def serve(
       SIGINT (raised by the TUI's ``on_quit`` callback or Ctrl-C).
     """
     scheduler_task: asyncio.Task[None] | None = None
+    # `--stop-after` under `--quiet`: nothing else counts the refreshes (the
+    # TUI and the stdout printer stop themselves), so the scheduler does.
+    stop_after = getattr(args, "stop_after", None) if not args.server and tui is None else None
     if scheduler._entries:  # type: ignore[attr-defined]
-        scheduler_task = asyncio.create_task(scheduler.run_forever())
+        scheduler_task = asyncio.create_task(scheduler.run_forever(stop_after=stop_after))
 
     if tui is not None:
         tui.start()

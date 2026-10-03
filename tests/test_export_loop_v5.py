@@ -233,3 +233,55 @@ def test_csv_and_json_file_flags_have_v4_defaults():
     assert args.export_csv_file == "./glances.csv"
     assert args.export_json_file == "./glances.json"
     assert args.export_csv_overwrite is False
+
+
+# ---------------------------------------------------- --stop-after under --quiet
+
+
+async def test_stop_after_returns_after_n_export_cycles():
+    """`run_forever(stop_after=n)` exports exactly n times, then stops every loop."""
+    config = make_config({"global": {"refresh": "0.01"}, "export": {"refresh": "0.01"}})
+    store = StatsStoreV5()
+    scheduler = AsyncScheduler(store, config)
+    scheduler.register(TinyPlugin(store, config))
+    exporter = RecordingExport(config)
+    scheduler.register_exporter(exporter)
+
+    await asyncio.wait_for(scheduler.run_forever(stop_after=3), timeout=5)
+
+    assert exporter.ticks == 3
+    assert scheduler._running is False
+    assert scheduler._tasks == []
+
+
+async def test_stop_after_without_an_exporter_waits_n_global_refreshes():
+    config = make_config({"global": {"refresh": "0.01"}})
+    store = StatsStoreV5()
+    scheduler = AsyncScheduler(store, config)
+    scheduler.register(TinyPlugin(store, config))
+
+    started = time.monotonic()
+    await asyncio.wait_for(scheduler.run_forever(stop_after=5), timeout=5)
+
+    assert time.monotonic() - started >= 0.05
+    assert store.get("tiny")["percent"] == 1.0
+
+
+async def test_quiet_mode_honours_stop_after():
+    """`glances-v5 --quiet --stop-after n`: serve() returns, the exporters are closed."""
+    from argparse import Namespace
+
+    from glances.main_v5 import serve
+
+    config = make_config({"global": {"refresh": "0.01"}, "export": {"refresh": "0.01"}})
+    store = StatsStoreV5()
+    scheduler = AsyncScheduler(store, config)
+    scheduler.register(TinyPlugin(store, config))
+    exporter = RecordingExport(config)
+    scheduler.register_exporter(exporter)
+
+    args = Namespace(server=False, no_tui=True, stop_after=2, disable_autodiscover=True)
+    await asyncio.wait_for(serve(args, None, scheduler, "127.0.0.1", 61208), timeout=5)
+
+    assert exporter.ticks == 2
+    assert exporter.exited is True

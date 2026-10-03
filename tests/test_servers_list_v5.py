@@ -136,6 +136,7 @@ def test_the_static_list_reads_v4s_layout(caplog):
         ("https://gamma.example/glances", 61208, None),
     ]
     assert [s.target for s in servers] == ["alpha:61208", "beta:61237", "https://gamma.example/glances"]
+    assert all(s.status == sl.UNKNOWN for s in servers), "nothing is known before the first round"
     assert "server_2_protocol is ignored" in caplog.text
     assert "server_5 skipped" in caplog.text
 
@@ -186,6 +187,8 @@ def test_a_configured_password_opens_a_protected_server(network):
     assert _poll(network, _Server(dict(_V5), password="secret"), config).status == sl.ONLINE
     config = _Config(passwords={"default": "secret"})
     assert _poll(network, _Server(dict(_V5), password="secret"), config, name="beta").status == sl.ONLINE
+    # No -u: the token request names v4's default user.
+    assert {auth for url, auth in network.sent if url.endswith("/api/5/token")} == {("glances", "secret")}
 
 
 def test_a_typed_password_is_used_from_the_next_round(network):
@@ -205,6 +208,11 @@ def test_a_non_static_server_gets_no_configured_password():
     poller = sl.ServersPoller([], _Config(passwords={"alpha": "secret", "default": "x"}), [])
     assert poller.password_for(ServerEntry(name="alpha", port=61208)) == "secret"
     assert poller.password_for(ServerEntry(name="alpha", port=61208, source="zeroconf")) is None
+
+
+def test_without_a_default_password_an_unlisted_host_gets_none():
+    poller = sl.ServersPoller([], _Config(passwords={"alpha": "x"}), [])
+    assert poller.password_for(ServerEntry(name="beta", port=61208)) is None
 
 
 # ------------------------------------------------ /api/5/serverslist
@@ -243,6 +251,35 @@ def test_serverslist_never_carries_a_credential(network, tmp_path, monkeypatch):
     text = json.dumps(response.json())
     for leak in ("s3cr3t-pw", "password", "uri", "username", "Bearer", "tok"):
         assert leak not in text, leak
+
+
+def test_serverslist_stays_stable_and_clean_over_rounds(network, tmp_path, monkeypatch):
+    """v4 `TestServersListStability`: the count does not drift round after
+    round, and a password typed after the first round never shows either."""
+    from fastapi.testclient import TestClient
+
+    from glances.config_v5 import GlancesConfigV5
+    from glances.stats_store_v5 import StatsStoreV5
+
+    monkeypatch.setattr(GlancesConfigV5, "SYSTEM_CONFIG_PATH", tmp_path / "none.conf")
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+    network.servers["http://alpha:61208"] = _Server(dict(_V5), password="s3cr3t-pw")
+    network.servers["http://beta:61208"] = _Server(dict(_V5), password="typed-pw")
+    config = _Config(serverlist={"server_1_name": "alpha", "server_2_name": "beta"}, passwords={"alpha": "s3cr3t-pw"})
+    poller = sl.build_poller(config)
+    poller.columns = _COLUMNS
+
+    with TestClient(_app(GlancesConfigV5(), StatsStoreV5(), poller)) as client:
+        poller.poll_round()
+        poller.set_password(poller.servers[1], "typed-pw")
+        for _ in range(3):
+            poller.poll_round()
+            items = client.get("/api/5/serverslist").json()
+            assert len(items) == 2
+            assert [i["status"] for i in items] == [sl.ONLINE, sl.ONLINE]
+            text = json.dumps(items)
+            for leak in ("s3cr3t-pw", "typed-pw", "password", "Bearer", "tok"):
+                assert leak not in text, leak
 
 
 def test_serverslist_is_404_without_browser_mode(tmp_path, monkeypatch):

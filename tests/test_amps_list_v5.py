@@ -320,6 +320,18 @@ async def test_no_match_sets_the_no_running_process_message(cfg, procs):
     assert amps._amps["python"].result() == "No running process"
 
 
+async def test_unprimed_process_engine_does_not_report_a_missing_process(cfg, procs):
+    """At startup `amps` can run before `processcount` has filled the shared
+    engine. An empty list there means "not known yet", not "zero process":
+    the AMP must stay silent instead of flashing a critical
+    "No running process" until the next cycle."""
+    procs([])
+    amps = AmpsListV5(cfg("[amp_python]\nenable=true\nregex=.*python.*\nrefresh=3\ncountmin=1\n"))
+    await amps.update()
+    await _settle(amps)
+    assert amps._amps["python"].result() is None
+
+
 async def test_no_match_without_countmin_leaves_the_result_alone(cfg, procs):
     procs([_PROC_NGINX])
     amps = AmpsListV5(cfg("[amp_python]\nenable=true\nregex=.*python.*\nrefresh=3\n"))
