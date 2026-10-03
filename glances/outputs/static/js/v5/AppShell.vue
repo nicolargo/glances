@@ -274,6 +274,9 @@ export default {
 			// `{ rowBudget: this.rowBudget }` would capture whatever it was at
 			// provide()-time forever.
 			rowBudget: computed(() => this.rowBudget),
+			// An immediate poll, for a click that changes server state (the
+			// processlist pin) and should not wait for the next interval.
+			refreshNow: () => this.tick(),
 		};
 	},
 	data() {

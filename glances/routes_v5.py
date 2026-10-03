@@ -127,7 +127,7 @@ def _register_extended_process_routes(router: APIRouter) -> None:
     # every other route.
     #
     # The pin is GLOBAL: one pinned process per server, set either from here
-    # or by the TUI's `e` key. Extended stats cost a psutil grab per cycle, so
+    # or by the TUI's ENTER key. Extended stats cost a psutil grab per cycle, so
     # that ceiling is a property worth having rather than an accident.
 
     def _pinnable_pids(request: Request) -> set[int]:

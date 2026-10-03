@@ -153,6 +153,8 @@ export default {
 			columnWidth: (key) => WEBUI_COL_WIDTHS[key],
 			wideIrixLabel: "CPUi",
 		}), sortHeadersMixin(HEADER_SORT_KEY),],
+	// AppShell's immediate poll, so a pin/unpin does not wait for the next tick.
+	inject: { refreshNow: { default: () => () => {} } },
 	// Reads `serverArgs.sort_processes_key` -- the LIVE key, seeded from
 	// `processcount` by AppShell -- for the sort underline (sortAttrs()).
 	// `degrade` is declared and left unused: this block owns its own width
@@ -176,7 +178,7 @@ export default {
 		// The pinned process, straight from the payload metadata the server
 		// publishes while a pin is live (processlist/model_v5.py
 		// `_add_metadata`). No local copy: the pin is GLOBAL server state --
-		// the TUI's `e` sets the same one -- so the payload is the truth and
+		// the TUI's ENTER sets the same one -- so the payload is the truth and
 		// a component-level mirror could only go stale against it.
 		extended() {
 			const payload = this.payload;
@@ -206,14 +208,15 @@ export default {
 			const path = this.isPinned(item)
 				? "api/5/processes/extended/disable"
 				: `api/5/processes/extended/${item.pid}`;
-			// No optimistic update and no `$forceUpdate` (v4 does both): the
-			// next tick re-reads the payload from the server, which is where
-			// the pin actually lives. A failed POST therefore leaves the UI
-			// showing the truth rather than a pin that was never set.
-			postJson(path).catch(() => {});
+			// No optimistic update and no `$forceUpdate` (v4 does both): a
+			// poll forced once the POST is accepted re-reads the payload from
+			// the server, which is where the pin actually lives. A failed POST
+			// therefore leaves the UI showing the truth rather than a pin that
+			// was never set.
+			postJson(path).then(() => this.refreshNow()).catch(() => {});
 		},
 		unpin() {
-			postJson("api/5/processes/extended/disable").catch(() => {});
+			postJson("api/5/processes/extended/disable").then(() => this.refreshNow()).catch(() => {});
 		},
 	},
 };

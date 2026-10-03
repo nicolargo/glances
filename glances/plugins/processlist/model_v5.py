@@ -231,7 +231,7 @@ class PluginModel(GlancesPluginBase[list]):
         almost all the time.
 
         The pin is global server state (`glances_processes.extended_pid`),
-        set either by the TUI's `e` or by the WebUI's click — one pin, two
+        set either by the TUI's ENTER or by the WebUI's click — one pin, two
         ways to ask. Absent when nothing is pinned, so the key's presence is
         the signal.
         """
