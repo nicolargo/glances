@@ -182,16 +182,14 @@ class GlancesExport:
 
         # issue1871 - Check if a key exist. If a key exist, the value of
         # the key should be used as a tag to identify the measurement.
-        keys_list = [k.split(".")[0] for k in columns if k.endswith(".key")]
+        keys_list = [k.rsplit(".", 1)[0] for k in columns if k.endswith(".key")]
         if not keys_list:
             keys_list = [None]
 
         for measurement in keys_list:
             # Manage field
             if measurement is not None:
-                fields = {
-                    k.replace(f"{measurement}.", ""): data_dict[k] for k in data_dict if k.startswith(f"{measurement}.")
-                }
+                fields = {k[len(measurement) + 1 :]: data_dict[k] for k in data_dict if k.startswith(f"{measurement}.")}
             else:
                 fields = data_dict
             # Transform to InfluxDB data model
