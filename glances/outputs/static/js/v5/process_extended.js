@@ -115,15 +115,17 @@ export function pinnedTitle(payload) {
 }
 
 /**
- * A pin the browser has asked for but the server has not published yet, or
- * null once it no longer needs showing: the payload's `extended` names it
- * (confirmed), or the process left the list (it will never be).
+ * A pin (or unpin) the browser has asked for but the server has not published
+ * yet, or null once it no longer needs showing: the payload's `extended`
+ * names it (confirmed), or the process left the list (it will never be).
+ * An unpin is `{ pid: null }`, confirmed once `extended` is gone.
  *
- * The pending pin is what lets the "Pinned task:" line appear on the click
- * itself, before the server's next cycle carries the extended stats.
+ * The pending state is what lets the click show at once, before the server's
+ * next cycle carries (or drops) the extended stats.
  */
 export function settlePendingPin(pending, payload) {
 	if (!pending) return null;
+	if (pending.pid === null) return payload?.extended ? pending : null;
 	if (payload?.extended?.pid === pending.pid) return null;
 	if (Array.isArray(payload?.data) && !payload.data.some((item) => item?.pid === pending.pid)) return null;
 	return pending;

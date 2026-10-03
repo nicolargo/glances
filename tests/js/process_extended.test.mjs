@@ -141,3 +141,10 @@ test("settlePendingPin keeps a click until the server publishes it", () => {
 	// The process left the list: the pin will never come.
 	assert.equal(settlePendingPin(pending, { data: [{ pid: 3 }] }), null);
 });
+
+test("settlePendingPin keeps an unpin until the server drops the block", () => {
+	const pending = { pid: null };
+	assert.equal(settlePendingPin(pending, { data: [{ pid: 7 }], extended: { pid: 7 } }), pending);
+	assert.equal(settlePendingPin(pending, { data: [{ pid: 7 }] }), null);
+	assert.equal(settlePendingPin(pending, { data: [] }), null);
+});

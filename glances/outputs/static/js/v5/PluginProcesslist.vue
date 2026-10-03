@@ -20,6 +20,7 @@
 					<span class="gl-truncate" :title="pinnedTitle(pinned)">{{ pinnedTitle(pinned) }}</span>
 					<button type="button" class="gl-pin-button" @click="unpin">Unpin</button>
 				</div>
+				<div v-if="pendingPin" class="gl-pinned-line gl-muted">Collecting extended stats…</div>
 				<div v-for="(line, i) in pendingPin ? [] : extendedLines(extended)" :key="i" class="gl-pinned-line">
 					<span v-for="(seg, j) in line" :key="j" :class="{ 'gl-level-ok': seg.value, 'gl-pinned-sep': seg.sep }">{{ seg.text }}</span>
 				</div>
@@ -161,8 +162,9 @@ export default {
 	// cascade, not the shell's zone-level one.
 	props: { ...PLUGIN_PROPS },
 	data() {
-		// The row just clicked, shown as the "Pinned task:" line until the
-		// server publishes its extended stats (settlePendingPin()).
+		// The click not yet published by the server (settlePendingPin()): the
+		// row just pinned, shown as the "Pinned task:" line until its extended
+		// stats arrive, or `{ pid: null }` for an unpin, hiding the block.
 		return { pendingPin: null };
 	},
 	computed: {
@@ -190,9 +192,10 @@ export default {
 			return payload && payload.extended ? payload.extended : null;
 		},
 		// What the "Pinned task:" line names: the click, until the server
-		// confirms it, then the server's pin.
+		// confirms it, then the server's pin. Null while an unpin is pending.
 		pinned() {
-			return this.pendingPin || this.extended;
+			if (this.pendingPin) return this.pendingPin.pid === null ? null : this.pendingPin;
+			return this.extended;
 		},
 	},
 	watch: {
@@ -232,8 +235,15 @@ export default {
 				});
 		},
 		unpin() {
-			this.pendingPin = null;
-			postJson("api/5/processes/extended/disable").then(() => this.refreshNow()).catch(() => {});
+			// The block goes at once; a failed POST brings back what the
+			// server still shows.
+			const pending = { pid: null };
+			this.pendingPin = pending;
+			postJson("api/5/processes/extended/disable")
+				.then(() => this.refreshNow())
+				.catch(() => {
+					if (this.pendingPin === pending) this.pendingPin = null;
+				});
 		},
 	},
 };
