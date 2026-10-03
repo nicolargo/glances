@@ -265,6 +265,9 @@ log_level = "INFO"
 #log_cli_date_format = "%Y-%m-%d %H:%M:%S"
 # v5 tests use async functions; auto mode avoids per-test @pytest.mark.asyncio.
 asyncio_mode = "auto"
+# Some v5 tests import shared helpers as `tests.<module>`: the editable install
+# only maps `glances`, so the repo root must be on sys.path explicitly.
+pythonpath = ["."]
 
 [tool.flake8]
 max-line-length = 120
