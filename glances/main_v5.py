@@ -1207,7 +1207,7 @@ def assemble(
             "plugins can be activated later via the REST API (issue #3548)."
         )
     else:
-        logger.info("Discovered %d v5 plugins: %s", len(plugins), ", ".join(p.plugin_name for p in plugins))
+        logger.debug("Discovered %d v5 plugins: %s", len(plugins), ", ".join(p.plugin_name for p in plugins))
 
     attach_history(plugins, config, args)
 
