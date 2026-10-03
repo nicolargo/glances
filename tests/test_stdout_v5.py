@@ -87,6 +87,29 @@ def test_csv_prints_the_header_first_then_aligned_data():
     assert csv.render(later, PKS) == "20.0,eth0,7,8,N/A,N/A,N/A"
 
 
+def test_csv_keeps_each_item_own_fields():
+    """Port of v4 #3747 -- items of one collection may carry different field
+    sets (a rate absent on the first sample): each keeps its own columns."""
+    csv = CsvRenderer([("network", None)])
+    first = {
+        "network": [
+            {"interface_name": "eth0", "bytes_sent": 1},
+            {"interface_name": "wlan0", "bytes_sent": 2, "bytes_recv_rate_per_sec": 3.0},
+        ]
+    }
+    header = csv.render(first, PKS).split(",")
+    later = {
+        "network": [
+            {"interface_name": "eth0", "bytes_sent": 7},
+            {"interface_name": "wlan0", "bytes_sent": 5, "bytes_recv_rate_per_sec": 6.0},
+        ]
+    }
+    row = dict(zip(header, csv.render(later, PKS).split(",")))
+    assert len(header) == 5
+    assert row["network.eth0.bytes_sent"] == "7"
+    assert row["network.wlan0.bytes_recv_rate_per_sec"] == "6.0"
+
+
 def test_output_once_writes_the_selected_format():
     written = []
     printer = StdoutV5(plugins=_plugins(), refresh_interval=1, stdout_json="cpu", write=written.append)
