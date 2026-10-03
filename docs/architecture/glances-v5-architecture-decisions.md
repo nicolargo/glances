@@ -702,6 +702,8 @@ Composed outer → inner:
 ```
 TrustedHostMiddleware    ← DNS rebinding (CVE-2026-32632)
     ↓
+RateLimitMiddleware      ← per-address limits (§4.5)
+    ↓
 CORSMiddleware           ← Cross-origin policy (CVE-2026-32610 / 34839)
     ↓
 AuthMiddleware           ← Basic / Bearer (CVE-2026-32596)
@@ -709,7 +711,7 @@ AuthMiddleware           ← Basic / Bearer (CVE-2026-32596)
 route handler / probe
 ```
 
-Starlette applies middlewares in reverse registration order; `build_app()` registers them inner-first (auth, CORS, trusted-hosts) so the runtime order is the one above.
+Starlette applies middlewares in reverse registration order; `build_app()` registers them inner-first (auth, CORS, rate limit, trusted-hosts) so the runtime order is the one above.
 
 #### TrustedHost — `[outputs] webui_allowed_hosts`
 
@@ -756,18 +758,25 @@ v5 passwords are stored as `salt$pbkdf2_hex` with PBKDF2-SHA256, 100 000 iterati
 
 This is **not byte-compatible** with the v4 stored hash, which applies an extra `pbkdf2(plain, salt='')` pre-hash before the salted PBKDF2. v4 → v5 migration requires regenerating the hash via the Phase 1.7 CLI (`glances-v5 --set-password`). The algorithmic strength is preserved.
 
-### 4.5 Rate limiting — reserved keys, deferred implementation
+### 4.5 Rate limiting
 
-Rate limiting is part of the v5 scope but not delivered in Phase 1.5. Reserved configuration keys:
+**Shipped 2026-10-03** (`glances/ratelimit_v5.py`, wired by `webserver_v5._wire_rate_limit`). One pure ASGI middleware between TrustedHost and CORS, so outside authentication, with two token buckets per client address. No dependency (`slowapi` was the alternative).
 
 ```ini
 [outputs]
-# Default 0 = disabled. Phase 2+ implementation.
+# General limit, per client address. 0 (the default) turns it off.
 rate_limit_per_minute=0
+# Requests allowed at once; 0 means one minute's worth (rate_limit_per_minute).
 rate_limit_burst=0
+# Failed authentications per client address and minute; 0 turns it off.
+auth_fail_per_minute=10
 ```
 
-Implementation will use a Starlette-level middleware (token-bucket or `slowapi`-style), inserted between TrustedHost and CORS. The `UNAUTH_PATHS` probes will always be exempt.
+- **The general limit is off by default** (maintainer, 2026-10-03): a WebUI tab polls ~30 times a minute, a `-c` client ~90, and several can share one address behind a NAT.
+- **The failed-authentication limit is on by default** (maintainer, 2026-10-03), because with a password configured every Basic guess costs the server ~50 ms of PBKDF2, on any route. A request carrying an `Authorization` header reserves a try on its way in and gets it back unless it ends in a 401, so parallel guesses cannot overspend; an address with no try left gets 429 **before** PBKDF2. A request without credentials (a browser's first visit, which gets the 401 challenge) is not counted. The right password from a locked-out address also waits.
+- **429** carries `Retry-After` (whole seconds, at least 1) and `{"detail": "Too many requests"}`.
+- **Exempt: `/status` and `/healthz` only.** `/api/5/token` is limited: it is where a password is guessed. The middleware also covers `/mcp` and `/static`.
+- **Client address**: the one uvicorn reports, which honours `X-Forwarded-For` only from a proxy on 127.0.0.1 (uvicorn's `forwarded_allow_ips`); the header is never read by Glances. An IPv6 client counts per /64. The table holds 10 000 addresses at most; past it the least recently seen is forgotten (and gets a full bucket back).
 
 ### 4.6 REST routes — Phase 1.6
 
@@ -924,7 +933,7 @@ Before merging `develop-v5 → develop`, schedule a **full cybersecurity audit o
 
 - Is `/api/5/config` returning redacted data sufficient to keep it unauthenticated when the global API is unauthenticated? Or should the endpoint require auth even when `as_dict_secure()` redacts the obvious secrets? (Captured during Phase 1.6 review.)
 - Confirm `UNAUTH_PATHS` (probes + `/api/5/token`) cannot be abused for enumeration or oracle attacks.
-- Confirm rate limiting is wired before any release candidate (Phase 2+).
+- Confirm rate limiting is wired before any release candidate (Phase 2+). **Wired 2026-10-03**, §4.5: the audit reviews it.
 - Re-check every CVE in §8 against the actual v5 code, not just against the original v4 fix.
 - Confirm no v4 module that has reached EOL leaks through `from glances.<x> import ...` in any `_v5` file.
 

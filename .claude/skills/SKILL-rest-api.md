@@ -146,7 +146,6 @@ Auth flow for tests: either skip auth (default — no `password` set), or set `p
 - `/api/5/args` — depends on Phase 1.7 CLI args module
 - `/api/5/serverslist` — Phase 3 (browser mode)
 - WebUI static mount — Phase 2
-- Rate limiting middleware — Phase 2+ (reserved keys in §4.5)
 
 ## Module path
 

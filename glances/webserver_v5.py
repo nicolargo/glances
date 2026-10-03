@@ -53,6 +53,7 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from glances.alerts_v5 import GlancesAlerts
 from glances.config_v5 import GlancesConfigV5
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
+from glances.ratelimit_v5 import RateLimitMiddleware
 from glances.routes_v5 import build_router
 from glances.security_v5 import JWTHandler, verify_password
 from glances.stats_store_v5 import StatsStoreV5
@@ -82,6 +83,9 @@ _DEFAULT_USERNAME = "glances"
 
 # Default JWT token lifetime in minutes — matches v4.
 _DEFAULT_JWT_EXPIRE_MINUTES = 60
+
+# Failed authentications allowed per client address and minute (§4.5).
+_DEFAULT_AUTH_FAIL_PER_MINUTE = 10
 
 # WebUI assets. `public/` holds the webpack output and is committed; the
 # templates directory holds the root documents. Both are package data, not
@@ -154,6 +158,7 @@ def build_app(
     # Register from inner to outer — Starlette applies middlewares in reverse.
     _wire_auth(app, config)
     _wire_cors(app, config)
+    _wire_rate_limit(app, config)
     _wire_trusted_hosts(app, config, args)
 
     _register_health_endpoints(app)
@@ -392,6 +397,24 @@ def _wire_cors(app: FastAPI, config: GlancesConfigV5) -> None:
         allow_credentials=allow_credentials,
         allow_methods=["GET", "POST"],
         allow_headers=["Authorization", "Content-Type"],
+    )
+
+
+def _wire_rate_limit(app: FastAPI, config: GlancesConfigV5) -> None:
+    """Limit requests per client address, between TrustedHost and CORS (§4.5).
+
+    The general limit is off unless ``rate_limit_per_minute`` is set; the
+    failed-authentication one is on (``auth_fail_per_minute``, 0 turns it off).
+    """
+    per_minute = config.get("outputs", "rate_limit_per_minute", 0)
+    auth_fail_per_minute = config.get("outputs", "auth_fail_per_minute", _DEFAULT_AUTH_FAIL_PER_MINUTE)
+    if per_minute <= 0 and auth_fail_per_minute <= 0:
+        return
+    app.add_middleware(
+        RateLimitMiddleware,
+        per_minute=per_minute,
+        burst=config.get("outputs", "rate_limit_burst", 0),
+        auth_fail_per_minute=auth_fail_per_minute,
     )
 
 
