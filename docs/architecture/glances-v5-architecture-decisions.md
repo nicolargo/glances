@@ -1125,18 +1125,19 @@ The following advisories were fixed in v4 before the v5 effort began. The fixes 
 ### Branch model
 
 ```
-main          ──────────────────────────────────────────────────► (v4 stable releases)
-develop       ──────────────────────────────────────────────────► (v4 bugfixes & security)
-develop-v5    ──┬──────┬──────┬──────┬──────────────────────────► (v5 development)
-                │      │      │      │
-             weekly  alpha  alpha  alpha  …→ beta → rc → merge develop
-             merge   0.1    0.2    0.3
+main               ───────────────────────────────────────────────► stable releases (v4, then v5)
+support/glancesv4          (1) ┌──────────────────────────────────► v4 hotfixes (4.5.x)
+develop            ────────────┴──────┬──── 5.0.0b1 → rc → 5.0.0 ─► v4 fixes, then v5
+                     │ weekly merge   ▲ (2) merge
+develop-v5         ──▼────────────────┘                             v5 development, nothing published
 ```
 
 - The v5 development branch is **`develop-v5`**.
 - A **weekly automated merge** `develop → develop-v5` is configured in CI. Security fixes and bugfixes land in v5 without manual action. Conflicts (restructured files) are resolved immediately, not accumulated.
-- Alpha and beta releases are published to **PyPI** from `develop-v5` to gather early feedback before the final merge.
-- The final merge `develop-v5 → develop` happens at v5.0.0 release candidate stage, after all plugins, exporters, and tests are green.
+- **No pre-release is published from `develop-v5`** (maintainer, 2026-10-03): no alpha, no beta. The first v5 published on PyPI is a beta, from `develop`, after the merge. This replaces the earlier plan of alphas and betas from `develop-v5`.
+- **Before the merge, `develop` is branched to `support/glancesv4`** (maintainer, 2026-10-03), the v4 hotfix branch: v4 bugfix and security releases are cut from it once `develop` carries v5.
+- The merge `develop-v5 → develop` happens once Phase 4's hardening is done (all plugins, exporters and tests green, security audit passed). The weekly `develop → develop-v5` merge stops with it.
+- After the merge, `develop` publishes `5.0.0b1`, `5.0.0b2`…, then `5.0.0rc1`… and `5.0.0`.
 
 ### Migration phases
 
@@ -1161,12 +1162,12 @@ _Goal: async skeleton running, no plugin migrated yet. All contributor skills wr
 | `.claude/skills/SKILL-actions.md` | `GlancesActionBase`, auto-discovery, Mustache context, Apprise optional dependency, webhook example |
 | `.claude/skills/SKILL-security.md` | FastAPI security model, CVE list (§8), `as_dict_secure()`, CORS defaults, startup warnings |
 | `.claude/skills/SKILL-config.md` | Env overlay, typed `get()`, `thresholds` structure, hot-reload safe vs unsafe keys |
-| `.claude/skills/SKILL-ci-cd.md` | `develop-v5` pipeline, weekly merge job, alpha release tagging |
+| `.claude/skills/SKILL-ci-cd.md` | `develop-v5` pipeline, weekly merge job, release tagging |
 | `.claude/skills/SKILL-rest-api.md` | FastAPI route structure, auth middleware, `/api/5` conventions _(Phase 1)_ |
 | `.claude/skills/SKILL-webui.md` | Vue.js 3, Bootstrap 5, SCSS — largely unchanged from v4 _(Phase 2)_ |
 
 #### Phase 1 — Core plugins + minimal REST API
-_Goal: first runnable v5 instance. Release `5.0.0a1`._
+_Goal: first runnable v5 instance. Internal milestone (no PyPI release, see Branch model)._
 
 - Plugins: `mem`, `cpu`, `load`, `network`
 - `GlancesAlerts` with `_levels` pipeline
@@ -1175,7 +1176,7 @@ _Goal: first runnable v5 instance. Release `5.0.0a1`._
 - Migrated unit tests for Phase 1 plugins
 
 #### Phase 2 — All local plugins + core exporters
-_Goal: feature parity with v4 for local monitoring. Release `5.0.0a2`._
+_Goal: feature parity with v4 for local monitoring. Internal milestone (no PyPI release)._
 
 - All remaining local plugins migrated
 - Exporters: InfluxDB, Prometheus, CSV, JSON (most widely used)
@@ -1183,7 +1184,7 @@ _Goal: feature parity with v4 for local monitoring. Release `5.0.0a2`._
 - WebUI served by FastAPI
 
 #### Phase 3 — Remote client + all exporters + browser mode
-_Goal: feature parity with v4 for all modes. Release `5.0.0b1`._
+_Goal: feature parity with v4 for all modes. Internal milestone (no PyPI release); done 2026-09-28._
 
 - `GlancesPluginRemote` (httpx, auth, stale data handling) — became `RemoteSource` on `requests`, shipped 2026-09-27 (P3-1, `glances/client_v5.py`)
 - Client mode TUI with `DISCONNECTED` banner
@@ -1192,13 +1193,13 @@ _Goal: feature parity with v4 for all modes. Release `5.0.0b1`._
 - All CVE fixes verified
 
 #### Phase 4 — Hardening & release
-_Goal: production-ready. Release `5.0.0rc1` then `5.0.0`._
+_Goal: production-ready. Release `5.0.0b1` (the first published v5), `5.0.0rc1`, then `5.0.0`, all from `develop` after the merge._
 
 - All v4 unit tests migrated and passing
 - Performance validation (no regression on refresh latency)
 - **Full cybersecurity audit on the `develop-v5` branch** — release blocker. See §4.8 for the open items the audit must address (each CVE in §8 re-verified against actual v5 code, `/api/5/config` auth posture decision, `UNAUTH_PATHS` review, rate limiting wired, no v4 module leaks into v5 imports). Output: downloadable `.md` audit report.
 - Release notes documenting all breaking changes and datamodel differences
-- Merge `develop-v5 → develop`
+- Branch `develop` to `support/glancesv4` (the v4 hotfix branch), then merge `develop-v5 → develop`
 - **One version source** (maintainer, 2026-09-27): at the merge, v5 reads its
   release and its API version from `glances/__init__.py` (`__version__`,
   `__apiversion__`), and the v5-only copies go. **Intermediate step shipped
@@ -1210,12 +1211,14 @@ _Goal: production-ready. Release `5.0.0rc1` then `5.0.0`._
   router prefix, `UNAUTH_PATHS`, `API_URL`, the Zeroconf `api=` TXT, the
   client's and the browser's version check, the `version` plugin and the TUI
   help title (the last two showed the v4 release). `tests/test_version_v5.py`
-  holds them together. At the merge, the two lines move into
-  `glances/__init__.py`, the `glances.version_v5` imports are re-pointed and
-  the module goes. Still written out as `/api/5/...`: the request paths of
+  holds them together. `5.0.0a1` is a label only: it is never published
+  (no pre-release from `develop-v5`, maintainer 2026-10-03). At the merge,
+  the two lines move into `glances/__init__.py`, with the release set for
+  the first published v5 (`5.0.0b1`), the `glances.version_v5` imports are
+  re-pointed and the module goes. Still written out as `/api/5/...`: the request paths of
   `client_v5.py`, `servers_list_v5.py` and `restful_doc_v5.py`'s examples,
   and the WebUI's JavaScript.
-- PyPI, Docker, Snap, Helm packages published
+- From `develop`: `5.0.0b1` (first published v5), then `5.0.0rc1` and `5.0.0`; PyPI, Docker, Snap, Helm packages published
 
 #### Phase 2.X — TUI interactive surface (owned group)
 _Goal: close the largest gap the v4 → v5 parity inventory found — the interactive
