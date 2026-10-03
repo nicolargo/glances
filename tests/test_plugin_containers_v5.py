@@ -281,7 +281,11 @@ def test_parse_urls_from_config(store_with, config_with, conf_value, expected):
 
 def test_parse_urls_from_list(store_with, config_with):
     p = PluginModel(store_with(), config_with({}))
-    p.config = type("MockConfig", (), {"get_value": lambda self, sec, key, default=None: ['"unix:///d1.sock"', '', "'unix:///d2.sock'"]})()
+    p.config = type(
+        "MockConfig",
+        (),
+        {"get_value": lambda self, sec, key, default=None: ['"unix:///d1.sock"', '', "'unix:///d2.sock'"]},
+    )()
     assert p._parse_urls("docker_urls") == ["unix:///d1.sock", "unix:///d2.sock"]
 
 
