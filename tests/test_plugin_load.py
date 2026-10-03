@@ -14,7 +14,8 @@ import json
 import pytest
 
 from glances.globals import WINDOWS
-from glances.plugins.load import load_average, log_core, phys_core
+from glances.plugins.load import LoadPlugin, load_average, log_core, phys_core
+from glances.timer import Timer
 
 
 @pytest.fixture
@@ -298,3 +299,24 @@ class TestLoadPluginExport:
             assert 'min1' in export
             assert 'min5' in export
             assert 'min15' in export
+
+
+class TestLoadPluginMMM:
+    """Test Load plugin MMM (Min/Max/Mean) fields.
+
+    load_average() is patched, so this also runs where there is no load average (Windows).
+    """
+
+    def test_min1_min_max_mean(self, load_plugin, monkeypatch):
+        """Test that min1_min, min1_max and min1_mean follow the samples."""
+        samples = iter([(1.0, 2.0, 3.0), (3.0, 2.0, 1.0)])
+        monkeypatch.setattr('glances.plugins.load.load_average', lambda percent=False: next(samples))
+        # A fresh instance: the shared one has already been fed by the other tests
+        plugin = LoadPlugin(args=load_plugin.args)
+        for _ in range(2):
+            plugin.refresh_timer = Timer(-1)
+            plugin.update()
+        stats = plugin.get_raw()
+        assert stats['min1_min'] == 1.0
+        assert stats['min1_max'] == 3.0
+        assert stats['min1_mean'] == 2.0
