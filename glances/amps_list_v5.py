@@ -187,6 +187,14 @@ class AmpsListV5:
                 self._maybe_run(name, amp, [])
                 continue
 
+            if not processlist:
+                # The engine has not been filled yet: v5 schedules `amps` and
+                # `processcount` independently, so the first cycles can run
+                # before it (v4 updated them in order). A live system always
+                # has processes, so empty means "unknown", not "none running"
+                # — stay silent rather than flash a critical count.
+                continue
+
             matching = self._match(pattern, processlist)
             amp.set_count(len(matching))
 
