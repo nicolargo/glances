@@ -22,10 +22,10 @@ import asyncio
 import logging
 from typing import Any, ClassVar
 
-from glances.plugins.containers.engines import ContainersExtension
-from glances.plugins.containers.engines.docker import DockerExtension, disable_plugin_docker
-from glances.plugins.containers.engines.lxd import LxdExtension, disable_plugin_lxd
-from glances.plugins.containers.engines.podman import PodmanExtension, disable_plugin_podman
+from glances.plugins.containers.engines import ContainerEngineMonitor
+from glances.plugins.containers.engines.docker import DockerEngineMonitor, disable_plugin_docker
+from glances.plugins.containers.engines.lxd import LxdEngineMonitor, disable_plugin_lxd
+from glances.plugins.containers.engines.podman import PodmanEngineMonitor, disable_plugin_podman
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
 from glances.processes import glances_processes
 from glances.processes import sort_stats as sort_stats_processes
@@ -84,6 +84,7 @@ class PluginModel(GlancesPluginBase[list]):
         "ports": {"description": "Container ports.", "unit": "string"},
         "uptime": {"description": "Container uptime.", "unit": "string"},
         "engine": {"description": "Container engine (Docker, Podman, LXD).", "unit": "string"},
+        "engine_url": {"description": "Container engine base URL / endpoint (creds are hidden).", "unit": "string"},
         "pod_name": {"description": "Pod name (Podman only).", "unit": "string"},
         "pod_id": {"description": "Pod ID (Podman only).", "unit": "string"},
     }
@@ -91,16 +92,39 @@ class PluginModel(GlancesPluginBase[list]):
     def __init__(self, store, config) -> None:
         super().__init__(store, config)
 
-        # Reuse the v4 engines verbatim (Option A). Each construction is
-        # guarded so a broken engine leaves the others (and an empty plugin)
-        # valid.
-        self.watchers: dict[str, ContainersExtension] = {}
+        # Multi-engine monitoring support (Option A + multi-socket PR #3765).
+        # Each engine monitor tracks one endpoint instance.
+        self.monitors: list[ContainerEngineMonitor] = []
+
         if not disable_plugin_docker:
-            self._try_add_watcher("docker", lambda: DockerExtension())
+            docker_urls = self._parse_urls("docker_urls")
+            if docker_urls is None:
+                self._try_add_monitor(lambda: DockerEngineMonitor())
+            elif docker_urls:
+                for url in docker_urls:
+                    self._try_add_monitor(lambda u=url: DockerEngineMonitor(url=u))
+            else:
+                logger.debug("containers plugin - Docker engine monitor disabled via configuration")
+
         if not disable_plugin_podman:
-            self._try_add_watcher("podman", lambda: PodmanExtension(podman_sock=self._podman_sock()))
+            podman_urls = self._parse_urls("podman_urls")
+            if podman_urls is None:
+                self._try_add_monitor(lambda: PodmanEngineMonitor(url=self._podman_sock()))
+            elif podman_urls:
+                for url in podman_urls:
+                    self._try_add_monitor(lambda u=url: PodmanEngineMonitor(url=u))
+            else:
+                logger.debug("containers plugin - Podman engine monitor disabled via configuration")
+
         if not disable_plugin_lxd:
-            self._try_add_watcher("lxd", lambda: LxdExtension(poll_interval=self._poll_interval()))
+            lxd_urls = self._parse_urls("lxd_urls")
+            if lxd_urls is None:
+                self._try_add_monitor(lambda: LxdEngineMonitor(poll_interval=self._poll_interval()))
+            elif lxd_urls:
+                for url in lxd_urls:
+                    self._try_add_monitor(lambda u=url: LxdEngineMonitor(url=u, poll_interval=self._poll_interval()))
+            else:
+                logger.debug("containers plugin - LXD engine monitor disabled via configuration")
 
         # Static config surfaced to the renderer via metadata each cycle.
         raw_disable = self.config.get(self.plugin_name, "disable_stats", "")
@@ -114,11 +138,24 @@ class PluginModel(GlancesPluginBase[list]):
         except (TypeError, ValueError):
             self._max_name_size = 20
 
-    def _try_add_watcher(self, engine: str, factory) -> None:
+    def _try_add_monitor(self, factory) -> None:
         try:
-            self.watchers[engine] = factory()
+            self.monitors.append(factory())
         except Exception as e:
-            logger.warning("containers: engine %s unavailable (%s) — skipped", engine, e)
+            logger.warning("containers: engine monitor unavailable (%s) — skipped", e)
+
+    def _parse_urls(self, key: str) -> list[str] | None:
+        """Returns a list of configured URLs, or None if the option is not present in config."""
+        raw = self.config.get_value(self.plugin_name, key, default=None)
+        if raw is None:
+            return None
+        if isinstance(raw, str):
+            if not raw.strip():
+                return []
+            return [url.strip().strip("'\"") for url in raw.split(",") if url.strip().strip("'\"")]
+        if isinstance(raw, (list, tuple)):
+            return [url.strip().strip("'\"") for url in raw if isinstance(url, str) and url.strip().strip("'\"")]
+        return []
 
     def _podman_sock(self) -> str:
         sock = self.config.get(self.plugin_name, "podman_sock", "")
@@ -138,7 +175,7 @@ class PluginModel(GlancesPluginBase[list]):
         val = self.config.get(self.plugin_name, "all", False)
         return str(val).lower() == "true"
 
-    def _update_watchers(self) -> list:
+    def _update_monitors(self) -> list:
         """v4 flatten/merge/inject-engine/reconcile-memory/sort pipeline.
 
         Blocking (reads engine snapshots); always called via to_thread.
@@ -147,14 +184,17 @@ class PluginModel(GlancesPluginBase[list]):
         """
         all_tag = self._all_tag()
         items: list[dict[str, Any]] = []
-        for engine, watcher in self.watchers.items():
+        for monitor in self.monitors:
             try:
-                _version, containers = watcher.update(all_tag=all_tag)
+                _version, containers = monitor.update(all_tag=all_tag)
             except Exception as e:
-                logger.warning("containers: engine %s update failed: %s", engine, e)
+                logger.warning("containers: monitor update failed: %s", e)
                 continue
             for c in containers:
-                c["engine"] = engine
+                if "engine" not in c:
+                    c["engine"] = getattr(monitor, "ENGINE", getattr(monitor, "engine", "unknown"))
+                if "engine_url" not in c and hasattr(monitor, "engine_url"):
+                    c["engine_url"] = monitor.engine_url
                 self._reconcile_memory(c)
                 items.append(c)
         return self._sort(items)
@@ -207,10 +247,10 @@ class PluginModel(GlancesPluginBase[list]):
             return stats
 
     async def _grab_stats(self) -> list:
-        if not self.watchers:
+        if not self.monitors:
             return []
         try:
-            return await asyncio.to_thread(self._update_watchers)
+            return await asyncio.to_thread(self._update_monitors)
         except Exception as e:
             logger.warning("containers: grab failed: %s", e)
             return []
@@ -222,8 +262,8 @@ class PluginModel(GlancesPluginBase[list]):
         self._metadata["max_name_size"] = self._max_name_size
 
     def stop(self) -> None:
-        for engine, watcher in self.watchers.items():
+        for monitor in self.monitors:
             try:
-                watcher.stop()
+                monitor.stop()
             except Exception as e:
-                logger.warning("containers: stop(%s) failed: %s", engine, e)
+                logger.warning("containers: stop failed: %s", e)
