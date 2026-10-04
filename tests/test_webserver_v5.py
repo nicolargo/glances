@@ -358,6 +358,31 @@ def test_trusted_host_rejects_a_request_without_host(config_factory, store):
     assert sent[0]["status"] == 400
 
 
+@pytest.mark.parametrize(
+    ("host", "status"),
+    [
+        ("localhost:61208", 200),
+        ("127.0.0.1:61208", 200),
+        ("[::1]:61208", 200),
+        ("rebind.attacker.example:61208", 400),
+        ("rebind.attacker.example", 400),
+    ],
+)
+def test_loopback_bind_answers_loopback_hosts_only_by_default(host, status, config_factory, store):
+    """Audit M2: DNS rebinding targets a server on 127.0.0.1, the default bind."""
+    app = build_app(config=config_factory(), store=store)
+    with TestClient(app) as client:
+        assert client.get("/api/5/config", headers={"Host": host}).status_code == status
+
+
+def test_non_loopback_bind_without_allowlist_filters_no_host(config_factory, store):
+    """A server bound to the network cannot guess the names it is reached by."""
+    exposed = argparse.Namespace(bind="0.0.0.0", disable_webui=True)
+    app = build_app(config=config_factory(), store=store, args=exposed)
+    with TestClient(app) as client:
+        assert client.get("/status", headers={"Host": "glances.lan"}).status_code == 200
+
+
 def test_trusted_host_warning_when_bind_non_loopback(config_factory, store, caplog):
     config = config_factory(bind_address="0.0.0.0")
     with caplog.at_level(logging.WARNING):
@@ -499,11 +524,14 @@ def test_a_custom_mcp_path_stays_behind_auth(config_factory, store):
 
 
 def test_a_custom_mcp_path_keeps_the_dns_rebinding_guard(config_factory, store):
-    """MCP's own TransportSecuritySettings do not depend on the mount path."""
+    """MCP's own TransportSecuritySettings do not depend on the mount path.
+
+    Bound to the network, so the REST layer filters no Host and the 421 is
+    MCP's own (a loopback bind would answer 400 before MCP sees the request)."""
     from glances.webserver_v5 import attach_mcp
 
     config = config_factory(enable_mcp="true", mcp_path="/glances/mcp")
-    app = build_app(config=config, store=store)
+    app = build_app(config=config, store=store, args=argparse.Namespace(bind="0.0.0.0", disable_webui=True))
     attach_mcp(app, config=config, store=store, plugins=[])
     url = "/glances/mcp/messages/?session_id=" + "0" * 32
     body = {"content": b"{}", "headers": {"content-type": "application/json"}}

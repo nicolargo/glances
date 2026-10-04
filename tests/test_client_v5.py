@@ -801,8 +801,8 @@ def test_against_a_real_v5_app(tmp_path, monkeypatch):
     app = build_app(config=config, store=server_store)
     register_plugin(app, mem)
 
-    with TestClient(app, base_url="http://srv:61208") as http:
-        conn = RemoteConnection("http://srv:61208")
+    with TestClient(app, base_url="http://localhost:61208") as http:
+        conn = RemoteConnection("http://localhost:61208")
         conn._session = _TestClientSession(http)
         source = RemoteSource(conn, StatsStoreV5(), "srv")
         source.connect()

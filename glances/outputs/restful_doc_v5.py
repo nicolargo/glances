@@ -226,7 +226,9 @@ def run(config: Any, out: TextIO = sys.stdout, wait: float = 1.0) -> int:
         app = build_app(config=config, store=store, alerts=alerts)
         for plugin in plugins:
             register_plugin(app, plugin)
-        with TestClient(app) as client:
+        # `build_app` binds to loopback by default, which only answers a
+        # loopback `Host`: TestClient's own `testserver` would get 400.
+        with TestClient(app, base_url="http://localhost") as client:
             out.write(render(client, app.openapi()))
     finally:
         for plugin in plugins:

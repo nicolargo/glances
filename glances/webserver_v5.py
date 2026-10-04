@@ -75,6 +75,11 @@ UNAUTH_PATHS: frozenset[str] = frozenset({"/status", "/healthz", f"/api/{__apive
 # Loopback addresses that suppress the "no TrustedHost configured" warning.
 _LOOPBACK_HOSTS: frozenset[str] = frozenset({"127.0.0.1", "::1", "localhost"})
 
+# The `Host` values a loopback-bound server answers when `webui_allowed_hosts`
+# is not set. Starlette compares the host without its port, IPv6 literals
+# keeping their brackets.
+_LOOPBACK_ALLOWED_HOSTS: tuple[str, ...] = ("localhost", "127.0.0.1", "[::1]")
+
 # Default bind address — matches v4 (``--bind 127.0.0.1`` default).
 _DEFAULT_BIND_ADDRESS = "127.0.0.1"
 
@@ -353,9 +358,12 @@ def _wire_webui(app: FastAPI, browser: bool = False) -> None:
 def _wire_trusted_hosts(app: FastAPI, config: GlancesConfigV5, args: argparse.Namespace | None = None) -> None:
     """Filter requests by ``Host`` header against an allowlist.
 
-    Default: not wired (matches v4 behaviour). When the bind address is not
-    loopback and no allowlist is configured, log a WARNING — this is the
-    only signal users see that DNS-rebinding mitigation is off (CVE-2026-32632).
+    ``[outputs] webui_allowed_hosts`` when set. Otherwise, a loopback bind
+    gets the loopback names (`_LOOPBACK_ALLOWED_HOSTS`): DNS rebinding
+    targets exactly a service on 127.0.0.1, so leaving it unfiltered let any
+    web page read the API (security audit 2026-10-04, M2; MCP already
+    defaults the same way). A non-loopback bind cannot guess its own names:
+    nothing is wired and a WARNING says the mitigation is off (CVE-2026-32632).
     """
     allowed = _csv_to_list(config.get("outputs", "webui_allowed_hosts", []))
     if not allowed:
@@ -367,7 +375,8 @@ def _wire_trusted_hosts(app: FastAPI, config: GlancesConfigV5, args: argparse.Na
                 "DNS rebinding mitigation (CVE-2026-32632) is disabled.",
                 bind,
             )
-        return
+            return
+        allowed = list(_LOOPBACK_ALLOWED_HOSTS)
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=allowed)
 
 

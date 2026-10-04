@@ -62,6 +62,26 @@ def _isolate_user_config(tmp_path: Path, monkeypatch):
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "isolated-xdg"))
 
 
+@pytest.fixture(autouse=True)
+def _testclient_on_localhost(monkeypatch):
+    """Send TestClient requests as `Host: localhost`, not `testserver`.
+
+    A v5 server bound to loopback (the default) answers a loopback `Host`
+    only (DNS rebinding, `webserver_v5._wire_trusted_hosts`). A test that
+    passes its own `base_url` or `Host` header still wins.
+    """
+    try:
+        from starlette.testclient import TestClient
+    except ImportError:
+        return
+    init = TestClient.__init__
+
+    def init_on_localhost(self, app, base_url="http://localhost", *args, **kwargs):
+        init(self, app, base_url, *args, **kwargs)
+
+    monkeypatch.setattr(TestClient, "__init__", init_on_localhost)
+
+
 @pytest.fixture(scope="session")
 def logger():
     return logging.getLogger(__name__)
