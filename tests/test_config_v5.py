@@ -514,6 +514,25 @@ def test_redacts_a_password_holding_an_unencoded_at_sign() -> None:
     assert GlancesConfigV5._secure_value("url", "https://u:p@ssW0RD@host.example/x") == "https://***@host.example/x"
 
 
+def test_backticks_in_a_value_are_never_executed(env: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """CVE-2026-33641: v4 ran `` `cmd` `` found in a config value (`system_exec`).
+
+    v5 never executes anything from the config, through the file or through
+    a `GLANCES_<SECTION>__<KEY>` variable: the value is kept as written.
+    """
+    canary = tmp_path / "executed"
+    value = f"`touch {canary}`"
+    cli = tmp_path / "glances.conf"
+    write(cli, f"[influxdb]\nprefix = {value}\n")
+    monkeypatch.setenv("GLANCES_INFLUXDB__TAGS", f"`touch {canary}`")
+    config = GlancesConfigV5(cli_config_path=str(cli))
+    assert config.get("influxdb", "prefix", "") == value
+    assert config.get_value("influxdb", "prefix") == value
+    assert config.get("influxdb", "tags", "") == value
+    assert config.as_dict()["influxdb"]["prefix"] == value
+    assert not canary.exists()
+
+
 # ============================================================================
 # as_dict_public() — what an unauthenticated /api/5/config serves (audit M1)
 # ============================================================================
