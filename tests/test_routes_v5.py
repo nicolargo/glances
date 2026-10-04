@@ -629,8 +629,28 @@ def test_config_open_when_no_auth(config_factory, store):
     with TestClient(app) as client:
         r = client.get("/api/5/config")
     assert r.status_code == 200
-    # Still no secret on this conf, just sanity-check we got something.
     assert isinstance(r.json(), dict)
+
+
+def test_config_without_auth_serves_only_the_public_options(config_factory, store, monkeypatch):
+    """Audit M1: the unauthenticated view is an allowlist, not a redacted dump."""
+    monkeypatch.setenv("GLANCES_CPU__CRITICAL_ACTION", "curl https://hooks.example/T0/ACTIONSECRET")
+    config = config_factory(theme="white", cors_origins="https://ok.example")
+    with TestClient(_make_app_with_plugins(config, store)) as client:
+        body = client.get("/api/5/config").json()
+    assert "ACTIONSECRET" not in str(body)
+    assert "cpu" not in body
+    assert body["outputs"] == {"theme": "white", "api_doc": True}
+    assert set(body) <= set(GlancesConfigV5.PUBLIC_OPTIONS)
+
+
+def test_config_with_auth_serves_the_redacted_dump(config_factory, store):
+    """Behind a password, the whole config is served, still redacted."""
+    config = config_factory(password=hash_password("hunter2"), cors_origins="https://ok.example")
+    with TestClient(_make_app_with_plugins(config, store)) as client:
+        body = client.get("/api/5/config", headers=_basic_header("glances", "hunter2")).json()
+    assert body["outputs"]["cors_origins"] == "https://ok.example"
+    assert body["outputs"]["password"] == "***"
 
 
 # ------------------------------------------------------- /token

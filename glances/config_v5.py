@@ -39,6 +39,7 @@ Public API:
 - ``get_value(...)``                          (v4 alias)
 - ``has_section(section) / sections()``       (introspection)
 - ``as_dict() / as_dict_secure()``            (full / redacted dump)
+- ``as_dict_public()``                        (the WebUI keys only)
 - ``reload()``                                (re-run the resolution)
 - ``loaded_sources``                          (the **at most one** file
                                               actually read)
@@ -60,8 +61,11 @@ T = TypeVar("T")
 # Credentials embedded in the authority part of an URL value
 # (``scheme://user:password@host``) — CVE-2026-68520. The lookbehind anchors
 # on ``://`` so only a real URL authority is scrubbed; a value that merely
-# contains an '@' is left untouched.
-_URL_CREDENTIALS_RE = re.compile(r"(?<=://)[^/?#@\s]+@")
+# contains an '@' is left untouched. The class admits '@' and the match is
+# greedy, so it runs to the LAST '@' of the authority: a password holding an
+# unencoded '@' (`u:p@ss@host`) is redacted whole, as `urlparse` and requests
+# split it.
+_URL_CREDENTIALS_RE = re.compile(r"(?<=://)[^/?#\s]+@")
 
 
 def _coerce_bool(raw: str) -> bool:
@@ -143,6 +147,17 @@ class GlancesConfigV5:
     BLOCKED_SECTIONS: set[str] = {"passwords"}
 
     SECRET_REDACTED: str = "***"
+
+    # The only options `/api/5/config` serves while the API is unauthenticated:
+    # the ones the WebUI reads (`static/js/v5/api.js`, `resolveConfig()`).
+    # An allowlist, because a denylist on option names cannot see a secret
+    # inside a free-form value: a token in an `*_action` command line, a
+    # password in an AMP command, an API key in a query string (security
+    # audit 2026-10-04, M1).
+    PUBLIC_OPTIONS: dict[str, frozenset[str]] = {
+        "global": frozenset({"refresh"}),
+        "outputs": frozenset({"theme", "max_processes_display", "api_doc"}),
+    }
 
     # Class-level paths, indirected for testability (patch.object friendly).
     SYSTEM_CONFIG_PATH: Path = Path("/etc/glances/glances.conf")
@@ -373,6 +388,18 @@ class GlancesConfigV5:
             if section.lower() in self.BLOCKED_SECTIONS:
                 continue
             result[section] = {key: self._secure_value(key, value) for key, value in options.items()}
+        return result
+
+    def as_dict_public(self) -> dict[str, dict[str, Any]]:
+        """Return only the `PUBLIC_OPTIONS`, for an unauthenticated API.
+
+        A section with none of its public options set is left out.
+        """
+        result: dict[str, dict[str, Any]] = {}
+        for section, keys in self.PUBLIC_OPTIONS.items():
+            options = {k: v for k, v in self._merged.get(section, {}).items() if k in keys}
+            if options:
+                result[section] = options
         return result
 
     @classmethod

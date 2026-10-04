@@ -25,7 +25,7 @@ Route inventory:
 | ``/api/5/all/info``           | GET    | per-plugin ``fields_description`` |
 | ``/api/5/alert``              | GET    | ``alerts.get_history()``     |
 | ``/api/5/alert/incidents``    | GET    | ``{is_initializing, incidents}`` envelope (``derive_incidents()``) |
-| ``/api/5/config``             | GET    | ``config.as_dict_secure()``  |
+| ``/api/5/config``             | GET    | ``as_dict_secure()`` with a password, else ``as_dict_public()`` |
 | ``/api/5/args``               | GET    | ``app.state.args``, redacted |
 | ``/api/5/<plugin>``           | GET    | ``plugin.get_api_payload()`` (``_levels`` included) |
 | ``/api/5/<plugin>/info``      | GET    | ``plugin.fields_description``|
@@ -303,9 +303,7 @@ def build_router() -> APIRouter:
     # Same ordering reason: before /{plugin_name}.
     router.add_api_route("/serverslist", _servers_list, methods=["GET"], name="servers_list")
 
-    @router.get("/config")
-    async def config_dump(request: Request) -> dict[str, Any]:
-        return request.app.state.config.as_dict_secure()
+    router.add_api_route("/config", _config_dump, methods=["GET"], name="config_dump")
 
     @router.get("/args")
     async def args_dump(request: Request) -> dict[str, Any]:
@@ -414,6 +412,19 @@ async def _alert_incidents(request: Request) -> dict[str, Any]:
     for incident in incidents:
         incident["duration"] = incident_duration(incident)
     return {"is_initializing": alerts.is_initializing(), "incidents": incidents}
+
+
+async def _config_dump(request: Request) -> dict[str, Any]:
+    """The redacted config behind a password, else only the WebUI keys.
+
+    Without a password anyone who reaches the API reads this route, and a
+    redaction keyed on option names leaks the secrets held in free-form
+    values (security audit 2026-10-04, M1).
+    """
+    config = request.app.state.config
+    if request.app.state.jwt_handler is None:
+        return config.as_dict_public()
+    return config.as_dict_secure()
 
 
 async def _servers_list(request: Request) -> list[dict[str, Any]]:

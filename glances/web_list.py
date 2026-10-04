@@ -68,8 +68,11 @@ class GlancesWebList:
                     continue
 
                 # The URL is published, so the userinfo (user:password@) it may
-                # embed goes through the same sanitiser as the configuration view.
-                new_web['url'] = secure_option('url', url)
+                # embed goes through the same sanitiser as the configuration view,
+                # and the query string and fragment, which may carry a token
+                # (`?access_token=`), are left out. The scanner reads the full
+                # URL from the secrets below.
+                new_web['url'] = secure_option('url', url_parse._replace(query='', fragment='').geturl())
 
                 # Read optionals configuration keys
                 # Default description is the URL without the http:// and,

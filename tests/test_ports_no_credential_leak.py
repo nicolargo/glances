@@ -38,6 +38,7 @@ web_1_https_proxy=http://proxyuser:{PROXY_SECRET}@proxy.corp.example:3128
 web_2_url=https://public.example:8443/health
 web_3_url=https://svcmonitor:{SECRET}@intranet.corp.example/health
 web_3_description=Intranet health
+web_4_url=https://api.example/health?access_token={SECRET}#frag
 """
 
 
@@ -67,6 +68,12 @@ def test_no_secret_anywhere_in_the_published_list(web_list):
 
 def test_published_url_is_redacted(web_list):
     assert entry(web_list, 'web_1')['url'] == 'https://********@intranet.corp.example/health'
+
+
+def test_published_url_leaves_out_the_query_string(web_list, web_list_object):
+    """A token in the query string is not published; the scanner still gets it (audit M1)."""
+    assert entry(web_list, 'web_4')['url'] == 'https://api.example/health'
+    assert SECRET in web_list_object.get_web_secrets()['web_4']['url']
 
 
 def test_proxies_are_not_published(web_list):

@@ -509,6 +509,55 @@ def test_secure_value_passes_through_non_string() -> None:
     assert GlancesConfigV5._secure_value("missing", None) is None
 
 
+def test_redacts_a_password_holding_an_unencoded_at_sign() -> None:
+    """`urlparse` and requests split the userinfo on the LAST '@': so must the redaction."""
+    assert GlancesConfigV5._secure_value("url", "https://u:p@ssW0RD@host.example/x") == "https://***@host.example/x"
+
+
+# ============================================================================
+# as_dict_public() — what an unauthenticated /api/5/config serves (audit M1)
+# ============================================================================
+
+
+def test_public_view_serves_only_the_webui_keys(env: Path) -> None:
+    """Secrets in free-form values never reach the public view, whatever the key name."""
+    write(
+        etc_path(env),
+        """
+        [global]
+        refresh = 3
+
+        [outputs]
+        theme = white
+        max_processes_display = 25
+        api_doc = false
+        cors_origins = https://ok.example
+
+        [cpu]
+        critical_action = curl -H "Authorization: Bearer ACTIONBEARER" https://hooks.example/T0/SECRET
+
+        [amp_mysql]
+        command = mysqladmin -uroot -pAMPMYSQLPW status
+
+        [ip]
+        public_api = https://ipinfo.io/json?token=IPINFOTOKEN
+    """,
+    )
+    public = GlancesConfigV5().as_dict_public()
+    assert public == {
+        "global": {"refresh": "3"},
+        "outputs": {"theme": "white", "max_processes_display": "25", "api_doc": "false"},
+    }
+
+
+def test_public_view_never_serves_a_key_outside_the_allowlist(env: Path) -> None:
+    """With DEFAULTS only, the view stays within `PUBLIC_OPTIONS`."""
+    public = GlancesConfigV5().as_dict_public()
+    assert set(public) <= set(GlancesConfigV5.PUBLIC_OPTIONS)
+    for section, options in public.items():
+        assert set(options) <= GlancesConfigV5.PUBLIC_OPTIONS[section]
+
+
 # ============================================================================
 # reload()
 # ============================================================================

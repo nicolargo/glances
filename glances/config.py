@@ -32,8 +32,10 @@ _SECURE_SENSITIVE_KEY_RE = re.compile(
     re.IGNORECASE,
 )
 
-# Credentials embedded in an URL value (scheme://user:password@host)
-_SECURE_URL_CREDENTIALS_RE = re.compile(r"(?<=://)[^/?#@\s]+@")
+# Credentials embedded in an URL value (scheme://user:password@host).
+# The class admits '@' and the match is greedy, so a password holding an
+# unencoded '@' (`u:p@ss@host`) is redacted whole.
+_SECURE_URL_CREDENTIALS_RE = re.compile(r"(?<=://)[^/?#\s]+@")
 
 
 def secure_option(key, value):
