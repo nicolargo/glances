@@ -198,7 +198,9 @@ class GlancesIRQ:
                     irq_line = self.__humanname(line)
                     current_irqs = self.__sum(line)
                     irq_rate = int(
-                        current_irqs - self.lasts.get(irq_line) if self.lasts.get(irq_line) else 0 // time_since_update
+                        (current_irqs - self.lasts.get(irq_line)) // time_since_update
+                        if self.lasts.get(irq_line)
+                        else 0
                     )
                     irq_current = {
                         'irq_line': irq_line,
