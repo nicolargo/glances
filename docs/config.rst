@@ -212,6 +212,11 @@ command line.
 
 The file is automatically rotated when its size exceeds 1 MB.
 
+The log file lives in a folder private to the user (``$XDG_CACHE_HOME/glances``
+or ``~/.local/share/glances``) and is readable by its owner only. Glances
+never falls back to a shared temporary folder such as ``/tmp``: when no
+private folder can be created (no home directory), it does not log to a file.
+
 If you want to use another system path or change the log message, you
 can use your logger configuration. First of all, you have to create
 a ``glances.json`` file with, for example, the following content (JSON
