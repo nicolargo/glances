@@ -487,7 +487,7 @@ un vrai navigateur ; un slowloris contre uvicorn.
 **Avant `5.0.0` :** M5, M6, M9, M11 et les constats bas restants ; I-1 et
 I-3 (documentation).
 
-Les constats identiques en v4 (M7, M8, M9, M10, B-9, B-15) sont
+Les constats identiques en v4 (M7 — le module graph v4 —, M9, M10, B-9, B-15 ; M8 est corrigé dans le module partagé) sont
 à reporter sur `support/glancesv4`.
 
 ## Suivi des corrections
@@ -498,3 +498,5 @@ Les constats identiques en v4 (M7, M8, M9, M10, B-9, B-15) sont
 | M2 — DNS rebinding | **Corrigé** : écoute loopback sans `webui_allowed_hosts` → seuls `localhost`, `127.0.0.1`, `[::1]`. Un reverse proxy local qui transmet son propre `Host` doit définir `webui_allowed_hosts` (à noter dans `NEWS.rst`). | `e9132b1` |
 | M3 — limiteur d'échecs | **Corrigé** : des identifiants déjà reconnus bons (jeton Bearer valide, en-tête Basic déjà passé par PBKDF2, gardé sous forme de HMAC) ne consomment plus d'essai et ne sont jamais refusés ; un en-tête Basic connu n'est plus revérifié par PBKDF2, ce qui lève aussi le plafond de 10 requêtes authentifiées simultanées. Reste : un bon mot de passe jamais vu depuis le démarrage attend la fin du verrouillage ; `forwarded_allow_ips` (B-6) reste à exposer. | ce commit |
 | M4 — `--disable-config-exec` | **Corrigé** : appliqué dans `main()`, donc sous `--issue` et `--fetch` ; `GlancesAPI(disable_config_exec=)` (`65cf52c`). `sh -c` : **documenté, non bloqué** (décision du mainteneur, 2026-10-04, option c) — le flag retire les opérateurs, ce n'est pas un bac à sable (`docs/aoa/amps.rst`, `actions.rst`, aide de la CLI). | `65cf52c` + ce commit |
+| M7 — exportateur graph | **Corrigé** : dossier par défaut `$XDG_DATA_HOME/glances/graphs` (`0700`) ; chaque SVG écrit dans un fichier `mkstemp` puis renommé sur la cible, donc un lien planté est remplacé, jamais suivi ; WARNING si le dossier configuré est inscriptible par d'autres ; `conf/glances.conf` ne fixe plus `path=/tmp/glances` (`docker-compose/glances.conf` le garde : `/tmp` d'un conteneur n'est pas partagé). | `ef3a6aa` |
+| M8 — journal | **Corrigé** (module partagé v4/v5) : dossier `$XDG_CACHE_HOME/glances` ou `~/.local/share/glances` créé en `0700`, fichier en `0600` (un ancien fichier lisible est resserré) ; plus jamais `/tmp` : sans dossier privé possible, pas de journal fichier. Un lien placé par le propriétaire dans son dossier privé reste suivi (redirection volontaire). | `9ff11f0` |
