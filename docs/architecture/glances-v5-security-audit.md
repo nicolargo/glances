@@ -489,3 +489,11 @@ I-3 (documentation).
 
 Les constats identiques en v4 (M4 `sh -c`, M7, M8, M9, M10, B-9, B-15) sont
 à reporter sur `support/glancesv4`.
+
+## Suivi des corrections
+
+| Constat | État | Commit |
+|---|---|---|
+| M1 — `/api/5/config` | **Corrigé** : sans mot de passe, liste blanche `PUBLIC_OPTIONS` (les clés lues par la WebUI) ; avec mot de passe, dump redacté. Regex des identifiants d'URL jusqu'au dernier `@` (v5 et v4 partagé). URL de `ports` publiées sans query ni fragment. Reste : un mot de passe d'URL contenant une espace brute (URL invalide) n'est pas redacté. | `a6e347e` |
+| M2 — DNS rebinding | **Corrigé** : écoute loopback sans `webui_allowed_hosts` → seuls `localhost`, `127.0.0.1`, `[::1]`. Un reverse proxy local qui transmet son propre `Host` doit définir `webui_allowed_hosts` (à noter dans `NEWS.rst`). | `e9132b1` |
+| M4 — `--disable-config-exec` | **En partie corrigé** : appliqué dans `main()`, donc sous `--issue` et `--fetch` ; `GlancesAPI(disable_config_exec=)`. **Ouvert** : le contournement par `sh -c "…"` (décision du mainteneur). | `65cf52c` |
