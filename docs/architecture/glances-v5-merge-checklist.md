@@ -18,7 +18,7 @@ au 2026-10-04. Rien ici ne se fait sur `develop`, sauf la section 6.
   - [ ] B1 — les `__init__.py` de paquets v4 chargés par chaque import v5
     (avant la suppression du code v4)
   - [ ] constats « avant 5.0.0b1 » du plan de correction : M1 ✅, M2 ✅,
-    M4 (en partie : reste `sh -c`), M3, M7, M8, M10, B-4, B-13, tests
+    M4 ✅ (`sh -c` documenté, décision du mainteneur), M3, M7, M8, M10, B-4, B-13, tests
     CVE-2026-33641 et GHSA-mcm7
   - [ ] constats « avant 5.0.0 » (M5, M6, M9, M11, constats bas, I-1, I-3)
 - [ ] **Les 42 tests GAP** de `glances-v5-v4-tests-migration.md` : pour chacun,

@@ -669,8 +669,9 @@ def build_parser() -> argparse.ArgumentParser:
         dest="disable_config_exec",
         action="store_true",
         default=False,
-        help="Disable shell operator interpretation (&&, |, >) in the on-alert action "
-        "commands read from glances.conf (recommended for system services).",
+        help="Disable shell operator interpretation (&&, |, >) in the AMP and on-alert action "
+        "commands read from glances.conf (recommended for system services). The commands "
+        "themselves still run: this is not a sandbox, see docs/aoa/amps.rst.",
     )
     parser.add_argument(
         "--set-password",

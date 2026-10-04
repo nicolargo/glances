@@ -143,6 +143,17 @@ Note: with ``--disable-config-exec`` set, AMP commands that rely on these
 operators stop working. Move such logic into a dedicated shell script and
 point the ``command`` option to that script instead.
 
+.. warning::
+
+    ``--disable-config-exec`` removes the shell operators, it does not stop
+    the commands themselves from running, and it is not a sandbox. A command
+    that starts a shell or an interpreter, such as ``sh -c "..."`` or
+    ``python -c "..."``, still interprets whatever it is given, operators
+    included. The option protects against a monitored value or a template
+    smuggling an operator into a command line; it does not make an untrusted
+    configuration file safe. Keep ``glances.conf`` writable by its owner only
+    (root for a system service).
+
 An AMP command that hangs blocks that AMP indefinitely. The optional
 ``timeout`` key bounds it:
 

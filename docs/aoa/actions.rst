@@ -131,5 +131,11 @@ seconds, in the ``[alerts]`` section:
     [alerts]
     action_timeout=60
 
+With ``--disable-config-exec``, the shell operators (``&&``, ``|``,
+``>``) of an action command are no longer interpreted, as for the AMP
+commands. The command itself still runs, and a command that starts a shell
+(``sh -c "..."``) still interprets what it is given: see the warning in
+:ref:`amps`. The option is not a sandbox.
+
 .. _Mustache: https://mustache.github.io/
 .. _Chevron: https://github.com/noahmorrison/chevron
