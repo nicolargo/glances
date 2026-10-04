@@ -121,7 +121,7 @@ def modules_list() -> str:
     return f"Plugins list: {', '.join(plugins)}\nExporters list: {', '.join(exporters)}"
 
 
-def open_web_ui(host: str, port: int) -> None:
+def open_web_ui(host: str, port: int, scheme: str = "http") -> None:
     """`--open-web-browser` (v4 issue #946): open the Web UI in a new tab.
 
     A wildcard bind address is not somewhere a browser can go, so it is
@@ -133,7 +133,7 @@ def open_web_ui(host: str, port: int) -> None:
     if ":" in target:
         target = f"[{target}]"
     try:
-        webbrowser.open(f"http://{target}:{port}/", new=2, autoraise=True)
+        webbrowser.open(f"{scheme}://{target}:{port}/", new=2, autoraise=True)
     except webbrowser.Error as exc:
         logger.warning("--open-web-browser: could not open a browser (%s)", exc)
 
@@ -1640,6 +1640,34 @@ def run_issue(args: argparse.Namespace, config: GlancesConfigV5) -> int:
     return issue_v5.run(plugins, disabled, __version__, sources)
 
 
+def server_ssl_options(config: GlancesConfigV5) -> dict[str, str]:
+    """`[outputs] ssl_keyfile`, `ssl_certfile`, `ssl_keyfile_password`, as `uvicorn.Config` takes them.
+
+    Empty when neither file is set: the server speaks plain HTTP. v4 served
+    HTTPS from these keys; v5 used to ignore them, so an operator who set
+    them got cleartext HTTP, Basic credentials and tokens included, with no
+    word about it (security audit 2026-10-04, B-4). A half or broken setup
+    therefore stops the start rather than falling back to HTTP: one file
+    without the other, or a file that cannot be read.
+    """
+    keyfile = str(config.get("outputs", "ssl_keyfile", "") or "")
+    certfile = str(config.get("outputs", "ssl_certfile", "") or "")
+    if not keyfile and not certfile:
+        return {}
+    if not keyfile or not certfile:
+        logger.critical("[outputs] ssl_keyfile and ssl_certfile go together: set both, or neither for plain HTTP")
+        sys.exit(2)
+    for name, path in (("ssl_keyfile", keyfile), ("ssl_certfile", certfile)):
+        if not os.access(path, os.R_OK):
+            logger.critical("[outputs] %s=%s cannot be read", name, path)
+            sys.exit(2)
+    options = {"ssl_keyfile": keyfile, "ssl_certfile": certfile}
+    password = str(config.get("outputs", "ssl_keyfile_password", "") or "")
+    if password:
+        options["ssl_keyfile_password"] = password
+    return options
+
+
 # --------------------------------------------------------------- serve
 
 
@@ -1650,8 +1678,11 @@ async def serve(
     host: str,
     port: int,
     tui: TuiV5 | None = None,
+    ssl: dict[str, str] | None = None,
 ) -> None:
     """Run the scheduler and the mode-specific runtime concurrently.
+
+    ``ssl``: the `server_ssl_options()` uvicorn serves HTTPS with.
 
     Two modes (mirrors ``assemble`` above):
 
@@ -1692,6 +1723,7 @@ async def serve(
                 port=port,
                 log_level="warning",
                 access_log=False,
+                **(ssl or {}),
             )
             server = uvicorn.Server(uvi_config)
             await server.serve()
@@ -1762,16 +1794,18 @@ def main(argv: list[str] | None = None) -> int:
             unicode=not args.disable_unicode,
             disable_config_exec=args.disable_config_exec,
         )
+    ssl = server_ssl_options(config) if args.server else {}
     app, scheduler, host, port, tui = assemble(args, config)
 
     if args.server:
-        logger.info("Starting Glances v5 REST API on http://%s:%d", host, port)
+        scheme = "https" if ssl else "http"
+        logger.info("Starting Glances v5 REST API on %s://%s:%d", scheme, host, port)
         if getattr(args, "open_web_browser", False):
-            open_web_ui(host, port)
+            open_web_ui(host, port, scheme)
     else:
         logger.info("Starting Glances v5 in TUI mode (no REST API bound).")
     try:
-        asyncio.run(serve(args, app, scheduler, host, port, tui))
+        asyncio.run(serve(args, app, scheduler, host, port, tui, ssl))
     except KeyboardInterrupt:
         pass
     finally:

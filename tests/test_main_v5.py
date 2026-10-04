@@ -47,6 +47,7 @@ from glances.main_v5 import (
     main,
     modules_list,
     serve,
+    server_ssl_options,
     setup_logging,
     validate_args,
 )
@@ -658,6 +659,57 @@ def test_serve_stops_scheduler_after_uvicorn_returns(config):
 
         instance.serve.assert_awaited_once()
         scheduler.stop.assert_awaited()
+
+
+# ----------------------------------------------------------- TLS (audit B-4)
+
+
+def _outputs(config, **keys):
+    config._merged.setdefault("outputs", {}).update(keys)
+    return config
+
+
+def test_no_ssl_file_means_plain_http(config):
+    assert server_ssl_options(config) == {}
+
+
+def test_both_ssl_files_are_handed_to_uvicorn(config, tmp_path):
+    key, cert = tmp_path / "k.pem", tmp_path / "c.pem"
+    key.write_text("k")
+    cert.write_text("c")
+    options = server_ssl_options(
+        _outputs(config, ssl_keyfile=str(key), ssl_certfile=str(cert), ssl_keyfile_password="kfp")
+    )
+    assert options == {"ssl_keyfile": str(key), "ssl_certfile": str(cert), "ssl_keyfile_password": "kfp"}
+
+
+@pytest.mark.parametrize("keys", [{"ssl_keyfile": "k.pem"}, {"ssl_certfile": "c.pem"}])
+def test_one_ssl_file_without_the_other_stops_the_start(config, keys):
+    """Never fall back to cleartext HTTP when the operator asked for TLS."""
+    with pytest.raises(SystemExit) as exc:
+        server_ssl_options(_outputs(config, **keys))
+    assert exc.value.code == 2
+
+
+def test_an_unreadable_ssl_file_stops_the_start(config, tmp_path):
+    cert = tmp_path / "c.pem"
+    cert.write_text("c")
+    with pytest.raises(SystemExit) as exc:
+        server_ssl_options(_outputs(config, ssl_keyfile=str(tmp_path / "missing.pem"), ssl_certfile=str(cert)))
+    assert exc.value.code == 2
+
+
+def test_serve_hands_the_ssl_options_to_uvicorn(config):
+    args = build_parser().parse_args(["-s"])
+    app, scheduler, host, port, tui = assemble(args, config)
+    scheduler.run_forever = AsyncMock(return_value=None)  # type: ignore[method-assign]
+    scheduler.stop = AsyncMock(return_value=None)  # type: ignore[method-assign]
+    ssl = {"ssl_keyfile": "k.pem", "ssl_certfile": "c.pem"}
+    with patch("uvicorn.Config") as MockConfig, patch("uvicorn.Server") as MockServer:
+        MockServer.return_value.serve = AsyncMock(return_value=None)
+        asyncio.run(serve(args, app, scheduler, host, port, tui, ssl))
+    assert MockConfig.call_args.kwargs["ssl_keyfile"] == "k.pem"
+    assert MockConfig.call_args.kwargs["ssl_certfile"] == "c.pem"
 
 
 def test_serve_tui_mode_does_not_instantiate_uvicorn(config):
