@@ -12,13 +12,14 @@ au 2026-10-04. Rien ici ne se fait sur `develop`, sauf la section 6.
 
 ## 1. Bloquants (§4.8, §9)
 
-- [ ] **Audit de sécurité complet** sur `develop-v5`, rapport `.md` dans
-  `docs/architecture/`. Il doit répondre aux questions ouvertes du §4.8 :
-  - [ ] `/api/5/config` reste-t-il ouvert sans authentification quand l'API l'est ?
-  - [ ] `UNAUTH_PATHS` (sondes + `/api/5/token`) ne permet ni énumération ni oracle
-  - [ ] revue du rate limiting (câblé le 2026-10-03, §4.5)
-  - [ ] chaque CVE du §8 revérifiée contre le code v5
-  - [ ] aucun module v4 en fin de vie importé par un fichier `_v5`
+- [x] **Audit de sécurité complet** sur `develop-v5` (2026-10-04) :
+  `glances-v5-security-audit.md`. Aucune faille critique ou haute ;
+  1 bloquant structurel, 11 constats moyens. Reste à corriger :
+  - [ ] B1 — les `__init__.py` de paquets v4 chargés par chaque import v5
+    (avant la suppression du code v4)
+  - [ ] constats « avant 5.0.0b1 » du plan de correction (M1, M2, M3, M4,
+    M7, M8, M10, B-4, B-13, tests CVE-2026-33641 et GHSA-mcm7)
+  - [ ] constats « avant 5.0.0 » (M5, M6, M9, M11, constats bas, I-1, I-3)
 - [ ] **Les 42 tests GAP** de `glances-v5-v4-tests-migration.md` : pour chacun,
   correction en v5 ou retrait par décision écrite (§9 : « not silently dropped »).
   - [ ] mem : bornes `used`/`percent` en conteneur (LXC, cgroup v2), ARC ZFS,
