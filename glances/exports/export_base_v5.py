@@ -37,14 +37,15 @@ import re
 import threading
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, ClassVar
+from urllib.parse import urlsplit, urlunsplit
 
+from glances.config_v5 import GlancesConfigV5
 from glances.globals import json_dumps
 from glances.logger import logger
 
 if TYPE_CHECKING:
     import argparse
 
-    from glances.config_v5 import GlancesConfigV5
     from glances.plugins.plugin.base_v5 import GlancesPluginBase
 
 # Hard-coded fallback, matching the scheduler's own. Used only when neither
@@ -334,10 +335,16 @@ class GlancesExportBase(ABC):
         ``GlancesPluginModel.load_limits`` and merges into the exported
         payload, so field names reaching a backend are unchanged.
 
-        Two departures from v4:
+        Three departures from v4:
 
         - keys containing ``_action`` are skipped (design §5.4): they hold
           shell commands and Mustache templates, never measurements;
+        - keys a secret is kept under (the names `/api/5/config` redacts:
+          ``password``, ``token``, ``username``...) are skipped, and a URL
+          value loses its credentials and query string (security audit
+          2026-10-04, M10): a backend usually has wider readers than the
+          host, and `[ip] public_password` or `[ports] web_N_url` went there
+          in clear;
         - the result is cached per plugin name — the config does not change
           between ticks.
 
@@ -361,7 +368,7 @@ class GlancesExportBase(ABC):
         }
 
         for option, _ in self.config.items(plugin.plugin_name):
-            if self._ACTION_KEY_MARKER in option:
+            if self._ACTION_KEY_MARKER in option or GlancesConfigV5._is_secret_key(option):
                 continue
             name = f"{plugin.plugin_name}_{option}"
             try:
@@ -372,7 +379,7 @@ class GlancesExportBase(ABC):
                 # is how a comma-separated value is normally written, and a bare split
                 # exported ' S' and ' D' to the backend. Only the edges are trimmed, so
                 # a value like `alias=sda1:System Disk` keeps its internal spaces.
-                limits[name] = [item.strip() for item in str(raw).split(",")]
+                limits[name] = [_without_url_secrets(item.strip()) for item in str(raw).split(",")]
 
         self._limits_cache[plugin.plugin_name] = limits
         return limits
@@ -457,3 +464,17 @@ class GlancesExportBase(ABC):
         """
         with self._lifecycle_lock:
             logger.debug("Finalise v5 export interface %s", self.export_name)
+
+
+def _without_url_secrets(value: str) -> str:
+    """A URL without its credentials (``user:password@``) nor its query string and fragment.
+
+    Anything that is not a URL is returned as is. The query goes because it
+    may carry a token (``?access_token=``), as the ports plugin's published
+    URLs already do without it.
+    """
+    if "://" not in value:
+        return value
+    parts = urlsplit(value)
+    netloc = parts.netloc.rpartition("@")[2]
+    return urlunsplit((parts.scheme, netloc, parts.path, "", ""))

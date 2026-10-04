@@ -309,6 +309,36 @@ def test_limits_for_never_exports_action_templates():
     assert "/usr/bin/mail -s alert ops@example.com" not in str(limits.values())
 
 
+def test_limits_for_never_exports_a_credential():
+    """Audit M10: a backend usually has wider readers than the host.
+
+    `[ip] public_username` / `public_password` and a `[ports] web_N_url`
+    carrying `user:password@` or a query-string token used to leave in clear.
+    """
+    config = make_config(
+        {
+            "fakescalar": {
+                "careful": "50",
+                "user_careful": "60",
+                "public_username": "alice",
+                "public_password": "S3CRET-PW",
+                "api_token": "TOKEN-1",
+                "web_1_url": "https://bob:hunter2@intranet.example/health?access_token=TOKEN-2#frag",
+                "web_2_url": "https://public.example:8443/health",
+            }
+        }
+    )
+    plugin = FakeScalarPlugin(StatsStoreV5(), config)
+    limits = FakeExport(config, args=None)._limits_for(plugin)
+
+    for secret in ("alice", "S3CRET-PW", "TOKEN-1", "bob", "hunter2", "TOKEN-2"):
+        assert secret not in str(limits), secret
+    assert limits["fakescalar_web_1_url"] == ["https://intranet.example/health"]
+    assert limits["fakescalar_web_2_url"] == ["https://public.example:8443/health"]
+    assert limits["fakescalar_careful"] == 50.0
+    assert limits["fakescalar_user_careful"] == 60.0, "a `user` CPU threshold is not a credential"
+
+
 def test_limits_for_is_cached_per_plugin():
     config = make_config({"fakescalar": {"careful": "50"}})
     store = StatsStoreV5()
