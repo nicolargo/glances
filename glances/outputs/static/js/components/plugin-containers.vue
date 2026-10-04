@@ -14,7 +14,14 @@
                             @click="args.sort_processes_key = 'name'">
                             Name
                         </td>
-                        <td v-show="!getDisableStats().includes('status')" scope="col">Status</td>
+                        <td
+                            v-show="!getDisableStats().includes('status')"
+                            scope="col"
+                            :class="['sortable', sorter.column === 'status' && 'sort']"
+                            @click="args.sort_processes_key = 'status'"
+                        >
+                            Status
+                        </td>
                         <td v-show="!getDisableStats().includes('cpu')" scope="col"
                             :class="['sortable', sorter.column === 'cpu_percent' && 'sort']"
                             @click="args.sort_processes_key = 'cpu_percent'">
@@ -78,7 +85,14 @@
                             @click="args.sort_processes_key = 'name'">
                             Name
                         </td>
-                        <td v-show="!getDisableStats().includes('status')" scope="col">Status</td>
+                        <td
+                            v-show="!getDisableStats().includes('status')"
+                            scope="col"
+                            :class="['sortable', sorter.column === 'status' && 'sort']"
+                            @click="args.sort_processes_key = 'status'"
+                        >
+                            Status
+                        </td>
                         <td v-show="!getDisableStats().includes('uptime')" scope="col">Uptime</td>
                         <td v-show="!getDisableStats().includes('cpu')" scope="col"
                             :class="['sortable', sorter.column === 'cpu_percent' && 'sort']"
@@ -269,8 +283,16 @@ export default {
 			return orderBy(
 				containers,
 				[sorter.column].map((col) => {
-					const sorter = (item) =>
-						item[col === "memory_percent" ? "memory_usage" : col] ?? -Infinity;
+					const sorter = (item) => {
+						if (col === "status") {
+							// Worst first, in the order getStatusClass colours them,
+							// uncoloured statuses (e.g. starting) just above ok
+							return ["ok", "info", "careful", "warning", "error"].indexOf(
+								this.getStatusClass(item.status),
+							);
+						}
+						return item[col === "memory_percent" ? "memory_usage" : col] ?? -Infinity;
+					};
 					return sorter;
 				}, []),
 				[sorter.isReverseColumn(sorter.column) ? "desc" : "asc"],
@@ -295,6 +317,7 @@ export default {
 					"io_wx",
 					"network_rx",
 					"network_tx",
+					"status",
 				];
 				function isReverseColumn(column) {
 					return !["name"].includes(column);
@@ -310,6 +333,7 @@ export default {
 						io_wx: "disk write rate",
 						network_rx: "network receive rate",
 						network_tx: "network transmit rate",
+						status: "container status",
 						None: "None",
 					};
 					return labels[value] || value;
