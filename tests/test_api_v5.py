@@ -198,6 +198,14 @@ def test_no_alert_action_and_no_exporter_ever(conf):
         assert gl._scheduler._exporters == []
 
 
+@pytest.mark.parametrize("flag", [False, True])
+def test_disable_config_exec_reaches_the_amps(conf, flag):
+    """`--fetch` hands `--disable-config-exec` to the API, which builds the AMPs (audit M4)."""
+    body = "[amps]\ndisable=False\n[amp_probe]\nenable=true\nrefresh=60\ncommand=echo x\n"
+    with api.GlancesAPI(config_path=conf(body), plugins=["amps"], disable_config_exec=flag) as gl:
+        assert gl._plugins["amps"]._amps_list._amps["probe"].allow_operators() is not flag
+
+
 def test_alerts_are_recorded_and_returned(conf):
     with api.GlancesAPI(
         config_path=conf("[alerts]\nwarmup_cycles=0\nmin_duration_seconds=0\n[mem]\ncritical=0.1\n"), plugins=["mem"]

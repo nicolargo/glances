@@ -1151,13 +1151,9 @@ def assemble(
     always built — they are shared by both modes.
     """
     store = StatsStoreV5()
-    if args.disable_config_exec:
-        # Flip the hardening gate via the same overlay mechanism used for
-        # api_doc / enable_mcp. Applied before the actions are built, and
-        # outside the `--server` branch: the flag must hold in TUI mode too.
-        # One-way: the CLI can only harden, never relax a config that already
-        # sets the key (CVE-2026-68519).
-        config._merged.setdefault("global", {})["disable_config_exec"] = True
+    # Already applied by `main()`; repeated for the callers that assemble on
+    # their own (`run_memory_leak`, tests). Idempotent.
+    apply_disable_config_exec(args, config)
     # `-t` / `--strftime`: the same overlay, before the scheduler and the
     # plugins read them. `[global] refresh` is what the scheduler and the TUI
     # cadence resolve first; `now` reads `strftime_format` at construction.
@@ -1616,6 +1612,19 @@ async def _client_exports(source: Any, exporters: list[Any], build_plugins: Any,
                 await asyncio.to_thread(exporter.exit)
 
 
+def apply_disable_config_exec(args: argparse.Namespace, config: GlancesConfigV5) -> None:
+    """`--disable-config-exec` → `[global] disable_config_exec`, the key AMPs and actions read.
+
+    Applied by `main()` right after the config is loaded, so it holds in every
+    mode that runs config-sourced commands, `--issue` and `--fetch` included
+    (security audit 2026-10-04, M4). The same overlay mechanism as api_doc /
+    enable_mcp. One-way: the CLI can only harden, never relax a config that
+    already sets the key (CVE-2026-68519).
+    """
+    if getattr(args, "disable_config_exec", False):
+        config._merged.setdefault("global", {})["disable_config_exec"] = True
+
+
 # --------------------------------------------------------------- issue
 
 
@@ -1730,6 +1739,7 @@ def main(argv: list[str] | None = None) -> int:
     except ConfigFileError as e:
         logger.critical("%s", e)
         sys.exit(2)
+    apply_disable_config_exec(args, config)
     if getattr(args, "memory_leak", False):
         return run_memory_leak(args, config)
     if getattr(args, "client", None):
@@ -1745,7 +1755,12 @@ def main(argv: list[str] | None = None) -> int:
     if getattr(args, "fetch", False):
         from glances.outputs import fetch_v5
 
-        return fetch_v5.run(args.config_path, args.fetch_template, unicode=not args.disable_unicode)
+        return fetch_v5.run(
+            args.config_path,
+            args.fetch_template,
+            unicode=not args.disable_unicode,
+            disable_config_exec=args.disable_config_exec,
+        )
     app, scheduler, host, port, tui = assemble(args, config)
 
     if args.server:

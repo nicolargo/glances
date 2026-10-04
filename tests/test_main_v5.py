@@ -465,6 +465,27 @@ def test_disable_config_exec_flag_hardens_the_shell_action(config):
     assert scheduler.alerts.actions["action"].allow_operators() is False
 
 
+@pytest.mark.parametrize("mode", [["--issue"], ["--fetch"]])
+@pytest.mark.parametrize("flag", [[], ["--disable-config-exec"]])
+def test_disable_config_exec_holds_under_issue_and_fetch(mode, flag, tmp_path):
+    """Audit M4 (CVE-2026-53925): `--issue` and `--fetch` build the AMPs too.
+
+    The flag used to be applied by `assemble()` only, which neither mode
+    reaches: an AMP's `>` redirect wrote its file anyway. Without the flag the
+    redirect is honoured, which proves the AMP did run.
+    """
+    canary = tmp_path / "written"
+    conf = tmp_path / "glances.conf"
+    conf.write_text(f"[amps]\ndisable=False\n[amp_probe]\nenable=true\nrefresh=1\ncommand=echo x > {canary}\n")
+    subprocess.run(
+        [sys.executable, "-m", "glances.main_v5", "-C", str(conf), *flag, *mode],
+        capture_output=True,
+        timeout=60,
+        check=False,
+    )
+    assert canary.exists() is not bool(flag)
+
+
 def test_shell_action_allows_operators_without_the_flag(config):
     args = build_parser().parse_args(["-s"])
     _, scheduler, _, _, _tui = assemble(args, config)

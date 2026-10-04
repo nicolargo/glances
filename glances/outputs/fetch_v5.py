@@ -205,8 +205,13 @@ def run(
     out: TextIO = sys.stdout,
     err: TextIO = sys.stderr,
     wait: float = DEFAULT_WAIT,
+    disable_config_exec: bool = False,
 ) -> int:
-    """`--fetch`: collect for `wait` seconds, render the template, print it."""
+    """`--fetch`: collect for `wait` seconds, render the template, print it.
+
+    `disable_config_exec` carries `--disable-config-exec` to the API, which
+    loads its own config: the AMPs it builds must honour the flag.
+    """
     from glances.api_v5 import GlancesAPI
 
     if template_path:
@@ -219,7 +224,7 @@ def run(
     else:
         template_text = DEFAULT_TEMPLATE
     color = out.isatty() and "NO_COLOR" not in os.environ
-    with GlancesAPI(config_path=config_path) as gl:
+    with GlancesAPI(config_path=config_path, disable_config_exec=disable_config_exec) as gl:
         time.sleep(wait)
         try:
             text = render(template_text, gl, FetchUI(gl, color=color, unicode=unicode))

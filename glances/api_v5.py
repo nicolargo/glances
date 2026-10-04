@@ -143,6 +143,8 @@ class GlancesAPI:
         refresh: seconds, overriding ``[global] refresh`` as ``-t`` does: how
             long a read stays cached on demand, and the scheduler's cadence in
             the background (per-plugin ``[<plugin>] refresh`` keys still win).
+        disable_config_exec: as ``--disable-config-exec``: the commands that
+            ``glances.conf`` gives the AMPs run without shell operators.
 
     Use it as a context manager, or call ``close()``: some plugins hold
     background resources until then.
@@ -154,9 +156,14 @@ class GlancesAPI:
         background: bool = False,
         plugins: list[str] | None = None,
         refresh: float | None = None,
+        disable_config_exec: bool = False,
     ) -> None:
         self.__version__ = __version__.split(".")[0]
         self._config = GlancesConfigV5(cli_config_path=config_path)
+        if disable_config_exec:
+            # The overlay `--disable-config-exec` uses (`main_v5`), read by
+            # `AmpsListV5` when the plugins are built below.
+            self._config._merged.setdefault("global", {})["disable_config_exec"] = True
         if refresh is not None:
             if refresh <= 0:
                 raise ValueError(f"refresh must be > 0 seconds, got {refresh!r}")
