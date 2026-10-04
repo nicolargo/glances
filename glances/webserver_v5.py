@@ -55,7 +55,7 @@ from glances.config_v5 import GlancesConfigV5
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
 from glances.ratelimit_v5 import RateLimitMiddleware
 from glances.routes_v5 import build_router
-from glances.security_v5 import JWTHandler, verify_password
+from glances.security_v5 import JWTHandler, KnownCredentials, verify_password
 from glances.stats_store_v5 import StatsStoreV5
 from glances.version_v5 import __apiversion__, __version__
 
@@ -155,6 +155,7 @@ def build_app(
     app.state.alerts = alerts
     app.state.args = args
     app.state.jwt_handler = None  # set by _wire_auth() when password is configured
+    app.state.known_credentials = None  # idem
     # Populated by ``register_plugin(app, plugin)`` — used by /pluginslist
     # and /<plugin>/info. Routes that only need the store payload do not
     # consult this dict.
@@ -424,6 +425,8 @@ def _wire_rate_limit(app: FastAPI, config: GlancesConfigV5) -> None:
         per_minute=per_minute,
         burst=config.get("outputs", "rate_limit_burst", 0),
         auth_fail_per_minute=auth_fail_per_minute,
+        # Set by `_wire_auth`, which runs first; None without a password.
+        known_credentials=app.state.known_credentials,
     )
 
 
@@ -443,6 +446,8 @@ def _wire_auth(app: FastAPI, config: GlancesConfigV5) -> None:
     jwt_expire = config.get("outputs", "jwt_expire_minutes", _DEFAULT_JWT_EXPIRE_MINUTES)
     jwt_handler = JWTHandler(secret_key=jwt_secret, expire_minutes=jwt_expire)
     app.state.jwt_handler = jwt_handler
+    known = KnownCredentials(jwt_handler)
+    app.state.known_credentials = known
 
     if jwt_handler.secret_was_generated:
         logger.info(
@@ -466,6 +471,9 @@ def _wire_auth(app: FastAPI, config: GlancesConfigV5) -> None:
             return _unauth_response(scheme="Bearer")
 
         if auth.startswith("Basic "):
+            # Proven good before: no second PBKDF2 for the same header.
+            if known.is_known(auth):
+                return await call_next(request)
             credentials = _decode_basic(auth[len("Basic ") :].strip())
             if credentials is not None:
                 user, password = credentials
@@ -476,6 +484,7 @@ def _wire_auth(app: FastAPI, config: GlancesConfigV5) -> None:
                 if hmac.compare_digest(user.encode(), username.encode()) and await run_in_threadpool(
                     verify_password, password, password_hash
                 ):
+                    known.remember(auth)
                     return await call_next(request)
 
         return _unauth_response(scheme="Basic")

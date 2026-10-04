@@ -20,7 +20,12 @@ between TrustedHost and CORS, so outside authentication:
   credentials reach PBKDF2. Reserving up front is what keeps parallel guesses
   from all getting through while the first ones are still being checked. A
   request without credentials is a browser's first visit, not a guess: it is
-  not counted. The try that locks an address out logs one WARNING naming it.
+  not counted. Nor is one whose credentials are already known good
+  (`security_v5.KnownCredentials`: a valid Bearer token, or a Basic header
+  that has passed the password check before): it spends no try and is let
+  through even from a locked-out address, so an attacker sharing an address
+  with the users (proxy, NAT) cannot lock out the clients already logged in.
+  The try that locks an address out logs one WARNING naming it.
 
 `/status` and `/healthz` are never limited. `/api/5/token` is: it is where a
 password is guessed.
@@ -114,8 +119,17 @@ class Buckets:
 class RateLimitMiddleware:
     """Pure ASGI middleware: the general limit, then the failed-authentication one."""
 
-    def __init__(self, app: Any, *, per_minute: int, burst: int, auth_fail_per_minute: int) -> None:
+    def __init__(
+        self,
+        app: Any,
+        *,
+        per_minute: int,
+        burst: int,
+        auth_fail_per_minute: int,
+        known_credentials: Any = None,
+    ) -> None:
         self.app = app
+        self._known = known_credentials
         # A burst left at 0 is one minute's worth of requests.
         self._general = Buckets(per_minute, burst if burst > 0 else per_minute) if per_minute > 0 else None
         self._auth = Buckets(auth_fail_per_minute, auth_fail_per_minute) if auth_fail_per_minute > 0 else None
@@ -135,7 +149,8 @@ class RateLimitMiddleware:
                 await _too_many_requests(wait)(scope, receive, send)
                 return
 
-        if self._auth is None or not _has_credentials(scope):
+        authorization = _authorization(scope)
+        if self._auth is None or not authorization or (self._known is not None and self._known.is_known(authorization)):
             await self.app(scope, receive, send)
             return
 
@@ -163,8 +178,12 @@ class RateLimitMiddleware:
                 )
 
 
-def _has_credentials(scope: dict[str, Any]) -> bool:
-    return any(name == b"authorization" and value for name, value in scope.get("headers", []))
+def _authorization(scope: dict[str, Any]) -> str:
+    """The `Authorization` header, or "" when the request carries none."""
+    for name, value in scope.get("headers", []):
+        if name == b"authorization" and value:
+            return value.decode("latin-1")
+    return ""
 
 
 def _too_many_requests(wait: float) -> JSONResponse:

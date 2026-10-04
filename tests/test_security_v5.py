@@ -30,7 +30,8 @@ import time
 
 from jose import jwt
 
-from glances.security_v5 import JWTHandler, hash_password, verify_password
+from glances import security_v5
+from glances.security_v5 import JWTHandler, KnownCredentials, hash_password, verify_password
 
 # -------------------------------------------------------- password
 
@@ -153,3 +154,38 @@ def test_jwt_expire_minutes_honored():
     delta_seconds = payload["exp"] - payload["iat"]
     # 42 minutes = 2520 seconds, allow a small skew.
     assert 2510 <= delta_seconds <= 2530
+
+
+# ----------------------------------------------------- known credentials
+
+
+def test_known_credentials_remember_a_basic_header():
+    known = KnownCredentials(JWTHandler(secret_key="s"))
+    assert not known.is_known("Basic Z2xhbmNlczpodW50ZXIy")
+    known.remember("Basic Z2xhbmNlczpodW50ZXIy")
+    assert known.is_known("Basic Z2xhbmNlczpodW50ZXIy")
+    assert not known.is_known("Basic Z2xhbmNlczpndWVzcw==")
+
+
+def test_known_credentials_keep_no_plain_header():
+    known = KnownCredentials(JWTHandler(secret_key="s"))
+    known.remember("Basic Z2xhbmNlczpodW50ZXIy")
+    assert "Z2xhbmNlczpodW50ZXIy" not in repr(known.__dict__)
+
+
+def test_known_credentials_check_a_bearer_token_each_time():
+    """A token is not remembered: it stops being known when it expires."""
+    handler = JWTHandler(secret_key="s", expire_minutes=-1)
+    known = KnownCredentials(handler)
+    assert not known.is_known("Bearer " + handler.create_access_token("glances"))
+    fresh = JWTHandler(secret_key="s").create_access_token("glances")
+    assert known.is_known("Bearer " + fresh)
+
+
+def test_known_credentials_stay_bounded(monkeypatch):
+    monkeypatch.setattr(security_v5, "_MAX_KNOWN_BASIC", 2)
+    known = KnownCredentials(JWTHandler(secret_key="s"))
+    for i in range(5):
+        known.remember(f"Basic {i}")
+    assert len(known._basic) == 2
+    assert known.is_known("Basic 4") and not known.is_known("Basic 0")

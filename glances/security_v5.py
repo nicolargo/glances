@@ -18,6 +18,9 @@ Two primitives, both kept algorithmically equivalent to v4 (CVE-2026-32596
 - ``JWTHandler`` — HS256 JWT minting and verification, with ``sub`` / ``exp``
   / ``iat`` / ``iss`` claims. Same algorithm and claim shape as v4
   ``glances/jwt_utils.py``.
+- ``KnownCredentials`` — the ``Authorization`` values already proven good,
+  which the rate limiter lets through and the auth middleware does not
+  re-check with PBKDF2.
 
 The v4 modules are intentionally not imported — v5 keeps a clean boundary.
 Stored password hashes are *not* byte-compatible across v4 ↔ v5 because v4
@@ -143,3 +146,47 @@ class JWTHandler:
         if not isinstance(sub, str):
             return None
         return sub
+
+
+# ----------------------------------------------------- known credentials
+
+# Basic headers remembered at most. One password gives one good header per
+# username spelling, so a handful is plenty; the bound only caps memory.
+_MAX_KNOWN_BASIC = 64
+
+
+class KnownCredentials:
+    """The ``Authorization`` values already proven good (security audit 2026-10-04, M3).
+
+    The failed-login limiter runs before authentication, so on its own it
+    refuses the right password too while an address is locked out, and every
+    client behind one proxy or NAT shares that address. With this, a request
+    whose credentials are known good spends no try and is never refused:
+
+    - a Bearer token is known good when it verifies (an HMAC, no PBKDF2);
+    - a Basic header is known good once it has passed PBKDF2. Only an HMAC of
+      it, under a key drawn per process, is kept, so the plain password never
+      stays in memory; the set is lost on restart, as is the config it was
+      checked against.
+
+    A request with credentials never seen before still spends a try.
+    """
+
+    def __init__(self, jwt_handler: JWTHandler) -> None:
+        self._jwt_handler = jwt_handler
+        self._key = secrets.token_bytes(32)
+        self._basic: dict[bytes, None] = {}
+
+    def is_known(self, authorization: str) -> bool:
+        if authorization.startswith("Bearer "):
+            return self._jwt_handler.verify_token(authorization[len("Bearer ") :].strip()) is not None
+        return self._digest(authorization) in self._basic
+
+    def remember(self, authorization: str) -> None:
+        """Record a Basic header that has just passed the password check."""
+        self._basic[self._digest(authorization)] = None
+        if len(self._basic) > _MAX_KNOWN_BASIC:
+            del self._basic[next(iter(self._basic))]
+
+    def _digest(self, authorization: str) -> bytes:
+        return hmac.new(self._key, authorization.encode(), hashlib.sha256).digest()

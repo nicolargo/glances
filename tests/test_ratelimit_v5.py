@@ -200,6 +200,59 @@ def test_another_address_is_not_locked_out(config_factory, clock):
     assert user.get("/api/5/pluginslist", headers=_basic("glances", "hunter2")).status_code == 200
 
 
+def test_a_user_already_logged_in_is_not_locked_out_by_a_neighbour(config_factory, clock, pbkdf2_calls):
+    """Audit M3: behind one proxy or NAT, the attacker and the users share an address."""
+    client = _client(config_factory(password=PASSWORD_HASH, auth_fail_per_minute=2))
+    assert client.get("/api/5/pluginslist", headers=_basic("glances", "hunter2")).status_code == 200
+    codes = [client.get("/api/5/pluginslist", headers=_basic("glances", "guess")).status_code for _ in range(4)]
+    assert codes == [401, 401, 429, 429]
+    assert client.get("/api/5/pluginslist", headers=_basic("glances", "hunter2")).status_code == 200
+    assert pbkdf2_calls == ["hunter2", "guess", "guess"], "a known header is not checked twice"
+
+
+def test_a_valid_token_is_never_locked_out(config_factory, clock):
+    client = _client(config_factory(password=PASSWORD_HASH, auth_fail_per_minute=2))
+    token = client.post("/api/5/token", headers=_basic("glances", "hunter2")).json()["access_token"]
+    for _ in range(3):
+        client.get("/api/5/pluginslist", headers=_basic("glances", "guess"))
+    assert client.get("/api/5/pluginslist", headers={"Authorization": f"Bearer {token}"}).status_code == 200
+    assert client.get("/api/5/pluginslist", headers={"Authorization": "Bearer forged"}).status_code == 429
+
+
+async def test_known_credentials_reserve_no_try(clock):
+    """Many requests in flight with known credentials: none is refused."""
+    started = []
+
+    async def app(scope, receive, send):
+        started.append(scope["path"])
+        await send({"type": "http.response.start", "status": 200, "headers": []})
+        await send({"type": "http.response.body", "body": b""})
+
+    class AllKnown:
+        def is_known(self, authorization):
+            return True
+
+    limiter = ratelimit_v5.RateLimitMiddleware(
+        app, per_minute=0, burst=0, auth_fail_per_minute=1, known_credentials=AllKnown()
+    )
+    scope = {
+        "type": "http",
+        "path": "/api/5/cpu",
+        "client": ("192.0.2.1", 1),
+        "headers": [(b"authorization", b"Basic eDp5")],
+    }
+    assert limiter._reserve_auth_try(ratelimit_v5._client_key(scope)), "the only try is now taken"
+
+    async def receive():
+        return {"type": "http.request"}
+
+    async def send(message):
+        pass
+
+    await limiter(scope, receive, send)
+    assert started == ["/api/5/cpu"]
+
+
 # ------------------------------------------------------------------ table
 
 
