@@ -19,16 +19,21 @@ When: every `generate_every` seconds, or when the TUI's `g` key asks for it
 (v4 parity), at the next export cycle. A collection's series are named
 `<item>.<field>`, as its exported columns are.
 
-Divergences from v4, both fixes: the `path` given on the command line wins
+Divergences from v4, all fixes: the `path` given on the command line wins
 over the configuration file (v4's comment said so, its code did the
-opposite); and a series longer than the chart's width is averaged down to
+opposite); a series longer than the chart's width is averaged down to
 it -- v4 passed a dict where `time_series_subsample` wanted a list, so it
-never subsampled anything.
+never subsampled anything; and the files are never written through a shared
+temporary folder (security audit 2026-10-04, M7): the default folder is the
+user's own, and each chart is written to a fresh file then renamed over the
+target, so a symlink planted under the target name is replaced, not followed.
 """
 
 from __future__ import annotations
 
+import contextlib
 import os
+import stat
 import sys
 import tempfile
 import threading
@@ -46,7 +51,15 @@ if TYPE_CHECKING:
     from glances.config_v5 import GlancesConfigV5
     from glances.plugins.plugin.base_v5 import GlancesPluginBase
 
-DEFAULT_PATH = os.path.join(tempfile.gettempdir(), "glances")
+
+def default_path() -> str:
+    """`$XDG_DATA_HOME/glances/graphs`, else `~/.local/share/glances/graphs`: the user's own folder.
+
+    Not the shared temporary folder v4 used: as root, a folder another user
+    created there first is a place where that user chooses what root writes.
+    """
+    data_home = os.environ.get("XDG_DATA_HOME") or os.path.join(os.path.expanduser("~"), ".local", "share")
+    return os.path.join(data_home, "glances", "graphs")
 
 
 class Export(GlancesExportBase):
@@ -68,7 +81,8 @@ class Export(GlancesExportBase):
         self.style: str = "DarkStyle"
         # Optional section: v4 ran on its defaults without one.
         self.load_conf("graph", mandatories=(), options=("path", "generate_every", "width", "height", "style"))
-        self.path = getattr(args, "export_graph_path", None) or self.path or DEFAULT_PATH
+        configured = getattr(args, "export_graph_path", None) or self.path
+        self.path = configured or default_path()
         try:
             self.generate_every = int(self.generate_every or 0)
             self.width = int(self.width or 800)
@@ -77,11 +91,19 @@ class Export(GlancesExportBase):
             logger.critical("Error in the graph configuration (%s)", e)
             sys.exit(2)
         try:
-            os.makedirs(self.path, exist_ok=True)
+            # The default folder is private; a configured one keeps its owner's choice.
+            os.makedirs(self.path, mode=0o755 if configured else 0o700, exist_ok=True)
             tempfile.TemporaryFile(dir=self.path).close()
         except OSError as e:
             logger.critical("Graph output folder %s is not writable (%s)", self.path, e)
             sys.exit(2)
+        if os.stat(self.path).st_mode & (stat.S_IWGRP | stat.S_IWOTH):
+            logger.warning("Graph output folder %s is writable by other users: they can replace the graphs", self.path)
+        # The mode a plain `open()` would give the files, read once: the umask
+        # can only be read by setting it.
+        umask = os.umask(0)
+        os.umask(umask)
+        self._file_mode = 0o666 & ~umask
         self._requested = threading.Event()
         self._last_generation = time.monotonic()
         if self.generate_every:
@@ -154,8 +176,26 @@ class Export(GlancesExportBase):
         for name, points in series.items():
             chart.add(name, time_series_subsample(points, self.width))
         try:
-            chart.render_to_file(os.path.join(self.path, f"{plugin.plugin_name}.svg"))
+            self._write(f"{plugin.plugin_name}.svg", chart.render())
         except OSError as e:
             logger.warning("Cannot write the %s graph (%s)", plugin.plugin_name, e)
             return False
         return True
+
+    def _write(self, name: str, content: bytes) -> None:
+        """Write `content` to `<path>/<name>` without following a link planted there.
+
+        `mkstemp` creates a new file (O_EXCL), and `os.replace` renames it over
+        the target: a symlink at the target is replaced, never followed.
+        """
+        fd, tmp = tempfile.mkstemp(dir=self.path, prefix=f".{name}.", suffix=".tmp")
+        try:
+            with os.fdopen(fd, "wb") as f:
+                if hasattr(os, "fchmod"):
+                    os.fchmod(f.fileno(), self._file_mode)
+                f.write(content)
+            os.replace(tmp, os.path.join(self.path, name))
+        except BaseException:
+            with contextlib.suppress(OSError):
+                os.unlink(tmp)
+            raise

@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import asyncio
 import importlib.util
+import os
+import stat
 
 import pytest
 import requests
@@ -127,6 +129,52 @@ def test_graph_draws_one_svg_per_plugin_from_the_history(tmp_path):
     svg = (tmp_path / "histcoll.svg").read_text()
     assert "eth0.rx" in svg and "wlan0.rx" in svg, "a collection's series are <item>.<field>"
     assert "Histscalar" in (tmp_path / "histscalar.svg").read_text()
+
+
+@requires_pygal
+def test_graph_replaces_a_planted_symlink_instead_of_following_it(tmp_path):
+    """Audit M7: a link at `<path>/<plugin>.svg` must not make Glances (often root) overwrite its target."""
+    victim = tmp_path / "victim"
+    victim.write_text("precious")
+    out = tmp_path / "graphs"
+    out.mkdir()
+    (out / "histscalar.svg").symlink_to(victim)
+    exporter = _graph(out)
+    exporter.request()
+    exporter.update(_history_plugins(make_config({})))
+    assert victim.read_text() == "precious"
+    assert not (out / "histscalar.svg").is_symlink()
+    assert "Histscalar" in (out / "histscalar.svg").read_text()
+    assert not list(out.glob(".*.tmp")), "no temporary file left behind"
+
+
+@requires_pygal
+def test_graph_files_get_the_mode_a_plain_open_would_give(tmp_path):
+    exporter = _graph(tmp_path)
+    exporter.request()
+    exporter.update(_history_plugins(make_config({})))
+    umask = os.umask(0)
+    os.umask(umask)
+    assert stat.S_IMODE((tmp_path / "histscalar.svg").stat().st_mode) == 0o666 & ~umask
+
+
+@requires_pygal
+def test_graph_default_folder_is_the_users_own(tmp_path, monkeypatch):
+    """Not the shared temporary folder: `$XDG_DATA_HOME/glances/graphs`, private."""
+    from glances.exports.glances_graph.export_v5 import Export
+
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
+    exporter = Export(make_config({}))
+    assert exporter.path == str(tmp_path / "data" / "glances" / "graphs")
+    assert stat.S_IMODE(os.stat(exporter.path).st_mode) == 0o700
+
+
+@requires_pygal
+def test_graph_warns_about_a_folder_others_can_write(tmp_path, caplog):
+    tmp_path.chmod(0o777)
+    with caplog.at_level("WARNING"):
+        _graph(tmp_path)
+    assert any("writable by other users" in r.getMessage() for r in caplog.records)
 
 
 @requires_pygal
