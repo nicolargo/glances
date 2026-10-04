@@ -487,7 +487,7 @@ un vrai navigateur ; un slowloris contre uvicorn.
 **Avant `5.0.0` :** M5, M6, M9, M11 et les constats bas restants ; I-1 et
 I-3 (documentation).
 
-Les constats identiques en v4 (M7 — le module graph v4 —, M9, M10, B-9, B-15 ; M8 est corrigé dans le module partagé) sont
+Les constats identiques en v4 (M7 — le module graph v4 —, M9, M10 — `glances/exports/export.py` —, B-9, B-15 ; M8 est corrigé dans le module partagé) sont
 à reporter sur `support/glancesv4`.
 
 ## Suivi des corrections
@@ -500,3 +500,4 @@ Les constats identiques en v4 (M7 — le module graph v4 —, M9, M10, B-9, B-15
 | M4 — `--disable-config-exec` | **Corrigé** : appliqué dans `main()`, donc sous `--issue` et `--fetch` ; `GlancesAPI(disable_config_exec=)` (`65cf52c`). `sh -c` : **documenté, non bloqué** (décision du mainteneur, 2026-10-04, option c) — le flag retire les opérateurs, ce n'est pas un bac à sable (`docs/aoa/amps.rst`, `actions.rst`, aide de la CLI). | `65cf52c` + ce commit |
 | M7 — exportateur graph | **Corrigé** : dossier par défaut `$XDG_DATA_HOME/glances/graphs` (`0700`) ; chaque SVG écrit dans un fichier `mkstemp` puis renommé sur la cible, donc un lien planté est remplacé, jamais suivi ; WARNING si le dossier configuré est inscriptible par d'autres ; `conf/glances.conf` ne fixe plus `path=/tmp/glances` (`docker-compose/glances.conf` le garde : `/tmp` d'un conteneur n'est pas partagé). | `ef3a6aa` |
 | M8 — journal | **Corrigé** (module partagé v4/v5) : dossier `$XDG_CACHE_HOME/glances` ou `~/.local/share/glances` créé en `0700`, fichier en `0600` (un ancien fichier lisible est resserré) ; plus jamais `/tmp` : sans dossier privé possible, pas de journal fichier. Un lien placé par le propriétaire dans son dossier privé reste suivi (redirection volontaire). | `9ff11f0` |
+| M10 — options exportées | **Corrigé** : une option dont le nom désigne un secret (la liste de `/api/5/config` : `password`, `token`, `username`, `user`…) n'est plus exportée ; une valeur URL perd ses identifiants, sa query et son fragment. Les seuils (`user_careful`…) restent exportés. | `ff045b2` |
