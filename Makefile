@@ -20,7 +20,7 @@ UV_RUN		   	  := .venv-uv/bin/uv
 # if the command is only `make`, the default tasks will be the printing of the help.
 .DEFAULT_GOAL := help
 
-.PHONY: help test docs docs-server venv requirements profiling docker all clean all test
+.PHONY: help webui-v5 test docs docs-server venv requirements profiling docker all clean all test
 
 help: ## List all make commands available
 	@grep -E '^[\.a-zA-Z0-9_%-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -276,6 +276,10 @@ webui-gen-config: ## Generate the Web UI config file
 
 webui: webui-gen-config ## Build the Web UI
 	cd $(DIR) && npm ci && npm run build
+
+webui-v5: ## Build the v5 Web UI bundle only (temporary, removed at the merge into develop)
+	cd $(DIR) && npm ci && npm run build
+	git checkout -- $(DIR)public/glances.js
 
 webui-audit: ## Audit the Web UI
 	cd $(DIR) && npm audit
