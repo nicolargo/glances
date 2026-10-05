@@ -12,13 +12,17 @@
 from __future__ import annotations
 
 from collections import namedtuple
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
 
 from glances.config_v5 import GlancesConfigV5
+from glances.plugins.fs.zfs import zfs_enable, zfs_stats
 from glances.plugins.mem.model_v5 import PluginModel
 from glances.stats_store_v5 import StatsStoreV5
+
+_ZFS_DIR = Path(__file__).parent.parent / "tests-data" / "plugins" / "fs" / "zfs"
 
 # psutil.virtual_memory() returns a namedtuple — replicate its shape.
 VMTuple = namedtuple(
@@ -149,6 +153,47 @@ async def test_percent_is_clamped_to_100(store, config):
         await plugin.update()
 
     assert store.get("mem")["percent"] == 100.0
+
+
+# ---------------------------------------------------------- ZFS ARC (issue #3979)
+
+
+def test_zfs_helpers_read_the_arcstats_file():
+    assert zfs_enable(str(_ZFS_DIR))
+    stats = zfs_stats([str(_ZFS_DIR / "arcstats")])
+    assert stats["arcstats.c_min"] == 2_637_352_832
+    assert stats["arcstats.size"] == 41_321_273_080
+
+
+async def test_zfs_arc_counts_as_cached_and_its_shrinkable_part_as_available(store, config):
+    """v4 `mem/__init__.py:179-210`: ARC size -> cached, size - c_min -> available, out of used."""
+    vm = _make_vm()._replace(total=128_000_000_000, available=20_000_000_000)
+    with patch("glances.plugins.mem.model_v5.zfs_enable", return_value=True):
+        plugin = PluginModel(store, config)
+    with (
+        patch("glances.plugins.mem.model_v5.psutil.virtual_memory", return_value=vm),
+        patch("glances.plugins.mem.model_v5.zfs_stats", return_value=zfs_stats([str(_ZFS_DIR / "arcstats")])),
+    ):
+        await plugin.update()
+
+    shrink = 41_321_273_080 - 2_637_352_832
+    payload = store.get("mem")
+    assert payload["cached"] == 2_000_000_000 + 41_321_273_080
+    assert payload["available"] == 20_000_000_000 + shrink
+    assert payload["used"] == 128_000_000_000 - 20_000_000_000 - shrink
+    assert payload["percent"] == round((128_000_000_000 - payload["available"]) / 128_000_000_000 * 100, 1)
+
+
+async def test_no_zfs_leaves_psutil_values(store, config):
+    with patch("glances.plugins.mem.model_v5.zfs_enable", return_value=False):
+        plugin = PluginModel(store, config)
+    with patch("glances.plugins.mem.model_v5.psutil.virtual_memory", return_value=_make_vm(50.0)):
+        await plugin.update()
+
+    payload = store.get("mem")
+    assert payload["cached"] == 2_000_000_000
+    assert payload["available"] == 8_000_000_000
+    assert payload["percent"] == 50.0
 
 
 # ---------------------------------------------------------- _levels

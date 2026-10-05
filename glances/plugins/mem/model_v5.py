@@ -20,6 +20,7 @@ from typing import Any, ClassVar
 
 import psutil
 
+from glances.plugins.fs.zfs import zfs_enable, zfs_stats
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
 
 
@@ -102,11 +103,25 @@ class PluginModel(GlancesPluginBase[dict]):
         },
     }
 
+    def __init__(self, store: Any, config: Any) -> None:
+        super().__init__(store, config)
+        self.zfs_enabled = zfs_enable()
+
     async def _grab_stats(self) -> dict:
         vm = await asyncio.to_thread(psutil.virtual_memory)
         # psutil returns a namedtuple — fields not declared in
         # fields_description are stripped by the base in _remove_parameters.
         stats = vm._asdict()
+
+        # ZFS ARC (issue #3979, v4 `mem/__init__.py:179-210`): the ARC is
+        # cache, and the part above `c_min` can be given back on demand.
+        if self.zfs_enabled:
+            arc = await asyncio.to_thread(zfs_stats)
+            zfs_size = arc.get("arcstats.size", 0)
+            zfs_shrink = zfs_size - arc.get("arcstats.c_min", 0) if "arcstats.size" in arc else 0
+            stats["cached"] = stats.get("cached", 0) + zfs_size
+            stats["available"] += zfs_shrink
+            stats["percent"] = round((stats["total"] - stats["available"]) / stats["total"] * 100, 1)
 
         # In LXC/cgroup-v2 containers the kernel may report `available` >
         # `total`. Clamp `used` and `percent` so they are never negative

@@ -56,6 +56,7 @@ SHARED = {
     "glances.plugins.*.engines.*": "container / VM engines",
     "glances.plugins.*.cards.*": "GPU / NPU / MPP cards",
     "glances.plugins.sensors.sensor.*": "sensor grabbers",
+    "glances.plugins.fs.zfs": "ZFS ARC reader (mem)",
 }
 
 BORROWED = {
