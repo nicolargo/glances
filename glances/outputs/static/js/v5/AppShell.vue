@@ -169,6 +169,7 @@ import { FULL_QUICKLOOK_HIDDEN } from "./full_quicklook.js";
 import { hideTargets, toggleHidden, helpRows, viewFlag, sortKeyFor, startupHidden, HELP_KEY, HELP_DOC_URL } from "./hotkeys.js";
 import { planRightColumn } from "./row_budget.js";
 import { ampsLineCount } from "./amps.js";
+import { extendedLines } from "./process_extended.js";
 
 // The page's zones, top to bottom, and the registry slots each one holds.
 // `tag` is the element the zone renders as: the header zone stays a real
@@ -1063,11 +1064,16 @@ export default {
 					this.rowBudget = {};
 					return;
 				}
-				const bodyHeight = this.measureBodyRows();
-				if (bodyHeight === null) {
+				const measured = this.measureBodyRows();
+				if (measured === null) {
 					this.rowBudget = {};
 					return;
 				}
+				// A pinned process adds its "Pinned task" block above the
+				// process table, rows the solver knows nothing about: take
+				// them off the body, or the alerts get pushed below the fold.
+				const pinned = this.results.processlist?.extended;
+				const bodyHeight = pinned ? Math.max(1, measured - (1 + extendedLines(pinned).length)) : measured;
 				const count = (name) => (this.results[name]?.data || []).length;
 				// `tick()` fetches `this.plugins`, NOT the `slots()`-filtered
 				// list (AppShell.vue:283), so BOTH process payloads are always
