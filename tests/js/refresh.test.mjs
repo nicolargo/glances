@@ -5,6 +5,7 @@ import {
 	stepRefresh,
 	loadRefresh,
 	saveRefresh,
+	initialRefresh,
 } from "../../glances/outputs/static/js/v5/refresh.js";
 
 function stubStorage(initial) {
@@ -20,6 +21,7 @@ function stubStorage(initial) {
 
 beforeEach(() => {
 	delete globalThis.localStorage;
+	delete globalThis.location;
 });
 
 test("the ladder spans the whole 1..60 s range the footer advertises", () => {
@@ -75,4 +77,31 @@ test("no localStorage at all degrades to 'not remembered', never to a throw", ()
 	// look like this.
 	assert.equal(loadRefresh(), null);
 	assert.doesNotThrow(() => saveRefresh(5));
+});
+
+test("?refresh=N in the page URL wins over the saved cadence and the config", () => {
+	// v4 parity, documented in docs/api/restful.rst "WebUI refresh".
+	stubStorage({ "glances.refresh": "15" });
+	globalThis.location = { search: "?refresh=7" };
+	assert.equal(initialRefresh(2), 7);
+});
+
+test("without ?refresh, the saved cadence then the config value apply", () => {
+	stubStorage({ "glances.refresh": "15" });
+	globalThis.location = { search: "?other=1" };
+	assert.equal(initialRefresh(2), 15);
+	stubStorage({});
+	assert.equal(initialRefresh(2), 2);
+});
+
+test("an unusable ?refresh is ignored, not repaired", () => {
+	stubStorage({});
+	for (const search of ["?refresh=", "?refresh=abc", "?refresh=0", "?refresh=-3"]) {
+		globalThis.location = { search };
+		assert.equal(initialRefresh(2), 2, search);
+	}
+});
+
+test("no location at all (the render probe's DOM stub) falls back without a throw", () => {
+	assert.equal(initialRefresh(2), 2);
 });

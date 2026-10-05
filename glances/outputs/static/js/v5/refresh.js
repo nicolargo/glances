@@ -46,3 +46,18 @@ export function saveRefresh(seconds) {
 		// Same as above -- never a reason to make the click fail.
 	}
 }
+
+export function initialRefresh(configSeconds) {
+	// The cadence a page load starts at: `?refresh=N` in the URL first (v4
+	// parity, docs/api/restful.rst "WebUI refresh"), then the viewer's saved
+	// choice, then `[global] refresh`. The URL value is not saved: it only
+	// applies to the page it is on. An absent or unusable one (null -> 0,
+	// "abc" -> NaN) is ignored, as loadRefresh() does.
+	try {
+		const seconds = Number(new URLSearchParams(globalThis.location.search).get("refresh"));
+		if (Number.isFinite(seconds) && seconds > 0) return seconds;
+	} catch {
+		// No location (the render probe's DOM stub): no URL to read.
+	}
+	return loadRefresh() ?? configSeconds;
+}

@@ -160,7 +160,7 @@
 <script>
 import { computed, markRaw } from "vue";
 import { fetchAll, resolveConfig, resolveArgs, resolvePluginNames, resolveVersion, getJson, requestSort } from "./api.js";
-import { REFRESH_STEPS, stepRefresh, loadRefresh, saveRefresh } from "./refresh.js";
+import { REFRESH_STEPS, stepRefresh, initialRefresh, saveRefresh } from "./refresh.js";
 import { resolveAllLabels } from "./labels.js";
 import { visiblePlugins, groupBySlot } from "./layout.js";
 import { PLUGINS } from "./plugins/index.js";
@@ -508,9 +508,10 @@ export default {
 	},
 	async mounted() {
 		const { refreshSeconds, theme, maxProcessesDisplay, apiDoc } = await resolveConfig();
-		// A cadence the viewer picked with the footer's -/+ buttons wins over
-		// `[global] refresh`, which stays the value a first visit starts at.
-		this.refresh = loadRefresh() ?? refreshSeconds;
+		// `?refresh=N`, then a cadence the viewer picked with the footer's -/+
+		// buttons, win over `[global] refresh`, which stays the value a first
+		// visit starts at.
+		this.refresh = initialRefresh(refreshSeconds);
 		this.apiDoc = apiDoc;
 		// [outputs] theme, mapped straight to data-theme -- see the design
 		// spec, section 5. The static template hardcodes "dark" so the page
