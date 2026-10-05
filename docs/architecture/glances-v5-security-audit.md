@@ -403,7 +403,7 @@ itératif borné) ; le socket Podman par défaut appartient à l'uid 1000
 | CVE-2026-35587 (SSRF `ip`) | Sain pour http/https ; **brèche FTP** (B-14) | `plugins/ip/model_v5.py:60-200, 278-286` | `test_plugin_ip_v5.py:111-161, 272, 424-494` |
 | CVE-2026-35588 (Cassandra) | Sain | `glances_cassandra/export_v5.py:51-95, 148-149` | `test_cassandra_allowlist_refuses_every_hostile_identifier` |
 | CVE-2026-46606 (virsh) | Sain (liste d'arguments, `shell=False`) ; option injectable faute de `--` (I : faible, accès libvirt requis) | `vms/engines/virsh.py:38-50, 209, 228` | `test_plugin_virsh_injection.py:88-181` |
-| CVE-2026-46607 (pickle du cache de version) | Pas encore porté : v5 n'a pas de vérification de version | — | à écrire avec le portage (GAP de la migration des tests) |
+| CVE-2026-46607 (pickle du cache de version) | Sans objet : la vérification de mise à jour est retirée de la v5 (décision du mainteneur, 2026-10-05) ; le module v4 part avec le code v4 | — | — |
 | CVE-2026-53925, GHSA-59fj, CVE-2026-68519 (`--disable-config-exec`) | **Régression partielle** sous `--issue`/`--fetch`, contournable par `sh -c` (M4) | `main_v5.py:1154-1160`, `amps_list_v5.py:66-68`, `shell/__init__.py:271-282` | `test_action_shell_v5.py:307-352`, `test_main_v5.py:458`, `test_amps_list_v5.py:185, 202` (aucun ne couvre `--issue`/`--fetch`) |
 | CVE-2026-68520 (identifiants dans une URL) | Sain sauf mot de passe contenant `@` (M1) | `config_v5.py:64, 389` | `tests/test_config_v5.py` |
 | Constat P3-7 (`[passwords]` dans `/config`) | Sain | `config_v5.py:143, 373` | `test_config_route_never_serves_the_passwords_section` |

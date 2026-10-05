@@ -809,6 +809,10 @@ A plugin registered but not yet updated returns `200 null` rather than `404` or 
 #### Deferred for follow-up
 - `/api/5/<plugin>/<field>` — single-field accessor (scalar convenience)
 - `/api/5/<plugin>/<pk_value>` — collection item lookup
+- **Decided 2026-10-05 (maintainer): port** the v4 fine-grained routes,
+  `/<plugin>/<field>`, `/<plugin>/<field>/<pk>`, `/<plugin>/<pk>/value/<v>`
+  and `/<plugin>/top/<n>` (v4 tests migration, GAP rows of
+  `test_restful.py`). `/config/<section>[/<key>]` is dropped (§10).
 - `/api/5/args` — depends on the Phase 1.7 CLI args module
 - `/api/5/serverslist` — Phase 3 (browser mode, CVE-2026-32633)
 
@@ -1087,7 +1091,7 @@ _Last synced against the published advisory list on 2026-08-01 — includes the 
 | CVE-2026-35588 | medium | Parameterized CQL in Cassandra export. `keyspace`, `table`, `replication_factor` validated against an allowlist regex (`^[A-Za-z][A-Za-z0-9_]*$`) before being interpolated into DDL. Same family as CVE-2026-32611 / CVE-2026-30930. | Fixed in P3-3 (2026-09-28): `keyspace` and `table` checked with `fullmatch` against the allowlist (a plain `match` let a trailing newline through, fixed during review), `replication_factor`, `port` and `protocol_version` must be positive integers, a bad value is fatal before any statement; the stat map is bound to a prepared statement. **Verified in P3-7 (2026-09-28)**: the allowlist refuses every hostile name of the battery, a trailing newline, fullwidth letters, combining marks and non-ASCII digits, before any statement runs. |
 | P3-7 finding (no CVE) | high | `/api/5/config` must not serve `[passwords]`: the section maps HOST NAMES to other servers' clear passwords, which the key-name rules of CVE-2026-32609 / 30928 cannot recognise. v4 leaves the section out (`_SECURE_BLOCKED_SECTIONS`); the v5 port had dropped that. | Fixed in P3-7 (2026-09-28): `GlancesConfigV5.BLOCKED_SECTIONS` leaves it out of `as_dict_secure()`, as v4; `test_config_route_never_serves_the_passwords_section`. v4 is not affected. |
 | CVE-2026-46606 | high | Command injection via KVM/QEMU VM domain names (v4 `glances/plugins/vms/engines/virsh.py`). The v5 `vms` plugin migration must run `virsh` via `subprocess.run([...], shell=False)` with the domain name passed as a single opaque list argument — never through a shell or a `secure_popen` path that interprets `;`, `&&`, `\|`, `>`. Same family as CVE-2026-32608. | Carry forward (Phase 2 — `vms` plugin migration) |
-| CVE-2026-46607 | high | Insecure pickle deserialization of the version-update cache → arbitrary code execution (v4 `glances/outdated.py`, cache `~/.cache/glances/glances-version.db`). The v5 port of the update check must persist the cache as **JSON** (datetimes via `isoformat()`), never `pickle`; a malformed or legacy pickle file is treated as a silent cache miss, not loaded. | Carry forward (version-check port) |
+| CVE-2026-46607 | high | Insecure pickle deserialization of the version-update cache → arbitrary code execution (v4 `glances/outdated.py`, cache `~/.cache/glances/glances-version.db`). The v5 port of the update check must persist the cache as **JSON** (datetimes via `isoformat()`), never `pickle`; a malformed or legacy pickle file is treated as a silent cache miss, not loaded. | **Not applicable: the update check is dropped** (maintainer decision 2026-10-05, §10) — no version cache exists in v5. |
 | CVE-2026-46608 | high | XML-RPC multi-origin CORS silently fell back to wildcard (incomplete fix for CVE-2026-33533). XML-RPC server is removed in v5 (§1.1). The v5 FastAPI CORS layer (`webserver_v5._wire_cors`) reflects only exact-match origins from `cors_origins` and never emits `*` for a multi-origin allowlist. | Resolved by architecture |
 | CVE-2026-46611 | medium | XML-RPC server lacked Host-header validation → DNS rebinding. XML-RPC server is removed in v5 (§1.1). REST/WebUI DNS-rebinding protection is already covered by `TrustedHostMiddleware` / `webui_allowed_hosts` (`webserver_v5._wire_trusted_hosts`, see CVE-2026-32632). | Resolved by architecture |
 | CVE-2026-53925 | high | Arbitrary file write and command execution via shell redirection / chaining operators (`>`, `>>`, `;`, `&&`, `\|`) in AMP command configuration through `secure_popen` (v4 `glances/secure.py` + `glances/amps/`). The v5 AMP/actions port must default to `shell=False` / explicit arg lists for config-sourced commands and only interpret operators behind an explicit opt-in (v4's `allow_operators` gate, hardened by `--disable-config-exec`). Same family as CVE-2026-32608 / CVE-2026-33641. | Done — actions (`ShellAction.allow_shell()`) and AMP (`AmpsListV5` builds the `args` shim from `[global] disable_config_exec`, so `GlancesAmp.allow_operators()` gates `secure_popen`) — G6C-amps. Applied in `main()` since 2026-10-04, so `--issue` and `--fetch` honour it too (security audit M4). **Scope, maintainer decision 2026-10-04:** the flag strips the operators, it is not a sandbox — a configured `sh -c "…"` still gets a shell; documented in `docs/aoa/amps.rst` and `actions.rst`, not blocked. |
@@ -1723,6 +1727,40 @@ draws ↑/↓ next to MEM, SWAP and LOAD from `get_trend()`
 `memswap/__init__.py:166`, `load/__init__.py:157`). The history store made
 them implementable; the maintainer decided on 2026-09-26 that v5 does not
 carry them. A removed v4 feature, for the 5.0.0 release notes.
+
+**Dropped — the PyPI update check (maintainer decision, 2026-10-05).** v4
+asks PyPI at startup whether a newer Glances exists and caches the answer
+(`glances/outdated.py`; its pickle cache was CVE-2026-46607). v5 does not
+carry it: no outbound request at startup, one attack surface less, and the
+distributions' package managers already tell users about updates.
+`--disable-check-update` has nothing left to disable and is not ported.
+The six `tests/test_outdated.py` tests, kept as the acceptance tests of a
+future port, are dropped with the v4 code. A removed v4 feature, for the
+5.0.0 release notes.
+
+**Dropped — external plugins, `-P` / `[global] plugin_dir` (maintainer
+decision, 2026-10-05).** v4 loads extra plugins from a directory
+(`glances/stats.py:212-250`). v5 imports plugins from the installed
+`glances.plugins` package only (GHSA-mcm7-fmh3-v6v3,
+`tests/test_plugin_discovery_v5.py`): code loaded from a directory is code
+run by Glances, often as root, from wherever that directory is writable. A
+v5 plugin API for third parties, if users ask for one, gets its own design
+(loading, the `GlancesPluginBase` contract, who may write the directory).
+A removed v4 feature, for the 5.0.0 release notes.
+
+**Dropped — `/api/5/config/<section>` and `/api/5/config/<section>/<key>`
+(maintainer decision, 2026-10-05).** v4 serves one section or one option
+of the configuration. In v5, `/api/5/config` serves only the WebUI keys
+without a password (security audit M1, `GlancesConfigV5.PUBLIC_OPTIONS`)
+and the redacted dump behind one; a per-key route would be a second door
+on the same data to keep in step. Clients read the key from
+`/api/5/config`. A removed v4 feature, for the 5.0.0 release notes.
+
+**Kept as is — wifi thresholds cannot be switched off (maintainer decision,
+2026-10-05).** v4 leaves a wifi signal undecorated when no threshold is
+set; v5 `wifi/model_v5.py::_read_thresholds` falls back to its code
+defaults, so the signal is always coloured. Kept: the defaults are the
+documented v4 ones, and a user who wants no colour sets them out of range.
 
 **Reversed decision — `vms EMITS_ALERTS`.** G6A set `vms EMITS_ALERTS = False`
 (`docs/superpowers/specs/2026-07-14-glances-v5-g6a-design.md`, decision 3) because
