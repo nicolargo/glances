@@ -1071,9 +1071,10 @@ export default {
 				}
 				// A pinned process adds its "Pinned task" block above the
 				// process table, rows the solver knows nothing about: take
-				// them off the body, or the alerts get pushed below the fold.
+				// them (plus its margins) off the body, or the alerts get pushed below
+				// the fold.
 				const pinned = this.results.processlist?.extended;
-				const bodyHeight = pinned ? Math.max(1, measured - (1 + extendedLines(pinned).length)) : measured;
+				const bodyHeight = pinned ? Math.max(1, measured - (2 + extendedLines(pinned).length)) : measured;
 				const count = (name) => (this.results[name]?.data || []).length;
 				// `tick()` fetches `this.plugins`, NOT the `slots()`-filtered
 				// list (AppShell.vue:283), so BOTH process payloads are always
