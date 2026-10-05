@@ -15,8 +15,11 @@ au 2026-10-04. Rien ici ne se fait sur `develop`, sauf la section 6.
 - [x] **Audit de sécurité complet** sur `develop-v5` (2026-10-04) :
   `glances-v5-security-audit.md`. Aucune faille critique ou haute ;
   1 bloquant structurel, 11 constats moyens. Reste à corriger :
-  - [ ] B1 — les `__init__.py` de paquets v4 chargés par chaque import v5
-    (avant la suppression du code v4)
+  - [ ] B1 — les `__init__.py` de paquets v4 chargés par chaque import v5,
+    en deux temps pour garder la fusion hebdomadaire `develop → develop-v5` :
+    - [x] avant la bascule : `tests/test_v4_boundary_v5.py` fige les imports
+      de la v5 hors d'elle-même ; plan dans `glances-v5-cutover-plan.md`
+    - [ ] le jour de la bascule : appliquer le plan (après le dernier merge)
   - [x] constats « avant 5.0.0b1 » du plan de correction : M1 ✅, M2 ✅,
     M4 ✅ (`sh -c` documenté, décision du mainteneur), M3 ✅, M7 ✅, M8 ✅, M10 ✅, B-4 ✅, B-13 ✅,
     tests CVE-2026-33641 et GHSA-mcm7 ✅
