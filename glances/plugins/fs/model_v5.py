@@ -121,6 +121,14 @@ class PluginModel(GlancesPluginBase[list]):
         super()._add_metadata()
         self._metadata["free_space"] = self.free_space
 
+    def _derived_parameters(self) -> None:
+        super()._derived_parameters()
+        # No threshold for a volume mounted read-only: full by design
+        # (squashfs snaps, ISO). v4 `fs/__init__.py:270-271`, issue #3143.
+        for item in self._stats:
+            if "ro" in str(item.get("options", "")).split(","):
+                self._levels.pop(item["mnt_point"], None)
+
     async def _grab_stats(self) -> list:
         # Snap-heavy hosts routinely expose 70+ mountpoints (one per
         # installed snap revision). Calling

@@ -258,6 +258,28 @@ async def test_levels_indexed_by_mnt_point(store, config):
     assert levels["/home"]["percent"]["level"] == "ok"
 
 
+async def test_levels_skip_read_only_mounts(store, config):
+    """v4 parity (`fs/__init__.py:270-271`, issue #3143): a mount whose
+    options carry `ro` (squashfs snaps, ISO) is full by design -- no level,
+    so no colour and no alert. `rw` mounts and an `ro`-prefixed option
+    (`rootcontext=`) still get one."""
+    total = 100 * 1024**2
+    full = DiskUsage(total, total, 0, 100.0)
+    plugin = PluginModel(store, config)
+    with _patch_psutil(
+        [
+            (Partition("/dev/loop0", "/snap/core/1", "squashfs", "ro,nodev,relatime"), full),
+            (Partition("/dev/sr0", "/media/iso", "iso9660", "nosuid,ro"), full),
+            (Partition("/dev/sdb1", "/data", "ext4", "rw,rootcontext=x"), full),
+        ]
+    ):
+        await plugin.update()
+    levels = store.get("fs")["_levels"]
+    assert "/snap/core/1" not in levels
+    assert "/media/iso" not in levels
+    assert levels["/data"]["percent"]["level"] == "critical"
+
+
 # ---------------------------------------------------------- alias (design §5.5)
 
 
