@@ -1494,3 +1494,173 @@ def test_sorting_requires_auth_when_a_password_is_set(sort_engine, config_factor
         response = client.post("/api/5/processes/sort/name")
     assert response.status_code == 401
     assert sort_engine.sort_key == "cpu_percent"
+
+
+# ------------------------------- v4's field routes (test_restful.py ports)
+
+
+class FakeEmptyCollection(GlancesPluginBase[list]):
+    plugin_name: ClassVar[str] = "fakeempty"
+    IS_COLLECTION: ClassVar[bool] = True
+    fields_description: ClassVar[dict[str, dict[str, Any]]] = {
+        "name": {"description": "Item name.", "unit": "string", "primary_key": True},
+    }
+
+    async def _grab_stats(self) -> list:
+        return []
+
+
+def _fields_app(config, store, populate=True):
+    plugins = [
+        FakeScalarPlugin(store, config),
+        FakeCollectionPlugin(store, config),
+        FakeHistFs(store, config),
+        FakeEmptyCollection(store, config),
+    ]
+    if populate:
+        for plugin in plugins:
+            _populate(store, plugin)
+    return _make_app_with_plugins(config, store, alerts=GlancesAlerts(config, actions={}), plugins=plugins)
+
+
+def test_field_of_a_scalar_plugin(config_factory, store):
+    """v4 test_004_items: every key of the payload answers on its own."""
+    with TestClient(_fields_app(config_factory(), store)) as client:
+        payload = client.get("/api/5/fakescalar").json()
+        for key, value in payload.items():
+            assert client.get(f"/api/5/fakescalar/{key}").json() == {key: value}
+
+
+def test_field_of_a_collection_is_a_list(config_factory, store):
+    """v4 test_011_issue1401 (`/network/interface_name`)."""
+    with TestClient(_fields_app(config_factory(), store)) as client:
+        assert client.get("/api/5/fakecollection/name").json() == {"name": ["eth0", "lo"]}
+        assert client.get("/api/5/fakeempty/name").json() == {"name": []}
+
+
+def test_field_of_one_item(config_factory, store):
+    """v4 test_017_item_key: `/<plugin>/<field>/<primary key value>`."""
+    with TestClient(_fields_app(config_factory(), store)) as client:
+        assert client.get("/api/5/fakecollection/rx/eth0").json() == {"rx": 100}
+        assert client.get("/api/5/fakecollection/name/lo").json() == {"name": "lo"}
+        # A primary key with a slash, raw or encoded.
+        assert client.get("/api/5/fakehistfs/percent//home").json() == {"percent": 50.0}
+        assert client.get("/api/5/fakehistfs/percent/%2Fhome").json() == {"percent": 50.0}
+        assert client.get("/api/5/fakehistfs/free//").json() == {"free": 2}
+
+
+def test_items_by_value(config_factory, store):
+    """v4 test_005_values: `/<plugin>/<field>/value/<value>`, numbers compared as text."""
+    with TestClient(_fields_app(config_factory(), store)) as client:
+        assert client.get("/api/5/fakecollection/rx/value/100").json() == {"100": [{"name": "eth0", "rx": 100}]}
+        assert client.get("/api/5/fakecollection/rx/value/7").json() == {"7": []}
+        assert client.get("/api/5/fakehistfs/mnt_point/value//home").json()["/home"][0]["free"] == 1
+
+
+def test_top(config_factory, store):
+    """v4 test_013_top: a bare list of the first n items."""
+    with TestClient(_fields_app(config_factory(), store)) as client:
+        assert client.get("/api/5/fakecollection/top/1").json() == [{"name": "eth0", "rx": 100}]
+        assert len(client.get("/api/5/fakecollection/top/5").json()) == 2
+
+
+@pytest.mark.parametrize("n", ["0", "-1", "two"])
+def test_top_rejects_a_bad_n(n, config_factory, store):
+    with TestClient(_fields_app(config_factory(), store)) as client:
+        assert client.get(f"/api/5/fakecollection/top/{n}").status_code == 422
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "/api/5/nope/total",
+        "/api/5/nope/top/1",
+        "/api/5/nope/rx/eth0",
+        "/api/5/nope/rx/value/1",
+        "/api/5/fakescalar/nope",
+        "/api/5/fakecollection/nope",
+        "/api/5/fakeempty/nope",
+        "/api/5/fakecollection/nope/eth0",
+        "/api/5/fakecollection/rx/nope",
+        "/api/5/fakecollection/nope/value/1",
+        # A scalar plugin has no items.
+        "/api/5/fakescalar/top/1",
+        "/api/5/fakescalar/total/x",
+        "/api/5/fakescalar/total/value/1024",
+        # A reserved name is not a plugin.
+        "/api/5/args/x",
+        "/api/5/config/outputs",
+    ],
+)
+def test_field_routes_404(path, config_factory, store):
+    with TestClient(_fields_app(config_factory(), store)) as client:
+        assert client.get(path).status_code == 404
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "/api/5/fakescalar/secret",
+        "/api/5/fakecollection/secret",
+        "/api/5/fakecollection/secret/eth0",
+        "/api/5/fakecollection/secret/value/hunter2",
+    ],
+)
+def test_field_routes_do_not_serve_a_non_exportable_field(path, config_factory, store):
+    with TestClient(_fields_app(config_factory(), store)) as client:
+        response = client.get(path)
+    assert response.status_code == 404
+    assert "hunter2" not in response.text
+
+
+def test_top_and_value_project_each_item(config_factory, store):
+    with TestClient(_fields_app(config_factory(), store)) as client:
+        assert "hunter2" not in client.get("/api/5/fakecollection/top/2").text
+        assert "hunter2" not in client.get("/api/5/fakecollection/name/value/eth0").text
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "/api/5/fakescalar/total",
+        "/api/5/fakecollection/top/1",
+        "/api/5/fakecollection/rx/eth0",
+        "/api/5/fakecollection/rx/value/100",
+    ],
+)
+def test_field_routes_return_null_before_the_first_cycle(path, config_factory, store):
+    with TestClient(_fields_app(config_factory(), store, populate=False)) as client:
+        response = client.get(path)
+    assert response.status_code == 200
+    assert response.json() is None
+
+
+def test_field_routes_do_not_capture_the_static_routes(config_factory, store):
+    """`/{plugin}/{field}` is declared last: every older route still answers."""
+    with TestClient(_fields_app(config_factory(), store)) as client:
+        assert client.get("/api/5/fakescalar/info").json() == FakeScalarPlugin.fields_description
+        assert client.get("/api/5/fakescalar/limits").json() == {}
+        assert set(client.get("/api/5/fakehistfs/history").json()) == {"timestamps", "series"}
+        assert client.get("/api/5/all/limits").json() == {}
+        assert "fakeempty" in client.get("/api/5/all/info").json()
+        assert set(client.get("/api/5/alert/incidents").json()) == {"is_initializing", "incidents"}
+        assert isinstance(client.get("/api/5/alert").json(), list)
+        assert client.get("/api/5/config").status_code == 200
+        assert client.get("/api/5/args").json() == {}
+        assert "Browser mode" in client.get("/api/5/serverslist").json()["detail"]
+
+
+def test_field_routes_do_not_capture_the_process_routes(engine, sort_engine, config_factory, store):
+    with TestClient(_app_with_processes(config_factory, store)) as client:
+        assert client.post("/api/5/processes/extended/42").json() is True
+        assert client.post("/api/5/processes/extended/disable").json() is True
+        assert client.post("/api/5/processes/sort/name").json() is True
+
+
+def test_field_routes_require_auth_when_password_is_set(config_factory, store):
+    app = _fields_app(config_factory(password=hash_password("hunter2")), store)
+    with TestClient(app) as client:
+        for path in ("/api/5/fakescalar/total", "/api/5/fakecollection/top/1", "/api/5/fakecollection/rx/eth0"):
+            assert client.get(path).status_code == 401
+        ok = client.get("/api/5/fakecollection/rx/value/100", headers=_basic_header("glances", "hunter2"))
+    assert ok.status_code == 200

@@ -29,6 +29,7 @@ import asyncio
 import json
 import sys
 from typing import Any, TextIO
+from urllib.parse import quote
 
 from glances.api_v5_doc import _escape
 from glances.processes import sort_processes_stats_list
@@ -148,6 +149,29 @@ def _plugin(client: Any, name: str) -> list[str]:
     return out
 
 
+def _fields(client: Any, plugins: list[str]) -> list[str]:
+    """The field routes, on the first collection plugin that has items."""
+    for name in plugins:
+        payload = client.get(f"/api/5/{name}").json()
+        if isinstance(payload, dict) and payload.get("data"):
+            break
+    else:
+        return []
+    key = payload["_key"]
+    first = payload["data"][0]
+    pk = quote(str(first[key]), safe="")
+    field = next((f for f in first if f != key and not f.startswith("_")), key)
+    out = _title("GET one field, one item, the first items")
+    out += [
+        "``/api/5/<plugin>/<field>`` serves ``{field: value}``, a list of values for a plugin",
+        "with items. An item is named by its primary key (``_key`` in the payload):",
+        "",
+    ]
+    for path in (f"{key}", f"{field}/{pk}", f"{key}/value/{pk}", "top/1"):
+        out += _example(f"curl {API_URL}/{name}/{path}", client.get(f"/api/5/{name}/{path}").json())
+    return out
+
+
 def render(client: Any, schema: dict[str, Any]) -> str:
     """The whole restful.rst page, from calls on `client` (a TestClient on the v5 app)."""
     lines = [_HEADER]
@@ -161,6 +185,7 @@ def render(client: Any, schema: dict[str, Any]) -> str:
     lines += _title("GET all stats")
     lines += ["Every plugin's payload in one call, a large dictionary:", ""]
     lines += [".. code-block:: bash", "", f"    # curl {API_URL}/all", ""]
+    lines += _fields(client, plugins)
     lines += _title("GET alerts")
     lines += ["The alert events, most recent last, then the same history grouped into incidents:", ""]
     lines += _example(f"curl {API_URL}/alert", client.get("/api/5/alert").json())

@@ -93,6 +93,19 @@ def test_a_plugin_section_has_its_payload_fields_limits_and_history(page):
     assert "curl http://localhost:61208/api/5/fakedisk/history?nb=2" in section
 
 
+def test_the_field_routes_have_real_examples(page):
+    section = page.split("GET one field, one item, the first items\n", 1)[1].split("GET alerts\n", 1)[0]
+    api = "http://localhost:61208/api/5/fakedisk"
+
+    def body(path: str) -> Any:
+        return json.loads(section.split(f"# curl {api}/{path}\n", 1)[1].split("\n\n", 1)[0])
+
+    assert body("name") == {"name": ["sda", "sdb", "sdc", "sdd"]}
+    assert body("percent/sda") == {"percent": 12.5}
+    assert body("name/value/sda")["sda"][0]["name"] == "sda"
+    assert [item["name"] for item in body("top/1")] == ["sda"]
+
+
 def test_descriptions_are_escaped(page):
     assert r"Disk \*name\*, e.g. sda\_1." in page
 

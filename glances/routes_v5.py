@@ -31,6 +31,10 @@ Route inventory:
 | ``/api/5/<plugin>/info``      | GET    | ``plugin.fields_description``|
 | ``/api/5/<plugin>/limits``    | GET    | ``plugin.get_limits()``      |
 | ``/api/5/<plugin>/history``   | GET    | ``plugin.get_history()`` (``?nb=&field=&item=``) |
+| ``/api/5/<plugin>/top/<n>``   | GET    | the first n items of ``get_api_payload()["data"]`` |
+| ``/api/5/<plugin>/<field>``   | GET    | ``{field: value}``, a list of values for a collection |
+| ``/api/5/<plugin>/<field>/<pk_value>`` | GET | ``{field: value}`` of one collection item |
+| ``/api/5/<plugin>/<field>/value/<value>`` | GET | ``{value: [items whose field == value]}`` |
 | ``/api/5/processes/sort/<key>`` | POST | ``glances_processes.set_sort_key()`` |
 
 A plugin that has registered but has not yet produced stats (scheduler
@@ -49,7 +53,7 @@ import hmac
 import logging
 from typing import TYPE_CHECKING, Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from starlette.concurrency import run_in_threadpool
@@ -340,6 +344,18 @@ def build_router() -> APIRouter:
             return JSONResponse(content=None)
         return payload
 
+    # v4's field routes. After /info, /limits and /history: FastAPI matches in
+    # declaration order, so `/{plugin_name}/{field}` would swallow them. `/top`
+    # and `/value` before the `{pk_value:path}` catch-all for the same reason.
+    router.add_api_route("/{plugin_name}/top/{n}", _plugin_top, methods=["GET"], name="plugin_top")
+    router.add_api_route("/{plugin_name}/{field}", _plugin_field, methods=["GET"], name="plugin_field")
+    router.add_api_route(
+        "/{plugin_name}/{field}/value/{value:path}", _plugin_value, methods=["GET"], name="plugin_value"
+    )
+    router.add_api_route(
+        "/{plugin_name}/{field}/{pk_value:path}", _plugin_item_field, methods=["GET"], name="plugin_item_field"
+    )
+
     return router
 
 
@@ -438,6 +454,65 @@ async def _servers_list(request: Request) -> list[dict[str, Any]]:
     if poller is None:
         raise HTTPException(status_code=404, detail="Browser mode is off: start the server with --browser")
     return [server.as_dict() for server in poller.servers]
+
+
+def _collection_plugin(request: Request, plugin_name: str):
+    plugin = _resolve_plugin(request, plugin_name)
+    if not plugin.IS_COLLECTION:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Plugin {plugin_name!r} has no items")
+    return plugin
+
+
+def _check_field(plugin, rows: list[dict[str, Any]], field: str) -> None:
+    # The rows are the API projection: a non-exportable field is in none of
+    # them. An empty collection can only be checked against the schema, which
+    # /info serves anyway.
+    if not (any(field in row for row in rows) if rows else field in plugin.fields_description):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Field {field!r} not found")
+
+
+async def _plugin_top(request: Request, plugin_name: str, n: int = Path(ge=1)):
+    """The first n items of a collection plugin, as a bare list (v4 `/top/<n>`)."""
+    payload = _collection_plugin(request, plugin_name).get_api_payload()
+    if not payload:
+        return JSONResponse(content=None)
+    return payload["data"][:n]
+
+
+async def _plugin_field(request: Request, plugin_name: str, field: str):
+    """One field: `{field: value}`, a list of values for a collection (v4 `/<plugin>/<item>`)."""
+    plugin = _resolve_plugin(request, plugin_name)
+    payload = plugin.get_api_payload()
+    if not payload:
+        return JSONResponse(content=None)
+    if not plugin.IS_COLLECTION:
+        if field not in payload:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Field {field!r} not found")
+        return {field: payload[field]}
+    _check_field(plugin, payload["data"], field)
+    return {field: [row.get(field) for row in payload["data"]]}
+
+
+async def _plugin_item_field(request: Request, plugin_name: str, field: str, pk_value: str):
+    """One field of the item whose primary key is pk_value (v4 `/<plugin>/<item>/<key>`)."""
+    payload = _collection_plugin(request, plugin_name).get_api_payload()
+    if not payload:
+        return JSONResponse(content=None)
+    # Compared as text: the path carries a string, the key may be a pid.
+    row = next((row for row in payload["data"] if str(row.get(payload["_key"])) == pk_value), None)
+    if row is None or field not in row:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No {field!r} for item {pk_value!r}")
+    return {field: row[field]}
+
+
+async def _plugin_value(request: Request, plugin_name: str, field: str, value: str):
+    """The items whose field equals value: `{value: [items]}` (v4 `/<plugin>/<item>/value/<value>`)."""
+    plugin = _collection_plugin(request, plugin_name)
+    payload = plugin.get_api_payload()
+    if not payload:
+        return JSONResponse(content=None)
+    _check_field(plugin, payload["data"], field)
+    return {value: [row for row in payload["data"] if str(row.get(field)) == value]}
 
 
 def _redact_args(args: argparse.Namespace | None) -> dict[str, Any]:
