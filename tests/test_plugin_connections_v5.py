@@ -66,6 +66,14 @@ def test_fields_description_keys():
         "nf_conntrack_enabled",
         "LISTEN",
         "ESTABLISHED",
+        "SYN_SENT",
+        "SYN_RECV",
+        "FIN_WAIT1",
+        "FIN_WAIT2",
+        "TIME_WAIT",
+        "CLOSE",
+        "CLOSE_WAIT",
+        "LAST_ACK",
         "initiated",
         "terminated",
         "nf_conntrack_count",
@@ -112,6 +120,46 @@ async def test_terminated_computed_from_terminated_states_not_initiated(store, c
     assert stats["initiated"] == 1  # one SYN_SENT
     assert stats["terminated"] == 3  # two TIME_WAIT + one CLOSE_WAIT
     assert stats["terminated"] != stats["initiated"]
+
+
+# ---------------------------------------------------------- per-state counters (v4 parity)
+
+
+async def _per_state_stats(store, config):
+    plugin = PluginModel(store, config)
+    conns = [
+        FakeConn(psutil.CONN_LISTEN),
+        FakeConn(psutil.CONN_ESTABLISHED),
+        FakeConn(psutil.CONN_ESTABLISHED),
+        FakeConn(psutil.CONN_SYN_SENT),
+        FakeConn(psutil.CONN_TIME_WAIT),
+        FakeConn(psutil.CONN_TIME_WAIT),
+        FakeConn(psutil.CONN_CLOSE_WAIT),
+    ]
+    with patch("glances.plugins.connections.model_v5.psutil.net_connections", return_value=conns):
+        return await plugin._grab_stats()
+
+
+async def test_terminated_states_are_counted(store, config):
+    stats = await _per_state_stats(store, config)
+    assert stats["terminated"] == 3  # 2 TIME_WAIT + 1 CLOSE_WAIT
+    assert stats[psutil.CONN_TIME_WAIT] == 2
+    assert stats[psutil.CONN_CLOSE_WAIT] == 1
+
+
+async def test_initiated_states_are_counted(store, config):
+    stats = await _per_state_stats(store, config)
+    assert stats["initiated"] == 1
+    assert stats[psutil.CONN_SYN_SENT] == 1
+    assert stats[psutil.CONN_SYN_RECV] == 0
+
+
+async def test_every_initiated_and_terminated_state_is_reported_and_described(store, config):
+    stats = await _per_state_stats(store, config)
+    for state in PluginModel.initiated_states + PluginModel.terminated_states:
+        assert state in stats
+        assert PluginModel.fields_description[state]["description"]
+        assert PluginModel.fields_description[state]["unit"] == "number"
 
 
 # ---------------------------------------------------------- disabled by default

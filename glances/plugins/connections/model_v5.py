@@ -114,6 +114,14 @@ class PluginModel(GlancesPluginBase[dict]):
             "unit": "number",
             "short_name": "Established",
         },
+        "SYN_SENT": {"description": "Number of TCP connections in SYN_SENT state.", "unit": "number"},
+        "SYN_RECV": {"description": "Number of TCP connections in SYN_RECV state.", "unit": "number"},
+        "FIN_WAIT1": {"description": "Number of TCP connections in FIN_WAIT1 state.", "unit": "number"},
+        "FIN_WAIT2": {"description": "Number of TCP connections in FIN_WAIT2 state.", "unit": "number"},
+        "TIME_WAIT": {"description": "Number of TCP connections in TIME_WAIT state.", "unit": "number"},
+        "CLOSE": {"description": "Number of TCP connections in CLOSE state.", "unit": "number"},
+        "CLOSE_WAIT": {"description": "Number of TCP connections in CLOSE_WAIT state.", "unit": "number"},
+        "LAST_ACK": {"description": "Number of TCP connections in LAST_ACK state.", "unit": "number"},
         "initiated": {
             "description": "Number of TCP connections initiated (SYN_SENT + SYN_RECV).",
             "unit": "number",
@@ -178,12 +186,12 @@ class PluginModel(GlancesPluginBase[dict]):
             return False
 
         self._probe_warned.discard("net_connections")
-        for status in self.status_list:
+        for status in self.status_list + self.initiated_states + self.terminated_states:
             stats[status] = len([c for c in connections if c.status == status])
-        stats["initiated"] = sum(1 for c in connections if c.status in self.initiated_states)
+        stats["initiated"] = sum(stats[status] for status in self.initiated_states)
         # Approved bug fix vs v4 (__init__.py:123): iterate terminated_states,
         # not initiated_states, so `terminated` is a real, distinct count.
-        stats["terminated"] = sum(1 for c in connections if c.status in self.terminated_states)
+        stats["terminated"] = sum(stats[status] for status in self.terminated_states)
         return True
 
     def _collect_nf_conntrack(self, stats: dict[str, Any]) -> bool:
