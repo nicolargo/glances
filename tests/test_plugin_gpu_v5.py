@@ -107,3 +107,38 @@ async def test_grab_stats_empty_when_no_backend(store, config):
     p = PluginModel(store, config)
     p._backends = []
     assert await p._grab_stats() == []
+
+
+class _ExitSpy(_FakeBackend):
+    def __init__(self, calls, error=None):
+        super().__init__([])
+        self._calls = calls
+        self._error = error
+
+    def exit(self):
+        self._calls.append(self)
+        if self._error:
+            raise self._error
+
+
+def test_stop_calls_every_backend_exit_even_if_one_raises(store, config):
+    """v4 `exit()` closes each card API (nvmlShutdown...) on shutdown; one
+    failing must not leave the others open."""
+    calls = []
+    p = PluginModel(store, config)
+    p._backends = [_ExitSpy(calls, OSError("nvml")), _ExitSpy(calls)]
+    p.stop()
+    assert calls == p._backends
+
+
+def test_build_backends_skips_a_constructor_that_raises(monkeypatch):
+    """v5 form of v4's None backend: a vendor whose init fails is left out."""
+    from glances.plugins.gpu import model_v5
+    from glances.plugins.gpu.cards import nvidia
+
+    def boom():
+        raise RuntimeError("no driver")
+
+    monkeypatch.setattr(nvidia, "NvidiaGPU", boom)
+    names = [type(b).__name__ for b in model_v5._build_backends()]
+    assert names == ["AmdGPU", "IntelGPU", "ArmGPU"]

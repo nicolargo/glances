@@ -128,3 +128,11 @@ class PluginModel(GlancesPluginBase[list]):
 
     async def _grab_stats(self) -> list:
         return await asyncio.to_thread(self._collect)
+
+    def stop(self) -> None:
+        # v4 `exit()`: close each card API (nvmlShutdown...); one failing keeps the others closing.
+        for backend in self._backends:
+            try:
+                backend.exit()
+            except Exception as exc:  # noqa: BLE001
+                logger.debug("gpu: %s exit failed: %s", type(backend).__name__, exc)

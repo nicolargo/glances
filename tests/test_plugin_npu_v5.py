@@ -146,6 +146,27 @@ async def test_grab_stats_disables_card_on_error(store, config, monkeypatch):
     assert boom.disabled is True
 
 
+def test_stop_calls_every_card_exit_even_if_one_raises(store, config):
+    """v4 `exit()` closes each card on shutdown; one failing must not leave
+    the others open."""
+    calls = []
+
+    class _Spy(_FakeCard):
+        def __init__(self, error=None):
+            super().__init__(None)
+            self._error = error
+
+        def exit(self):
+            calls.append(self)
+            if self._error:
+                raise self._error
+
+    p = PluginModel(store, config)
+    p._backends = [_Spy(OSError("boom")), _Spy()]
+    p.stop()
+    assert calls == p._backends
+
+
 def test_npu_disabled_by_default(config):
     # Mirror v4 [npu] disable=True — no user config present here. The gate
     # is generic: `main_v5.discover_plugins()` does not even instantiate a
