@@ -1762,6 +1762,17 @@ set; v5 `wifi/model_v5.py::_read_thresholds` falls back to its code
 defaults, so the signal is always coloured. Kept: the defaults are the
 documented v4 ones, and a user who wants no colour sets them out of range.
 
+**Kept as is — no `CONTAINERS N (served by <engine>)` title row
+(maintainer decision, 2026-10-05).** v4 draws a title row above the
+containers table; in v5 the `CONTAINER` column header is the title (G9-6
+D6, G9-9A design §5.4), and `vms` follows the same convention (G6B §5).
+Folding v4's title into the header widens the name column on every row
+(about 19 characters for docker), so the responsive columns drop much
+earlier; a separate row would cost a line in the right-column solver,
+the WebUI and both blocks. The two v4 tests
+(`TestContainersTitle::test_one_engine_*`) are OBSOLETE. A v4 display
+difference, for the 5.0.0 release notes.
+
 **Reversed decision — `vms EMITS_ALERTS`.** G6A set `vms EMITS_ALERTS = False`
 (`docs/superpowers/specs/2026-07-14-glances-v5-g6a-design.md`, decision 3) because
 v4's vms alert decorations were dead code at the time. v4 `f8657a0a` (2026-09-08)

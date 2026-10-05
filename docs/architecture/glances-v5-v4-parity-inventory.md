@@ -462,7 +462,7 @@ et sont détaillées dans leur sous-table.
 | Clé | v4 lit où (file:line) | Statut v5 | Preuve v5 (file:line) | Note |
 |---|---|---|---|---|
 | `disable` | `glances/main.py:734` | ✅ porté | `glances/plugins/plugin/base_v5.py:166` | |
-| `available` | `glances/plugins/mem/__init__.py:131` | ❌ absent | `glances/plugins/mem/render_curses_v5.py:114-117` | Le TUI v5 affiche `available` dès que le champ est présent (Linux/macOS), sans consulter la clé. **Changement de comportement par défaut** : v4 affiche `used` sauf si `available=True`. |
+| `available` | `glances/plugins/mem/__init__.py:131` | ✅ porté | `glances/plugins/mem/model_v5.py` (`_show_available`), `render_curses_v5.py`, `static/js/v5/PluginMem.vue` | **Porté le 2026-10-05** (GAP de la migration des tests) : comme en v4, `used` par défaut, `avail` si `available=True`, dans le TUI et la WebUI. |
 | `careful` / `warning` / `critical` (nus) | `glances/plugins/plugin/model.py:964` | ✅ porté | champ `percent` non-strict → repli sur `<level>` nu (`thresholds_v5.py:130-137`) | |
 | `critical_action_repeat` | `glances/plugins/plugin/model.py:980` | ✅ porté | `glances/alerts_v5.py:779-784` (`<level>_action_repeat`) | |
 
@@ -813,8 +813,9 @@ ligne par section** (cf. consigne), pas clé par clé.
 
 - `[outputs] cors_origins` : défaut v4 `*`, défaut v5 = middleware non câblé.
 - `[outputs] cors_credentials` renommée en `cors_allow_credentials`.
-- `[mem] available` : v5 affiche `available` inconditionnellement quand psutil le
-  fournit ; v4 affichait `used` par défaut.
+- ~~`[mem] available` : v5 affiche `available` inconditionnellement quand psutil le
+  fournit ; v4 affichait `used` par défaut.~~ Plus une divergence : la clé est
+  portée le 2026-10-05 (`used` par défaut, comme v4).
 - `[alert] min_duration` → `[alerts] min_duration_seconds` : sémantique
   différente (rejet a posteriori vs. debounce), avertissement déjà présent
   conf:31-33.
@@ -1019,8 +1020,8 @@ Par ordre de valeur pour l'utilisateur, pas par ordre de difficulté.
    générique, `[fs] allow`, `[fs] free_space`)~~ — **faits (parity wave 1,
    2026-09-10)**.
 6. **Écrire les notes de version des changements de défaut** identifiés ici :
-   `--bind` en loopback, `-s`/`-w`, `[mem] available` affiché
-   inconditionnellement, seuils renommés.
+   `--bind` en loopback, `-s`/`-w`, seuils renommés (`[mem] available` :
+   porté le 2026-10-05, plus un changement de défaut).
 
 Le phasage déjà décidé (18 exporteurs, mode browser, client distant, SNMP →
 Phase 3) n'a pas besoin d'arbitrage ; il n'entre dans ce document que pour que

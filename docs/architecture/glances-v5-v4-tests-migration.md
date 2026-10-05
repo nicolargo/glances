@@ -30,6 +30,34 @@ ils testent du code v4 encore présent sur cette branche, et la fusion hebdomada
 
 Les fonctions paramétrées comptent pour une. Le détail par test suit, groupe par groupe.
 
+## GAP — traités le 2026-10-05
+
+Les 42 tests GAP (19 comportements distincts) ont chacun une issue : corrigé
+en v5 avec un test qui l'affirme, ou retiré par une décision écrite
+(`glances-v5-architecture-decisions.md` §10, « Dropped » / « Kept as is »,
+2026-10-05). Il ne reste aucun GAP ouvert. Chaque test v5 ci-dessous échouait
+avant sa correction.
+
+| Test(s) v4 GAP | Issue | Test v5 ou décision |
+|---|---|---|
+| test_plugin_mem : test_memory_values_positive, test_memory_percent_in_valid_range, test_used_plus_free_less_than_total | corrigé (`used = total - available`, `percent` borné) | test_plugin_mem_v5::test_used_is_total_minus_available, ::test_available_above_total_clamps_used_and_percent, ::test_percent_is_clamped_to_100 |
+| test_plugin_mem::test_zfs_enabled_attribute, test_core::test_108_fs_zfs_ | corrigé (ARC ZFS, #3979) | test_plugin_mem_v5::test_zfs_helpers_read_the_arcstats_file, ::test_zfs_arc_counts_as_cached_and_its_shrinkable_part_as_available, ::test_no_zfs_leaves_psutil_values |
+| test_plugin_mem::test_available_config_option | corrigé (`[mem] available`, `used` par défaut, TUI et WebUI) | test_plugin_mem_v5::test_available_config_key_reaches_the_payload, test_plugin_mem_render_curses_v5::test_render_shows_avail_when_the_config_key_is_set |
+| test_plugin_network / test_plugin_diskio ::test_sorted_stats_preserves_count, test_core::test_015_sorted_stats | corrigé (tri naturel par alias ou nom, TUI et WebUI) | test_plugin_network_render_curses_v5::test_render_sorts_interfaces_naturally_by_alias_or_name, test_plugin_diskio_render_curses_v5::test_render_sorts_disks_naturally_by_alias_or_name, `tests/js/rows.test.mjs` |
+| test_plugin_fs::test_views_skip_ro_mounts_for_threshold | corrigé (#3143) | test_plugin_fs_v5::test_levels_skip_read_only_mounts |
+| test_plugin_gpu::TestGpuPluginIntegration::test_exit_tolerates_none_backends | corrigé (`stop()` ferme les cartes gpu et npu) | test_plugin_gpu_v5::test_stop_calls_every_backend_exit_even_if_one_raises, ::test_build_backends_skips_a_constructor_that_raises, test_plugin_npu_v5::test_stop_calls_every_card_exit_even_if_one_raises |
+| test_plugin_containers::TestContainersTitle (×2) | OBSOLETE (décision : l'en-tête `CONTAINER` est le titre) | décisions §10, « Kept as is — no `CONTAINERS N` title row » |
+| test_connections_states (×3) | corrigé (compteurs par état TCP) | test_plugin_connections_v5::test_terminated_states_are_counted, ::test_initiated_states_are_counted, ::test_every_initiated_and_terminated_state_is_reported_and_described |
+| test_core::test_010a_processes_cpu_num | corrigé (colonne CPU, TUI et WebUI) | test_plugin_processlist_render_curses_v5::test_render_cpu_num_value_or_dash, ::test_render_cpu_num_header_follows_the_io_columns |
+| test_glances_stats (×5, plugins externes) | OBSOLETE (décision : plugins externes retirés, GHSA-mcm7) | décisions §10 ; test_plugin_discovery_v5 |
+| test_json_serializer (×4, `_errors`) | corrigé | test_stdout_v5::test_a_failing_plugin_is_reported_in_the_json_errors |
+| test_restful : test_004_items, test_005_values, test_011_issue1401, test_013_top, test_017_item_key | corrigé (routes fines `/<plugin>/<field>`, `/<field>/<pk>`, `/<field>/value/<v>`, `/top/<n>`) | test_routes_v5 (test_field_of_a_scalar_plugin, test_field_of_a_collection_is_a_list et suivants) |
+| test_restful::test_014_config | OBSOLETE (décision : `/config/<section>[/<key>]` retiré) | décisions §10 |
+| test_restful::test_015_all_gzip | corrigé (GZip au-delà de 1000 octets) | test_webserver_v5::test_api_responses_are_gzipped_above_the_minimum_size |
+| test_webui_template_response (`/?refresh=N`) | corrigé (WebUI) | `tests/js/refresh.test.mjs` via test_webui_v5_js |
+| test_outdated (×6, CVE-2026-46607) | OBSOLETE (décision : vérification de mise à jour retirée) | décisions §10 |
+| test_plugin_wifi::test_no_threshold_at_all_is_not_decorated (GAP low) | OBSOLETE (décision : seuils par défaut gardés) | décisions §10, « Kept as is — wifi thresholds » |
+
 ## Portage — fait le 2026-10-03
 
 Les 108 tests PORT sont portés (commits `9e2ddc8` et suivants). Les 9 scripts

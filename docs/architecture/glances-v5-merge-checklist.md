@@ -24,24 +24,9 @@ au 2026-10-04. Rien ici ne se fait sur `develop`, sauf la section 6.
     M4 ✅ (`sh -c` documenté, décision du mainteneur), M3 ✅, M7 ✅, M8 ✅, M10 ✅, B-4 ✅, B-13 ✅,
     tests CVE-2026-33641 et GHSA-mcm7 ✅
   - [ ] constats « avant 5.0.0 » (M5, M6, M9, M11, constats bas, I-1, I-3)
-- [ ] **Les 42 tests GAP** de `glances-v5-v4-tests-migration.md` : pour chacun,
-  correction en v5 ou retrait par décision écrite (§9 : « not silently dropped »).
-  - [ ] mem : bornes `used`/`percent` en conteneur (LXC, cgroup v2), ARC ZFS,
-    `[mem] available`
-  - [ ] network / diskio : tri naturel par alias ou nom
-  - [ ] fs : pas de seuils sur les montages en lecture seule (#3143)
-  - [ ] gpu : `stop()` appelle l'`exit()` des backends (`nvmlShutdown`)
-  - [ ] containers : titre « served by <engine> »
-  - [ ] connections : compteurs par état (`SYN_SENT`, `SYN_RECV`…)
-  - [ ] processlist : colonne CPU#
-  - [ ] stdout-json : entrée `_errors` pour un plugin en échec
-  - [ ] REST : `/<plugin>/<field>`, `/<plugin>/<pk>/value/<v>`,
-    `/<plugin>/<field>/<pk>`, `/<plugin>/top/<n>`, `/config/<section>/<key>`,
-    compression gzip
-  - [ ] WebUI : `/?refresh=N` règle la cadence
-  - [ ] plugins externes (`-P`, `plugin_dir`)
-  - [ ] vérification de mise à jour : à porter avec le correctif CVE-2026-46607
-    (cache JSON, jamais pickle) ou à retirer par décision
+- [x] **Les 42 tests GAP** de `glances-v5-v4-tests-migration.md` (2026-10-05) :
+  chacun corrigé en v5 avec son test, ou retiré par décision écrite (section
+  « GAP — traités le 2026-10-05 » du document de migration).
 - [ ] **Validation des performances** : pas de régression de la latence de
   rafraîchissement par rapport à v4 (mesure documentée).
 
@@ -80,6 +65,14 @@ au 2026-10-04. Rien ici ne se fait sur `develop`, sauf la section 6.
   - [ ] templates `--fetch` v4 cassés
   - [ ] touche `4` : quicklook seul, pleine largeur
   - [ ] gestion des processus : F4 ouvre le filtre, ENTRÉE épingle
+  - [ ] retirés le 2026-10-05 : vérification de mise à jour PyPI
+    (`--disable-check-update`), plugins externes (`-P`, `plugin_dir`),
+    `/api/5/config/<section>[/<key>]` ; titre « CONTAINERS N (served by …) »
+  - [ ] routes fines `/api/5` : comparaison en texte, 404 sur champ inconnu
+    (v4 : `200 null`), `top`/`value`/item en 404 sur un plugin non collection
+  - [ ] `/api/5/config` sans mot de passe : seulement les clés de la WebUI (M1) ;
+    serveur en loopback : seuls les Host loopback (M2, reverse proxy local →
+    `webui_allowed_hosts`) ; graphes par défaut dans `~/.local/share/glances/graphs`
 - [ ] `make docs` sur une machine représentative : `docs/api/restful.rst`
   (encore en `/api/4`) et `docs/api/python.rst`.
 - [ ] Man page, `README.rst`, `docs/quickstart.rst`, `docs/cmds.rst`,
