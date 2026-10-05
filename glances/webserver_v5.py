@@ -27,6 +27,8 @@ Middleware composition (from outer to inner):
         ↓
     AuthMiddleware          ← Basic / Bearer (CVE-2026-32596)
         ↓
+    GZipMiddleware          ← response compression (v4 parity)
+        ↓
     route handler / probe
 
 Starlette applies middlewares in reverse registration order, so the code
@@ -48,6 +50,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.concurrency import run_in_threadpool
 from starlette.middleware.cors import CORSMiddleware
+from starlette.middleware.gzip import GZipMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from glances.alerts_v5 import GlancesAlerts
@@ -162,6 +165,9 @@ def build_app(
     app.state.plugins = {}
 
     # Register from inner to outer — Starlette applies middlewares in reverse.
+    # GZip innermost (v4 registers it first too): the outer middlewares see
+    # the handler's status untouched, and their own small rejections stay plain.
+    app.add_middleware(GZipMiddleware, minimum_size=1000)
     _wire_auth(app, config)
     _wire_cors(app, config)
     _wire_rate_limit(app, config)

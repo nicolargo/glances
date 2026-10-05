@@ -39,7 +39,7 @@ from glances.config_v5 import GlancesConfigV5
 from glances.security_v5 import hash_password
 from glances.stats_store_v5 import StatsStoreV5
 from glances.version_v5 import __version__
-from glances.webserver_v5 import build_app
+from glances.webserver_v5 import build_app, register_plugin
 
 # ----------------------------------------------------------------- fixtures
 
@@ -225,6 +225,28 @@ def test_warning_logged_when_unauthenticated(config_factory, store, caplog):
     with caplog.at_level(logging.WARNING):
         build_app(config=config, store=store)
     assert any("unauthenticated" in rec.message for rec in caplog.records)
+
+
+# ------------------------------------------------------------- GZip
+
+
+def test_api_responses_are_gzipped_above_the_minimum_size(config_factory, store):
+    """v4 `GZipMiddleware(minimum_size=1000)`: a large `/all` is compressed, a small probe is not."""
+
+    class _Big:
+        plugin_name = "big"
+
+        def get_api_payload(self):
+            return {f"field_{i}": i for i in range(200)}
+
+    app = build_app(config=config_factory(), store=store)
+    register_plugin(app, _Big())
+    client = TestClient(app)
+    resp = client.get("/api/5/all", headers={"Accept-Encoding": "gzip"})
+    assert resp.status_code == 200
+    assert resp.headers["Content-Encoding"] == "gzip"
+    assert resp.json()["big"]["field_199"] == 199
+    assert "Content-Encoding" not in client.get("/status", headers={"Accept-Encoding": "gzip"}).headers
 
 
 # ------------------------------------------------------------- CORS
