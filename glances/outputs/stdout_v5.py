@@ -97,9 +97,17 @@ def render_plain(
     return lines
 
 
-def render_json(plugins: list[str], exports: dict[str, Any]) -> str:
-    """v4 ``GlancesStdoutJson``: one object per refresh, keyed by plugin."""
-    return json.dumps({name: exports[name] for name in plugins if name in exports}, default=str)
+def render_json(plugins: list[str], exports: dict[str, Any], errors: dict[str, str] | None = None) -> str:
+    """v4 ``GlancesStdoutJson``: one object per refresh, keyed by plugin.
+
+    A plugin whose export failed is listed under ``_errors`` (v4
+    ``GlancesJSONSerializer(include_errors=True)``).
+    """
+    out: dict[str, Any] = {name: exports[name] for name in plugins if name in exports}
+    failed = [{"error": True, "plugin": name, "message": errors[name]} for name in plugins if name in (errors or {})]
+    if failed:
+        out["_errors"] = failed
+    return json.dumps(out, default=str)
 
 
 class CsvRenderer:
@@ -201,8 +209,9 @@ class StdoutV5(threading.Thread):
             return set(self._json)
         return {p for p, _ in self._csv.selection} if self._csv else set()
 
-    def _exports(self) -> dict[str, Any]:
+    def _exports(self) -> tuple[dict[str, Any], dict[str, str]]:
         out: dict[str, Any] = {}
+        errors: dict[str, str] = {}
         for name in self._wanted():
             plugin = self._plugins.get(name)
             if plugin is None:
@@ -211,16 +220,17 @@ class StdoutV5(threading.Thread):
                 out[name] = plugin.get_export()
             except Exception as exc:  # noqa: BLE001 -- one broken plugin must not end the stream
                 logger.debug("stdout: %s.get_export() failed: %s", name, exc)
-        return out
+                errors[name] = str(exc)
+        return out, errors
 
     def output_once(self) -> None:
         """Print one refresh worth of output."""
-        exports = self._exports()
+        exports, errors = self._exports()
         if self._plain is not None:
             for line in render_plain(self._plain, exports, self._primary_keys):
                 self._write(line)
         elif self._json is not None:
-            self._write(render_json(self._json, exports))
+            self._write(render_json(self._json, exports, errors))
         elif self._csv is not None:
             self._write(self._csv.render(exports, self._primary_keys))
 

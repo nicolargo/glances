@@ -172,7 +172,10 @@ def test_a_failing_plugin_does_not_end_the_stream():
     assert written == ["cpu.total: 12.5"]
 
 
-def test_a_failing_plugin_is_dropped_from_the_json_output():
+def test_a_failing_plugin_is_reported_in_the_json_errors():
+    """v4 `--stdout-json` (`GlancesJSONSerializer(include_errors=True)`): a
+    failing plugin is left out of the stats and listed under `_errors`."""
+
     class _Broken(_Plugin):
         def get_export(self):
             raise RuntimeError("boom")
@@ -182,8 +185,21 @@ def test_a_failing_plugin_is_dropped_from_the_json_output():
         plugins=[_Broken("mem", None), *_plugins()], refresh_interval=1, stdout_json="mem,cpu", write=written.append
     )
     printer.output_once()
-    assert json.loads(written[0]) == {"cpu": EXPORTS["cpu"]}
+    assert json.loads(written[0]) == {
+        "cpu": EXPORTS["cpu"],
+        "_errors": [{"error": True, "plugin": "mem", "message": "boom"}],
+    }
     # Every selected plugin failing still prints valid JSON.
     written.clear()
-    StdoutV5(plugins=[_Broken("mem", None)], refresh_interval=1, stdout_json="mem", write=written.append).output_once()
-    assert written == ["{}"]
+    StdoutV5(
+        plugins=[_Broken("mem", None), _Broken("load", None)],
+        refresh_interval=1,
+        stdout_json="mem,load",
+        write=written.append,
+    ).output_once()
+    assert json.loads(written[0]) == {
+        "_errors": [
+            {"error": True, "plugin": "mem", "message": "boom"},
+            {"error": True, "plugin": "load", "message": "boom"},
+        ]
+    }
