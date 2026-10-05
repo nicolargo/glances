@@ -106,4 +106,11 @@ class PluginModel(GlancesPluginBase[dict]):
         vm = await asyncio.to_thread(psutil.virtual_memory)
         # psutil returns a namedtuple — fields not declared in
         # fields_description are stripped by the base in _remove_parameters.
-        return vm._asdict()
+        stats = vm._asdict()
+
+        # In LXC/cgroup-v2 containers the kernel may report `available` >
+        # `total`. Clamp `used` and `percent` so they are never negative
+        # (v4 parity, `mem/__init__.py:212-218`).
+        stats["used"] = max(0, stats["total"] - stats["available"])
+        stats["percent"] = max(0.0, min(100.0, stats["percent"]))
+        return stats

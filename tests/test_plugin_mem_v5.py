@@ -119,6 +119,38 @@ async def test_update_drops_undeclared_fields(store, config):
     assert "future_field" not in payload
 
 
+async def test_used_is_total_minus_available(store, config):
+    """v4 redefines `used` as `total - available` (`mem/__init__.py:216`), not psutil's platform `used`."""
+    vm = _make_vm(50.0)._replace(used=5_000_000_000)
+    plugin = PluginModel(store, config)
+    with patch("glances.plugins.mem.model_v5.psutil.virtual_memory", return_value=vm):
+        await plugin.update()
+
+    payload = store.get("mem")
+    assert payload["used"] == 8_000_000_000
+    assert payload["used"] + payload["available"] == payload["total"]
+
+
+async def test_available_above_total_clamps_used_and_percent(store, config):
+    """LXC/cgroup-v2: `available > total` must not publish a negative `used` or `percent` (v4 parity)."""
+    vm = _make_vm(-6.2)._replace(available=17_000_000_000)
+    plugin = PluginModel(store, config)
+    with patch("glances.plugins.mem.model_v5.psutil.virtual_memory", return_value=vm):
+        await plugin.update()
+
+    payload = store.get("mem")
+    assert payload["used"] == 0
+    assert payload["percent"] == 0.0
+
+
+async def test_percent_is_clamped_to_100(store, config):
+    plugin = PluginModel(store, config)
+    with patch("glances.plugins.mem.model_v5.psutil.virtual_memory", return_value=_make_vm(120.0)):
+        await plugin.update()
+
+    assert store.get("mem")["percent"] == 100.0
+
+
 # ---------------------------------------------------------- _levels
 
 
