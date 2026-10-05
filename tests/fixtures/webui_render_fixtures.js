@@ -305,8 +305,10 @@ const ALERT_INCIDENTS_SCENARIOS = {
 // Values are exact powers of 1024 so formatBytes() rounds to one predictable
 // decimal (e.g. 16*1024**3 -> "16.0G"), and `used` carries a value distinct
 // from `available` so a switch that rendered the wrong one, or both, cannot
-// pass unnoticed.
+// pass unnoticed. `_show_available` is `[mem] available=True` (mem/model_v5.py):
+// without it the component shows `used`, as v4 does.
 const MEM_FIXTURE_WITH_AVAILABLE = {
+	_show_available: true,
 	percent: 53.2,
 	total: 17179869184, // 16.0G
 	available: 8589934592, // 8.0G
@@ -1068,6 +1070,7 @@ const ALL_FIXTURES = {
 	"pluginslist-unreachable": {},
 	"mem-with-available": { mem: MEM_FIXTURE_WITH_AVAILABLE },
 	"mem-no-available": { mem: MEM_FIXTURE_NO_AVAILABLE },
+	"mem-available-not-selected": { mem: { ...MEM_FIXTURE_WITH_AVAILABLE, _show_available: false } },
 	network: { network: NETWORK_FIXTURE },
 	// eth0's Rx rate prominent-warning: the badge must wrap the formatted
 	// value, not fill the whole .gl-num cell.

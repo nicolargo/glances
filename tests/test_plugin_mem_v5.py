@@ -196,6 +196,26 @@ async def test_no_zfs_leaves_psutil_values(store, config):
     assert payload["percent"] == 50.0
 
 
+# ---------------------------------------------------------- [mem] available
+
+
+async def test_available_display_is_off_by_default(store, config):
+    """v4 shows `used` unless `[mem] available=True` (`mem/__init__.py:131`)."""
+    plugin = PluginModel(store, config)
+    with patch("glances.plugins.mem.model_v5.psutil.virtual_memory", return_value=_make_vm(50.0)):
+        await plugin.update()
+    assert store.get("mem")["_show_available"] is False
+
+
+async def test_available_config_key_reaches_the_payload(tmp_path, monkeypatch, store):
+    config = _config_with(tmp_path, monkeypatch, "[mem]\navailable=True\n")
+    plugin = PluginModel(store, config)
+    with patch("glances.plugins.mem.model_v5.psutil.virtual_memory", return_value=_make_vm(50.0)):
+        await plugin.update()
+    assert store.get("mem")["_show_available"] is True
+    assert "_show_available" not in plugin.get_export()
+
+
 # ---------------------------------------------------------- _levels
 
 

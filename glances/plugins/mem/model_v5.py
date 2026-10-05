@@ -106,6 +106,14 @@ class PluginModel(GlancesPluginBase[dict]):
     def __init__(self, store: Any, config: Any) -> None:
         super().__init__(store, config)
         self.zfs_enabled = zfs_enable()
+        # `[mem] available`: show `available` instead of `used` in the TUI and
+        # the WebUI (v4 `mem/__init__.py:131`). Published as metadata, the
+        # renderers' only way to reach the config.
+        self.show_available: bool = self.config.get(self.plugin_name, "available", False)
+
+    def _add_metadata(self) -> None:
+        super()._add_metadata()
+        self._metadata["_show_available"] = self.show_available
 
     async def _grab_stats(self) -> dict:
         vm = await asyncio.to_thread(psutil.virtual_memory)

@@ -47,11 +47,11 @@ export default {
 	// (glances_curses_v5.py). Anything else means "no degradation".
 	props: { ...PLUGIN_PROPS },
 	computed: {
-		// Mirrors glances/plugins/mem/render_curses_v5.py: `available` (Linux,
-		// macOS) is preferred over `used`; `used` is the fallback for
-		// platforms that don't publish `available` (e.g. some BSDs).
+		// Mirrors glances/plugins/mem/render_curses_v5.py: `available` only
+		// when `[mem] available=True` (`_show_available`) and the platform
+		// publishes it; `used` otherwise (v4 default).
 		availOrUsedField() {
-			return this.payload && this.payload.available != null ? "available" : "used";
+			return this.payload?._show_available && this.payload.available != null ? "available" : "used";
 		},
 		col1() {
 			return ["total", this.availOrUsedField, "free"].map((field) => this.statFor(field));

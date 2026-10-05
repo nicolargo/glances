@@ -362,7 +362,7 @@ def test_mem_renders_all_eight_statistics_with_avail():
     16-28) is eight (label, value) pairs: percent, total, avail, free,
     active, inactive, buffers, cached. The probe's `api/5/all` stub answers
     with the `mem-with-available` fixture -- a full psutil-shaped payload
-    that HAS `available` -- so this asserts every one of the eight
+    that HAS `available`, with `[mem] available` set -- so this asserts every one of the eight
     formatted values actually reaches the DOM, and that the avail/used
     switch shows `avail`: the fixture's `used` field carries a DIFFERENT
     value (9.0G) than `available` (8.0G) specifically so a component that
@@ -389,6 +389,16 @@ def test_mem_shows_used_when_available_is_absent():
     for expected in ("53.2%", "16.0G", "9.0G", "2.0G", "5.0G", "4.0G", "100.0M", "3.0G"):
         assert expected in mem_text, f"expected {expected!r} in the MEM plugin text, got {mem_text!r}"
     assert "avail" not in mem_text, f"expected no 'avail' label when 'available' is absent: {mem_text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_mem_shows_used_when_the_available_key_is_not_set():
+    """v4 parity: `available` exists but `[mem] available` is off, so `used` shows."""
+    payload = _run_render_probe("mem-available-not-selected")
+    mem_text = payload["pluginText"].get("mem", "")
+
+    assert "9.0G" in mem_text, f"expected 'used' (9.0G) in the MEM plugin text, got {mem_text!r}"
+    assert "avail" not in mem_text, f"expected no 'avail' label when the key is off: {mem_text!r}"
 
 
 # ------------------------------------------------- network TUI parity (labels)

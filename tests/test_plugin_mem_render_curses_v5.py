@@ -71,12 +71,19 @@ def test_render_lines_2_to_4_are_four_cell_rows(mem_payload_linux, mem_fields):
         assert len(rows[i].cells) == 4, f"row {i} has {len(rows[i].cells)} cells"
 
 
-def test_render_uses_avail_label_when_available_present(mem_payload_linux, mem_fields):
+def test_render_shows_used_by_default(mem_payload_linux, mem_fields):
+    """v4 parity: `used` is shown unless `[mem] available=True`, even when `available` exists."""
     rows = render(mem_payload_linux, mem_fields)
-    flat = " ".join(c.text for row in rows for c in row.cells)
-    assert "avail" in flat
-    # `used:` label not shown when avail is.
-    assert "used " not in flat or "used " in flat  # we just check avail won
+    labels = [c.text.strip() for row in rows for c in row.cells]
+    assert "used" in labels
+    assert "avail" not in labels
+
+
+def test_render_shows_avail_when_the_config_key_is_set(mem_payload_linux, mem_fields):
+    rows = render({**mem_payload_linux, "_show_available": True}, mem_fields)
+    labels = [c.text.strip() for row in rows for c in row.cells]
+    assert "avail" in labels
+    assert "used" not in labels
 
 
 def test_render_falls_back_to_used_when_available_absent(mem_fields):
@@ -217,7 +224,7 @@ def test_render_pulls_short_name_from_schema(mem_payload_linux):
         "buffers": {"unit": "bytes", "short_name": "buffer"},
         "cached": {"unit": "bytes"},
     }
-    rows = render(mem_payload_linux, fields)
+    rows = render({**mem_payload_linux, "_show_available": True}, fields)
     flat = " ".join(c.text for row in rows for c in row.cells)
     assert "avail" in flat
     assert "inactiv" in flat
@@ -248,8 +255,9 @@ def test_render_column_widths_shrink_with_short_names(mem_payload_linux):
     }
     fields_short = {**fields_long, "available": {"unit": "bytes", "short_name": "avail"}}
 
-    rows_long = render(mem_payload_linux, fields_long)
-    rows_short = render(mem_payload_linux, fields_short)
+    payload = {**mem_payload_linux, "_show_available": True}
+    rows_long = render(payload, fields_long)
+    rows_short = render(payload, fields_short)
 
     col0_long = max(len(r.cells[0].text) for r in rows_long)
     col0_short = max(len(r.cells[0].text) for r in rows_short)

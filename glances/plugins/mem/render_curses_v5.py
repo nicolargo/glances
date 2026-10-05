@@ -24,8 +24,9 @@ Reference layout (Linux):
   ``active`` label + value.
 - Lines 2-4: 2-column grid; col 1 = total/avail|used/free, col 2 =
   inactive/buffers/cached.
-- Avail vs used: when ``available`` is in the payload (Linux, macOS),
-  show ``avail`` (and the corresponding bytes); otherwise show ``used``.
+- Avail vs used: show ``avail`` when ``[mem] available=True`` (payload
+  metadata ``_show_available``, ``mem/model_v5.py``) and the platform
+  publishes ``available``; otherwise show ``used`` (v4 default).
 """
 
 from __future__ import annotations
@@ -111,7 +112,7 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]], view
     # Lines 2-4. Each row: col-1 pair (+ col-2 pair when n_cols >= 2).
     # Col 1 (line 2-4): total / (avail|used) / free
     # Col 2 (line 2-4): inactive / buffers / cached
-    if "available" in payload and payload.get("available") is not None:
+    if payload.get("_show_available") and payload.get("available") is not None:
         col1_line3 = "available"
     else:
         col1_line3 = "used"
