@@ -3363,7 +3363,7 @@ def test_the_alert_block_honours_its_row_budget():
 def test_processlist_renders_the_tui_columns_and_rows():
     """processlist/render_curses_v5.py `_FIXED_COL_KEYS` (:91) plus `Command`.
     No title cell (unlike `containers`): the renderer never puts one in its
-    header row, so every one of the 13 headers below is a field label.
+    header row, so every one of the 14 headers below is a field label.
     """
     payload = _run_render_probe("processlist")
     assert payload["pluginHeaderCells"].get("processlist") == [
@@ -3379,6 +3379,7 @@ def test_processlist_renders_the_tui_columns_and_rows():
         "TIME+",
         "R/s",
         "W/s",
+        "CPU",
         # "Command", not v4's "Command (click to pin)": measured in Chromium,
         # this elastic column lands at 72-161px across 640/900/1280 viewports
         # while that wording needs 186, so it would wrap the header row nearly
@@ -3386,7 +3387,7 @@ def test_processlist_renders_the_tui_columns_and_rows():
         # `title`, which cost no layout.
         "Command",
     ], f"got {payload['pluginHeaderCells'].get('processlist')!r}"
-    rows = _table_rows(payload, "processlist", 13)
+    rows = _table_rows(payload, "processlist", 14)
     # VIRT is "120M", not "120.0M": VIRT/RES/R/s/W/s render through
     # `formatProcessBytes` (processlist/render_curses_v5.py's OWN
     # `_format_bytes`, not the shared `formatBytes` every other byte column
@@ -3407,6 +3408,7 @@ def test_processlist_renders_the_tui_columns_and_rows():
         "0:12",
         "512B",
         "512B",
+        "2",
         "python3 myscript.py --verbose",
     ], f"got {rows[0]!r}"
 
@@ -3421,25 +3423,26 @@ def test_processlist_shows_the_placeholder_for_every_missing_value_and_the_kerne
     `formatProcessBytes`'s own docstring says why a null there is a live,
     reachable case rather than a defensive guard. Every other column
     (CPU%, MEM%, THR, NI, S, TIME+) keeps the WebUI's single
-    placeholder `-` (format.js `MISSING`). Its Command cell is the OTHER TUI
+    placeholder `-` (format.js `MISSING`), as does CPU, whose `-` is also the
+    TUI's own (`_format_cpu_num`). Its Command cell is the OTHER TUI
     fallback: no `cmdline` at all renders the kernel-thread bracket form from
     the process `name`.
     """
     payload = _run_render_probe("processlist")
-    rows = _table_rows(payload, "processlist", 13)
+    rows = _table_rows(payload, "processlist", 14)
     row = rows[1]
     # VIRT, RES, USER, R/s, W/s -- the five columns that render through a
     # formatter that answers "?" for a missing value.
     question_mark_columns = {2, 3, 5, 10, 11}
-    # PID (index 4) is the only non-null field among the first 12 columns.
-    for i, cell in enumerate(row[:12]):
+    # PID (index 4) is the only non-null field among the first 13 columns.
+    for i, cell in enumerate(row[:13]):
         if i == 4:
             assert cell == "999", f"PID must render, got {row!r}"
         elif i in question_mark_columns:
             assert cell == "?", f"column {i} must mirror the TUI's own marker, got {row!r}"
         else:
             assert cell == "-", f"column {i} must be the WebUI placeholder, got {row!r}"
-    assert row[12] == "[kthread0]", f"got {row!r}"
+    assert row[13] == "[kthread0]", f"got {row!r}"
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
@@ -3576,7 +3579,7 @@ def test_the_process_table_declares_the_terminal_column_widths():
     """
     payload = _run_render_probe("processlist-wide")
     assert payload["pluginColWidths"]["processlist"] == [
-        f"calc({n + 2} * var(--gl-col))" for n in (7, 6, 5, 5, 7, 10, 3, 3, 1, 8, 5, 5)
+        f"calc({n + 2} * var(--gl-col))" for n in (7, 6, 5, 5, 7, 10, 3, 3, 1, 8, 5, 5, 3)
     ]
     assert "gl-process-table" in payload["pluginTableClasses"]["processlist"]
 
@@ -3955,7 +3958,7 @@ def test_a_block_with_neither_new_input_renders_its_table_unchanged():
     col_widths = payload["pluginColWidths"]
     table_classes = payload["pluginTableClasses"]
     assert "processlist" in col_widths and "processlist" in table_classes
-    assert len(col_widths["processlist"]) == 12, col_widths["processlist"]
+    assert len(col_widths["processlist"]) == 13, col_widths["processlist"]
     assert table_classes["processlist"] == ["gl-table", "gl-process-table"], table_classes["processlist"]
     assert table_classes["alert"] == ["gl-table", "gl-process-table"], table_classes["alert"]
     for name in payload["pluginNames"]:
@@ -4626,7 +4629,7 @@ def test_processlist_marks_only_the_headers_with_an_engine_key_as_clickable():
     headers = [h.strip() for h in payload["pluginColumnHeaders"]["processlist"]]
     classes = payload["pluginColumnClasses"]["processlist"]
     sortable = {h for h, cls in zip(headers, classes) if "gl-sortable" in cls.split()}
-    expected = {"CPU%", "MEM%", "USER", "TIME+", "R/s", "W/s", "Command"} & set(headers)
+    expected = {"CPU%", "MEM%", "USER", "TIME+", "R/s", "W/s", "CPU", "Command"} & set(headers)
     assert sortable == expected, f"got {sortable!r}"
 
 

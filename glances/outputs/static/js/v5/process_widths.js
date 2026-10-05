@@ -36,6 +36,7 @@ export const PROCESS_COL_WIDTHS = {
 	"TIME+": 8,
 	"R/s": 5,
 	"W/s": 5,
+	"CPU": 3,
 };
 
 // Characters of separator BETWEEN two adjacent cells, reserved by
@@ -79,13 +80,28 @@ export const WEBUI_COL_WIDTHS = {
 	"TIME+": 8, // 99h59:59
 	"R/s": 5, // as VIRT/RES -- the same `formatProcessBytes()`
 	"W/s": 5,
+	"CPU": 3, // a core number, `-` when unknown
 };
 
 // The fixed columns in DISPLAY order -- what a <colgroup> needs, and not the
 // same thing as PROCESS_COL_WIDTHS' key order, which no test would catch if it
 // changed. Copy of `_FIXED_COL_KEYS`
 // (glances/plugins/processlist/render_curses_v5.py:91).
-export const FIXED_COL_KEYS = ["CPU%", "MEM%", "VIRT", "RES", "PID", "USER", "THR", "NI", "S", "TIME+", "R/s", "W/s"];
+export const FIXED_COL_KEYS = [
+	"CPU%",
+	"MEM%",
+	"VIRT",
+	"RES",
+	"PID",
+	"USER",
+	"THR",
+	"NI",
+	"S",
+	"TIME+",
+	"R/s",
+	"W/s",
+	"CPU",
+];
 
 // programlist replaces PID with NPROCS -- same width, different meaning
 // (glances/plugins/programlist/render_curses_v5.py:58).

@@ -2082,23 +2082,23 @@ def make_tui_with_body(fake_alerts, fake_config):
 
 def test_right_width_passed_and_narrows_columns(make_tui_with_body):
     """A narrow terminal: the right sidebar is small, so the processlist
-    renderer drops columns (fewer than the full 13 header cells) while always
+    renderer drops columns (fewer than the full 14 header cells) while always
     keeping ``Command``."""
     tui = make_tui_with_body()
     frame = tui._build_fitted_frame(max_x=95)
     proc = next(b for b in frame.right if b.name == "processlist")
     header = proc.rows[0]
-    assert len(header.cells) < 13
+    assert len(header.cells) < 14
     assert any("Command" in c.text for c in header.cells)
 
 
 def test_wide_terminal_keeps_all_proclist_columns(make_tui_with_body):
     """A roomy terminal leaves the right sidebar wide enough for every
-    column — all 13 header cells survive."""
+    column — all 14 header cells survive."""
     tui = make_tui_with_body()
     frame = tui._build_fitted_frame(max_x=400)
     proc = next(b for b in frame.right if b.name == "processlist")
-    assert len(proc.rows[0].cells) == 13
+    assert len(proc.rows[0].cells) == 14
 
 
 def test_right_width_is_published_even_without_a_processlist_block(fake_alerts, fake_config):

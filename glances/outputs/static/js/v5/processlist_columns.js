@@ -3,7 +3,7 @@
 // Pure: no DOM and no fetch, so `node --test` can load it.
 //
 // Unlike `containers_columns.js`, processlist has no DATA-driven hiding --
-// every one of its 12 fixed columns is always present in the payload
+// every one of its 13 fixed columns is always present in the payload
 // (processlist/render_curses_v5.py has no `disable_stats`-style config
 // knob). Only the WIDTH-driven cascade in `drop_order.js` ever hides one.
 
@@ -17,7 +17,7 @@ import { droppedColumns } from "./drop_order.js";
 // terminal renderer, and this is not an inconsistency to "fix".
 // tests/test_webui_v5_processlist_drop_order_drift.py compares the two
 // copies; never edit one side alone.
-export const PROCESSLIST_DROP_ORDER = ["VIRT", "TIME+", "RES", "USER", "PID", "THR", "S", "NI"];
+export const PROCESSLIST_DROP_ORDER = ["CPU", "VIRT", "TIME+", "RES", "USER", "PID", "THR", "S", "NI"];
 
 // This plugin has no data-driven hiding to union in (see the module comment
 // above), so the width cascade's own flags are the whole story -- unlike

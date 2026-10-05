@@ -325,3 +325,9 @@ export function formatUsername(value) {
 	const text = value === null || value === undefined ? "?" : String(value);
 	return text.length > USER_WIDTH ? `${text.slice(0, USER_WIDTH - 1)}+` : text;
 }
+
+// `_format_cpu_num` (processlist/render_curses_v5.py): the core a process last
+// ran on, or `-` when the platform cannot report it (v4 parity).
+export function formatCpuNum(value) {
+	return Number.isInteger(value) && value >= 0 ? String(value) : "-";
+}

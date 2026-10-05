@@ -42,6 +42,7 @@ def test_the_processlist_widths_match_the_terminal_renderer():
         "TIME+": processlist._W_TIME,
         "R/s": processlist._W_IO,
         "W/s": processlist._W_IO,
+        "CPU": processlist._W_CPU_NUM,
     }
 
 

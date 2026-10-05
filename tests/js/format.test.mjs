@@ -5,6 +5,7 @@ import {
 	formatAutoUnit,
 	formatBytes,
 	formatCount,
+	formatCpuNum,
 	formatFixed0,
 	formatIops,
 	formatNetworkRate,
@@ -212,6 +213,16 @@ test("a name at the width is shown whole; one past it crops", () => {
 	assert.equal(formatUsername("0123456789"), "0123456789");
 	assert.equal(formatUsername("01234567890"), "012345678+");
 	assert.equal(formatUsername(null), "?");
+});
+
+// Mirrors processlist/render_curses_v5.py::_format_cpu_num() -- v4's CPU
+// core column: the number, or `-` when it is unknown or negative.
+test("formatCpuNum shows the core, or a dash when there is none", () => {
+	assert.equal(formatCpuNum(5), "5");
+	assert.equal(formatCpuNum(0), "0");
+	assert.equal(formatCpuNum(null), "-");
+	assert.equal(formatCpuNum(undefined), "-");
+	assert.equal(formatCpuNum(-1), "-");
 });
 
 // Mirrors processlist/render_curses_v5.py::_format_bytes() -- the terminal's

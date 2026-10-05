@@ -22,7 +22,8 @@ STATUS_COL = 8
 TIME_COL = 9
 RS_COL = 10
 WS_COL = 11
-CMD_START = 12
+CPU_NUM_COL = 12
+CMD_START = 13
 
 
 @pytest.fixture
@@ -256,9 +257,38 @@ def test_render_no_view_means_no_underline(payload, fields):
 
 
 def test_render_sort_indicator_unmarked_column_not_underlined(payload, fields):
-    """A sort key with no matching column (cpu_num) underlines nothing."""
-    rows = render(payload, fields, view={"sort_key": "cpu_num"})
+    """A sort key with no matching column underlines nothing."""
+    rows = render(payload, fields, view={"sort_key": "num_threads"})
     assert all(c.underline is False for c in rows[0].cells)
+
+
+# ---------------------------------------------------------- CPU core column (v4 parity)
+
+
+def test_render_cpu_num_header_follows_the_io_columns(payload, fields):
+    """v4 draws `CPU` (`{:>3}`) after W/s and before Command."""
+    rows = render(payload, fields)
+    assert rows[0].cells[CPU_NUM_COL].text == "CPU"
+
+
+@pytest.mark.parametrize(
+    ("overrides", "expected"),
+    [({"cpu_num": 5}, "  5"), ({"cpu_num": None}, "  -"), ({"cpu_num": -1}, "  -"), ({}, "  -")],
+)
+def test_render_cpu_num_value_or_dash(fields, overrides, expected):
+    """v4 `_get_process_curses_cpu_num`: the core, else `-` (unknown, or a
+    platform where `glances_processes.disable_cpu_num` leaves it out)."""
+    proc = _proc(**overrides)
+    if not overrides:
+        del proc["cpu_num"]
+    rows = render({"data": [proc], "_levels": {}}, fields)
+    assert rows[1].cells[CPU_NUM_COL].text == expected
+
+
+def test_render_sort_by_cpu_num_underlines_the_cpu_column(payload, fields):
+    """The `o` hotkey sorts by cpu_num; the sorted column is now on screen."""
+    rows = render(payload, fields, view={"sort_key": "cpu_num"})
+    assert [c.text for c in rows[0].cells if c.underline] == ["CPU"]
 
 
 # ---------------------------------------------------------- categorical colour
@@ -500,7 +530,7 @@ def test_render_fixed_columns_align_across_rows(payload, fields):
 # based on ``view["right_width"]``. CPU%, MEM%, R/s, W/s and Command are
 # never dropped. Absent ``right_width`` keeps every column.
 
-ALL_LABELS = ("CPU%", "MEM%", "VIRT", "RES", "PID", "USER", "THR", "NI", "S", "TIME+", "R/s", "W/s", "Command")
+ALL_LABELS = ("CPU%", "MEM%", "VIRT", "RES", "PID", "USER", "THR", "NI", "S", "TIME+", "R/s", "W/s", "CPU", "Command")
 
 
 def _has_col(rows, label):
@@ -531,6 +561,13 @@ def test_narrow_drops_in_order_virt_first(payload, fields):
     assert not _has_col(rows, "VIRT")  # (a) dropped first
     assert _has_col(rows, "RES")  # (c) still present at this width
     assert _has_col(rows, "Command")
+
+
+def test_cpu_num_is_dropped_before_virt(payload, fields):
+    # 81 is the width at which the CPU core column alone has to go.
+    rows = render(payload, fields, view={"right_width": 81})
+    assert not _has_col(rows, "CPU")
+    assert _has_col(rows, "VIRT")
 
 
 def test_very_narrow_drops_cascade(payload, fields):

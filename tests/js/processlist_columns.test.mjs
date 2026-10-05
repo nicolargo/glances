@@ -4,7 +4,7 @@ import { test } from "node:test";
 import { PROCESSLIST_DROP_ORDER, hiddenColumns } from "../../glances/outputs/static/js/v5/processlist_columns.js";
 
 test("the drop order is the TUI's, in the TUI's order", () => {
-	assert.deepEqual(PROCESSLIST_DROP_ORDER, ["VIRT", "TIME+", "RES", "USER", "PID", "THR", "S", "NI"]);
+	assert.deepEqual(PROCESSLIST_DROP_ORDER, ["CPU", "VIRT", "TIME+", "RES", "USER", "PID", "THR", "S", "NI"]);
 });
 
 test("the columns the TUI never drops are absent from the order", () => {

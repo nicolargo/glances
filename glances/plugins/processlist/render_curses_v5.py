@@ -34,6 +34,8 @@ Columns:
 - ``R/s`` / ``W/s``   — IO rates from ``io_counters[0..3]`` / ``time_since_update``
   (engine pattern: ``[r_new, w_new, r_old, w_old, io_tag]``). ``io_tag == 0``
   (access denied or first cycle) → ``?``.
+- ``CPU``             — core the process last ran on (``cpu_num``); ``-`` when
+  the platform cannot report it (v4 ``_get_process_curses_cpu_num``).
 - ``Command``         — v4 ``split_cmdline`` pattern: command name in **bold**,
   arguments in default colour. Falls back to ``[name]`` for kernel threads.
 
@@ -68,6 +70,7 @@ _W_NI = 3  # v4 `{:>3}`: nice -20 fits
 _W_STATUS = 1
 _W_TIME = 8
 _W_IO = 5
+_W_CPU_NUM = 3  # v4 `processor` layout `{:>3}`
 _W_PID_DEFAULT = 7
 _MAX_ROWS = 20
 
@@ -91,10 +94,11 @@ _WINDOWS_NICE_LABELS = {
 # ``Command`` fits (or all droppable columns are gone). Never dropped:
 # CPU%, MEM%, R/s, W/s, Command.
 _MIN_COMMAND_WIDTH = 8
-# Drop order a→h (maintainer spec). Never includes CPU%/MEM%/R/s/W/s/Command.
-_DROP_ORDER = ["VIRT", "TIME+", "RES", "USER", "PID", "THR", "S", "NI"]
-# Fixed columns in display order (the 12 cells before Command).
-_FIXED_COL_KEYS = ["CPU%", "MEM%", "VIRT", "RES", "PID", "USER", "THR", "NI", "S", "TIME+", "R/s", "W/s"]
+# Drop order a→h (maintainer spec), preceded by the CPU core column (an
+# `optional` column in v4). Never includes CPU%/MEM%/R/s/W/s/Command.
+_DROP_ORDER = ["CPU", "VIRT", "TIME+", "RES", "USER", "PID", "THR", "S", "NI"]
+# Fixed columns in display order (the 13 cells before Command).
+_FIXED_COL_KEYS = ["CPU%", "MEM%", "VIRT", "RES", "PID", "USER", "THR", "NI", "S", "TIME+", "R/s", "W/s", "CPU"]
 
 # Header label → engine sort key. The active sort column's header is
 # underlined (v4 'SORT' decoration). Columns with no sort key (VIRT, RES,
@@ -107,6 +111,7 @@ _HEADER_SORT_KEY: dict[str, str] = {
     "TIME+": "cpu_times",
     "R/s": "io_counters",
     "W/s": "io_counters",
+    "CPU": "cpu_num",
     "Command": "name",
 }
 
@@ -163,6 +168,13 @@ def _format_nice(value: Any) -> str:
         if label is not None:
             return label.rjust(_W_NI)
     return _format_int(value, _W_NI, signed=False)
+
+
+def _format_cpu_num(value: Any) -> str:
+    """v4 parity: the core number, or ``-`` when unknown or negative."""
+    if isinstance(value, int) and value >= 0:
+        return f"{value:>{_W_CPU_NUM}}"
+    return "-".rjust(_W_CPU_NUM)
 
 
 def _format_username(value: Any) -> str:
@@ -547,6 +559,7 @@ def _summary_row(label: str, totals: dict[str, float], active: list[str], pid_wi
         "NI": _W_NI,
         "S": _W_STATUS,
         "TIME+": _W_TIME,
+        "CPU": _W_CPU_NUM,
     }
     for key in _FIXED_COL_KEYS:
         if key not in active:
@@ -659,6 +672,7 @@ def _visible_fixed_keys(available_width: int, pid_width: int) -> list[str]:
         "TIME+": _W_TIME,
         "R/s": _W_IO,
         "W/s": _W_IO,
+        "CPU": _W_CPU_NUM,
     }
     active = list(_FIXED_COL_KEYS)
 
@@ -738,8 +752,8 @@ def render(
     raw_levels = payload.get("_levels") if isinstance(payload, dict) else None
     levels_index = raw_levels if isinstance(raw_levels, dict) else {}
 
-    # Responsive columns: which of the 12 fixed columns are visible. Absent
-    # ``right_width`` (export / tests / non-int) → keep all 12 (byte-identical
+    # Responsive columns: which of the 13 fixed columns are visible. Absent
+    # ``right_width`` (export / tests / non-int) → keep all 13 (byte-identical
     # to the historical output, locked by ``test_no_width_keeps_all_columns``).
     active = _visible_fixed_keys(available, pid_width) if isinstance(available, int) else list(_FIXED_COL_KEYS)
     active_set = set(active)
@@ -761,6 +775,7 @@ def render(
         _header("TIME+", _W_TIME),
         _header("R/s", _W_IO),
         _header("W/s", _W_IO),
+        _header("CPU", _W_CPU_NUM),
     ]
     header_cells = _filter_fixed(header_fixed) + [_header("Command", len("Command"))]
     rows: list[Row] = [*extended_rows, Row(cells=header_cells)]
@@ -797,6 +812,7 @@ def render(
             Cell(text=_format_cpu_time(item, _W_TIME)),
             _io_cell(r_rate, r_unknown, _W_IO),
             _io_cell(w_rate, w_unknown, _W_IO),
+            Cell(text=_format_cpu_num(item.get("cpu_num"))),
         ]
         command_cells = _command_cells(item, short_name, command_offset)
         if cursor == position:

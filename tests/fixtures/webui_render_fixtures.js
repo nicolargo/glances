@@ -1414,6 +1414,7 @@ const PROCESSLIST_FIXTURE = {
 			cpu_times: { user: 10, system: 2 },
 			io_counters: [2048, 1024, 1024, 0, 1],
 			time_since_update: 2,
+			cpu_num: 2,
 		},
 		{
 			pid: 999,

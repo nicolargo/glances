@@ -23,6 +23,7 @@ export const HEADER_SORT_KEY = {
 	"TIME+": "cpu_times",
 	"R/s": "io_counters",
 	"W/s": "io_counters",
+	CPU: "cpu_num",
 	Command: "name",
 };
 

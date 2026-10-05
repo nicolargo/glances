@@ -44,6 +44,8 @@ const WORST_CASE = {
 	"TIME+": () => formatCpuTime({ user: 99 * 3600 + 59 * 60 + 59, system: 0 }),
 	"R/s": () => formatProcessBytes(1023 * 1024 ** 3),
 	"W/s": () => formatProcessBytes(1023 * 1024 ** 3),
+	// A core number: three digits, as the terminal's `{:>3}` budgets.
+	"CPU": () => "999",
 };
 
 test("every WebUI process column is wide enough for its own worst case", () => {

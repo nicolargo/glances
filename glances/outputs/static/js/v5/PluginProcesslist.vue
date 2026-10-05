@@ -32,7 +32,7 @@
 				no `:style`. The fixed table-layout algorithm (CSS 2.1 17.5.2.1)
 				gives any column past the <colgroup>'s specified count an equal
 				share of the remaining space once every other column is pinned;
-				with only the 12 fixed columns listed, Command (alone past that
+				with only the 13 fixed columns listed, Command (alone past that
 				count) gets the whole remainder -- the TUI's elastic last column.
 				A bare trailing `<col />` renders identically in a browser but adds
 				a 13th, width-less entry to `pluginColWidths` (the render probe reads
@@ -65,6 +65,7 @@
 				confirmed knowing the terminal disagrees. Do not "fix" this back to
 				match the TUI. -->
 				<th v-if="shows('W/s')" class="gl-header gl-num gl-num-left" v-bind="sortAttrs('W/s')">W/s</th>
+				<th v-if="shows('CPU')" class="gl-header gl-num" v-bind="sortAttrs('CPU')">CPU</th>
 				<!-- "Command", like the terminal and like `programlist` -- NOT
 				v4's "Command (click to pin)" (plugin-processlist.vue:59).
 				Measured in Chromium: this column is the elastic remainder and
@@ -110,6 +111,7 @@
 					<td v-if="shows('TIME+')" class="gl-num"><span>{{ formatCpuTime(item.cpu_times) }}</span></td>
 					<td v-if="shows('R/s')" class="gl-num"><span>{{ formatProcessBytes(ioRate(item, true)) }}</span></td>
 					<td v-if="shows('W/s')" class="gl-num gl-num-left"><span>{{ formatProcessBytes(ioRate(item, false)) }}</span></td>
+					<td v-if="shows('CPU')" class="gl-num"><span>{{ formatCpuNum(item.cpu_num) }}</span></td>
 					<td>
 						<span class="gl-truncate" :title="fmt(commandText(item))">{{
 							fmt(commandText(item))
@@ -138,6 +140,7 @@ import { FIXED_COL_KEYS, WEBUI_COL_WIDTHS } from "./process_widths.js";
 // test rather than through a second hand-written copy.
 import { extendedLines, pinnedTitle, settlePendingPin } from "./process_extended.js";
 import { postJson } from "./api.js";
+import { formatCpuNum } from "./format.js";
 import { HEADER_SORT_KEY } from "./process_shared.js";
 import { sortHeadersMixin } from "./sort_headers.js";
 
@@ -212,6 +215,7 @@ export default {
 			return !this.hiddenColumns.has(column);
 		},
 		extendedLines,
+		formatCpuNum,
 		pinnedTitle,
 		isPinned(item) {
 			return !!this.pinned && this.pinned.pid === item.pid;
