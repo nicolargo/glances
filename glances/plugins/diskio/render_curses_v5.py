@@ -15,7 +15,7 @@ Replicates v4 ``diskio.msg_curse()`` default mode (R/s + W/s):
     sda                   1.4M   732K
 
 - Header: ``DISK I/O`` (HEADER) + ``R/s`` + ``W/s`` (right-aligned).
-- One row per disk, sorted by ``disk_name``.
+- One row per disk, natural-sorted by alias-or-name (v4 ``sorted_stats()``).
 - Rate cells display ``auto_unit(bytes_per_sec)`` WITHOUT a trailing
   ``/s`` — the header carries the per-second semantic, saving column
   width (v4 parity).
@@ -37,6 +37,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from glances.globals import natural_keys
 from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row, field_label
 
 # Block width capped at the v5 left-sidebar maximum (34 chars).
@@ -166,7 +167,9 @@ def render(
     raw_levels = payload.get("_levels")
     levels_index = raw_levels if isinstance(raw_levels, dict) else {}
 
-    for item in sorted(items, key=lambda it: str(it.get("disk_name", ""))):
+    # v4 `sorted_stats()` (`diskio/__init__.py:257`): natural,
+    # case-insensitive order of the displayed name, alias first.
+    for item in sorted(items, key=lambda it: natural_keys(str(it.get("alias") or it.get("disk_name") or "").lower())):
         if not isinstance(item, dict):
             continue
         # hide_zero display filter (design §5.1) — sticky state computed and

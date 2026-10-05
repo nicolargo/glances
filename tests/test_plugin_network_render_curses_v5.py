@@ -386,6 +386,19 @@ def test_render_falls_back_to_interface_name_when_no_alias(network_fields):
     assert "eth0" in rows[1].cells[0].text
 
 
+def test_render_sorts_interfaces_naturally_by_alias_or_name(network_fields):
+    """v4 parity (`sorted_stats()`, `network/__init__.py:323`): rows in
+    natural, case-insensitive order of the displayed name, alias first."""
+    names = ["eth10", "eth2", "Wlan0", "lo", "eth1"]
+    payload = {
+        "data": [{"interface_name": n, "bytes_recv": 0.0, "bytes_sent": 0.0, "is_up": True} for n in names],
+        "_levels": {},
+    }
+    payload["data"][3]["alias"] = "aaa"
+    rows = render(payload, network_fields)
+    assert [r.cells[0].text.strip() for r in rows[1:]] == ["aaa", "eth1", "eth2", "eth10", "Wlan0"]
+
+
 @pytest.mark.parametrize("scaled", [999.96, 1000.0, 1023.9])
 @pytest.mark.parametrize("symbol, factor", [("K", 1024), ("M", 1024**2), ("G", 1024**3)])
 def test_rate_between_1000_and_1024_units_fits_the_column(scaled, symbol, factor):

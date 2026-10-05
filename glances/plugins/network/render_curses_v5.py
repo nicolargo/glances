@@ -20,7 +20,8 @@ Reference layout (default — rate display, bits/s, two columns):
     lo                     0b      0b
 
 - Header: ``NETWORK`` (HEADER) + ``Rx/s`` + ``Tx/s`` (right-aligned).
-- One row per interface filtered by ``is_up`` and rate availability.
+- One row per interface filtered by ``is_up`` and rate availability,
+  natural-sorted by alias-or-name (v4 ``sorted_stats()``).
 - Rate values: bytes/s × 8 → bits/s, with K/M/G/T auto-scaling and a ``b``
   suffix (v4 ``auto_unit(int(value * 8)) + 'b'``). Sub-K values stay raw
   (e.g. ``0b``, ``800b``). With ``view["byte"]`` truthy (``--byte``), rates
@@ -40,6 +41,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from glances.globals import natural_keys
 from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row, field_label
 
 # Hardcoded for G1 — must match the v5 left sidebar max width.
@@ -162,9 +164,13 @@ def render(
     raw_levels = payload.get("_levels")
     levels_index = raw_levels if isinstance(raw_levels, dict) else {}
 
+    # v4 `sorted_stats()` (`network/__init__.py:323`): natural,
+    # case-insensitive order of the displayed name, alias first.
+    items = sorted(
+        (it for it in items if isinstance(it, dict)),
+        key=lambda it: natural_keys(str(it.get("alias") or it.get("interface_name") or "").lower()),
+    )
     for item in items:
-        if not isinstance(item, dict):
-            continue
         # v4 fidelity: skip interfaces in the down state (issue #765).
         if item.get("is_up") is False:
             continue

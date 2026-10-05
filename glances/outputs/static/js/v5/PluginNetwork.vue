@@ -47,7 +47,7 @@
 import { formatNetworkRate } from "./format.js";
 import { labelFor } from "./labels.js";
 import { cellClassFor } from "./columns.js";
-import { displayName } from "./rows.js";
+import { byNaturalName, displayName } from "./rows.js";
 import CollectionBlock from "./CollectionBlock.vue";
 import { PLUGIN_PROPS } from "./plugin_props.js";
 
@@ -87,13 +87,13 @@ export default {
 		},
 		// Mirrors network/render_curses_v5.py:129-142: skip a down interface
 		// (v4 #765), one hide_zero still hides, and one with no rate yet (cycle
-		// 1). Payload order -- the TUI does not sort this block.
+		// 1). Natural order of alias-or-name, as the TUI (v4 `sorted_stats()`).
 		// A counter exists from cycle 1, so `U` shows a row the rate mode skips.
 		rows() {
 			const [rx, tx] = this.valueFields;
-			return (this.payload?.data || []).filter(
-				(item) => item.is_up !== false && item.hidden !== true && item[rx] != null && item[tx] != null,
-			);
+			return (this.payload?.data || [])
+				.filter((item) => item.is_up !== false && item.hidden !== true && item[rx] != null && item[tx] != null)
+				.sort(byNaturalName("interface_name"));
 		},
 	},
 	methods: {

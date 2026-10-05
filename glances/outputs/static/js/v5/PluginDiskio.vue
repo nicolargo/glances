@@ -36,7 +36,7 @@
 import { formatBytes, formatIops } from "./format.js";
 import { labelFor } from "./labels.js";
 import { cellClassFor } from "./columns.js";
-import { byText, displayName } from "./rows.js";
+import { byNaturalName, displayName } from "./rows.js";
 import CollectionBlock from "./CollectionBlock.vue";
 import { PLUGIN_PROPS } from "./plugin_props.js";
 
@@ -88,7 +88,7 @@ export default {
 		combined() {
 			return !this.latency && !!this.serverArgs.network_sum;
 		},
-		// Mirrors diskio/render_curses_v5.py:109-122: sorted by raw disk_name;
+		// Mirrors diskio/render_curses_v5.py: natural order of alias-or-name;
 		// skip a row hide_zero still hides, a disk with no rate yet (cycle 1),
 		// and a nameless one. Byte rates without "/s", the header carries it.
 		rows() {
@@ -99,7 +99,7 @@ export default {
 						this.rateFields.every((field) => item[field] != null) &&
 						item.disk_name
 				)
-				.sort(byText("disk_name"));
+				.sort(byNaturalName("disk_name"));
 		},
 	},
 	methods: {

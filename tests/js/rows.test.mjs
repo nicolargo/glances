@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { displayName, byText } from "../../glances/outputs/static/js/v5/rows.js";
+import { displayName, byText, byNaturalName } from "../../glances/outputs/static/js/v5/rows.js";
 
 test("displayName shows the configured alias", () => {
 	assert.equal(displayName({ interface_name: "lo", alias: "Loopback" }, "interface_name"), "Loopback");
@@ -29,4 +29,12 @@ test("byText keeps equal keys in their original order, like sorted()", () => {
 		{ mnt_point: "/", n: 2 },
 	];
 	assert.deepEqual(rows.slice().sort(byText("mnt_point")).map((r) => r.n), [1, 2]);
+});
+
+test("byNaturalName sorts like v4 sorted_stats(): natural, case-insensitive, alias first", () => {
+	const rows = [{ disk_name: "sda10" }, { disk_name: "sda2" }, { disk_name: "SDB" }, { disk_name: "nvme0n1", alias: "zzz" }, { disk_name: "sda1" }, { disk_name: "sda" }];
+	assert.deepEqual(
+		rows.slice().sort(byNaturalName("disk_name")).map((r) => displayName(r, "disk_name")),
+		["sda", "sda1", "sda2", "sda10", "SDB", "zzz"],
+	);
 });

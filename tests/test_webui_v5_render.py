@@ -714,8 +714,8 @@ def _tier_classes(class_name):
         pytest.param("network-prominent", "network", 1, {"gl-level-warning", "gl-prominent"}, id="network"),
         # Columns: name, proc, mem -> cell 1 is card 0's proc.
         pytest.param("gpu-multi-levels", "gpu", 1, {"gl-level-critical"}, id="gpu"),
-        # Columns: name, R/s, W/s -> row 1 (sdb) cell 4 is its read rate.
-        pytest.param("diskio", "diskio", 4, {"gl-level-warning"}, id="diskio"),
+        # Columns: name, R/s, W/s -> row 0 (sdb, alias Backup) cell 1 is its read rate.
+        pytest.param("diskio", "diskio", 1, {"gl-level-warning"}, id="diskio"),
         # Columns: name, Used, Total -> row 1 (/home) cell 4 is its used space.
         pytest.param("fs", "fs", 4, {"gl-level-careful"}, id="fs"),
         # Columns: name, dBm -> row 0 (wlan0) cell 1 is its signal.
@@ -750,20 +750,20 @@ def _table_rows(payload, name, width):
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
-def test_network_renders_only_the_rows_the_tui_renders_in_payload_order():
-    """network/render_curses_v5.py:129-142 skips a down interface, one
-    hide_zero still hides, and one without a rate yet; it keeps payload order
-    and shows the alias. Rates are bits, as `_format_rate()` prints them.
+def test_network_renders_only_the_rows_the_tui_renders_in_natural_order():
+    """network/render_curses_v5.py skips a down interface, one hide_zero
+    still hides, and one without a rate yet; it sorts by alias-or-name in
+    natural order (v4 `sorted_stats()`) and shows the alias. Rates are bits, as `_format_rate()` prints them.
     """
     payload = _run_render_probe("network-rows")
-    assert _table_rows(payload, "network", 3) == [["Loopback", "800b", "800b"], ["eth0", "8.0Mb", "4.0Mb"]]
+    assert _table_rows(payload, "network", 3) == [["eth0", "8.0Mb", "4.0Mb"], ["Loopback", "800b", "800b"]]
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
 def test_network_shows_bytes_under_the_byte_flag():
     """`--byte` reaches the WebUI through /api/5/args (`serverArgs.byte`)."""
     payload = _run_render_probe("network-byte")
-    assert _table_rows(payload, "network", 3) == [["Loopback", "100", "100"], ["eth0", "1.0M", "512.0K"]]
+    assert _table_rows(payload, "network", 3) == [["eth0", "1.0M", "512.0K"], ["Loopback", "100", "100"]]
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
@@ -898,13 +898,13 @@ def test_a_path_like_name_keeps_its_tail_and_its_full_text_on_hover(scenario, na
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
-def test_diskio_renders_the_tui_rows_sorted_by_raw_name():
-    """diskio/render_curses_v5.py:100-131: sorted by raw disk_name, hide_zero
+def test_diskio_renders_the_tui_rows_sorted_by_alias_or_name():
+    """diskio/render_curses_v5.py: natural order of alias-or-name, hide_zero
     and rate-less rows skipped, the alias displayed, byte rates without "/s".
     """
     payload = _run_render_probe("diskio")
     assert payload["pluginColumnHeaders"]["diskio"] == ["DISK I/O", "R/s", "W/s"]
-    assert _table_rows(payload, "diskio", 3) == [["nvme0n1", "855B", "1.2K"], ["Backup", "1.5K", "0B"]]
+    assert _table_rows(payload, "diskio", 3) == [["Backup", "1.5K", "0B"], ["nvme0n1", "855B", "1.2K"]]
 
 
 @pytest.mark.parametrize(
@@ -4357,9 +4357,9 @@ def test_key_L_switches_the_diskio_columns_to_latency():
     after = _run_render_probe("diskio", "L")
 
     assert after["pluginColumnHeaders"]["diskio"] == ["DISK I/O", "ms/opR", "ms/opW"]
-    assert _table_rows(after, "diskio", 3) == [["nvme0n1", "1.5K", "2"], ["Backup", "3", "0"]]
+    assert _table_rows(after, "diskio", 3) == [["Backup", "3", "0"], ["nvme0n1", "1.5K", "2"]]
     classes = [c["value"] for c in after["pluginTableCells"]["diskio"]]
-    assert classes[1] == "gl-level-critical"
+    assert classes[4] == "gl-level-critical"
     before_classes = [c["value"] or "" for c in before["pluginTableCells"]["diskio"]]
     assert not any("critical" in c for c in before_classes)
 
@@ -4376,7 +4376,7 @@ def test_key_T_combines_the_diskio_columns():
     after = _run_render_probe("diskio", "T")
     assert after["pluginColumnHeaders"]["diskio"] == ["DISK I/O", "R+W/s"]
     # 855.6 + 1280 = 2135.6 -> 2.1K ; 1536 + 0 -> 1.5K
-    assert _table_rows(after, "diskio", 2) == [["nvme0n1", "2.1K"], ["Backup", "1.5K"]]
+    assert _table_rows(after, "diskio", 2) == [["Backup", "1.5K"], ["nvme0n1", "2.1K"]]
     assert not any(c["value"] for c in after["pluginTableCells"]["diskio"] if c["cell"] == "gl-num")
 
 
@@ -4384,7 +4384,7 @@ def test_key_T_combines_the_diskio_columns():
 def test_key_T_sums_the_operations_in_iops_mode_and_is_ignored_in_latency_mode():
     iops = _run_render_probe("diskio", "T,B")
     assert iops["pluginColumnHeaders"]["diskio"] == ["DISK I/O", "IOR+W/s"]
-    assert _table_rows(iops, "diskio", 2) == [["nvme0n1", "2.5K"], ["Backup", "12"]]
+    assert _table_rows(iops, "diskio", 2) == [["Backup", "12"], ["nvme0n1", "2.5K"]]
     latency = _run_render_probe("diskio", "T,L")
     assert latency["pluginColumnHeaders"]["diskio"] == ["DISK I/O", "ms/opR", "ms/opW"]
 
@@ -4397,11 +4397,11 @@ def test_key_U_shows_the_network_counters():
     after = _run_render_probe("network-rows", "U")
     assert after["pluginColumnHeaders"]["network"] == ["NETWORK", "Rx", "Tx"]
     assert _table_rows(after, "network", 3) == [
+        ["eth0", "1.0Gb", "8.0Kb"],
         ["Loopback", "1.0Kb", "1.0Kb"],
         ["wlan0", "8.0Kb", "0b"],
-        ["eth0", "1.0Gb", "8.0Kb"],
     ]
-    eth0_rx = [c for c in after["pluginTableCells"]["network"] if c["cell"] == "gl-num"][4]
+    eth0_rx = [c for c in after["pluginTableCells"]["network"] if c["cell"] == "gl-num"][0]
     assert eth0_rx["value"] == "gl-level-warning"
 
 
@@ -4416,10 +4416,10 @@ def test_key_U_shows_the_diskio_counters_in_byte_and_iops_mode():
     """Network's `U` extended to disks (v5 addition); not in latency mode."""
     bytes_mode = _run_render_probe("diskio", "U")
     assert bytes_mode["pluginColumnHeaders"]["diskio"] == ["DISK I/O", "R", "W"]
-    assert _table_rows(bytes_mode, "diskio", 3) == [["nvme0n1", "2.0G", "4.0K"], ["Backup", "1.0M", "0B"]]
+    assert _table_rows(bytes_mode, "diskio", 3) == [["Backup", "1.0M", "0B"], ["nvme0n1", "2.0G", "4.0K"]]
     iops = _run_render_probe("diskio", "U,B")
     assert iops["pluginColumnHeaders"]["diskio"] == ["DISK I/O", "IOR", "IOW"]
-    assert _table_rows(iops, "diskio", 3) == [["nvme0n1", "90", "3"], ["Backup", "1.5K", "0"]]
+    assert _table_rows(iops, "diskio", 3) == [["Backup", "1.5K", "0"], ["nvme0n1", "90", "3"]]
     assert _run_render_probe("diskio", "U,T")["pluginColumnHeaders"]["diskio"] == ["DISK I/O", "R+W"]
     latency = _run_render_probe("diskio", "U,L")
     assert latency["pluginColumnHeaders"]["diskio"] == ["DISK I/O", "ms/opR", "ms/opW"]

@@ -235,6 +235,20 @@ def test_render_falls_back_to_disk_name_when_no_alias(diskio_fields):
     assert "sda" in rows[1].cells[0].text
 
 
+def test_render_sorts_disks_naturally_by_alias_or_name(diskio_fields):
+    """v4 parity (`sorted_stats()`, `diskio/__init__.py:257`): rows in
+    natural, case-insensitive order of the displayed name, alias first --
+    `sda10` after `sda2`, and an alias moves its row."""
+    names = ["sda10", "sda2", "SDB", "nvme0n1", "sda1"]
+    payload = {
+        "data": [{"disk_name": n, "read_bytes": 0.0, "write_bytes": 0.0} for n in names],
+        "_levels": {},
+    }
+    payload["data"][3]["alias"] = "zzz"
+    rows = render(payload, diskio_fields)
+    assert [r.cells[0].text.strip() for r in rows[1:]] == ["sda1", "sda2", "sda10", "SDB", "zzz"]
+
+
 def test_iops_mode_swaps_both_the_columns_and_the_header():
     """`B` (v4 `_handle_diskio_iops`). The labels come from the schema, so
     swapping the field pair swaps the header with it."""

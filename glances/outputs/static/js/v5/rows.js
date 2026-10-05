@@ -25,3 +25,21 @@ export function byText(field) {
 		return x < y ? -1 : x > y ? 1 : 0;
 	};
 }
+
+// Comparator for v4 `sorted_stats()` (network, diskio): natural order of
+// displayName() lowercased, digit runs compared as numbers ("sda2" before
+// "sda10"), like `natural_keys(name.lower())` in the TUI renderers.
+export function byNaturalName(keyField) {
+	const parts = (item) => displayName(item, keyField).toLowerCase().split(/(\d+)/);
+	return (a, b) => {
+		const x = parts(a);
+		const y = parts(b);
+		for (let i = 0; i < Math.min(x.length, y.length); i++) {
+			// Odd indexes are the digit runs split() captured.
+			const p = i % 2 ? Number(x[i]) : x[i];
+			const q = i % 2 ? Number(y[i]) : y[i];
+			if (p !== q) return p < q ? -1 : 1;
+		}
+		return x.length - y.length;
+	};
+}
