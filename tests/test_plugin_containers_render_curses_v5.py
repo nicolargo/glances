@@ -11,6 +11,8 @@
 
 from __future__ import annotations
 
+import time
+
 from glances.outputs.curses_renderer_v5 import ColorRole
 from glances.plugins.containers.render_curses_v5 import render
 
@@ -38,7 +40,7 @@ def test_header_and_one_row():
             "name": "web",
             "engine": "docker",
             "status": "running",
-            "uptime": "1h",
+            "started_at": 1791273600,
             "cpu_percent": 12.0,
             "memory_usage_no_cache": 200,
             "memory_limit": 1000,
@@ -49,6 +51,18 @@ def test_header_and_one_row():
     assert len(rows) == 2  # header + 1
     header = _texts(rows[0])
     assert "CONTAINER" in header and "CPU%" in header and "Status" in header
+
+
+def test_uptime_is_computed_from_started_at():
+    # v4's pretty_date() string, now derived from the start timestamp.
+    data = [
+        {"name": "web", "engine": "docker", "status": "running", "started_at": int(time.time()) - 7300},
+        {"name": "db", "engine": "docker", "status": "exited", "started_at": None},
+    ]
+    rows = render(_payload(data), None, {})
+    assert _labels(rows[0])[2] == "Uptime"
+    assert _labels(rows[1])[2] == "2 hours"
+    assert _labels(rows[2])[2] == "_"
 
 
 def test_status_colour_running_is_ok():
@@ -225,7 +239,7 @@ def _rich(name="web", engine="docker", **extra):
         "name": name,
         "engine": engine,
         "status": "running",
-        "uptime": "1h",
+        "started_at": 1791273600,
         "cpu_percent": 12.0,
         "memory_usage_no_cache": 200,
         "memory_limit": 1000,

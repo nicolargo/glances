@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from datetime import datetime
 from typing import Any, ClassVar
 
 from glances.plugins.containers.engines import ContainerEngineMonitor
@@ -32,7 +33,50 @@ from glances.processes import sort_stats as sort_stats_processes
 
 logger = logging.getLogger(__name__)
 
+# dateutil comes with the Docker deps: without it engines/docker.py disables
+# the Docker monitor, so the parser is never needed.
+try:
+    from dateutil import parser as date_parser
+except ImportError:
+    date_parser = None  # type: ignore[assignment]
+
 _DEFAULT_PODMAN_SOCK = "unix:///run/user/1000/podman/podman.sock"
+
+
+# v5 monitors: the shared v4 engines plus `started_at`, the container start
+# time as a Unix timestamp (seconds). None when the container is not active,
+# as the v4 `uptime` string. The renderers derive the uptime from it.
+class DockerEngineMonitorV5(DockerEngineMonitor):
+    def generate_stats(self, container) -> dict[str, Any]:
+        stats = super().generate_stats(container)
+        stats["started_at"] = None
+        if stats["status"] in self.CONTAINER_ACTIVE_STATUS:
+            stats["started_at"] = int(date_parser.parse(container.attrs["State"]["StartedAt"]).timestamp())
+        return stats
+
+
+class PodmanEngineMonitorV5(PodmanEngineMonitor):
+    def generate_stats(self, container) -> dict[str, Any]:
+        stats = super().generate_stats(container)
+        stats["started_at"] = None
+        if stats["status"] in self.CONTAINER_ACTIVE_STATUS:
+            stats["started_at"] = int(container.attrs["StartedAt"])
+        return stats
+
+
+class LxdEngineMonitorV5(LxdEngineMonitor):
+    def generate_stats(self, instance) -> dict[str, Any]:
+        stats = super().generate_stats(instance)
+        stats["started_at"] = None
+        # LXD has no start time: last_used_at is what v4 bases the uptime on.
+        # It is UTC, so it is parsed as an aware datetime.
+        last_used = getattr(instance, "last_used_at", None)
+        if instance.status in self.CONTAINER_ACTIVE_STATUS and last_used and last_used != "1970-01-01T00:00:00Z":
+            try:
+                stats["started_at"] = int(datetime.fromisoformat(last_used.replace("Z", "+00:00")).timestamp())
+            except (ValueError, AttributeError) as e:
+                logger.debug("containers: can't parse last_used_at for %s (%s)", instance.name, e)
+        return stats
 
 
 class PluginModel(GlancesPluginBase[list]):
@@ -82,7 +126,10 @@ class PluginModel(GlancesPluginBase[list]):
         "network_rx": {"description": "Container network RX bitrate.", "unit": "bitpersecond"},
         "network_tx": {"description": "Container network TX bitrate.", "unit": "bitpersecond"},
         "ports": {"description": "Container ports.", "unit": "string"},
-        "uptime": {"description": "Container uptime.", "unit": "string"},
+        "started_at": {
+            "description": "Container start time (Unix timestamp, seconds). None when the container is not active.",
+            "unit": "number",
+        },
         "engine": {"description": "Container engine (Docker, Podman, LXD).", "unit": "string"},
         "engine_url": {"description": "Container engine base URL / endpoint (creds are hidden).", "unit": "string"},
         "pod_name": {"description": "Pod name (Podman only).", "unit": "string"},
@@ -99,30 +146,30 @@ class PluginModel(GlancesPluginBase[list]):
         if not disable_plugin_docker:
             docker_urls = self._parse_urls("docker_urls")
             if docker_urls is None:
-                self._try_add_monitor(lambda: DockerEngineMonitor())
+                self._try_add_monitor(lambda: DockerEngineMonitorV5())
             elif docker_urls:
                 for url in docker_urls:
-                    self._try_add_monitor(lambda u=url: DockerEngineMonitor(url=u))
+                    self._try_add_monitor(lambda u=url: DockerEngineMonitorV5(url=u))
             else:
                 logger.debug("containers plugin - Docker engine monitor disabled via configuration")
 
         if not disable_plugin_podman:
             podman_urls = self._parse_urls("podman_urls")
             if podman_urls is None:
-                self._try_add_monitor(lambda: PodmanEngineMonitor(url=self._podman_sock()))
+                self._try_add_monitor(lambda: PodmanEngineMonitorV5(url=self._podman_sock()))
             elif podman_urls:
                 for url in podman_urls:
-                    self._try_add_monitor(lambda u=url: PodmanEngineMonitor(url=u))
+                    self._try_add_monitor(lambda u=url: PodmanEngineMonitorV5(url=u))
             else:
                 logger.debug("containers plugin - Podman engine monitor disabled via configuration")
 
         if not disable_plugin_lxd:
             lxd_urls = self._parse_urls("lxd_urls")
             if lxd_urls is None:
-                self._try_add_monitor(lambda: LxdEngineMonitor(poll_interval=self._poll_interval()))
+                self._try_add_monitor(lambda: LxdEngineMonitorV5(poll_interval=self._poll_interval()))
             elif lxd_urls:
                 for url in lxd_urls:
-                    self._try_add_monitor(lambda u=url: LxdEngineMonitor(url=u, poll_interval=self._poll_interval()))
+                    self._try_add_monitor(lambda u=url: LxdEngineMonitorV5(url=u, poll_interval=self._poll_interval()))
             else:
                 logger.debug("containers plugin - LXD engine monitor disabled via configuration")
 

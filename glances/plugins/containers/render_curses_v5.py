@@ -17,9 +17,10 @@ Pod only when a pod is present), and by the painted width (see
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import Any
 
-from glances.globals import auto_unit
+from glances.globals import auto_unit, pretty_date
 from glances.outputs.curses_renderer_v5 import _LEVEL_TO_ROLE, Cell, ColorRole, Row, row_budget
 
 # Header → the GLOBAL process sort key (view["sort_key"], dynamic/auto-resolved),
@@ -167,6 +168,13 @@ def _build_header_row(
     return Row(cells=h)
 
 
+def _uptime_text(started_at: Any) -> str:
+    """v4's uptime string (``pretty_date``), from the ``started_at`` timestamp."""
+    if not isinstance(started_at, (int, float)):
+        return ""
+    return pretty_date(datetime.fromtimestamp(started_at, timezone.utc), now=datetime.now(timezone.utc))
+
+
 def _name_status_uptime_cells(c: dict[str, Any], disable: set[str], name_w: int) -> list[Cell]:
     cells: list[Cell] = []
     if "name" not in disable:
@@ -175,7 +183,7 @@ def _name_status_uptime_cells(c: dict[str, Any], disable: set[str], name_w: int)
         status = str(c.get("status", ""))
         cells.append(Cell(text=f"{status[:10]:>10}", color=_status_role(status)))
     if "uptime" not in disable:
-        cells.append(Cell(text=f"{(c.get('uptime') or '_'):>10}"))
+        cells.append(Cell(text=f"{(_uptime_text(c.get('started_at')) or '_'):>10}"))
     return cells
 
 

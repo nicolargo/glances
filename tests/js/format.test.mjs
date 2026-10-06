@@ -10,6 +10,7 @@ import {
 	formatIops,
 	formatNetworkRate,
 	formatPercent,
+	formatPrettyDate,
 	formatProcessBytes,
 	formatRate,
 	formatSeconds,
@@ -83,6 +84,35 @@ test("toFahrenheit mirrors glances.globals.to_fahrenheit", () => {
 	assert.equal(toFahrenheit(0), 32);
 	assert.equal(toFahrenheit(100), 212);
 	assert.equal(toFahrenheit(55), 131);
+});
+
+test("formatPrettyDate mirrors glances.globals.pretty_date", () => {
+	// glances/globals.py pretty_date(): each threshold on both sides.
+	const now = 1791273600;
+	const at = (ago) => formatPrettyDate(now - ago, now);
+	assert.equal(at(0), "just now");
+	assert.equal(at(9), "just now");
+	assert.equal(at(10), "10 secs");
+	assert.equal(at(119), "a min");
+	assert.equal(at(120), "2 mins");
+	assert.equal(at(3599), "59 mins");
+	assert.equal(at(3600), "an hour");
+	assert.equal(at(7200), "2 hours");
+	assert.equal(at(86399), "23 hours");
+	assert.equal(at(86400), "yesterday");
+	assert.equal(at(2 * 86400), "2 days");
+	assert.equal(at(7 * 86400), "a week");
+	assert.equal(at(14 * 86400), "2 weeks");
+	assert.equal(at(31 * 86400), "a month");
+	assert.equal(at(90 * 86400), "3 months");
+	assert.equal(at(365 * 86400), "an year");
+	assert.equal(at(800 * 86400), "2 years");
+});
+
+test("formatPrettyDate returns pretty_date's empty string without a past start", () => {
+	assert.equal(formatPrettyDate(null), "");
+	assert.equal(formatPrettyDate(undefined), "");
+	assert.equal(formatPrettyDate(1791273600 + 5, 1791273600), "");
 });
 
 test("formatSeconds mirrors the TUI's format_seconds exactly", () => {

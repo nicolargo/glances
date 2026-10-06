@@ -65,7 +65,7 @@
 					<td v-if="shows('status')" class="gl-num">
 						<span :class="statusClass(item.status)">{{ fmt(item.status) }}</span>
 					</td>
-					<td v-if="shows('uptime')" class="gl-num"><span>{{ fmt(item.uptime) }}</span></td>
+					<td v-if="shows('uptime')" class="gl-num"><span>{{ fmt(formatPrettyDate(item.started_at)) }}</span></td>
 					<td v-if="shows('cpu')" class="gl-num">
 						<span :class="cellClassFor(payload, item, 'cpu_percent')">{{
 							formatPercent(item.cpu_percent)
@@ -101,7 +101,7 @@
 </template>
 
 <script>
-import { dashIfBlank, formatAutoUnit, formatNetworkRate, formatPercent } from "./format.js";
+import { dashIfBlank, formatAutoUnit, formatNetworkRate, formatPercent, formatPrettyDate } from "./format.js";
 import { cellClassFor } from "./columns.js";
 import { levelClass } from "./levels.js";
 import { displayName } from "./rows.js";
@@ -231,6 +231,7 @@ export default {
 		cellClassFor,
 		formatAutoUnit,
 		formatPercent,
+		formatPrettyDate,
 		shows(column) {
 			return !this.hiddenColumns.has(column);
 		},

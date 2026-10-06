@@ -245,6 +245,50 @@ function pad2(n) {
 	return String(n).padStart(2, "0");
 }
 
+// Mirrors glances.globals.pretty_date() -- the containers Uptime column,
+// derived from `started_at` (Unix seconds) as the TUI's `_uptime_text()`
+// does (containers/render_curses_v5.py). Same thresholds, same strings
+// ("an year" included), and the same "" for a missing or future start time.
+const PRETTY_SECOND_THRESHOLDS = [
+	[10, 1, "just now", null],
+	[60, 1, null, " secs"],
+	[120, 1, "a min", null],
+	[3600, 60, null, " mins"],
+	[7200, 1, "an hour", null],
+	[86400, 3600, null, " hours"],
+];
+const PRETTY_DAY_THRESHOLDS = [
+	[2, 1, "yesterday", null],
+	[7, 1, "a day", " days"],
+	[31, 7, "a week", " weeks"],
+	[365, 30, "a month", " months"],
+	[Infinity, 365, "an year", " years"],
+];
+
+export function formatPrettyDate(startedAt, now = Date.now() / 1000) {
+	if (!isNumber(startedAt)) return "";
+	const diff = now - startedAt;
+	if (diff < 0) return "";
+	const dayDiff = Math.floor(diff / 86400);
+	const secondDiff = Math.floor(diff - dayDiff * 86400);
+	if (dayDiff === 0) {
+		for (const [max, divisor, singular, plural] of PRETTY_SECOND_THRESHOLDS) {
+			if (secondDiff < max) {
+				if (singular && !plural) return singular;
+				return `${Math.floor(secondDiff / divisor)}${plural}`;
+			}
+		}
+	}
+	for (const [max, divisor, singular, plural] of PRETTY_DAY_THRESHOLDS) {
+		if (dayDiff < max) {
+			const value = Math.floor(dayDiff / divisor);
+			if (singular && (value <= 1 || !plural)) return singular;
+			return `${value}${plural}`;
+		}
+	}
+	return "";
+}
+
 // Mirrors processlist/render_curses_v5.py::_format_cpu_time() -- the TIME+
 // column: `cpu_times.user + cpu_times.system`, NOT format_seconds() above
 // (a different algorithm: MM:SS below an hour, Hh{MM:SS} between 1h and

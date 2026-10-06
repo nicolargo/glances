@@ -990,7 +990,8 @@ const CONTAINERS_FIXTURE = {
 			pod_name: "frontend",
 			pod_id: "pod-7f3a",
 			status: "running",
-			uptime: "2 days",
+			// "2 days" in pretty_date(), whatever the clock says.
+			started_at: Math.floor(Date.now() / 1000) - 2 * 86400 - 3600,
 			cpu_percent: 12.5,
 			memory_usage_no_cache: 536870912,
 			memory_limit: 2147483648,
@@ -1006,7 +1007,7 @@ const CONTAINERS_FIXTURE = {
 			engine: "podman",
 			pod_name: null,
 			status: "paused",
-			uptime: null,
+			started_at: null,
 			cpu_percent: null,
 			memory_usage_no_cache: null,
 			memory_limit: null,
