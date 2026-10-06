@@ -27,8 +27,11 @@ au 2026-10-04. Rien ici ne se fait sur `develop`, sauf la section 6.
 - [x] **Les 42 tests GAP** de `glances-v5-v4-tests-migration.md` (2026-10-05) :
   chacun corrigé en v5 avec son test, ou retiré par décision écrite (section
   « GAP — traités le 2026-10-05 » du document de migration).
-- [ ] **Validation des performances** : pas de régression de la latence de
-  rafraîchissement par rapport à v4 (mesure documentée).
+- [x] **Validation des performances** (2026-10-06) : pas de régression de
+  latence (cycle ×2,3, API ×1,7, démarrage ×4 plus rapides, −25 % de mémoire) ;
+  CPU plus élevé par conception (collecte continue) et parce que la v5
+  respecte le `refresh` que la v4 sautait (`glances-v5-performance.md`).
+  - [ ] à refaire sur une machine représentative avant `5.0.0`
 
 ## 2. Décisions de bascule (à écrire au §10)
 
