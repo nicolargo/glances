@@ -97,5 +97,5 @@ def test_disabled_process_stat_is_tolerated(disabled):
 
     (program,) = processes_to_programs(processes)
 
-    assert program['nprocs'] == 2
-    assert program['childrens'] == [1, 2]
+    assert program['nprocs'] == 2  # nosec B101
+    assert program['childrens'] == [1, 2]  # nosec B101
