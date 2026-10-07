@@ -70,7 +70,6 @@ class Export(GlancesExport):
         action = {
             "_index": index,
             "_id": f'{name}.{dt_now}',
-            "_type": f'glances-{name}',
             "_source": {"plugin": name, "timestamp": dt_now},
         }
         action['_source'].update(zip(columns, [str(p) for p in points]))
