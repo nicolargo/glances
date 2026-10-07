@@ -310,6 +310,7 @@ class LxdEngineMonitor:
             'network_tx': None,
             'ports': '',
             'uptime': None,
+            'started_at': None,
         }
 
         if instance.status not in self.CONTAINER_ACTIVE_STATUS:
@@ -361,8 +362,9 @@ class LxdEngineMonitor:
         try:
             last_used = instance.last_used_at
             if last_used and last_used != '1970-01-01T00:00:00Z':
-                started = datetime.fromisoformat(last_used.replace('Z', '+00:00')).replace(tzinfo=None)
-                stats['uptime'] = pretty_date(started)
+                started = datetime.fromisoformat(last_used.replace('Z', '+00:00'))
+                stats['uptime'] = pretty_date(started.replace(tzinfo=None))
+                stats['started_at'] = int(started.timestamp())
         except (ValueError, AttributeError) as e:
             logger.debug(f"{self.ext_name} plugin - Can't compute uptime for {instance.name} ({e})")
 

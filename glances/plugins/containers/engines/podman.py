@@ -427,6 +427,7 @@ class PodmanEngineMonitor:
             "network_tx": None,
             "ports": "",
             "uptime": None,
+            "started_at": None,
         }
 
         stats_fetcher = self.container_stats_fetchers[container.id]
@@ -452,6 +453,9 @@ class PodmanEngineMonitor:
 
         started_at = datetime.fromtimestamp(container.attrs["StartedAt"])
         stats["uptime"] = pretty_date(started_at)
+        # Podman keeps StartedAt after the container stops
+        if stats["status"] in self.CONTAINER_ACTIVE_STATUS:
+            stats["started_at"] = int(container.attrs["StartedAt"])
 
         # Manage special chars in command (see issue#2733)
         stats["command"] = replace_special_chars(" ".join(stats["command"]))

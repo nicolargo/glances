@@ -82,7 +82,10 @@ class PluginModel(GlancesPluginBase[list]):
         "network_rx": {"description": "Container network RX bitrate.", "unit": "bitpersecond"},
         "network_tx": {"description": "Container network TX bitrate.", "unit": "bitpersecond"},
         "ports": {"description": "Container ports.", "unit": "string"},
-        "uptime": {"description": "Container uptime.", "unit": "string"},
+        "started_at": {
+            "description": "Container start time (Unix timestamp, seconds). None when the container is not active.",
+            "unit": "number",
+        },
         "engine": {"description": "Container engine (Docker, Podman, LXD).", "unit": "string"},
         "engine_url": {"description": "Container engine base URL / endpoint (creds are hidden).", "unit": "string"},
         "pod_name": {"description": "Pod name (Podman only).", "unit": "string"},

@@ -11,7 +11,9 @@
 
 from __future__ import annotations
 
-from unittest.mock import call, patch
+import time
+from types import SimpleNamespace
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 
@@ -52,7 +54,7 @@ def test_fields_present(store_with, config_with):
         "network_rx",
         "network_tx",
         "ports",
-        "uptime",
+        "started_at",
         "engine",
         "engine_url",
         "pod_name",
@@ -357,3 +359,113 @@ async def test_grab_aggregates_multiple_monitors_for_same_engine(store_with, con
     assert names == {"c1", "c2"}
     urls = {c["engine_url"] for c in out}
     assert urls == {"unix:///d1.sock", "unix:///d2.sock"}
+
+
+# started_at: the engines publish the container start time (Unix seconds). 2026-10-06T08:00:00Z == 1791273600.
+_STARTED_AT = 1791273600
+_ACTIVITY = {"cpu": {"total": 1.0}, "memory": {"usage": 100}, "io": {}, "network": {}}
+
+
+def _docker_monitor():
+    m = model_mod.DockerEngineMonitor.__new__(model_mod.DockerEngineMonitor)
+    m.engine_url = None
+    m.image_cache = {}
+    m.stats_fetchers = {"c1": SimpleNamespace(activity_stats=_ACTIVITY)}
+    return m
+
+
+def _docker_container(status):
+    c = MagicMock()
+    c.id, c.name, c.ports = "c1", "web", {}
+    c.attrs = {
+        "State": {"Status": status, "StartedAt": "2026-10-06T08:00:00.123456789Z"},
+        "Created": "2026-10-01T00:00:00Z",
+        "Config": {"Cmd": ["sh"]},
+    }
+    c.image.tags = ["web:latest"]
+    return c
+
+
+def _podman_monitor():
+    m = model_mod.PodmanEngineMonitor.__new__(model_mod.PodmanEngineMonitor)
+    m.engine_url = None
+    m.image_cache = {}
+    m.container_stats_fetchers = {"c1": SimpleNamespace(activity_stats=_ACTIVITY)}
+    return m
+
+
+def _podman_container(state):
+    c = MagicMock()
+    c.id, c.name, c.ports = "c1", "web", {}
+    c.attrs = {"State": state, "StartedAt": _STARTED_AT, "Created": 1791000000, "Command": ["sh"]}
+    c.image.tags = ["web:latest"]
+    return c
+
+
+def _lxd_monitor():
+    m = model_mod.LxdEngineMonitor.__new__(model_mod.LxdEngineMonitor)
+    m.ext_name = "containers (LXD)"
+    m.engine_url = None
+    m.stats_fetchers = {"web": SimpleNamespace(activity_stats=_ACTIVITY)}
+    return m
+
+
+def _lxd_instance(status, last_used_at="2026-10-06T08:00:00Z"):
+    i = MagicMock()
+    i.name, i.status, i.last_used_at = "web", status, last_used_at
+    i.config, i.expanded_devices = {}, {}
+    return i
+
+
+def test_docker_started_at_is_the_start_timestamp():
+    stats = _docker_monitor().generate_stats(_docker_container("running"))
+    assert stats["started_at"] == _STARTED_AT
+
+
+def test_docker_started_at_is_none_when_not_running():
+    stats = _docker_monitor().generate_stats(_docker_container("exited"))
+    assert stats["started_at"] is None
+
+
+def test_podman_started_at_is_the_start_timestamp():
+    stats = _podman_monitor().generate_stats(_podman_container("running"))
+    assert stats["started_at"] == _STARTED_AT
+
+
+def test_podman_started_at_is_none_when_not_running():
+    # Podman keeps StartedAt after the container stops.
+    stats = _podman_monitor().generate_stats(_podman_container("exited"))
+    assert stats["started_at"] is None
+
+
+@pytest.mark.parametrize("tz", ["UTC0", "JST-9", "EST5EDT"])
+def test_lxd_started_at_is_last_used_at_in_utc(monkeypatch, tz):
+    # last_used_at is UTC: the timestamp must not move with the local zone.
+    monkeypatch.setenv("TZ", tz)
+    time.tzset()
+    try:
+        stats = _lxd_monitor().generate_stats(_lxd_instance("Running"))
+    finally:
+        monkeypatch.undo()
+        time.tzset()
+    assert stats["started_at"] == _STARTED_AT
+
+
+@pytest.mark.parametrize(
+    ("status", "last_used_at"), [("Stopped", "2026-10-06T08:00:00Z"), ("Running", "1970-01-01T00:00:00Z")]
+)
+def test_lxd_started_at_is_none_without_a_start(status, last_used_at):
+    stats = _lxd_monitor().generate_stats(_lxd_instance(status, last_used_at))
+    assert stats["started_at"] is None
+
+
+@pytest.mark.asyncio
+async def test_grab_publishes_started_at_and_no_uptime(store_with, config_with):
+    m = _docker_monitor()
+    m.update = lambda all_tag: ({}, [m.generate_stats(_docker_container("running"))])
+    m.stop = lambda: None
+    p = _model_with_monitors(store_with, config_with, [m])
+    await p.update()
+    item = p.get_stats()["data"][0]
+    assert item["started_at"] == _STARTED_AT
+    assert "uptime" not in item
