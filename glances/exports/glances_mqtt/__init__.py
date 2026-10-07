@@ -45,7 +45,7 @@ class Export(GlancesExport):
 
         # Get the current hostname
         self.devicename = self.devicename or socket.gethostname()
-        self.port = int(self.port) or 8883
+        self.port = int(self.port or 8883)
         self.topic = self.topic or 'glances'
         self.user = self.user or 'glances'
         self.tls = self.tls and self.tls.lower() == 'true'
@@ -62,7 +62,7 @@ class Export(GlancesExport):
 
     def init(self):
         # Get the current callback api version
-        self.callback_api_version = int(self.callback_api_version) or 2
+        self.callback_api_version = int(self.callback_api_version or 2)
 
         # Set enum for connection
         if self.callback_api_version == 1:
