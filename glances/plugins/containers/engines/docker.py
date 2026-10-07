@@ -419,6 +419,7 @@ class DockerEngineMonitor:
             'network_tx': None,
             'ports': '',
             'uptime': None,
+            'started_at': None,
         }
 
         if container.attrs['Config'].get('Entrypoint', None):
@@ -454,6 +455,7 @@ class DockerEngineMonitor:
 
         started_at = container.attrs['State']['StartedAt']
         stats['uptime'] = pretty_date(parser.parse(started_at).astimezone(tz.tzlocal()).replace(tzinfo=None))
+        stats['started_at'] = int(parser.parse(started_at).timestamp())
 
         # Manage special chars in command (see issue#2733)
         stats['command'] = replace_special_chars(' '.join(stats['command']))

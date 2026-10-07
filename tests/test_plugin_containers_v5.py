@@ -293,9 +293,9 @@ def test_parse_urls_from_list(store_with, config_with):
 
 def test_init_monitors_with_custom_urls(store_with, config_with):
     with (
-        patch.object(model_mod, "DockerEngineMonitorV5") as mock_docker,
-        patch.object(model_mod, "PodmanEngineMonitorV5") as mock_podman,
-        patch.object(model_mod, "LxdEngineMonitorV5") as mock_lxd,
+        patch.object(model_mod, "DockerEngineMonitor") as mock_docker,
+        patch.object(model_mod, "PodmanEngineMonitor") as mock_podman,
+        patch.object(model_mod, "LxdEngineMonitor") as mock_lxd,
         patch.object(model_mod, "disable_plugin_docker", False),
         patch.object(model_mod, "disable_plugin_podman", False),
         patch.object(model_mod, "disable_plugin_lxd", False),
@@ -319,9 +319,9 @@ def test_init_monitors_with_custom_urls(store_with, config_with):
 
 def test_init_monitors_all_disabled(store_with, config_with):
     with (
-        patch.object(model_mod, "DockerEngineMonitorV5") as mock_docker,
-        patch.object(model_mod, "PodmanEngineMonitorV5") as mock_podman,
-        patch.object(model_mod, "LxdEngineMonitorV5") as mock_lxd,
+        patch.object(model_mod, "DockerEngineMonitor") as mock_docker,
+        patch.object(model_mod, "PodmanEngineMonitor") as mock_podman,
+        patch.object(model_mod, "LxdEngineMonitor") as mock_lxd,
         patch.object(model_mod, "disable_plugin_docker", False),
         patch.object(model_mod, "disable_plugin_podman", False),
         patch.object(model_mod, "disable_plugin_lxd", False),
@@ -361,14 +361,13 @@ async def test_grab_aggregates_multiple_monitors_for_same_engine(store_with, con
     assert urls == {"unix:///d1.sock", "unix:///d2.sock"}
 
 
-# started_at: the v5 monitors add the container start time (Unix seconds) to
-# the shared v4 engine stats. 2026-10-06T08:00:00Z == 1791273600.
+# started_at: the engines publish the container start time (Unix seconds). 2026-10-06T08:00:00Z == 1791273600.
 _STARTED_AT = 1791273600
 _ACTIVITY = {"cpu": {"total": 1.0}, "memory": {"usage": 100}, "io": {}, "network": {}}
 
 
 def _docker_monitor():
-    m = model_mod.DockerEngineMonitorV5.__new__(model_mod.DockerEngineMonitorV5)
+    m = model_mod.DockerEngineMonitor.__new__(model_mod.DockerEngineMonitor)
     m.engine_url = None
     m.image_cache = {}
     m.stats_fetchers = {"c1": SimpleNamespace(activity_stats=_ACTIVITY)}
@@ -388,7 +387,7 @@ def _docker_container(status):
 
 
 def _podman_monitor():
-    m = model_mod.PodmanEngineMonitorV5.__new__(model_mod.PodmanEngineMonitorV5)
+    m = model_mod.PodmanEngineMonitor.__new__(model_mod.PodmanEngineMonitor)
     m.engine_url = None
     m.image_cache = {}
     m.container_stats_fetchers = {"c1": SimpleNamespace(activity_stats=_ACTIVITY)}
@@ -404,7 +403,7 @@ def _podman_container(state):
 
 
 def _lxd_monitor():
-    m = model_mod.LxdEngineMonitorV5.__new__(model_mod.LxdEngineMonitorV5)
+    m = model_mod.LxdEngineMonitor.__new__(model_mod.LxdEngineMonitor)
     m.ext_name = "containers (LXD)"
     m.engine_url = None
     m.stats_fetchers = {"web": SimpleNamespace(activity_stats=_ACTIVITY)}
