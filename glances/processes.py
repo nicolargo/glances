@@ -30,7 +30,9 @@ psutil_version_info = tuple([int(num) for num in psutil.__version__.split('.')])
 mandatory_processes_stats_list = ['pid', 'name']
 
 # This constant defines the list of available processes sort key
-sort_processes_stats_list = ['cpu_percent', 'memory_percent', 'username']
+# Note: keep CPU/GPU/MEM adjacent -- Shift+Left/Right cycles this list
+# while the columns are displayed in the same order.
+sort_processes_stats_list = ['cpu_percent', 'gpu_percent', 'gpu_mem', 'memory_percent', 'username']
 sort_processes_stats_list += ['cpu_times', 'io_counters', 'name', 'cpu_num']
 
 # Sort dictionary for human
@@ -42,6 +44,8 @@ sort_for_human = {
     'username': 'user name',
     'name': 'processs name',
     'cpu_num': 'CPU core number',
+    'gpu_percent': 'GPU consumption (Intel i915/xe only)',
+    'gpu_mem': 'GPU memory consumption (Intel i915/xe only)',
     None: 'None',
 }
 
