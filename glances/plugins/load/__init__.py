@@ -90,6 +90,7 @@ class LoadPlugin(GlancesPluginModel):
 
     @GlancesPluginModel._check_decorator
     @GlancesPluginModel._log_result_decorator
+    @GlancesPluginModel._manage_mmm
     def update(self):
         """Update load stats."""
         # Init new stats

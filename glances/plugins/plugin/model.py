@@ -14,6 +14,7 @@ I am your father...
 
 import copy
 import re
+from collections import deque
 from datetime import datetime
 
 from glances.actions import GlancesActions
@@ -210,7 +211,8 @@ class GlancesPluginModel:
 
             # Initialize tracking for this field
             mmm_fields[field_name] = {
-                'values': [],  # Keep history for mean calculation
+                'values': deque(maxlen=28800),  # 16 h at the default 2 s refresh
+                'sum': 0,  # Running sum of values, for the mean
                 'min': None,
                 'max': None,
                 'unit': field_info.get('unit', ''),
@@ -259,11 +261,12 @@ class GlancesPluginModel:
             if current_value is None or (not isinstance(current_value, (int, float))):
                 continue
 
-            # Keep history for mean calculation (limit to reasonable size to avoid memory growth)
-            max_history_size = 28800  # ~1 day at 1 sample/sec
-            mmm_info['values'].append(current_value)
-            if len(mmm_info['values']) > max_history_size:
-                mmm_info['values'].pop(0)
+            # Keep history for mean calculation, the deque drops the oldest value when full
+            values = mmm_info['values']
+            if len(values) == values.maxlen:
+                mmm_info['sum'] -= values[0]
+            values.append(current_value)
+            mmm_info['sum'] += current_value
 
             # Update min and max
             if mmm_info['min'] is None or current_value < mmm_info['min']:
@@ -276,8 +279,7 @@ class GlancesPluginModel:
             stats[field_name + '_max'] = mmm_info['max']
 
             # Compute mean from history
-            if mmm_info['values']:
-                stats[field_name + '_mean'] = round(mean(mmm_info['values']), 2)
+            stats[field_name + '_mean'] = round(mmm_info['sum'] / len(values), 2)
 
         return stats
 

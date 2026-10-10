@@ -12,6 +12,7 @@
 
 import json
 import multiprocessing
+import statistics
 import time
 import unittest
 from datetime import datetime
@@ -1437,6 +1438,27 @@ class TestGlances(unittest.TestCase):
         plugin = GlancesPluginModel(config=Config())
         plugin.plugin_name = 'processlist'
         self.assertIs(plugin.get_conf_value('disable_virtual_memory', convert_bool=True, default=False), False)
+
+    def test_709_mmm_mean_full_history(self):
+        """Test MMM mean once the history is full and the oldest values drop out."""
+        print('INFO: [TEST_709] MMM mean with a full history')
+
+        test_fields = {'value': {'description': 'A test value', 'unit': 'percent', 'mmm': True}}
+
+        class TestMMMPlugin(GlancesPluginModel):
+            def __init__(self):
+                super().__init__(args=None, config=None, fields_description=test_fields)
+
+        plugin = TestMMMPlugin()
+        values = plugin._mmm_fields['value']['values']
+
+        test_values = [float(i % 97) + 0.25 for i in range(values.maxlen + 50)]
+        for val in test_values:
+            updated_stats = plugin._update_mmm_fields({'value': val})
+
+        self.assertEqual(len(values), values.maxlen)
+        expected_mean = round(statistics.mean(test_values[-values.maxlen :]), 2)
+        self.assertAlmostEqual(updated_stats['value_mean'], expected_mean, places=2)
 
     def test_999_the_end(self):
         """Free all the stats"""

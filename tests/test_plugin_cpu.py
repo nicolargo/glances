@@ -15,6 +15,7 @@ import time
 import pytest
 
 from glances.globals import WINDOWS
+from glances.timer import Timer
 
 
 @pytest.fixture
@@ -276,3 +277,20 @@ class TestCpuPluginMsgCurse:
             assert any('CPU' in str(m) for m in messages)
         if hasattr(cpu_plugin.args, 'percpu'):
             cpu_plugin.args.percpu = original_percpu
+
+
+class TestCpuPluginMMM:
+    """Test CPU plugin MMM (Min/Max/Mean) fields."""
+
+    def test_total_min_max_mean_in_stats(self, cpu_plugin):
+        """Test that total_min, total_max and total_mean are published after update."""
+        for _ in range(2):
+            # Expire the refresh timer so update() really runs (Timer(0) may not be
+            # finished yet with the 15.6 ms clock resolution of Windows)
+            cpu_plugin.refresh_timer = Timer(-1)
+            cpu_plugin.update()
+        stats = cpu_plugin.get_raw()
+        assert 'total_min' in stats
+        assert 'total_max' in stats
+        assert 'total_mean' in stats
+        assert stats['total_min'] <= stats['total_mean'] <= stats['total_max']
