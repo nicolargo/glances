@@ -1152,6 +1152,16 @@ develop-v5         ──▼────────────────┘ 
 - **Before the merge, `develop` is branched to `support/glancesv4`** (maintainer, 2026-10-03), the v4 hotfix branch: v4 bugfix and security releases are cut from it once `develop` carries v5.
 - The merge `develop-v5 → develop` happens once Phase 4's hardening is done (all plugins, exporters and tests green, security audit passed). The weekly `develop → develop-v5` merge stops with it.
 - After the merge, `develop` publishes `5.0.0b1`, `5.0.0b2`…, then `5.0.0rc1`… and `5.0.0`.
+- **Cutover decisions (maintainer, 2026-10-10)**, the full run in
+  `glances-v5-cutover-plan.md`: `glances-v5` is dropped and `glances`
+  runs v5 (D1); release `5.0.0b1`, API stays `/api/5` (D2); every `_v5`
+  file, module and `…V5` class loses its suffix, the WebUI bundles become
+  `glances.js` / `browser.js` (D3, D4); design history in
+  `docs/architecture` and `docs/superpowers` is kept as dated archive
+  (D5); the cleanup runs on a `cutover/v5` branch merged into `develop`
+  with a merge commit (D6); the Docker image binds `0.0.0.0` and a beta
+  never publishes `latest` (D7); Windows, macOS and FreeBSD CI run the v5
+  suite minus the Linux-only tests (D8).
 
 ### Migration phases
 

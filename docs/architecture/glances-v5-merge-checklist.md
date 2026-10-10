@@ -33,16 +33,17 @@ au 2026-10-04. Rien ici ne se fait sur `develop`, sauf la section 6.
   respecte le `refresh` que la v4 sautait (`glances-v5-performance.md`).
   - [ ] à refaire sur une machine représentative avant `5.0.0`
 
-## 2. Décisions de bascule (à écrire au §10)
+## 2. Décisions de bascule (prises le 2026-10-10)
 
-- [ ] La commande `glances` lance la v5 (`pyproject.toml` : aujourd'hui
-  `glances = "glances:main"` est la v4, `glances-v5` la v5).
-- [ ] Sort du code v4 et des tests v4 COVERED / OBSOLETE : supprimés sur
-  `develop-v5` avant la fusion (recommandé : ce qui est fusionné est ce qui a
-  été testé) ou juste après.
-- [ ] Les tests SHARED qui importent du v4 au niveau du module sont déplacés
-  dans un fichier sans v4 (ex. `TestSecurePopen*` → `tests/test_secure_popen.py`).
-- [ ] Le suffixe `_v5` des modules : gardé ou renommé.
+Décisions D1 à D8 et déroulé complet dans `glances-v5-cutover-plan.md` ; à
+exécuter le jour de la bascule.
+
+- [x] La commande `glances` lance la v5 ; `glances-v5` est retiré (D1).
+- [x] Code v4 et tests v4 COVERED / OBSOLETE supprimés sur `cutover/v5`,
+  avant la fusion (D6, étape C3) ; tests SHARED déplacés.
+- [x] Le suffixe `_v5` disparaît des fichiers, modules, classes et bundles
+  WebUI (D3, D4, étape C4).
+- [ ] Exécution : étapes 1 à 5 du plan de bascule.
 
 ## 3. Version et packaging
 
