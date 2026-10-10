@@ -123,7 +123,8 @@ class GlancesExport:
         # Load options
         for opt in options:
             try:
-                setattr(self, opt, self.config.get_value(section, opt))
+                # Keep the default value set by the export module if the option is not configured
+                setattr(self, opt, self.config.get_value(section, opt, default=getattr(self, opt, None)))
             except NoOptionError:
                 logger.debug(f"{opt} option not found in the {section} configuration section")
 
