@@ -1,5 +1,7 @@
 """Tests for aggregating processes into programs."""
 
+import pytest
+
 from glances.programs import processes_to_programs, sum_field_dict
 
 CPU_TIMES_FIELDS = ('user', 'system', 'children_user', 'children_system', 'iowait')
@@ -65,3 +67,35 @@ def test_aggregated_program_keeps_every_memory_info_field():
     assert set(program['memory_info']) == {'rss', 'vms', 'shared', 'text', 'data'}
     assert program['memory_info']['shared'] == 0
     assert program['memory_info']['rss'] == 2048
+
+
+@pytest.mark.parametrize(
+    'disabled',
+    ['cpu_percent', 'memory_percent', 'memory_info', 'cpu_times', 'num_threads', 'nice', 'status', 'io_counters'],
+)
+def test_disabled_process_stat_is_tolerated(disabled):
+    # Stats listed in the [processlist] disable_stats option are absent from the process dicts
+    processes = [
+        {
+            'pid': pid,
+            'name': 'worker',
+            'time_since_update': 1.0,
+            'num_threads': 2,
+            'cpu_percent': 10.0,
+            'memory_percent': 1.5,
+            'cpu_times': {'user': 1.0},
+            'memory_info': {'rss': 100},
+            'io_counters': [1, 2, 0, 0, 1],
+            'username': 'u',
+            'nice': 0,
+            'status': 'R',
+        }
+        for pid in (1, 2)
+    ]
+    for p in processes:
+        del p[disabled]
+
+    (program,) = processes_to_programs(processes)
+
+    assert program['nprocs'] == 2  # nosec B101
+    assert program['childrens'] == [1, 2]  # nosec B101

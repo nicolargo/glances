@@ -178,7 +178,9 @@ class ThreadOpenStack(threading.Thread):
                     self._stats[k] = to_ascii(r.content)
         else:
             # No break during the loop, so we can set the platform
-            self._stats['platform'] = self.OPENSTACK_PLATFORM
+            # (only if the metadata API answered, else this is not the right cloud)
+            if self._stats:
+                self._stats['platform'] = self.OPENSTACK_PLATFORM
 
         return True
 
