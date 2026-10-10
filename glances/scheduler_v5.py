@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -54,6 +55,11 @@ logger = logging.getLogger(__name__)
 # a local, function-scoped import of `resolve_export_refresh` itself,
 # because that one is an actual cross-module call, not a bare constant.
 _DEFAULT_REFRESH_TIME = 2.0
+
+# Idle mode: seconds without client activity before the loops slow down, and
+# the default slowdown factor (`[global] idle_refresh_factor`).
+_IDLE_AFTER = 30.0
+_DEFAULT_IDLE_FACTOR = 5.0
 
 
 class AsyncScheduler:
@@ -85,6 +91,53 @@ class AsyncScheduler:
         self._tasks: list[asyncio.Task[None]] = []
         self._running: bool = False
         self._exporters: list[GlancesExportBase] = []
+        # Idle mode (see `enable_idle_mode`): off until a server turns it on.
+        self._idle_factor: float = 1.0
+        self._last_activity: float = time.monotonic()
+        self._wake = asyncio.Event()
+
+    # ------------------------------------------------------------ idle mode
+
+    def enable_idle_mode(self) -> None:
+        """Slow the plugin loops down while no client has read the API lately.
+
+        Only meaningful for a REST server with nothing else consuming the
+        stats (the caller checks: no exporter, no TUI). `[global]
+        idle_refresh_factor` is the slowdown (default 5, `<= 1` disables);
+        after `_IDLE_AFTER` seconds without `touch()` each plugin sleeps
+        `refresh_time * factor`. The next `touch()` wakes every loop at once.
+        """
+        factor = self._config_float("global", "idle_refresh_factor", _DEFAULT_IDLE_FACTOR)
+        self._idle_factor = factor if factor > 1 else 1.0
+        self._last_activity = time.monotonic()
+
+    def touch(self) -> None:
+        """Record client activity; wake the loops if they were in idle mode."""
+        was_idle = self._is_idle()
+        self._last_activity = time.monotonic()
+        if was_idle:
+            woken, self._wake = self._wake, asyncio.Event()
+            woken.set()
+
+    def _is_idle(self) -> bool:
+        return self._idle_factor > 1.0 and time.monotonic() - self._last_activity > _IDLE_AFTER
+
+    async def _sleep(self, seconds: float) -> None:
+        if self._idle_factor == 1.0:
+            await asyncio.sleep(seconds)
+            return
+        if self._is_idle():
+            seconds *= self._idle_factor
+        try:
+            await asyncio.wait_for(self._wake.wait(), seconds)
+        except asyncio.TimeoutError:
+            pass
+
+    def _config_float(self, section: str, key: str, default: float) -> float:
+        try:
+            return float(self.config.get(section, key, default))
+        except (TypeError, ValueError):
+            return default
 
     # ------------------------------------------------------------ register
 
@@ -319,7 +372,7 @@ class AsyncScheduler:
                 first_cycle = False
             else:
                 sleep_time = entry.refresh_time
-            await asyncio.sleep(sleep_time)
+            await self._sleep(sleep_time)
 
     async def _export_loop(self, stop_after: int | None = None) -> None:
         """Single loop driving every registered exporter, forever.

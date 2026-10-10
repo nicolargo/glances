@@ -27,6 +27,16 @@ un surcoût par rafraîchissement.** Le coût d'un rafraîchissement est le mêm
 Dès qu'un client lit le serveur (une WebUI ouverte), l'écart tombe à
 0,4 point de pourcentage d'un cœur (2,1 % contre 1,7 %).
 
+**Mode repos (2026-10-10).** En mode serveur sans module d'export, le
+scheduler ralentit les plugins d'un facteur `[global] idle_refresh_factor`
+(défaut 5, `1` désactive) après 30 s sans requête cliente authentifiée (hors
+`/status`, `/healthz`, `/api/5/token`). La requête suivante les réveille
+aussitôt. Mesure rapide sur une VM de 4 cœurs : 1,6 % → 0,5 % d'un cœur au
+repos. Contrepartie : l'historique est moins dense et les alertes plus lentes
+tant qu'aucun client n'est connecté. À refaire avec `bench_v4_v5.py` (la
+fenêtre « repos » de 10 s de chauffe est avant le seuil de 30 s : utiliser
+`--warmup 35`).
+
 ## Mesures
 
 Machine : VM Linux, 4 vCPU, 15,7 Go, Python 3.11.15, psutil 7.2.2 ; même

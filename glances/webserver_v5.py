@@ -163,11 +163,15 @@ def build_app(
     # and /<plugin>/info. Routes that only need the store payload do not
     # consult this dict.
     app.state.plugins = {}
+    # Set by the CLI entrypoint to `scheduler.touch` when the scheduler may
+    # idle down; called for every authenticated, non-probe request.
+    app.state.on_activity = None
 
     # Register from inner to outer — Starlette applies middlewares in reverse.
     # GZip innermost (v4 registers it first too): the outer middlewares see
     # the handler's status untouched, and their own small rejections stay plain.
     app.add_middleware(GZipMiddleware, minimum_size=1000)
+    app.add_middleware(_ActivityMiddleware)
     _wire_auth(app, config)
     _wire_cors(app, config)
     _wire_rate_limit(app, config)
@@ -360,6 +364,25 @@ def _wire_webui(app: FastAPI, browser: bool = False) -> None:
 
 
 # ---------------------------------------------------------- middlewares
+
+
+class _ActivityMiddleware:
+    """Tell the scheduler a client is reading, so it leaves idle mode.
+
+    Pure ASGI (no per-request task). Sits inside the auth middleware: a
+    rejected request does not count. The unauthenticated paths (probes, token) are ignored: a
+    health check must not keep an otherwise unused server at full speed.
+    """
+
+    def __init__(self, app) -> None:  # noqa: ANN001
+        self.app = app
+
+    async def __call__(self, scope, receive, send) -> None:  # noqa: ANN001
+        if scope["type"] in ("http", "websocket") and scope["path"] not in UNAUTH_PATHS:
+            on_activity = scope["app"].state.on_activity
+            if on_activity is not None:
+                on_activity()
+        await self.app(scope, receive, send)
 
 
 def _wire_trusted_hosts(app: FastAPI, config: GlancesConfigV5, args: argparse.Namespace | None = None) -> None:

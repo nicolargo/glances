@@ -1236,6 +1236,11 @@ def assemble(
             config._merged.setdefault("outputs", {})["api_doc"] = bool(args.api_doc)
         apply_mcp_flags(args, config)
         app = build_app(config=config, store=store, alerts=alerts, args=args)
+        # Nothing but REST clients reads the stats of a server with no
+        # exporter: let the scheduler slow down while none is connected.
+        if not exporters:
+            scheduler.enable_idle_mode()
+            app.state.on_activity = scheduler.touch
         for plugin in plugins:
             register_plugin(app, plugin)
         if getattr(args, "browser", False):
