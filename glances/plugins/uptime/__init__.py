@@ -64,7 +64,8 @@ class UptimePlugin(GlancesPluginModel):
             uptime = self.get_stats_snmp(snmp_oid=snmp_oid)['_uptime']
             try:
                 # In hundredths of seconds
-                stats = str(timedelta(seconds=int(uptime) / 100))
+                self.uptime = timedelta(seconds=int(uptime) / 100)
+                stats = str(self.uptime)
             except Exception:
                 pass
 
