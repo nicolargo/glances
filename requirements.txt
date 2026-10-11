@@ -8,7 +8,7 @@ idna==3.20
     # via requests
 jinja2==3.1.6
     # via glances
-markupsafe==3.0.3
+markupsafe==3.0.4
     # via jinja2
 psutil==7.2.2
     # via glances

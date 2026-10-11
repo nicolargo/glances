@@ -7,7 +7,7 @@ annotated-types==0.8.0
 anyio==4.15.1
     # via
     #   elasticsearch
-    #   httpx
+    #   httpx2
     #   mcp
     #   sse-starlette
     #   starlette
@@ -15,7 +15,7 @@ attrs==26.1.0
     # via
     #   jsonschema
     #   referencing
-backports-zstd==1.7.0 ; python_full_version < '3.14'
+backports-zstd==1.8.0 ; python_full_version < '3.14'
     # via clickhouse-connect
 batinfo==0.4.2 ; sys_platform == 'linux'
     # via glances
@@ -25,8 +25,6 @@ certifi==2026.7.22
     # via
     #   clickhouse-connect
     #   elastic-transport
-    #   httpcore
-    #   httpx
     #   influxdb-client
     #   influxdb3-python
     #   requests
@@ -36,17 +34,15 @@ cffi==2.1.1 ; implementation_name == 'pypy' or platform_python_implementation !=
     #   pyzmq
 chardet==7.6.0
     # via pysmart
-charset-normalizer==3.5.1
+charset-normalizer==3.5.2
     # via requests
 chevron==0.14.0
     # via glances
-click==8.4.2
+click==8.5.0
     # via uvicorn
-clickhouse-connect==1.9.0
+clickhouse-connect==1.10.0
     # via glances
-colorama==0.4.6 ; sys_platform == 'win32'
-    # via click
-cryptography==50.0.1
+cryptography==50.0.2
     # via
     #   pyjwt
     #   pylxd
@@ -63,20 +59,20 @@ elasticsearch==9.5.1
     # via glances
 exceptiongroup==1.2.2 ; python_full_version < '3.11'
     # via anyio
-fastapi==0.141.1
+fastapi==0.143.0
     # via glances
 graphitesender==0.11.2
     # via glances
 h11==0.16.0
     # via
-    #   httpcore
+    #   httpcore2
     #   uvicorn
-httpcore==1.0.9
-    # via httpx
-httpx==0.28.1
+httpcore2==2.13.1 ; sys_platform != 'emscripten'
+    # via httpx2
+httpx2==2.13.1
     # via mcp
-httpx-sse==0.4.3
-    # via mcp
+httpx2-jsfetch==1.0 ; python_full_version >= '3.12' and sys_platform == 'emscripten'
+    # via httpx2
 humanfriendly==10.0
     # via pysmart
 ibm-cloud-sdk-core==3.26.1
@@ -86,11 +82,11 @@ ibmcloudant==0.11.11
 idna==3.20
     # via
     #   anyio
-    #   httpx
+    #   httpx2
     #   requests
 ifaddr==0.2.0
     # via zeroconf
-importlib-metadata==8.7.1
+importlib-metadata==9.0.1
     # via pygal
 influxdb==5.3.2
     # via glances
@@ -108,16 +104,22 @@ kafka-python==3.0.11
     # via glances
 lz4==4.4.5
     # via clickhouse-connect
-markupsafe==3.0.3
+markupsafe==3.0.4
     # via jinja2
-mcp==1.29.0
+mcp==2.3.0
     # via glances
-msgpack==1.2.2
+mcp-types==2.3.0
+    # via mcp
+msgpack==1.2.3
     # via influxdb
 nats-py==2.16.0
     # via glances
 nvidia-ml-py==13.615.71
     # via glances
+opentelemetry-api==1.45.1
+    # via
+    #   fastapi
+    #   mcp
 packaging==26.3
     # via glances
 paho-mqtt==2.1.0
@@ -132,7 +134,7 @@ potsdb==1.0.3
     # via glances
 prometheus-client==0.26.0
     # via glances
-protobuf==6.33.6
+protobuf==7.36.2
     # via bernhard
 psutil==7.2.2
     # via glances
@@ -140,26 +142,26 @@ psycopg==3.3.6
     # via glances
 psycopg-binary==3.3.6 ; implementation_name != 'pypy'
     # via psycopg
-pyarrow==25.0.1
+pyarrow==25.0.1 ; python_full_version < '3.11'
+    # via influxdb3-python
+pyarrow==26.0.0 ; python_full_version >= '3.11'
     # via influxdb3-python
 pyasn1==0.6.4
     # via
     #   python-jose
     #   rsa
-pycparser==3.0 ; (implementation_name != 'PyPy' and platform_python_implementation != 'PyPy') or (implementation_name == 'pypy' and platform_python_implementation == 'PyPy')
+pycparser==3.11 ; (implementation_name != 'PyPy' and platform_python_implementation != 'PyPy') or (implementation_name == 'pypy' and platform_python_implementation == 'PyPy')
     # via cffi
-pydantic==2.13.5
+pydantic==2.14.0
     # via
     #   fastapi
     #   mcp
-    #   pydantic-settings
-pydantic-core==2.46.5
+    #   mcp-types
+pydantic-core==2.50.0
     # via pydantic
-pydantic-settings==2.15.0
-    # via mcp
 pygal==3.1.3
     # via glances
-pyjwt==2.13.0
+pyjwt==2.15.1
     # via
     #   ibm-cloud-sdk-core
     #   ibmcloudant
@@ -168,7 +170,7 @@ pylxd==2.4.2
     # via glances
 pymdstat==0.5.1
     # via glances
-pymongo==4.18.2
+pymongo==4.18.3
     # via glances
 pyreadline3==3.5.6 ; sys_platform == 'win32'
     # via humanfriendly
@@ -184,15 +186,13 @@ python-dateutil==2.9.0.post0
     #   influxdb-client
     #   influxdb3-python
     #   pylxd
-python-dotenv==1.2.3
-    # via pydantic-settings
 python-jose==3.5.0
     # via glances
 python-multipart==0.0.32
     # via mcp
-pytz==2026.4
+pytz==2026.5
     # via influxdb
-pywin32==311 ; sys_platform == 'win32'
+pywin32==312 ; sys_platform == 'win32'
     # via
     #   docker
     #   mcp
@@ -222,7 +222,7 @@ rpds-py==0.30.0 ; python_full_version < '3.11'
     # via
     #   jsonschema
     #   referencing
-rpds-py==2026.6.3 ; python_full_version >= '3.11'
+rpds-py==2026.9.1 ; python_full_version >= '3.11'
     # via
     #   jsonschema
     #   referencing
@@ -253,13 +253,20 @@ statsd==4.0.1
     # via glances
 tomli==2.4.1 ; python_full_version < '3.11'
     # via podman
+truststore==0.10.4 ; sys_platform != 'emscripten'
+    # via
+    #   httpcore2
+    #   httpx2
 typing-extensions==4.16.0
     # via
     #   anyio
     #   cryptography
     #   elasticsearch
     #   fastapi
+    #   httpx2
     #   mcp
+    #   mcp-types
+    #   opentelemetry-api
     #   psycopg
     #   pydantic
     #   pydantic-core
@@ -274,8 +281,7 @@ typing-inspection==0.4.4
     #   fastapi
     #   mcp
     #   pydantic
-    #   pydantic-settings
-tzdata==2026.4 ; sys_platform == 'win32'
+tzdata==2026.5 ; sys_platform == 'win32'
     # via
     #   clickhouse-connect
     #   psycopg
@@ -299,7 +305,7 @@ windows-curses==2.4.2 ; sys_platform == 'win32'
     # via glances
 ws4py==0.6.0
     # via pylxd
-zeroconf==0.151.3
+zeroconf==0.151.5
     # via glances
-zipp==4.1.0
+zipp==4.1.1
     # via importlib-metadata
