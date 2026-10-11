@@ -77,7 +77,7 @@ Note: if you want to use SSL, please set 'protocol=https'.
 
 
 InfluxDB v2 (from InfluxDB v1.8.x/Flux and InfluxDB <v3.x)
----------------------------------------------------------
+----------------------------------------------------------
 
 Note: The InfluxDB v2 client (https://pypi.org/project/influxdb-client/)
 is only available for Python 3.6 or higher.

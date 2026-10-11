@@ -101,7 +101,7 @@ Columns display
 ---------------
 
 .. list-table:: Title
-   :widths: 10 60
+   :widths: 10 20 50
    :header-rows: 0
 
    * - ``CPU%``
