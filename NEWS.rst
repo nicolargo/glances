@@ -3,6 +3,45 @@
 ==============================================================================
 
 =============
+Version 4.5.8
+=============
+
+Bugs corrected:
+
+* Stdout: CSV data blocks use the first list item's fields instead of each item's own #3746
+* Stdout: raw selector with a dotted item key (network.eth0.100.bytes_recv) raises UnboundLocalError #3748
+* Folders: a second configured FolderList appends its entries to the first instance #3750
+* JSON export: --stop-after leaves an empty file, the last sample is lost on shutdown #3752
+* DuckDB export turns the string 'False' into TRUE #3754
+* InfluxDB export truncates dotted list item identifiers (VLAN interfaces lose their tags) #3756
+* IP plugin: a non-object public IP response raises AttributeError in the main thread #3758
+* CSV export: rows are shifted under another device's column when the field order changes #3760
+* Export: exporters mutate the live plugin statistics when merging limits #3766
+* Elasticsearch export: a mapping type per plugin is rejected by ES 6/7/8+, only the first plugin is stored #3780
+* Exports: an optional key missing from the config overwrote the module default with None #3781
+* MQTT export: crash at startup when port or callback_api_version is omitted #3777
+* Uptime: export the SNMP uptime instead of the local one #3779
+* Cloud: do not report a platform whose metadata API returns nothing (OpenStack reported on Amazon EC2) #3778
+* IRQ: divide the interrupt count by the refresh time (Rate/s was multiplied by the refresh time) #3771
+* Programs: KeyError when a process stat is listed in [processlist] disable_stats #3776
+* Containers: WebUI throws on a restarting container whose cpu/mem stats are empty #3768
+* WebUI: the browser caches glances.js heuristically, revalidate the static files #3763
+* Processes: io_old keeps one entry per pid ever seen (slow memory leak on hosts spawning short-lived processes)
+* Smart: a missing smartctl (pySMART >= 1.4) crashes the server at startup
+
+Enhancements:
+
+* WebUI: make the container table sortable by status #3763
+* Processlist: only build curses rows for the processes that fit on screen (performance) #3762
+
+Continuous integration and documentation:
+
+* Mark regression test assertions for Bandit
+
+Thanks to all the contributors for this version: Luis Figueroa, Param Tanna, Iain, Juice-de-Orange,
+xu91102, Artem Lytkin and Hassan Rady.
+
+=============
 Version 4.5.7
 =============
 
