@@ -150,7 +150,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--config",
         dest="config_path",
         metavar="<path>",
-        help="Path to an additional glances.conf file (overlays system/user defaults).",
+        help="Path to the glances.conf file to load (instead of the user and system ones).",
     )
     if shtab is not None:
         # Complete `-C` with file names, as v4 does.
@@ -292,7 +292,7 @@ def build_parser() -> argparse.ArgumentParser:
         dest="export_graph_path",
         default=None,
         metavar="<folder>",
-        help="Folder for the graph exporter's SVG files (default: [graph] path, else <tmp>/glances).",
+        help="Folder for the graph exporter's SVG files (default: [graph] path, else ~/.local/share/glances/graphs).",
     )
     parser.add_argument(
         "--export-process-filter",
