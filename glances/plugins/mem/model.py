@@ -125,7 +125,7 @@ class PluginModel(GlancesPluginBase[dict]):
         if self.zfs_enabled:
             arc = await asyncio.to_thread(zfs_stats)
             zfs_size = arc.get("arcstats.size", 0)
-            zfs_shrink = zfs_size - arc.get("arcstats.c_min", 0) if "arcstats.size" in arc else 0
+            zfs_shrink = max(0, zfs_size - arc.get("arcstats.c_min", 0)) if "arcstats.size" in arc else 0
             stats["cached"] = stats.get("cached", 0) + zfs_size
             stats["available"] += zfs_shrink
             stats["percent"] = round((stats["total"] - stats["available"]) / stats["total"] * 100, 1)

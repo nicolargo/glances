@@ -50,6 +50,16 @@ def _make_vm(percent: float = 50.0) -> VMTuple:
 # ---------------------------------------------------------- fixtures
 
 
+@pytest.fixture(autouse=True)
+def no_host_zfs():
+    """Keep the host's /proc/spl/kstat/zfs out of the tests.
+
+    The ZFS tests re-enable it explicitly with their own patch.
+    """
+    with patch("glances.plugins.mem.model.zfs_enable", return_value=False):
+        yield
+
+
 @pytest.fixture
 def store() -> StatsStore:
     return StatsStore()
@@ -182,6 +192,23 @@ async def test_zfs_arc_counts_as_cached_and_its_shrinkable_part_as_available(sto
     assert payload["available"] == 20_000_000_000 + shrink
     assert payload["used"] == 128_000_000_000 - 20_000_000_000 - shrink
     assert payload["percent"] == round((128_000_000_000 - payload["available"]) / 128_000_000_000 * 100, 1)
+
+
+async def test_zfs_arc_below_c_min_never_lowers_available(store, config):
+    """An ARC smaller than `c_min` has nothing to give back: `available` must not shrink."""
+    with patch("glances.plugins.mem.model.zfs_enable", return_value=True):
+        plugin = PluginModel(store, config)
+    arc = {"arcstats.size": 2_597_048, "arcstats.c_min": 496_251_904}
+    with (
+        patch("glances.plugins.mem.model.psutil.virtual_memory", return_value=_make_vm()),
+        patch("glances.plugins.mem.model.zfs_stats", return_value=arc),
+    ):
+        await plugin.update()
+
+    payload = store.get("mem")
+    assert payload["available"] == 8_000_000_000
+    assert payload["cached"] == 2_000_000_000 + 2_597_048
+    assert payload["percent"] == 50.0
 
 
 async def test_no_zfs_leaves_psutil_values(store, config):
