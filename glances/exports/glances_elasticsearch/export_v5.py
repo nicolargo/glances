@@ -10,8 +10,9 @@
 
 Ported from the v4 module in this directory: same `[elasticsearch]` section,
 a daily index `<index>-YYYY.MM.DD` (UTC), one bulk action per plugin and
-tick with `_id` `<plugin>.<timestamp>`, `_type` `glances-<plugin>`, and a
-`_source` of `plugin`, `timestamp` and every field as a string. A server
+tick with `_id` `<plugin>.<timestamp>` (no `_type`: mapping types are gone
+since Elasticsearch 8, v4 `807cbed2`), and a `_source` of `plugin`,
+`timestamp` and every field as a string. A server
 that does not answer the startup ping is fatal, as in v4. `elasticsearch`
 is imported when the exporter starts.
 """
@@ -75,7 +76,6 @@ class Export(GlancesExportBase):
         action = {
             "_index": "{}-{}".format(self.index, now.strftime("%Y.%m.%d")),
             "_id": f"{name}.{dt_now}",
-            "_type": f"glances-{name}",
             "_source": {"plugin": name, "timestamp": dt_now},
         }
         action["_source"].update(zip(columns, [str(p) for p in points]))

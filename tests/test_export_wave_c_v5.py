@@ -218,7 +218,9 @@ def test_elasticsearch_bulks_one_stringified_action_per_plugin(backend):
     scalar, collection = backend.writes
     stamp = scalar["_source"]["timestamp"]
     assert scalar["_index"] == f"glances-{stamp[:10].replace('-', '.')}"
-    assert scalar["_id"] == f"fakescalar.{stamp}" and scalar["_type"] == "glances-fakescalar"
+    assert scalar["_id"] == f"fakescalar.{stamp}"
+    # No mapping type per plugin (v4 807cbed2): removed in Elasticsearch 8.
+    assert "_type" not in scalar and "_type" not in collection
     assert scalar["_source"]["plugin"] == "fakescalar"
     assert scalar["_source"]["total"] == "12.5" and scalar["_source"]["label"] == "busy host"
     assert scalar["_source"]["missing"] == "None"
