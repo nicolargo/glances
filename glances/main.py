@@ -802,7 +802,7 @@ def setup_logging(debug: bool, server: bool = False) -> None:
     ``glances.logger`` is the single source of truth for the file location
     (XDG-aware, `$LOG_CFG` override, rotation at 1 MB × 3), for the handler
     set and for the formats — all reused, none duplicated here. It is already
-    in the process, since shared v4 modules import it; calling
+    in the process, since shared modules import it; calling
     ``glances_logger()`` re-applies it, which also makes this idempotent and
     keeps what ``force=True`` was there for: ``dictConfig`` replaces the root
     handler list outright, so a handler a harness (pytest) attached after the

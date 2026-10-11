@@ -8,7 +8,7 @@
 
 """Glances v5 — Cassandra/ScyllaDB export module (P3-3, wave D).
 
-Ported from the v4 module in this directory: same `[cassandra]` section,
+Ported from the v4 module of this exporter: same `[cassandra]` section,
 same keyspace (SimpleStrategy), same table
 `(plugin text, time timeuuid, stat map<text,float>)` and the same rows —
 one per plugin per tick, numbers only, as floats.

@@ -9,7 +9,7 @@
 
 """Glances v5 — InfluxDB 2.x export module (InfluxDB 1.8+ to <3.0).
 
-Ported from the v4 module in this directory. One behavioural change: the
+Ported from the v4 module of this exporter. One behavioural change: the
 client's write buffer is flushed on the EXPORT cadence.
 
 v4 read `args.time` — the CLI refresh rate — whenever `[influxdb2] interval`

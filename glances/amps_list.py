@@ -9,8 +9,7 @@
 
 """Glances v5 — AMP orchestrator.
 
-Replaces v4's `glances/amps_list.py::AmpsList` (left untouched for the v4
-runtime). The AMP-facing contract is unchanged — an AMP is still a
+Replaces v4's `glances/amps_list.py::AmpsList`. The AMP-facing contract is unchanged — an AMP is still a
 `GlancesAmp` subclass with a synchronous `update(process_list)` — so
 third-party AMP scripts written for v4 keep working. What changes is the
 orchestration around them:

@@ -8,7 +8,7 @@
 
 """Glances v5 — OpenTSDB export module (P3-3, wave A).
 
-Ported from the v4 module in this directory: same `[opentsdb]` section, one
+Ported from the v4 module of this exporter: same `[opentsdb]` section, one
 point per numeric field, named `<prefix>.<plugin>.<field>`, with the
 configured `tags`. `potsdb` is imported when the exporter starts.
 """

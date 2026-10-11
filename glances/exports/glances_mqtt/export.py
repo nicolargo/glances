@@ -8,7 +8,7 @@
 
 """Glances v5 — MQTT export module (P3-3, wave B).
 
-Ported from the v4 module in this directory: same `[mqtt]` section, same
+Ported from the v4 module of this exporter: same `[mqtt]` section, same
 topics and payloads. `topic_structure=per-metric` publishes each value on
 `<topic>/<devicename>/<plugin>/<field parts>` (field parts whitelisted to
 `[A-Za-z0-9_-]`); `per-plugin` publishes one JSON document per plugin on

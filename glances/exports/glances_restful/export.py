@@ -8,7 +8,7 @@
 
 """Glances v5 — RESTful export module (P3-3, wave E).
 
-Ported from the v4 module in this directory: same `[restful]` section
+Ported from the v4 module of this exporter: same `[restful]` section
 (`host`, `port`, `protocol`, `path`, all mandatory), and the same body: ONE
 POST per export cycle, `{"<plugin>": {"<field>": value, ...}, ...}`.
 

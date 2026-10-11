@@ -17,7 +17,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from glances import api as api
+from glances import api
 from glances.config import GlancesConfig
 from glances.outputs import fetch
 from glances.outputs.fetch import DEFAULT_TEMPLATE, FetchUI, render, visible_len

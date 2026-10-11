@@ -8,7 +8,7 @@
 
 """Glances v5 — NATS export module (P3-3, wave B).
 
-Ported from the v4 module in this directory: same `[nats]` section (`host` is
+Ported from the v4 module of this exporter: same `[nats]` section (`host` is
 a comma-separated list of servers), one message per plugin and tick on the
 subject `<prefix>.<plugin>`, whose payload is the flat `{column: value}` dict
 as JSON. A server unreachable at start-up is not fatal (v4). `nats-py` is

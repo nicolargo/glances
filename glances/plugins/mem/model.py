@@ -9,8 +9,7 @@
 
 """Glances v5 — memory plugin (scalar).
 
-Migrated from `glances/plugins/mem/__init__.py`. The v4 module is left
-untouched until the final `develop-v5 → develop` merge (architecture §10).
+Migrated from the v4 `glances/plugins/mem/__init__.py`.
 """
 
 from __future__ import annotations

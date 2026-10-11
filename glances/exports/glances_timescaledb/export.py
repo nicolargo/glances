@@ -8,7 +8,7 @@
 
 """Glances v5 — TimescaleDB export module (P3-3, wave D).
 
-Ported from the v4 module in this directory: same `[timescaledb]` section,
+Ported from the v4 module of this exporter: same `[timescaledb]` section,
 same tables (one hypertable per plugin, named after it), same columns
 (`time`, `hostname_id`, `key_id` for a collection, then one column per
 field) and the same PostgreSQL types, so an existing database keeps working.

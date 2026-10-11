@@ -8,7 +8,7 @@
 
 """Glances v5 — Riemann export module (P3-3, wave A).
 
-Ported from the v4 module in this directory: same `[riemann]` section, one
+Ported from the v4 module of this exporter: same `[riemann]` section, one
 event per numeric field, `{"host": <hostname>, "service": "<plugin> <field>",
 "metric": <value>}`. `bernhard` is imported when the exporter starts.
 """

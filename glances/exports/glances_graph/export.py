@@ -8,7 +8,7 @@
 
 """Glances v5 — Graph export module (P3-3, wave E): one SVG chart per plugin.
 
-Ported from the v4 module in this directory: same `[graph]` section (`path`,
+Ported from the v4 module of this exporter: same `[graph]` section (`path`,
 `generate_every`, `width`, `height`, `style`), same `--export-graph-path`
 option, same files (`<path>/<plugin>.svg`, a pygal `DateTimeLine` per
 plugin). The charts are drawn from the history store (history design,

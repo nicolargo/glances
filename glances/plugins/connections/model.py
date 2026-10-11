@@ -9,10 +9,9 @@
 
 """Glances v5 — connections plugin (scalar).
 
-Migrated from `glances/plugins/connections/__init__.py`. The v4 module is
-left untouched until the final `develop-v5 → develop` merge (architecture
-§10). The only scalar plugin of group G6B — do not model `folders` or
-`ports` (both collections) by analogy with it.
+Migrated from the v4 `glances/plugins/connections/__init__.py`. The only
+scalar plugin of group G6B — do not model `folders` or `ports` (both
+collections) by analogy with it.
 
 Two independent sources are collected each cycle:
 

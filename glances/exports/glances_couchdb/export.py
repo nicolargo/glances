@@ -8,7 +8,7 @@
 
 """Glances v5 — CouchDB export module (P3-3, wave C).
 
-Ported from the v4 module in this directory: same `[couchdb]` section (user
+Ported from the v4 module of this exporter: same `[couchdb]` section (user
 and password stay mandatory, CouchDB 3+ requires them), the `db` database is
 created when missing, and one document per plugin and tick:
 `dict(zip(columns, points))` plus `type` (the plugin name) and `time` (v4's

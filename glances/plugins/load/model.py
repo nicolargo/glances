@@ -9,8 +9,7 @@
 
 """Glances v5 — load plugin (scalar).
 
-Migrated from `glances/plugins/load/__init__.py`. The v4 module is left
-untouched until the final `develop-v5 → develop` merge (architecture §10).
+Migrated from the v4 `glances/plugins/load/__init__.py`.
 
 V4-aligned alert semantics:
 - `min1`  is **not watched** — too volatile (transient bursts cause flapping).

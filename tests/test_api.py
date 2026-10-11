@@ -25,7 +25,7 @@ from collections.abc import Mapping
 
 import pytest
 
-from glances import api as api
+from glances import api
 from glances.config import GlancesConfig
 from glances.globals import auto_unit
 from glances.outputs.glances_bars import Bar

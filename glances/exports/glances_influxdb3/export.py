@@ -9,7 +9,7 @@
 
 """Glances v5 — InfluxDB 3.x export module.
 
-Ported from the v4 module in this directory. Same measurement shape as the
+Ported from the v4 module of this exporter. Same measurement shape as the
 1.x and 2.x exporters — `GlancesExportBase.normalize_for_influxdb()` is the
 single implementation.
 """

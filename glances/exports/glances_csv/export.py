@@ -9,7 +9,7 @@
 
 """Glances v5 — CSV export module.
 
-Ported from the v4 module in this directory, with one deliberate departure:
+Ported from the v4 module of this exporter, with one deliberate departure:
 
 - **A column-set change rotates the file instead of refusing to write.**
   v4 logged an error and stopped writing when the header no longer matched

@@ -8,7 +8,7 @@
 
 """Glances v5 — ZeroMQ export module (P3-3, wave B).
 
-Ported from the v4 module in this directory: same `[zeromq]` section, a PUB
+Ported from the v4 module of this exporter: same `[zeromq]` section, a PUB
 socket bound on `tcp://<host>:<port>`, one three-frame message per plugin
 and tick — `prefix`, plugin name, the flat `{column: value}` dict as JSON.
 `pyzmq` is imported when the exporter starts, so this module stays

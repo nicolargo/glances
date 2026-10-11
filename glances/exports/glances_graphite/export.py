@@ -8,7 +8,7 @@
 
 """Glances v5 — Graphite export module (P3-3, wave A).
 
-Ported from the v4 module in this directory: same `[graphite]` section, same
+Ported from the v4 module of this exporter: same `[graphite]` section, same
 metric names (`<prefix>.<system_name>.<plugin>.<field>`, lowercased, spaces
 as `_`), numbers only. `graphitesend` is imported when the exporter starts,
 so this module stays importable without it.

@@ -9,7 +9,7 @@
 
 """Glances v5 — Prometheus export module.
 
-Ported from the v4 module in this directory.
+Ported from the v4 module of this exporter.
 
 Prometheus is a PULL backend: ``start_http_server()`` runs once at init and
 the export cycle only refreshes ``Gauge`` values. Metric names are built

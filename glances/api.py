@@ -8,7 +8,7 @@
 
 """Glances v5 — the Python API.
 
-    >>> from glances import api as api
+    >>> from glances import api
     >>> gl = api.GlancesAPI()
     >>> gl.cpu["total"]
     7.7
@@ -16,8 +16,7 @@
     3472.0
 
 Design: ``docs/superpowers/specs/2026-09-26-glances-v5-python-api-design.md``.
-The v4 API (``glances/api.py``) is left untouched; this module replaces it at
-the ``develop-v5 → develop`` merge.
+It replaces the v4 API of the same name.
 
 v5's plugins are coroutines, and the caller may already be inside a running
 event loop (a Jupyter notebook is), where ``asyncio.run`` refuses to start.

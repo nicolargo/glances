@@ -8,7 +8,7 @@
 
 """Glances v5 — DuckDB export module (P3-3, wave D).
 
-Ported from the v4 module in this directory: same `[duckdb]` section, same
+Ported from the v4 module of this exporter: same `[duckdb]` section, same
 tables (one per plugin, named after it), same columns (`time`,
 `hostname_id`, `key_id` for a collection, then one column per field, `key`
 included) and the same DuckDB types, so an existing database keeps working.

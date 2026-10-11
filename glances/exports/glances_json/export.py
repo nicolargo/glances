@@ -9,7 +9,7 @@
 
 """Glances v5 — JSON export module.
 
-Ported from the v4 module in this directory. The file holds ONE JSON
+Ported from the v4 module of this exporter. The file holds ONE JSON
 object describing the latest cycle and is rewritten — not appended — every
 time, exactly as in v4. Consumers tail the file and re-read it whole.
 

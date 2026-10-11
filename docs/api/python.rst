@@ -16,13 +16,13 @@ TL;DR
 
 .. code-block:: python
 
-    >>> from glances import api as api
+    >>> from glances import api
     >>> gl = api.GlancesAPI()
     >>> gl.cpu
     {'cpucore': 4,
      'ctx_switches': 0.0,
      'guest': 0.0,
-     'idle': 38.5,
+     'idle': 64.7,
      'interrupts': 0.0,
      'iowait': 0.0,
      'irq': 0.0,
@@ -30,23 +30,23 @@ TL;DR
      'soft_interrupts': 0.0,
      'steal': 0.0,
      'syscalls': 0.0,
-     'system': 15.4,
-     'time_since_update': 0.06931250700017699,
-     'total': 61.5,
-     'user': 46.2}
+     'system': 5.9,
+     'time_since_update': 0.07694467100009206,
+     'total': 35.3,
+     'user': 29.4}
     >>> gl.cpu["total"]
-    61.5
+    35.3
     >>> gl.mem["used"]
-    880214016
+    914624512
     >>> gl.auto_unit(gl.mem["used"])
-    '839M'
+    '872M'
     >>> gl.network.keys()
     ['eth0']
     >>> gl.network["eth0"]
-    {'bytes_recv': 23345.13623607054,
-     'bytes_recv_cumul': 192744834,
-     'bytes_sent': 1114065.3621517206,
-     'bytes_sent_cumul': 117394716,
+    {'bytes_recv': 10149.496791124793,
+     'bytes_recv_cumul': 232524860,
+     'bytes_sent': 944.805060950968,
+     'bytes_sent_cumul': 242831957,
      'bytes_speed_rate_per_sec': 0.0,
      'dropped_in': 0.0,
      'dropped_out': 0.0,
@@ -129,7 +129,7 @@ Glances amps
      'regex': True,
      'result': None,
      'result_float': None,
-     'timer': 0.08660578727722168}
+     'timer': 0.09551787376403809}
 
 Amps fields:
 
@@ -183,7 +183,7 @@ Glances core
 .. code-block:: python
 
     >>> gl.core
-    {'log': 4, 'phys': 4, 'time_since_update': 0.07368776400016941}
+    {'log': 4, 'phys': 4, 'time_since_update': 0.08141684400015947}
 
 Core fields:
 
@@ -199,7 +199,7 @@ Glances cpu
     {'cpucore': 4,
      'ctx_switches': 0.0,
      'guest': 0.0,
-     'idle': 38.5,
+     'idle': 64.7,
      'interrupts': 0.0,
      'iowait': 0.0,
      'irq': 0.0,
@@ -207,10 +207,10 @@ Glances cpu
      'soft_interrupts': 0.0,
      'steal': 0.0,
      'syscalls': 0.0,
-     'system': 15.4,
-     'time_since_update': 0.06931250700017699,
-     'total': 61.5,
-     'user': 46.2}
+     'system': 5.9,
+     'time_since_update': 0.07694467100009206,
+     'total': 35.3,
+     'user': 29.4}
 
 Cpu fields:
 
@@ -254,15 +254,15 @@ Glances diskio
     {'disk_name': 'vda',
      'hidden': False,
      'read_bytes': 0.0,
-     'read_bytes_cumul': 954582016,
+     'read_bytes_cumul': 1223902208,
      'read_count': 0.0,
-     'read_count_cumul': 50197,
+     'read_count_cumul': 54966,
      'read_latency': 0,
      'read_time': 0.0,
-     'write_bytes': 166557.29792685667,
-     'write_bytes_cumul': 1369006080,
-     'write_count': 13.554467604724664,
-     'write_count_cumul': 24710,
+     'write_bytes': 0.0,
+     'write_bytes_cumul': 1698881536,
+     'write_count': 0.0,
+     'write_count_cumul': 32907,
      'write_latency': 0,
      'write_time': 0.0}
 
@@ -310,13 +310,13 @@ Glances fs
      '/mnt/skills/public', '/mnt/skills/examples']
     >>> gl.fs['/']
     {'device_name': '/dev/vda',
-     'free': 29979713536,
+     'free': 29795254272,
      'fs_type': 'ext4',
      'mnt_point': '/',
      'options': 'rw,relatime,discard,no_prefetch_block_bitmaps,resv_strict,resuid=65534,resgid=65534',
-     'percent': 27.1,
+     'percent': 27.6,
      'size': 270553174016,
-     'used': 11154362368}
+     'used': 11338821632}
 
 Fs fields:
 
@@ -371,7 +371,7 @@ Glances ip
     {'address': '192.0.2.2',
      'mask': '255.255.255.0',
      'mask_cidr': 24,
-     'time_since_update': 0.0756522789997689}
+     'time_since_update': 0.08423473499988177}
 
 Ip fields:
 
@@ -389,10 +389,10 @@ Glances load
 
     >>> gl.load
     {'cpucore': 4,
-     'min1': 0.904296875,
-     'min15': 0.56201171875,
-     'min5': 0.560546875,
-     'time_since_update': 0.07595141100000546}
+     'min1': 0.85791015625,
+     'min15': 1.087890625,
+     'min5': 1.34228515625,
+     'time_since_update': 0.084564071999921}
 
 Load fields:
 
@@ -415,18 +415,18 @@ Glances mem
 .. code-block:: python
 
     >>> gl.mem
-    {'active': 1073631232,
-     'available': 15994716160,
-     'buffers': 264708096,
-     'cached': 1597554688,
-     'free': 14419484672,
-     'inactive': 1089409024,
-     'percent': 5.2,
+    {'active': 1285890048,
+     'available': 15960305664,
+     'buffers': 297066496,
+     'cached': 2069483520,
+     'free': 13895008256,
+     'inactive': 1408208896,
+     'percent': 5.4,
      'shared': 14733312,
-     'slab': 143499264,
-     'time_since_update': 0.06781277100026273,
+     'slab': 168710144,
+     'time_since_update': 0.07441861000006611,
      'total': 16874930176,
-     'used': 880214016}
+     'used': 914624512}
 
 Mem fields:
 
@@ -460,7 +460,7 @@ Glances memswap
      'percent': 0.0,
      'sin': 0.0,
      'sout': 0.0,
-     'time_since_update': 0.07642880200000945,
+     'time_since_update': 0.08488404099989566,
      'total': 0,
      'used': 0}
 
@@ -488,10 +488,10 @@ Glances network
     >>> gl.network.keys()
     ['eth0']
     >>> gl.network['eth0']
-    {'bytes_recv': 23345.13623607054,
-     'bytes_recv_cumul': 192744834,
-     'bytes_sent': 1114065.3621517206,
-     'bytes_sent_cumul': 117394716,
+    {'bytes_recv': 10149.496791124793,
+     'bytes_recv_cumul': 232524860,
+     'bytes_sent': 944.805060950968,
+     'bytes_sent_cumul': 242831957,
      'bytes_speed_rate_per_sec': 0.0,
      'dropped_in': 0.0,
      'dropped_out': 0.0,
@@ -531,9 +531,9 @@ Glances now
 .. code-block:: python
 
     >>> gl.now
-    {'custom': '2026-10-11 15:10:50 UTC',
-     'iso': '2026-10-11T15:10:50+00:00',
-     'time_since_update': 0.07584123300011925}
+    {'custom': '2026-10-11 15:21:44 UTC',
+     'iso': '2026-10-11T15:21:44+00:00',
+     'time_since_update': 0.0831626059998598}
 
 Now fields:
 
@@ -551,15 +551,15 @@ Glances percpu
     {'cpu_number': 0,
      'guest': 0.0,
      'guest_nice': 0.0,
-     'idle': 66.7,
+     'idle': 75.0,
      'iowait': 0.0,
      'irq': 0.0,
      'nice': 0.0,
      'softirq': 0.0,
      'steal': 0.0,
      'system': 0.0,
-     'total': 33.3,
-     'user': 33.3}
+     'total': 25.0,
+     'user': 25.0}
 
 Percpu fields:
 
@@ -630,9 +630,9 @@ Glances processcount
      'running': 1,
      'sleeping': 36,
      'sort_key': 'cpu_percent',
-     'thread': 125,
-     'time_since_update': 0.04733782700031952,
-     'total': 82}
+     'thread': 128,
+     'time_since_update': 0.04919852599959995,
+     'total': 85}
 
 Processcount fields:
 
@@ -650,53 +650,41 @@ Glances processlist
 .. code-block:: python
 
     >>> gl.processlist.keys()
-    [6121, 6154, 120, 87, 6150, 1, 82, 6120, 83, 2, 3, 4, 5, 6, 7, 8, 10, 13, 14,
-     15, 16, 17, 18, 19, 20, 21, 22, 24, 25, 26, 27, 28, 29, 30, 31, 32, 34, 35, 36,
-     37, 38, 39, 40, 41, 42, 44, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58,
-     59, 60, 61, 62, 63, 64, 67, 68, 69, 76, 77, 79, 80, 1693, 4530, 5452, 17040,
-     17198, 19363, 21728, 21777, 26236, 28559]
-    >>> gl.processlist[6121]
-    {'cmdline': ['npm exec block-no-verify@1.1.2',
-                 '',
-                 '',
-                 '',
-                 '',
-                 '',
-                 '',
-                 '',
-                 '',
-                 '',
-                 '',
-                 '',
-                 '',
-                 '',
-                 '',
-                 '',
-                 ''],
-     'cpu_num': 1,
-     'cpu_percent': 141.3,
-     'cpu_times': {'children_system': 0.0,
+    [27399, 27382, 120, 87, 27380, 1, 82, 27381, 83, 2, 3, 4, 5, 6, 7, 8, 10, 13,
+     14, 15, 16, 17, 18, 19, 20, 21, 22, 24, 25, 26, 27, 28, 29, 30, 31, 32, 34, 35,
+     36, 37, 38, 39, 40, 41, 42, 44, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57,
+     58, 59, 60, 61, 62, 63, 64, 67, 68, 69, 76, 77, 79, 80, 4530, 5452, 7996, 9314,
+     11797, 17198, 19363, 21777, 21874, 22156, 23044, 26236, 28559]
+    >>> gl.processlist[27399]
+    {'cmdline': ['/tmp/claude-0/-home-user-glances/e9f514df-ce0c-51e4-ae2a-cfc1eafb2ab6/scratchpad/venv/bin/python',
+                 '-m',
+                 'glances.api_doc',
+                 '-C',
+                 'conf/glances.conf'],
+     'cpu_num': 2,
+     'cpu_percent': 80.8,
+     'cpu_times': {'children_system': 0.01,
                    'children_user': 0.0,
                    'iowait': 0.0,
-                   'system': 0.08,
-                   'user': 0.56},
+                   'system': 0.09,
+                   'user': 0.32},
      'gids': {'effective': 0, 'real': 0, 'saved': 0},
-     'io_counters': [0, 16384, 0, 16384, 1],
+     'io_counters': [0, 245760, 0, 245760, 1],
      'key': 'pid',
-     'memory_info': {'data': 129896448,
+     'memory_info': {'data': 81723392,
                      'dirty': 0,
                      'lib': 0,
-                     'rss': 101978112,
-                     'shared': 53035008,
-                     'text': 39653376,
-                     'vms': 1375858688},
-     'memory_percent': 0.6043172382724057,
-     'name': 'npm exec block-no-verify@1.1.2',
+                     'rss': 55128064,
+                     'shared': 18956288,
+                     'text': 2752512,
+                     'vms': 448512000},
+     'memory_percent': 0.3266861754391415,
+     'name': 'python',
      'nice': 0,
-     'num_threads': 11,
-     'pid': 6121,
-     'status': 'R',
-     'time_since_update': 0.07651209831237793,
+     'num_threads': 6,
+     'pid': 27399,
+     'status': 'S',
+     'time_since_update': 0.08295726776123047,
      'username': 'root'}
 
 Processlist fields:
@@ -774,7 +762,7 @@ Glances programlist
 .. code-block:: python
 
     >>> gl.programlist.keys()
-    ['npm exec block-no-verify@1.1.2', 'python', 'claude', 'environment-manager',
+    ['python', 'npm exec block-no-verify@1.1.2', 'claude', 'environment-manager',
      'bash', 'process_api', '6', 'sh', 'kthreadd', 'pool_workqueue_release',
      'kworker/R-rcu_gp', 'kworker/R-sync_wq', 'kworker/R-kvfree_rcu_reclaim',
      'kworker/R-slub_flushwq', 'kworker/R-netns', 'kworker/0:0H-events_highpri',
@@ -787,39 +775,41 @@ Glances programlist
      'kworker/R-inet_frag_wq', 'rcu_tasks_kthread', 'rcu_tasks_rude_kthread',
      'rcu_tasks_trace_kthread', 'kauditd', 'khungtaskd', 'oom_reaper',
      'kworker/R-writeback', 'kcompactd0', 'ksmd', 'khugepaged', 'kworker/R-kblockd',
-     'kworker/1:1-events_freezable', 'kworker/2:1-events', 'kworker/3:1-events',
-     'watchdogd', 'kworker/R-quota_events_unbound', 'kworker/2:1H-kblockd',
-     'kswapd0', 'kworker/R-xfsalloc', 'kworker/R-xfs_mru_cache', 'kworker/u17:0',
-     'kworker/R-kthrotld', 'irq/24-ACPI:Ged', 'irq/25-ACPI:Ged', 'hwrng',
-     'kworker/R-kstrp', 'kworker/1:1H-kblockd', 'kworker/0:1H-kblockd',
-     'kworker/3:1H-kblockd', 'kworker/0:2-events', 'kworker/R-ext4-rsv-conversion',
-     'kworker/u16:3-iou_exit', 'kworker/u16:0', 'kworker/u16:1-iou_exit',
-     'kworker/0:0', 'kworker/3:2', 'kworker/u16:2-iou_exit',
-     'kworker/u16:5-iou_exit', 'kworker/u16:7-ext4-rsv-conversion',
+     'kworker/1:1-events_freezable', 'kworker/2:1-mm_percpu_wq',
+     'kworker/3:1-mm_percpu_wq', 'watchdogd', 'kworker/R-quota_events_unbound',
+     'kworker/2:1H-kblockd', 'kswapd0', 'kworker/R-xfsalloc',
+     'kworker/R-xfs_mru_cache', 'kworker/u17:0', 'kworker/R-kthrotld',
+     'irq/24-ACPI:Ged', 'irq/25-ACPI:Ged', 'hwrng', 'kworker/R-kstrp',
+     'kworker/1:1H-kblockd', 'kworker/0:1H-kblockd', 'kworker/3:1H-kblockd',
+     'kworker/0:2-events', 'kworker/R-ext4-rsv-conversion',
+     'kworker/u16:0-iou_exit', 'kworker/u16:1-iou_exit', 'kworker/u16:6-iou_exit',
+     'kworker/0:1-events', 'kworker/u16:9-iou_exit', 'kworker/3:2',
+     'kworker/u16:2-kvfree_rcu_reclaim', 'kworker/u16:7-iou_exit',
+     'kworker/u16:3-flush-254:0', 'kworker/u16:4-iou_exit', 'kworker/u16:5',
      'kworker/u16:8-iou_exit', 'kworker/1:0-mm_percpu_wq']
-    >>> gl.programlist['npm exec block-no-verify@1.1.2']
-    {'cmdline': ['npm exec block-no-verify@1.1.2'],
-     'cpu_percent': 141.3,
-     'cpu_times': {'children_system': 0.0,
+    >>> gl.programlist['python']
+    {'cmdline': ['python'],
+     'cpu_percent': 80.8,
+     'cpu_times': {'children_system': 0.01,
                    'children_user': 0.0,
                    'iowait': 0.0,
-                   'system': 0.08,
-                   'user': 0.56},
-     'io_counters': [0, 16384, 0, 16384, 1],
-     'memory_info': {'data': 129896448,
+                   'system': 0.09,
+                   'user': 0.32},
+     'io_counters': [0, 245760, 0, 245760, 1],
+     'memory_info': {'data': 81723392,
                      'dirty': 0,
                      'lib': 0,
-                     'rss': 101978112,
-                     'shared': 53035008,
-                     'text': 39653376,
-                     'vms': 1375858688},
-     'memory_percent': 0.6043172382724057,
-     'name': 'npm exec block-no-verify@1.1.2',
+                     'rss': 55128064,
+                     'shared': 18956288,
+                     'text': 2752512,
+                     'vms': 448512000},
+     'memory_percent': 0.3266861754391415,
+     'name': 'python',
      'nice': 0,
      'nprocs': 1,
-     'num_threads': 11,
-     'status': 'R',
-     'time_since_update': 0.07651209831237793,
+     'num_threads': 6,
+     'status': 'S',
+     'time_since_update': 0.08295726776123047,
      'username': 'root'}
 
 Programlist fields:
@@ -853,7 +843,7 @@ Glances psutilversion
 .. code-block:: python
 
     >>> gl.psutilversion
-    {'time_since_update': 0.05393677900019611, 'version': '7.2.2'}
+    {'time_since_update': 0.05629989600038243, 'version': '7.2.2'}
 
 Psutilversion fields:
 
@@ -866,22 +856,22 @@ Glances quicklook
 
     >>> gl.quicklook
     {'bar_char': '▪',
-     'cpu': 61.5,
+     'cpu': 35.3,
      'cpu_hz_current': 2799998000,
      'cpu_log_core': 4,
      'cpu_name': 'Intel(R) Xeon(R) Processor @ 2.80GHz',
      'cpu_phys_core': 4,
-     'load': 14.1,
+     'load': 27.2,
      'max_cpu_display': 4,
-     'mem': 5.2,
-     'percpu': [{'cpu_number': 0, 'level': 'ok', 'total': 33.3},
+     'mem': 5.4,
+     'percpu': [{'cpu_number': 0, 'level': 'ok', 'total': 25.0},
                 {'cpu_number': 1, 'level': 'warning', 'total': 80.0},
-                {'cpu_number': 2, 'level': 'careful', 'total': 66.7},
-                {'cpu_number': 3, 'level': 'careful', 'total': 66.7}],
+                {'cpu_number': 2, 'level': 'ok', 'total': 16.7},
+                {'cpu_number': 3, 'level': 'ok', 'total': 0.0}],
      'percpu_other': None,
      'stats_list': ['cpu', 'mem', 'load'],
      'swap': 0.0,
-     'time_since_update': 0.0543863739999324}
+     'time_since_update': 0.05632940499981487}
 
 Quicklook fields:
 
@@ -944,7 +934,7 @@ Glances system
      'os_name': 'Linux',
      'os_version': '6.18.44-fc-v114',
      'platform': '64bit',
-     'time_since_update': 0.053897801999937656}
+     'time_since_update': 0.05610885599980975}
 
 System fields:
 
@@ -961,7 +951,7 @@ Glances uptime
 .. code-block:: python
 
     >>> gl.uptime
-    {'seconds': 3613, 'time_since_update': 0.05446407499994166}
+    {'seconds': 4267, 'time_since_update': 0.05849941799988301}
 
 Uptime fields:
 
@@ -973,7 +963,7 @@ Glances version
 .. code-block:: python
 
     >>> gl.version
-    {'time_since_update': 0.05470002999982171, 'version': '5.0.0b1'}
+    {'time_since_update': 0.05873382699974172, 'version': '5.0.0b1'}
 
 Version fields:
 
@@ -1001,7 +991,7 @@ Human-readable units, as the terminal interface shows them:
 .. code-block:: python
 
     >>> gl.auto_unit(gl.mem["used"])
-    '839M'
+    '872M'
 
 A percentage as a text bar:
 
@@ -1015,16 +1005,16 @@ The top processes (the API's own process is left out):
 .. code-block:: python
 
     >>> gl.top_process()
-    [{'cpu_percent': 141.3,
-      'memory_percent': 0.6043172382724057,
+    [{'cpu_percent': 80.7,
+      'memory_percent': 0.5609904812207028,
       'name': 'npm exec block-no-verify@1.1.2',
-      'pid': 6121},
-     {'cpu_percent': 56.3,
-      'memory_percent': 2.658806521392981,
+      'pid': 27382},
+     {'cpu_percent': 0.0,
+      'memory_percent': 2.965443452392511,
       'name': 'claude',
       'pid': 120},
      {'cpu_percent': 0.0,
-      'memory_percent': 0.2695725287485776,
+      'memory_percent': 0.3061272044459806,
       'name': 'environment-manager',
       'pid': 87}]
 

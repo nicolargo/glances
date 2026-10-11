@@ -27,9 +27,8 @@ from typing import Any
 
 from glances.api import GlancesAPI, PluginView
 
-# The import users write. Becomes `from glances import api` at the merge,
-# when api replaces the v4 module (design §1, decision 3).
-_IMPORT = "from glances import api as api"
+# The import users write (design §1, decision 3).
+_IMPORT = "from glances import api"
 
 _HEADER = """\
 .. _api:

@@ -8,7 +8,7 @@
 
 """Glances v5 — MongoDB export module (P3-3, wave C).
 
-Ported from the v4 module in this directory: same `[mongodb]` section, one
+Ported from the v4 module of this exporter: same `[mongodb]` section, one
 document per plugin and tick, `dict(zip(columns, points))`, inserted in the
 collection named after the plugin, in the `db` database. An unreachable
 server at startup is fatal, as in v4. `pymongo` is imported when the

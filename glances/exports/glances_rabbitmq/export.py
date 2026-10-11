@@ -8,7 +8,7 @@
 
 """Glances v5 — RabbitMQ export module (P3-3, wave B).
 
-Ported from the v4 module in this directory: same `[rabbitmq]` section, one
+Ported from the v4 module of this exporter: same `[rabbitmq]` section, one
 message per plugin and tick on the default exchange, routed to `queue`, whose
 body is the v4 text line `hostname=<h>, name=<plugin>, dateinfo=<UTC ISO>,
 <column>=<value>, ...` (numbers only). `pika` is imported when the exporter

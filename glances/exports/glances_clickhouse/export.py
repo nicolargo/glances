@@ -8,7 +8,7 @@
 
 """Glances v5 — ClickHouse export module (P3-3, wave C).
 
-Ported from the v4 module in this directory: same `[clickhouse]` section, one
+Ported from the v4 module of this exporter: same `[clickhouse]` section, one
 MergeTree table per plugin (named after it, `ORDER BY time`) created on first
 use and widened when a new field appears, columns `time`, `hostname_id`,
 `key_id` (collections only) then one column per raw stat field, typed from

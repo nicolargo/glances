@@ -8,7 +8,7 @@
 
 """Glances v5 — Kafka export module (P3-3, wave B).
 
-Ported from the v4 module in this directory: same `[kafka]` section, one
+Ported from the v4 module of this exporter: same `[kafka]` section, one
 message per plugin and tick on `topic`, keyed by the plugin name (bytes,
 #1593), whose value is the flat `{column: value}` dict as JSON, with the
 optional `tags` merged in. `kafka-python` is imported when the exporter

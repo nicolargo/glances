@@ -8,7 +8,7 @@
 
 """Glances v5 — StatsD export module (P3-3, wave A).
 
-Ported from the v4 module in this directory: same `[statsd]` section, one
+Ported from the v4 module of this exporter: same `[statsd]` section, one
 gauge per numeric field, named `<plugin>.<field>` under `prefix`, with v4's
 character clean-up (#1068). `statsd` is imported when the exporter starts.
 """
