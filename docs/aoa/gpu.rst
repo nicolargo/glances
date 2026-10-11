@@ -8,15 +8,17 @@ For the moment, following GPU are supported:
 - NVidia Jetson / Tegra integrated GPU (NVML reports the device but not its
   telemetry, so usage and temperature are read from Tegra sysfs)
 - AMD (only on Linux Operating system with kernel 5.14 or higher)
-- Intel (only on Linux Operating system)
+- Intel (only on Linux Operating system; drivers: i915, xe)
 - ARM (only on Linux Operating system with kernel 6.0 or higher;
   drivers: msm/Adreno, Panfrost, Panthor, v3d, Lima, Etnaviv)
 
 The GPU stats are shown as a percentage of value and for the configured
 refresh time. It displays:
 
-- GPU usage (NVidia, AMD and ARM) or frequency (Intel)
-- memory consumption (NVidia, AMD, and ARM when exposed by fdinfo)
+- GPU usage (NVidia, AMD, ARM and Intel) or frequency (Intel fallback when
+  no per-client engine counters are available in ``/proc/*/fdinfo``)
+- memory consumption (NVidia, AMD, ARM and Intel when exposed by fdinfo;
+  on integrated GPUs this is GPU-resident shared system memory)
 - temperature (if available)
 
 .. note::

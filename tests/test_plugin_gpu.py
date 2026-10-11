@@ -9,9 +9,13 @@
 
 """Tests for the GPU plugin (ARM and Tegra backends)."""
 
+import os
+import time
+
 import pytest
 
 from glances.globals import LINUX
+from glances.plugins.gpu.cards import intel as intel_backend
 from glances.plugins.gpu.cards import tegra
 from glances.plugins.gpu.cards.arm import (
     ArmGPU,
@@ -22,10 +26,17 @@ from glances.plugins.gpu.cards.arm import (
     get_mem_capacity_bytes,
     parse_fdinfo,
 )
+from glances.plugins.gpu.cards.intel import IntelGPU
 
 ARM_TEST_DATA_ROOT = './tests-data/plugins/gpu/arm'
 ARM_DRM_ROOT = f'{ARM_TEST_DATA_ROOT}/sys/class/drm'
 ARM_PROC_ROOT = f'{ARM_TEST_DATA_ROOT}/proc'
+
+INTEL_TEST_DATA_ROOT = './tests-data/plugins/gpu/intel'
+INTEL_DRM_ROOT = f'{INTEL_TEST_DATA_ROOT}/sys/class/drm'
+INTEL_PROC_ROOT = f'{INTEL_TEST_DATA_ROOT}/proc'
+# Fixture frequencies: 300 / 1450 MHz -> frequency fallback is 21 %.
+INTEL_FREQ_FALLBACK = 21
 
 TEGRA_TEST_DATA_ROOT = './tests-data/plugins/gpu/tegra'
 TEGRA_GPU_FOLDER = f'{TEGRA_TEST_DATA_ROOT}/sys/devices/platform/gpu.0'
@@ -278,6 +289,233 @@ class TestTegraBackend:
 
     def test_temperature_missing_root(self):
         assert tegra.get_temperature(thermal_root='/this/does/not/exist') is None  # nosec B101
+
+
+@pytest.fixture
+def intel_gpu():
+    """Return an IntelGPU instance wired to the test fixtures."""
+    return IntelGPU(drm_root_folder=INTEL_DRM_ROOT, proc_root_folder=INTEL_PROC_ROOT)
+
+
+# Intel (i915/xe) fdinfo engine-busy tests against committed fixtures.
+class TestIntelFdinfoParser:
+    """Unit tests for the Intel fdinfo parser (pure, no I/O)."""
+
+    def test_valid_i915_record(self):
+        text = (
+            "pos:\t0\n"
+            "drm-driver:\ti915\n"
+            "drm-pdev:\t0000:00:02.0\n"
+            "drm-engine-render:\t5000000 ns\n"
+            "drm-engine-copy:\t3000000 ns\n"
+            "drm-engine-video:\t0 ns\n"
+            "drm-engine-capacity-video:\t2\n"
+            "drm-engine-video-enhance:\t0 ns\n"
+        )
+        record = intel_backend.parse_fdinfo(text)
+        assert record is not None
+        assert record['driver'] == 'i915'
+        assert record['pdev'] == '0000:00:02.0'
+        # Capacity entries are counts, not time -- must be excluded.
+        assert record['engine_total_ns'] == 8000000
+
+    def test_not_a_drm_fd(self):
+        assert intel_backend.parse_fdinfo("pos:\t0\nflags:\t02100002\n") is None
+
+    def test_empty_text(self):
+        assert intel_backend.parse_fdinfo("") is None
+
+    def test_missing_driver_line(self):
+        text = "pos:\t0\ndrm-pdev:\t0000:00:02.0\ndrm-engine-render:\t1 ns\n"
+        assert intel_backend.parse_fdinfo(text) is None
+
+    def test_malformed_lines_do_not_crash(self):
+        text = "drm-driver:\ti915\ndrm-engine-render:\tnotanumber ns\nno-colon-here\n"
+        record = intel_backend.parse_fdinfo(text)
+        assert record is not None
+        assert record['engine_total_ns'] == 0
+
+    def test_non_ns_unit_ignored(self):
+        text = "drm-driver:\ti915\ndrm-engine-render:\t100 ticks\n"
+        record = intel_backend.parse_fdinfo(text)
+        assert record is not None
+        assert record['engine_total_ns'] == 0
+
+
+@pytest.mark.skipif(not LINUX, reason="Intel GPU backend is Linux-only")
+class TestIntelBackendDiscovery:
+    """Discovery tests against the committed test fixtures."""
+
+    def test_device_enumeration(self, intel_gpu):
+        assert len(intel_gpu.device_folders) == 1
+        device, driver, _pdev = intel_gpu.device_folders[0]
+        assert driver == 'i915'
+        assert device.endswith('card0')
+
+    def test_stats_shape(self, intel_gpu):
+        stats = intel_gpu.get_device_stats()
+        assert isinstance(stats, list)
+        assert len(stats) == 1
+        entry = stats[0]
+        for key in ('key', 'gpu_id', 'name', 'mem', 'proc', 'temperature', 'fan_speed'):
+            assert key in entry
+        assert entry['key'] == 'gpu_id'
+        assert entry['gpu_id'] == 'intel0'
+
+    def test_mem_from_fdinfo_resident(self, intel_gpu):
+        # Numerator: 1158 + 512 = 1670 KiB resident (from fdinfo).
+        # No meminfo fixture -> capacity None -> denominator is the fdinfo
+        # drm-total sum: 2316 + 1024 = 3340 KiB -> 1670 / 3340 = 50%.
+        stats = intel_gpu.get_device_stats()
+        assert stats[0]['mem'] == 50
+
+    def test_temp_fan_always_none(self, intel_gpu):
+        stats = intel_gpu.get_device_stats()
+        assert stats[0]['temperature'] is None
+        assert stats[0]['fan_speed'] is None
+
+    def test_proc_first_call_uses_freq_fallback(self, intel_gpu):
+        # Delta-based engine load has no previous sample on first call,
+        # so the frequency ratio (300/1450 MHz) is reported.
+        stats = intel_gpu.get_device_stats()
+        assert stats[0]['proc'] == INTEL_FREQ_FALLBACK
+
+    def test_proc_second_call_is_engine_busy(self, intel_gpu):
+        intel_gpu.get_device_stats()
+        stats = intel_gpu.get_device_stats()
+        assert isinstance(stats[0]['proc'], int)
+        assert 0 <= stats[0]['proc'] <= 100
+
+
+class TestIntelBackendNoHardware:
+    """Backend must degrade gracefully with no hardware / no sysfs."""
+
+    def test_missing_drm_root(self):
+        backend = IntelGPU(
+            drm_root_folder='/this/path/does/not/exist',
+            proc_root_folder='/this/path/does/not/exist',
+        )
+        assert backend.device_folders == []
+        assert backend.get_device_stats() == []
+
+    def test_missing_proc_root_keeps_freq_fallback(self):
+        backend = IntelGPU(
+            drm_root_folder=INTEL_DRM_ROOT,
+            proc_root_folder='/this/path/does/not/exist',
+        )
+        stats = backend.get_device_stats() if LINUX else []
+        if LINUX:
+            assert len(stats) == 1
+            assert stats[0]['proc'] == INTEL_FREQ_FALLBACK
+
+
+@pytest.mark.skipif(not LINUX, reason="Intel GPU backend is Linux-only")
+class TestIntelAggregation:
+    """Aggregation layer tests."""
+
+    def test_aggregate_fdinfo_sums_engine_time(self):
+        devices = intel_backend.get_device_list(INTEL_DRM_ROOT)
+        per_device = intel_backend.aggregate_fdinfo(INTEL_PROC_ROOT, devices)
+        assert len(per_device) == 1
+        bucket = next(iter(per_device.values()))
+        # Client 1: 5_000_000 + 3_000_000 + 0 + 0 = 8_000_000 ns
+        # Client 2: 1_000_000 + 500_000 = 1_500_000 ns
+        assert bucket['engine_total_ns'] == 9_500_000
+
+
+@pytest.mark.skipif(not LINUX, reason="Intel GPU backend is Linux-only")
+class TestIntelPerPid:
+    """Per-PID engine-time sampler (nvtop-style source for the GPU% column)."""
+
+    PID = 424242
+
+    def _write_fdinfo(self, proc_root, pid, render_ns):
+        fdinfo_dir = os.path.join(str(proc_root), str(pid), 'fdinfo')
+        os.makedirs(fdinfo_dir, exist_ok=True)
+        with open(os.path.join(fdinfo_dir, '7'), 'w') as f:
+            f.write(
+                "pos:\t0\n"
+                "drm-driver:\ti915\n"
+                "drm-pdev:\t0000:00:02.0\n"
+                f"drm-engine-render:\t{render_ns} ns\n"
+            )
+
+    def test_first_sighting_reports_nothing(self, tmp_path):
+        self._write_fdinfo(tmp_path, self.PID, 1_000_000)
+        assert intel_backend.get_per_pid_gpu_percent(str(tmp_path)) == {}
+
+    def test_busy_pid_reports_clamped_percent(self, tmp_path):
+        self._write_fdinfo(tmp_path, self.PID, 1_000_000)
+        intel_backend.get_per_pid_gpu_percent(str(tmp_path))
+        # +50s of engine time: busy over any sane interval -> clamped to 100.
+        self._write_fdinfo(tmp_path, self.PID, 1_000_000 + 50_000_000_000)
+        result = intel_backend.get_per_pid_gpu_percent(str(tmp_path))
+        assert result[self.PID] == 100
+
+    def test_idle_pid_reports_zero(self, tmp_path):
+        pid = self.PID + 1
+        self._write_fdinfo(tmp_path, pid, 2_000_000)
+        intel_backend.get_per_pid_gpu_percent(str(tmp_path))
+        time.sleep(0.02)
+        result = intel_backend.get_per_pid_gpu_percent(str(tmp_path))
+        assert result[pid] == 0
+
+    def test_stale_pids_are_pruned(self, tmp_path):
+        # Empty proc root: nothing reported, previous samples dropped.
+        assert intel_backend.get_per_pid_gpu_percent(str(tmp_path)) == {}
+
+    def test_per_pid_mem_bytes(self, tmp_path):
+        fdinfo_dir = os.path.join(str(tmp_path), '424243', 'fdinfo')
+        os.makedirs(fdinfo_dir, exist_ok=True)
+        with open(os.path.join(fdinfo_dir, '7'), 'w') as f:
+            f.write(
+                "drm-driver:\ti915\n"
+                "drm-total-system0:\t2048 KiB\n"
+                "drm-resident-system0:\t1024 KiB\n"
+                "drm-engine-render:\t0 ns\n"
+            )
+        result = intel_backend.get_per_pid_gpu_mem_bytes(str(tmp_path))
+        assert result[424243] == 1024 * 1024
+        assert intel_backend.get_per_pid_gpu_mem_bytes(str(tmp_path / 'missing')) == {}
+
+    def test_presence_detection(self):
+        assert intel_backend.intel_gpu_present(INTEL_DRM_ROOT) is True
+        assert intel_backend.intel_gpu_present('/this/path/does/not/exist') is False
+
+
+@pytest.mark.skipif(not LINUX, reason="Intel GPU backend is Linux-only")
+class TestIntelMem:
+    """GPU memory (resident shared buffers) from fdinfo region counters."""
+
+    def test_parser_sums_region_counters(self):
+        text = (
+            "drm-driver:\ti915\n"
+            "drm-pdev:\t0000:00:02.0\n"
+            "drm-total-system0:\t2316 KiB\n"
+            "drm-resident-system0:\t1158 KiB\n"
+            "drm-shared-system0:\t100 KiB\n"
+            "drm-active-system0:\t50 KiB\n"
+            "drm-engine-render:\t5 ns\n"
+        )
+        record = intel_backend.parse_fdinfo(text)
+        assert record is not None
+        # Shared/active are subsets and must not double-count.
+        assert record['mem_total_bytes'] == 2316 * 1024
+        assert record['mem_used_bytes'] == 1158 * 1024
+
+    def test_parser_malformed_memory_ignored(self):
+        text = "drm-driver:\ti915\ndrm-total-system0:\tnotanumber\ndrm-resident-system0:\t1 QB\n"
+        record = intel_backend.parse_fdinfo(text)
+        assert record is not None
+        assert record['mem_total_bytes'] == 0
+        assert record['mem_used_bytes'] == 0
+
+    def test_aggregation_sums_memory(self):
+        devices = intel_backend.get_device_list(INTEL_DRM_ROOT)
+        per_device = intel_backend.aggregate_fdinfo(INTEL_PROC_ROOT, devices)
+        bucket = next(iter(per_device.values()))
+        assert bucket['mem_total_bytes'] == (2316 + 1024) * 1024
+        assert bucket['mem_used_bytes'] == (1158 + 512) * 1024
 
 
 class TestGpuPluginIntegration:
