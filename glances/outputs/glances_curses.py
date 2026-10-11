@@ -534,6 +534,9 @@ class _GlancesCurses:
         """
         ret = {}
 
+        # No more process rows than the screen has lines
+        self.args.process_rows = self.term_window.getmaxyx()[0]
+
         for p in stats.getPluginsList(enable=False):
             # Ignore Quicklook because it is compute later in __display_top
             if p == 'quicklook':

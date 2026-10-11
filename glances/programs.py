@@ -16,14 +16,15 @@ def create_program_dict(p):
     """Create a new entry in the dict (new program)"""
     return {
         'time_since_update': p['time_since_update'],
-        # some values can be None, e.g. macOS system processes
-        'num_threads': p['num_threads'] or 0,
-        'cpu_percent': p['cpu_percent'] or 0,
-        'memory_percent': p['memory_percent'] or 0,
-        'cpu_times': p['cpu_times'] or {},
-        'memory_info': p['memory_info'] or {},
+        # some values can be None, e.g. macOS system processes, and stats listed in the
+        # [processlist] disable_stats option are not in the process dict at all
+        'num_threads': p.get('num_threads') or 0,
+        'cpu_percent': p.get('cpu_percent') or 0,
+        'memory_percent': p.get('memory_percent') or 0,
+        'cpu_times': p.get('cpu_times') or {},
+        'memory_info': p.get('memory_info') or {},
         # A copy: the program must not borrow - and then grow - the process's own list.
-        'io_counters': list(p['io_counters'] or NO_IO_COUNTERS),
+        'io_counters': list(p.get('io_counters') or NO_IO_COUNTERS),
         'childrens': [p['pid']],
         # Others keys are not used
         # but should be set to be compliant with the existing process_list
@@ -31,8 +32,8 @@ def create_program_dict(p):
         'cmdline': [p['name']],
         'pid': '_',
         'username': p.get('username', '_'),
-        'nice': p['nice'],
-        'status': p['status'],
+        'nice': p.get('nice'),
+        'status': p.get('status'),
     }
 
 
@@ -69,19 +70,19 @@ def sum_field_dict(total, addition):
 
 def update_program_dict(program, p):
     """Update an existing entry in the dict (existing program)"""
-    # some values can be None, e.g. macOS system processes
-    program['num_threads'] += p['num_threads'] or 0
-    program['cpu_percent'] += p['cpu_percent'] or 0
-    program['memory_percent'] += p['memory_percent'] or 0
-    program['cpu_times'] = sum_field_dict(program['cpu_times'], p['cpu_times'])
-    program['memory_info'] = sum_field_dict(program['memory_info'], p['memory_info'])
+    # some values can be None (e.g. macOS system processes) or missing (disable_stats)
+    program['num_threads'] += p.get('num_threads') or 0
+    program['cpu_percent'] += p.get('cpu_percent') or 0
+    program['memory_percent'] += p.get('memory_percent') or 0
+    program['cpu_times'] = sum_field_dict(program['cpu_times'], p.get('cpu_times'))
+    program['memory_info'] = sum_field_dict(program['memory_info'], p.get('memory_info'))
 
-    program['io_counters'] = sum_io_counters(program['io_counters'], p['io_counters'])
+    program['io_counters'] = sum_io_counters(program['io_counters'], p.get('io_counters'))
     program['childrens'].append(p['pid'])
     # If all the subprocess has the same value, display it
     program['username'] = p.get('username', '_') if p.get('username') == program['username'] else '_'
-    program['nice'] = p['nice'] if p['nice'] == program['nice'] else '_'
-    program['status'] = p['status'] if p['status'] == program['status'] else '_'
+    program['nice'] = p.get('nice') if p.get('nice') == program['nice'] else '_'
+    program['status'] = p.get('status') if p.get('status') == program['status'] else '_'
 
 
 def compute_nprocs(p):

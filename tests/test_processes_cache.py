@@ -33,3 +33,19 @@ def test_remove_non_running_procs_ignores_running_pids_absent_from_cache(process
     processes.processlist_cache = {1: {'cmdline': 'a'}}
     processes.remove_non_running_procs([{'pid': 1}, {'pid': 42}])
     assert set(processes.processlist_cache) == {1}
+
+
+def test_remove_non_running_procs_evicts_io_old_of_gone_pids(processes):
+    processes.io_old = {1: [10, 20], 2: [30, 40], 3: [50, 60]}
+    processes.remove_non_running_procs([{'pid': 1}, {'pid': 3}])
+    assert processes.io_old == {1: [10, 20], 3: [50, 60]}
+
+
+def test_io_old_stays_bounded_across_cycles_of_short_lived_pids(processes):
+    # One new pid per cycle, each gone at the next one: io_old must only ever
+    # hold the pids of the current cycle, not every pid seen since startup.
+    for pid in range(100, 200):
+        proc = {'pid': pid, 'io_counters': [0, 0, pid, pid]}
+        processes.get_io_counters(proc)
+        processes.remove_non_running_procs([proc])
+    assert set(processes.io_old) == {199}

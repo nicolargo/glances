@@ -71,17 +71,17 @@ class GlancesStdoutCsv:
                     line += f'{plugin}.{str(k)}{self.separator}'
             elif isinstance(stat, list):
                 keys_order = []
+                field_names = {}
                 for i in stat:
                     if isinstance(i, dict) and 'key' in i:
-                        keys_order.append(str(i[i['key']]))
+                        ident = str(i[i['key']])
+                        keys_order.append(ident)
+                        field_names[ident] = list(i.keys())
                         for k in i:
                             line += '{}.{}.{}{}'.format(plugin, str(i[i['key']]), str(k), self.separator)
                 # Lock the interface schema: ordered identities + ordered field names
                 self.list_keys[plugin] = keys_order
-                for i in stat:
-                    if isinstance(i, dict) and 'key' in i:
-                        self.header_field_names[plugin] = list(i.keys())
-                        break
+                self.header_field_names[plugin] = field_names
             else:
                 line += f'{plugin}{self.separator}'
 
@@ -109,10 +109,10 @@ class GlancesStdoutCsv:
                 # fields (absent interface, or rate fields not yet computed on an
                 # interface's first sample) become N/A. Identities that appeared only
                 # after the header was built are omitted (they have no column).
-                field_names = self.header_field_names.get(plugin, [])
+                field_names = self.header_field_names.get(plugin, {})
                 for ident in self.list_keys.get(plugin, []):
                     item = current.get(ident, {})
-                    for field in field_names:
+                    for field in field_names.get(ident, []):
                         line += f'{str(item.get(field, self.na))}{self.separator}'
             else:
                 line += f'{str(stat)}{self.separator}'

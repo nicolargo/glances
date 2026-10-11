@@ -383,6 +383,18 @@ class TestGlances(unittest.TestCase):
         if len(req.json()) > 0:
             self.assertIsInstance(req.json()[0], dict)
 
+    def test_101_static_files_are_revalidated(self):
+        """Static files make the browser revalidate its cached copy."""
+        print('INFO: [TEST_101] Cache-Control on static files')
+        url = f"http://localhost:{SERVER_PORT}/static/browser.js"
+        req = requests.get(url)
+        self.assertTrue(req.ok)
+        self.assertEqual(req.headers.get('Cache-Control'), 'no-cache')
+        # An unchanged file then only costs a 304
+        req = requests.get(url, headers={'If-None-Match': req.headers['ETag']})
+        self.assertEqual(req.status_code, 304)
+        self.assertEqual(req.headers.get('Cache-Control'), 'no-cache')
+
     def test_999_stop_server(self):
         """Stop the Glances Web Server."""
         print('INFO: [TEST_999] Stop the Glances Web Server')

@@ -88,7 +88,7 @@ class Export(GlancesExport):
     def normalize(self, value):
         # Nothing to do...
         if isinstance(value, list) and len(value) == 1 and value[0] in ['True', 'False']:
-            return bool(value[0])
+            return value[0] == 'True'
         return value
 
     def update(self, stats):
@@ -105,19 +105,10 @@ class Export(GlancesExport):
         # Loop over plugins to export
         for plugin in self.last_exported_list():
             # Remove some fields
-            if isinstance(all_stats[plugin], dict):
-                all_stats[plugin].update(all_limits[plugin])
-                # Remove the <plugin>_disable field
-                all_stats[plugin].pop(f"{plugin}_disable", None)
-            elif isinstance(all_stats[plugin], list):
-                for i in all_stats[plugin]:
-                    i.update(all_limits[plugin])
-                    # Remove the <plugin>_disable field
-                    i.pop(f"{plugin}_disable", None)
-            else:
+            plugin_stats = self._prepare_export_stats(plugin, all_stats[plugin], all_limits[plugin])
+            if not isinstance(plugin_stats, (dict, list)):
                 continue
 
-            plugin_stats = all_stats[plugin]
             creation_list = []  # List used to create the DuckDB table
             values_list = []  # List of values to insert (list of lists, one list per row)
             if isinstance(plugin_stats, dict):

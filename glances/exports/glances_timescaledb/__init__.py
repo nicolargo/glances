@@ -105,19 +105,14 @@ class Export(GlancesExport):
 
         # Loop over plugins to export
         for plugin in self.last_exported_list():
-            if isinstance(all_stats[plugin], dict):
-                all_stats[plugin].update(all_limits[plugin])
-                # Remove the <plugin>_disable field
-                all_stats[plugin].pop(f"{plugin}_disable", None)
+            plugin_stats = self._prepare_export_stats(plugin, all_stats[plugin], all_limits[plugin])
+            if isinstance(plugin_stats, dict):
                 # user is a special field that should not be exported
                 # rename it to user_<plugin>
-                if 'user' in all_stats[plugin]:
-                    all_stats[plugin][f'user_{plugin}'] = all_stats[plugin].pop('user')
-            elif isinstance(all_stats[plugin], list):
-                for i in all_stats[plugin]:
-                    i.update(all_limits[plugin])
-                    # Remove the <plugin>_disable field
-                    i.pop(f"{plugin}_disable", None)
+                if 'user' in plugin_stats:
+                    plugin_stats[f'user_{plugin}'] = plugin_stats.pop('user')
+            elif isinstance(plugin_stats, list):
+                for i in plugin_stats:
                     # user is a special field that should not be exported
                     # rename it to user_<plugin>
                     if 'user' in i:
@@ -125,7 +120,6 @@ class Export(GlancesExport):
             else:
                 continue
 
-            plugin_stats = all_stats[plugin]
             creation_list = []  # List used to create the TimescaleDB table
             segmented_by = []  # List of columns used to segment the data
             values_list = []  # List of values to insert (list of lists, one list per row)

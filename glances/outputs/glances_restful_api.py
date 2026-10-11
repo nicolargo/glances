@@ -73,6 +73,21 @@ import time
 security = HTTPBasic(auto_error=False)
 
 
+class NoCacheStaticFiles(StaticFiles):
+    """Static files the browser has to revalidate before using its cached copy.
+
+    glances.js is served without a version in its URL. Without Cache-Control the
+    browser caches it heuristically from Last-Modified and can keep running the
+    old WebUI after an upgrade. With no-cache it still keeps the file but checks
+    the ETag first, which costs a 304 when nothing changed.
+    """
+
+    async def get_response(self, path, scope):
+        response = await super().get_response(path, scope)
+        response.headers['Cache-Control'] = 'no-cache'
+        return response
+
+
 class GlancesMcpAuthMiddleware:
     """Pure ASGI middleware that applies Basic/JWT authentication to the MCP endpoint.
 
@@ -625,7 +640,7 @@ class GlancesRestfulApi:
             router.add_api_route('/browser', self._browser, response_class=HTMLResponse)
 
             # Statics files
-            self._app.mount(self.url_prefix + '/static', StaticFiles(directory=self.STATIC_PATH), name="static")
+            self._app.mount(self.url_prefix + '/static', NoCacheStaticFiles(directory=self.STATIC_PATH), name="static")
             logger.debug(f"The Browser WebUI is enable and got statics files in {self.STATIC_PATH}")
 
             bindmsg = f'Glances Browser Web User Interface started on {self.bind_url}browser'
@@ -638,7 +653,7 @@ class GlancesRestfulApi:
             router.add_api_route('/', self._index, response_class=HTMLResponse)
 
             # Statics files
-            self._app.mount(self.url_prefix + '/static', StaticFiles(directory=self.STATIC_PATH), name="static")
+            self._app.mount(self.url_prefix + '/static', NoCacheStaticFiles(directory=self.STATIC_PATH), name="static")
             logger.debug(f"The WebUI is enable and got statics files in {self.STATIC_PATH}")
 
             bindmsg = f'Glances Web User Interface started on {self.bind_url}'

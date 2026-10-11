@@ -1,5 +1,6 @@
 """Tests for the lazily built process views."""
 
+import argparse
 import json
 
 import pytest
@@ -73,3 +74,21 @@ def test_set_views_is_not_overwritten(plugin):
     plugin.update_views()
     plugin.set_views({'given': 'by the server'})
     assert plugin.get_views() == {'given': 'by the server'}
+
+
+def test_curses_rows_stop_at_the_screen_height(plugin):
+    """Rows below the bottom of the terminal were built on every refresh and never drawn."""
+    plugin.stats = [make_process(pid) for pid in range(200)]
+    args = argparse.Namespace(**vars(plugin.args))
+    args.cursor_position = 3
+    full = plugin.msg_curse(args=args)
+    args.process_rows = 20
+    rows = plugin.msg_curse(args=args)
+
+    def selectors(msgs):
+        return [m['msg'] for m in msgs if m['decoration'] == 'SELECTED']
+
+    assert len(selectors(full)) == 200
+    assert len(selectors(rows)) == 20
+    assert rows == full[: len(rows)]
+    assert selectors(rows)[3] != ' '

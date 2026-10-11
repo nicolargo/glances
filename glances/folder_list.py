@@ -28,14 +28,13 @@ class FolderList:
 
     # Maximum number of items in the list
     __folder_list_max_size = 10
-    # The folder list
-    __folder_list = []
     # Default refresh time is 30 seconds for this plugins
     __default_refresh = 30
 
     def __init__(self, config):
         """Init the folder list from the configuration file, if it exists."""
         self.config = config
+        self.__folder_list = []
 
         # A list of Timer
         # One timer per folder
@@ -47,8 +46,6 @@ class FolderList:
             # Process monitoring list
             logger.debug("Folder list configuration detected")
             self.__set_folder_list('folders')
-        else:
-            self.__folder_list = []
 
     def __set_folder_list(self, section):
         """Init the monitored folder list.

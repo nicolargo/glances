@@ -123,7 +123,8 @@ class GlancesExport:
         # Load options
         for opt in options:
             try:
-                setattr(self, opt, self.config.get_value(section, opt))
+                # Keep the default value set by the export module if the option is not configured
+                setattr(self, opt, self.config.get_value(section, opt, default=getattr(self, opt, None)))
             except NoOptionError:
                 logger.debug(f"{opt} option not found in the {section} configuration section")
 
@@ -182,16 +183,14 @@ class GlancesExport:
 
         # issue1871 - Check if a key exist. If a key exist, the value of
         # the key should be used as a tag to identify the measurement.
-        keys_list = [k.split(".")[0] for k in columns if k.endswith(".key")]
+        keys_list = [k.rsplit(".", 1)[0] for k in columns if k.endswith(".key")]
         if not keys_list:
             keys_list = [None]
 
         for measurement in keys_list:
             # Manage field
             if measurement is not None:
-                fields = {
-                    k.replace(f"{measurement}.", ""): data_dict[k] for k in data_dict if k.startswith(f"{measurement}.")
-                }
+                fields = {k[len(measurement) + 1 :]: data_dict[k] for k in data_dict if k.startswith(f"{measurement}.")}
             else:
                 fields = data_dict
             # Transform to InfluxDB data model
@@ -260,6 +259,23 @@ class GlancesExport:
         self._fields_description = stats.getAllFieldsDescriptionAsDict(plugin_list=self.last_exported_list())
         return self._fields_description
 
+    @staticmethod
+    def _prepare_export_stats(plugin, plugin_stats, plugin_limits):
+        """Return a derived export payload without mutating plugin statistics."""
+        if isinstance(plugin_stats, dict):
+            prepared_stats = plugin_stats.copy()
+            prepared_items = [prepared_stats]
+        elif isinstance(plugin_stats, list):
+            prepared_stats = [item.copy() for item in plugin_stats]
+            prepared_items = prepared_stats
+        else:
+            return plugin_stats
+
+        for item in prepared_items:
+            item.update(plugin_limits)
+            item.pop(f"{plugin}_disable", None)
+        return prepared_stats
+
     def update(self, stats):
         """Update stats to a server.
 
@@ -277,19 +293,10 @@ class GlancesExport:
 
         # Loop over plugins to export
         for plugin in self.last_exported_list():
-            if isinstance(all_stats[plugin], dict):
-                all_stats[plugin].update(all_limits[plugin])
-                # Remove the <plugin>_disable field
-                all_stats[plugin].pop(f"{plugin}_disable", None)
-            elif isinstance(all_stats[plugin], list):
-                # TypeError: string indices must be integers (Network plugin) #1054
-                for i in all_stats[plugin]:
-                    i.update(all_limits[plugin])
-                    # Remove the <plugin>_disable field
-                    i.pop(f"{plugin}_disable", None)
-            else:
+            plugin_stats = self._prepare_export_stats(plugin, all_stats[plugin], all_limits[plugin])
+            if not isinstance(plugin_stats, (dict, list)):
                 continue
-            export_names, export_values = self.build_export(all_stats[plugin])
+            export_names, export_values = self.build_export(plugin_stats)
             self.export(plugin, export_names, export_values)
 
         return True
