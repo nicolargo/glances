@@ -125,6 +125,18 @@ def test_load_conf_reads_mandatories_and_options():
     assert getattr(exporter, "tags", None) is None
 
 
+def test_load_conf_keeps_the_exporter_default_of_a_missing_optional_key():
+    """v4 #3781 (`test_export_load_conf.py`): an absent optional key leaves the module default."""
+    exporter = FakeExport(make_config({"backend": {"host": "localhost", "port": "8086"}}), args=None)
+    exporter.protocol = "http"
+    assert exporter.load_conf("backend", mandatories=("host", "port"), options=("protocol",))
+    assert exporter.protocol == "http"
+    configured = FakeExport(make_config({"backend": {"host": "h", "port": "1", "protocol": "https"}}), args=None)
+    configured.protocol = "http"
+    configured.load_conf("backend", mandatories=("host", "port"), options=("protocol",))
+    assert configured.protocol == "https"
+
+
 def test_load_conf_returns_false_on_missing_section():
     exporter = FakeExport(make_config({}), args=None)
     assert exporter.load_conf("backend") is False
