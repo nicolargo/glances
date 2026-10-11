@@ -32,8 +32,6 @@ cryptography==50.0.1
     #   pyjwt
     #   pylxd
     #   python-jose
-defusedxml==0.7.1
-    # via glances
 docker==7.2.0
     # via glances
 ecdsa==0.19.2

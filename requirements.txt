@@ -4,16 +4,12 @@ certifi==2026.7.22
     # via requests
 charset-normalizer==3.5.1
     # via requests
-defusedxml==0.7.1
-    # via glances
 idna==3.20
     # via requests
 jinja2==3.1.6
     # via glances
 markupsafe==3.0.3
     # via jinja2
-packaging==26.3
-    # via glances
 psutil==7.2.2
     # via glances
 requests==2.34.2

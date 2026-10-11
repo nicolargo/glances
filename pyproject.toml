@@ -18,8 +18,6 @@ classifiers = [
   "Topic :: System :: Monitoring",
 ]
 dependencies = [
-  "defusedxml",
-  "packaging",
   "psutil>=5.6.7",
   "requests>=2.32.4",
   "windows-curses; platform_system == 'Windows'",
@@ -64,7 +62,7 @@ dev = [
 [project.optional-dependencies]
 action = ["chevron"]
 # all but not dev
-all = ["glances[action,browser,cloud,containers,export,gpu,graph,mcp,raid,sensors,smart,snmp,sparklines,web,wifi]"]
+all = ["glances[action,browser,cloud,containers,export,gpu,graph,mcp,raid,sensors,smart,web,wifi]"]
 browser = ["zeroconf"]
 cloud = ["requests>=2.32.4"]
 containers = [
@@ -102,8 +100,6 @@ mcp = ["mcp>=1.23.0,<3"]
 raid = ["pymdstat"]
 sensors = ["batinfo; platform_system == 'Linux'"]
 smart = ["pySMART"]
-snmp = ["pysnmp-lextudio<6.2.0"]
-sparklines = ["sparklines"]
 web = [
   "fastapi>=0.82.0",
   "python-jose[cryptography]>=3.4.0",
@@ -136,7 +132,7 @@ glances = "glances:main"
 version = {attr = "glances.__version__"}
 
 [tool.setuptools.packages.find]
-exclude = ["*__pycache__*"]
+exclude = ["*__pycache__*", "glances.outputs.static.node_modules*"]
 include = ["glances*"]
 where = ["."]
 

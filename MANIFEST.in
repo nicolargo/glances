@@ -14,3 +14,4 @@ recursive-include glances *.py
 recursive-include glances/outputs/static *
 global-exclude __pycache__/*
 global-exclude *.py[co]
+prune glances/outputs/static/node_modules
