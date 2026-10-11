@@ -17,7 +17,8 @@ import pytest
 
 from glances.config import Config
 from glances.globals import LINUX
-from glances.plugins.sensors import GlancesGrabSensors, SensorsPlugin
+from glances.plugins.sensors import SensorsPlugin
+from glances.plugins.sensors.grab import GlancesGrabSensors
 from glances.plugins.sensors.sensor import glances_hddtemp
 from glances.plugins.sensors.sensor.glances_hddtemp import HddtempPlugin
 

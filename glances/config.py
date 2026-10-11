@@ -16,6 +16,7 @@ import sys
 
 from glances.globals import BSD, LINUX, MACOS, SUNOS, WINDOWS, ConfigParser, NoOptionError, NoSectionError, system_exec
 from glances.logger import logger
+from glances.secure import secure_option
 
 # Sections entirely blocked from the secure view
 _SECURE_BLOCKED_SECTIONS = frozenset(
@@ -23,33 +24,6 @@ _SECURE_BLOCKED_SECTIONS = frozenset(
         "passwords",
     }
 )
-
-# Key name patterns redacted in any section
-# Note: `\buser\b` only matches a standalone `user` key, so the CPU/load
-# `user_careful`, `user_warning`... thresholds stay visible (they are not credentials).
-_SECURE_SENSITIVE_KEY_RE = re.compile(
-    r"password|token|secret|api_key|apikey|ssl_keyfile|username|\buser\b|login",
-    re.IGNORECASE,
-)
-
-# Credentials embedded in an URL value (scheme://user:password@host).
-# The class admits '@' and the match is greedy, so a password holding an
-# unencoded '@' (`u:p@ss@host`) is redacted whole.
-_SECURE_URL_CREDENTIALS_RE = re.compile(r"(?<=://)[^/?#\s]+@")
-
-
-def secure_option(key, value):
-    """Return the sanitised value of a configuration option or a command line argument.
-
-    A sensitive key is fully redacted, otherwise only the credentials
-    embedded in an URL value are redacted. Non string values (boolean flags,
-    ports, refresh rates...) can not carry a credential and are returned as is.
-    """
-    if not isinstance(value, str):
-        return value
-    if _SECURE_SENSITIVE_KEY_RE.search(key):
-        return "********"
-    return _SECURE_URL_CREDENTIALS_RE.sub("********@", value)
 
 
 def user_config_dir():

@@ -23,8 +23,8 @@ from __future__ import annotations
 
 import pytest
 
-from glances.plugins.ports import ThreadScanner
 from glances.plugins.ports.model_v5 import PluginModel
+from glances.plugins.ports.scanner import ThreadScanner
 
 SECRET = 'Sup3rS3cret'
 PROXY_SECRET = 'Pr0xyP4ss'
@@ -47,7 +47,7 @@ def plugin(store_with, config_with, monkeypatch):
     def fake_head(url, **kwargs):
         raise RuntimeError('no request is actually sent')
 
-    monkeypatch.setattr('glances.plugins.ports.requests.head', fake_head)
+    monkeypatch.setattr('glances.plugins.ports.scanner.requests.head', fake_head)
     return PluginModel(store_with(), config_with({"ports": _SECTION}))
 
 
@@ -115,7 +115,7 @@ async def test_scan_requests_the_real_url_not_the_redacted_one(plugin, monkeypat
         calls.append((url, kwargs['proxies']))
         raise RuntimeError('no request is actually sent')
 
-    monkeypatch.setattr('glances.plugins.ports.requests.head', recording_head)
+    monkeypatch.setattr('glances.plugins.ports.scanner.requests.head', recording_head)
 
     await plugin._grab_stats()
     plugin._thread.join(timeout=5)

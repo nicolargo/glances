@@ -12,9 +12,9 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
-from glances.config import secure_option
 from glances.globals import nativestr, pretty_date, replace_special_chars
 from glances.logger import logger
+from glances.secure import secure_option
 from glances.stats_streamer import ThreadedIterableStreamer
 
 # Docker-py library (optional and Linux-only)

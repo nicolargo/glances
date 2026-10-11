@@ -17,7 +17,6 @@ import re
 from datetime import datetime
 
 from glances.actions import GlancesActions
-from glances.config import secure_option
 from glances.events_list import glances_events
 from glances.globals import (
     auto_unit,
@@ -33,6 +32,7 @@ from glances.globals import (
 from glances.history import GlancesHistory
 from glances.logger import logger
 from glances.outputs.glances_unicode import unicode_message
+from glances.secure import secure_option
 from glances.thresholds import glances_thresholds
 from glances.timer import Counter, Timer, getTimeSinceLastUpdate
 

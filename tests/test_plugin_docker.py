@@ -51,7 +51,7 @@ class FakeContainer:
 
 def make_monitor(containers, url=None):
     """Build a DockerEngineMonitor without connecting to a real daemon."""
-    from glances.config import secure_option
+    from glances.secure import secure_option
 
     monitor = docker_engine.DockerEngineMonitor.__new__(docker_engine.DockerEngineMonitor)
     monitor.disable = False

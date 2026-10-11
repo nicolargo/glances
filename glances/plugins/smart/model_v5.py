@@ -27,7 +27,7 @@ import asyncio
 import logging
 from typing import Any, ClassVar
 
-import glances.plugins.smart as smart_v4
+import glances.plugins.smart.data as smart_data
 from glances.globals import is_admin
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
 
@@ -81,9 +81,9 @@ class PluginModel(GlancesPluginBase[list]):
             # v4 calls `disable(args, "smart")` when not admin; here we simply
             # yield an empty collection (base keeps it valid).
             return []
-        if smart_v4.import_error_tag:
+        if smart_data.import_error_tag:
             return []
-        devices = await asyncio.to_thread(smart_v4.get_smart_data, self._hide_attributes)
+        devices = await asyncio.to_thread(smart_data.get_smart_data, self._hide_attributes)
         return [self._reshape(dev) for dev in devices if isinstance(dev, dict)]
 
     @staticmethod

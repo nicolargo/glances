@@ -24,7 +24,7 @@ from pathlib import Path
 
 import pytest
 
-from glances.plugins.smart import LARGE_VALUE_KEYS
+from glances.plugins.smart.data import LARGE_VALUE_KEYS
 
 _MODULE = Path(__file__).resolve().parent.parent / "glances" / "outputs" / "static" / "js" / "v5" / "smart_keys.js"
 

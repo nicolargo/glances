@@ -36,7 +36,7 @@ import re
 from typing import Any, ClassVar
 
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
-from glances.plugins.ports import ThreadScanner
+from glances.plugins.ports.scanner import ThreadScanner
 from glances.ports_list import GlancesPortsList
 from glances.timer import Timer
 from glances.web_list import GlancesWebList

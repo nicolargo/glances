@@ -15,6 +15,7 @@ from argparse import Namespace
 import pytest
 
 import glances.plugins.smart as smart_mod
+import glances.plugins.smart.data as smart_data
 from glances.config import Config
 from glances.plugins.smart import SmartPlugin
 
@@ -67,7 +68,7 @@ class EmptyConfig:
 def plugin(monkeypatch):
     """A SMART plugin instance, enabled, with the pySMART dependency faked as available."""
     monkeypatch.setattr(smart_mod, 'is_admin', lambda: True)
-    monkeypatch.setattr(smart_mod, 'import_error_tag', False)
+    monkeypatch.setattr(smart_data, 'import_error_tag', False)
     return SmartPlugin(args=Namespace(disable_smart=False, disable_history=True), config=EmptyConfig())
 
 
@@ -102,7 +103,7 @@ def test_missing_smartctl_returns_no_device(monkeypatch):
     def no_smartctl():
         raise FileNotFoundError("Command smartctl doesn't exist!")
 
-    monkeypatch.setattr(smart_mod, 'DeviceList', no_smartctl)
-    monkeypatch.setattr(smart_mod, 'import_error_tag', False)
-    assert smart_mod.get_smart_data([]) == []
-    assert smart_mod.import_error_tag is True
+    monkeypatch.setattr(smart_data, 'DeviceList', no_smartctl)
+    monkeypatch.setattr(smart_data, 'import_error_tag', False)
+    assert smart_data.get_smart_data([]) == []
+    assert smart_data.import_error_tag is True

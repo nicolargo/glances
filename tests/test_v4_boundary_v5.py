@@ -57,13 +57,14 @@ SHARED = {
     "glances.plugins.*.cards.*": "GPU / NPU / MPP cards",
     "glances.plugins.sensors.sensor.*": "sensor grabbers",
     "glances.plugins.fs.zfs": "ZFS ARC reader (mem)",
+    # Moved out of the v4 plugin modules at the cutover (step C1).
+    "glances.plugins.ports.scanner": "ports scanner thread",
+    "glances.plugins.sensors.grab": "psutil temperature and fan sensors",
+    "glances.plugins.smart.data": "SMART attributes through pySMART",
 }
 
 BORROWED = {
     "glances": "psutil_version_info (psutilversion/model_v5.py); __init__ imports the v4 CLI",
-    "glances.plugins.ports": "ThreadScanner (ports/model_v5.py)",
-    "glances.plugins.sensors": "GlancesGrabSensors, sensors_definition (sensors/model_v5.py)",
-    "glances.plugins.smart": "get_smart_data, LARGE_VALUE_KEYS (smart/model_v5.py, smart/render_curses_v5.py)",
 }
 
 

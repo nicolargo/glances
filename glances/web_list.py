@@ -8,9 +8,9 @@
 
 """Manage the Glances web/url list (Ports plugin)."""
 
-from glances.config import secure_option
 from glances.globals import urlparse
 from glances.logger import logger
+from glances.secure import secure_option
 
 
 class GlancesWebList:

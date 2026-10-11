@@ -17,11 +17,11 @@ from typing import Annotated, Any
 from urllib.parse import urljoin
 
 from glances import __apiversion__, __version__
-from glances.config import secure_option
 from glances.events_list import glances_events
 from glances.globals import json_dumps
 from glances.logger import logger
 from glances.password import GlancesPassword
+from glances.secure import secure_option
 
 # JWT import with fallback
 try:

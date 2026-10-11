@@ -124,7 +124,7 @@ def test_scan_requests_the_real_url_not_the_redacted_one(web_list_object, monkey
         called['proxies'] = kwargs['proxies']
         raise RuntimeError('stop here, no request is actually sent')
 
-    monkeypatch.setattr('glances.plugins.ports.requests.head', fake_head)
+    monkeypatch.setattr('glances.plugins.ports.scanner.requests.head', fake_head)
 
     web = entry(web_list_object.get_web_list(), 'web_1')
     ThreadScanner(web_list_object.get_web_list(), web_list_object.get_web_secrets())._web_scan(web)

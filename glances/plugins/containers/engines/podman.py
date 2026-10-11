@@ -13,9 +13,9 @@ from typing import Any
 
 import psutil
 
-from glances.config import secure_option
 from glances.globals import nativestr, pretty_date, replace_special_chars, string_value_to_float
 from glances.logger import logger
+from glances.secure import secure_option
 from glances.stats_streamer import ThreadedIterableStreamer
 
 # Podman library (optional and Linux-only)

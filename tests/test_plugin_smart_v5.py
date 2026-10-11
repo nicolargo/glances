@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import pytest
 
-import glances.plugins.smart as smart_module
+import glances.plugins.smart.data as smart_module
 from glances.config_v5 import GlancesConfigV5
 from glances.plugins.smart.model_v5 import PluginModel
 from glances.stats_store_v5 import StatsStoreV5

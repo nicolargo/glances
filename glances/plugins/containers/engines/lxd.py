@@ -14,9 +14,9 @@ from typing import Any
 
 import psutil
 
-from glances.config import secure_option
 from glances.globals import nativestr, pretty_date
 from glances.logger import logger
+from glances.secure import secure_option
 
 # pylxd library (optional and Linux-only)
 # https://github.com/canonical/pylxd

@@ -31,7 +31,7 @@ from typing import Any, ClassVar
 
 from glances.globals import natural_keys
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
-from glances.plugins.sensors import GlancesGrabSensors, sensors_definition
+from glances.plugins.sensors.grab import GlancesGrabSensors, sensors_definition
 from glances.plugins.sensors.sensor.glances_batpercent import GlancesGrabBat
 from glances.plugins.sensors.sensor.glances_hddtemp import GlancesGrabHDDTemp
 

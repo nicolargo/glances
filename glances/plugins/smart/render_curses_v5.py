@@ -29,7 +29,7 @@ from typing import Any
 
 from glances.globals import auto_unit
 from glances.outputs.curses_renderer_v5 import Cell, ColorRole, Row
-from glances.plugins.smart import LARGE_VALUE_KEYS
+from glances.plugins.smart.data import LARGE_VALUE_KEYS
 
 _NAME_COL_WIDTH = 25
 _VALUE_COL_WIDTH = 8

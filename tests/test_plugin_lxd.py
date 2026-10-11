@@ -230,7 +230,7 @@ class TestLxdEngineMonitorGenerateStats:
         assert stats['engine_url'] == "https://10.0.0.1:8443"
 
         monitor.url = "https://user:secret@10.0.0.1:8443"
-        from glances.config import secure_option
+        from glances.secure import secure_option
 
         monitor.engine_url = secure_option('url', monitor.url)
         stats = monitor.generate_stats(instance)

@@ -13,8 +13,9 @@ import socket
 
 import pytest
 
-import glances.plugins.ports as ports_mod
-from glances.plugins.ports import PortsPlugin, ThreadScanner
+import glances.plugins.ports.scanner as ports_mod
+from glances.plugins.ports import PortsPlugin
+from glances.plugins.ports.scanner import ThreadScanner
 
 
 @pytest.fixture
