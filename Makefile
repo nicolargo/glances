@@ -8,7 +8,7 @@ alpine_images     := $(IMAGES_TYPES:%=docker-alpine-%)
 ubuntu_images     := $(IMAGES_TYPES:%=docker-ubuntu-%)
 DOCKER_IMAGES     := $(alpine_images) $(ubuntu_images)
 DOCKER_RUNTIMES   := $(DOCKER_IMAGES:%=run-%)
-UNIT_TESTS        := test-core test-restful test-xmlrpc
+UNIT_TESTS        := test-core test-restful
 DOCKER_BUILD      := docker buildx build
 DOCKER_RUN        := docker run
 PODMAN_SOCK       ?= /run/user/$(shell id -u)/podman/podman.sock
@@ -98,29 +98,20 @@ test: ## Run All unit tests
 test-core: ## Run Core unit tests
 	$(UV_RUN) run pytest tests/test_core.py
 
-test-v5: ## Run only v5 unit tests
-	$(UV_RUN) run pytest tests/ -k "v5 or stats_store or scheduler or config or action or thresholds or alerts or security or webserver or routes"
-
 test-plugins: ## Run Plugins unit tests
 	$(UV_RUN) run pytest tests/test_plugin_*.py
 
 test-api: ## Run API unit tests
 	$(UV_RUN) run pytest tests/test_api.py
 
-test-memoryleak: ## Run Memory-leak unit tests
-	$(UV_RUN) run pytest tests/test_memoryleak.py
-
-test-perf: ## Run Perf unit tests
-	$(UV_RUN) run pytest tests/test_perf.py
-
 test-restful: ## Run Restful API unit tests
-	$(UV_RUN) run pytest tests/test_restful.py
+	$(UV_RUN) run pytest tests/test_routes.py tests/test_webserver.py
 
-test-webui: ## Run WebUI unit tests
-	$(UV_RUN) run pytest tests/test_webui.py
+test-webui: ## Run WebUI unit tests (the browser tests need Playwright and Chromium)
+	$(UV_RUN) run pytest tests/test_webui_*.py
 
-test-xmlrpc: ## Run XMLRPC API unit tests
-	$(UV_RUN) run pytest tests/test_xmlrpc.py
+test-js: ## Run the WebUI JavaScript unit tests (Node.js)
+	node --test tests/js/*.mjs
 
 test-with-upgrade: venv-upgrade test ## Upgrade deps and run unit tests
 
@@ -146,9 +137,6 @@ test-export-clickhouse: ## Run interface tests with ClickHouse
 	/bin/bash ./tests/test_export_clickhouse.sh
 
 test-exports: ## Tests all exports
-	@for f in ./tests/test_export_*.sh; do case "$$f" in *.sh) ;; *) /bin/bash "$$f" ;; esac; done
-
-test-exports-v5: ## Tests all exports with glances
 	@for f in ./tests/test_export_*.sh; do /bin/bash "$$f"; done
 
 # ===================================================================
@@ -207,10 +195,6 @@ profiling-memray: ## Flame profiling (memory)
 
 profiling: profiling-gprof profiling-pyinstrument profiling-memray ## Profiling of the Glances software
 
-trace-malloc: ## Trace the malloc() calls
-	@echo "Malloc test is running, please wait ~30 secondes..."
-	$(UV_RUN) run python -m glances -C $(CONF) --trace-malloc --stop-after 15 --quiet
-
 memory-leak: ## Profile memory leaks
 	$(UV_RUN) run python -m glances -C $(CONF) --memory-leak
 
@@ -243,7 +227,7 @@ bandit: ## Run Bandit to find vulnerabilities
 docs: ## Create the documentation
 	$(UV_RUN) run python -m glances.api_doc -C $(CONF) > ./docs/api/python.rst
 	$(UV_RUN) run python ./generate_openapi.py
-	$(UV_RUN) run python -m glances.main -C $(CONF) --api-restful-doc > ./docs/api/restful.rst
+	$(UV_RUN) run python -m glances -C $(CONF) --api-restful-doc > ./docs/api/restful.rst
 	cd docs && ./build.sh && cd ..
 
 docs-server: docs ## Start a Web server to serve the documentation
@@ -341,34 +325,13 @@ run-local-conf-hide-public: ## Start Glances in console mode with the system con
 	$(UV_RUN) run python -m glances --hide-public-info
 
 run-like-htop: ## Start Glances with the same features than Htop
-	$(UV_RUN) run python -m glances --disable-plugin network,ports,wifi,connections,diskio,fs,irq,folders,raid,smart,sensors,vms,containers,ip,amps --disable-left-sidebar
+	$(UV_RUN) run python -m glances --disable-plugin network,ports,wifi,connections,diskio,fs,irq,folders,raid,smart,sensors,vms,containers,ip,amps
 
 run-fetch: ## Start Glances in fetch mode
 	$(UV_RUN) run python -m glances --fetch
 
-run-v5: ## Start Glances v5 in TUI mode (no REST API bound)
-	$(UV_RUN) run python -m glances.main -C $(CONF)
-
-run-v5-debug: ## Start Glances v5 TUI in debug mode
-	$(UV_RUN) run python -m glances.main -C $(CONF) -d
-
-run-v5-local-conf: ## Start Glances v5 in TUI mode with the system conf file
-	$(UV_RUN) run python -m glances.main
-
-run-v5-server: ## Start Glances v5 REST server (FastAPI on :61208, headless)
-	$(UV_RUN) run python -m glances.main -C $(CONF) -s
-
-run-v5-server-local-conf: ## Start Glances v5 REST server with the system conf file (FastAPI on :61208, headless)
-	$(UV_RUN) run python -m glances.main -s
-
-run-v5-server-debug: ## Start Glances v5 REST server in debug mode (headless)
-	$(UV_RUN) run python -m glances.main -C $(CONF) -s -d
-
-run-v5-mcp: ## Start Glances v5 REST server with the MCP endpoint mounted (--enable-mcp will be operational once G3-MCP lands)
-	$(UV_RUN) run python -m glances.main -C $(CONF) -s --enable-mcp
-
-set-password-v5: ## Generate a PBKDF2 hash for [outputs] password (v5)
-	$(UV_RUN) run python -m glances.main --set-password
+set-password: ## Generate a PBKDF2 hash for [outputs] password
+	$(UV_RUN) run python -m glances --set-password
 
 $(DOCKER_RUNTIMES): run-docker-%:
 	$(DOCKER_RUN) $(DOCKER_OPTS) $(DOCKER_SOCKS) -it glances:local-$*
@@ -403,13 +366,10 @@ run-webui: run-webserver  ## Start Glances in Web server mode
 run-restapiserver: ## Start Glances in REST API server mode
 	$(UV_RUN) run python -m glances -C $(CONF) -w --disable-webui
 
-run-server: ## Start Glances in server mode (RPC)
-	$(UV_RUN) run python -m glances -C $(CONF) -s
-
-run-client: ## Start Glances in client mode (RPC)
+run-client: ## Start Glances in client mode
 	$(UV_RUN) run python -m glances -C $(CONF) -c localhost
 
-run-browser: ## Start Glances in browser mode (RPC)
+run-browser: ## Start Glances in browser mode
 	$(UV_RUN) run python -m glances -C $(CONF) --browser
 
 run-web-browser: ## Start Web Central Browser
