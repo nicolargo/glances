@@ -82,8 +82,13 @@ trois exécutions sont stables : écart inférieur à 0,1 point pour le CPU).
 
 ## Reproduire
 
+Le script compare les deux versions dans le même arbre : il a été supprimé
+avec le code v4 lors de la bascule (étape C3) et se récupère dans
+l'historique, à lancer sur un checkout d'avant la bascule (`4295b038^`) :
+
 ```console
-$ python tests/perf/bench_v4_v5.py --runs 3 --markdown
+$ git show 4295b038^:tests/perf/bench_v4_v5.py > /tmp/bench_v4_v5.py
+$ python /tmp/bench_v4_v5.py --runs 3 --markdown
 ```
 
 Options : `--config`, `--cycles`, `--idle` (fenêtres en secondes),
