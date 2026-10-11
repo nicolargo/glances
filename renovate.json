@@ -2,5 +2,6 @@
 	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
 	"extends": ["config:recommended"],
 	"prHourlyLimit": 3,
-	"updateLockFiles": false
+	"updateLockFiles": false,
+	"enabled": false
 }
