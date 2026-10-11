@@ -4,12 +4,12 @@
 
 "use strict";
 
-// Real event shape from `_build_event()` (glances/alerts_v5.py:706-716) --
+// Real event shape from `_build_event()` (glances/alerts.py:706-716) --
 // the ONLY fields `/api/5/alert` ever sends. There is no `description`
 // field; AppShell.vue must compose the footer line from these.
 //
 // Twelve entries, oldest first -- matching get_history()'s documented
-// most-recent-LAST contract (glances/alerts_v5.py:181) -- with a
+// most-recent-LAST contract (glances/alerts.py:181) -- with a
 // distinguishable `plugin` per entry ("plugin0".."plugin11"). A single-alert
 // fixture cannot tell a correct `slice(-10).reverse()` apart from the buggy
 // `slice(0, 10)` that shipped in fix round 1: both show one alert. Twelve
@@ -40,8 +40,8 @@ const ALERT_SCENARIOS = {
 };
 
 // `/api/5/alert/incidents` answer -- the collapsed shape `derive_incidents()`
-// + `incident_duration()` produce (glances/alerts_incidents_v5.py), exactly
-// as `/api/5/alert/incidents` serves it (glances/routes_v5.py:178-215). Used
+// + `incident_duration()` produce (glances/alerts_incidents.py), exactly
+// as `/api/5/alert/incidents` serves it (glances/routes.py:178-215). Used
 // for every scenario (PluginAlert.vue is fetched independently of the
 // scenario's /api/5/all payload), so it carries the rules the component
 // must get right rather than one per scenario:
@@ -53,7 +53,7 @@ const ALERT_SCENARIOS = {
 //   - incident 2: resolved -- LEVEL goes neutral even though the incident
 //     reached `warning`.
 //   - incident 3 (fix round 1, IMPORTANT 2): resolved + prominent --
-//     curses_renderer_v5.py:851-861 drops the COLOUR once resolved but keeps
+//     curses_renderer.py:851-861 drops the COLOUR once resolved but keeps
 //     the BADGE (`prominent` is passed to the Cell unconditionally); nothing
 //     in incidents 0-2 could catch a component that drops both.
 //   - incident 4 (fix round 1, MINOR 5): `duration: null` -- incident_duration()
@@ -136,7 +136,7 @@ const ALERT_INCIDENTS_FIXTURE = [
 // resolveAllLabels() expects it. Real enough that the short_name -> label ->
 // field name precedence has something to resolve, rather than degrading to
 // field names by accident. short_names for the mem fields are copied from
-// glances/plugins/mem/model_v5.py so the rendered labels match the TUI
+// glances/plugins/mem/model.py so the rendered labels match the TUI
 // ("avail", "inacti", "buffer"). Keyed by plugin: a single schema shared by
 // every plugin would make a network header assertion meaningless.
 const INFO_FIXTURES = {
@@ -150,7 +150,7 @@ const INFO_FIXTURES = {
 		buffers: { short_name: "buffer" },
 		cached: { short_name: "cached" },
 	},
-	// short_names copied from glances/plugins/network/model_v5.py. The name
+	// short_names copied from glances/plugins/network/model.py. The name
 	// column declares none: its header cell is the block title (G9-6 D6).
 	network: {
 		interface_name: {},
@@ -171,7 +171,7 @@ const INFO_FIXTURES = {
 	// `labelFor` falls back to the field name -- which is the point (the
 	// field names already ARE the TUI's labels).
 	memswap: { total: {}, used: {}, free: {}, percent: {}, sin: {}, sout: {} },
-	// glances/plugins/cpu/model_v5.py declares exactly three short_names --
+	// glances/plugins/cpu/model.py declares exactly three short_names --
 	// the rest of the fields carry none, so their labels ARE the field names.
 	cpu: {
 		total: {}, user: {}, system: {}, iowait: {}, idle: {}, irq: {}, nice: {}, steal: {},
@@ -180,7 +180,7 @@ const INFO_FIXTURES = {
 		interrupts: { short_name: "inter" },
 		soft_interrupts: { short_name: "sw_int" },
 	},
-	// short_names copied from glances/plugins/gpu/model_v5.py -- the bare word
+	// short_names copied from glances/plugins/gpu/model.py -- the bare word
 	// only; both the TUI and the component compose the ":" and the " mean:"
 	// suffix themselves. `gpu_id`, `name` and `fan_speed` declare none.
 	gpu: {
@@ -196,8 +196,8 @@ const INFO_FIXTURES = {
 	now: { custom: {}, iso: {} },
 	ip: { address: {}, mask: {}, mask_cidr: {}, gateway: {}, public_address: {}, public_info_human: {} },
 	cloud: { id: {}, platform: {}, name: {}, type: {}, region: {} },
-	// short_names copied from glances/plugins/diskio/model_v5.py and
-	// glances/plugins/fs/model_v5.py (G9-6 Task 3).
+	// short_names copied from glances/plugins/diskio/model.py and
+	// glances/plugins/fs/model.py (G9-6 Task 3).
 	diskio: {
 		disk_name: {},
 		read_bytes: { short_name: "R/s" },
@@ -212,7 +212,7 @@ const INFO_FIXTURES = {
 		write_count_cumul: { short_name: "IOW" },
 	},
 	fs: { mnt_point: {}, size: { short_name: "Total" }, used: { short_name: "Used" }, free: { short_name: "Free" }, percent: {} },
-	// short_name copied from glances/plugins/wifi/model_v5.py (G9-6 Task 3);
+	// short_name copied from glances/plugins/wifi/model.py (G9-6 Task 3);
 	// sensors declares none -- its value column has no header in the TUI.
 	wifi: { ssid: {}, quality_link: {}, quality_level: { short_name: "dBm" } },
 	sensors: { label: {}, type: {}, unit: {}, value: {}, warning: {}, critical: {}, status: {} },
@@ -226,12 +226,12 @@ const INFO_FIXTURES = {
 		nf_conntrack_percent: {},
 	},
 	irq: { irq_line: {}, irq_rate: { short_name: "Rate/s" } },
-	// short_names copied from glances/plugins/raid/model_v5.py.
+	// short_names copied from glances/plugins/raid/model.py.
 	raid: { name: {}, used: { short_name: "Used" }, available: { short_name: "Avail" } },
 };
 
 // `/api/5/pluginslist` default answer: every plugin a v5 server instantiates
-// when nothing is disabled -- the plugin directories carrying a model_v5.py.
+// when nothing is disabled -- the plugin directories carrying a model.py.
 // `cloud` is included although it is disabled by default on a real server:
 // the header render tests need it instantiated. A scenario absent from
 // PLUGINSLIST_FIXTURES gets this list.
@@ -247,7 +247,7 @@ const SERVER_PLUGINS = [
 const PLUGINSLIST_FIXTURES = {
 	"gpu-disabled": SERVER_PLUGINS.filter((name) => name !== "gpu"),
 	"pluginslist-unreachable": null,
-	// The shipped default: `[cloud] disable` is true (cloud/model_v5.py:100).
+	// The shipped default: `[cloud] disable` is true (cloud/model.py:100).
 	"cloud-disabled": SERVER_PLUGINS.filter((name) => name !== "cloud"),
 	// quicklook absent -> percpu renders standalone (title, `total` column,
 	// row labels). `percpu-with-quicklook` is deliberately NOT overridden
@@ -293,7 +293,7 @@ const ALERT_INCIDENTS_UNREACHABLE_SCENARIOS = new Set(["alert-incidents-unreacha
 //     never "(no alert detected)" (a claim of health it cannot make).
 //   - `alert-empty`: warmed up, genuinely nothing has ever fired -- the
 //     component may claim "(no alert detected)", in its OK colour (matching
-//     the TUI, curses_renderer_v5.py:745).
+//     the TUI, curses_renderer.py:745).
 const ALERT_INCIDENTS_SCENARIOS = {
 	"alert-initializing": { is_initializing: true, incidents: [] },
 	"alert-empty": { is_initializing: false, incidents: [] },
@@ -301,11 +301,11 @@ const ALERT_INCIDENTS_SCENARIOS = {
 
 // `/api/5/all` fixtures for the `mem` render-parity tests
 // (test_mem_renders_all_eight_statistics_with_avail /
-// test_mem_shows_used_when_available_is_absent in test_webui_v5_render.py).
+// test_mem_shows_used_when_available_is_absent in test_webui_render.py).
 // Values are exact powers of 1024 so formatBytes() rounds to one predictable
 // decimal (e.g. 16*1024**3 -> "16.0G"), and `used` carries a value distinct
 // from `available` so a switch that rendered the wrong one, or both, cannot
-// pass unnoticed. `_show_available` is `[mem] available=True` (mem/model_v5.py):
+// pass unnoticed. `_show_available` is `[mem] available=True` (mem/model.py):
 // without it the component shows `used`, as v4 does.
 const MEM_FIXTURE_WITH_AVAILABLE = {
 	_show_available: true,
@@ -342,7 +342,7 @@ const NETWORK_FIXTURE = {
 };
 
 // The network rows the TUI renderer skips, next to two it shows
-// (network/render_curses_v5.py:129-142): a down interface, one hide_zero still
+// (network/render_curses.py:129-142): a down interface, one hide_zero still
 // hides, one with no rate yet. `lo` comes FIRST with an alias: the TUI keeps
 // payload order, so "Loopback" must render before "eth0" -- a component
 // sorting by raw key ("eth0" < "lo") would put "eth0" first.
@@ -361,7 +361,7 @@ const NETWORK_ROWS = {
 	_levels: { eth0: { bytes_recv: { level: "warning", prominent: false } } },
 };
 
-// diskio (render_curses_v5.py:109-140): sorted by RAW disk_name, a hide_zero
+// diskio (render_curses.py:109-140): sorted by RAW disk_name, a hide_zero
 // row and a rate-less row skipped, the alias displayed. `sdb`'s alias
 // "Backup" sorts before "nvme0n1" but its raw key sorts after it, so a sort
 // on the display name cannot pass. 855.6 B/s truncates ("855B"); 1280 is an
@@ -386,7 +386,7 @@ const DISKIO_FIXTURE = {
 	},
 };
 
-// fs (render_curses_v5.py:99-124): sorted by RAW mount point, an empty mount
+// fs (render_curses.py:99-124): sorted by RAW mount point, an empty mount
 // point skipped, the alias "root" displayed for "/" (it would sort LAST by
 // display name). The tier comes from `percent` and lands on the used/free
 // cell only, never on Total.
@@ -405,7 +405,7 @@ const FS_FIXTURE = {
 	},
 };
 
-// wifi (render_curses_v5.py:82-104): sorted by ssid, an empty ssid and a
+// wifi (render_curses.py:82-104): sorted by ssid, an empty ssid and a
 // non-numeric signal skipped. -54.5 is an exact tie: Python's :.0f gives -54.
 const WIFI_FIXTURE = {
 	_key: "ssid",
@@ -419,7 +419,7 @@ const WIFI_FIXTURE = {
 	_levels: { wlan0: { quality_level: { level: "warning", prominent: false } } },
 };
 
-// sensors (render_curses_v5.py:77-128), in PAYLOAD order: the server sorts
+// sensors (render_curses.py:77-128), in PAYLOAD order: the server sorts
 // with natural keys, the renderer does not, so "fan1" before "Core 0" must
 // survive. An empty battery and a non-numeric value are skipped; "ERR" is an
 // hddtemp sentinel shown verbatim. 42.5 C is a tie ("42C"), and so is its
@@ -561,12 +561,12 @@ const ARGS_FIXTURES = {
 	// exclusivity rule (final review, Minor 2 -- see the ALL_FIXTURES entry).
 	"quicklook-full": { full_quicklook: true, percpu: true },
 	// cpu/percpu mutual exclusion (final review, Critical 1):
-	// glances_curses_v5.py:565-567 shows exactly one of them in the TUI, and
+	// glances_curses.py:565-567 shows exactly one of them in the TUI, and
 	// AppShell.vue now mirrors that off `serverArgs.percpu`.
 	"cpu-percpu-on": { percpu: true },
 	// "cpu-percpu-off" is deliberately absent here: a scenario absent from
 	// this map gets `{}`, i.e. no flag set -- exactly the state under test.
-	// processlist/render_curses_v5.py `_HEADER_SORT_KEY`: with no live key in
+	// processlist/render_curses.py `_HEADER_SORT_KEY`: with no live key in
 	// `processcount`, the WebUI falls back on the key the server was STARTED
 	// with (`--sort-processes`).
 	"processlist-sorted": { sort_processes_key: "cpu_percent" },
@@ -574,7 +574,7 @@ const ARGS_FIXTURES = {
 	// Task 8: processlist/programlist exclusivity (AppShell.vue `slots()`,
 	// mirroring `cpu`/`percpu`) and the programlist block's own rendering are
 	// both gated on `serverArgs.programs` -- the same CLI flag
-	// (`--programs`/`--program`, main_v5.py:228-235) the v5 TUI's `j` hotkey
+	// (`--programs`/`--program`, main.py:228-235) the v5 TUI's `j` hotkey
 	// starts from.
 	programlist: { programs: true },
 	"programlist-sorted": { programs: true, sort_processes_key: "cpu_percent" },
@@ -604,7 +604,7 @@ const CONFIG_FIXTURES = {
 	"processlist-cap": { outputs: { max_processes_display: 2 } },
 	"programlist-cap": { outputs: { max_processes_display: 2 } },
 	// PROCESSCOUNT_FIXTURE.total is 215 -- 30 is comfortably below it, so the
-	// list is actually cut and `_count_text` (processcount/render_curses_v5.py
+	// list is actually cut and `_count_text` (processcount/render_curses.py
 	// :37-55) must render `30/215`.
 	"processcount-cut": { outputs: { max_processes_display: 30 } },
 	"processcount-cut-programs": { outputs: { max_processes_display: 30 } },
@@ -612,14 +612,14 @@ const CONFIG_FIXTURES = {
 	// otherwise grow to all 30 rows) -- the two ceilings compose with `min()`,
 	// so this one must win (design 4.7).
 	"budget-tall-with-config-cap": { outputs: { max_processes_display: 5 } },
-	// `[outputs] api_doc=false` -- the gate webserver_v5.build_app() reads to
+	// `[outputs] api_doc=false` -- the gate webserver.build_app() reads to
 	// decide whether FastAPI mounts /docs at all. A STRING, which is how a
 	// value read from glances.conf reaches /api/5/config (the DEFAULTS layer
 	// and the CLI overlay hold a real boolean instead).
 	"api-doc-off": { outputs: { api_doc: "false" } },
 };
 
-// Header plugin payloads, shaped like their model_v5.py `_collect()` output.
+// Header plugin payloads, shaped like their model.py `_collect()` output.
 // 273600 s is exactly 3 days 4 hours -> "3d04h".
 const SYSTEM_FIXTURE = {
 	os_name: "Linux",
@@ -643,7 +643,7 @@ const IP_FIXTURE = {
 	public_info_human: "Paris, France (AS64496 Example Net)",
 	_levels: {},
 };
-// cloud/render_curses_v5.py's own docstring example.
+// cloud/render_curses.py's own docstring example.
 const CLOUD_FIXTURE = {
 	id: "b7c1e2d3",
 	platform: "OpenStack",
@@ -654,7 +654,7 @@ const CLOUD_FIXTURE = {
 };
 
 // `ports` — one item per branch of _status_if_host / _status_if_url
-// (ports/render_curses_v5.py:57-78). `_levels` is keyed by `indice` and the
+// (ports/render_curses.py:57-78). `_levels` is keyed by `indice` and the
 // model publishes an entry for every SCANNABLE item, healthy ones included
 // (the "ok" tier is v4's green OK). The last item has neither `url` nor
 // `host`: it cannot be scanned and the renderer skips it.
@@ -688,9 +688,9 @@ const PORTS_FIXTURE = {
 // `folders` — a healthy folder, one whose name is longer than the 24ch cap
 // (its ellipsis falls at the START: the TUI keeps the tail), and one the
 // plugin could not read. The unreadable one has NO `_levels` entry: the model
-// short-circuits its size ladder (folders/model_v5.py::_folder_level), v4
+// short-circuits its size ladder (folders/model.py::_folder_level), v4
 // parity -- no alert, no history, no action.
-// The fourth item has no usable path (folders/render_curses_v5.py:93-94, 103
+// The fourth item has no usable path (folders/render_curses.py:93-94, 103
 // keeps every dict item and coalesces a missing/falsy path to "" rather than
 // dropping the row): it must still render, with an empty name cell.
 const FOLDERS_FIXTURE = {
@@ -709,7 +709,7 @@ const FOLDERS_FIXTURE = {
 
 // `connections` is a SCALAR payload: the four state counters, the conntrack
 // pair, and the two flags that decide which half renders
-// (connections/render_curses_v5.py:80-100). Only the Tracked row is coloured,
+// (connections/render_curses.py:80-100). Only the Tracked row is coloured,
 // from nf_conntrack_percent.
 const CONNECTIONS_FIXTURE = {
 	net_connections_enabled: true,
@@ -727,7 +727,7 @@ const CONNECTIONS_FIXTURE = {
 // Seven IRQ lines, one of them on its first cycle (a null rate). The model
 // publishes every line -- a documented v4 divergence, so exporters get the
 // whole series -- and the TUI ranks and cuts to five
-// (irq/render_curses_v5.py:38-58), which the component must reproduce.
+// (irq/render_curses.py:38-58), which the component must reproduce.
 const IRQ_FIXTURE = {
 	_key: "irq_line",
 	data: [
@@ -744,7 +744,7 @@ const IRQ_FIXTURE = {
 
 // `raid` -- one array per branch of the renderer, plus md12, which is BOTH
 // inactive and degraded: the two sub-line groups are not exclusive, and the
-// TUI emits them in this order (raid/render_curses_v5.py:126-140).
+// TUI emits them in this order (raid/render_curses.py:126-140).
 const RAID_FIXTURE = {
 	_key: "name",
 	data: [
@@ -753,7 +753,7 @@ const RAID_FIXTURE = {
 		{ name: "md12", type: "raid1", status: "inactive", used: 1, available: 2, components: { sde1: "0", sdf1: "1" }, config: "U_" },
 		{ name: "md4", type: "raid5", status: "active", used: 2, available: 3, components: {}, config: "UU_" },
 		// `type: null` -- exercises _format_name's UNKNOWN branch
-		// (raid/render_curses_v5.py:50) and nothing else: active, no sub-lines.
+		// (raid/render_curses.py:50) and nothing else: active, no sub-lines.
 		// Named so the string sort puts it last (md99 sorts after md9) and
 		// leaves every other row's position unchanged.
 		{ name: "md99", type: null, status: "active", used: 2, available: 2, components: { sdg1: "0", sdh1: "1" }, config: "UU" },
@@ -798,7 +798,7 @@ const SMART_FIXTURE = {
 	_levels: {},
 };
 
-// `mpp` — one engine per branch of mpp/render_curses_v5.py:32-57: a load with
+// `mpp` — one engine per branch of mpp/render_curses.py:32-57: a load with
 // sessions, a load with ZERO sessions (v4 omits the session cell entirely),
 // and a null load rendered "N/A". Only the load is coloured.
 const MPP_FIXTURE = {
@@ -815,7 +815,7 @@ const MPP_FIXTURE = {
 };
 
 // `npu` — TWO devices on purpose: the renderer shows the FIRST only (v4
-// parity, npu/render_curses_v5.py:40-43), so a component that rendered both
+// parity, npu/render_curses.py:40-43), so a component that rendered both
 // must fail. The first has a load; the second would show the freq fallback,
 // which the dedicated scenario below exercises instead.
 const NPU_FIXTURE = {
@@ -831,7 +831,7 @@ const NPU_FIXTURE = {
 };
 
 // Load absent -> the percentage cell falls back to the FREQUENCY percentage
-// (npu/render_curses_v5.py:47-54), coloured from the `freq` level.
+// (npu/render_curses.py:47-54), coloured from the `freq` level.
 const NPU_NO_LOAD = {
 	_key: "npu_id",
 	data: [{ ...NPU_FIXTURE.data[0], load: null, freq: 80.0 }],
@@ -861,7 +861,7 @@ const QUICKLOOK_FIXTURE = {
 		{ cpu_number: 3, total: 20.0, level: "ok" },
 	],
 	percpu_other: { total: 15.0, level: "ok" },
-	// `prominent: false` on every entry -- the real schema (quicklook/model_v5.py,
+	// `prominent: false` on every entry -- the real schema (quicklook/model.py,
 	// G9-8 smoke fix 2) never sets it True for cpu/mem/load/gpu_mem/gpu_proc; the
 	// filled badge look was rejected after a smoke test. `quicklook-prominent`
 	// below overrides `cpu` to prove the component still honours a True it is
@@ -895,7 +895,7 @@ const PERCPU_FIXTURE = {
 };
 
 // processcount is a scalar plugin: total/running/sleeping/thread/pid_max
-// (processcount/model_v5.py). 215 - 3 - 195 = 17 "oth", the value the
+// (processcount/model.py). 215 - 3 - 195 = 17 "oth", the value the
 // TUI computes rather than reads.
 const PROCESSCOUNT_FIXTURE = {
 	total: 215,
@@ -907,7 +907,7 @@ const PROCESSCOUNT_FIXTURE = {
 };
 
 // amps: one row per AMP, `result` is the AMP's own output and may carry
-// newlines (amps/render_curses_v5.py:82). `Dropped` has result: null --
+// newlines (amps/render_curses.py:82). `Dropped` has result: null --
 // the AMP has not produced anything yet and v4 skips it. `Kernel` has no
 // regex, so its count is not displayed even though it is set.
 const AMPS_FIXTURE = {
@@ -922,7 +922,7 @@ const AMPS_FIXTURE = {
 };
 
 // vms: two engines on purpose, so the Engine column is shown (the TUI
-// shows it only with >1 distinct engine, vms/render_curses_v5.py:157).
+// shows it only with >1 distinct engine, vms/render_curses.py:157).
 // `load_1min` present -> the LOAD column is shown (:162).
 const VMS_FIXTURE = {
 	_key: "name",
@@ -1031,14 +1031,14 @@ const CONTAINERS_DISABLED_STATS = {
 	disable_stats: ["ports", "command"],
 };
 
-// `[containers] disable_stats=mem` -- render_curses_v5.py:286-288 cascades
+// `[containers] disable_stats=mem` -- render_curses.py:286-288 cascades
 // `mem` into `memory_max` too, so `/MAX` must disappear alongside `MEM`.
 const CONTAINERS_DISABLE_MEM = {
 	...CONTAINERS_FIXTURE,
 	disable_stats: ["mem"],
 };
 
-// No container on this host declares a limit. render_curses_v5.py's
+// No container on this host declares a limit. render_curses.py's
 // `show_mem_max` (:298) reads only `hidden` (disable_stats + the `mem`
 // cascade + the width cascade) -- `memory_limit` never gates the column,
 // only what the cell PRINTS (`_cpu_mem_cells`: "/" + the limit, or "/_"
@@ -1084,7 +1084,7 @@ const ALL_FIXTURES = {
 	"network-empty": { network: { _key: "interface_name", data: [], _levels: {} } },
 	diskio: { diskio: DISKIO_FIXTURE },
 	fs: { fs: FS_FIXTURE },
-	// `free_space` is envelope metadata (fs/model_v5.py:117-119): the config
+	// `free_space` is envelope metadata (fs/model.py:117-119): the config
 	// key merged with --fs-free-space, which is why the component reads it
 	// from the payload and not from /api/5/args.
 	"fs-free-space": { fs: { ...FS_FIXTURE, free_space: true } },
@@ -1184,7 +1184,7 @@ const ALL_FIXTURES = {
 		memswap: { total: 17179869184, used: 4294967296, free: 12884901888, percent: 25.0, sin: null, sout: null, _levels: {} },
 	},
 	// The three cpu scenarios, one per branch of the TUI's own selection
-	// rules (glances/plugins/cpu/render_curses_v5.py:181-200). Counter values
+	// rules (glances/plugins/cpu/render_curses.py:181-200). Counter values
 	// are chosen so formatCount's base-1024 scaling lands on a checkable
 	// string: 6860 -> "6.7K", 3072 -> "3.0K", 1843 -> "1.8K".
 	// Linux: `user` present, `soft_interrupts` a real rate, `guest` present.
@@ -1259,14 +1259,14 @@ const ALL_FIXTURES = {
 	// address can only come from the flag.
 	"header-hide-public": { ip: IP_FIXTURE },
 	"ip-no-cidr": { ip: { ...IP_FIXTURE, mask_cidr: null } },
-	// Neither address: the TUI returns [] (ip/render_curses_v5.py:71).
+	// Neither address: the TUI returns [] (ip/render_curses.py:71).
 	"ip-no-address": { ip: { ...IP_FIXTURE, address: "", public_address: "" } },
 	// platform present, name absent: the #2485 guard hides the block.
 	"cloud-no-name": { cloud: { id: "b7c1e2d3", platform: "OpenStack", type: "gold", region: "eu-west-1a", _levels: {} } },
 	// region absent as a KEY: the TUI's `payload.get("region", "Unknown")`.
 	"cloud-no-region": { cloud: { id: "b7c1e2d3", platform: "OpenStack", name: "my-vm", type: "gold", _levels: {} } },
 	"cloud-disabled": { system: SYSTEM_FIXTURE, cloud: CLOUD_FIXTURE },
-	// The TUI's guard (system/render_curses_v5.py:25): no hostname, no block --
+	// The TUI's guard (system/render_curses.py:25): no hostname, no block --
 	// even with an OS name to show.
 	"system-no-hostname": { system: { ...SYSTEM_FIXTURE, hostname: "" } },
 	processcount: { processcount: PROCESSCOUNT_FIXTURE },
@@ -1328,7 +1328,7 @@ ALL_FIXTURES["degrade-medium"] = { mem: MEM_FIXTURE_WITH_AVAILABLE };
 ALL_FIXTURES["degrade-narrow"] = { cpu: ALL_FIXTURES.cpu.cpu };
 
 // --full-quicklook (G9-8 Task 6): the six blocks the flag hides, plus `load`
-// and `percpu`, which must survive it (curses_renderer_v5.py:89
+// and `percpu`, which must survive it (curses_renderer.py:89
 // `_FULL_QUICKLOOK_HIDDEN`). `npu` and `mpp` are the two other TOP-slot
 // plugins the six-block list must also cover (final review, Minor 2).
 // `percpu: true` in ARGS_FIXTURES below keeps the shell's OWN cpu/percpu
@@ -1375,7 +1375,7 @@ ALL_FIXTURES["percpu-with-quicklook-percpu"] = { percpu: PERCPU_FIXTURE };
 ALL_FIXTURES["percpu-quicklook-cascaded-out"] = { percpu: PERCPU_FIXTURE, quicklook: QUICKLOOK_FIXTURE };
 
 // A collection payload shaped like `/api/5/all`'s processlist envelope
-// (processlist/model_v5.py, `_key: "pid"`). Row 0 carries every fixed-column
+// (processlist/model.py, `_key: "pid"`). Row 0 carries every fixed-column
 // field with values chosen so each formatter's output is unambiguous:
 // - VIRT 125829120 B == 120*1024*1024 -> formatBytes() "120.0M" (JS's
 //   `_auto_unit` mirror always keeps one decimal -- unlike the TUI's OWN
@@ -1398,7 +1398,7 @@ ALL_FIXTURES["percpu-quicklook-cascaded-out"] = { percpu: PERCPU_FIXTURE, quickl
 // "[kthread0]", not the placeholder.
 const PROCESSLIST_FIXTURE = {
 	_key: "pid",
-	// The `0` key's Irix divisor (processlist/model_v5.py `cpucore`).
+	// The `0` key's Irix divisor (processlist/model.py `cpucore`).
 	cpucore: 4,
 	data: [
 		{
@@ -1443,7 +1443,7 @@ const PROCESSLIST_FIXTURE = {
 
 // Three rows, payload order DELIBERATELY not sorted by any column -- the
 // highest `cpu_percent` (pid 10, 50%) sits in the MIDDLE. Proves two things
-// at once (test_webui_v5_render.py): the component renders payload order,
+// at once (test_webui_render.py): the component renders payload order,
 // never re-sorting (the engine already did that server-side), and the
 // `max_processes_display` cap (CONFIG_FIXTURES above, set to 2 for this
 // scenario) slices the first N of THAT order, not the top N by value --
@@ -1505,7 +1505,7 @@ ALL_FIXTURES["processlist-narrow"] = { processlist: PROCESSLIST_FIXTURE };
 // Task 8: `PROCESSLIST_FIXTURE`'s own usernames ("alice", null) are both
 // <= 10 characters formatted, so neither exercises `formatUsername`'s crop --
 // this fixture adds a 13-character one ("administrator" -> "administr+",
-// `_format_username`, render_curses_v5.py:158-162) so
+// `_format_username`, render_curses.py:158-162) so
 // test_a_long_user_name_is_cropped_not_wrapped has something to crop. Two
 // rows (not one) so test_the_command_column_carries_no_character_cap's
 // `pluginValueClasses` assertion has more than a single value to read.
@@ -1549,7 +1549,7 @@ ALL_FIXTURES["processlist-wide"] = { processlist: PROCESSLIST_WIDE_FIXTURE };
 
 // programlist (task 8): the per-program aggregation. Same shape as
 // PROCESSLIST_FIXTURE above with `pid` replaced by `nprocs` (no single pid --
-// programlist/model_v5.py: the engine sets `pid='_'` on the aggregated row)
+// programlist/model.py: the engine sets `pid='_'` on the aggregated row)
 // and keyed on `name` (the primary key) instead. Values reused unchanged
 // where the column is identical (CPU%/MEM%/VIRT/RES/USER/THR/NI/S/TIME+/R-W
 // per-s/Command), so the same formatted strings apply.
@@ -1697,7 +1697,7 @@ const BLOCK_WIDTH_FIXTURES = {
 	// protected tail is exactly what this scenario is for.
 	"processlist-narrow": { processlist: { available: 200, content: 2000 } },
 	// PluginAlert.vue's own width cascade: TOP, then LEVEL, then DURATION
-	// (curses_renderer_v5.py:538-540) -- TARGET is never dropped. Three
+	// (curses_renderer.py:538-540) -- TARGET is never dropped. Three
 	// fixtures, one per notch count, sharing `content: 1000` and differing
 	// only in `available` so each stops the cascade at a distinct step.
 	// 1000 - 150 = 850 <= 900: exactly one notch, so `drop_TOP` alone lands.
@@ -1803,7 +1803,7 @@ ALERT_INCIDENTS_SCENARIOS["budget-tall-with-config-cap"] = { is_initializing: fa
 
 // `budget-tick-shift` (fix round 3): pins that AppShell.refitVertical(),
 // inside tick(), reads the ALERT DATA THAT TICK JUST FETCHED, not the
-// previous tick's -- see tests/test_webui_v5_render.py's
+// previous tick's -- see tests/test_webui_render.py's
 // test_a_second_tick_rebudgets_against_its_own_alert_state. Same
 // bodyHeight as `budget-short` (14 rows) and the same 30-row
 // BUDGET_PROCESSLIST_FIXTURE, held constant across both ticks so the
@@ -1842,9 +1842,9 @@ const ALERT_INCIDENTS_SEQUENCES = {
 };
 
 // AppShell.vue's `ampsHeight()` defect (task 11 step 0): it used to add a
-// phantom `1 +` header row (amps/render_curses_v5.py paints none, module
+// phantom `1 +` header row (amps/render_curses.py paints none, module
 // docstring) and count a null-result AMP that PluginAmps.vue's own `rows`
-// filter drops (amps/render_curses_v5.py:67-71). AMPS_FIXTURE already has
+// filter drops (amps/render_curses.py:67-71). AMPS_FIXTURE already has
 // one null-result item (`Dropped`) and one two-line item (`Systemd`), so its
 // correct height is 4 (Python 1 + Systemd 2 + Kernel 1) against the old
 // buggy 6 (1 header + Python 1 + Systemd 2 + Dropped 1 + Kernel 1). At this
@@ -1860,7 +1860,7 @@ HEIGHT_FIXTURES["budget-amps-height-defect"] = {
 ALL_FIXTURES["budget-amps-height-defect"] = { processlist: BUDGET_PROCESSLIST_FIXTURE, amps: AMPS_FIXTURE };
 ALERT_INCIDENTS_SCENARIOS["budget-amps-height-defect"] = { is_initializing: false, incidents: [] };
 
-// Ladder step j (row_budget.js SHRINK_STEPS, curses_renderer_v5.py:957):
+// Ladder step j (row_budget.js SHRINK_STEPS, curses_renderer.py:957):
 // five AMPS, two result lines each, so the natural height is 10 -- no vms,
 // containers, processlist or alert data, so every OTHER step of the ladder
 // is a no-op (their cost terms are gated on `nVms`/`nContainers`/
@@ -1887,7 +1887,7 @@ ALL_FIXTURES["budget-amps-truncated"] = { amps: AMPS_TRUNCATED_FIXTURE };
 ALERT_INCIDENTS_SCENARIOS["budget-amps-truncated"] = { is_initializing: false, incidents: [] };
 
 // `_split_workloads` divides the solver's shared workload pool between vms
-// and containers (curses_renderer_v5.py:923-942); `containers` alone (no vms)
+// and containers (curses_renderer.py:923-942); `containers` alone (no vms)
 // exercises the cap without the max-min fairness split muddying the
 // expected number. 30 containers, `budget-short`'s own cramped geometry (14
 // rows of body height, aliased by reference, not copied) -- verified against
@@ -1939,7 +1939,7 @@ ALERT_INCIDENTS_SCENARIOS["budget-processlist-zeroed"] = {
 };
 
 // `_split_workloads` divides ONE shared pool between vms and containers with
-// max-min fairness (curses_renderer_v5.py:923-942) -- a `containers`-only
+// max-min fairness (curses_renderer.py:923-942) -- a `containers`-only
 // scenario exercises the per-block SLICE but not the SPLIT itself. Ten vms
 // alongside the existing 30-row BUDGET_CONTAINERS_FIXTURE (aliased by
 // reference), `budget-short`'s own cramped geometry (aliased by reference) --
@@ -1977,7 +1977,7 @@ HEIGHT_FIXTURES["budget-workload-column-parity"] = {
 	slots: { right: { top: 100, height: 0 }, footer: { top: 280, height: 20 } },
 };
 
-// vms/render_curses_v5.py:157 decides `show_engine` from the FULL item list,
+// vms/render_curses.py:157 decides `show_engine` from the FULL item list,
 // BEFORE its own `items[:budget]` slice (:169) -- five VMs, two distinct
 // engines, but the SECOND engine sits at index 3, past the 3-row quota this
 // scenario's geometry produces. A component that decided the Engine column
@@ -1999,7 +1999,7 @@ HEIGHT_FIXTURES["budget-vms-column-parity"] = HEIGHT_FIXTURES["budget-workload-c
 ALL_FIXTURES["budget-vms-column-parity"] = { vms: VMS_COLUMN_PARITY_FIXTURE };
 ALERT_INCIDENTS_SCENARIOS["budget-vms-column-parity"] = { is_initializing: false, incidents: [] };
 
-// containers/render_curses_v5.py:265 decides `show_pod` from the FULL item
+// containers/render_curses.py:265 decides `show_pod` from the FULL item
 // list, BEFORE its own `items[:budget]` slice (:273) -- the same class of
 // bug as vms' Engine column above, on containers_columns.js's OTHER
 // data-driven flag. Five containers, a pod on two of them, but both sit past

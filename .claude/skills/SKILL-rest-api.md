@@ -13,7 +13,7 @@ app, scheduler, and plugin registry together.
 
 ## Route inventory (Phase 1.6 ✅)
 
-All routes live in `glances/routes_v5.py` under the `/api/5` prefix.
+All routes live in `glances/routes.py` under the `/api/5` prefix.
 
 | Path | Method | Auth | Source |
 |---|---|---|---|
@@ -74,7 +74,7 @@ Config keys in `[outputs]`: `password`, `username`, `jwt_secret_key`, `jwt_expir
 ## Plugin registry — `app.state.plugins`
 
 ```python
-from glances.webserver_v5 import build_app, register_plugin
+from glances.webserver import build_app, register_plugin
 
 app = build_app(config=config, store=store, alerts=alerts)
 register_plugin(app, mem_plugin)
@@ -94,7 +94,7 @@ HTTP request
 TrustedHost → CORS → Auth (middleware stack)
     │
     ▼
-FastAPI route handler                          (glances/routes_v5.py)
+FastAPI route handler                          (glances/routes.py)
     │
     ▼
 app.state.store.get(plugin)                    ← lockless read (architecture §1.3)
@@ -116,13 +116,13 @@ The v5 API can rename fields, change types, drop v4-only fields, add new fields,
 
 ## Testing the REST API
 
-Test stack: `pytest` + `pytest-asyncio` (auto mode) + `unittest.mock`. Reference: `tests/test_routes_v5.py` + `tests/test_webserver_v5.py`.
+Test stack: `pytest` + `pytest-asyncio` (auto mode) + `unittest.mock`. Reference: `tests/test_routes.py` + `tests/test_webserver.py`.
 
 Pattern:
 
 ```python
 from fastapi.testclient import TestClient
-from glances.webserver_v5 import build_app, register_plugin
+from glances.webserver import build_app, register_plugin
 
 
 def test_my_route(config, store):
@@ -150,14 +150,14 @@ Auth flow for tests: either skip auth (default — no `password` set), or set `p
 ## Module path
 
 ```
-glances/webserver_v5.py        # build_app + middlewares + register_plugin
-glances/routes_v5.py           # /api/5/* router (Phase 1.6 ✅)
-glances/security_v5.py         # PBKDF2 + JWTHandler
-glances/alerts_v5.py           # state machine + history (consumed by /api/5/alert)
-glances/stats_store_v5.py      # the lockless store
-tests/test_webserver_v5.py     # middleware + auth integration tests
-tests/test_routes_v5.py        # route handler tests
-tests/test_security_v5.py      # PBKDF2 + JWT unit tests
+glances/webserver.py        # build_app + middlewares + register_plugin
+glances/routes.py           # /api/5/* router (Phase 1.6 ✅)
+glances/security.py         # PBKDF2 + JWTHandler
+glances/alerts.py           # state machine + history (consumed by /api/5/alert)
+glances/stats_store.py      # the lockless store
+tests/test_webserver.py     # middleware + auth integration tests
+tests/test_routes.py        # route handler tests
+tests/test_security.py      # PBKDF2 + JWT unit tests
 ```
 
 The v4 API code (`glances/main.py`, `glances/outputs/glances_bottle.py`, `glances/outputs/glances_restful_api.py`) is **not modified**, **not imported**, **not subclassed** by v5.

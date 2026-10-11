@@ -1,7 +1,7 @@
-// Minimal DOM + vm harness used by test_webui_v5_render.py to prove that the
+// Minimal DOM + vm harness used by test_webui_render.py to prove that the
 // v5 bundle actually RENDERS, rather than merely being served as bytes.
 //
-// It stubs only what glances5.js touches: document (element/text/comment
+// It stubs only what glances.js touches: document (element/text/comment
 // node creation + a `#app` querySelector), window (existence check only)
 // and fetch (resolved with empty JSON so the component's data-fetching
 // paths don't throw). No jsdom, no npm dependency -- just enough of the
@@ -113,7 +113,7 @@ class FakeElement extends FakeNode {
 		this.dataset = {};
 		// Layout, faked. A real DOM computes these; this harness reads them from
 		// WIDTH_FIXTURES so a scenario can drive the degradation cascade
-		// (js/v5/degrade.js). Unset -> 0, which degrade.js reads as "cannot
+		// (js/degrade.js). Unset -> 0, which degrade.js reads as "cannot
 		// measure" and never degrades on.
 		this._width = 0;
 		this._content = 0;
@@ -401,11 +401,11 @@ async function fakeFetch(url, init) {
 	}
 	// The health probe, which carries the release the footer names. NOT under
 	// /api/5 -- api.js's resolveVersion() reads "status" at the root, the way
-	// webserver_v5._register_health_endpoints() serves it.
+	// webserver._register_health_endpoints() serves it.
 	if (path === "status") {
 		return { ok: true, status: 200, json: async () => ({ status: "ok", version: "5", glances_version: "5.0.0" }) };
 	}
-	// The browser page (browser5.js, P3-6): one server per status the list
+	// The browser page (browser.js, P3-6): one server per status the list
 	// colours, and a name that must not become a link.
 	if (path.includes("api/5/serverslist")) {
 		return { ok: true, status: 200, json: async () => SERVERS_LIST_FIXTURE };
@@ -468,13 +468,13 @@ const sandbox = {
 		observe() {}
 		disconnect() {}
 	},
-	// The blocks (js/v5/fit_block.js) register each instance's own refit here,
+	// The blocks (js/fit_block.js) register each instance's own refit here,
 	// as the harness never fires their ResizeObserver -- see applyBlockWidths.
 	__glancesBlockRefits: [],
 	// AppShell.measureBodyRows() reads window.innerHeight. 0 means "cannot
 	// measure", which is the safe answer (design section 4.8).
 	innerHeight: 0,
-	// The browser page builds each server's link with it (js/v5/browser.js).
+	// The browser page builds each server's link with it (js/browser.js).
 	URL,
 };
 sandbox.window = sandbox;
@@ -583,7 +583,7 @@ function collect() {
 		// The disconnected overlay: whether it is up, and the text it shows.
 		// [] / null when the server is answering.
 		offlineText: null,
-		// The browser page's table (browser5.js): per <tbody> row, each cell's
+		// The browser page's table (browser.js): per <tbody> row, each cell's
 		// text and class, and the row's link. [] on the main page.
 		browserRows: findAllByTag(appDiv, "TBODY").flatMap((tbody) =>
 			findAllByTag(tbody, "TR").map((tr) => ({
@@ -667,7 +667,7 @@ function collect() {
 		pluginAttrs: {},
 		// Ordered `data-plugin` values inside each `[data-slot]` container,
 		// keyed by the slot name -- what the drift guard compares against the
-		// TUI's slot tuples (curses_renderer_v5.py:58-80).
+		// TUI's slot tuples (curses_renderer.py:58-80).
 		slots: {},
 		// Whether each plugin root is hidden by `v-show` (Vue writes
 		// `style.display = "none"`, runtime-dom's setDisplay()). The header
@@ -714,7 +714,7 @@ function collect() {
 		// WHERE the prominent badge lands (the level word, not the whole line).
 		footerAlerts: [],
 		// The tagName of each `.gl-inline` element in a plugin, keyed by
-		// data-plugin -- `.gl-inline` zeroes no margin of its own (css/v5.css),
+		// data-plugin -- `.gl-inline` zeroes no margin of its own (css/glances.css),
 		// it only supplies the baseline/gap layout, so a `<p>` picking that
 		// class up still keeps the browser's default `margin: 1em 0` and
 		// drifts the block down (quicklook's CPU name/frequency header, G9-8
@@ -933,7 +933,7 @@ function applyWidths() {
 
 // Same as applyWidths(), one level down: blocks are addressed by their
 // `data-plugin` attribute rather than by `data-slot`, because a per-block
-// cascade (js/v5/fit_block.js) measures the component's own root.
+// cascade (js/fit_block.js) measures the component's own root.
 function applyBlockWidths() {
 	const widths = BLOCK_WIDTH_FIXTURES[scenario];
 	if (!widths) return false;

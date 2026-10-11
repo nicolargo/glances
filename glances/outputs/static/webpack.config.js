@@ -27,15 +27,15 @@ module.exports = (_, env) => {
 		__VUE_PROD_HYDRATION_MISMATCH_DETAILS__: false,
 	});
 
-	const v5Config = {
-		name: "v5",
+	const config = {
+		name: "glances",
 		mode,
 		entry: {
-			glances5: "./js/app_v5.js",
+			glances: "./js/app.js",
 			// The browser page (P3-6), served at /browser by `-s --browser`.
-			browser5: "./js/browser_v5.js",
+			browser: "./js/browser_app.js",
 		},
-		// index_v5.html loads the bundle as "static/glances5.js" -- the path
+		// index.html loads the bundle as "static/glances.js" -- the path
 		// the Python server mounts it on. In dev the bundle lives in the dev
 		// server's memory, so it has to be published under the same prefix or
 		// the served page 404s on its only <script>. Production is untouched.
@@ -49,7 +49,7 @@ module.exports = (_, env) => {
 		// Vue's runtime-only build (the default resolution of "vue") is
 		// enough. The full build shipped a template compiler the bundle never
 		// called, in a single module terser cannot tree-shake: dropping the
-		// alias took glances5.js from 190 KB to 77 KB.
+		// alias took glances.js from 190 KB to 77 KB.
 		module: {
 			rules: [
 				{
@@ -74,7 +74,7 @@ module.exports = (_, env) => {
 			// in memory, so public/ is untouched.
 			!isProd &&
 				new HtmlWebpackPlugin({
-					template: "./templates/index_v5.html",
+					template: "./templates/index.html",
 					inject: false,
 				}),
 			new VueLoaderPlugin(),
@@ -96,5 +96,5 @@ module.exports = (_, env) => {
 		},
 	};
 
-	return v5Config;
+	return config;
 };

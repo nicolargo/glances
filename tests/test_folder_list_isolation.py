@@ -8,7 +8,7 @@
 
 """Configured folder lists must not share state between instances."""
 
-from glances.config_v5 import GlancesConfigV5
+from glances.config import GlancesConfig
 from glances.folder_list import FolderList
 
 
@@ -18,8 +18,8 @@ def test_configured_folder_lists_are_independent(tmp_path):
     second_config = tmp_path / 'second.conf'
     second_config.write_text('[folders]\nfolder_1_path=/second\nfolder_1_refresh=60\n')
 
-    first = FolderList(GlancesConfigV5(cli_config_path=str(first_config)))
-    second = FolderList(GlancesConfigV5(cli_config_path=str(second_config)))
+    first = FolderList(GlancesConfig(cli_config_path=str(first_config)))
+    second = FolderList(GlancesConfig(cli_config_path=str(second_config)))
 
     assert [folder['path'] for folder in first.get()] == ['/first']  # nosec B101 - pytest regression assertion.
     assert [folder['path'] for folder in second.get()] == ['/second']  # nosec B101 - pytest regression assertion.

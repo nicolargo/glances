@@ -104,7 +104,7 @@ glances/outputs/static/src/components/<name>/  # one folder per plugin component
 .github/workflows/webui.yml                    # WebUI build + test
 ```
 
-Phase 2 will introduce a parallel `static_v5/` only if the porting
+Phase 2 will introduce a parallel `static/` only if the porting
 volume justifies it. Default plan: in-place migration, one component at
 a time, gated by feature flags during the transition.
 

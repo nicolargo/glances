@@ -4,8 +4,8 @@ import test from "node:test";
 import {
 	CONTAINERS_HEADER_SORT_KEY,
 	sortHeaderAttrs,
-} from "../../glances/outputs/static/js/v5/sort_headers.js";
-import { HEADER_SORT_KEY } from "../../glances/outputs/static/js/v5/process_shared.js";
+} from "../../glances/outputs/static/js/sort_headers.js";
+import { HEADER_SORT_KEY } from "../../glances/outputs/static/js/process_shared.js";
 
 test("the live sort column is underlined, and only it", () => {
 	assert.equal(sortHeaderAttrs(HEADER_SORT_KEY, "cpu_percent", "CPU%").class["gl-sorted"], true);

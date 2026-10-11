@@ -1,6 +1,6 @@
 import { test, beforeEach } from "node:test";
 import assert from "node:assert/strict";
-import { resolveAllLabels, labelFor } from "../../glances/outputs/static/js/v5/labels.js";
+import { resolveAllLabels, labelFor } from "../../glances/outputs/static/js/labels.js";
 
 beforeEach(() => {
 	delete globalThis.fetch;

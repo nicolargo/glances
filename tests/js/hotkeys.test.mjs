@@ -11,7 +11,7 @@ import {
 	toggleHidden,
 	helpRows,
 	viewFlag,
-} from "../../glances/outputs/static/js/v5/hotkeys.js";
+} from "../../glances/outputs/static/js/hotkeys.js";
 
 // A registry shaped like `AppShell.plugins`: name + slot is all hideTargets reads.
 const REGISTRY = [
@@ -62,7 +62,7 @@ test("toggling adds then removes the same names", () => {
 test("a compound key never lands half-hidden", () => {
 	// Start from a half state: folders hidden on its own, fs visible. The tuple
 	// flips as a unit, keyed on its FIRST member -- the TUI's rule
-	// (glances_curses_v5._handle_key).
+	// (glances_curses._handle_key).
 	let hidden = new Set(["folders"]);
 	hidden = toggleHidden(hidden, ["fs", "folders"]);
 	assert.deepEqual([...hidden].sort(), ["folders", "fs"]);

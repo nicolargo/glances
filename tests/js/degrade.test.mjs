@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { TOP_CASCADE, HEADER_CASCADE, fits, resolveDegrade } from "../../glances/outputs/static/js/v5/degrade.js";
+import { TOP_CASCADE, HEADER_CASCADE, fits, resolveDegrade } from "../../glances/outputs/static/js/degrade.js";
 
 test("fits compares the zone's content with its available width", () => {
 	assert.equal(fits({ content: 300, available: 400 }), true);

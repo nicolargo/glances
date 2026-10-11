@@ -1,6 +1,6 @@
 # Skill: Glances v5 — Authoring a plugin (`GlancesPluginBase[T]`)
 
-Use the v5 plugin base class (`glances.plugins.plugin.base_v5.GlancesPluginBase`)
+Use the v5 plugin base class (`glances.plugins.plugin.base.GlancesPluginBase`)
 for any new plugin in `develop-v5`. It lives next to the v4 base class
 (`glances/plugins/plugin/model.py`), which is kept untouched during the
 transition. Concrete v4 plugins under `glances/plugins/` are migrated one
@@ -20,7 +20,7 @@ attribute — Python erases the `T` type parameter at runtime, so
 ## Minimal scalar plugin
 
 ```python
-from glances.plugins.plugin.base_v5 import GlancesPluginBase
+from glances.plugins.plugin.base import GlancesPluginBase
 
 import psutil
 import asyncio
@@ -115,7 +115,7 @@ stays in place (stale handling lands in Phase 3).
 | `watch_direction` | `"high"` / `"low"` | Threshold direction. `"high"` (default) alerts on `value >= threshold`; `"low"` alerts on `value <= threshold` (e.g. fs free). |
 | `prominent` | bool | When `True`, the field is rendered with **background highlight** (TUI/WebUI) and every level transition is tagged `prominent: True` in the alert event feed. Replaces v4 `_log` flag. Default `True` for watched fields. |
 | `default_thresholds` | dict | `{"careful": …, "warning": …, "critical": …}` — plugin-author defaults. Overridable per-level following the **3-level precedence** (most-specific wins, first non-empty key): `<pk_value>_<field>_<level>` (collection items, e.g. `wlan0_bytes_recv_warning=0.7`) > `<field>_<level>` (multi-watched plugins) > `<level>` (single-field plugins). Layering is per-key: overriding only `critical` keeps `careful` and `warning` at defaults. |
-| `normalize_by` | str | Optional. Name of another field whose value divides this field before threshold comparison: `level = compute_level(value / stats[normalize_by], …)`. Used for per-core normalisation (`load.min15` ÷ `cpucore`) and percent-of-capacity comparisons (`network.bytes_recv` ÷ `bytes_speed_rate_per_sec`). When the divisor is **missing, `None`, or `0`** the level is **skipped** for that field — meaning "no meaningful threshold computable" (e.g. interface with unknown link speed). Capacity-relative thresholds should be declared as ratios in `[0, 1]`. **`cpu.ctx_switches` is NOT normalised in v5** — absolute thresholds (10k/15k/20k); see `glances/plugins/cpu/model_v5.py` for the rationale. |
+| `normalize_by` | str | Optional. Name of another field whose value divides this field before threshold comparison: `level = compute_level(value / stats[normalize_by], …)`. Used for per-core normalisation (`load.min15` ÷ `cpucore`) and percent-of-capacity comparisons (`network.bytes_recv` ÷ `bytes_speed_rate_per_sec`). When the divisor is **missing, `None`, or `0`** the level is **skipped** for that field — meaning "no meaningful threshold computable" (e.g. interface with unknown link speed). Capacity-relative thresholds should be declared as ratios in `[0, 1]`. **`cpu.ctx_switches` is NOT normalised in v5** — absolute thresholds (10k/15k/20k); see `glances/plugins/cpu/model.py` for the rationale. |
 | `rate` | bool | When `True`, the field is a cumulative counter; the base class converts it to a per-second rate via `_transform_gauge` (`(current - previous) / time_since_update`). On the first cycle the field is **absent** from the payload (no previous sample). Counter wrap or reboot clamps to `0.0`. |
 | `primary_key` | bool | Marks the join key for `_levels` indexing in collection plugins |
 | `exportable` | bool | Defaults to `True`. Set `False` for internal fields. |
@@ -247,8 +247,8 @@ When two plugins consume the same psutil source — `cpu` ↔ `percpu`,
 or future `network` aggregate ↔ per-interface — pull the psutil call
 into a shared sampler module so the cost is paid once per refresh
 window, not twice. See architecture §3.7. First instance:
-`glances/cpu_sampler_v5.py` exposes a module-level `sampler` singleton
-that both `cpu/model_v5.py` and `percpu/model_v5.py` import. TTL-based
+`glances/cpu_sampler.py` exposes a module-level `sampler` singleton
+that both `cpu/model.py` and `percpu/model.py` import. TTL-based
 caching (default `1.0 s`) plus an `asyncio.Lock` for serialised access.
 
 ## What's deferred (out of scope for new plugins right now)
@@ -267,12 +267,12 @@ Test stack: `pytest` + `pytest-asyncio` (`asyncio_mode = "auto"`) +
 `unittest.mock` (architecture decision §9). Style: pytest-native top-level
 functions with fixtures and `assert` statements.
 
-Pattern: instantiate the plugin against a real `StatsStoreV5` and
-`GlancesConfigV5`, mock `_grab_stats()` to return a deterministic payload,
+Pattern: instantiate the plugin against a real `StatsStore` and
+`GlancesConfig`, mock `_grab_stats()` to return a deterministic payload,
 call `await plugin.update()`, assert on the store payload or
 `plugin.get_export()`.
 
-`tests/test_plugin_base_v5.py` provides reference fakes
+`tests/test_plugin_base.py` provides reference fakes
 (`FakeScalarPlugin`, `FakeCollectionPlugin`) demonstrating the pattern.
 
 ## Renderer hints in `fields_description`
@@ -303,24 +303,24 @@ the renderer.
 two-line rendering, sparkline). The renderer hints above can't change layout —
 declare a **per-plugin TUI renderer** instead (next section).
 
-## Per-plugin TUI renderer (`render_curses_v5.py`)
+## Per-plugin TUI renderer (`render_curses.py`)
 
 When v4's layout for a plugin can't be reproduced by the generic
 2-column / N-column table fallback — e.g. CPU's 3-column × 4-row grid —
-the plugin opts in to a custom layout by providing a `render_curses_v5.py`
-module next to `model_v5.py`:
+the plugin opts in to a custom layout by providing a `render_curses.py`
+module next to `model.py`:
 
 ```
 glances/plugins/<name>/
 ├── __init__.py
-├── model_v5.py              # stats (no TUI coupling)
-└── render_curses_v5.py      # OPTIONAL — per-plugin TUI layout
+├── model.py              # stats (no TUI coupling)
+└── render_curses.py      # OPTIONAL — per-plugin TUI layout
 ```
 
 The module exports a pure `render` function:
 
 ```python
-from glances.outputs.curses_renderer_v5 import Cell, ColorRole, Row
+from glances.outputs.curses_renderer import Cell, ColorRole, Row
 
 
 def render(payload: dict, fields_desc: dict) -> list[Row]:
@@ -329,7 +329,7 @@ def render(payload: dict, fields_desc: dict) -> list[Row]:
 ```
 
 `build_frame()` auto-discovers the module at first use and caches the
-lookup. A plugin without `render_curses_v5.py` falls back to the
+lookup. A plugin without `render_curses.py` falls back to the
 generic renderer — no breakage. If `render()` raises at runtime, the
 generic fallback applies for that cycle only.
 
@@ -339,13 +339,13 @@ can be loaded headless by exporters and the REST API. The split file
 keeps that contract while restoring v4's per-plugin layout freedom.
 
 **Reference implementations:**
-- `glances/plugins/cpu/render_curses_v5.py` — 3-column grid (mirrors v4
+- `glances/plugins/cpu/render_curses.py` — 3-column grid (mirrors v4
   `cpu.msg_curse()`).
 
 **Migration source:** for each plugin to migrate, the v4 `msg_curse()` in
 `glances/plugins/<name>/__init__.py` is the spec. The catalogue in
 `docs/architecture/tui-v4-rendering-patterns.md` summarises every Phase 1
-plugin's v4 layout — read it before writing `render_curses_v5.py`.
+plugin's v4 layout — read it before writing `render_curses.py`.
 
 ## Visual parity contract
 
@@ -357,8 +357,8 @@ on the same data set. The reviewer arbitrates:
 - Threshold-driven coloration triggered at the same boundaries?
 
 If the visual diff is non-trivial and the reviewer wants automation, the
-PR author adds a text fixture under `tests/fixtures/tui_<plugin>_v5.txt`
-and a `test_curses_<plugin>_v5.py` assertion that the renderer output
+PR author adds a text fixture under `tests/fixtures/tui_<plugin>.txt`
+and a `test_curses_<plugin>.py` assertion that the renderer output
 matches the fixture (line-by-line). This is opt-in per plugin.
 
 The catalogue of v4 patterns lives in
@@ -369,18 +369,18 @@ new plugin is migrated.
 
 Before requesting review on a plugin migration PR:
 
-- [ ] `glances/plugins/<name>/model_v5.py` exists with a complete
+- [ ] `glances/plugins/<name>/model.py` exists with a complete
       `fields_description` (description, unit, label, watched,
       watch_direction, prominent, default_thresholds, primary_key for
       collections, exportable, rate where applicable).
-- [ ] `tests/test_plugin_<name>_v5.py` covers `_grab_stats`, the four
+- [ ] `tests/test_plugin_<name>.py` covers `_grab_stats`, the four
       `_transform` steps, `_levels`, the field schema, and `get_export`.
 - [ ] `tests/test_plugin_<name>.py` (v4) still passes — no regression.
 - [ ] `GET /api/5/<name>` and `GET /api/5/<name>/info` return the expected
-      shapes (verified in `tests/test_routes_v5.py` or via curl in the
+      shapes (verified in `tests/test_routes.py` or via curl in the
       PR description).
 - [ ] TUI wiring done in the same PR — screenshot v4 vs v5 attached.
-- [ ] Perf check (`tests/test_perf_v5.py`) shows no regression > 20%.
+- [ ] Perf check (`tests/test_perf.py`) shows no regression > 20%.
 - [ ] `make lint && make format` clean.
 - [ ] `NEWS.rst` updated if a visible-API change (datamodel, thresholds,
       config keys) is introduced.
@@ -388,13 +388,13 @@ Before requesting review on a plugin migration PR:
 ## Module path
 
 ```
-glances/plugins/plugin/base_v5.py    # v5 base class (next to v4 model.py)
+glances/plugins/plugin/base.py    # v5 base class (next to v4 model.py)
 glances/plugins/plugin/model.py      # v4 base class — untouched
-tests/test_plugin_base_v5.py         # v5 base class unit tests
+tests/test_plugin_base.py         # v5 base class unit tests
 ```
 
 Concrete plugin layout for Phase 1+ is decided when the first plugin lands
-(likely `glances/plugins/<name>/v5.py` or `glances/plugins/<name>_v5.py`).
+(likely `glances/plugins/<name>/v5.py` or `glances/plugins/<name>.py`).
 
 The v4 modules in `glances/plugins/` are **not modified**, **not
 imported**, **not subclassed** by v5. The two base classes live side by

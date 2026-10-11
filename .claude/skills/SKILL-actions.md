@@ -1,8 +1,8 @@
 # Skill: Glances v5 — Authoring an alert action (`GlancesActionBase`)
 
-Use the v5 action base class (`glances.actions_v5.GlancesActionBase`) to add
+Use the v5 action base class (`glances.actions.GlancesActionBase`) to add
 a new alert action type to `develop-v5`. Actions are auto-discovered from
-the `glances.actions_v5` package — adding one means dropping a single file,
+the `glances.actions` package — adding one means dropping a single file,
 no changes to any core module.
 
 The v4 module `glances/actions.py` is kept untouched during the transition.
@@ -10,7 +10,7 @@ The v4 module `glances/actions.py` is kept untouched during the transition.
 ## When does an action run?
 
 Actions are triggered by `GlancesAlerts` (architecture §3.4, module
-`glances/alerts_v5.py`) when a plugin's `_levels` indicates a level
+`glances/alerts.py`) when a plugin's `_levels` indicates a level
 transition. The scheduler calls `alerts.ingest_plugin(plugin)` after
 every plugin update; the alert engine debounces transitions with a
 configurable hysteresis (``[alerts] min_duration_seconds=N``, default
@@ -34,14 +34,14 @@ Concrete actions shipped:
 
 | Package | `action_name` | Status |
 |---|---|---|
-| `glances/actions_v5/shell/` | `action` (matches v4 `_action` keys) | Phase 1.4 ✅ |
-| `glances/actions_v5/apprise/` | `apprise` | Phase 1.5 (deferred) |
-| `glances/actions_v5/llm/` | `llm` | Phase 2 (deferred) |
+| `glances/actions/shell/` | `action` (matches v4 `_action` keys) | Phase 1.4 ✅ |
+| `glances/actions/apprise/` | `apprise` | Phase 1.5 (deferred) |
+| `glances/actions/llm/` | `llm` | Phase 2 (deferred) |
 
 ## Action contract
 
 ```python
-from glances.actions_v5 import GlancesActionBase
+from glances.actions import GlancesActionBase
 
 
 class WebhookAction(GlancesActionBase):
@@ -96,13 +96,13 @@ unavailable.
 ## Auto-discovery
 
 ```python
-from glances.actions_v5 import discover_actions
+from glances.actions import discover_actions
 
 registry = discover_actions()
 # → {"shell": ShellAction(), "apprise": AppriseAction(), ...}
 ```
 
-Discovery walks the `glances.actions_v5` package via `pkgutil.iter_modules`
+Discovery walks the `glances.actions` package via `pkgutil.iter_modules`
 and instantiates every concrete subclass of `GlancesActionBase`. Failure
 modes are deliberately defensive:
 
@@ -189,7 +189,7 @@ written file…).
 
 For discovery tests: build a fake action package on disk via `tmp_path`,
 add it to `sys.path` with `monkeypatch.syspath_prepend`, then call
-`discover_actions("fake_pkg_name")`. See `tests/test_action_base_v5.py`
+`discover_actions("fake_pkg_name")`. See `tests/test_action_base.py`
 for the reference fixture.
 
 ## What's deferred (out of scope for new actions today)
@@ -203,18 +203,18 @@ for the reference fixture.
 ## Module path
 
 ```
-glances/actions_v5/__init__.py        # re-exports GlancesActionBase + discover_actions
-glances/actions_v5/action_base.py     # base class + discovery
-glances/actions_v5/shell/__init__.py  # concrete shell action (Phase 1.4)
-glances/alerts_v5.py                  # GlancesAlerts — schedules action.execute()
-tests/test_action_base_v5.py          # base class + discovery tests
-tests/test_action_shell_v5.py         # shell action tests
-tests/test_alerts_v5.py               # state machine + dispatch tests
+glances/actions/__init__.py        # re-exports GlancesActionBase + discover_actions
+glances/actions/action_base.py     # base class + discovery
+glances/actions/shell/__init__.py  # concrete shell action (Phase 1.4)
+glances/alerts.py                  # GlancesAlerts — schedules action.execute()
+tests/test_action_base.py          # base class + discovery tests
+tests/test_action_shell.py         # shell action tests
+tests/test_alerts.py               # state machine + dispatch tests
 ```
 
-Concrete actions ship as sub-packages: `glances/actions_v5/<name>/__init__.py`.
+Concrete actions ship as sub-packages: `glances/actions/<name>/__init__.py`.
 
 The v4 module `glances/actions.py` is **not modified**, **not imported**,
 **not subclassed** by v5. The two systems coexist through Phase 0 → Phase
-N. At the end of the transition the `_v5` suffix is dropped (the package
+N. At the end of the transition the `` suffix is dropped (the package
 becomes `glances/actions/`).

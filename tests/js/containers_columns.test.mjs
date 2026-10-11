@@ -7,14 +7,14 @@ import {
 	nameWidth,
 	rowWidth,
 	visibleCells,
-} from "../../glances/outputs/static/js/v5/containers_columns.js";
+} from "../../glances/outputs/static/js/containers_columns.js";
 import {
 	COL_SEPARATOR,
 	CONTAINER_COL_KEYS,
 	CONTAINER_COL_WIDTHS,
 	WEBUI_CONTAINER_COL_WIDTHS,
-} from "../../glances/outputs/static/js/v5/process_widths.js";
-import { formatAutoUnit, formatNetworkRate, formatPercent } from "../../glances/outputs/static/js/v5/format.js";
+} from "../../glances/outputs/static/js/process_widths.js";
+import { formatAutoUnit, formatNetworkRate, formatPercent } from "../../glances/outputs/static/js/format.js";
 
 const ONE_ENGINE = [{ engine: "docker", pod_name: null, memory_limit: null }];
 const TWO_ENGINES = [
@@ -44,7 +44,7 @@ test("disable_stats mem takes memory_max with it", () => {
 	assert.ok(hidden.has("memory_max"));
 });
 
-test("no memory_limit anywhere does NOT hide the /MAX column -- render_curses_v5.py has no such rule", () => {
+test("no memory_limit anywhere does NOT hide the /MAX column -- render_curses.py has no such rule", () => {
 	const allNullLimits = [
 		{ engine: "docker", pod_name: "frontend", memory_limit: null },
 		{ engine: "podman", pod_name: null, memory_limit: null },
@@ -105,7 +105,7 @@ test("every visible column is a cell, and the rate pairs are two", () => {
 		],
 	);
 	// The pair's 14 characters are split evenly, as the TUI's two 7-wide
-	// headers are (render_curses_v5.py:157-162).
+	// headers are (render_curses.py:157-162).
 	assert.deepEqual(
 		cells.filter((cell) => cell.key === "diskio").map((cell) => cell.width),
 		[7, 7],
@@ -198,7 +198,7 @@ test("every WebUI container column is wide enough for its own worst case", () =>
 
 test("the WebUI container widths only ever diverge from the terminal's for the `%` suffix", () => {
 	// CONTAINER_COL_WIDTHS is drift-tested against the curses renderer 1:1
-	// (tests/test_webui_v5_width_drift.py); WEBUI_CONTAINER_COL_WIDTHS is not,
+	// (tests/test_webui_width_drift.py); WEBUI_CONTAINER_COL_WIDTHS is not,
 	// so this is what keeps the second map from quietly wandering off. `cpu`
 	// is the ONE documented divergence.
 	for (const key of CONTAINER_COL_KEYS) {

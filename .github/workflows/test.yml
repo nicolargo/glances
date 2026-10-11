@@ -79,7 +79,7 @@ jobs:
     # their own job rather than weighing that portability down.
     #
     # Selection is by naming convention, not a hand-maintained list: every v5
-    # test file is `test_*_v5*.py` (91 of them today, and no v5-touching test
+    # test file is `test_**.py` (91 of them today, and no v5-touching test
     # file falls outside the convention). A new v5 test module is picked up
     # with no change here.
     #
@@ -117,7 +117,7 @@ jobs:
 
       - name: Unitary tests (v5)
         run: |
-          python -m pytest tests/test_*_v5*.py
+          python -m pytest tests/test_**.py
 
   test-windows:
 

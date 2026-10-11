@@ -9,42 +9,15 @@
 """Glances unitary tests suite fixtures.
 
 This module provides pytest fixtures for testing Glances plugins and components.
-
-For WebUI tests, the following are required:
-- chromedriver command line (example on Ubuntu system):
-  $ sudo apt install chromium-chromedriver
-- The chromedriver command line should be in your path (/usr/bin)
 """
 
 import logging
-import shlex
-import socket
-import subprocess
-import sys
-import time
 from pathlib import Path
 
 import pytest
-import requests
 
-from glances.config_v5 import GlancesConfigV5
-from glances.stats_store_v5 import StatsStoreV5
-
-# Optional imports for WebUI testing
-try:
-    from selenium import webdriver
-    from selenium.webdriver import ChromeOptions
-    from selenium.webdriver.chrome.service import Service as ChromeService
-    from webdriver_manager.chrome import ChromeDriverManager
-
-    SELENIUM_AVAILABLE = True
-except ImportError:
-    SELENIUM_AVAILABLE = False
-
-SERVER_PORT = 61234
-URL = f"http://localhost:{SERVER_PORT}"
-# Maximum time to wait for the Glances web server to be ready to answer
-SERVER_STARTUP_TIMEOUT = 15
+from glances.config import GlancesConfig
+from glances.stats_store import StatsStore
 
 
 @pytest.fixture(autouse=True)
@@ -64,7 +37,7 @@ def _testclient_on_localhost(monkeypatch):
     """Send TestClient requests as `Host: localhost`, not `testserver`.
 
     A v5 server bound to loopback (the default) answers a loopback `Host`
-    only (DNS rebinding, `webserver_v5._wire_trusted_hosts`). A test that
+    only (DNS rebinding, `webserver._wire_trusted_hosts`). A test that
     passes its own `base_url` or `Host` header still wins.
     """
     try:
@@ -84,107 +57,39 @@ def logger():
     return logging.getLogger(__name__)
 
 
-def _fail_if_port_is_used(port):
-    """Fail the tests if the given TCP port is already bound.
-
-    Without this check, the web server started by the fixture silently dies with
-    an 'address already in use' error and the tests run against the process
-    already listening on the port (a stale Glances instance, most of the time).
-    """
-    with socket.socket() as sock:
-        sock.settimeout(1)
-        if sock.connect_ex(("localhost", port)) == 0:
-            pytest.fail(
-                f"Port {port} is already in use, the Glances web server can not start. "
-                "Kill the process listening on this port (a stale Glances instance ?) and retry."
-            )
-
-
-def _wait_for_webserver(pid, timeout=SERVER_STARTUP_TIMEOUT):
-    """Wait for the Glances web server to answer on its health check end point."""
-    deadline = time.monotonic() + timeout
-    while time.monotonic() < deadline:
-        if pid.poll() is not None:
-            pytest.fail(f"Glances web server exited during startup with return code {pid.returncode}")
-        try:
-            if requests.get(f"{URL}/status", timeout=1).status_code == 200:
-                return
-        except requests.exceptions.RequestException:
-            pass
-        time.sleep(0.5)
-    pid.terminate()
-    pytest.fail(f"Glances web server did not answer within {timeout} seconds")
-
-
-@pytest.fixture(scope="session")
-def glances_webserver():
-    _fail_if_port_is_used(SERVER_PORT)
-    cmdline = sys.executable
-    cmdline += f" -m glances -s --disable-autodiscover -p {SERVER_PORT} -C ./conf/glances.conf"
-    args = shlex.split(cmdline)
-    pid = subprocess.Popen(args)
-    _wait_for_webserver(pid)
-    yield pid
-    pid.terminate()
-    time.sleep(1)
-
-
-@pytest.fixture(scope="session")
-def web_browser():
-    """Init Chrome browser for WebUI testing.
-
-    Requires selenium and webdriver-manager packages.
-    """
-    if not SELENIUM_AVAILABLE:
-        pytest.skip("selenium not installed - skipping WebUI tests")
-
-    opt = ChromeOptions()
-    opt.add_argument("--headless")
-    opt.add_argument("--start-maximized")
-    srv = ChromeService(ChromeDriverManager().install())
-    driver = webdriver.Chrome(options=opt, service=srv)
-
-    # Yield the WebDriver instance
-    driver.implicitly_wait(10)
-    yield driver
-
-    # Close the WebDriver instance
-    driver.quit()
-
-
 @pytest.fixture
 def store_with():
-    """Factory fixture — returns a callable producing a fresh StatsStoreV5.
+    """Factory fixture — returns a callable producing a fresh StatsStore.
 
     Shared across v5 plugin model tests (see
-    tests/test_plugin_base_v5_stop_and_threshold_field.py, the origin of
+    tests/test_plugin_base_stop_and_threshold_field.py, the origin of
     this fixture).
     """
 
-    def _factory() -> StatsStoreV5:
-        return StatsStoreV5()
+    def _factory() -> StatsStore:
+        return StatsStore()
 
     return _factory
 
 
 @pytest.fixture
 def config_with(tmp_path: Path, monkeypatch):
-    """Factory fixture — returns a callable that builds a real GlancesConfigV5
+    """Factory fixture — returns a callable that builds a real GlancesConfig
     from a ``{section: {key: value}}`` dict, backed by a temp glances.conf.
     """
-    monkeypatch.setattr(GlancesConfigV5, "SYSTEM_CONFIG_PATH", tmp_path / "etc" / "glances.conf")
+    monkeypatch.setattr(GlancesConfig, "SYSTEM_CONFIG_PATH", tmp_path / "etc" / "glances.conf")
     xdg = tmp_path / "xdg"
     cfg_dir = xdg / "glances"
     cfg_dir.mkdir(parents=True)
     monkeypatch.setenv("XDG_CONFIG_HOME", str(xdg))
 
-    def _factory(sections: dict[str, dict[str, str]]) -> GlancesConfigV5:
+    def _factory(sections: dict[str, dict[str, str]]) -> GlancesConfig:
         body = ""
         for section, options in sections.items():
             body += f"[{section}]\n"
             for key, value in options.items():
                 body += f"{key}={value}\n"
         (cfg_dir / "glances.conf").write_text(body)
-        return GlancesConfigV5()
+        return GlancesConfig()
 
     return _factory

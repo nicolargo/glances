@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { CONTAINERS_DROP_ORDER, dropCascade } from "../../glances/outputs/static/js/v5/drop_order.js";
+import { CONTAINERS_DROP_ORDER, dropCascade } from "../../glances/outputs/static/js/drop_order.js";
 
 test("the drop order is the TUI's, in the TUI's order", () => {
 	assert.deepEqual(CONTAINERS_DROP_ORDER, [

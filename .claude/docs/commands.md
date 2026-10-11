@@ -53,9 +53,9 @@ make run-v5-debug        # Same, debug-level logging
 make set-password-v5     # Interactive PBKDF2 hash for [outputs] password — paste into glances.conf
 
 # Equivalent direct invocations:
-.venv-uv/bin/uv run python -m glances.main_v5 -C conf/glances.conf
-.venv-uv/bin/uv run python -m glances.main_v5 --bind 0.0.0.0 --port 61299
-.venv-uv/bin/uv run python -m glances.main_v5 --set-password
+.venv-uv/bin/uv run python -m glances.main -C conf/glances.conf
+.venv-uv/bin/uv run python -m glances.main --bind 0.0.0.0 --port 61299
+.venv-uv/bin/uv run python -m glances.main --set-password
 ```
 
 After the migration completes (Phase 4), the v5 server will become the default `glances` entry point.

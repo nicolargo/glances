@@ -34,9 +34,9 @@ Pattern for a new optional protection:
 
 | Mechanism | Status | Module |
 |---|---|---|
-| Basic Auth (PBKDF2-SHA256) | Phase 1.5 ✅ | `glances/webserver_v5.py` + `glances/security_v5.py` |
-| JWT Bearer (HS256, v4.5.0+) | Phase 1.5 ✅ (handler) / Phase 1.6 (`/api/5/token` route) | `glances.security_v5.JWTHandler` |
-| Unauthenticated mode | Default — startup `WARNING` logged (CVE-2026-32596) | `glances/webserver_v5.py` |
+| Basic Auth (PBKDF2-SHA256) | Phase 1.5 ✅ | `glances/webserver.py` + `glances/security.py` |
+| JWT Bearer (HS256, v4.5.0+) | Phase 1.5 ✅ (handler) / Phase 1.6 (`/api/5/token` route) | `glances.security.JWTHandler` |
+| Unauthenticated mode | Default — startup `WARNING` logged (CVE-2026-32596) | `glances/webserver.py` |
 
 ### Config keys (`[outputs]`)
 
@@ -63,7 +63,7 @@ route handler / probe
 
 ### Liveness / readiness probes
 
-`GET /status` (v4-compat) and `GET /healthz` (k8s / Prometheus / Docker convention) — same payload, both **hard-coded as exempt from auth** via `UNAUTH_PATHS` in `glances/webserver_v5.py`. Deliberately not configurable: a probe surface must be predictable.
+`GET /status` (v4-compat) and `GET /healthz` (k8s / Prometheus / Docker convention) — same payload, both **hard-coded as exempt from auth** via `UNAUTH_PATHS` in `glances/webserver.py`. Deliberately not configurable: a probe surface must be predictable.
 
 ### Hash format & v4 migration
 
@@ -95,22 +95,22 @@ _Table below last synced 2026-08-01. Source of truth is architecture §8._
 
 | CVE | Severity | Mitigation in v5 | v5 status |
 |---|---|---|---|
-| **CVE-2026-30928** | high | Redact secrets from `/api/5/config` for unauthenticated callers via `GlancesConfigV5.as_dict_secure()`. Same mechanism as CVE-2026-32609. | Carry forward (Phase 0.2 ✅) |
+| **CVE-2026-30928** | high | Redact secrets from `/api/5/config` for unauthenticated callers via `GlancesConfig.as_dict_secure()`. Same mechanism as CVE-2026-32609. | Carry forward (Phase 0.2 ✅) |
 | **CVE-2026-30930** | high | Parameterized SQL in TimescaleDB export. Process names, mount points, interface names, container names — every string drawn from monitored data — must be parameterized, never f-string-interpolated. | Carry forward (Phase 3) |
 | **CVE-2026-32596** | high | Startup `WARNING` log when REST API runs unauthenticated. Default behaviour unchanged. | Carry forward (Phase 1.5 ✅) |
-| **CVE-2026-32608** | high | Shell-escape process names in `[action]` command templates **before** Mustache substitution. Implemented in the `shell` action under `glances/actions_v5/shell/`, not in `GlancesActionBase`. | Carry forward (Phase 1.4 ✅ — concrete `shell` action) |
-| **CVE-2026-32609** | high | Redact secret-like values from `/api/5/args` (and any other unauthenticated endpoint) via `GlancesConfigV5.as_dict_secure()`. | Carry forward (Phase 0.2 ✅) |
+| **CVE-2026-32608** | high | Shell-escape process names in `[action]` command templates **before** Mustache substitution. Implemented in the `shell` action under `glances/actions/shell/`, not in `GlancesActionBase`. | Carry forward (Phase 1.4 ✅ — concrete `shell` action) |
+| **CVE-2026-32609** | high | Redact secret-like values from `/api/5/args` (and any other unauthenticated endpoint) via `GlancesConfig.as_dict_secure()`. | Carry forward (Phase 0.2 ✅) |
 | **CVE-2026-32610** | high | No wildcard `Access-Control-Allow-Origin` with credentials. Allowed origins via `cors_origins` in `[outputs]`. `cors_allow_credentials=False` default; wildcard + credentials downgrades to no-credentials with WARNING. | Carry forward (Phase 1.5 ✅) |
 | **CVE-2026-32611** | high | Parameterized DDL in DuckDB export. Plugin/metric names sanitized, never string-interpolated. | Carry forward (Phase 3 — DuckDB) |
 | **CVE-2026-32632** | medium | Host validation against DNS rebinding. `webui_allowed_hosts` config key. Startup warning when unset in non-loopback mode. | Carry forward (Phase 1.5 ✅) |
 | **CVE-2026-32633** | critical | `/api/5/serverslist` must not return credential-bearing `uri` fields. Strip `password` and `uri` before serialization. | Carry forward (Phase 3) |
 | **CVE-2026-32634** | high | Browser autodiscovery must not forward configured credentials to discovered servers. | Carry forward (Phase 3) |
 | **CVE-2026-33533** | high | XML-RPC server removed in v5 (architecture §1.1). The vulnerable code path no longer exists. | Resolved by architecture |
-| **CVE-2026-33641** | high | Backtick command substitution in configuration values is **not** ported to `GlancesConfigV5` — the `re_pattern = r'(\`.+?\`)'` + `system_exec()` paths from v4 `glances/config.py` are deliberately absent. Document as a breaking change in `NEWS.rst` at v5.0.0. | Resolved by architecture |
+| **CVE-2026-33641** | high | Backtick command substitution in configuration values is **not** ported to `GlancesConfig` — the `re_pattern = r'(\`.+?\`)'` + `system_exec()` paths from v4 `glances/config.py` are deliberately absent. Document as a breaking change in `NEWS.rst` at v5.0.0. | Resolved by architecture |
 | **CVE-2026-34839** | high | REST API CORS hardening — same mechanism as CVE-2026-32610 applied to `/api/5/*`. `cors_origins` enforced; wildcard + credentials downgrades to no-credentials. | Carry forward (Phase 1.5 ✅) |
 | **CVE-2026-35587** | high | SSRF in IP plugin via `public_api`. v5 plugin migration must validate the URL scheme (allow `http`/`https` only), reject loopback / link-local / RFC1918 / cloud metadata IPs unless explicitly opted in via `public_api_allow_internal=true`, and **never** send `public_username`/`public_password` to a hostname not on an allowlist. | New v5 mitigation (Phase 2 — `ip` plugin migration) |
 | **CVE-2026-35588** | medium | Parameterized CQL in Cassandra export. `keyspace`, `table`, `replication_factor` validated against an allowlist regex (`^[A-Za-z][A-Za-z0-9_]*$`) before being interpolated into DDL. Same family as CVE-2026-32611 / CVE-2026-30930. | Carry forward (Phase 3 — Cassandra) |
-| **CVE-2026-68520** | high | `as_dict_secure()` value-level bypass. v5 `config_v5.as_dict_secure()` scrubs URL userinfo (`scheme://user:pass@host`) in every string value via `_URL_CREDENTIALS_RE`, and redacts `username` / `user` / `login` key names (`user` / `login` via exact match so `user_careful` / `user_warning` thresholds stay visible). A future `/api/5/args` must reuse `_secure_value()`. | Carry forward (Phase 0.2, extended 2026-08-01 ✅) |
+| **CVE-2026-68520** | high | `as_dict_secure()` value-level bypass. v5 `config.as_dict_secure()` scrubs URL userinfo (`scheme://user:pass@host`) in every string value via `_URL_CREDENTIALS_RE`, and redacts `username` / `user` / `login` key names (`user` / `login` via exact match so `user_careful` / `user_warning` thresholds stay visible). A future `/api/5/args` must reuse `_secure_value()`. | Carry forward (Phase 0.2, extended 2026-08-01 ✅) |
 | **GHSA-73wf-9vmv-5pv9** | high | Incomplete fix of CVE-2026-32608 (nested list/dict values). v5 `ShellAction` pre-quotes every value with `shlex.quote(str(value))`, so a stringified list is one token — v4's operator-stripping sanitizer is not used. | Covered by a different v5 mechanism |
 | **GHSA-qcpp-8x79-hhp3** | high | Incomplete fix of CVE-2026-32608 (operator reconstruction across adjacent `{{{a}}}{{{b}}}`). v5 `shlex.quote` closes/reopens a quote at every boundary → single literal word. | Covered by a different v5 mechanism |
 | **GHSA-59fj-m2j6-hcxh** | high | Incomplete fix of CVE-2026-53925: `--disable-config-exec` did not cover on-alert action commands. v5 `ShellAction.allow_shell()` reads `[global] disable_config_exec` (set by the `--disable-config-exec` CLI overlay) and, when hardened, runs the rendered command through `create_subprocess_exec(*shlex.split(cmd))` — no shell, operators stay literal. | Carry forward (CVE-2026-68519 port ✅) |
@@ -136,7 +136,7 @@ weekly merge, and no additional v5-specific work is needed.
 
 Used by the unauthenticated REST API endpoints (`/api/5/config`,
 `/api/5/args`) — CVE-2026-32609. Already implemented in
-`glances/config_v5.py` (Phase 0.2). See `SKILL-config.md` for the full
+`glances/config.py` (Phase 0.2). See `SKILL-config.md` for the full
 list of redacted key fragments and the conditional access pattern.
 
 Redaction is **value-level as well as key-level** (CVE-2026-68520):
@@ -150,10 +150,10 @@ The same redaction discipline applies **anywhere** the API may be
 consumed unauthenticated — not just `/api/5/config`. When adding a new
 endpoint, ask: "could this leak a credential to an anonymous caller?".
 **`/api/5/args`** (not yet implemented in v5) must route its payload
-through the same `GlancesConfigV5._secure_value()` before returning it to
+through the same `GlancesConfig._secure_value()` before returning it to
 an unauthenticated caller.
 
-## CORS — `glances/webserver_v5.py::_wire_cors`
+## CORS — `glances/webserver.py::_wire_cors`
 
 Default values for v5:
 
@@ -167,7 +167,7 @@ When `cors_origins` is unset the CORS middleware is **not added** at all — bro
 
 `cors_origins=*` with `cors_allow_credentials=true` is **invalid per the CORS spec** (CVE-2026-32610). The middleware logs a WARNING and forces `allow_credentials=False`. It never refuses to start.
 
-## DNS rebinding — `glances/webserver_v5.py::_wire_trusted_hosts`
+## DNS rebinding — `glances/webserver.py::_wire_trusted_hosts`
 
 ```ini
 [outputs]
@@ -181,7 +181,7 @@ The MCP endpoint already enforces equivalent protection via `mcp_allowed_hosts` 
 
 ## Rate limiting (architecture §4.5)
 
-`glances/ratelimit_v5.py`, a pure ASGI middleware between TrustedHost and CORS:
+`glances/ratelimit.py`, a pure ASGI middleware between TrustedHost and CORS:
 
 ```ini
 [outputs]
@@ -249,13 +249,13 @@ Before merging `develop-v5 → develop`, run a **full audit on the `develop-v5` 
 - Confirm `UNAUTH_PATHS` (probes + `/api/5/token`) cannot be abused for enumeration or oracle attacks.
 - Re-check every CVE in §8 against the actual v5 code, not just against the v4 fix.
 - Confirm rate limiting is wired before any release candidate.
-- Confirm no v4 module that has reached EOL leaks through `from glances.<x> import ...` in any `_v5` file.
+- Confirm no v4 module that has reached EOL leaks through `from glances.<x> import ...` in any `` file.
 
 Output: downloadable `.md` audit report. Release blocker for `5.0.0`.
 
 ## What's deferred
 
-- **`glances-v5 --set-password` CLI** — Phase 1.7 (regenerate hash for `[outputs] password`).
+- **`glances --set-password` CLI** — Phase 1.7 (regenerate hash for `[outputs] password`).
 - **`--disable-config-exec` for AMP commands** — the `ShellAction` gate shipped (GHSA-59fj-m2j6-hcxh, see the CVE table); the AMP side lands with the amps port, which has its own cycle.
 - **IP plugin SSRF mitigation** (CVE-2026-35587) — Phase 2 (`ip` plugin migration). New v5 mitigation, not present in v4.
 - **Curses escape sanitization in alerts** (GHSA-mcm7-fmh3-v6v3 — draft) — Phase 2 (alerts plugin / curses TUI)
@@ -266,12 +266,12 @@ Output: downloadable `.md` audit report. Release blocker for `5.0.0`.
 ## Module path
 
 ```
-glances/config_v5.py                  # as_dict_secure() (Phase 0 ✅)
-glances/security_v5.py                # PBKDF2 + JWTHandler (Phase 1.5 ✅)
-glances/webserver_v5.py               # build_app + middlewares (Phase 1.5 ✅)
-glances/actions_v5/shell/             # shell escaping (Phase 1.4 ✅)
+glances/config.py                  # as_dict_secure() (Phase 0 ✅)
+glances/security.py                # PBKDF2 + JWTHandler (Phase 1.5 ✅)
+glances/webserver.py               # build_app + middlewares (Phase 1.5 ✅)
+glances/actions/shell/             # shell escaping (Phase 1.4 ✅)
 glances/outputs/glances_mcp.py        # MCP host protection (v4 — untouched)
-tests/test_security_v5.py             # PBKDF2 + JWT unit tests
-tests/test_webserver_v5.py            # middleware + auth integration tests
+tests/test_security.py             # PBKDF2 + JWT unit tests
+tests/test_webserver.py            # middleware + auth integration tests
 docs/architecture/glances-v5-architecture-decisions.md  # §4 + §8 CVE table
 ```

@@ -6,7 +6,7 @@ import {
 	loadRefresh,
 	saveRefresh,
 	initialRefresh,
-} from "../../glances/outputs/static/js/v5/refresh.js";
+} from "../../glances/outputs/static/js/refresh.js";
 
 function stubStorage(initial) {
 	const store = { ...initial };

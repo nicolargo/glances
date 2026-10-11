@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { levelClass, scalarLevel, itemLevel, computeLevel } from "../../glances/outputs/static/js/v5/levels.js";
+import { levelClass, scalarLevel, itemLevel, computeLevel } from "../../glances/outputs/static/js/levels.js";
 
 const SCALAR = { percent: 52.5, _levels: { percent: { level: "careful", prominent: true } } };
 const COLLECTION = {
@@ -39,12 +39,12 @@ test("itemLevel reads _levels[primaryKeyValue][field]", () => {
 
 test("levels.js exports exactly its intended surface", async () => {
 	// The TUI signals an alert on the VALUE only
-	// (glances/outputs/curses_renderer_v5.py:126-129). The rule is enforced by
+	// (glances/outputs/curses_renderer.py:126-129). The rule is enforced by
 	// there being no API to break it -- so the export surface is asserted, not
 	// asserted-about. A previous version of this test checked globalThis,
 	// which ES module exports never populate: it passed even with a real
 	// `export function headerClass` present.
-	const mod = await import("../../glances/outputs/static/js/v5/levels.js");
+	const mod = await import("../../glances/outputs/static/js/levels.js");
 	assert.deepEqual(Object.keys(mod).sort(), ["computeLevel", "itemLevel", "levelClass", "scalarLevel"]);
 });
 

@@ -1,6 +1,6 @@
 # Skill: Glances v5 — Asyncio scheduler (`AsyncScheduler`)
 
-The asyncio scheduler (`glances.scheduler_v5.AsyncScheduler`) is the
+The asyncio scheduler (`glances.scheduler.AsyncScheduler`) is the
 component that actually runs registered plugins concurrently. It owns one
 `asyncio.Task` per plugin and calls `plugin.update()` at each plugin's
 `refresh_time`.
@@ -12,12 +12,12 @@ plugins lands when the first concrete plugin does (Phase 1+).
 
 ```python
 import asyncio
-from glances.config_v5 import GlancesConfigV5
-from glances.scheduler_v5 import AsyncScheduler
-from glances.stats_store_v5 import StatsStoreV5
+from glances.config import GlancesConfig
+from glances.scheduler import AsyncScheduler
+from glances.stats_store import StatsStore
 
-store = StatsStoreV5()
-config = GlancesConfigV5()
+store = StatsStore()
+config = GlancesConfig()
 
 scheduler = AsyncScheduler(store, config)
 scheduler.register(MemPlugin(store, config))
@@ -94,14 +94,14 @@ functions with fixtures and `assert` statements.
 Pattern: register fake plugins with very short `refresh_time` (e.g.
 `0.01`), `asyncio.create_task(scheduler.run_forever())`, sleep briefly,
 `await scheduler.stop()`, then assert on the store and on per-plugin call
-counters. See `tests/test_scheduler_v5.py` for reference fakes
+counters. See `tests/test_scheduler.py` for reference fakes
 (`FastPlugin`, `SlowPlugin`, `RaisingPlugin`).
 
 ## Module path
 
 ```
-glances/scheduler_v5.py        # AsyncScheduler implementation
-tests/test_scheduler_v5.py     # contract + smoke tests
+glances/scheduler.py        # AsyncScheduler implementation
+tests/test_scheduler.py     # contract + smoke tests
 ```
 
 The v4 scheduling model lives in `glances/main.py` / `glances/standalone.py`

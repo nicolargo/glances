@@ -1,0 +1,295 @@
+#!/usr/bin/env python
+#
+# Glances - An eye on your system
+#
+# SPDX-FileCopyrightText: 2026 Nicolas Hennion <nicolas@nicolargo.com>
+#
+# SPDX-License-Identifier: LGPL-3.0-only
+#
+
+"""Glances v5 — unit tests for the `folders` plugin (collection)."""
+
+from __future__ import annotations
+
+import logging
+import textwrap
+from pathlib import Path
+
+import pytest
+
+from glances.config import GlancesConfig
+from glances.folder_list import FolderList
+from glances.plugins.folders.model import PluginModel
+from glances.stats_store import StatsStore
+
+
+@pytest.fixture(autouse=True)
+def _reset_folder_list_class_state():
+    """FolderList keeps its item list as a CLASS attribute
+    (glances/folder_list.py:30-32) that every instance constructed with a
+    `[folders]` config section APPENDS onto rather than replacing — a
+    pre-existing v4 bug (see plan's "Key implementation findings" #2),
+    left untouched per the "reuse verbatim" mandate. Left unreset, folder
+    items from one test would leak into the next. Reset the class
+    attribute (test-time state only — does not modify folder_list.py)
+    before and after every test in this file.
+    """
+    FolderList._FolderList__folder_list = []
+    yield
+    FolderList._FolderList__folder_list = []
+
+
+@pytest.fixture
+def store() -> StatsStore:
+    return StatsStore()
+
+
+@pytest.fixture
+def config(tmp_path, monkeypatch) -> GlancesConfig:
+    monkeypatch.setattr(GlancesConfig, "SYSTEM_CONFIG_PATH", tmp_path / "etc" / "glances.conf")
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "xdg"))
+    return GlancesConfig()
+
+
+def _cfg_with(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, body: str) -> GlancesConfig:
+    xdg_conf = tmp_path / "xdg" / "glances" / "glances.conf"
+    xdg_conf.parent.mkdir(parents=True, exist_ok=True)
+    xdg_conf.write_text(textwrap.dedent(body).lstrip("\n"))
+    monkeypatch.setattr(GlancesConfig, "SYSTEM_CONFIG_PATH", tmp_path / "etc" / "glances.conf")
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "xdg"))
+    return GlancesConfig()
+
+
+def test_plugin_identity(store, config):
+    p = PluginModel(store, config)
+    assert p.plugin_name == "folders"
+    assert p.IS_COLLECTION is True
+    assert p.EMITS_ALERTS is True
+    assert p._primary_key == "path"
+
+
+def test_fields_description():
+    fd = PluginModel.fields_description
+    assert set(fd) == {"path", "size", "refresh", "errno", "careful", "warning", "critical"}
+    assert fd["path"]["primary_key"] is True
+
+
+def test_no_folders_section_returns_empty(store, config):
+    p = PluginModel(store, config)
+    assert list(p._folders.get()) == []
+
+
+@pytest.mark.asyncio
+async def test_no_folders_section_grab_returns_empty(store, config):
+    p = PluginModel(store, config)
+    assert await p._grab_stats() == []
+
+
+@pytest.mark.asyncio
+async def test_folders_section_with_no_paths_returns_empty(tmp_path, monkeypatch):
+    config = _cfg_with(tmp_path, monkeypatch, "[folders]\ndisable=False\n")
+    p = PluginModel(StatsStore(), config)
+    assert await p._grab_stats() == []
+
+
+@pytest.mark.asyncio
+async def test_single_folder_collected(tmp_path, monkeypatch):
+    watched = tmp_path / "watched"
+    watched.mkdir()
+    (watched / "f.bin").write_bytes(b"\x00" * 4096)
+    config = _cfg_with(
+        tmp_path,
+        monkeypatch,
+        f"""
+        [folders]
+        disable=False
+        folder_1_path={watched}
+        """,
+    )
+    p = PluginModel(StatsStore(), config)
+    stats = await p._grab_stats()
+    assert len(stats) == 1
+    assert stats[0]["path"] == str(watched)
+    assert stats[0]["size"] >= 4096
+    assert stats[0]["errno"] == 0
+
+
+@pytest.mark.asyncio
+async def test_nonexistent_folder_has_nonzero_errno(tmp_path, monkeypatch):
+    missing = tmp_path / "does-not-exist"
+    config = _cfg_with(
+        tmp_path,
+        monkeypatch,
+        f"""
+        [folders]
+        disable=False
+        folder_1_path={missing}
+        """,
+    )
+    p = PluginModel(StatsStore(), config)
+    stats = await p._grab_stats()
+    assert len(stats) == 1
+    assert stats[0]["path"] == str(missing)
+    assert stats[0]["errno"] != 0
+    assert stats[0]["size"] == 0
+
+
+def _levels(p, items):
+    p._stats = items
+    p._derived_parameters()
+    return p._levels
+
+
+def _item(path="/tmp", size=0, errno=0, careful=None, warning=None, critical=None):
+    return {
+        "path": path,
+        "size": size,
+        "errno": errno,
+        "careful": careful,
+        "warning": warning,
+        "critical": critical,
+        "refresh": 30,
+    }
+
+
+def test_mb_to_byte_conversion_fires_at_decimal_magnitude(store, config):
+    # careful="10" -> 10 * 1_000_000 = 10,000,000 bytes (decimal MB).
+    # A WRONG *1024**2 conversion would give 10,485,760 bytes instead.
+    # 10_200_000 sits strictly between the two: it must trigger "careful"
+    # under the correct (decimal) conversion, and would NOT under the
+    # wrong (binary) one — this is the discriminating assertion.
+    p = PluginModel(store, config)
+    lv = _levels(p, [_item(size=10_200_000, careful="10", warning="50", critical="100")])
+    assert lv["/tmp"]["size"]["level"] == "careful"
+
+
+def test_mb_to_byte_conversion_boundary_just_under_stays_ok(store, config):
+    # One byte under the decimal-MB threshold (10,000,000) -> ok. Pins the
+    # exact magnitude rather than merely "some threshold eventually fires".
+    p = PluginModel(store, config)
+    lv = _levels(p, [_item(size=9_999_999, careful="10", warning="50", critical="100")])
+    assert lv["/tmp"]["size"]["level"] == "ok"
+
+
+def test_errno_short_circuits_and_emits_no_level(store, config):
+    # No thresholds configured at all -> the ladder alone would say "ok".
+    # errno != 0 must still short-circuit it and emit NO _levels entry at
+    # all (v4 parity: no alert, no history, no action dispatch).
+    p = PluginModel(store, config)
+    lv = _levels(p, [_item(size=100, errno=2, careful=None, warning=None, critical=None)])
+    assert "/tmp" not in lv
+
+
+def test_errno_outranks_the_size_ladder_even_over_threshold(store, config):
+    # A folder that is BOTH over a size threshold AND has errno != 0 must
+    # still emit no level — errno short-circuits before the size ladder is
+    # ever consulted, so it is never "size-derived" instead.
+    p = PluginModel(store, config)
+    lv = _levels(p, [_item(size=999_999_999, errno=2, careful="10", warning="50", critical="100")])
+    assert "/tmp" not in lv
+
+
+def test_ok_when_no_thresholds_configured(store, config):
+    p = PluginModel(store, config)
+    lv = _levels(p, [_item(size=999_999_999, careful=None, warning=None, critical=None)])
+    assert lv["/tmp"]["size"]["level"] == "ok"
+
+
+def test_levels_indexed_by_path(store, config):
+    p = PluginModel(store, config)
+    lv = _levels(p, [_item(path="/a", size=1), _item(path="/b", size=2)])
+    assert set(lv) == {"/a", "/b"}
+    assert lv["/a"]["size"]["prominent"] is False
+
+
+# ------------------------------------------------------ per-folder refresh timer
+
+
+def test_refresh_timer_gates_the_folder_walk(tmp_path, monkeypatch):
+    """`folder_N_refresh` must actually skip the expensive walk.
+
+    Regression test for the broken index test in `FolderList.update()`
+    (`i in self.timer_folders` compared an int index against a list of
+    `Timer` objects, so it was always False and `folder_size()` ran on
+    every cycle). `folder_size` is spied on rather than timed, so the
+    test is deterministic.
+    """
+    watched = tmp_path / "watched"
+    watched.mkdir()
+    config = _cfg_with(
+        tmp_path,
+        monkeypatch,
+        f"""
+        [folders]
+        disable=False
+        folder_1_path={watched}
+        folder_1_refresh=60
+        """,
+    )
+
+    calls: list[str] = []
+
+    def _spy(path):
+        calls.append(path)
+        return (4096, 0)
+
+    monkeypatch.setattr("glances.folder_list.folder_size", _spy)
+
+    folders = FolderList(config)
+
+    # First cycle: always walks, so a value is available immediately.
+    folders.update()
+    assert len(calls) == 1
+
+    # Second cycle, timer not elapsed: the walk must be skipped.
+    folders.update()
+    assert len(calls) == 1
+
+    # Timer elapsed -> exactly one more walk...
+    folders.timer_folders[0].target = 0
+    folders.update()
+    assert len(calls) == 2
+
+    # ...and the timer was reset by that walk, so the next cycle skips again.
+    folders.update()
+    assert len(calls) == 2
+
+
+# ------------------------------------------------------ threshold-key warning (finding 1)
+
+
+def test_folder_n_careful_is_recognised(tmp_path, monkeypatch, store, caplog):
+    """`folder_1_careful` is the shipped conf's own documented spelling
+    (`conf/glances.conf:517`, `FolderList` at `glances/folder_list.py:74-76`)
+    — it must not warn."""
+    config = _cfg_with(
+        tmp_path,
+        monkeypatch,
+        """
+        [folders]
+        folder_1_path=/tmp
+        folder_1_careful=2500
+        """,
+    )
+    with caplog.at_level(logging.WARNING):
+        PluginModel(store, config)
+    warnings = [r.getMessage() for r in caplog.records if "unrecognised threshold key" in r.getMessage()]
+    assert warnings == []
+
+
+def test_unrelated_threshold_key_still_warns(tmp_path, monkeypatch, store, caplog):
+    """The hook answers per-shape, not per-plugin — a genuinely stale key
+    (not `folder_<N>_<level>`) must still warn."""
+    config = _cfg_with(
+        tmp_path,
+        monkeypatch,
+        """
+        [folders]
+        nonsense_careful=1
+        """,
+    )
+    with caplog.at_level(logging.WARNING):
+        PluginModel(store, config)
+    warnings = [r.getMessage() for r in caplog.records if "unrecognised threshold key" in r.getMessage()]
+    assert len(warnings) == 1
+    assert "nonsense_careful" in warnings[0]

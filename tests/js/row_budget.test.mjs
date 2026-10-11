@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { planRightColumn, splitWorkloads, alertBlockHeight } from "../../glances/outputs/static/js/v5/row_budget.js";
+import { planRightColumn, splitWorkloads, alertBlockHeight } from "../../glances/outputs/static/js/row_budget.js";
 
 const BASE = {
 	bodyHeight: 40,

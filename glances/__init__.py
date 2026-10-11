@@ -45,7 +45,7 @@ if psutil_version_info < psutil_min_version:
 
 def main():
     """Main entry point for Glances (the `glances` command and `python -m glances`)."""
-    from glances.main_v5 import main as run
+    from glances.main import main as run
 
     sys.exit(run())
 

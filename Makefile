@@ -99,7 +99,7 @@ test-core: ## Run Core unit tests
 	$(UV_RUN) run pytest tests/test_core.py
 
 test-v5: ## Run only v5 unit tests
-	$(UV_RUN) run pytest tests/ -k "v5 or stats_store or scheduler or config_v5 or action or thresholds or alerts or security or webserver or routes"
+	$(UV_RUN) run pytest tests/ -k "v5 or stats_store or scheduler or config or action or thresholds or alerts or security or webserver or routes"
 
 test-plugins: ## Run Plugins unit tests
 	$(UV_RUN) run pytest tests/test_plugin_*.py
@@ -146,10 +146,10 @@ test-export-clickhouse: ## Run interface tests with ClickHouse
 	/bin/bash ./tests/test_export_clickhouse.sh
 
 test-exports: ## Tests all exports
-	@for f in ./tests/test_export_*.sh; do case "$$f" in *_v5.sh) ;; *) /bin/bash "$$f" ;; esac; done
+	@for f in ./tests/test_export_*.sh; do case "$$f" in *.sh) ;; *) /bin/bash "$$f" ;; esac; done
 
-test-exports-v5: ## Tests all exports with glances-v5
-	@for f in ./tests/test_export_*_v5.sh; do /bin/bash "$$f"; done
+test-exports-v5: ## Tests all exports with glances
+	@for f in ./tests/test_export_*.sh; do /bin/bash "$$f"; done
 
 # ===================================================================
 # Linters, profilers and cyber security
@@ -241,9 +241,9 @@ bandit: ## Run Bandit to find vulnerabilities
 # ===================================================================
 
 docs: ## Create the documentation
-	$(UV_RUN) run python -m glances.api_v5_doc -C $(CONF) > ./docs/api/python.rst
+	$(UV_RUN) run python -m glances.api_doc -C $(CONF) > ./docs/api/python.rst
 	$(UV_RUN) run python ./generate_openapi.py
-	$(UV_RUN) run python -m glances.main_v5 -C $(CONF) --api-restful-doc > ./docs/api/restful.rst
+	$(UV_RUN) run python -m glances.main -C $(CONF) --api-restful-doc > ./docs/api/restful.rst
 	cd docs && ./build.sh && cd ..
 
 docs-server: docs ## Start a Web server to serve the documentation
@@ -347,28 +347,28 @@ run-fetch: ## Start Glances in fetch mode
 	$(UV_RUN) run python -m glances --fetch
 
 run-v5: ## Start Glances v5 in TUI mode (no REST API bound)
-	$(UV_RUN) run python -m glances.main_v5 -C $(CONF)
+	$(UV_RUN) run python -m glances.main -C $(CONF)
 
 run-v5-debug: ## Start Glances v5 TUI in debug mode
-	$(UV_RUN) run python -m glances.main_v5 -C $(CONF) -d
+	$(UV_RUN) run python -m glances.main -C $(CONF) -d
 
 run-v5-local-conf: ## Start Glances v5 in TUI mode with the system conf file
-	$(UV_RUN) run python -m glances.main_v5
+	$(UV_RUN) run python -m glances.main
 
 run-v5-server: ## Start Glances v5 REST server (FastAPI on :61208, headless)
-	$(UV_RUN) run python -m glances.main_v5 -C $(CONF) -s
+	$(UV_RUN) run python -m glances.main -C $(CONF) -s
 
 run-v5-server-local-conf: ## Start Glances v5 REST server with the system conf file (FastAPI on :61208, headless)
-	$(UV_RUN) run python -m glances.main_v5 -s
+	$(UV_RUN) run python -m glances.main -s
 
 run-v5-server-debug: ## Start Glances v5 REST server in debug mode (headless)
-	$(UV_RUN) run python -m glances.main_v5 -C $(CONF) -s -d
+	$(UV_RUN) run python -m glances.main -C $(CONF) -s -d
 
 run-v5-mcp: ## Start Glances v5 REST server with the MCP endpoint mounted (--enable-mcp will be operational once G3-MCP lands)
-	$(UV_RUN) run python -m glances.main_v5 -C $(CONF) -s --enable-mcp
+	$(UV_RUN) run python -m glances.main -C $(CONF) -s --enable-mcp
 
 set-password-v5: ## Generate a PBKDF2 hash for [outputs] password (v5)
-	$(UV_RUN) run python -m glances.main_v5 --set-password
+	$(UV_RUN) run python -m glances.main --set-password
 
 $(DOCKER_RUNTIMES): run-docker-%:
 	$(DOCKER_RUN) $(DOCKER_OPTS) $(DOCKER_SOCKS) -it glances:local-$*

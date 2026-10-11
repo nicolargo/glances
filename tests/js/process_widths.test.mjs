@@ -6,8 +6,8 @@ import {
 	FIXED_COL_KEYS,
 	PROCESS_COL_WIDTHS,
 	WEBUI_COL_WIDTHS,
-} from "../../glances/outputs/static/js/v5/process_widths.js";
-import { formatCpuTime, formatPercent, formatProcessBytes, formatUsername } from "../../glances/outputs/static/js/v5/format.js";
+} from "../../glances/outputs/static/js/process_widths.js";
+import { formatCpuTime, formatPercent, formatProcessBytes, formatUsername } from "../../glances/outputs/static/js/format.js";
 
 // The WORST CASE each processlist/programlist column can ever render, as the
 // string its own formatter actually produces -- the maintainer requirement
@@ -72,7 +72,7 @@ test("a WebUI process column is no wider than it has to be", () => {
 
 test("the WebUI widths only ever diverge from the terminal's for the `%` suffix", () => {
 	// process_widths.js's PROCESS_COL_WIDTHS is drift-tested against the
-	// curses renderer 1:1 (tests/test_webui_v5_width_drift.py); WEBUI_COL_WIDTHS
+	// curses renderer 1:1 (tests/test_webui_width_drift.py); WEBUI_COL_WIDTHS
 	// is not, so this is what keeps the second map from quietly wandering off.
 	// MEM% is the ONE documented divergence: `formatPercent()` appends a `%`
 	// curses never prints, and `100.0%` no longer fits `_W_MEM`'s 5.
@@ -99,6 +99,6 @@ test("every alert column is wide enough for its own worst case", () => {
 test("the column separator is a positive character count", () => {
 	// Both the <col> boxes and the `--gl-fixed-cols` sums add it; the
 	// stylesheet's own `padding-right` multiplier is checked against it in
-	// tests/test_webui_v5_tokens.py.
+	// tests/test_webui_tokens.py.
 	assert.ok(Number.isInteger(COL_SEPARATOR) && COL_SEPARATOR >= 1);
 });

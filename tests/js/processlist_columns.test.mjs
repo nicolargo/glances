@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { PROCESSLIST_DROP_ORDER, hiddenColumns } from "../../glances/outputs/static/js/v5/processlist_columns.js";
+import { PROCESSLIST_DROP_ORDER, hiddenColumns } from "../../glances/outputs/static/js/processlist_columns.js";
 
 test("the drop order is the TUI's, in the TUI's order", () => {
 	assert.deepEqual(PROCESSLIST_DROP_ORDER, ["CPU", "VIRT", "TIME+", "RES", "USER", "PID", "THR", "S", "NI"]);

@@ -47,6 +47,7 @@ dev = [
   "pillow>=10.0.1",
   "pre-commit",
   "pyinstrument>=5.1.2",
+  "playwright",
   "pyright",
   "pytest",
   "pytest-asyncio",
@@ -54,12 +55,10 @@ dev = [
   "reuse",
   "rstcheck",
   "ruff",
-  "selenium",
   "semgrep",
   "setuptools>=65.5.1",
   "sphinx",
   "sphinx_rtd_theme",
-  "webdriver-manager",
 ]
 
 [project.optional-dependencies]

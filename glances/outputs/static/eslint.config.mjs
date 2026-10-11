@@ -25,12 +25,12 @@ export default typescriptEslint.config(
 			// your rules
 		},
 	},
-	// The v5 WebUI's pure JS modules. Their own block on purpose: widening
-	// the glob above to plain `.js` would drag v4's whole js/ tree, this file
-	// and webpack.config.js into the lint set in one step.
+	// The WebUI's pure JS modules. Their own block on purpose: widening
+	// the glob above to plain `.js` would drag this file and
+	// webpack.config.js into the lint set.
 	{
 		extends: [eslint.configs.recommended],
-		files: ["**/js/v5/**/*.js"],
+		files: ["**/js/**/*.js"],
 		languageOptions: {
 			ecmaVersion: "latest",
 			sourceType: "module",
@@ -44,7 +44,7 @@ export default typescriptEslint.config(
 	//
 	//   glances/outputs/static/node_modules/.bin/eslint \
 	//     --config glances/outputs/static/eslint.config.mjs \
-	//     glances/outputs/static/js/v5 tests/js
+	//     glances/outputs/static/js tests/js
 	//
 	// Hence the leading `**/` on both globs above and below: it matches zero
 	// directories too, so the same patterns hold from either directory.

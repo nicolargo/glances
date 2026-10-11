@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { cellClassFor } from "../../glances/outputs/static/js/v5/columns.js";
+import { cellClassFor } from "../../glances/outputs/static/js/columns.js";
 
 const PAYLOAD = {
 	_key: "interface_name",

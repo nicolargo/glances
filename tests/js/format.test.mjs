@@ -17,7 +17,7 @@ import {
 	formatUsername,
 	toFahrenheit,
 	toFixedHalfEven
-} from "../../glances/outputs/static/js/v5/format.js";
+} from "../../glances/outputs/static/js/format.js";
 
 test("formatBytes uses binary units", () => {
 	assert.equal(formatBytes(0), "0B");
@@ -45,7 +45,7 @@ test("formatPercent keeps one decimal", () => {
 
 test("formatCount is a plain integer below 1024 and K-scaled at or above it", () => {
 	// The TUI is the authority here: _ctx_sw_value_cell()
-	// (glances/plugins/cpu/render_curses_v5.py:52-70) scales at >= 1024, not
+	// (glances/plugins/cpu/render_curses.py:52-70) scales at >= 1024, not
 	// >= 1000, matching v4's auto_unit. Counting in powers of two is odd, but
 	// the two outputs agreeing matters more than either being tidy.
 	assert.equal(formatCount(0), "0");
@@ -60,7 +60,7 @@ test("formatCount truncates below 1024, like the TUI's int()", () => {
 	// These fields are `rate`s, so the values are floats, and an idle
 	// machine's interrupts/s is routinely under 1024 -- i.e. this is the
 	// common path, not an edge case. `_ctx_sw_value_cell()`
-	// (glances/plugins/cpu/render_curses_v5.py) formats an unscaled counter
+	// (glances/plugins/cpu/render_curses.py) formats an unscaled counter
 	// with `f"{int(value)}"`, which truncates: 855.6 reads 855 there, so
 	// Math.round would have shown 856 in the browser for the same tick.
 	assert.equal(formatCount(855.6), "855");
@@ -116,7 +116,7 @@ test("formatPrettyDate returns pretty_date's empty string without a past start",
 });
 
 test("formatSeconds mirrors the TUI's format_seconds exactly", () => {
-	// glances/outputs/curses_formatters_v5.py:66-80. Each boundary on both
+	// glances/outputs/curses_formatters.py:66-80. Each boundary on both
 	// sides: the unit changes at 60, 3600 and 86400.
 	assert.equal(formatSeconds(0), "0s");
 	assert.equal(formatSeconds(59), "59s");
@@ -163,7 +163,7 @@ test("toFixedHalfEven matches CPython's float formatting, exact ties included", 
 });
 
 test("formatBytes truncates below 1K like the TUI's int()", () => {
-	// _auto_unit() in curses_formatters_v5.py prints int(value) below 1024.
+	// _auto_unit() in curses_formatters.py prints int(value) below 1024.
 	assert.equal(formatBytes(855.6), "855B");
 	assert.equal(formatBytes(1023.9), "1023B");
 });
@@ -224,7 +224,7 @@ test("formatAutoUnit below 1K, at zero and on a missing value", () => {
 	assert.equal(formatAutoUnit(undefined), "-");
 });
 
-// Mirrors npu/render_curses_v5.py::_auto_hz() -- base 1000, one decimal once
+// Mirrors npu/render_curses.py::_auto_hz() -- base 1000, one decimal once
 // scaled, a plain truncated integer below 1K.
 test("formatAutoHz mirrors npu's _auto_hz: base 1000, one decimal", () => {
 	assert.equal(formatAutoHz(1000000000), "1.0G");
@@ -236,7 +236,7 @@ test("formatAutoHz mirrors npu's _auto_hz: base 1000, one decimal", () => {
 	assert.equal(formatAutoHz(0), "0");
 });
 
-// Mirrors processlist/render_curses_v5.py::_format_username() -- the boundary
+// Mirrors processlist/render_curses.py::_format_username() -- the boundary
 // is off by one from the obvious reading: the crop fires only when the name
 // is LONGER than the column, so a name AT the width is shown whole.
 test("a name at the width is shown whole; one past it crops", () => {
@@ -245,7 +245,7 @@ test("a name at the width is shown whole; one past it crops", () => {
 	assert.equal(formatUsername(null), "?");
 });
 
-// Mirrors processlist/render_curses_v5.py::_format_cpu_num() -- v4's CPU
+// Mirrors processlist/render_curses.py::_format_cpu_num() -- v4's CPU
 // core column: the number, or `-` when it is unknown or negative.
 test("formatCpuNum shows the core, or a dash when there is none", () => {
 	assert.equal(formatCpuNum(5), "5");
@@ -255,7 +255,7 @@ test("formatCpuNum shows the core, or a dash when there is none", () => {
 	assert.equal(formatCpuNum(-1), "-");
 });
 
-// Mirrors processlist/render_curses_v5.py::_format_bytes() -- the terminal's
+// Mirrors processlist/render_curses.py::_format_bytes() -- the terminal's
 // OWN byte formatter (distinct from formatBytes/formatAutoUnit above).
 test("formatProcessBytes keeps the decimal below 100 and drops it at 100", () => {
 	assert.equal(formatProcessBytes(99.4 * 1024 ** 3), "99.4G");
@@ -268,7 +268,7 @@ test("formatProcessBytes: sub-kilobyte values are plain bytes, bad values are a 
 	assert.equal(formatProcessBytes("nope"), "?");
 });
 
-// _memory_info_field() (render_curses_v5.py:217-221) returns None whenever
+// _memory_info_field() (render_curses.py:217-221) returns None whenever
 // memory_info is missing or not a dict -- an access-denied process, for one
 // -- and that None reaches _format_bytes directly. Python's float(None)
 // raises and is caught, returning "?"; Number(null) is 0, so an unguarded

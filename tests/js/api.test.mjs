@@ -11,7 +11,7 @@ import {
 	DEFAULT_REFRESH_SECONDS,
 	DEFAULT_THEME,
 	DEFAULT_API_DOC,
-} from "../../glances/outputs/static/js/v5/api.js";
+} from "../../glances/outputs/static/js/api.js";
 
 function stubFetch(routes) {
 	globalThis.fetch = async (path) => {
@@ -237,9 +237,9 @@ test("resolvePluginNames returns null when the list cannot be read", async () =>
 });
 
 // The footer links /docs only when the server mounts it -- the same
-// `[outputs] api_doc` gate webserver_v5.build_app() reads.
+// `[outputs] api_doc` gate webserver.build_app() reads.
 test("resolveConfig reads [outputs] api_doc, in either of the types the merged config serves", async () => {
-	// GlancesConfigV5.DEFAULTS and the CLI overlay hold a real boolean ...
+	// GlancesConfig.DEFAULTS and the CLI overlay hold a real boolean ...
 	stubFetch({ "api/5/config": { body: { outputs: { api_doc: false } } } });
 	assert.equal((await resolveConfig()).apiDoc, false);
 	// ... while a value read from glances.conf arrives as a raw string.

@@ -1,0 +1,438 @@
+#
+# Glances - An eye on your system
+#
+# SPDX-FileCopyrightText: 2026 Nicolas Hennion <nicolas@nicolargo.com>
+#
+# SPDX-License-Identifier: LGPL-3.0-only
+#
+
+"""Glances v5 — unit tests for the `diskio` plugin (collection)."""
+
+from __future__ import annotations
+
+from collections import namedtuple
+from unittest.mock import patch
+
+import pytest
+
+from glances.config import GlancesConfig
+from glances.plugins.diskio.model import PluginModel
+from glances.stats_store import StatsStore
+
+# psutil stub ------------------------------------------------------
+
+DiskIo = namedtuple(
+    "sdiskio",
+    ["read_count", "write_count", "read_bytes", "write_bytes", "read_time", "write_time"],
+)
+
+
+def _io(rc: int = 0, wc: int = 0, rb: int = 0, wb: int = 0, rt: int = 0, wt: int = 0) -> DiskIo:
+    return DiskIo(rc, wc, rb, wb, rt, wt)
+
+
+# ----------------------------------------------------------- fixtures
+
+
+@pytest.fixture
+def store() -> StatsStore:
+    return StatsStore()
+
+
+@pytest.fixture
+def config(tmp_path, monkeypatch) -> GlancesConfig:
+    monkeypatch.setattr(GlancesConfig, "SYSTEM_CONFIG_PATH", tmp_path / "etc" / "glances.conf")
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "xdg"))
+    return GlancesConfig()
+
+
+def _config_with(tmp_path, monkeypatch, body: str) -> GlancesConfig:
+    monkeypatch.setattr(GlancesConfig, "SYSTEM_CONFIG_PATH", tmp_path / "etc" / "glances.conf")
+    xdg = tmp_path / "xdg"
+    cfg_dir = xdg / "glances"
+    cfg_dir.mkdir(parents=True)
+    (cfg_dir / "glances.conf").write_text(body)
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(xdg))
+    return GlancesConfig()
+
+
+# ---------------------------------------------------------- contract
+
+
+def test_plugin_identity(store, config):
+    plugin = PluginModel(store, config)
+    assert plugin.plugin_name == "diskio"
+    assert plugin.IS_COLLECTION is True
+
+
+def test_disk_name_is_primary_key(store, config):
+    fields = PluginModel(store, config)._fields
+    assert fields["disk_name"].get("primary_key") is True
+
+
+def test_read_write_bytes_are_rate_counters(store, config):
+    fields = PluginModel(store, config)._fields
+    for name in ("read_bytes", "write_bytes"):
+        assert fields[name].get("rate") is True, name
+
+
+def test_read_write_bytes_are_watched_but_not_prominent_with_strict(store, config):
+    """Opt-in alerts: watched=True so the framework wires levels when the
+    user sets thresholds, but no defaults — and strict_thresholds=True so
+    bare ``careful``/``warning``/``critical`` keys in ``[diskio]`` do NOT
+    spill onto these per-disk rates."""
+    fields = PluginModel(store, config)._fields
+    for name in ("read_bytes", "write_bytes"):
+        assert fields[name].get("watched") is True, name
+        assert fields[name].get("prominent") is False, name
+        assert fields[name].get("strict_thresholds") is True, name
+        assert "default_thresholds" not in fields[name], name
+
+
+def test_read_write_count_are_rate_internal(store, config):
+    """read_count / write_count are kept in the payload for IOPS export but
+    flagged ``internal`` so the generic renderer skips them."""
+    fields = PluginModel(store, config)._fields
+    for name in ("read_count", "write_count"):
+        assert fields[name].get("rate") is True, name
+        assert fields[name].get("internal") is True, name
+
+
+# ---------------------------------------------------------- update pipeline
+
+
+async def test_update_yields_one_entry_per_disk(store, config):
+    plugin = PluginModel(store, config)
+    iomap = {"sda": _io(rc=10, wc=5), "sdb": _io(rc=20, wc=15)}
+    with patch("glances.plugins.diskio.model.psutil.disk_io_counters", return_value=iomap):
+        await plugin.update()
+    payload = store.get("diskio")
+    names = sorted(i["disk_name"] for i in payload["data"])
+    assert names == ["sda", "sdb"]
+
+
+async def test_first_cycle_rate_fields_are_none(store, config):
+    plugin = PluginModel(store, config)
+    iomap = {"sda": _io(rc=10, wc=5, rb=1000, wb=500)}
+    with patch("glances.plugins.diskio.model.psutil.disk_io_counters", return_value=iomap):
+        await plugin.update()
+    item = store.get("diskio")["data"][0]
+    # No baseline yet → rate fields kept, value None.
+    for name in ("read_bytes", "write_bytes", "read_count", "write_count"):
+        assert name in item, name
+        assert item[name] is None, name
+
+
+async def test_second_cycle_computes_byte_rates(store, config, monkeypatch):
+    plugin = PluginModel(store, config)
+    fake_now = [100.0]
+    import glances.plugins.plugin.base as base_module
+
+    monkeypatch.setattr(base_module.time, "monotonic", lambda: fake_now[0])
+
+    psutil_path = "glances.plugins.diskio.model.psutil.disk_io_counters"
+    with patch(psutil_path, return_value={"sda": _io(rc=0, wc=0, rb=0, wb=0)}):
+        await plugin.update()
+    fake_now[0] = 101.0
+    with patch(psutil_path, return_value={"sda": _io(rc=10, wc=5, rb=10_000, wb=5_000)}):
+        await plugin.update()
+
+    item = next(i for i in store.get("diskio")["data"] if i["disk_name"] == "sda")
+    assert item["read_bytes"] == 10_000.0  # 10_000 B / 1 s
+    assert item["write_bytes"] == 5_000.0
+    assert item["read_count"] == 10.0
+    assert item["write_count"] == 5.0
+
+
+async def test_update_handles_psutil_failure(store, config):
+    """psutil.disk_io_counters may return None on locked-down hosts or
+    raise on transient kernel hiccups — model degrades gracefully."""
+    plugin = PluginModel(store, config)
+    with patch("glances.plugins.diskio.model.psutil.disk_io_counters", side_effect=OSError("boom")):
+        await plugin.update()
+    assert store.get("diskio")["data"] == []
+
+
+async def test_update_handles_none_return(store, config):
+    """psutil returns ``None`` on platforms without disk I/O support."""
+    plugin = PluginModel(store, config)
+    with patch("glances.plugins.diskio.model.psutil.disk_io_counters", return_value=None):
+        await plugin.update()
+    assert store.get("diskio")["data"] == []
+
+
+# ---------------------------------------------------------- thresholds
+
+
+async def test_no_levels_without_user_thresholds(store, config, monkeypatch):
+    """No ``[diskio] read_bytes_*`` in conf → no _levels entries."""
+    plugin = PluginModel(store, config)
+    fake_now = [100.0]
+    import glances.plugins.plugin.base as base_module
+
+    monkeypatch.setattr(base_module.time, "monotonic", lambda: fake_now[0])
+
+    psutil_path = "glances.plugins.diskio.model.psutil.disk_io_counters"
+    with patch(psutil_path, return_value={"sda": _io()}):
+        await plugin.update()
+    fake_now[0] = 101.0
+    with patch(psutil_path, return_value={"sda": _io(rb=1_000_000, wb=500_000)}):
+        await plugin.update()
+
+    levels = store.get("diskio")["_levels"]
+    # Either no entry for sda or entry with no read/write_bytes keys.
+    sda = levels.get("sda", {})
+    assert "read_bytes" not in sda
+    assert "write_bytes" not in sda
+
+
+async def test_bare_level_keys_do_not_leak_onto_per_disk_rates(tmp_path, monkeypatch, store):
+    """Regression guard: ``[diskio] careful=50`` (bare) must NOT trigger
+    on read_bytes/write_bytes — they ship ``strict_thresholds=True``."""
+    config = _config_with(tmp_path, monkeypatch, "[diskio]\ncareful=50\nwarning=70\ncritical=90\n")
+    plugin = PluginModel(store, config)
+    fake_now = [100.0]
+    import glances.plugins.plugin.base as base_module
+
+    monkeypatch.setattr(base_module.time, "monotonic", lambda: fake_now[0])
+
+    psutil_path = "glances.plugins.diskio.model.psutil.disk_io_counters"
+    with patch(psutil_path, return_value={"sda": _io()}):
+        await plugin.update()
+    fake_now[0] = 101.0
+    with patch(psutil_path, return_value={"sda": _io(rb=1_000, wb=1_000)}):
+        await plugin.update()
+
+    sda = store.get("diskio")["_levels"].get("sda", {})
+    assert "read_bytes" not in sda
+    assert "write_bytes" not in sda
+
+
+async def test_read_bytes_threshold_from_config_triggers_level(tmp_path, monkeypatch, store):
+    """User-set per-field thresholds wire through normally."""
+    config = _config_with(
+        tmp_path,
+        monkeypatch,
+        "[diskio]\nread_bytes_careful=5000\nread_bytes_warning=10000\nread_bytes_critical=20000\n",
+    )
+    plugin = PluginModel(store, config)
+    fake_now = [100.0]
+    import glances.plugins.plugin.base as base_module
+
+    monkeypatch.setattr(base_module.time, "monotonic", lambda: fake_now[0])
+
+    psutil_path = "glances.plugins.diskio.model.psutil.disk_io_counters"
+    with patch(psutil_path, return_value={"sda": _io()}):
+        await plugin.update()
+    fake_now[0] = 101.0
+    with patch(psutil_path, return_value={"sda": _io(rb=15_000)}):  # 15_000 B/s → warning
+        await plugin.update()
+
+    sda = store.get("diskio")["_levels"]["sda"]
+    assert sda["read_bytes"]["level"] == "warning"
+    assert sda["read_bytes"]["prominent"] is False
+
+
+async def test_level_follows_the_rate_not_the_lifetime_counter(tmp_path, monkeypatch, store):
+    """A 5 GB lifetime counter growing by 10 B/s is far under critical=90 B/s:
+    the level is computed on the rate, not on the raw counter."""
+    config = _config_with(tmp_path, monkeypatch, "[diskio]\nsda_read_bytes_critical=90\n")
+    plugin = PluginModel(store, config)
+    await _two_cycles(plugin, monkeypatch, {"sda": _io(rb=5_000_000_000)}, {"sda": _io(rb=5_000_000_010)})
+
+    assert store.get("diskio")["data"][0]["read_bytes"] == 10.0
+    assert store.get("diskio")["_levels"]["sda"]["read_bytes"]["level"] == "ok"
+
+
+# ---------------------------------------------------------- alias (design §5.5)
+
+
+async def test_alias_published_for_matching_disk(tmp_path, monkeypatch, store):
+    config = _config_with(tmp_path, monkeypatch, "[diskio]\nalias=sda:SystemDisk\n")
+    plugin = PluginModel(store, config)
+    iomap = {"sda": _io(), "sdb": _io()}
+    with patch("glances.plugins.diskio.model.psutil.disk_io_counters", return_value=iomap):
+        await plugin.update()
+    data = {i["disk_name"]: i for i in store.get("diskio")["data"]}
+    assert data["sda"]["alias"] == "SystemDisk"
+    assert "alias" not in data["sdb"]
+    assert data["sda"]["disk_name"] == "sda"  # primary key untouched
+
+
+# ---------------------------------------------------------- hide_zero / hide_threshold_bytes (design §5.1)
+
+
+def test_hide_zero_fields_declared(store, config):
+    assert PluginModel.HIDE_ZERO_FIELDS == ["read_bytes", "write_bytes"]
+
+
+async def test_hide_zero_off_by_default_never_hides(store, config, monkeypatch):
+    """diskio ships no `hide_zero` key in conf/glances.conf — defaults to False."""
+    plugin = PluginModel(store, config)
+    fake_now = [100.0]
+    import glances.plugins.plugin.base as base_module
+
+    monkeypatch.setattr(base_module.time, "monotonic", lambda: fake_now[0])
+
+    psutil_path = "glances.plugins.diskio.model.psutil.disk_io_counters"
+    with patch(psutil_path, return_value={"sda": _io()}):
+        await plugin.update()
+    fake_now[0] = 101.0
+    with patch(psutil_path, return_value={"sda": _io()}):
+        await plugin.update()
+
+    item = store.get("diskio")["data"][0]
+    assert item["hidden"] is False
+
+
+async def test_hide_zero_sticky_after_threshold_burst(tmp_path, monkeypatch, store):
+    config = _config_with(tmp_path, monkeypatch, "[diskio]\nhide_zero=True\nhide_threshold_bytes=1000\n")
+    plugin = PluginModel(store, config)
+    fake_now = [100.0]
+    import glances.plugins.plugin.base as base_module
+
+    monkeypatch.setattr(base_module.time, "monotonic", lambda: fake_now[0])
+
+    psutil_path = "glances.plugins.diskio.model.psutil.disk_io_counters"
+    with patch(psutil_path, return_value={"sda": _io(rb=0, wb=0)}):
+        await plugin.update()  # cycle 1, rate None
+
+    assert store.get("diskio")["data"][0]["hidden"] is True
+
+    fake_now[0] = 101.0
+    with patch(psutil_path, return_value={"sda": _io(rb=5000, wb=0)}):
+        await plugin.update()  # rb rate 5000 > 1000 -> unhide
+
+    assert store.get("diskio")["data"][0]["hidden"] is False
+
+    fake_now[0] = 102.0
+    with patch(psutil_path, return_value={"sda": _io(rb=5000, wb=0)}):
+        await plugin.update()  # unchanged counter -> rate 0 -> sticky stays visible
+
+    assert store.get("diskio")["data"][0]["hidden"] is False
+
+
+# ---------------------------------------------------------- latency (v4 update_latency)
+
+
+async def _two_cycles(plugin, monkeypatch, first, second):
+    """Run two updates one second apart with the given psutil maps."""
+    import glances.plugins.plugin.base as base_module
+
+    fake_now = [100.0]
+    monkeypatch.setattr(base_module.time, "monotonic", lambda: fake_now[0])
+    psutil_path = "glances.plugins.diskio.model.psutil.disk_io_counters"
+    with patch(psutil_path, return_value=first):
+        await plugin.update()
+    fake_now[0] = 101.0
+    with patch(psutil_path, return_value=second):
+        await plugin.update()
+
+
+def test_latency_fields_are_internal_opt_in_alerts_under_v4_keys(store, config):
+    fields = PluginModel(store, config)._fields
+    for name, v4_key in (("read_latency", "rx_latency"), ("write_latency", "tx_latency")):
+        schema = fields[name]
+        assert schema["internal"] is True
+        assert schema["watched"] is True and schema["prominent"] is False
+        assert schema["strict_thresholds"] is True
+        assert "default_thresholds" not in schema
+        assert schema["threshold_field"] == v4_key
+    for name in ("read_time", "write_time"):
+        assert fields[name]["rate"] is True and fields[name]["internal"] is True
+
+
+async def test_latency_is_time_rate_over_count_rate(store, config, monkeypatch):
+    """50 ms spent over 10 reads in one second -> 5 ms per read (v4 int())."""
+    plugin = PluginModel(store, config)
+    await _two_cycles(
+        plugin,
+        monkeypatch,
+        {"sda": _io()},
+        {"sda": _io(rc=10, wc=3, rt=50, wt=10)},
+    )
+    sda = store.get("diskio")["data"][0]
+    assert sda["read_latency"] == 5
+    assert sda["write_latency"] == 3  # int(10 / 3)
+
+
+async def test_latency_is_zero_without_operations(store, config, monkeypatch):
+    plugin = PluginModel(store, config)
+    await _two_cycles(plugin, monkeypatch, {"sda": _io()}, {"sda": _io()})
+    sda = store.get("diskio")["data"][0]
+    assert sda["read_latency"] == 0 and sda["write_latency"] == 0
+
+
+async def test_latency_is_none_on_the_first_cycle(store, config):
+    plugin = PluginModel(store, config)
+    with patch("glances.plugins.diskio.model.psutil.disk_io_counters", return_value={"sda": _io()}):
+        await plugin.update()
+    sda = store.get("diskio")["data"][0]
+    assert sda["read_latency"] is None and sda["write_latency"] is None
+
+
+async def test_latency_is_none_when_psutil_has_no_time_counters(store, config, monkeypatch):
+    """Some platforms' psutil omit read_time/write_time: no latency, no crash."""
+    NoTime = namedtuple("sdiskio", ["read_count", "write_count", "read_bytes", "write_bytes"])
+    plugin = PluginModel(store, config)
+    await _two_cycles(plugin, monkeypatch, {"sda": NoTime(0, 0, 0, 0)}, {"sda": NoTime(10, 10, 100, 100)})
+    sda = store.get("diskio")["data"][0]
+    assert sda["read_latency"] is None and sda["write_latency"] is None
+
+
+async def test_v4_latency_threshold_keys_colour_the_latency(tmp_path, monkeypatch, store):
+    """`rx_latency_*` and the per-disk `<disk>_tx_latency_*` of the shipped
+    glances.conf work as written."""
+    config = _config_with(
+        tmp_path,
+        monkeypatch,
+        "[diskio]\nrx_latency_careful=10\nrx_latency_warning=20\nsda_tx_latency_critical=2\n",
+    )
+    plugin = PluginModel(store, config)
+    await _two_cycles(plugin, monkeypatch, {"sda": _io()}, {"sda": _io(rc=10, wc=10, rt=250, wt=30)})
+    levels = store.get("diskio")["_levels"]["sda"]
+    assert levels["read_latency"]["level"] == "warning"  # 25 ms
+    assert levels["write_latency"]["level"] == "critical"  # 3 ms, per-disk key
+
+
+# ---------------------------------------------------------- `U` cumulative counters
+
+
+async def test_cumulative_counters_ride_beside_the_rates(store, config, monkeypatch):
+    plugin = PluginModel(store, config)
+    await _two_cycles(
+        plugin, monkeypatch, {"sda": _io(rc=1, wc=2, rb=10, wb=20)}, {"sda": _io(rc=5, wc=6, rb=50, wb=60)}
+    )
+    sda = store.get("diskio")["data"][0]
+    assert sda["read_bytes"] == 40.0
+    assert (sda["read_bytes_cumul"], sda["write_bytes_cumul"]) == (50, 60)
+    assert (sda["read_count_cumul"], sda["write_count_cumul"]) == (5, 6)
+
+
+def test_cumulative_fields_are_internal(store, config):
+    fields = PluginModel(store, config)._fields
+    for name, label in (
+        ("read_bytes_cumul", "R"),
+        ("write_bytes_cumul", "W"),
+        ("read_count_cumul", "IOR"),
+        ("write_count_cumul", "IOW"),
+    ):
+        assert fields[name]["internal"] is True and fields[name]["short_name"] == label
+
+
+# ---------------------------------------------------------- RAM disks (v4 --diskio-show-ramfs)
+
+
+async def test_ram_disks_are_hidden_by_default(store, config):
+    plugin = PluginModel(store, config)
+    with patch("glances.plugins.diskio.model.psutil.disk_io_counters", return_value={"ram0": _io(), "sda": _io()}):
+        await plugin.update()
+    assert [d["disk_name"] for d in store.get("diskio")["data"]] == ["sda"]
+
+
+async def test_show_ramfs_keeps_the_ram_disks(tmp_path, monkeypatch, store):
+    config = _config_with(tmp_path, monkeypatch, "[diskio]\nshow_ramfs=True\n")
+    plugin = PluginModel(store, config)
+    with patch("glances.plugins.diskio.model.psutil.disk_io_counters", return_value={"ram0": _io(), "sda": _io()}):
+        await plugin.update()
+    assert sorted(d["disk_name"] for d in store.get("diskio")["data"]) == ["ram0", "sda"]

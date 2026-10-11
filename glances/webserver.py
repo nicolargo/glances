@@ -1,0 +1,575 @@
+#!/usr/bin/env python
+#
+# Glances - An eye on your system
+#
+# SPDX-FileCopyrightText: 2026 Nicolas Hennion <nicolas@nicolargo.com>
+#
+# SPDX-License-Identifier: LGPL-3.0-only
+#
+
+"""Glances v5 FastAPI app skeleton.
+
+Phase 1.5 deliverable. Builds the FastAPI app, wires the security
+middlewares (TrustedHost / CORS / Auth), and exposes the liveness probes
+``/status`` and ``/healthz``. Concrete REST routes (``/api/5/<plugin>``,
+``/api/5/alert``, ``/api/5/token``) land in Phase 1.6 and read from
+``app.state``.
+
+Architecture references:
+- §4   REST API server — FastAPI
+- §8   Security advisories (CVE-2026-32596, 32610, 32632, 34839)
+
+Middleware composition (from outer to inner):
+
+    TrustedHostMiddleware   ← DNS rebinding (CVE-2026-32632)
+        ↓
+    CORSMiddleware          ← Cross-origin policy (CVE-2026-32610 / 34839)
+        ↓
+    AuthMiddleware          ← Basic / Bearer (CVE-2026-32596)
+        ↓
+    GZipMiddleware          ← response compression (v4 parity)
+        ↓
+    route handler / probe
+
+Starlette applies middlewares in reverse registration order, so the code
+below registers them inner-first.
+"""
+
+from __future__ import annotations
+
+import base64
+import binascii
+import contextlib
+import hmac
+import logging
+from pathlib import Path
+from typing import TYPE_CHECKING, Any
+
+from fastapi import FastAPI, Request
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+from starlette.concurrency import run_in_threadpool
+from starlette.middleware.cors import CORSMiddleware
+from starlette.middleware.gzip import GZipMiddleware
+from starlette.middleware.trustedhost import TrustedHostMiddleware
+
+from glances import __apiversion__, __version__
+from glances.alerts import GlancesAlerts
+from glances.config import GlancesConfig
+from glances.plugins.plugin.base import GlancesPluginBase
+from glances.ratelimit import RateLimitMiddleware
+from glances.routes import build_router
+from glances.security import JWTHandler, KnownCredentials, verify_password
+from glances.stats_store import StatsStore
+
+if TYPE_CHECKING:
+    import argparse
+
+logger = logging.getLogger(__name__)
+
+# Endpoints that bypass the global Auth middleware. Two categories:
+# - Liveness probes (``/status``, ``/healthz``) — must always answer.
+# - ``/api/5/token`` — the JWT minting endpoint authenticates Basic creds
+#   itself; it cannot live behind the Bearer-or-Basic middleware because
+#   the very purpose of the call is to *obtain* the Bearer token.
+# Hardcoded — deliberately not configurable so the surface stays predictable.
+UNAUTH_PATHS: frozenset[str] = frozenset({"/status", "/healthz", f"/api/{__apiversion__}/token"})
+
+# Loopback addresses that suppress the "no TrustedHost configured" warning.
+_LOOPBACK_HOSTS: frozenset[str] = frozenset({"127.0.0.1", "::1", "localhost"})
+
+# The `Host` values a loopback-bound server answers when `webui_allowed_hosts`
+# is not set. Starlette compares the host without its port, IPv6 literals
+# keeping their brackets.
+_LOOPBACK_ALLOWED_HOSTS: tuple[str, ...] = ("localhost", "127.0.0.1", "[::1]")
+
+# Default bind address — matches v4 (``--bind 127.0.0.1`` default).
+_DEFAULT_BIND_ADDRESS = "127.0.0.1"
+
+# Default Basic-Auth username — matches v4 CLI default.
+_DEFAULT_USERNAME = "glances"
+
+# Default JWT token lifetime in minutes — matches v4.
+_DEFAULT_JWT_EXPIRE_MINUTES = 60
+
+# Failed authentications allowed per client address and minute (§4.5).
+_DEFAULT_AUTH_FAIL_PER_MINUTE = 10
+
+# WebUI assets. `public/` holds the webpack output and is committed; the
+# templates directory holds the root documents. Both are package data, not
+# user-writable paths -- a UI served from a config-specified directory would
+# be an arbitrary-file-read surface.
+_WEBUI_ROOT = Path(__file__).parent / "outputs" / "static"
+_STATIC_PATH = _WEBUI_ROOT / "public"
+_TEMPLATE_PATH = _WEBUI_ROOT / "templates"
+
+
+class _NoCacheStaticFiles(StaticFiles):
+    """Static files the browser has to revalidate (port of v4 #3770).
+
+    glances.js has no version in its URL: without Cache-Control the browser
+    caches it heuristically from Last-Modified and can keep running the old
+    WebUI after an upgrade. With no-cache it checks the ETag first (a 304 when
+    nothing changed).
+    """
+
+    async def get_response(self, path, scope):
+        response = await super().get_response(path, scope)
+        response.headers["Cache-Control"] = "no-cache"
+        return response
+
+
+def build_app(
+    *,
+    config: GlancesConfig,
+    store: StatsStore,
+    alerts: GlancesAlerts | None = None,
+    args: argparse.Namespace | None = None,
+) -> FastAPI:
+    """Build the v5 FastAPI app with security middlewares wired in.
+
+    The returned app:
+    - exposes ``/status`` and ``/healthz`` (200 OK, no auth)
+    - serves Swagger UI at ``/docs`` and ReDoc at ``/redoc`` unless
+      ``[outputs] api_doc=false``
+    - applies, from outer to inner: TrustedHost → CORS → Auth
+    - exposes ``config``, ``store``, ``alerts``, ``args``, ``jwt_handler``
+      via ``app.state``
+
+    The scheduler is *not* started here — Phase 1.7 wires that into the CLI
+    entrypoint. Routes for ``/api/5/<plugin>`` and ``/api/5/alert`` land in
+    Phase 1.6.
+    """
+    api_doc_enabled = config.get("outputs", "api_doc", True)
+
+    @contextlib.asynccontextmanager
+    async def lifespan(_: FastAPI):
+        yield
+
+    app = FastAPI(
+        title="Glances REST API",
+        version=__apiversion__,
+        docs_url="/docs" if api_doc_enabled else None,
+        redoc_url="/redoc" if api_doc_enabled else None,
+        lifespan=lifespan,
+    )
+    app.state.config = config
+    app.state.store = store
+    app.state.alerts = alerts
+    app.state.args = args
+    app.state.jwt_handler = None  # set by _wire_auth() when password is configured
+    app.state.known_credentials = None  # idem
+    # Populated by ``register_plugin(app, plugin)`` — used by /pluginslist
+    # and /<plugin>/info. Routes that only need the store payload do not
+    # consult this dict.
+    app.state.plugins = {}
+    # Set by the CLI entrypoint to `scheduler.touch` when the scheduler may
+    # idle down; called for every authenticated, non-probe request.
+    app.state.on_activity = None
+
+    # Register from inner to outer — Starlette applies middlewares in reverse.
+    # GZip innermost (v4 registers it first too): the outer middlewares see
+    # the handler's status untouched, and their own small rejections stay plain.
+    app.add_middleware(GZipMiddleware, minimum_size=1000)
+    app.add_middleware(_ActivityMiddleware)
+    _wire_auth(app, config)
+    _wire_cors(app, config)
+    _wire_rate_limit(app, config)
+    _wire_trusted_hosts(app, config, args)
+
+    _register_health_endpoints(app)
+    app.include_router(build_router())
+
+    if args is not None and not getattr(args, "disable_webui", False):
+        _wire_webui(app, browser=bool(getattr(args, "browser", False)))
+
+    if not _auth_is_configured(config):
+        logger.warning(
+            "Glances REST API runs unauthenticated (CVE-2026-32596). "
+            "Set [outputs] password=<pbkdf2> in glances.conf to enable Basic + Bearer auth."
+        )
+
+    return app
+
+
+def register_plugin(app: FastAPI, plugin: GlancesPluginBase) -> None:
+    """Make ``plugin`` discoverable by the REST API.
+
+    Used by the Phase 1.7 CLI entrypoint, which registers each plugin
+    with both the scheduler (so it gets updated) and the FastAPI app (so
+    ``/api/5/pluginslist`` and ``/api/5/<plugin>/info`` can find it).
+    """
+    plugins = app.state.plugins
+    if plugin.plugin_name in plugins:
+        raise ValueError(f"Plugin {plugin.plugin_name!r} is already registered with the FastAPI app")
+    plugins[plugin.plugin_name] = plugin
+
+
+_DEFAULT_MCP_PATH = "/mcp"
+# What the server itself serves. An MCP mount on one of these, below one, or
+# above one (`/api` would swallow `/api/5`) would shadow it.
+_RESERVED_PATHS = ("/api", "/docs", "/redoc", "/openapi.json", "/static", "/status", "/healthz", "/browser")
+
+
+def resolve_mcp_path(config: GlancesConfig) -> str:
+    """`[outputs] mcp_path` (or `--mcp-path`), normalised; `/mcp` by default.
+
+    A leading `/` is added and a trailing one dropped, as in v4
+    (`glances_restful_api.py:409-411`). A path that would shadow a route the
+    server already serves -- the WebUI's `/` included -- falls back to `/mcp`
+    with a WARNING. The auth middleware and MCP's own DNS-rebinding guard do
+    not depend on the path.
+    """
+    raw = str(config.get("outputs", "mcp_path", _DEFAULT_MCP_PATH) or "").strip()
+    path = "/" + raw.strip("/")
+    clashes = path == "/" or any(
+        path == reserved or path.startswith(reserved + "/") or reserved.startswith(path + "/")
+        for reserved in _RESERVED_PATHS
+    )
+    if clashes:
+        logger.warning(
+            "[outputs] mcp_path %r would shadow a route the server already serves; mounting MCP at %s instead",
+            raw,
+            _DEFAULT_MCP_PATH,
+        )
+        return _DEFAULT_MCP_PATH
+    return path
+
+
+def attach_mcp(
+    app: FastAPI,
+    *,
+    config: GlancesConfig,
+    store: StatsStore,
+    plugins: list[GlancesPluginBase],
+    alerts: GlancesAlerts | None = None,
+) -> bool:
+    """Mount the MCP SSE endpoint when the config gate is on.
+
+    At ``/mcp`` unless ``[outputs] mcp_path`` (or ``--mcp-path``) says
+    otherwise -- see ``resolve_mcp_path``.
+
+    Gate: ``[outputs] enable_mcp`` (Boolean, default ``False``). The
+    CLI flag ``--enable-mcp`` flips it via the config overlay in
+    ``main.assemble`` (cf. G3-MCP Task 3).
+
+    Returns ``True`` when the mount was added, ``False`` when skipped
+    (gate off or the ``mcp`` package is missing). Skipping is silent
+    on the gate-off path and emits a clear WARNING on the missing-package
+    path — never raises.
+
+    Auth posture: the global v5 auth middleware
+    (cf. ``_wire_auth``) is HTTP-level and passes through SSE responses
+    unchanged. The MCP mount inherits that policy — no extra wiring
+    here. Unauthenticated MCP requests get a 401 from the same code path
+    as the rest of the API.
+
+    DNS rebinding: ``GlancesMcpServer`` reads
+    ``[outputs] mcp_allowed_hosts`` from the config itself (loopback
+    only by default). The SSE transport applies its own protection
+    independently of ``[outputs] webui_allowed_hosts``.
+    """
+    if not config.get("outputs", "enable_mcp", False):
+        return False
+
+    # Local import so a missing optional dep does not break ``build_app``.
+    try:
+        from glances.outputs.glances_mcp import MCP_AVAILABLE, GlancesMcpServer
+    except ImportError as exc:  # pragma: no cover — defensive
+        logger.warning("MCP requested but the import of glances_mcp failed: %s", exc)
+        return False
+
+    if not MCP_AVAILABLE:
+        logger.warning(
+            "MCP requested via [outputs] enable_mcp=true but the 'mcp' package is not installed. "
+            "Install with: pip install 'glances[mcp]' — skipping the mount."
+        )
+        return False
+
+    from types import SimpleNamespace
+
+    from glances.outputs.mcp_adapter import KNOWN_MISSING_PLUGINS, McpStatsAdapter
+
+    adapter = McpStatsAdapter(plugins=plugins, alerts=alerts)
+    # ``GlancesMcpServer`` stores ``args`` but never reads it (cf. v4 module).
+    # An empty namespace keeps the constructor happy without leaking v4 CLI shape.
+    mcp_server = GlancesMcpServer(stats=adapter, args=SimpleNamespace(), config=config)
+    mcp_path = resolve_mcp_path(config)
+    # The MCP app needs no path of its own: Starlette hands it the mount
+    # prefix as `root_path`, from which the SSE transport builds its URLs.
+    app.mount(mcp_path, mcp_server.get_asgi_app(mount_path=mcp_path))
+    app.state.mcp_server = mcp_server
+    logger.info("MCP endpoint mounted at %s", mcp_path)
+
+    # Surface the v4↔v5 gap so operators know which MCP resources will
+    # return "Plugin not found" (cf. McpStatsAdapter docstring). The
+    # list is small (≤4 entries) so it fits a single log line.
+    missing_in_registry = [p for p in KNOWN_MISSING_PLUGINS if p not in (pl.plugin_name for pl in plugins)]
+    if missing_in_registry:
+        logger.info(
+            "MCP: v4 plugins not yet ported to v5 — requesting these via MCP returns 'Plugin not found': %s",
+            ", ".join(missing_in_registry),
+        )
+    return True
+
+
+# ---------------------------------------------------------- WebUI
+
+
+def _wire_webui(app: FastAPI, browser: bool = False) -> None:
+    """Mount the WebUI assets and the root document.
+
+    No route-collision guard is needed: the v5 router carries
+    ``prefix="/api/5"``, so its dynamic ``/{plugin_name}`` handler lives at
+    ``/api/5/{plugin_name}`` and cannot capture ``/`` or ``/static/*``. This
+    differs from v4, where the same handler sits nearer the root.
+
+    Both surfaces inherit the existing middleware stack unchanged:
+    TrustedHost (outermost, so it sees every route) and Auth (``/`` is not in
+    ``UNAUTH_PATHS``, so a configured password protects the UI as it does in
+    v4). Nothing security-related is added here, and nothing may be bypassed.
+
+    No Jinja2: v4 templates its index only to interpolate ``url_prefix`` and
+    ``refresh_time``. v5 has no ``url_prefix``, and the refresh rate is
+    already reachable as ``[global] refresh`` through ``/api/5/config``.
+    """
+    index = _TEMPLATE_PATH / "index.html"
+    if not _STATIC_PATH.is_dir() or not index.is_file():
+        # Source checkout with no build, or a trimmed package. The REST API
+        # must still come up: a missing UI is not a reason to refuse to serve
+        # stats. Warn loudly enough to be actionable.
+        logger.warning(
+            "WebUI assets not found (%s). Serving the REST API only — run `npm run build` in %s.",
+            _STATIC_PATH,
+            _WEBUI_ROOT,
+        )
+        return
+
+    app.mount("/static", _NoCacheStaticFiles(directory=_STATIC_PATH), name="static")
+
+    @app.get("/", response_class=FileResponse, include_in_schema=False)
+    async def index_page() -> FileResponse:
+        return FileResponse(index, media_type="text/html")
+
+    if browser:
+        # `-s --browser` (P3-6): the server list, from /api/5/serverslist.
+        # Same middlewares as `/`: a configured password protects it too.
+        browser_page = _TEMPLATE_PATH / "browser.html"
+
+        @app.get("/browser", response_class=FileResponse, include_in_schema=False)
+        async def browser_index() -> FileResponse:
+            return FileResponse(browser_page, media_type="text/html")
+
+    logger.info("Glances Web User Interface enabled at /")
+
+
+# ---------------------------------------------------------- middlewares
+
+
+class _ActivityMiddleware:
+    """Tell the scheduler a client is reading, so it leaves idle mode.
+
+    Pure ASGI (no per-request task). Sits inside the auth middleware: a
+    rejected request does not count. The unauthenticated paths (probes, token) are ignored: a
+    health check must not keep an otherwise unused server at full speed.
+    """
+
+    def __init__(self, app) -> None:  # noqa: ANN001
+        self.app = app
+
+    async def __call__(self, scope, receive, send) -> None:  # noqa: ANN001
+        if scope["type"] in ("http", "websocket") and scope["path"] not in UNAUTH_PATHS:
+            on_activity = scope["app"].state.on_activity
+            if on_activity is not None:
+                on_activity()
+        await self.app(scope, receive, send)
+
+
+def _wire_trusted_hosts(app: FastAPI, config: GlancesConfig, args: argparse.Namespace | None = None) -> None:
+    """Filter requests by ``Host`` header against an allowlist.
+
+    ``[outputs] webui_allowed_hosts`` when set. Otherwise, a loopback bind
+    gets the loopback names (`_LOOPBACK_ALLOWED_HOSTS`): DNS rebinding
+    targets exactly a service on 127.0.0.1, so leaving it unfiltered let any
+    web page read the API (security audit 2026-10-04, M2; MCP already
+    defaults the same way). A non-loopback bind cannot guess its own names:
+    nothing is wired and a WARNING says the mitigation is off (CVE-2026-32632).
+    """
+    allowed = _csv_to_list(config.get("outputs", "webui_allowed_hosts", []))
+    if not allowed:
+        # `--bind` wins over the config key, as in main.assemble.
+        bind = getattr(args, "bind", None) or config.get("outputs", "bind_address", _DEFAULT_BIND_ADDRESS)
+        if not _is_loopback(bind):
+            logger.warning(
+                "[outputs] webui_allowed_hosts is not set and bind_address=%s is not loopback. "
+                "DNS rebinding mitigation (CVE-2026-32632) is disabled.",
+                bind,
+            )
+            return
+        allowed = list(_LOOPBACK_ALLOWED_HOSTS)
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=allowed)
+
+
+def _wire_cors(app: FastAPI, config: GlancesConfig) -> None:
+    """Wire CORS only when an explicit origin allowlist is configured.
+
+    A wildcard origin combined with credentials is invalid per the CORS
+    spec (CVE-2026-32610). When detected, downgrade ``allow_credentials``
+    to ``False`` with a WARNING — do not refuse to start.
+    """
+    origins = _csv_to_list(config.get("outputs", "cors_origins", []))
+    allow_credentials = config.get("outputs", "cors_allow_credentials", False)
+
+    if any(o == "*" for o in origins) and allow_credentials:
+        logger.warning(
+            "[outputs] cors_origins='*' with cors_allow_credentials=True is invalid "
+            "per the CORS spec (CVE-2026-32610). Forcing allow_credentials=False."
+        )
+        allow_credentials = False
+
+    if not origins:
+        return
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=origins,
+        allow_credentials=allow_credentials,
+        allow_methods=["GET", "POST"],
+        allow_headers=["Authorization", "Content-Type"],
+    )
+
+
+def _wire_rate_limit(app: FastAPI, config: GlancesConfig) -> None:
+    """Limit requests per client address, between TrustedHost and CORS (§4.5).
+
+    The general limit is off unless ``rate_limit_per_minute`` is set; the
+    failed-authentication one is on (``auth_fail_per_minute``, 0 turns it off).
+    """
+    per_minute = config.get("outputs", "rate_limit_per_minute", 0)
+    auth_fail_per_minute = config.get("outputs", "auth_fail_per_minute", _DEFAULT_AUTH_FAIL_PER_MINUTE)
+    if per_minute <= 0 and auth_fail_per_minute <= 0:
+        return
+    app.add_middleware(
+        RateLimitMiddleware,
+        per_minute=per_minute,
+        burst=config.get("outputs", "rate_limit_burst", 0),
+        auth_fail_per_minute=auth_fail_per_minute,
+        # Set by `_wire_auth`, which runs first; None without a password.
+        known_credentials=app.state.known_credentials,
+    )
+
+
+def _wire_auth(app: FastAPI, config: GlancesConfig) -> None:
+    """Install the Basic + Bearer authentication middleware.
+
+    Matches v4 behaviour: JWT Bearer is *only* enabled when a Basic-Auth
+    password is configured — otherwise there is no path to mint a token
+    through ``/api/5/token`` (which lands in Phase 1.6).
+    """
+    password_hash = config.get("outputs", "password", "")
+    if not password_hash:
+        return  # No auth configured — startup warning is emitted by build_app().
+
+    username = config.get("outputs", "username", _DEFAULT_USERNAME)
+    jwt_secret = config.get("outputs", "jwt_secret_key", "") or None
+    jwt_expire = config.get("outputs", "jwt_expire_minutes", _DEFAULT_JWT_EXPIRE_MINUTES)
+    jwt_handler = JWTHandler(secret_key=jwt_secret, expire_minutes=jwt_expire)
+    app.state.jwt_handler = jwt_handler
+    known = KnownCredentials(jwt_handler)
+    app.state.known_credentials = known
+
+    if jwt_handler.secret_was_generated:
+        logger.info(
+            "[outputs] jwt_secret_key not set — generated an ephemeral key. "
+            "Tokens become invalid on every restart. Set jwt_secret_key for stable tokens."
+        )
+
+    @app.middleware("http")
+    async def authenticate(request: Request, call_next):  # noqa: ANN001 — FastAPI middleware signature
+        if request.url.path in UNAUTH_PATHS:
+            return await call_next(request)
+
+        auth = request.headers.get("Authorization", "")
+
+        # JWT Bearer takes precedence — checked first so Bearer Authorization
+        # headers are never confused with Basic.
+        if auth.startswith("Bearer "):
+            token = auth[len("Bearer ") :].strip()
+            if jwt_handler.verify_token(token) is not None:
+                return await call_next(request)
+            return _unauth_response(scheme="Bearer")
+
+        if auth.startswith("Basic "):
+            # Proven good before: no second PBKDF2 for the same header.
+            if known.is_known(auth):
+                return await call_next(request)
+            credentials = _decode_basic(auth[len("Basic ") :].strip())
+            if credentials is not None:
+                user, password = credentials
+                # PBKDF2 is ~50 ms of CPU: keep it off the event loop the
+                # scheduler shares, and out of the default executor its
+                # plugins use (anyio's threadpool, as v4's sync endpoints).
+                # Bytes: compare_digest raises TypeError on a non-ASCII str (-> 500).
+                if hmac.compare_digest(user.encode(), username.encode()) and await run_in_threadpool(
+                    verify_password, password, password_hash
+                ):
+                    known.remember(auth)
+                    return await call_next(request)
+
+        return _unauth_response(scheme="Basic")
+
+
+def _decode_basic(encoded: str) -> tuple[str, str] | None:
+    try:
+        raw = base64.b64decode(encoded, validate=True).decode("utf-8", errors="strict")
+    except (binascii.Error, ValueError, UnicodeDecodeError):
+        return None
+    if ":" not in raw:
+        return None
+    user, _, password = raw.partition(":")
+    return user, password
+
+
+def _unauth_response(*, scheme: str) -> JSONResponse:
+    headers = {"WWW-Authenticate": 'Basic realm="Glances"' if scheme == "Basic" else "Bearer"}
+    return JSONResponse(status_code=401, content={"detail": "Authentication required"}, headers=headers)
+
+
+# ---------------------------------------------------------- endpoints
+
+
+def _register_health_endpoints(app: FastAPI) -> None:
+    """Register ``/status`` (v4-compat) and ``/healthz`` (k8s-compat) probes.
+
+    Both endpoints return the same payload. They are *defined* on the app
+    but listed in ``UNAUTH_PATHS`` so the auth middleware bypasses them.
+    """
+
+    async def status_handler():
+        # `version` is the API version, as v4's /api/4/status reports it;
+        # `glances_version` is the release the server runs, which the WebUI
+        # footer shows. Kept on the probe rather than on a route of its own:
+        # v4 already serves the release from its own /status.
+        return {"status": "ok", "version": __apiversion__, "glances_version": __version__}
+
+    app.add_api_route("/status", status_handler, methods=["GET"], tags=["health"])
+    app.add_api_route("/healthz", status_handler, methods=["GET"], tags=["health"])
+
+
+# ---------------------------------------------------------- helpers
+
+
+def _csv_to_list(raw: Any) -> list[str]:
+    if isinstance(raw, list):
+        return [str(item).strip() for item in raw if str(item).strip()]
+    if isinstance(raw, str):
+        return [item.strip() for item in raw.split(",") if item.strip()]
+    return []
+
+
+def _is_loopback(addr: str) -> bool:
+    return addr in _LOOPBACK_HOSTS
+
+
+def _auth_is_configured(config: GlancesConfig) -> bool:
+    return bool(config.get("outputs", "password", ""))

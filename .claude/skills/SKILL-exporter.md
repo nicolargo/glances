@@ -53,7 +53,7 @@ async support) must be wrapped with `asyncio.to_thread()`.
 class GlancesExportBase(ABC):
     export_name: ClassVar[str] = ""
 
-    def __init__(self, config: GlancesConfigV5, store: StatsStoreV5) -> None: ...
+    def __init__(self, config: GlancesConfig, store: StatsStore) -> None: ...
 
     @abstractmethod
     async def update(self, plugins: list[GlancesPluginBase]) -> None:
@@ -93,7 +93,7 @@ For every v4 export module under `glances/exports/<name>/`:
    with `plugin.get_export()`.
 4. Wrap blocking client calls in `asyncio.to_thread()` until an async
    driver exists.
-5. Read configuration via `GlancesConfigV5.get(section, option, default)`
+5. Read configuration via `GlancesConfig.get(section, option, default)`
    — preserve the exact same `glances.conf` keys as v4 to avoid breaking
    user setups.
 6. Add unit tests (`pytest` + `pytest-asyncio`) covering the round-trip
@@ -130,21 +130,21 @@ Test stack: `pytest` + `pytest-asyncio` (`asyncio_mode = "auto"`) +
 `unittest.mock` (architecture decision §9). Style: pytest-native top-level
 functions with fixtures and `assert` statements.
 
-Pattern: instantiate the exporter against a real `GlancesConfigV5` and a
-real `StatsStoreV5` populated with one fake plugin (use
+Pattern: instantiate the exporter against a real `GlancesConfig` and a
+real `StatsStore` populated with one fake plugin (use
 `FakeScalarPlugin` / `FakeCollectionPlugin` from
-`tests/test_plugin_base_v5.py` as inspiration). Mock the backend client
+`tests/test_plugin_base.py` as inspiration). Mock the backend client
 (SQL connection, HTTP client, …) and assert the exporter calls
 `plugin.get_export()` — never the store directly.
 
 ## Module path (target — Phase 1+)
 
 ```
-glances/exports_v5/<name>/__init__.py    # concrete exporter
-glances/exports_v5/export_base.py        # GlancesExportBase (Phase 1)
-tests/test_<name>_export_v5.py           # exporter unit tests
+glances/exports/<name>/__init__.py    # concrete exporter
+glances/exports/export_base.py        # GlancesExportBase (Phase 1)
+tests/test_<name>_export.py           # exporter unit tests
 ```
 
 The v4 modules under `glances/exports/` are **not modified**, **not
 imported**, **not subclassed** by v5. The two systems coexist through the
-migration. At the end of the transition the `_v5` suffix is dropped.
+migration. At the end of the transition the `` suffix is dropped.

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { visiblePlugins, groupBySlot } from "../../glances/outputs/static/js/v5/layout.js";
+import { visiblePlugins, groupBySlot } from "../../glances/outputs/static/js/layout.js";
 
 const REGISTRY = [
 	{ name: "system", slot: "header-left" },

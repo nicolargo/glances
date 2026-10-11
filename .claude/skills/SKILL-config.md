@@ -1,6 +1,6 @@
-# Skill: Glances v5 — Configuration (`GlancesConfigV5`)
+# Skill: Glances v5 — Configuration (`GlancesConfig`)
 
-Use the v5 configuration loader (`glances.config_v5.GlancesConfigV5`) for any
+Use the v5 configuration loader (`glances.config.GlancesConfig`) for any
 new code in `develop-v5`. The v4 module `glances.config` is kept untouched
 during the transition.
 
@@ -12,7 +12,7 @@ replaced in bulk. This is a deliberate behaviour change vs. v4
 
 | # | Source | Notes |
 |---|---|---|
-| 1 | `GlancesConfigV5.DEFAULTS` (class attribute) | Hardcoded baseline. Phase 0 keeps this minimal; each phase adds the keys it references. |
+| 1 | `GlancesConfig.DEFAULTS` (class attribute) | Hardcoded baseline. Phase 0 keeps this minimal; each phase adds the keys it references. |
 | 2 | `/etc/glances/glances.conf` | System administrator baseline. |
 | 3 | `$XDG_CONFIG_HOME/glances/glances.conf` | Falls back to `~/.config/glances/glances.conf` when XDG is unset. |
 | 4 | `$GLANCES_CONFIG_FILE` | Single file pointed to by env var. |
@@ -43,7 +43,7 @@ The type is inferred from the `default` argument — you never pass a type
 explicitly.
 
 ```python
-config = GlancesConfigV5()
+config = GlancesConfig()
 
 refresh: int = config.get("global", "refresh_time", 2)
 api_doc: bool = config.get("outputs", "api_doc", True)
@@ -107,7 +107,7 @@ config.as_dict_secure()  # {"influxdb": {"password": "***"}}
 hook only — there is no automatic polling.
 
 ```python
-config = GlancesConfigV5(cli_config_path="/path/to/conf")
+config = GlancesConfig(cli_config_path="/path/to/conf")
 # ... user edits the file ...
 config.reload()  # picks up the changes
 ```
@@ -119,7 +119,7 @@ config.reload()  # picks up the changes
 
 ## Adding a new default key
 
-Add it to `GlancesConfigV5.DEFAULTS` in the same PR that introduces code
+Add it to `GlancesConfig.DEFAULTS` in the same PR that introduces code
 reading the key. Two rules:
 
 1. **Every key read by the codebase must have a default** — either in
@@ -135,21 +135,21 @@ Test stack: `pytest` + `pytest-asyncio` (`asyncio_mode = "auto"`) +
 `unittest.mock` (architecture decision §9). Style: pytest-native top-level
 functions with fixtures and `assert` statements — no `unittest.TestCase`.
 
-The test file `tests/test_config_v5.py` provides an `env` fixture that
+The test file `tests/test_config.py` provides an `env` fixture that
 isolates each test in its own `tmp_path` and patches:
 
 - `os.environ` (cleared via `monkeypatch.delenv`)
 - `XDG_CONFIG_HOME` (pointed at the tmp dir)
 - `HOME` (pointed at the tmp dir)
-- `GlancesConfigV5.SYSTEM_CONFIG_PATH` (pointed at the tmp dir)
+- `GlancesConfig.SYSTEM_CONFIG_PATH` (pointed at the tmp dir)
 
 Reuse this fixture for any test that needs a controlled config environment.
 
 ## Module path
 
 ```
-glances/config_v5.py        # implementation
-tests/test_config_v5.py     # unit tests (pytest-native)
+glances/config.py        # implementation
+tests/test_config.py     # unit tests (pytest-native)
 ```
 
 The v4 `glances/config.py` is **not modified**, **not imported**, **not

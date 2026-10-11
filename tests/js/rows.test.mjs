@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { displayName, byText, byNaturalName } from "../../glances/outputs/static/js/v5/rows.js";
+import { displayName, byText, byNaturalName } from "../../glances/outputs/static/js/rows.js";
 
 test("displayName shows the configured alias", () => {
 	assert.equal(displayName({ interface_name: "lo", alias: "Loopback" }, "interface_name"), "Loopback");

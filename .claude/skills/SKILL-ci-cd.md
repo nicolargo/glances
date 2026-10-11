@@ -43,7 +43,7 @@ A v4 fix that lands on `develop` is automatically propagated to
 
 ## Weekly automated merge (`develop → develop-v5`)
 
-Workflow: `.github/workflows/weekly_merge_develop_to_v5.yml`
+Workflow: `.github/workflows/weekly_merge_develop_to.yml`
 
 - Cron: every Monday at 06:00 UTC
 - Clean merge → pushed directly to `develop-v5`
@@ -52,7 +52,7 @@ Workflow: `.github/workflows/weekly_merge_develop_to_v5.yml`
 
 **Resolution policy.** Conflicts are resolved **immediately**, never
 accumulated. Restructured files (e.g. v4 `glances/foo.py` vs. v5
-`glances/foo_v5.py`) are the most common source. The maintainer reviews
+`glances/foo.py`) are the most common source. The maintainer reviews
 and resolves within 48 hours of the cron run.
 
 ## Release tagging
@@ -102,8 +102,8 @@ Two complementary suites live in CI:
 
 - **v4 tests** — `tests/unitest_*.py` (legacy `unittest`-based). Run
   unchanged on `develop` and `develop-v5` until they are migrated one by
-  one to `tests/test_*_v5.py`.
-- **v5 tests** — `tests/test_*_v5.py` (pytest-native, `pytest-asyncio`
+  one to `tests/test_*.py`.
+- **v5 tests** — `tests/test_*.py` (pytest-native, `pytest-asyncio`
   auto mode). New tests for v5 components only. See `pyproject.toml`
   `[tool.pytest.ini_options]`.
 
@@ -141,7 +141,7 @@ targets and local development commands.
 ## What's deferred
 
 - **Concrete CI workflow for the v5 beta PyPI release** — from `develop`, after the merge (no alpha is published)
-- **`glances-v5` Docker image** — Phase 2 (when v5 has feature parity for standalone mode)
+- **`glances` Docker image** — Phase 2 (when v5 has feature parity for standalone mode)
 - **Helm chart for v5** — Phase 3 (when v5 has feature parity for server mode)
 
 ## Module path
@@ -156,5 +156,5 @@ This skill is documentation-only. Workflows live in:
 .github/workflows/quality.yml                  # Code quality
 .github/workflows/webui.yml                    # WebUI bundle
 .github/workflows/cyber.yml                    # Security scans
-.github/workflows/weekly_merge_develop_to_v5.yml   # Weekly auto-merge develop → develop-v5
+.github/workflows/weekly_merge_develop_to.yml   # Weekly auto-merge develop → develop-v5
 ```

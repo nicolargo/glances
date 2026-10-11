@@ -10,7 +10,7 @@ import {
 	statusClass,
 	statusCounts,
 	title,
-} from "../../glances/outputs/static/js/v5/browser.js";
+} from "../../glances/outputs/static/js/browser.js";
 
 test("a status is coloured like the TUI browser colours it", () => {
 	assert.equal(statusClass("ONLINE"), "gl-level-ok");

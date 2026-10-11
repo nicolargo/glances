@@ -7,7 +7,7 @@ import {
 	ioniceText,
 	pinnedTitle,
 	settlePendingPin,
-} from "../../glances/outputs/static/js/v5/process_extended.js";
+} from "../../glances/outputs/static/js/process_extended.js";
 
 // The shape the live engine publishes (verified in
 // tests/test_processes_extended.py), trimmed to what this module reads.
