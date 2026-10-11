@@ -277,6 +277,26 @@ Suite complète et tests JS, `make pre-commit`, `make docs` (Sphinx sans
 avertissement), `make webui`, wheel installée proprement, images Docker, et le
 benchmark contre `support/glancesv4` comme garde-fou.
 
+### État (2026-10-11)
+
+C1 à C9 faits sur `cutover/v5`, un commit (ou plus) par étape. Écarts au plan :
+
+- C4 : l'entrée de la page browser est `js/browser_app.js` (`js/browser.js`
+  est déjà le module d'aide de la page) ; les tests SHARED dont le nom était
+  pris sont renommés d'après ce qu'ils testent (`test_sensors_grab.py`...) ;
+  le test Selenium est retiré, `tests/test_webui_browser.py` (Playwright) le
+  remplace.
+- C5 : `bench-v4-v5` et son script quittent `develop` avec le code v4 (le
+  script se récupère dans l'historique, voir `glances-v5-performance.md`).
+- C6 : pas de nouveau workflow PyPI, `build.yml` publie déjà tout tag.
+- C7 : dépendances du code v4 retirées (`defusedxml`, `packaging`, extras
+  `snmp` et `sparklines`).
+- C9 : 4084 tests passent (dont JS et navigateur), `pre-commit` propre,
+  Sphinx sans erreur, wheel installée dans un venv vierge (`-V`, `-s`,
+  `--stdout`). Non vérifié localement : les images Docker (pas de réseau dans
+  le build) et les jobs Windows, macOS et FreeBSD, à valider par la CI de la
+  PR.
+
 ## 4. La fusion
 
 1. PR `cutover/v5` → `develop` ; CI verte, relecture ; fusion par commit de

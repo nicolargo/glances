@@ -19,7 +19,7 @@ au 2026-10-04. Rien ici ne se fait sur `develop`, sauf la section 6.
     en deux temps pour garder la fusion hebdomadaire `develop → develop-v5` :
     - [x] avant la bascule : `tests/test_v4_boundary_v5.py` fige les imports
       de la v5 hors d'elle-même ; plan dans `glances-v5-cutover-plan.md`
-    - [ ] le jour de la bascule : appliquer le plan (après le dernier merge)
+    - [x] le jour de la bascule : appliquer le plan (2026-10-11, `cutover/v5`, étape C1)
   - [x] constats « avant 5.0.0b1 » du plan de correction : M1 ✅, M2 ✅,
     M4 ✅ (`sh -c` documenté, décision du mainteneur), M3 ✅, M7 ✅, M8 ✅, M10 ✅, B-4 ✅, B-13 ✅,
     tests CVE-2026-33641 et GHSA-mcm7 ✅
@@ -43,23 +43,25 @@ exécuter le jour de la bascule.
   avant la fusion (D6, étape C3) ; tests SHARED déplacés.
 - [x] Le suffixe `_v5` disparaît des fichiers, modules, classes et bundles
   WebUI (D3, D4, étape C4).
-- [ ] Exécution : étapes 1 à 5 du plan de bascule.
+- [ ] Exécution : étapes 1 à 5 du plan de bascule. Étapes 1, 2 et 3 (C1 à C9)
+  faites le 2026-10-11 sur `cutover/v5` ; restent la PR vers `develop` (4) et
+  l'après-fusion (5).
 
 ## 3. Version et packaging
 
-- [ ] Une seule source de version : `glances/__init__.py` reçoit
+- [x] Une seule source de version : `glances/__init__.py` reçoit
   `__version__ = "5.0.0b1"` et `__apiversion__ = "5"` ; les imports de
   `glances.version_v5` sont redirigés, le module est supprimé.
-- [ ] Dockerfiles (`alpine`, `ubuntu`) : `python -m glances` lance la v5.
-- [ ] Snap et Helm pointent sur la v5.
-- [ ] Workflow de publication de la bêta PyPI depuis `develop`
-  (« deferred » dans `.claude/skills/SKILL-ci-cd.md`).
-- [ ] `weekly_merge_develop_to_v5.yml` désactivé, `develop-v5` retiré de `ci.yml`
+- [x] Dockerfiles (`alpine`, `ubuntu`) : `python -m glances` lance la v5.
+- [x] Snap pointe sur la v5 (`5.0.0b1+build00`) ; Helm reste reporté.
+- [x] Publication de la bêta PyPI : `build.yml` publie tout tag, `v5.0.0b1`
+  compris ; un tag de pré-version ne déplace pas `latest` sur Docker.
+- [x] `weekly_merge_develop_to_v5.yml` désactivé, `develop-v5` retiré de `ci.yml`
   (dans le commit de fusion).
 
 ## 4. Documentation
 
-- [ ] `NEWS.rst` : section 5.0.0 avec toutes les ruptures marquées « for the
+- [x] `NEWS.rst` : section 5.0.0 avec toutes les ruptures marquées « for the
   5.0.0 release notes » dans le document d'architecture :
   - [ ] clés de seuils renommées, `bytes_recv_*`/`bytes_sent_*` en ratio [0,1]
   - [ ] modèle de données `/api/5`, XML-RPC supprimé
@@ -77,11 +79,11 @@ exécuter le jour de la bascule.
   - [ ] `/api/5/config` sans mot de passe : seulement les clés de la WebUI (M1) ;
     serveur en loopback : seuls les Host loopback (M2, reverse proxy local →
     `webui_allowed_hosts`) ; graphes par défaut dans `~/.local/share/glances/graphs`
-- [ ] `make docs` sur une machine représentative : `docs/api/restful.rst`
+- [x] `make docs` (2026-10-11, VM de test ; à refaire sur une machine représentative avant 5.0.0) : `docs/api/restful.rst`
   (encore en `/api/4`) et `docs/api/python.rst`.
-- [ ] Man page, `README.rst`, `docs/quickstart.rst`, `docs/cmds.rst`,
+- [x] Man page, `README.rst`, `docs/quickstart.rst`, `docs/cmds.rst`,
   `docs/config.rst` relus pour la v5.
-- [ ] `conf/glances.conf` et `docker-compose/glances.conf` : plus aucune clé
+- [x] `conf/glances.conf` et `docker-compose/glances.conf` : plus aucune clé
   v4 ignorée par la v5.
 - [ ] `glances-v5-v4-parity-inventory.md` (2026-09-10) recompté : il affiche
   encore 153 `❌ absent`, dont beaucoup livrés depuis.
@@ -95,6 +97,6 @@ exécuter le jour de la bascule.
 ## 6. Le jour de la fusion (hors `develop-v5`)
 
 - [ ] CI verte sur la tête de `develop-v5`, `make pre-commit` propre.
-- [ ] Créer `support/glancesv4` depuis `develop`.
+- [x] Créer `support/glancesv4` depuis `develop`.
 - [ ] Fusionner `develop-v5 → develop`, arrêter le weekly merge.
 - [ ] Publier `5.0.0b1` depuis `develop`.
