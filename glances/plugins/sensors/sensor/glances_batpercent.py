@@ -12,7 +12,6 @@ import psutil
 
 from glances.globals import LINUX
 from glances.logger import logger
-from glances.plugins.plugin.model import GlancesPluginModel
 
 # Batinfo library (optional; Linux-only)
 if LINUX:
@@ -32,53 +31,6 @@ try:
 except Exception as e:
     logger.error(f"Cannot grab battery status {e}.")
     psutil_tag = False
-
-
-class BatpercentPlugin(GlancesPluginModel):
-    """Glances battery capacity plugin.
-
-    stats is a list
-    """
-
-    def __init__(self, args=None, config=None):
-        """Init the plugin."""
-        super().__init__(args=args, config=config, stats_init_value=[])
-
-        # Init the sensor class
-        try:
-            self.glances_grab_bat = GlancesGrabBat()
-        except Exception as e:
-            logger.error(f"Can not init battery class ({e})")
-            global batinfo_tag
-            global psutil_tag
-            batinfo_tag = False
-            psutil_tag = False
-
-        # We do not want to display the stat in a dedicated area
-        # The HDD temp is displayed within the sensors plugin
-        self.display_curse = False
-
-    # @GlancesPluginModel._check_decorator
-    @GlancesPluginModel._log_result_decorator
-    def update(self):
-        """Update battery capacity stats using the input method."""
-        # Init new stats
-        stats = self.get_init_value()
-
-        if self.input_method == 'local':
-            # Update stats
-            self.glances_grab_bat.update()
-            stats = self.glances_grab_bat.get()
-
-        elif self.input_method == 'snmp':
-            # Update stats using SNMP
-            # Not available
-            pass
-
-        # Update the stats
-        self.stats = stats
-
-        return self.stats
 
 
 class GlancesGrabBat:

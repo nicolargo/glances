@@ -13,7 +13,7 @@ The ports plugin used to publish its configuration verbatim as statistics, so
 export module) returned the HTTP Basic credentials of the monitored URL and the
 credentials of the forward proxy, in cleartext and without authentication.
 
-`as_dict_secure()` masks those exact values on /api/4/config: its perimeter
+`as_dict_secure()` masks those exact values on /api/5/config: its perimeter
 never covered plugin statistics. The credentials now stay in a private
 structure that only the scanner reads, and the published `url` goes through the
 same sanitiser as the configuration view.
@@ -21,7 +21,7 @@ same sanitiser as the configuration view.
 
 import pytest
 
-from glances.config import Config
+from glances.config_v5 import GlancesConfigV5
 from glances.web_list import GlancesWebList
 
 SECRET = 'Sup3rS3cret'
@@ -46,7 +46,7 @@ web_4_url=https://api.example/health?access_token={SECRET}#frag
 def web_list_object(tmp_path):
     conf_file = tmp_path / 'glances.conf'
     conf_file.write_text(CONFIG)
-    return GlancesWebList(config=Config(config_dir=str(conf_file)))
+    return GlancesWebList(config=GlancesConfigV5(cli_config_path=str(conf_file)))
 
 
 @pytest.fixture
@@ -115,7 +115,7 @@ def test_no_proxy_configured_stays_none(web_list_object):
 
 def test_scan_requests_the_real_url_not_the_redacted_one(web_list_object, monkeypatch):
     """The scanner reads the secrets: redacting the published URL must not break it."""
-    from glances.plugins.ports import ThreadScanner
+    from glances.plugins.ports.scanner import ThreadScanner
 
     called = {}
 

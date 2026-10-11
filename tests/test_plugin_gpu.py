@@ -38,12 +38,6 @@ def arm_backend():
     return ArmGPU(drm_root_folder=ARM_DRM_ROOT, proc_root_folder=ARM_PROC_ROOT)
 
 
-@pytest.fixture
-def gpu_plugin(glances_stats):
-    """Return the GPU plugin instance from glances_stats."""
-    return glances_stats.get_plugin('gpu')
-
-
 class TestArmFdinfoParser:
     """Unit tests for the fdinfo parser (pure, no I/O)."""
 
@@ -278,44 +272,3 @@ class TestTegraBackend:
 
     def test_temperature_missing_root(self):
         assert tegra.get_temperature(thermal_root='/this/does/not/exist') is None  # nosec B101
-
-
-class TestGpuPluginIntegration:
-    """End-to-end plugin test."""
-
-    def test_plugin_name(self, gpu_plugin):
-        assert gpu_plugin.plugin_name == 'gpu'
-
-    def test_get_key_returns_gpu_id(self, gpu_plugin):
-        assert gpu_plugin.get_key() == 'gpu_id'
-
-    def test_update_does_not_crash(self, gpu_plugin):
-        gpu_plugin.update()
-        assert isinstance(gpu_plugin.get_raw(), list)
-
-    def test_exit_tolerates_none_backends(self, gpu_plugin):
-        """Regression guard: exit() must not crash if a backend failed to init."""
-        saved = (gpu_plugin.nvidia, gpu_plugin.amd, gpu_plugin.intel, gpu_plugin.arm)
-        try:
-            gpu_plugin.nvidia = None
-            gpu_plugin.amd = None
-            gpu_plugin.intel = None
-            gpu_plugin.arm = None
-            # Should not raise
-            gpu_plugin.exit()
-        finally:
-            gpu_plugin.nvidia, gpu_plugin.amd, gpu_plugin.intel, gpu_plugin.arm = saved
-
-    @pytest.mark.skipif(not LINUX, reason="ARM GPU backend is Linux-only")
-    def test_arm_backend_can_be_injected(self, gpu_plugin):
-        gpu_plugin.arm = ArmGPU(
-            drm_root_folder=ARM_DRM_ROOT,
-            proc_root_folder=ARM_PROC_ROOT,
-        )
-        # Force a real update (the plugin rate-limits via refresh_timer).
-        gpu_plugin.refresh_timer.reset(0)
-        gpu_plugin.update()
-        stats = gpu_plugin.get_raw()
-        arm_entries = [s for s in stats if s.get('gpu_id', '').startswith('arm')]
-        assert len(arm_entries) == 1
-        assert arm_entries[0]['name'] == 'Mali (Panthor)'

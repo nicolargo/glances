@@ -123,9 +123,9 @@ def test_plugins(glances_webserver, glances_homepage):
     ]:
         if plugin == 'sensors':
             try:
-                assert glances_homepage.find_element(By.ID, plugin) is not None
+                assert glances_homepage.find_element(By.CSS_SELECTOR, f'[data-plugin="{plugin}"]') is not None
             except NoSuchElementException:
                 # Sensors can be hidden on VM
                 pass
         else:
-            assert glances_homepage.find_element(By.ID, plugin) is not None
+            assert glances_homepage.find_element(By.CSS_SELECTOR, f'[data-plugin="{plugin}"]') is not None

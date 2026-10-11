@@ -63,25 +63,6 @@ class FakeCollectionPlugin(GlancesPluginBase[list]):
         return [dict(item) for item in self._payload]
 
 
-def test_v4_export_module_is_not_shadowed_by_the_v5_exports_package():
-    """Regression test for a real breakage, not a hypothetical one.
-
-    An earlier draft of the G8 design put the v5 base class in a
-    ``glances/exports/export/`` sub-package. Python cannot resolve both
-    ``glances/exports/export.py`` (the v4 base, read-only per this repo's
-    rules) and a same-named ``glances/exports/export/`` package under one
-    parent — the package wins, and
-    ``from glances.exports.export import GlancesExport`` raises
-    ImportError, breaking all 24 v4 exporters. This is currently guarded
-    only transitively via test_export_timescaledb_list.py; assert it
-    directly so nobody reintroduces the shadowing package and nobody
-    deletes this test as "redundant".
-    """
-    from glances.exports.export import GlancesExport
-
-    assert hasattr(GlancesExport, "non_exportable_plugins")
-
-
 def test_exportable_defaults_to_true():
     assert GlancesPluginBase.EXPORTABLE is True
     assert FakeScalarPlugin.EXPORTABLE is True

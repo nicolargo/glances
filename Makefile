@@ -20,7 +20,7 @@ UV_RUN		   	  := .venv-uv/bin/uv
 # if the command is only `make`, the default tasks will be the printing of the help.
 .DEFAULT_GOAL := help
 
-.PHONY: help webui-v5 test docs docs-server venv requirements profiling docker all clean all test
+.PHONY: help test docs docs-server venv requirements profiling docker all clean all test
 
 help: ## List all make commands available
 	@grep -E '^[\.a-zA-Z0-9_%-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -229,9 +229,6 @@ memory-profiling: ## Profile memory usage
 	$(UV_RUN) run mprof plot --output $(OUT_DIR)/glances-memory-profiling-without-history.png
 	rm -f $(PROFILE)
 
-bench-v4-v5: ## Compare the CPU and memory footprint of Glances v4 and v5 (~7 mins)
-	$(UV_RUN) run python tests-data/tools/bench_v4_v5.py -C $(CONF)
-
 # Trivy installation: https://aquasecurity.github.io/trivy/latest/getting-started/installation/
 trivy: ## Run Trivy to find vulnerabilities
 	$(UV_RUN) run trivy fs ./glances/
@@ -271,23 +268,16 @@ install: ## Open a Web Browser to the installation procedure
 
 webui webui%: DIR = glances/outputs/static/
 
-webui-gen-config: ## Generate the Web UI config file
-	$(UV_RUN) run python ./generate_webui_conf.py > ./glances/outputs/static/js/uiconfig.json
-
-webui: webui-gen-config ## Build the Web UI
+webui: ## Build the Web UI
 	cd $(DIR) && npm ci && npm run build
-
-webui-v5: ## Build the v5 Web UI bundle only (temporary, removed at the merge into develop)
-	cd $(DIR) && npm ci && npm run build
-	git checkout -- $(DIR)public/glances.js
 
 webui-audit: ## Audit the Web UI
 	cd $(DIR) && npm audit
 
-webui-audit-fix: webui-gen-config ## Fix audit the Web UI
+webui-audit-fix: ## Fix audit the Web UI
 	cd $(DIR) && npm ci && { npm audit fix || true; } && npm run build
 
-webui-update: webui-gen-config ## Update JS dependencies
+webui-update: ## Update JS dependencies
 	cd $(DIR) && npm update --save && npm ci && npm run build
 
 # ===================================================================

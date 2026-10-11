@@ -11,7 +11,7 @@
 
 import pytest
 
-from glances.config import Config
+from glances.config_v5 import GlancesConfigV5
 from glances.web_list import GlancesWebList
 
 CONFIG = """
@@ -33,7 +33,7 @@ web_4_url=https://example.com
 def web_list(tmp_path):
     conf_file = tmp_path / 'glances.conf'
     conf_file.write_text(CONFIG)
-    return GlancesWebList(config=Config(config_dir=str(conf_file))).get_web_list()
+    return GlancesWebList(config=GlancesConfigV5(cli_config_path=str(conf_file))).get_web_list()
 
 
 def ssl_verify(web_list, indice):

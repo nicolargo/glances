@@ -731,12 +731,11 @@ def test_index_is_served_when_the_webui_is_enabled(config_factory, store):
 
 
 def test_static_directory_is_mounted(config_factory, store):
-    """Asserted against the v4 bundle, which is committed in public/ --
-    glances5.js does not exist until Task 3."""
+    """Asserted against the committed bundle in public/."""
     app = build_app(config=config_factory(), store=store, args=_args())
 
     with TestClient(app) as client:
-        response = client.get("/static/glances.js")
+        response = client.get("/static/glances5.js")
 
     assert response.status_code == 200
 

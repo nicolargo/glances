@@ -23,14 +23,11 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from unittest.mock import patch
 
 import pytest
 import requests
 
 from glances.config_v5 import GlancesConfigV5
-from glances.main import GlancesMain
-from glances.stats import GlancesStats
 from glances.stats_store_v5 import StatsStoreV5
 
 # Optional imports for WebUI testing
@@ -87,30 +84,6 @@ def logger():
     return logging.getLogger(__name__)
 
 
-@pytest.fixture(scope="session")
-def glances_stats():
-    testargs = ["glances", "-C", "./conf/glances.conf"]
-    with patch('sys.argv', testargs):
-        core = GlancesMain()
-    stats = GlancesStats(config=core.get_config(), args=core.get_args())
-    yield stats
-    stats.end()
-
-
-@pytest.fixture(scope="module")
-def glances_stats_no_history():
-    testargs = ["glances", "-C", "./conf/glances.conf"]
-    with patch('sys.argv', testargs):
-        core = GlancesMain()
-    args = core.get_args()
-    args.time = 1
-    args.cached_time = 1
-    args.disable_history = True
-    stats = GlancesStats(config=core.get_config(), args=args)
-    yield stats
-    stats.end()
-
-
 def _fail_if_port_is_used(port):
     """Fail the tests if the given TCP port is already bound.
 
@@ -134,7 +107,7 @@ def _wait_for_webserver(pid, timeout=SERVER_STARTUP_TIMEOUT):
         if pid.poll() is not None:
             pytest.fail(f"Glances web server exited during startup with return code {pid.returncode}")
         try:
-            if requests.get(f"{URL}/api/4/status", timeout=1).status_code == 200:
+            if requests.get(f"{URL}/status", timeout=1).status_code == 200:
                 return
         except requests.exceptions.RequestException:
             pass
@@ -147,7 +120,7 @@ def _wait_for_webserver(pid, timeout=SERVER_STARTUP_TIMEOUT):
 def glances_webserver():
     _fail_if_port_is_used(SERVER_PORT)
     cmdline = sys.executable
-    cmdline += f" -m glances -B 0.0.0.0 -w --browser -p {SERVER_PORT} -C ./conf/glances.conf"
+    cmdline += f" -m glances -s --disable-autodiscover -p {SERVER_PORT} -C ./conf/glances.conf"
     args = shlex.split(cmdline)
     pid = subprocess.Popen(args)
     _wait_for_webserver(pid)
