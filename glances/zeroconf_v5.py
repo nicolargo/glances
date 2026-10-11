@@ -32,8 +32,8 @@ import logging
 import socket
 from typing import Any
 
+from glances import __apiversion__
 from glances.servers_list_v5 import ServerEntry
-from glances.version_v5 import __apiversion__
 
 try:
     from zeroconf import IPVersion, ServiceBrowser, ServiceInfo, ServiceStateChange, Zeroconf

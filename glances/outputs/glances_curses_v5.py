@@ -34,6 +34,7 @@ from typing import TYPE_CHECKING, Any, ClassVar
 
 import psutil
 
+from glances import __version__
 from glances.client_v5 import RemoteError, RemoteSource
 from glances.filter import GlancesFilter
 from glances.outputs.curses_renderer_v5 import (
@@ -51,7 +52,6 @@ from glances.outputs.curses_renderer_v5 import (
 )
 from glances.plugins.processlist.render_curses_v5 import process_extra_rows, summarise
 from glances.processes import glances_processes, sort_processes_stats_list, sort_stats
-from glances.version_v5 import __version__
 
 if TYPE_CHECKING:
     from glances.alerts_v5 import GlancesAlerts

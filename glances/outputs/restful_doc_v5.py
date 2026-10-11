@@ -31,9 +31,9 @@ import sys
 from typing import Any, TextIO
 from urllib.parse import quote
 
+from glances import __apiversion__
 from glances.api_v5_doc import _escape
 from glances.processes import sort_processes_stats_list
-from glances.version_v5 import __apiversion__
 
 API_URL = f"http://localhost:61208/api/{__apiversion__}"
 # A collection example keeps this many items; the rest is summarised.

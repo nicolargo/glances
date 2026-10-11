@@ -52,6 +52,7 @@ from typing import TYPE_CHECKING, Any
 
 import glances.exports as _exports_pkg
 import glances.plugins as _plugins_pkg
+from glances import __version__
 from glances.actions_v5 import discover_actions
 from glances.alerts_v5 import GlancesAlerts
 from glances.config_v5 import ConfigFileError, GlancesConfigV5
@@ -62,7 +63,6 @@ from glances.processes import glances_processes, sort_processes_stats_list
 from glances.scheduler_v5 import AsyncScheduler
 from glances.security_v5 import hash_password, verify_password
 from glances.stats_store_v5 import StatsStoreV5
-from glances.version_v5 import __version__
 
 # Shell completion (`--print-completion`), v4 parity (`main.py:17-22`). Optional:
 # shtab is not installed on Windows, and the option is then simply absent.

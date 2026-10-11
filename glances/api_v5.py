@@ -47,6 +47,7 @@ from collections.abc import Iterator, Mapping
 from types import SimpleNamespace
 from typing import Any
 
+from glances import __version__
 from glances.alerts_v5 import GlancesAlerts
 from glances.config_v5 import GlancesConfigV5
 from glances.globals import auto_unit
@@ -56,7 +57,6 @@ from glances.plugins.plugin.base_v5 import GlancesPluginBase
 from glances.processes import sort_stats
 from glances.scheduler_v5 import AsyncScheduler
 from glances.stats_store_v5 import StatsStoreV5
-from glances.version_v5 import __version__
 
 # How long `close()` waits for the loop thread and the scheduler.
 _SHUTDOWN_TIMEOUT = 5.0

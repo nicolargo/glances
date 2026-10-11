@@ -58,11 +58,11 @@ from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from starlette.concurrency import run_in_threadpool
 
+from glances import __apiversion__
 from glances.alerts_incidents_v5 import derive_incidents, incident_duration
 from glances.config_v5 import GlancesConfigV5
 from glances.processes import glances_processes, sort_processes_stats_list
 from glances.security_v5 import verify_password
-from glances.version_v5 import __apiversion__
 
 if TYPE_CHECKING:
     import argparse

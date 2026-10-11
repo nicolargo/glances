@@ -43,9 +43,9 @@ from urllib.parse import urlsplit
 
 import requests
 
+from glances import __apiversion__
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
 from glances.plugins.processlist.model_v5 import PluginModel as _Processlist
-from glances.version_v5 import __apiversion__
 
 logger = logging.getLogger(__name__)
 

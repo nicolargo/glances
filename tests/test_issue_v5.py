@@ -17,12 +17,12 @@ from typing import Any, ClassVar
 
 import pytest
 
+from glances import __version__
 from glances.config_v5 import GlancesConfigV5
 from glances.outputs import issue_v5
 from glances.outputs.issue_v5 import REDACTED, Environment, PluginResult, excerpt, redact, render
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
 from glances.stats_store_v5 import StatsStoreV5
-from glances.version_v5 import __version__
 
 # ---------------------------------------------------------------- redaction
 

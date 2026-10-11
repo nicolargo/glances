@@ -61,11 +61,11 @@ SHARED = {
     "glances.plugins.ports.scanner": "ports scanner thread",
     "glances.plugins.sensors.grab": "psutil temperature and fan sensors",
     "glances.plugins.smart.data": "SMART attributes through pySMART",
+    # The package root: version, API version, psutil check (step C2).
+    "glances": "package root",
 }
 
-BORROWED = {
-    "glances": "psutil_version_info (psutilversion/model_v5.py); __init__ imports the v4 CLI",
-}
+BORROWED = {}
 
 
 def _v5_files():

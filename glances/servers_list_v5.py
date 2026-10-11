@@ -28,6 +28,7 @@ import threading
 from dataclasses import dataclass, field
 from typing import Any
 
+from glances import __apiversion__
 from glances.client_v5 import (
     DEFAULT_PORT,
     DEFAULT_TIMEOUT,
@@ -38,7 +39,6 @@ from glances.client_v5 import (
     RemoteError,
     parse_target,
 )
-from glances.version_v5 import __apiversion__
 
 logger = logging.getLogger(__name__)
 

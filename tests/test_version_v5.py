@@ -7,19 +7,15 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
-"""Glances v5 — one version source: every v5 surface reads `glances.version_v5`.
-
-`glances/__init__.py` still serves v4 on `develop-v5` (`__apiversion__ = '4'`
-mounts v4's `/api/4`), so v5 keeps its own pair until the merge, when it moves
-into `glances/__init__.py` (architecture §10, Phase 4).
-"""
+"""Glances — one version source: every surface reads `glances.__version__` / `__apiversion__`."""
 
 from __future__ import annotations
 
 import pytest
 from fastapi.testclient import TestClient
 
-from glances import version_v5, zeroconf_v5
+import glances as version_v5
+from glances import zeroconf_v5
 from glances.config_v5 import GlancesConfigV5
 from glances.main_v5 import build_parser
 from glances.outputs import restful_doc_v5

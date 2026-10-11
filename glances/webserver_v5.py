@@ -53,6 +53,7 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.gzip import GZipMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
+from glances import __apiversion__, __version__
 from glances.alerts_v5 import GlancesAlerts
 from glances.config_v5 import GlancesConfigV5
 from glances.plugins.plugin.base_v5 import GlancesPluginBase
@@ -60,7 +61,6 @@ from glances.ratelimit_v5 import RateLimitMiddleware
 from glances.routes_v5 import build_router
 from glances.security_v5 import JWTHandler, KnownCredentials, verify_password
 from glances.stats_store_v5 import StatsStoreV5
-from glances.version_v5 import __apiversion__, __version__
 
 if TYPE_CHECKING:
     import argparse
