@@ -132,6 +132,13 @@ def test_a_pinned_process_that_is_still_running_is_kept(monkeypatch):
     assert engine.extended_process is not None
 
 
+@pytest.fixture
+def linux_swap(monkeypatch):
+    """`__get_extended_memory_swap` returns None off Linux (memory_maps swap is
+    Linux-only), which would make the swap tests below vacuous or wrong there."""
+    monkeypatch.setattr("glances.processes.LINUX", True)
+
+
 class _SwapProc:
     def __init__(self, raises=None, swap=0):
         self._raises = raises
@@ -144,7 +151,7 @@ class _SwapProc:
 
 
 @pytest.mark.parametrize("error", [KeyError("issue #1551"), psutil.NoSuchProcess(1)])
-def test_a_failed_swap_read_reports_no_figure_rather_than_raising(error, processes):
+def test_a_failed_swap_read_reports_no_figure_rather_than_raising(error, processes, linux_swap):
     """The handler used to `pass`, leaving `memory_swap` UNBOUND — so the
     return below raised `UnboundLocalError` instead of saying "no figure".
 
@@ -156,12 +163,12 @@ def test_a_failed_swap_read_reports_no_figure_rather_than_raising(error, process
     assert swap is None
 
 
-def test_a_readable_process_still_reports_its_swap(processes):
+def test_a_readable_process_still_reports_its_swap(processes, linux_swap):
     """The guard above must not swallow the ordinary answer."""
     assert processes._GlancesProcesses__get_extended_memory_swap(_SwapProc(swap=4096)) == 4096
 
 
-def test_access_denied_reports_no_figure_too(processes):
+def test_access_denied_reports_no_figure_too(processes, linux_swap):
     """Already handled before this chantier; pinned here so the three paths
     are one decision rather than two guarded and one not."""
     assert processes._GlancesProcesses__get_extended_memory_swap(_SwapProc(raises=psutil.AccessDenied(1))) is None
@@ -244,3 +251,19 @@ def test_the_pinned_process_carries_its_command_line(monkeypatch):
     engine.update()
 
     assert engine.extended_process["cmdline"] == ["python", "-m", "glances"]
+
+
+@pytest.mark.parametrize("missing", ["cpu_affinity", "ionice"])
+def test_extended_stats_survive_a_platform_without_an_optional_psutil_attribute(monkeypatch, missing):
+    """psutil exposes `cpu_affinity` / `ionice` on some platforms only (macOS has
+    neither, FreeBSD has no `ionice`). `as_dict()` raises ValueError on an unknown
+    attribute name, which `set_extended_stats` reports as "no extended stats" --
+    so pinning a process silently never worked there."""
+    import os
+
+    monkeypatch.delattr(psutil.Process, missing)
+    engine = GlancesProcesses()
+    engine.extended_process = {}
+    result = engine.set_extended_stats({"pid": os.getpid()})
+    assert result["extended_stats"] is True
+    assert missing not in result

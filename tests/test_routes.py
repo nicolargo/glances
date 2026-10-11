@@ -1061,6 +1061,7 @@ def test_args_matches_the_real_argument_set(config_factory, store):
     documents; do NOT special-case it here -- the helper is shared with
     /api/5/config and must not be loosened for cosmetics.
     """
+    import glances.main as glances_main
     from glances.main import build_parser
 
     config = config_factory()
@@ -1070,7 +1071,7 @@ def test_args_matches_the_real_argument_set(config_factory, store):
     with TestClient(app) as client:
         payload = client.get("/api/5/args").json()
 
-    assert set(payload) == {
+    expected = {
         "api_doc",
         # `--arrow-keys-sort`: which arrow pair steps the sort and which
         # scrolls the command column. A display preference, like
@@ -1181,6 +1182,10 @@ def test_args_matches_the_real_argument_set(config_factory, store):
         "set_password",
         "sort_processes_key",
     }
+    if glances_main.shtab is None:
+        # shtab is not installed on Windows: the option is then absent.
+        expected.discard("print_completion")
+    assert set(payload) == expected
     assert payload["set_password"] == "***"
     assert payload["config_path"] == "***"
     assert payload["server"] is True

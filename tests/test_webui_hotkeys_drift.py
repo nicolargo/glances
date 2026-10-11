@@ -62,7 +62,7 @@ def _js_hide_table() -> dict[str, dict[str, object]]:
     them: `hideTargets()` against a registry carrying each plugin's slot."""
     registry = [{"name": name, "slot": slot} for slot, names in _SLOT_MEMBERS.items() for name in names]
     script = f"""
-    import('{_MODULE.as_posix()}').then((m) => {{
+    import('{_MODULE.as_uri()}').then((m) => {{
         const registry = {json.dumps(registry)};
         const out = {{}};
         for (const [key, entry] of Object.entries(m.HIDE_KEYS)) {{
@@ -78,6 +78,7 @@ def _js_hide_table() -> dict[str, dict[str, object]]:
         ["node", "--no-warnings", "--input-type=module", "-e", script],
         capture_output=True,
         text=True,
+        encoding="utf-8",
         timeout=30,
     )
     assert result.returncode == 0, result.stdout + result.stderr
@@ -117,12 +118,13 @@ def _python_view_table() -> dict[str, str]:
 
 def _js_view_table() -> dict[str, dict[str, str]]:
     script = f"""
-    import('{_MODULE.as_posix()}').then((m) => process.stdout.write(JSON.stringify(m.VIEW_KEYS)));
+    import('{_MODULE.as_uri()}').then((m) => process.stdout.write(JSON.stringify(m.VIEW_KEYS)));
     """
     result = subprocess.run(
         ["node", "--no-warnings", "--input-type=module", "-e", script],
         capture_output=True,
         text=True,
+        encoding="utf-8",
         timeout=30,
     )
     assert result.returncode == 0, result.stdout + result.stderr
@@ -153,7 +155,7 @@ def test_the_help_overlay_documents_every_bound_key():
     cannot go undocumented. `helpRows()` gives the browser the same property —
     this test is what holds it, across BOTH groups."""
     script = f"""
-    import('{_MODULE.as_posix()}').then((m) => {{
+    import('{_MODULE.as_uri()}').then((m) => {{
         process.stdout.write(JSON.stringify(m.helpRows().map((r) => r.key)));
     }});
     """
@@ -161,6 +163,7 @@ def test_the_help_overlay_documents_every_bound_key():
         ["node", "--no-warnings", "--input-type=module", "-e", script],
         capture_output=True,
         text=True,
+        encoding="utf-8",
         timeout=30,
     )
     assert result.returncode == 0, result.stdout + result.stderr
@@ -178,12 +181,13 @@ def _python_sort_table() -> dict[str, dict[str, str]]:
 
 def _js_sort_table() -> dict[str, dict[str, str]]:
     script = f"""
-    import('{_MODULE.as_posix()}').then((m) => process.stdout.write(JSON.stringify(m.SORT_KEYS)));
+    import('{_MODULE.as_uri()}').then((m) => process.stdout.write(JSON.stringify(m.SORT_KEYS)));
     """
     result = subprocess.run(
         ["node", "--no-warnings", "--input-type=module", "-e", script],
         capture_output=True,
         text=True,
+        encoding="utf-8",
         timeout=30,
     )
     assert result.returncode == 0, result.stdout + result.stderr
@@ -209,12 +213,13 @@ def test_the_startup_flags_press_the_same_keys_in_both_surfaces():
     from glances.outputs.glances_curses import STARTUP_HIDE_KEYS
 
     script = f"""
-    import('{_MODULE.as_posix()}').then((m) => process.stdout.write(JSON.stringify(m.STARTUP_HIDE_KEYS)));
+    import('{_MODULE.as_uri()}').then((m) => process.stdout.write(JSON.stringify(m.STARTUP_HIDE_KEYS)));
     """
     result = subprocess.run(
         ["node", "--no-warnings", "--input-type=module", "-e", script],
         capture_output=True,
         text=True,
+        encoding="utf-8",
         timeout=30,
     )
     assert result.returncode == 0, result.stdout + result.stderr
@@ -224,12 +229,13 @@ def test_the_startup_flags_press_the_same_keys_in_both_surfaces():
 
 def test_the_help_overlay_links_the_same_documentation():
     script = f"""
-    import('{_MODULE.as_posix()}').then((m) => process.stdout.write(m.HELP_DOC_URL));
+    import('{_MODULE.as_uri()}').then((m) => process.stdout.write(m.HELP_DOC_URL));
     """
     result = subprocess.run(
         ["node", "--no-warnings", "--input-type=module", "-e", script],
         capture_output=True,
         text=True,
+        encoding="utf-8",
         timeout=30,
     )
     assert result.returncode == 0, result.stdout + result.stderr

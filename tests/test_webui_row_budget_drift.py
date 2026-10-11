@@ -86,6 +86,7 @@ def test_the_js_solver_matches_the_python_one():
         input=json.dumps(cases),
         capture_output=True,
         text=True,
+        encoding="utf-8",
         check=True,
     )
     js_results = json.loads(out.stdout)

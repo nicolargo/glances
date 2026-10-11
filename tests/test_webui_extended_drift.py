@@ -70,7 +70,7 @@ def _python_labels(payload: dict) -> list[list[str]]:
 
 def _js_labels(payload: dict) -> list[list[str]]:
     script = f"""
-    import('{_MODULE.as_posix()}').then((m) => {{
+    import('{_MODULE.as_uri()}').then((m) => {{
         const lines = m.extendedLines({json.dumps(payload)});
         process.stdout.write(JSON.stringify(lines.map((l) => l.filter((s) => !s.value).map((s) => s.text))));
     }});
@@ -79,6 +79,7 @@ def _js_labels(payload: dict) -> list[list[str]]:
         ["node", "--no-warnings", "--input-type=module", "-e", script],
         capture_output=True,
         text=True,
+        encoding="utf-8",
         timeout=30,
     )
     assert result.returncode == 0, result.stdout + result.stderr
@@ -131,7 +132,7 @@ def test_the_io_nice_tables_match():
     )
 
     script = f"""
-    import('{_MODULE.as_posix()}').then((m) => {{
+    import('{_MODULE.as_uri()}').then((m) => {{
         process.stdout.write(JSON.stringify({{ linux: m.IONICE_CLASSES, windows: m.IONICE_CLASSES_WINDOWS }}));
     }});
     """
@@ -139,6 +140,7 @@ def test_the_io_nice_tables_match():
         ["node", "--no-warnings", "--input-type=module", "-e", script],
         capture_output=True,
         text=True,
+        encoding="utf-8",
         timeout=30,
     )
     assert result.returncode == 0, result.stdout + result.stderr

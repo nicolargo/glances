@@ -36,12 +36,13 @@ pytestmark = pytest.mark.skipif(shutil.which("node") is None, reason="node not a
 
 def _js(module: str, name: str) -> dict[str, str]:
     script = f"""
-    import('{(_STATIC / module).as_posix()}').then((m) => process.stdout.write(JSON.stringify(m.{name})));
+    import('{(_STATIC / module).as_uri()}').then((m) => process.stdout.write(JSON.stringify(m.{name})));
     """
     result = subprocess.run(
         ["node", "--no-warnings", "--input-type=module", "-e", script],
         capture_output=True,
         text=True,
+        encoding="utf-8",
         timeout=30,
     )
     assert result.returncode == 0, result.stdout + result.stderr

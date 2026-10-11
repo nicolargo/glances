@@ -62,6 +62,7 @@ def _cascades() -> dict:
         ["node", "--no-warnings", "--input-type=module", "-e", script],
         capture_output=True,
         text=True,
+        encoding="utf-8",
         timeout=30,
     )
     assert result.returncode == 0, result.stdout + result.stderr

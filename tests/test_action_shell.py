@@ -23,11 +23,14 @@ import threading
 import time
 from unittest.mock import MagicMock, patch
 
-import chevron
 import pytest
 
-from glances.actions.shell import ShellAction
-from glances.secure import secure_popen
+# `chevron` is the optional `action` extra: skip the module where it is not packaged
+# (FreeBSD CI installs Glances with --no-deps).
+chevron = pytest.importorskip("chevron")
+
+from glances.actions.shell import ShellAction  # noqa: E402
+from glances.secure import secure_popen  # noqa: E402
 
 # ---------------------------------------------------------- helpers
 

@@ -33,13 +33,14 @@ pytestmark = pytest.mark.skipif(shutil.which("node") is None, reason="node not a
 
 def _js_keys() -> list[str]:
     script = (
-        f"import('{_MODULE.as_posix()}')"
+        f"import('{_MODULE.as_uri()}')"
         ".then((m) => process.stdout.write(JSON.stringify([...m.LARGE_VALUE_KEYS].sort())))"
     )
     result = subprocess.run(
         ["node", "--no-warnings", "--input-type=module", "-e", script],
         capture_output=True,
         text=True,
+        encoding="utf-8",
         timeout=30,
     )
     assert result.returncode == 0, result.stdout + result.stderr

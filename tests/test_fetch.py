@@ -137,7 +137,7 @@ def test_the_default_template_is_v4s_layout(gl):
 
 @pytest.mark.parametrize("name", ["short.jinja", "with-logo.jinja"])
 def test_the_shipped_templates_render(name, gl):
-    assert "⚡ CPU" in render((_TEMPLATES / name).read_text(), gl, FetchUI(gl, color=False))
+    assert "⚡ CPU" in render((_TEMPLATES / name).read_text(encoding="utf-8"), gl, FetchUI(gl, color=False))
 
 
 def test_an_undefined_name_fails_loudly(gl):

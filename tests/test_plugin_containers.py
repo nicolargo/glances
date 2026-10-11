@@ -438,6 +438,7 @@ def test_podman_started_at_is_none_when_not_running():
     assert stats["started_at"] is None
 
 
+@pytest.mark.skipif(not hasattr(time, "tzset"), reason="time.tzset is Unix-only")
 @pytest.mark.parametrize("tz", ["UTC0", "JST-9", "EST5EDT"])
 def test_lxd_started_at_is_last_used_at_in_utc(monkeypatch, tz):
     # last_used_at is UTC: the timestamp must not move with the local zone.

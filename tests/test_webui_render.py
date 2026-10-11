@@ -66,6 +66,7 @@ def test_the_bundle_actually_renders_an_element():
         ["node", str(_RENDER_PROBE_PATH), str(_BUNDLE_PATH)],
         capture_output=True,
         text=True,
+        encoding="utf-8",
         timeout=30,
     )
     assert result.returncode == 0, f"render probe crashed:\n{result.stderr}"
@@ -129,6 +130,7 @@ def test_the_registry_renders_every_registered_plugin():
         ["node", str(_RENDER_PROBE_PATH), str(_BUNDLE_PATH)],
         capture_output=True,
         text=True,
+        encoding="utf-8",
         timeout=30,
     )
     assert result.returncode == 0, f"render probe crashed:\n{result.stderr}"
@@ -344,6 +346,7 @@ def _run_render_probe(scenario: str, keys: str = "") -> dict:
         ["node", str(_RENDER_PROBE_PATH), str(_BUNDLE_PATH), scenario, keys],
         capture_output=True,
         text=True,
+        encoding="utf-8",
         timeout=30,
     )
     assert result.returncode == 0, f"render probe crashed:\n{result.stderr}"

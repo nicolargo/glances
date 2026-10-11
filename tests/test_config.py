@@ -44,13 +44,15 @@ def env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     - All real env vars are cleared.
     - SYSTEM_CONFIG_PATH is redirected to <tmp>/etc/glances.conf.
     - XDG_CONFIG_HOME is set to <tmp>/xdg.
-    - HOME is set to <tmp>/home (fallback when XDG is unset).
+    - HOME (USERPROFILE on Windows) is set to <tmp>/home (fallback when XDG is unset).
     """
     for key in list(os.environ.keys()):
         monkeypatch.delenv(key, raising=False)
 
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "xdg"))
     monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    # Windows resolves `~` from USERPROFILE and ignores HOME.
+    monkeypatch.setenv("USERPROFILE", str(tmp_path / "home"))
     monkeypatch.setattr(GlancesConfig, "SYSTEM_CONFIG_PATH", tmp_path / "etc" / "glances.conf")
     return tmp_path
 

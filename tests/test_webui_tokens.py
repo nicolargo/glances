@@ -246,7 +246,7 @@ def test_sources_exist():
 
 @pytest.mark.parametrize("path", _sources(), ids=lambda p: p.name)
 def test_no_colour_literal_outside_the_token_file(path: Path):
-    hits = [f"{path.name}:{hit}" for hit in _colour_hits(path.read_text())]
+    hits = [f"{path.name}:{hit}" for hit in _colour_hits(path.read_text(encoding="utf-8"))]
     assert not hits, (
         "Colour literals must live in css/glances.css so a user theme can override them (spec 5.1 R1):\n"
         + "\n".join(hits)
@@ -277,14 +277,14 @@ def test_colour_literal_detection(source: str, expect_hit: bool):
 
 
 def test_token_file_defines_both_shipped_themes():
-    css = _TOKENS.read_text()
+    css = _TOKENS.read_text(encoding="utf-8")
     assert ':root[data-theme="light"]' in css
     # `dark` is the default block on bare :root, matching [outputs] theme=dark.
     assert re.search(r"^:root\s*\{", css, re.M)
 
 
 def test_every_tier_has_a_token_in_both_themes():
-    css = _TOKENS.read_text()
+    css = _TOKENS.read_text(encoding="utf-8")
     for tier in ("ok", "careful", "warning", "critical"):
         assert css.count(f"--gl-level-{tier}:") >= 2, (
             f"--gl-level-{tier} must be defined in both the default and the light block"
@@ -301,7 +301,7 @@ def test_a_prominent_value_is_a_badge_in_its_tier_colour():
     light theme's critical. CSS is not observable through the render probe,
     so this reads the token file with comments stripped.
     """
-    css = _strip_comments(_TOKENS.read_text())
+    css = _strip_comments(_TOKENS.read_text(encoding="utf-8"))
     assert "--gl-prominent-fg:" in css, "--gl-prominent-fg must be defined"
     for tier in ("ok", "careful", "warning", "critical"):
         body = _rule_body(css, f".gl-prominent.gl-level-{tier}")
@@ -330,7 +330,7 @@ def test_a_plugin_title_has_the_text_size_and_no_margin():
     whose browser defaults (margin, 1.5em) pushed it down. CSS is not
     observable through the render probe, so this reads the token file.
     """
-    body = _rule_body(_strip_comments(_TOKENS.read_text()), ".gl-plugin-title h2")
+    body = _rule_body(_strip_comments(_TOKENS.read_text(encoding="utf-8")), ".gl-plugin-title h2")
     assert re.search(r"\bmargin:\s*0\s*;", body), f"the title <h2> has no margin: {body!r}"
     assert re.search(r"\bfont-size:\s*inherit\s*;", body), f"the title <h2> has the text size: {body!r}"
 
@@ -340,7 +340,7 @@ def test_a_value_column_has_a_width_floor_on_the_grid_not_the_cell():
     row reflowed on every refresh. The floor sits on the grid COLUMN: on the
     <dd> it would widen the prominent badge past its text again.
     """
-    css = _strip_comments(_TOKENS.read_text())
+    css = _strip_comments(_TOKENS.read_text(encoding="utf-8"))
     assert re.search(r"grid-template-columns:\s*auto\s+minmax\(7ch,\s*auto\)", _rule_body(css, ".gl-stat-grid dl")), (
         "a scalar value column is at least 7ch (100.0%, 1023.9G, 1023.9K)"
     )
@@ -356,7 +356,7 @@ def test_the_footer_sticks_to_the_bottom_of_the_viewport():
     the viewport, and the footer is pushed down and made sticky, on an opaque
     background so scrolled content does not show through it.
     """
-    shell = _strip_comments((_JS / "AppShell.vue").read_text())
+    shell = _strip_comments((_JS / "AppShell.vue").read_text(encoding="utf-8"))
     app = _rule_body(shell, ".gl-app")
     assert re.search(r"\bmin-height:\s*100vh\s*;", app), f".gl-app fills the viewport: {app!r}"
     footer = _rule_body(shell, ".gl-alerts")
@@ -375,7 +375,7 @@ def test_the_footer_controls_stay_out_of_the_way():
     The value box is pinned too: without a width floor, stepping 2s -> 10s
     widens the text and slides the "+" out from under the pointer.
     """
-    shell = _strip_comments((_JS / "AppShell.vue").read_text())
+    shell = _strip_comments((_JS / "AppShell.vue").read_text(encoding="utf-8"))
     assert re.search(r"justify-content:\s*space-between\s*;", _rule_body(shell, ".gl-alerts")), (
         "the footer's two ends sit at the two edges of the line"
     )
@@ -405,7 +405,7 @@ def test_a_name_cell_is_capped_and_can_keep_its_tail():
     ellipsis at the start, keeping the tail like the TUI's "_" + name[-17:].
     CSS is not observable through the render probe, so this reads the file.
     """
-    css = _strip_comments(_TOKENS.read_text())
+    css = _strip_comments(_TOKENS.read_text(encoding="utf-8"))
     name = _rule_body(css, ".gl-name")
     assert re.search(r"\bdisplay:\s*block\s*;", name), f".gl-name is a block: {name!r}"
     assert re.search(r"\bmax-width:\s*var\(--gl-name-width\)\s*;", name), f".gl-name is capped: {name!r}"
@@ -427,7 +427,7 @@ def test_a_measuring_exclusion_has_its_cap_in_the_token_file():
     those columns, so both classes are gone and the exclusion list is back to
     the single class that still needs one.
     """
-    css = _strip_comments(_TOKENS.read_text())
+    css = _strip_comments(_TOKENS.read_text(encoding="utf-8"))
     body = _rule_body(css, ".gl-name")
     assert re.search(r"\bdisplay:\s*block\s*;", body), f".gl-name needs a block box for its cap: {body!r}"
     assert re.search(r"\bmax-width:", body), f".gl-name has no cap in the token file: {body!r}"
@@ -449,7 +449,7 @@ def test_every_collection_table_fills_the_left_column():
     to the widest block, whatever the content. CSS is not observable through
     the render probe, so this reads the token file.
     """
-    body = _rule_body(_strip_comments(_TOKENS.read_text()), ".gl-table")
+    body = _rule_body(_strip_comments(_TOKENS.read_text(encoding="utf-8")), ".gl-table")
     assert re.search(r"\bwidth:\s*100%\s*;", body), f".gl-table fills its column: {body!r}"
 
 
@@ -459,7 +459,7 @@ def test_a_collection_table_left_aligns_only_its_non_numeric_cells():
     outranks the global `.gl-num`, so a plain rule would stop numeric columns
     right-aligning.
     """
-    css = _strip_comments(_TOKENS.read_text())
+    css = _strip_comments(_TOKENS.read_text(encoding="utf-8"))
     assert re.search(r"\.gl-table\s+th:not\(\.gl-num\)\s*,", css), "the <th> rule excludes numeric columns"
     body = _rule_body(css, ".gl-table td:not(.gl-num)")
     assert re.search(r"\btext-align:\s*left\s*;", body), f"non-numeric cells left-align: {body!r}"
@@ -470,7 +470,7 @@ def test_a_block_keeps_its_natural_width():
     zone would never report an overflow and the cascade would never run. CSS is
     not observable through the render probe, so this reads the token file.
     """
-    body = _rule_body(_strip_comments(_TOKENS.read_text()), ".gl-plugin")
+    body = _rule_body(_strip_comments(_TOKENS.read_text(encoding="utf-8")), ".gl-plugin")
     assert re.search(r"\bflex:\s*0\s+0\s+auto\s*;", body), f".gl-plugin keeps its natural width: {body!r}"
 
 
@@ -484,7 +484,7 @@ def test_the_header_and_top_zones_never_wrap():
     AppShell.vue's measureZone() never observes an overflow at all -- it goes
     silently dead with no test failing.
     """
-    shell = _strip_comments((_JS / "AppShell.vue").read_text())
+    shell = _strip_comments((_JS / "AppShell.vue").read_text(encoding="utf-8"))
     for selector in (".gl-zone-header", ".gl-slot-top"):
         body = _rule_body(shell, selector)
         assert re.search(r"\bflex-wrap:\s*nowrap\s*;", body), f"{selector} does not wrap: {body!r}"
@@ -505,12 +505,12 @@ def test_a_quicklook_bar_track_keeps_a_width_without_the_cpu_header():
     `_DEFAULT_BAR_WIDTH` (38) when there is no header to justify against.
     CSS is not observable through the render probe, so this reads the file.
     """
-    css = _strip_comments(_TOKENS.read_text())
+    css = _strip_comments(_TOKENS.read_text(encoding="utf-8"))
     assert re.search(r"\bmin-width:\s*8ch\s*;", _rule_body(css, ".gl-bar-track")), "the track has the TUI's floor"
     assert re.search(r"\bmin-width:\s*38ch\s*;", _rule_body(css, ".gl-quicklook-no-header .gl-bar-track")), (
         "without a header the track takes the TUI's default bar width"
     )
-    template = (_JS / "PluginQuicklook.vue").read_text()
+    template = (_JS / "PluginQuicklook.vue").read_text(encoding="utf-8")
     assert "'gl-quicklook-no-header': !header" in template, "the block flags the missing header"
 
 
@@ -519,7 +519,7 @@ def test_the_footer_hotkeys_control_is_a_button_dressed_as_a_link():
     assistive tech and offer a middle-click that goes nowhere. It must still
     look like the links beside it, which means resetting the UA's button
     chrome — a reset that is easy to half-do."""
-    template = (_JS / "AppShell.vue").read_text()
+    template = (_JS / "AppShell.vue").read_text(encoding="utf-8")
     assert '<button\n					type="button"\n					class="gl-about-action"' in template, (
         "the footer control must be a <button>, not an <a>"
     )
@@ -551,7 +551,7 @@ def test_full_quicklook_lets_the_block_grow_into_the_row():
        at equal specificity source order decides, and `.gl-plugin` comes LATER
        in the file. A bare `.gl-quicklook-full` rule is silently dead.
     """
-    css = _strip_comments(_TOKENS.read_text())
+    css = _strip_comments(_TOKENS.read_text(encoding="utf-8"))
     body = _rule_body(css, ".gl-plugin.gl-quicklook-full")
     assert body, "the rule must be qualified with .gl-plugin or it loses to it on source order"
     assert re.search(r"\bflex-grow:\s*1\s*;", body), "the block must grow into the free width"
@@ -559,7 +559,7 @@ def test_full_quicklook_lets_the_block_grow_into_the_row():
         "use flex-grow alone: the `flex` shorthand resets flex-shrink, which .gl-plugin needs at 0"
     )
     # The rule is dead without the class, and the class without the rule.
-    template = (_JS / "PluginQuicklook.vue").read_text()
+    template = (_JS / "PluginQuicklook.vue").read_text(encoding="utf-8")
     assert "'gl-quicklook-full': fullQuicklook" in template, "the block flags full-quicklook mode"
     assert "this.serverArgs.full_quicklook" in template, "the flag comes from the effective view args"
 
@@ -572,11 +572,11 @@ def test_the_cascade_measures_header_text_at_its_natural_width():
     (`gl-measuring`, AppShell.measureZone) they keep their natural width;
     `.gl-name` keeps its deliberate cap (G9-6 D3).
     """
-    css = _strip_comments(_TOKENS.read_text())
+    css = _strip_comments(_TOKENS.read_text(encoding="utf-8"))
     body = _rule_body(css, ".gl-measuring .gl-inline,\n.gl-measuring .gl-truncate:not(.gl-name)")
     assert re.search(r"\bmin-width:\s*max-content\s*;", body), body
     assert re.search(r"\bmax-width:\s*none\s*;", body), body
-    shell = (_JS / "AppShell.vue").read_text()
+    shell = (_JS / "AppShell.vue").read_text(encoding="utf-8")
     add = shell.index('zone.classList.add("gl-measuring")')
     read = shell.index("zone.scrollWidth", add)
     remove = shell.index('zone.classList.remove("gl-measuring")', read)
@@ -594,7 +594,7 @@ def test_the_left_aligned_rate_column_outranks_the_gl_num_default():
     is (0,2,1) and wins outright. Same trap the `.gl-table th:not(.gl-num)`
     comment in css/glances.css already documents.
     """
-    source = _strip_comments((_JS / "PluginContainers.vue").read_text())
+    source = _strip_comments((_JS / "PluginContainers.vue").read_text(encoding="utf-8"))
     body = _rule_body(source, ".gl-table th.gl-num-left,\n.gl-table td.gl-num-left")
     assert re.search(r"\btext-align:\s*left\s*;", body), f"the pair's second column is left-aligned: {body!r}"
 
@@ -606,7 +606,7 @@ def test_the_amps_count_column_drops_the_rate_width_floor():
     `_COUNT_COL_WIDTH` = 4). CSS is invisible to the render probe, so the
     class reaching the DOM is asserted there and the width here.
     """
-    source = _strip_comments((_JS / "PluginAmps.vue").read_text())
+    source = _strip_comments((_JS / "PluginAmps.vue").read_text(encoding="utf-8"))
     body = _rule_body(source, ".gl-amp-count")
     assert re.search(r"\bmin-width:\s*calc\(4 \* var\(--gl-col\)\)\s*;", body), (
         f"the count column uses the TUI's 4 characters, in the column unit: {body!r}"
@@ -639,7 +639,7 @@ _LAYOUT_BUDGET_NAME_WIDTHS = {
 def _name_width_declarations() -> dict[str, list[str]]:
     out: dict[str, list[str]] = {}
     for path in sorted(_JS.glob("*.vue")):
-        values = re.findall(r"--gl-name-width:\s*([^;\"]+)", _strip_comments(path.read_text()))
+        values = re.findall(r"--gl-name-width:\s*([^;\"]+)", _strip_comments(path.read_text(encoding="utf-8")))
         if values:
             out[path.name] = [v.strip() for v in values]
     return out
@@ -678,7 +678,7 @@ def test_the_column_unit_is_defined_once_on_the_root():
 
     Defining it anywhere but `:root` would let one block drift from the rest.
     """
-    css = _strip_comments(_TOKENS.read_text())
+    css = _strip_comments(_TOKENS.read_text(encoding="utf-8"))
     assert len(re.findall(r"--gl-col:", css)) == 1, "--gl-col is defined exactly once"
     match = re.search(r":root\s*\{[^}]*--gl-col:\s*(\d*\.?\d+)em", css, re.S)
     assert match, "--gl-col lives on :root and is declared in em"
@@ -694,7 +694,7 @@ def test_the_row_unit_is_defined_once_and_drives_the_right_column_gap():
     the line-height has to be a known number, not the font-dependent `normal`
     it was before this batch (design 4.5).
     """
-    css = _strip_comments(_TOKENS.read_text())
+    css = _strip_comments(_TOKENS.read_text(encoding="utf-8"))
     assert len(re.findall(r"--gl-row:", css)) == 1, "--gl-row is defined exactly once"
     assert re.search(r":root\s*\{[^}]*--gl-row:\s*1\.25\b", css, re.S), "--gl-row lives on :root"
     assert re.search(r"line-height:\s*var\(--gl-row\)", css), "the token is actually applied"
@@ -710,7 +710,7 @@ def test_the_right_column_gives_its_slack_to_the_last_cell():
     columns were dropped by the cascade still has one.
     """
     body = _rule_body(
-        _strip_comments(_TOKENS.read_text()),
+        _strip_comments(_TOKENS.read_text(encoding="utf-8")),
         '[data-slot="right"] .gl-table td:last-child,\n[data-slot="right"] .gl-table th:last-child',
     )
     assert re.search(r"\bwidth:\s*100%\s*;", body), f"the tail cell absorbs the slack: {body!r}"
@@ -723,7 +723,7 @@ def test_the_right_column_gives_its_slack_to_the_last_cell():
     # it does not replace it -- `amps`/`vms` (automatic layout) must still get
     # their slack from the general rule.
     excluded = _rule_body(
-        _strip_comments(_TOKENS.read_text()),
+        _strip_comments(_TOKENS.read_text(encoding="utf-8")),
         '[data-slot="right"] .gl-table.gl-process-table td:last-child,\n'
         '[data-slot="right"] .gl-table.gl-process-table th:last-child',
     )
@@ -748,7 +748,7 @@ def test_the_column_box_separator_multiplier_matches_colstyles_offset():
     (js/process_widths.js), the single constant every `colStyle()` and
     every `--gl-fixed-cols` sum now offsets by.
     """
-    css = _strip_comments(_TOKENS.read_text())
+    css = _strip_comments(_TOKENS.read_text(encoding="utf-8"))
     body = _rule_body(
         css,
         ".gl-table.gl-process-table th:not(:last-child),\n.gl-table.gl-process-table td:not(:last-child)",
@@ -760,7 +760,7 @@ def test_the_column_box_separator_multiplier_matches_colstyles_offset():
     # length, so no test should demand the more verbose form.
     separator_chars = int(match.group(1)) if match.group(1) is not None else 1
 
-    widths = (_JS / "process_widths.js").read_text()
+    widths = (_JS / "process_widths.js").read_text(encoding="utf-8")
     offset_match = re.search(r"export const COL_SEPARATOR\s*=\s*(\d+)\s*;", widths)
     assert offset_match, f"COL_SEPARATOR is not exported from {_JS / 'process_widths.js'}"
     colstyle_offset = int(offset_match.group(1))
@@ -778,7 +778,7 @@ def test_the_column_box_separator_multiplier_matches_colstyles_offset():
     # and PluginContainers have no width map in common with them and keep
     # their own.
     for name in ("process_block.js", "PluginAlert.vue", "PluginContainers.vue"):
-        script = (_JS / name).read_text()
+        script = (_JS / name).read_text(encoding="utf-8")
         assert re.search(r"\+\s*COL_SEPARATOR\}\s*\*\s*var\(--gl-col\)", script), (
             f"{name}'s colStyle() does not offset by COL_SEPARATOR"
         )
@@ -800,11 +800,11 @@ def test_the_container_cells_are_bounded_by_their_colgroup():
     the two halves that make that true, since the caps they replace are no
     longer there to be checked.
     """
-    template = (_JS / "PluginContainers.vue").read_text()
+    template = (_JS / "PluginContainers.vue").read_text(encoding="utf-8")
     assert 'table-class="gl-process-table"' in template, "the containers table is a fixed-layout one"
     assert ':style="fixedColsStyle"' in template, "the table's min-width comes from the visible columns"
     assert "<col v-for=" in template, "the fixed columns come from a <colgroup>"
-    body = _rule_body(_strip_comments(_TOKENS.read_text()), ".gl-table.gl-process-table")
+    body = _rule_body(_strip_comments(_TOKENS.read_text(encoding="utf-8")), ".gl-table.gl-process-table")
     assert re.search(r"\btable-layout:\s*fixed\s*;", body), f"the class carries the fixed layout: {body!r}"
 
 
@@ -815,7 +815,7 @@ def test_the_container_colgroup_leaves_exactly_one_column_elastic():
     future edit rendering a <col> per visible cell would pin the tail back to
     its floor, and no CSS assertion would notice.
     """
-    script = (_JS / "PluginContainers.vue").read_text()
+    script = (_JS / "PluginContainers.vue").read_text(encoding="utf-8")
     assert re.search(r"fixedCells\(\)\s*\{\s*return this\.cells\.slice\(0, -1\);", script), (
         "fixedCells no longer drops the tail cell"
     )
@@ -827,7 +827,7 @@ def test_the_stacking_breakpoint_matches_the_stylesheet():
     stacked layout (design 4.9). Two copies of `48rem` that can drift silently
     would leave the budget active while the columns are stacked.
     """
-    shell = (_JS / "AppShell.vue").read_text()
+    shell = (_JS / "AppShell.vue").read_text(encoding="utf-8")
     assert 'STACK_BREAKPOINT = "48rem"' in shell
     assert re.search(r"@media\s*\(max-width:\s*48rem\)", shell)
 
@@ -840,7 +840,7 @@ def test_the_row_hover_colour_is_a_token_in_both_themes():
     background of the overlays, and retuning those must not silently retune
     a table's hover feedback.
     """
-    css = _TOKENS.read_text()
+    css = _TOKENS.read_text(encoding="utf-8")
     assert css.count("--gl-row-hover:") >= 2, "--gl-row-hover must be defined in both the default and the light block"
 
 
@@ -858,7 +858,7 @@ def test_only_clickable_rows_light_up_under_the_cursor():
     decision. A rule widened to `.gl-table tr:hover` would pass every other
     test in this file.
     """
-    source = (_JS / "PluginProcesslist.vue").read_text()
+    source = (_JS / "PluginProcesslist.vue").read_text(encoding="utf-8")
     assert ".gl-table tr.gl-pinnable:hover {" in source
     # The cursor and the highlight must agree about which rows are clickable.
     assert ".gl-table tr.gl-pinnable {" in source
@@ -913,7 +913,7 @@ def test_the_hover_highlight_is_actually_perceptible(theme):
     actually made first -- passes every other test in this file while the
     feature silently stops working.
     """
-    block = _theme_blocks(_TOKENS.read_text())[theme]
+    block = _theme_blocks(_TOKENS.read_text(encoding="utf-8"))[theme]
     values = dict(re.findall(r"(--gl-[\w-]+)\s*:\s*(#[0-9a-fA-F]{6})\s*;", block))
 
     ratio = _contrast(values["--gl-row-hover"], values["--gl-bg"])
@@ -928,7 +928,7 @@ def test_the_hover_highlight_does_not_shout(theme):
     """The other end: a hover is feedback, not an alert. Anything approaching
     a tier badge's contrast would make a moving cursor the loudest thing on
     the page."""
-    block = _theme_blocks(_TOKENS.read_text())[theme]
+    block = _theme_blocks(_TOKENS.read_text(encoding="utf-8"))[theme]
     values = dict(re.findall(r"(--gl-[\w-]+)\s*:\s*(#[0-9a-fA-F]{6})\s*;", block))
 
     assert _contrast(values["--gl-row-hover"], values["--gl-bg"]) <= 2.0, theme

@@ -35,6 +35,7 @@ def _run(*paths: str) -> subprocess.CompletedProcess:
         cwd=_ROOT,
         capture_output=True,
         text=True,
+        encoding="utf-8",
         timeout=120,
     )
 

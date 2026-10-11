@@ -54,11 +54,26 @@ def _sum_pct(sample) -> float:
     return sum(getattr(sample, f) for f in sample._fields if f not in ("guest", "guest_nice"))
 
 
+def _unprimed_sampler(**kw) -> CpuSampler:
+    """A sampler without the construction-time baseline.
+
+    `_prime()` stores the *real* `psutil.cpu_times()` of the host, whose
+    fields differ per platform (no `nice` on Windows, no `iowait` on macOS).
+    A test feeding Linux-shaped stubs would then diff two incompatible
+    tuples; dropping the baseline restores the platform-neutral first-sample
+    path these cache tests are about.
+    """
+    sampler = CpuSampler(**kw)
+    sampler._prev_aggregate_times = None
+    sampler._prev_per_core_times = None
+    return sampler
+
+
 # ---------------------------------------------------------- aggregate cache
 
 
 async def test_aggregate_call_is_cached_within_ttl():
-    sampler = CpuSampler(ttl=10.0)
+    sampler = _unprimed_sampler(ttl=10.0)
     with patch("glances.cpu_sampler.psutil.cpu_times", return_value=_times(user=1.0, idle=3.0)) as m:
         a = await sampler.get_aggregate()
         b = await sampler.get_aggregate()
@@ -67,7 +82,7 @@ async def test_aggregate_call_is_cached_within_ttl():
 
 
 async def test_aggregate_call_refreshes_after_ttl():
-    sampler = CpuSampler(ttl=0.01)
+    sampler = _unprimed_sampler(ttl=0.01)
     with patch("glances.cpu_sampler.psutil.cpu_times", return_value=_times(user=1.0, idle=3.0)) as m:
         await sampler.get_aggregate()
         await asyncio.sleep(0.02)
@@ -79,7 +94,7 @@ async def test_aggregate_call_refreshes_after_ttl():
 
 
 async def test_per_core_call_is_cached_within_ttl():
-    sampler = CpuSampler(ttl=10.0)
+    sampler = _unprimed_sampler(ttl=10.0)
     cores = [_times(user=1.0, idle=3.0) for _ in range(4)]
     with patch("glances.cpu_sampler.psutil.cpu_times", return_value=cores) as m:
         a = await sampler.get_per_core()
@@ -90,7 +105,7 @@ async def test_per_core_call_is_cached_within_ttl():
 
 async def test_aggregate_and_per_core_are_independent_calls():
     """Two different psutil calls — both must fire when caches are cold."""
-    sampler = CpuSampler(ttl=10.0)
+    sampler = _unprimed_sampler(ttl=10.0)
 
     def stub(*args, **kwargs):
         return [_times(user=1.0, idle=3.0)] * 2 if kwargs.get("percpu") else _times(user=1.0, idle=3.0)
@@ -141,7 +156,7 @@ def test_cpu_count_falls_back_to_one_on_exception():
 
 async def test_concurrent_aggregate_calls_only_sample_once():
     """Two parallel callers within TTL must not duplicate the psutil call."""
-    sampler = CpuSampler(ttl=10.0)
+    sampler = _unprimed_sampler(ttl=10.0)
     call_count = {"n": 0}
 
     def stub(*args, **kwargs):

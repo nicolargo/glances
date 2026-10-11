@@ -33,6 +33,13 @@ FIQ:                          usb_fiq
 """
 
 
+@pytest.fixture(autouse=True)
+def _linux_host(monkeypatch):
+    """`_collect` returns [] off Linux (v4 parity); the tests below feed a
+    stubbed `/proc/interrupts`, so they must run the Linux branch on any host."""
+    monkeypatch.setattr("glances.plugins.irq.model.LINUX", True)
+
+
 def test_parse_builds_human_names_and_sums_cpu_columns():
     rows = parse_interrupts(PROC_INTERRUPTS)
     by_line = {r["irq_line"]: r["irq_rate"] for r in rows}

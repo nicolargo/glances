@@ -372,7 +372,12 @@ class GlancesProcesses:
         # - CPU min/max/mean
 
         # Set the extended stats list (OS dependent)
-        extended_stats = ['cpu_affinity', 'ionice', 'num_ctx_switches']
+        # Keep what this psutil build exposes: `as_dict()` raises on an unknown
+        # attribute name, which would disable the extended stats altogether
+        # (macOS has no cpu_affinity/ionice, FreeBSD no ionice).
+        extended_stats = [
+            attr for attr in ('cpu_affinity', 'ionice', 'num_ctx_switches') if hasattr(psutil.Process, attr)
+        ]
         if LINUX:
             # num_fds only available on Unix system (see issue #1351)
             extended_stats += ['num_fds']

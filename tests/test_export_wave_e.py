@@ -166,7 +166,8 @@ def test_graph_default_folder_is_the_users_own(tmp_path, monkeypatch):
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "data"))
     exporter = Export(make_config({}))
     assert exporter.path == str(tmp_path / "data" / "glances" / "graphs")
-    assert stat.S_IMODE(os.stat(exporter.path).st_mode) == 0o700
+    if os.name == "posix":  # Windows has no owner-only folder mode
+        assert stat.S_IMODE(os.stat(exporter.path).st_mode) == 0o700
 
 
 @requires_pygal

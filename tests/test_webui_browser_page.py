@@ -64,7 +64,9 @@ def test_the_browser_bundle_renders_the_list():
     """The built bundle against a fake DOM: rows, TUI colours, and links to each server's Web UI."""
     if not _BUNDLE.exists():
         pytest.fail(f"{_BUNDLE} is missing -- run `npm run build` in glances/outputs/static/")
-    result = subprocess.run(["node", str(_PROBE), str(_BUNDLE)], capture_output=True, text=True, timeout=30)
+    result = subprocess.run(
+        ["node", str(_PROBE), str(_BUNDLE)], capture_output=True, text=True, encoding="utf-8", timeout=30
+    )
     assert result.returncode == 0 and result.stderr == "", result.stderr
     page = json.loads(result.stdout)
     assert page["tagName"] == "MAIN"

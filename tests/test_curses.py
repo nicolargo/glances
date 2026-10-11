@@ -1270,7 +1270,9 @@ def test_tui_help_shows_config_file(fake_store, fake_alerts):
 
     flat = " ".join(str(call) for call in fake_stdscr.addstr.call_args_list)
     assert "Configuration file:" in flat
-    assert "/etc/glances/glances.conf" in flat
+    # Compare the painted text, not the call repr: it doubles Windows backslashes.
+    painted = [call.args[2] for call in fake_stdscr.addstr.call_args_list]
+    assert any(str(cfg.loaded_sources[0]) in text for text in painted)
 
 
 def test_tui_help_config_file_defaults_note_when_none(fake_store, fake_alerts):

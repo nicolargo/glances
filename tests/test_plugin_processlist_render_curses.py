@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+
 import pytest
 
 from glances.outputs.curses_renderer import ColorRole
@@ -444,9 +446,10 @@ def test_render_full_path_view_shows_path_prefix(fields, monkeypatch):
     rows = render({"data": [p], "_levels": {}}, fields, view={"process_short_name": False})
     cmd_cells = rows[1].cells[CMD_START:]
     flat = "".join(c.text for c in cmd_cells)
-    assert "/usr/bin/" in flat
+    prefix = f"/usr/bin{os.sep}"  # the renderer joins with os.sep (v4 parity)
+    assert prefix in flat
     # The path prefix is plain; the command stays bold.
-    assert any(c.text == "/usr/bin/" and not c.bold for c in cmd_cells)
+    assert any(c.text == prefix and not c.bold for c in cmd_cells)
     assert any(c.text == "python3" and c.bold for c in cmd_cells)
 
 
@@ -793,7 +796,9 @@ def test_a_short_command_line_is_not_cut(payload, fields):
     assert " ".join(c.text for c in title.cells) == "Pinned task: python -m glances (ENTER to unpin)"
 
 
-def test_the_cpu_line_carries_min_max_mean_affinity_and_io_nice(payload, fields):
+def test_the_cpu_line_carries_min_max_mean_affinity_and_io_nice(payload, fields, monkeypatch):
+    # The class names are Linux's; Windows has its own 0/1/2 table.
+    monkeypatch.setattr("glances.plugins.processlist.render_curses.WINDOWS", False)
     line = _flat(render(payload, fields, view={"extended_process": _extended_payload()}))[1]
     assert "0.5" in line and "78.4" in line and "12.2" in line
     assert "4 cores" in line
@@ -1075,7 +1080,7 @@ def test_the_path_prefix_does_not_scroll_in_full_mode(fields, monkeypatch):
     payload = {"data": [_proc(pid=1, cmdline=["/usr/bin/python3", "--flag", "value"])], "_levels": {}}
 
     text = _command_text(render(payload, fields, view={"command_offset": 2, "process_short_name": False}))
-    assert text.startswith("/usr/bin/ python3")
+    assert text.startswith(f"/usr/bin{os.sep} python3")
     assert "…" in text
 
 
