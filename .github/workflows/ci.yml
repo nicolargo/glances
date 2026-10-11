@@ -2,9 +2,9 @@ name: ci
 
 on:
     pull_request:
-      branches: [ develop, develop-v5 ]
+      branches: [ develop ]
     push:
-      branches: [ master, develop, develop-v5 ]
+      branches: [ master, develop ]
       tags:
         - v*
 
