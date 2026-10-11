@@ -5,8 +5,12 @@ component that actually runs registered plugins concurrently. It owns one
 `asyncio.Task` per plugin and calls `plugin.update()` at each plugin's
 `refresh_time`.
 
-Phase 0.6 ships **manual registration only** — auto-discovery of concrete
-plugins lands when the first concrete plugin does (Phase 1+).
+The scheduler itself takes **manual registration only**: `glances/main.py`
+discovers the plugins (`discover_plugins()`) and exporters
+(`discover_exporters()`) and registers each one. Exporters go through
+`scheduler.register_exporter(exporter)`: one export loop calls each
+exporter's `update()` in a worker thread at the `[export] refresh` cadence
+(see `SKILL-exporter.md`).
 
 ## Lifecycle
 
@@ -79,10 +83,8 @@ termination via `asyncio.gather(..., return_exceptions=True)` — the
 
 ## What's deferred
 
-- **Auto-discovery of concrete plugins** — Phase 1+ when concrete plugins land
 - **Drift / phase compensation** (subtract update duration from sleep) — only if needed
 - **Hot reload of `refresh_time`** — Phase 4 (architecture §1.2 / §2)
-- **`export_refresh_time`** for exporters — Phase 1 with exporter base class
 - **Per-plugin task supervision** beyond the gather safety net — only if real-world failure modes warrant
 
 ## Testing the scheduler
@@ -101,8 +103,6 @@ counters. See `tests/test_scheduler.py` for reference fakes
 
 ```
 glances/scheduler.py        # AsyncScheduler implementation
+glances/main.py             # discovery + registration (assemble())
 tests/test_scheduler.py     # contract + smoke tests
 ```
-
-The v4 scheduling model lives in `glances/main.py` / `glances/standalone.py`
-and is **not modified**, **not imported**, **not subclassed** by v5.

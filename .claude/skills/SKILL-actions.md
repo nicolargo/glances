@@ -1,11 +1,9 @@
 # Skill: Glances v5 — Authoring an alert action (`GlancesActionBase`)
 
 Use the v5 action base class (`glances.actions.GlancesActionBase`) to add
-a new alert action type to `develop-v5`. Actions are auto-discovered from
-the `glances.actions` package — adding one means dropping a single file,
-no changes to any core module.
-
-The v4 module `glances/actions.py` is kept untouched during the transition.
+a new alert action type (PRs target `develop`). Actions are auto-discovered
+from the `glances.actions` package — adding one means dropping a single
+file, no changes to any core module.
 
 ## When does an action run?
 
@@ -61,7 +59,7 @@ class WebhookAction(GlancesActionBase):
         action_value: str,  # raw value from glances.conf
         repeat: bool = False,  # True if the alert is repeating
     ) -> None:
-        import httpx  # lazy import — already a v5 core dep
+        import httpx  # lazy import — already a core dep
 
         async with httpx.AsyncClient() as client:
             await client.post(action_value, json=context, timeout=5.0)
@@ -74,7 +72,7 @@ the action when a transition fires (see "Config key precedence" below).
 
 ## Optional dependencies (`requires`)
 
-If your action needs a module that is **not** a core v5 dependency (for
+If your action needs a module that is **not** a core dependency (for
 example `apprise`), declare it in `requires`:
 
 ```python
@@ -213,8 +211,3 @@ tests/test_alerts.py               # state machine + dispatch tests
 ```
 
 Concrete actions ship as sub-packages: `glances/actions/<name>/__init__.py`.
-
-The v4 module `glances/actions.py` is **not modified**, **not imported**,
-**not subclassed** by v5. The two systems coexist through Phase 0 → Phase
-N. At the end of the transition the `` suffix is dropped (the package
-becomes `glances/actions/`).

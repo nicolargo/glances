@@ -1,8 +1,7 @@
 # Skill: Glances v5 — Configuration (`GlancesConfig`)
 
-Use the v5 configuration loader (`glances.config.GlancesConfig`) for any
-new code in `develop-v5`. The v4 module `glances.config` is kept untouched
-during the transition.
+Use the configuration loader (`glances.config.GlancesConfig`) for any
+code that reads `glances.conf`.
 
 ## Loading priority (ascending)
 
@@ -75,14 +74,16 @@ webui_allowed_hosts = localhost, 127.0.0.1, ::1
 ### v4 compatibility alias
 
 `get_value(section, option, default)` is preserved as a thin alias for
-`get()`. Existing v4 code paths that get migrated to v5 do not need to be
-rewritten on this front.
+`get()`, so code ported from v4 does not need to be rewritten on this
+front.
 
 ## Secret redaction — `as_dict_secure()`
 
-Used by the unauthenticated REST API endpoints (`/api/5/config`,
-`/api/5/args`) — CVE-2026-32609. It returns the same shape as `as_dict()`
-but replaces values of secret-like options with `"***"`.
+Used by the REST API — CVE-2026-32609. `/api/5/config` serves
+`as_dict_secure()` when `[outputs] password` is set, and only
+`as_dict_public()` (the `PUBLIC_OPTIONS` keys) otherwise; `/api/5/args`
+reuses `_secure_value()`. `as_dict_secure()` returns the same shape as
+`as_dict()` but replaces values of secret-like options with `"***"`.
 
 A key is considered secret if it contains (case-insensitive substring match)
 any of:
@@ -151,7 +152,3 @@ Reuse this fixture for any test that needs a controlled config environment.
 glances/config.py        # implementation
 tests/test_config.py     # unit tests (pytest-native)
 ```
-
-The v4 `glances/config.py` is **not modified**, **not imported**, **not
-subclassed** by the v5 module. Strict isolation throughout the v5
-transition.

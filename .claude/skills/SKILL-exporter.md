@@ -1,15 +1,9 @@
 # Skill: Glances v5 — Authoring an export module (`GlancesExportBase`)
 
-Use the v5 exporter base class (`GlancesExportBase`) for any new or
-migrated export module in `develop-v5`. The v4 export modules under
-`glances/exports/` are kept untouched during the transition and migrated
-one by one.
-
-> **Phase status.** `GlancesExportBase` itself lands in **Phase 1**
-> alongside the first concrete v5 plugin. This skill captures the
-> non-negotiable contract decided in Phase 0 (architecture §7) so that
-> contributors and Claude agree on the rules before any export module is
-> written or migrated.
+Use the exporter base class (`glances.exports.export_base.GlancesExportBase`)
+for any export module. Every v4 exporter has been ported: each lives in
+`glances/exports/glances_<name>/export.py` as a class named `Export`. This
+skill captures the non-negotiable contract (architecture §7).
 
 ## The two non-negotiable rules
 
@@ -36,92 +30,100 @@ data = self.store.as_dict()[plugin.plugin_name]
 It strips internal keys (`_levels`, anything starting with `_`) and any
 field whose `fields_description` carries `exportable: False`.
 
-### 2. All v4 export modules must be migrated
+### 2. Same coverage and wire format as v4
 
-No exporter is omitted (architecture §7.3). The v5 release ships with the
-same exporter coverage as v4, period. No new exporter is added during the
-v5 migration phase — the migration is the only goal.
+No exporter is omitted (architecture §7.3): the v5 release ships with the
+same exporter coverage as v4, and `build_export()` /
+`normalize_for_influxdb()` keep v4's field names, so users' dashboards keep
+working. No new exporter is added before v5.0.0 ships.
 
-## Async contract
+## Threading contract
 
-`GlancesExportBase.update()` is **async**. Every exporter integrates into
-the main asyncio loop. Blocking I/O (network sockets, DB drivers without
-async support) must be wrapped with `asyncio.to_thread()`.
+`GlancesExportBase.update()` and `export()` are **synchronous** on purpose
+(design §4.2 supersedes the async `update()` of architecture §7.3): every
+backend client is blocking, so the coroutine boundary lives one level up.
+`AsyncScheduler._export_loop()` calls
+`await asyncio.to_thread(exporter.update, plugins)` once per exporter per
+tick.
 
 ```python
-# Pseudo-code — concrete base class lands in Phase 1.
 class GlancesExportBase(ABC):
-    export_name: ClassVar[str] = ""
+    export_name: ClassVar[str] = ""  # "csv", "influxdb2" — matches glances_<name>/
 
-    def __init__(self, config: GlancesConfig, store: StatsStore) -> None: ...
+    def __init__(self, config: GlancesConfig, args: argparse.Namespace | None = None) -> None: ...
+
+    def update(self, plugins: list[GlancesPluginBase]) -> None:
+        """get_export() of every exportable plugin → build_export() → export()."""
 
     @abstractmethod
-    async def update(self, plugins: list[GlancesPluginBase]) -> None:
-        """Push every plugin's get_export() output to the backend."""
+    def export(self, name: str, columns: list[str], points: list[Any]) -> None:
+        """Write one plugin's flattened stats to the backend."""
+
+    def exit(self) -> None:
+        """Release backend resources — a subclass calls super().exit() FIRST."""
 ```
 
-A failure inside `update()` is logged at WARNING and swallowed — the
-asyncio gather loop must never crash because of a misbehaving exporter
-(same resilience contract as plugins, §1.2).
+A subclass implements `export()` (and `exit()` when it holds resources).
+A failure for one plugin inside `update()` is logged at WARNING and
+swallowed — the other plugins still get their tick (same resilience
+contract as plugins, §1.2).
 
-## `export_refresh_time`
+## Export refresh
 
 Exporters can flush at a different cadence than plugins:
 
 ```ini
-[exports]
-refresh_time = 10
+[export]
+refresh = 10
 ```
 
-`export_refresh_time` must be **≥** the slowest plugin's `refresh_time`.
-Otherwise the exporter would push duplicate data. The validation is a
-WARNING at startup (Phase 1 implementation detail).
+`resolve_export_refresh()` floors the value at the global refresh — a
+faster export would only push duplicate points — and defaults to the
+global cadence when the key is absent.
 
 The default for headless server deployments is to bump
 `[global] refresh_time` to lower the baseline CPU load (architecture §7.1)
 — v5 server mode runs the asyncio scheduler continuously, unlike the
 passive v4 server.
 
-## Migration pattern (v4 → v5)
+## Exporter pattern
 
-For every v4 export module under `glances/exports/<name>/`:
+Every exporter in `glances/exports/glances_<name>/export.py` follows the
+same shape (see `glances_statsd/export.py` for a short one):
 
-1. Subclass `GlancesExportBase` (Phase 1 base class), not the v4
-   `GlancesExport` model.
-2. Convert `update()` to `async def update(...)`.
-3. Replace any direct `stats.get_<plugin>` / `glances_stats.get_all` call
-   with `plugin.get_export()`.
-4. Wrap blocking client calls in `asyncio.to_thread()` until an async
-   driver exists.
-5. Read configuration via `GlancesConfig.get(section, option, default)`
-   — preserve the exact same `glances.conf` keys as v4 to avoid breaking
-   user setups.
-6. Add unit tests (`pytest` + `pytest-asyncio`) covering the round-trip
-   `plugin.get_export()` → exporter formatting → mocked client.
+1. `class Export(GlancesExportBase)` with `export_name = "<name>"`.
+2. In `__init__`, read the `[<name>]` section with
+   `self.load_conf("<name>", mandatories=(...), options=(...))` — keep the
+   `glances.conf` keys v4 used, to avoid breaking user setups. A missing
+   section or mandatory key is fatal (`sys.exit(2)`).
+3. Import the client library lazily (when the exporter starts), so the
+   module stays importable without it.
+4. Implement `export(name, columns, points)`; never read the store —
+   `update()` already went through `plugin.get_export()`.
+5. Add unit tests (`pytest`) covering the round-trip `plugin.get_export()`
+   → exporter formatting → fake client.
 
 ## Security — CVE-2026-32611
 
-The DuckDB exporter (and any future SQL-based exporter) **must** use
-parameterized DDL. Plugin and metric names are user-controlled strings;
-they must never be string-interpolated into SQL.
+The DuckDB exporter (and any SQL-based exporter) **must** never
+string-interpolate monitored data into SQL. Plugin and field names are
+identifiers, interface / process / container names are values; both are
+attacker-influenced.
 
 ```python
 # FORBIDDEN
 con.execute(f"CREATE TABLE {plugin_name} (...)")  # SQL injection vector
 
-# CORRECT — sanitize and parameterize
-safe_name = sanitize_identifier(plugin_name)
-con.execute("CREATE TABLE ? (...)", [safe_name])
+# CORRECT — quote identifiers, bind values
+quoted = quote_identifier(table)  # "…", embedded double quotes doubled
+con.execute(f"CREATE TABLE {quoted} ({', '.join(columns)});")
+con.executemany(f"INSERT INTO {quoted} VALUES ({placeholders});", rows)  # ? parameters
 ```
 
-`sanitize_identifier()` rejects anything that is not `[A-Za-z][A-Za-z0-9_]*`.
+See `glances/exports/glances_duckdb/export.py`.
 
 ## What's deferred (out of scope right now)
 
-- **`GlancesExportBase` concrete base class** — Phase 1 (alongside the first plugin)
-- **First migrated exporter** — Phase 2 (priority order: InfluxDB, Prometheus, CSV, JSON)
-- **Remaining exporters** — Phase 3 (MongoDB, MQTT, DuckDB, Apprise-based, etc.)
-- **`export_refresh_time` enforcement / startup validation** — Phase 1
 - **New exporters** — explicitly **not** in scope until v5.0.0 ships
 
 ## Testing an exporter
@@ -130,21 +132,21 @@ Test stack: `pytest` + `pytest-asyncio` (`asyncio_mode = "auto"`) +
 `unittest.mock` (architecture decision §9). Style: pytest-native top-level
 functions with fixtures and `assert` statements.
 
-Pattern: instantiate the exporter against a real `GlancesConfig` and a
-real `StatsStore` populated with one fake plugin (use
-`FakeScalarPlugin` / `FakeCollectionPlugin` from
-`tests/test_plugin_base.py` as inspiration). Mock the backend client
-(SQL connection, HTTP client, …) and assert the exporter calls
-`plugin.get_export()` — never the store directly.
+Pattern: build a config and real plugins with the helpers of
+`tests/export_fakes.py` (`make_config`, `plugins`, `FakeScalarPlugin` /
+`FakeCollectionPlugin`), install a stand-in client library with
+`fake_module(monkeypatch, ...)`, call `Export.update()`, and assert on
+what reached the fake client. No live backend is involved. The
+`tests/test_export_*.sh` scripts (`make test-exports`) run real backends
+under Docker.
 
-## Module path (target — Phase 1+)
+## Module path
 
 ```
-glances/exports/<name>/__init__.py    # concrete exporter
-glances/exports/export_base.py        # GlancesExportBase (Phase 1)
-tests/test_<name>_export.py           # exporter unit tests
+glances/exports/export_base.py               # GlancesExportBase
+glances/exports/glances_<name>/__init__.py   # package marker
+glances/exports/glances_<name>/export.py     # concrete exporter (class Export)
+glances/scheduler.py                         # _export_loop()
+tests/export_fakes.py                        # shared fakes
+tests/test_export_<name>.py                  # exporter unit tests (or tests/test_export_wave_*.py)
 ```
-
-The v4 modules under `glances/exports/` are **not modified**, **not
-imported**, **not subclassed** by v5. The two systems coexist through the
-migration. At the end of the transition the `` suffix is dropped.

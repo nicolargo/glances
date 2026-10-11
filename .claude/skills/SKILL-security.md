@@ -54,9 +54,13 @@ Pattern for a new optional protection:
 ```
 TrustedHostMiddleware    ← DNS rebinding (CVE-2026-32632)
     ↓
+RateLimitMiddleware      ← per-address limits (glances/ratelimit.py)
+    ↓
 CORSMiddleware           ← Cross-origin policy (CVE-2026-32610 / 34839)
     ↓
 AuthMiddleware           ← Basic / Bearer (CVE-2026-32596)
+    ↓
+GZipMiddleware           ← response compression
     ↓
 route handler / probe
 ```
@@ -67,7 +71,7 @@ route handler / probe
 
 ### Hash format & v4 migration
 
-v5 stored hashes are `salt$pbkdf2_hex` with PBKDF2-SHA256, 100 000 iterations, `dklen=128`. **Not byte-compatible** with v4 (which applies an extra `pbkdf2(plain, salt='')` pre-hash). Users migrating from v4 regenerate via the Phase 1.7 CLI; algorithmic strength is preserved.
+v5 stored hashes are `salt$pbkdf2_hex` with PBKDF2-SHA256, 100 000 iterations, `dklen=128`. **Not byte-compatible** with v4 (which applies an extra `pbkdf2(plain, salt='')` pre-hash). Users migrating from v4 regenerate it with `glances --set-password` (`make set-password`); algorithmic strength is preserved.
 
 ### JWT bearer flow
 
@@ -125,8 +129,8 @@ _Table below last synced 2026-08-01. Source of truth is architecture §8._
 ### Closed — fixed in v4, no v5 action required
 
 The following advisories were fixed in v4 before the v5 effort began. The
-fixes are present in the v4 codebase that `develop-v5` inherits via the
-weekly merge, and no additional v5-specific work is needed.
+v5 code covers them by construction, and no additional v5-specific work is
+needed.
 
 - GHSA-93gr-c454-3xw7 — Passwords exposed in plain text
 - GHSA-w4m6-4mpc-gq25 — BasicAuth Bypass
@@ -134,10 +138,11 @@ weekly merge, and no additional v5-specific work is needed.
 
 ## Secret redaction — `as_dict_secure()`
 
-Used by the unauthenticated REST API endpoints (`/api/5/config`,
-`/api/5/args`) — CVE-2026-32609. Already implemented in
-`glances/config.py` (Phase 0.2). See `SKILL-config.md` for the full
-list of redacted key fragments and the conditional access pattern.
+Used by the REST API — CVE-2026-32609. Implemented in
+`glances/config.py`. `/api/5/config` serves `as_dict_secure()` when
+`[outputs] password` is set and only `as_dict_public()` otherwise
+(security audit 2026-10-04, M1). See `SKILL-config.md` for the full list
+of redacted key fragments and the conditional access pattern.
 
 Redaction is **value-level as well as key-level** (CVE-2026-68520):
 `as_dict_secure()` scrubs credentials embedded in URL values
@@ -149,9 +154,8 @@ redacted (`user` / `login` matched exactly so the `user_careful` /
 The same redaction discipline applies **anywhere** the API may be
 consumed unauthenticated — not just `/api/5/config`. When adding a new
 endpoint, ask: "could this leak a credential to an anonymous caller?".
-**`/api/5/args`** (not yet implemented in v5) must route its payload
-through the same `GlancesConfig._secure_value()` before returning it to
-an unauthenticated caller.
+**`/api/5/args`** routes its payload through the same
+`GlancesConfig._secure_value()` (`_redact_args()` in `glances/routes.py`).
 
 ## CORS — `glances/webserver.py::_wire_cors`
 
@@ -177,7 +181,7 @@ When `cors_origins` is unset the CORS middleware is **not added** at all — bro
 
 Implemented via Starlette's `TrustedHostMiddleware`. Default behaviour matches v4: no allowlist → no filtering. When `bind_address` is **not** loopback (`127.0.0.1`, `::1`, `localhost`) and `webui_allowed_hosts` is empty, a startup WARNING is logged — this is the only signal that DNS-rebinding mitigation is off.
 
-The MCP endpoint already enforces equivalent protection via `mcp_allowed_hosts` + `TransportSecuritySettings` in `glances/outputs/glances_mcp.py` (v4 codebase, kept untouched in v5).
+The MCP endpoint already enforces equivalent protection via `mcp_allowed_hosts` + `TransportSecuritySettings` in `glances/outputs/glances_mcp.py`.
 
 ## Rate limiting (architecture §4.5)
 
@@ -236,42 +240,40 @@ conversation.
 > "All v4.x security fixes are reproduced in v5.0. v5 starts from the
 > hardened baseline." (architecture §8)
 
-Concretely: when a CVE is patched in `develop` (v4) post-Phase-0, it
-**must** also land in `develop-v5`. The weekly automated merge `develop
-→ develop-v5` (CI) is the primary channel; conflicts are resolved
-immediately, not accumulated. See `SKILL-ci-cd.md`.
+Since the cutover, v4 and v5 live on separate branches and nothing
+propagates automatically. A security fix for v4 targets
+`support/glancesv4`; when the same flaw exists in v5, a separate PR
+targets `develop` (and conversely). See `SKILL-ci-cd.md`.
 
-## End-of-v5 cybersecurity audit (release blocker)
+## v5 cybersecurity audit (release blocker)
 
-Before merging `develop-v5 → develop`, run a **full audit on the `develop-v5` branch**. Open items the audit must address (architecture §4.8):
+The full v5 audit (architecture §4.8) ran on 2026-10-04:
+`docs/architecture/glances-v5-security-audit.md` answers the §4.8 open
+items and re-checks every CVE of §8 against the v5 code. Its correction
+plan lists what remains before `5.0.0` (M5, M6, M9, M11 and the remaining
+low findings) — a release blocker for `5.0.0`.
 
-- Is `/api/5/config` returning redacted data sufficient to remain unauthenticated when the global API is unauthenticated, or should it require auth even when `as_dict_secure()` redacts the obvious secrets?
-- Confirm `UNAUTH_PATHS` (probes + `/api/5/token`) cannot be abused for enumeration or oracle attacks.
-- Re-check every CVE in §8 against the actual v5 code, not just against the v4 fix.
-- Confirm rate limiting is wired before any release candidate.
-- Confirm no v4 module that has reached EOL leaks through `from glances.<x> import ...` in any `` file.
-
-Output: downloadable `.md` audit report. Release blocker for `5.0.0`.
+No code may import a deleted v4 module: `tests/test_imports.py` checks
+every `glances` import statically.
 
 ## What's deferred
 
-- **`glances --set-password` CLI** — Phase 1.7 (regenerate hash for `[outputs] password`).
-- **`--disable-config-exec` for AMP commands** — the `ShellAction` gate shipped (GHSA-59fj-m2j6-hcxh, see the CVE table); the AMP side lands with the amps port, which has its own cycle.
-- **IP plugin SSRF mitigation** (CVE-2026-35587) — Phase 2 (`ip` plugin migration). New v5 mitigation, not present in v4.
-- **Curses escape sanitization in alerts** (GHSA-mcm7-fmh3-v6v3 — draft) — Phase 2 (alerts plugin / curses TUI)
-- **DDL parameterization** in SQL/CQL exporters (CVE-2026-32611, -30930, -35588) — Phase 3 (DuckDB, TimescaleDB, Cassandra)
-- **Browser autodiscovery hardening** (CVE-2026-32633, -32634) — Phase 3 (browser mode)
-- **NEWS.rst entry** documenting backtick config substitution removal (CVE-2026-33641 → resolved by architecture, breaking change for users who rely on `` `cmd` `` in `glances.conf`) — at v5.0.0 release
+- **Remaining audit findings** (M5, M6, M9, M11, low findings) — before `5.0.0`, see the audit's correction plan.
+- **v4 counterparts of the audit findings** — to port to `support/glancesv4` (list in the audit).
 
 ## Module path
 
 ```
-glances/config.py                  # as_dict_secure() (Phase 0 ✅)
-glances/security.py                # PBKDF2 + JWTHandler (Phase 1.5 ✅)
-glances/webserver.py               # build_app + middlewares (Phase 1.5 ✅)
-glances/actions/shell/             # shell escaping (Phase 1.4 ✅)
-glances/outputs/glances_mcp.py        # MCP host protection (v4 — untouched)
+glances/config.py                  # as_dict_secure() / as_dict_public()
+glances/security.py                # PBKDF2 + JWTHandler
+glances/webserver.py               # build_app + middlewares
+glances/ratelimit.py               # rate limiting middleware
+glances/routes.py                  # /api/5/config, /api/5/args redaction
+glances/actions/shell/             # shell escaping
+glances/outputs/glances_mcp.py     # MCP host protection
 tests/test_security.py             # PBKDF2 + JWT unit tests
 tests/test_webserver.py            # middleware + auth integration tests
+tests/test_imports.py              # no import of a deleted module
 docs/architecture/glances-v5-architecture-decisions.md  # §4 + §8 CVE table
+docs/architecture/glances-v5-security-audit.md          # v5 audit (2026-10-04)
 ```

@@ -1,26 +1,25 @@
-# Skill: Glances v5 — Web UI (Vue.js + Bootstrap 5)
+# Skill: Glances v5 — Web UI (Vue.js 3)
 
-> **Phase status — STUB.** The v5 WebUI work lands in **Phase 2** (after
-> the FastAPI server can serve `/api/5/all` and the Vue.js bundle).
-> This skill captures the locked-in stack and design principles so
-> contributors and Claude agree on the contract before the first v5
-> WebUI PR. Component-level guidance grows as Phase 2 progresses.
+The v5 WebUI is a Vue.js 3 rewrite against the `/api/5/` payloads. This
+skill captures the stack, the design principles and the contract with the
+REST API. Build commands and the pre-PR rules live in `webui.md`.
 
 ## Stack
 
 | Layer | Technology |
 |---|---|
-| Framework | **Vue.js 3** |
-| CSS | **Bootstrap 5** + **SCSS** |
-| Build | Existing v4 toolchain (`glances/outputs/static/`) — kept |
-| HTTP client | Native `fetch` against `/api/5/<plugin>` (Phase 2) |
+| Framework | **Vue.js 3** single-file components, compiled by `vue-loader` |
+| CSS | Plain CSS with design tokens (custom properties) in `css/glances.css` — no Bootstrap, no SCSS |
+| Build | webpack (`glances/outputs/static/webpack.config.js`), `make webui` |
+| HTTP client | Native `fetch`, only through `js/api.js` |
 | Hosted by | The same FastAPI instance as the REST API (architecture §4) |
 
-> "Vue.js 3, Bootstrap 5, SCSS — largely unchanged from v4." (architecture §10)
+Architecture §10 planned "Vue.js 3, Bootstrap 5, SCSS — largely unchanged
+from v4"; the WebUI was rewritten instead, and v5 ships no Bootstrap.
 
-The v4 Vue stack is **largely reused** — the v5 work is primarily about
-porting components to the `/api/5/` payload shape, not rewriting the
-front-end framework.
+Adding a plugin component is one new `js/Plugin<Name>.vue` file plus one
+entry in the registry `js/plugins/index.js` (its `slot` and order mirror
+the TUI's, `glances/outputs/curses_renderer.py`).
 
 ## Design principles (project CLAUDE.md)
 
@@ -35,16 +34,11 @@ front-end framework.
 
 ## Routing the WebUI from FastAPI
 
-The Vue.js bundle is mounted at the WebUI root, configurable in
-`glances.conf` (preserved from v4):
-
-```ini
-[outputs]
-webui_root_path = /              # default — change for sub-path deployments
-```
-
-Static files live under `glances/outputs/static/` (v4 path,
-**unchanged**). The FastAPI app serves them via `StaticFiles`.
+`_wire_webui()` in `glances/webserver.py` serves
+`glances/outputs/static/templates/index.html` at `/` (and `browser.html`
+at `/browser` with `--browser`), and mounts `glances/outputs/static/` at
+`/static` (`StaticFiles`). There is no `url_prefix` in v5. `--disable-webui`
+leaves only the REST API.
 
 ## Security implications
 
@@ -54,9 +48,9 @@ Static files live under `glances/outputs/static/` (v4 path,
   `allow_credentials = false`. WebUI calls go to its own origin, so CORS
   rarely matters, but third-party dashboards consuming `/api/5/*` are
   affected.
-- **Authentication** — when Bearer or Basic Auth is configured, the
-  WebUI passes credentials with every API call. The login flow is part
-  of Phase 2.
+- **Authentication** — `/` is not in `UNAUTH_PATHS`: when
+  `[outputs] password` is set, the WebUI is behind the same Basic / Bearer
+  auth as the API.
 
 ## Data shape (consumer side)
 
@@ -73,21 +67,16 @@ level decided by `GlancesAlerts` and styles the cell accordingly.
 
 `time_since_update` is exposed as an internal field
 (`exportable: False`) and is therefore filtered out of `get_export()`
-but **available via `get_stats()`** (which the WebUI consumes).
-
-## What's deferred
-
-- **Component-level migration** to `/api/5/` payload shapes — Phase 2,
-  one plugin at a time
-- **Login flow / auth UI** — Phase 2
-- **Browser mode multi-server view** — Phase 3
-- **Alert history view** (`/api/5/alert`) — Phase 2
+but **available via `get_api_payload()`** (which the REST API serves).
 
 ## Testing the WebUI
 
-The v4 WebUI test harness under `.github/workflows/webui.yml` continues
-to run. v5 component tests follow the same approach (no test stack
-change is planned for the front-end).
+- `make test-js` — JavaScript unit tests of the `js/*.js` modules
+  (`tests/js/*.mjs`, `node --test`).
+- `make test-webui` — `tests/test_webui_*.py`: rendering, drift tests that
+  keep the WebUI aligned with the TUI, and real-browser tests
+  (`tests/test_webui_browser*.py`, Playwright + Chromium).
+- CI (`.github/workflows/test.yml`, Linux job) runs both.
 
 UI-level changes must be **visually verified** in a real browser before
 being merged — type checking and unit tests verify code correctness, not
@@ -99,23 +88,22 @@ feature correctness. When testing manually, exercise both:
 ## Module path
 
 ```
-glances/outputs/static/                        # v4 Vue.js bundle (kept)
-glances/outputs/static/src/components/<name>/  # one folder per plugin component
-.github/workflows/webui.yml                    # WebUI build + test
+glances/outputs/static/js/app.js               # main page entry (AppShell.vue)
+glances/outputs/static/js/browser_app.js       # browser page entry (BrowserPage.vue)
+glances/outputs/static/js/Plugin<Name>.vue     # one component per plugin
+glances/outputs/static/js/plugins/index.js     # plugin registry
+glances/outputs/static/js/api.js               # the only module that calls the REST API
+glances/outputs/static/css/glances.css         # design tokens + styles
+glances/outputs/static/templates/index.html    # served at /
+glances/outputs/static/templates/browser.html  # served at /browser
+glances/outputs/static/public/glances.js       # built bundle (make webui) — never in a PR
+glances/outputs/static/public/browser.js       # built bundle (make webui) — never in a PR
+glances/webserver.py                           # _wire_webui()
+.github/workflows/webui.yml                    # WebUI build, bundle committed by CI
 ```
 
-Phase 2 will introduce a parallel `static/` only if the porting
-volume justifies it. Default plan: in-place migration, one component at
-a time, gated by feature flags during the transition.
+## Relationship with the `webui.md` skill
 
-The v4 `glances/outputs/glances_bottle.py` (legacy WebUI server) is
-**not modified**, **not imported**, **not subclassed** by v5. The v5
-WebUI is served exclusively by the new FastAPI app (see
-`SKILL-rest-api.md`).
-
-## Relationship with the existing `webui.md` skill
-
-The pre-existing `.claude/skills/webui.md` documents the **v4** WebUI
-contribution flow (build commands, npm scripts, pre-PR checks) and
-remains valid for v4 WebUI PRs targeting `develop`. The two skills
-coexist until the final `develop-v5 → develop` merge.
+`.claude/skills/webui.md` documents the WebUI contribution flow (build
+commands, npm scripts, pre-PR checks). This skill documents the design
+and the API contract; use both.

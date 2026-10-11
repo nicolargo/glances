@@ -13,14 +13,14 @@ make venv-dev            # Create virtualenv with all deps + dev tools + pre-com
 make test                # All tests (via pytest)
 make test-core           # Core unit tests (tests/test_core.py)
 make test-plugins        # Plugin tests (tests/test_plugin_*.py)
-make test-restful        # REST API tests
-make test-webui          # Selenium WebUI tests
+make test-restful        # REST API tests (tests/test_routes.py, tests/test_webserver.py)
+make test-webui          # WebUI tests (browser tests need Playwright + Chromium)
+make test-js             # WebUI JavaScript unit tests (node --test tests/js/*.mjs)
 make test-exports        # All export integration tests (shell scripts, need Docker)
-make test-v5             # Only v5 unit tests (Phase 1 stack)
 
 # Single test file or specific test:
 .venv-uv/bin/uv run pytest tests/test_core.py
-.venv-uv/bin/uv run pytest tests/test_core.py::TestGlances::test_000_update
+.venv-uv/bin/uv run pytest tests/test_core.py::TestGlances::test_016_subsample
 ```
 
 ## Linting & Formatting
@@ -34,28 +34,23 @@ make pre-commit          # All pre-commit hooks (ruff, gitleaks, shellcheck, etc
 ## WebUI
 
 ```bash
-make webui               # npm ci && npm run build (outputs to glances/outputs/static/public/)
+make webui               # npm ci && npm run build (outputs public/glances.js + public/browser.js in glances/outputs/static/)
 ```
 
 ## Running Glances
 
 ```bash
-.venv-uv/bin/uv run python -m glances                       # Standalone TUI (v4)
-.venv-uv/bin/uv run python -m glances -w                    # Web server (default port 61208)
-.venv-uv/bin/uv run python -m glances -C conf/glances.conf  # With specific config
-```
-
-### Running Glances v5 (Phase 1)
-
-```bash
-make run-v5              # Start the v5 FastAPI server on :61208 with conf/glances.conf
-make run-v5-debug        # Same, debug-level logging
-make set-password-v5     # Interactive PBKDF2 hash for [outputs] password — paste into glances.conf
+make run                 # Standalone TUI with conf/glances.conf
+make run-debug           # Same, debug-level logging
+make run-webserver       # Web server (REST API + WebUI) on :61208 with conf/glances.conf
+make run-webserver-mcp   # Same, with the MCP server
+make run-client          # TUI client of a local server (-c localhost)
+make set-password        # Interactive PBKDF2 hash for [outputs] password — paste into glances.conf
 
 # Equivalent direct invocations:
-.venv-uv/bin/uv run python -m glances.main -C conf/glances.conf
-.venv-uv/bin/uv run python -m glances.main --bind 0.0.0.0 --port 61299
-.venv-uv/bin/uv run python -m glances.main --set-password
+.venv-uv/bin/uv run python -m glances                       # Standalone TUI
+.venv-uv/bin/uv run python -m glances -w                    # Web server (default port 61208)
+.venv-uv/bin/uv run python -m glances -C conf/glances.conf  # With specific config
+.venv-uv/bin/uv run python -m glances -w --bind 0.0.0.0 --port 61299
+.venv-uv/bin/uv run python -m glances --set-password
 ```
-
-After the migration completes (Phase 4), the v5 server will become the default `glances` entry point.

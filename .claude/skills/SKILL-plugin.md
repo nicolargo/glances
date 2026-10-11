@@ -1,10 +1,9 @@
 # Skill: Glances v5 — Authoring a plugin (`GlancesPluginBase[T]`)
 
-Use the v5 plugin base class (`glances.plugins.plugin.base.GlancesPluginBase`)
-for any new plugin in `develop-v5`. It lives next to the v4 base class
-(`glances/plugins/plugin/model.py`), which is kept untouched during the
-transition. Concrete v4 plugins under `glances/plugins/` are migrated one
-by one.
+Use the plugin base class (`glances.plugins.plugin.base.GlancesPluginBase`)
+for any plugin. Each plugin lives in `glances/plugins/<name>/model.py` as a
+class named `PluginModel`, auto-discovered by `discover_plugins()` in
+`glances/main.py`.
 
 ## Two flavours
 
@@ -26,7 +25,7 @@ import psutil
 import asyncio
 
 
-class MemPlugin(GlancesPluginBase[dict]):
+class PluginModel(GlancesPluginBase[dict]):
     plugin_name = "mem"
     IS_COLLECTION = False
 
@@ -55,7 +54,7 @@ That's it. The base class handles everything else.
 ## Minimal collection plugin
 
 ```python
-class NetworkPlugin(GlancesPluginBase[list]):
+class PluginModel(GlancesPluginBase[list]):
     plugin_name = "network"
     IS_COLLECTION = True
 
@@ -342,8 +341,8 @@ keeps that contract while restoring v4's per-plugin layout freedom.
 - `glances/plugins/cpu/render_curses.py` — 3-column grid (mirrors v4
   `cpu.msg_curse()`).
 
-**Migration source:** for each plugin to migrate, the v4 `msg_curse()` in
-`glances/plugins/<name>/__init__.py` is the spec. The catalogue in
+**Layout reference:** the v4 `msg_curse()` of each plugin was the spec
+(v4 code: `support/glancesv4` branch). The catalogue in
 `docs/architecture/tui-v4-rendering-patterns.md` summarises every Phase 1
 plugin's v4 layout — read it before writing `render_curses.py`.
 
@@ -358,16 +357,17 @@ on the same data set. The reviewer arbitrates:
 
 If the visual diff is non-trivial and the reviewer wants automation, the
 PR author adds a text fixture under `tests/fixtures/tui_<plugin>.txt`
-and a `test_curses_<plugin>.py` assertion that the renderer output
-matches the fixture (line-by-line). This is opt-in per plugin.
+and a `tests/test_plugin_<plugin>_render_curses.py` assertion that the
+renderer output matches the fixture (line-by-line). This is opt-in per
+plugin.
 
 The catalogue of v4 patterns lives in
 `docs/architecture/tui-v4-rendering-patterns.md` — extend it whenever a
 new plugin is migrated.
 
-## Done-bar checklist (Phase 2)
+## Done-bar checklist
 
-Before requesting review on a plugin migration PR:
+Before requesting review on a plugin PR:
 
 - [ ] `glances/plugins/<name>/model.py` exists with a complete
       `fields_description` (description, unit, label, watched,
@@ -375,27 +375,23 @@ Before requesting review on a plugin migration PR:
       collections, exportable, rate where applicable).
 - [ ] `tests/test_plugin_<name>.py` covers `_grab_stats`, the four
       `_transform` steps, `_levels`, the field schema, and `get_export`.
-- [ ] `tests/test_plugin_<name>.py` (v4) still passes — no regression.
 - [ ] `GET /api/5/<name>` and `GET /api/5/<name>/info` return the expected
       shapes (verified in `tests/test_routes.py` or via curl in the
       PR description).
-- [ ] TUI wiring done in the same PR — screenshot v4 vs v5 attached.
-- [ ] Perf check (`tests/test_perf.py`) shows no regression > 20%.
-- [ ] `make lint && make format` clean.
+- [ ] TUI wiring done in the same PR (`render_curses.py` when the generic
+      table is not enough, tested in `tests/test_plugin_<name>_render_curses.py`)
+      — screenshot attached (v4 vs v5 when the plugin exists in v4).
+- [ ] `make pre-commit` clean.
 - [ ] `NEWS.rst` updated if a visible-API change (datamodel, thresholds,
       config keys) is introduced.
 
 ## Module path
 
 ```
-glances/plugins/plugin/base.py    # v5 base class (next to v4 model.py)
-glances/plugins/plugin/model.py      # v4 base class — untouched
-tests/test_plugin_base.py         # v5 base class unit tests
+glances/plugins/plugin/base.py             # GlancesPluginBase
+glances/plugins/plugin/thresholds.py       # threshold / level computation
+glances/plugins/<name>/model.py            # concrete plugin (class PluginModel)
+glances/plugins/<name>/render_curses.py    # optional per-plugin TUI layout
+tests/test_plugin_base.py                  # base class unit tests
+tests/test_plugin_<name>.py                # plugin unit tests
 ```
-
-Concrete plugin layout for Phase 1+ is decided when the first plugin lands
-(likely `glances/plugins/<name>/v5.py` or `glances/plugins/<name>.py`).
-
-The v4 modules in `glances/plugins/` are **not modified**, **not
-imported**, **not subclassed** by v5. The two base classes live side by
-side in `glances/plugins/plugin/` but share no code.

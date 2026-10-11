@@ -1,80 +1,65 @@
 # Skill: Glances v5 — CI/CD and branch model
 
 Use this skill when working on GitHub Actions, branch strategy, release
-tagging, or any infrastructure that affects how `develop-v5` is built,
-tested, and released.
+tagging, or any infrastructure that affects how `develop` (Glances v5) and
+`support/glancesv4` (Glances v4) are built, tested, and released.
 
 ## Branch model (architecture §10)
 
 ```
-main               ───────────────────────────────────────────────► stable releases (v4, then v5)
-support/glancesv4          (1) ┌──────────────────────────────────► v4 hotfixes (4.5.x)
-develop            ────────────┴──────┬──── 5.0.0b1 → rc → 5.0.0 ─► v4 fixes, then v5
-                     │ weekly merge   ▲ (2) merge
-develop-v5         ──▼────────────────┘                             v5 development, nothing published
+master             ──────────────────────────────────────────► tagged stable releases
+support/glancesv4  ──────────────────────────────────────────► v4 maintenance (4.5.x)
+develop            ──── v5.0.0b1 → rc → v5.0.0 ──────────────► v5 development
 ```
 
 | Branch | Purpose | PR target |
 |---|---|---|
-| `main` | Tagged stable releases only — never merge directly | — |
-| `develop` | v4 bugfixes and security fixes until the merge; v5 after it | v4 PRs, then v5 PRs |
-| `develop-v5` | v5 development, until the merge into `develop` | **v5 PRs** |
-| `support/glancesv4` | v4 hotfixes, branched from `develop` just before the merge | v4 PRs, after the merge |
+| `master` | Tagged stable releases only — never merge directly | — |
+| `develop` | Glances v5 development | **v5 PRs** |
+| `support/glancesv4` | Glances v4 maintenance: 4.5.x bugfixes and security fixes only | v4 PRs |
 
-**Sequence (maintainer, 2026-10-03):** 1) branch `develop` to
-`support/glancesv4`; 2) merge `develop-v5 → develop`. From then on a v4
-bugfix or security fix targets `support/glancesv4`, and the weekly merge
-job stops.
+**Cutover (maintainer, 2026-10-10):** the former `develop` (v4) was
+branched to `support/glancesv4`, then `develop-v5` was merged into
+`develop` and deleted. The weekly `develop → develop-v5` merge job was
+deleted with it.
 
 ## PR routing rule
 
 | Type of change | Target branch |
 |---|---|
-| v4 bugfix | `develop` |
-| v4 security fix | `develop` |
-| v5 work (any phase) | `develop-v5` |
-| v5 plugin / exporter / action | `develop-v5` |
-| Documentation change for v5 | `develop-v5` |
-| Documentation change for v4 | `develop` |
+| v5 work (feature, bugfix, plugin, exporter, action) | `develop` |
+| v5 security fix | `develop` |
+| Documentation change for v5 | `develop` |
+| v4 bugfix (4.5.x) | `support/glancesv4` |
+| v4 security fix | `support/glancesv4` |
+| Documentation change for v4 | `support/glancesv4` |
 
-A v4 fix that lands on `develop` is automatically propagated to
-`develop-v5` via the weekly merge job (see below). Contributors should
-**not** open the same PR against both branches.
-
-## Weekly automated merge (`develop → develop-v5`)
-
-Workflow: `.github/workflows/weekly_merge_develop_to.yml`
-
-- Cron: every Monday at 06:00 UTC
-- Clean merge → pushed directly to `develop-v5`
-- Conflict → opens a tracking issue and pushes a branch for manual
-  resolution
-
-**Resolution policy.** Conflicts are resolved **immediately**, never
-accumulated. Restructured files (e.g. v4 `glances/foo.py` vs. v5
-`glances/foo.py`) are the most common source. The maintainer reviews
-and resolves within 48 hours of the cron run.
+Nothing propagates automatically between the two branches. A fix that
+applies to both v4 and v5 is two PRs, one per branch, each written
+against that branch's code.
 
 ## Release tagging
 
 | Stage | Tag format | Source branch | PyPI |
 |---|---|---|---|
 | Alpha | — | — | **No** (maintainer, 2026-10-03) |
-| Beta | `5.0.0b1`, `5.0.0b2`, … | `develop` (after the merge) | Yes — the first published v5 |
-| Release candidate | `5.0.0rc1`, … | `develop` | Yes |
-| Final | `5.0.0` | `develop` | Yes |
-| v4 hotfix | `4.5.x` | `support/glancesv4` | Yes |
+| Beta | `v5.0.0b1`, `v5.0.0b2`, … | `develop` | Yes — PyPI pre-release, the first published v5 |
+| Release candidate | `v5.0.0rc1`, … | `develop` | Yes — PyPI pre-release |
+| Final | `v5.0.0` | `develop` | Yes |
+| v4 hotfix | `v4.5.x` | `support/glancesv4` | Yes |
 
-Nothing is published from `develop-v5`. The merge `develop-v5 → develop`
-happens once Phase 4's hardening is done: all plugins, exporters and
-migrated tests green, security audit passed.
+`build.yml` publishes to PyPI on any tag (a pre-release tag such as
+`v5.0.0b1` publishes a PyPI pre-release) and to TestPyPI on every push
+to `develop`. A pre-release tag (`a`, `b` or `rc` suffix) never moves the
+Docker `latest` / `latest-full` tags.
 
 ## GitHub Actions guards — known pitfalls
 
 ### `build_docker.yml` — empty matrix is a silent failure
 
-The workflow's trigger condition combines branch exclusion **and** event
-type. A dynamic matrix with zero entries fails silently without this
+The `build_docker` job of `ci.yml` combines branch exclusion **and** event
+type (and `build_docker.yml` skips its build job when the tag list is
+`[]`). A dynamic matrix with zero entries fails silently without this
 guard:
 
 ```yaml
@@ -98,14 +83,19 @@ green — which is **wrong**. Always combine exclusion conditions with
 
 ## Test execution
 
-Two complementary suites live in CI:
+One suite: `tests/test_*.py` (pytest, `pytest-asyncio` auto mode — see
+`pyproject.toml` `[tool.pytest.ini_options]`), plus the WebUI JavaScript
+tests `tests/js/*.mjs` (`make test-js`, run by `tests/test_webui_js.py`).
+`.github/workflows/test.yml` runs:
 
-- **v4 tests** — `tests/unitest_*.py` (legacy `unittest`-based). Run
-  unchanged on `develop` and `develop-v5` until they are migrated one by
-  one to `tests/test_*.py`.
-- **v5 tests** — `tests/test_*.py` (pytest-native, `pytest-asyncio`
-  auto mode). New tests for v5 components only. See `pyproject.toml`
-  `[tool.pytest.ini_options]`.
+- **Linux** — the whole suite (`python -m pytest tests/`) on every
+  supported Python, including the JavaScript tests and the WebUI browser
+  tests (`tests/test_webui_browser*.py`, Playwright + Chromium);
+- **Windows, macOS, FreeBSD** — the whole suite; the tests specific to Linux
+  (curses TUI, `/proc`) are skipped there.
+
+`tests/test_imports.py` fails when any code or test imports a `glances`
+module that does not exist (the deleted v4 modules included).
 
 A v5 release is not valid if any migrated v4 test fails or has been
 silently dropped (architecture §9).
@@ -113,20 +103,22 @@ silently dropped (architecture §9).
 ## Linting and formatting
 
 ```bash
+make pre-commit  # every pre-commit hook (ruff, gitleaks, shellcheck, …)
 make lint        # ruff check
 make format      # ruff format
 ```
 
-Both commands must be green before merge. The pre-commit hook is not
-configured — contributors run `make lint && make format` locally.
+`make pre-commit` must be green before merge (it supersedes
+`make lint && make format`; hooks in `.pre-commit-config.yaml`). CI runs
+`ruff check` in `test.yml` (`source-code-checks`).
 
 ## Container builds
 
 | Workflow | Trigger | Output |
 |---|---|---|
-| `build_docker.yml` | `develop` push or tag | Docker images on Docker Hub / GHCR |
-| `build.yml` | All pushes to v4/v5 dev branches | Wheels and source dist |
-| `webui.yml` | Changes under `glances/outputs/static/` | Vue.js bundle |
+| `build_docker.yml` | `develop` push (`dev` image) or tag | Docker images (Glances v5) on Docker Hub / GHCR; a pre-release tag never moves `latest` |
+| `build.yml` | Pushes to `develop` / `master` and tags | Wheels and source dist; PyPI on tags, TestPyPI on `develop` |
+| `webui.yml` | `develop` push | Vue.js bundle (`public/glances.js`, `public/browser.js`), committed by CI |
 
 Refer to `@.claude/docs/commands.md` for the canonical list of `make`
 targets and local development commands.
@@ -140,21 +132,24 @@ targets and local development commands.
 
 ## What's deferred
 
-- **Concrete CI workflow for the v5 beta PyPI release** — from `develop`, after the merge (no alpha is published)
-- **`glances` Docker image** — Phase 2 (when v5 has feature parity for standalone mode)
 - **Helm chart for v5** — Phase 3 (when v5 has feature parity for server mode)
+
+Done at the cutover: the v5 beta PyPI release (`build.yml`, any tag
+publishes; `v5.0.0b1` is a PyPI pre-release) and the Docker images, which
+now run Glances v5 (`python -m glances`).
 
 ## Module path
 
 This skill is documentation-only. Workflows live in:
 
 ```
-.github/workflows/build_docker.yml             # Docker — has the matrix guard above
-.github/workflows/build.yml                    # Wheels / sdist
-.github/workflows/ci.yml                       # Lint + tests
-.github/workflows/test.yml                     # Test matrix
-.github/workflows/quality.yml                  # Code quality
-.github/workflows/webui.yml                    # WebUI bundle
-.github/workflows/cyber.yml                    # Security scans
-.github/workflows/weekly_merge_develop_to.yml   # Weekly auto-merge develop → develop-v5
+.github/workflows/ci.yml                 # Entry point: PRs to develop, pushes to develop/master, v* tags
+.github/workflows/build_docker.yml       # Docker — empty-matrix guard above
+.github/workflows/build.yml              # Wheels / sdist, PyPI + TestPyPI
+.github/workflows/test.yml               # Test matrix (Linux, Windows, macOS, FreeBSD)
+.github/workflows/quality.yml            # Code quality
+.github/workflows/webui.yml              # WebUI bundle
+.github/workflows/cyber.yml              # Security scans
+.github/workflows/inactive_issues.yml    # Daily: label inactive issues
+.github/workflows/needs_contributor.yml  # Comment on the "needs contributor" label
 ```
