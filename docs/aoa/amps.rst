@@ -65,8 +65,9 @@ For example:
 
 Note: for multiple command, please use the '&&'' separator.
 
-For security reason, pipe is not directly allowed in a AMP command but you create a shell
-script with your command:
+Pipes and redirections can also be used (see the security considerations
+below), but they are not interpreted with the ``--disable-config-exec``
+option. In this case, create a shell script with your command:
 
 .. code-block:: ini
 
@@ -128,9 +129,8 @@ Glances configuration file can run arbitrary commands or write to arbitrary
 files** through an AMP section.
 
 For system services or any deployment where the configuration file is not
-fully trusted, start Glances with the ``--disable-config-exec`` option. In
-addition to disabling backtick command execution in configuration values,
-this option makes AMP commands run as a single process: ``&&``, ``|`` and
+fully trusted, start Glances with the ``--disable-config-exec`` option. This
+option makes AMP commands run as a single process: ``&&``, ``|`` and
 ``>`` are then treated as literal arguments and are no longer interpreted, so
 an AMP command can neither chain commands, pipe, nor write to an arbitrary
 file.
@@ -183,12 +183,15 @@ Embedded AMP
 
 Glances provides some specific AMP scripts (replacing the ``command``
 line). You can write your own AMP script to fill your needs. AMP scripts
-are located in the ``amps`` folder and should be named ``glances_*.py``.
-An AMP script define an Amp class (``GlancesAmp``) with a mandatory
+are Python packages located in the ``glances/amps`` folder (for example
+``glances/amps/nginx/__init__.py``). An AMP script define an ``Amp`` class
+(inheriting from ``GlancesAmp``) with a mandatory
 update method. The update method call the ``set_result`` method to set
 the AMP return string. The return string is a string with one or more
 line (\n between lines). To enable it, the configuration file section
-should be named ``[amp_*]``.
+should be named ``[amp_<package name>]`` (for example ``[amp_nginx]``).
+If no package matches the section name, the default AMP (``command`` key)
+is used.
 
 For example, if you want to enable the Nginx AMP, the following
 definition should do the job (Nginx AMP is provided by the Glances team

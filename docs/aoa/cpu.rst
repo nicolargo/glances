@@ -18,9 +18,6 @@ displayed.
 CPU stats description:
 
 - **total**: sum of all CPU percentages (except idle).
-- **total_min**: minimum total observed since Glances startup.
-- **total_max**: maximum total observed since Glances startup.
-- **total_mean**: mean (average) total computed from the history.
 - **user**: percent time spent in user space. User CPU time is the time
   spent on the processor running your program's code (or code in
   libraries).
@@ -46,9 +43,9 @@ CPU stats description:
   processing unit) follows to change from one task (or process) to
   another while ensuring that the tasks do not conflict.
 - **inter**: number of interrupts per second.
-- **sw_inter**: number of software interrupts per second. Always set to
+- **sw_int**: number of software interrupts per second. Always set to
   0 on Windows and SunOS.
-- **syscal**: number of system calls per second. Do not displayed on
+- **syscalls**: number of system calls per second. Do not displayed on
   Linux (always 0).
 - **dpc**: *(Windows)*: time spent servicing deferred procedure calls.
 
@@ -73,13 +70,14 @@ extra line with the mean of all others CPU will be added.
 Logical cores means the number of physical cores multiplied by the number
 of threads that can run on each core (this is known as Hyper Threading).
 
-By default, ``steal`` CPU time alerts aren't logged. If you want that,
-just add to the configuration file:
+By default, all the CPU alerts (including ``steal``) are logged in the
+events list. If you do not want a stat to be logged, just add to the
+configuration file:
 
 .. code-block:: ini
 
     [cpu]
-    steal_log=True
+    steal_log=False
 
 Legend:
 
@@ -91,6 +89,10 @@ CPU (user/system) Status
 ``>70%``          ``WARNING``
 ``>90%``          ``CRITICAL``
 ================= ============
+
+The ``steal`` stat has stricter default thresholds (5%, 15% and 30%) and
+the ``ctx_switches`` thresholds are defined per CPU core (default 25000,
+37500 and 50000 context switches per second and per core).
 
 .. note::
     Limit values can be overwritten in the configuration file under

@@ -46,7 +46,7 @@ under the ``[containers]`` section:
     containername_cpu_careful=10
     containername_cpu_warning=20
     containername_cpu_critical=30
-    containername_cpu_critical_action=/etc/glances/actions.d/container-alert.sh {{Image}} {{Id}} {{cpu}} {{name}}
+    containername_cpu_percent_critical_action=/etc/glances/actions.d/container-alert.sh {{image}} {{id}} {{cpu_percent}} {{name}}
     # By default, Glances only display running containers
     # Set the following key to True to display all containers
     all=False
@@ -66,7 +66,9 @@ under the ``[containers]`` section:
     ``cpu_careful/cpu_warning/cpu_critical``,
     ``mem_careful/mem_warning/mem_critical``, and the per-container overrides
     ``<name>_cpu_*`` / ``<name>_mem_*``. MEM thresholds are evaluated as a
-    percentage of each container's memory **limit**.
+    percentage of each container's memory **limit**. Action keys use the
+    stat names instead: ``<name>_cpu_percent_<level>_action`` and
+    ``<name>_memory_percent_<level>_action``.
     ``disable_stats`` accepts any of
     ``name,status,uptime,cpu,mem,diskio,networkio,ports,command``.
 
@@ -74,8 +76,9 @@ You can use all the variables ({{foo}}) available in the containers plugin.
 
 .. note::
 
-    Shell operators (``&&``, ``|``, ``>``, ``>>``) are **not allowed**
-    directly in action command lines. If your action requires pipes or
+    Shell operators (``&&``, ``|``, ``>``, ``>>``) can not be used inside a
+    Mustache value (and are not interpreted at all with the
+    ``--disable-config-exec`` option). If your action requires pipes or
     redirections, write a shell script and call it from the action.
     For example, create ``/etc/glances/actions.d/container-alert.sh``:
 

@@ -1,4 +1,4 @@
-.. _couchdb:
+.. _mongodb:
 
 MongoDB
 =======
@@ -13,6 +13,7 @@ following:
     host=localhost
     port=27017
     db=glances
+    # user and password are optional
     user=root
     password=example
 
@@ -36,7 +37,6 @@ Example of MongoDB Document for the load stats:
         min15: 1.07275390625,
         cpucore: 4,
         history_size: 1200,
-        load_disable: 'False',
         load_careful: 0.7,
         load_warning: 1,
         load_critical: 5

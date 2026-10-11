@@ -3,7 +3,9 @@
 MPP
 ===
 
-Note: this plugin is disable by default in glances.conf file.
+Note: this plugin is disable by default (set ``disable=False`` in the ``[mpp]``
+section of the glances.conf file or use the ``--enable-plugin mpp`` option to
+enable it). Use the ``8`` key to show/hide it in the terminal interface.
 
 The MPP (Media Process Platform) plugin monitors hardware video encoder/decoder engines on Rockchip supported platforms.
 

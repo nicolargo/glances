@@ -63,15 +63,21 @@ It is also possible to define thesholds for latency and bytes read and write per
     tx_latency_careful=10
     tx_latency_warning=20
     tx_latency_critical=50
-    # Set thresholds (in bytes per second) for a given disk name (rx = read / tx = write)
-    dm-0_rx_careful=4000000000
-    dm-0_rx_warning=5000000000
-    dm-0_rx_critical=6000000000
-    dm-0_rx_log=True
-    dm-0_tx_careful=700000000
-    dm-0_tx_warning=900000000
-    dm-0_tx_critical=1000000000
-    dm-0_tx_log=True
+    # Set thresholds (in bytes per second) for all disks
+    #read_bytes_careful=50000000
+    #write_bytes_careful=50000000
+    # Set thresholds (in bytes per second) for a given disk name
+    dm-0_read_bytes_careful=4000000000
+    dm-0_read_bytes_warning=5000000000
+    dm-0_read_bytes_critical=6000000000
+    dm-0_read_bytes_log=True
+    dm-0_write_bytes_careful=700000000
+    dm-0_write_bytes_warning=900000000
+    dm-0_write_bytes_critical=1000000000
+    dm-0_write_bytes_log=True
+
+There is no default threshold: disk I/O alerts are only raised when
+thresholds are defined in the configuration file.
 
 You also can automatically hide disk with no read or write using the
 ``hide_zero`` configuration key. The optional ``hide_threshold_bytes`` option

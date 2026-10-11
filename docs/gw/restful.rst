@@ -12,7 +12,7 @@ following:
 .. code-block:: ini
 
     [restful]
-    # Configuration for the --export-restful option
+    # Configuration for the --export restful option
     # Example, export to http://localhost:6789/
     host=localhost
     port=6789

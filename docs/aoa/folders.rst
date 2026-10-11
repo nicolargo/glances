@@ -72,8 +72,8 @@ In client/server mode, the list is defined on the ``server`` side.
 
     The v4 form is no longer read. Update any
     ``folder_<N>_<level>_action`` key to the new shape, otherwise the action
-    is silently ignored. The available levels are ``careful``, ``warning``
-    and ``critical``.
+    is silently ignored. The available levels are ``warning`` and
+    ``critical`` (a ``careful`` level never triggers an action).
 
     **The path must be written in lower case.** Configuration option names
     are lower-cased when the file is read, so a key containing an upper-case

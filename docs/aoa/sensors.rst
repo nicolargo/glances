@@ -10,6 +10,7 @@ Sensors
 Glances can display the sensors information using ``psutil``,
 ``hddtemp`` and ``batinfo``:
 - motherboard and CPU temperatures
+- fan speeds
 - hard disk temperature
 - battery capacity
 
@@ -18,6 +19,9 @@ file under the ``[sensors]`` section.
 
 Limit can be defined for a specific sensor, a type of sensor or defineby the system
 thresholds (default behavor).
+
+Sensors are slow to read, so the plugin is refreshed every 30 seconds by
+default (use the ``refresh`` key of the ``[sensors]`` section to change it).
 
 .. code-block:: ini
 
@@ -45,8 +49,9 @@ thresholds (default behavor).
     #temperature_core_Ambient_careful=40
     #temperature_core_Ambient_warning=60
     #temperature_core_Ambient_critical=85
-    #temperature_core_Ambient_log=True
-    #temperature_core_Ambient_critical_action=echo "{{time}} {{label}} temperature {{value}}{{unit}} higher than {{critical}}{{unit}}" > /tmp/temperature.alert
+    # Logs and actions for a specific sensor use the <label>_value_ prefix
+    #Ambient_value_log=True
+    #Ambient_value_critical_action=echo "{{_glances_timestamp}} {{label}} temperature {{value}}{{unit}}" > /tmp/temperature.alert
     # Display sensors in mean (fold same-prefix sensors into "<prefix> (mean)")
     #mean=true
     #temperature_core_mean=true
@@ -90,7 +95,7 @@ type in mean except the battery:
 .. note 2::
     If a sensors has temperature and fan speed with the same name unit,
     it is possible to alias it using:
-    alias=unitname_temperature_core_alias:Alias for temp,unitname_fan_speed_alias:Alias for fan speed
+    alias=unitname_temperature_core:Alias for temp,unitname_fan_speed:Alias for fan speed
 
 .. note 3::
     If a sensors has multiple identical features names (see #2280), then

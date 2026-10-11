@@ -21,17 +21,17 @@ Glances InfluxDB data model:
 |               | system                |                       |
 |               | iowait...             |                       |
 +---------------+-----------------------+-----------------------+
-| network       | read_bytes            | hostname              |
+| network       | bytes_recv            | hostname              |
+|               | bytes_sent            | interface_name        |
+|               | time_since_update...  |                       |
+|               |                       |                       |
++---------------+-----------------------+-----------------------+
+| diskio        | read_bytes            | hostname              |
 |               | write_bytes           | disk_name             |
 |               | time_since_update...  |                       |
 |               |                       |                       |
 +---------------+-----------------------+-----------------------+
-| diskio        | rx                    | hostname              |
-|               | tx                    | interface_name        |
-|               | time_since_update...  |                       |
-|               |                       |                       |
-+---------------+-----------------------+-----------------------+
-| docker        | cpu_percent           | hostname              |
+| containers    | cpu_percent           | hostname              |
 |               | memory_usage...       | name                  |
 +---------------+-----------------------+-----------------------+
 | gpu           | proc                  | hostname              |
@@ -58,12 +58,10 @@ following:
     # Ex: prefix=foo
     #     => foo.cpu
     #     => foo.mem
-    # You can also use dynamic values
     #prefix=foo
     # Following tags will be added for all measurements
-    # You can also use dynamic values.
     # Note: hostname is always added as a tag
-    #tags=foo:bar,spam:eggs,domain:`domainname`
+    #tags=foo:bar,spam:eggs
 
 and run Glances with:
 
@@ -99,18 +97,16 @@ following:
     bucket=glances
     token=PUT_YOUR_INFLUXDB2_TOKEN_HERE
     # Set the interval between two exports (in seconds)
-    # If the interval is set to 0, the Glances refresh time is used (default behavor)
+    # If the interval is set to 0, the export refresh time is used (default behavor)
     #interval=0
     # Prefix will be added for all measurement name
     # Ex: prefix=foo
     #     => foo.cpu
     #     => foo.mem
-    # You can also use dynamic values
     #prefix=foo
     # Following tags will be added for all measurements
-    # You can also use dynamic values.
     # Note: hostname and name (for process) are always added as a tag
-    #tags=foo:bar,spam:eggs,domain:`domainname`
+    #tags=foo:bar,spam:eggs
 
 and run Glances with:
 
@@ -138,19 +134,14 @@ following:
     org=nicolargo
     database=glances
     token=PUT_YOUR_INFLUXDB3_TOKEN_HERE
-    # Set the interval between two exports (in seconds)
-    # If the interval is set to 0, the Glances refresh time is used (default behavor)
-    #interval=0
     # Prefix will be added for all measurement name
     # Ex: prefix=foo
     #     => foo.cpu
     #     => foo.mem
-    # You can also use dynamic values
     #prefix=foo
     # Following tags will be added for all measurements
-    # You can also use dynamic values.
     # Note: hostname and name (for process) are always added as a tag
-    #tags=foo:bar,spam:eggs,domain:`domainname`
+    #tags=foo:bar,spam:eggs
 
 and run Glances with:
 

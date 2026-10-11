@@ -18,6 +18,8 @@ following:
     db=glances
     user=postgres
     password=password
+    # Optional: host name stored with the stats (default is the machine host name)
+    #hostname=myhost
 
 and run Glances with:
 

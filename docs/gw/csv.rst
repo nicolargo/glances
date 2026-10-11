@@ -14,9 +14,9 @@ CSV file description:
 - first line: Stats description (header)
 - others lines: Stats (data)
 
-Columns are fixed by the first sample. If a device disappears, its columns are
-left empty. Devices or fields first seen later are not added to the file; start
-a new export to include them. Existing columns stay aligned with their headers.
+Only the stats are exported (the thresholds defined in the configuration file
+are not). The same columns in another order (for example processes re-sorted by
+CPU) are realigned on the existing header.
 
 By default, data will be append any existing CSV file (if header are compliant).
 
@@ -34,7 +34,7 @@ The --export-csv-overwrite tag should be used if you want to delete the existing
 
 It is possible to remove some exported data using the --disable-plugin tag:
 
-  $ glances --export csv --export-csv-file /tmp/glances.csv --disable-plugin load,swap --quiet
+  $ glances --export csv --export-csv-file /tmp/glances.csv --disable-plugin load,memswap --quiet
 
 or by only enable some plugins:
 

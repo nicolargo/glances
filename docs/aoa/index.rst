@@ -15,7 +15,9 @@ Legend:
 =========== ============
 
 .. note::
-    Only stats with colored background will be shown in the alert view.
+    Only ``WARNING`` and ``CRITICAL`` levels are shown in the alert view
+    (see :ref:`events`). Stats with a colored background are the most
+    important ones for a given plugin.
 
 .. toctree::
    :maxdepth: 2
