@@ -4,18 +4,21 @@ Glances plugins
 
 This is the Glances plugins folder.
 
-A Glances plugin is a Python module hosted in a folder.
+A Glances plugin is a Python package hosted in a folder: the foo plugin
+lives in ``foo/``.
 
-It should implement a Class named <plugin name>Plugin inherited from GlancesPluginModel (example for foo plugin: FooPlugin).
+- ``foo/model.py`` implements a class named PluginModel inherited from
+  GlancesPluginBase (``plugin/base.py``). Its ``_grab_stats()`` coroutine
+  collects the stats; the scheduler stores them, computes the alert levels
+  and serves them to the TUI, the REST API, the WebUI and the exporters.
+- ``foo/render_curses.py`` (optional) implements the ``render()`` function
+  that turns the stats into TUI rows.
 
-This class should be based on the MVC model.
-- model: where the stats are updated (update method)
-- view: where the stats are prepare to be displayed (update_views)
-- controller: where the stats are displayed (msg_curse method)
+A plugin should define the following class variables:
 
-A plugin should define the following global variables:
+- plugin_name: the plugin name (foo)
+- fields_description: a dict with the field description/option
+- IS_COLLECTION: True when the stats are a list of items
 
-- fields_description: a dict twith the field description/option
-- items_history_list (optional): define items history
-
-Have a look of all Glances plugin's methods in the plugin folder (where the GlancesPluginModel is defined).
+Have a look of all Glances plugin's methods in the plugin folder (where the
+GlancesPluginBase is defined).

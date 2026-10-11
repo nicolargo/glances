@@ -4,23 +4,29 @@ Glances experts
 
 This is the Glances exporters folder.
 
-A Glances exporter is a Python module hosted in a folder.
+A Glances exporter is a Python package hosted in a folder: the foo exporter
+lives in ``glances_foo/`` and its code in ``glances_foo/export.py``.
 
-The name of the foo Glances exporter folder is foo (glances_foo).
-
-The exporter is a Python class named Export inherits the GlancesExport object:
+The exporter is a Python class named Export that inherits the
+GlancesExportBase class (``export_base.py``):
 
 .. code-block:: python
 
-    class Export(GlancesExport):
+    from glances.exports.export_base import GlancesExportBase
+
+
+    class Export(GlancesExportBase):
         """Glances foo exporter."""
 
-        def __init__(self, args=None, config=None):
-            super(Export, self).__init__(config=config, args=args)
-            pass
+        export_name = "foo"
 
-A plugin should implement the following methods:
+        def export(self, name, columns, points):
+            """Write one plugin's flattened stats to the backend."""
 
-- export(): export the self.stats variable to the exporter destination.
+An exporter should implement the following methods:
 
-Have a look of all Glances exporter's methods in the export.py file.
+- export(name, columns, points): write one plugin's stats to the exporter
+  destination.
+- exit() (optional): release the backend resources.
+
+Have a look of all Glances exporter's methods in the export_base.py file.
