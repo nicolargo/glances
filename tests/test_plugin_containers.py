@@ -291,6 +291,12 @@ def test_parse_urls_from_list(store_with, config_with):
     assert p._parse_urls("docker_urls") == ["unix:///d1.sock", "unix:///d2.sock"]
 
 
+@pytest.mark.parametrize("conf_value, expected", [("5", 5.0), ("10s", 2.0)])
+def test_poll_interval_from_config(store_with, config_with, conf_value, expected):
+    p = _mk(store_with, config_with, {"refresh": conf_value})
+    assert p._poll_interval() == expected
+
+
 def test_init_monitors_with_custom_urls(store_with, config_with):
     with (
         patch.object(model_mod, "DockerEngineMonitor") as mock_docker,

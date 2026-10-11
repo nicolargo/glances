@@ -136,11 +136,8 @@ def read_thresholds(
             # the bare key is the only option. Keep the same behaviour.
             keys = (level,)
         for key in keys:
-            value = config.get(section, key, _ABSENT)
-            if value is None:
-                continue
             try:
-                fvalue = float(value)
+                fvalue = float(config.get(section, key, _ABSENT))
             except (TypeError, ValueError):
                 continue
             if fvalue >= 0:

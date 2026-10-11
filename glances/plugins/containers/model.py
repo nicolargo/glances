@@ -167,9 +167,8 @@ class PluginModel(GlancesPluginBase[list]):
         return str(sock) if sock else _DEFAULT_PODMAN_SOCK
 
     def _poll_interval(self) -> float:
-        val = self.config.get(self.plugin_name, "refresh", -1.0)
         try:
-            val = float(val)
+            val = float(self.config.get(self.plugin_name, "refresh", -1.0))
         except (TypeError, ValueError):
             val = -1.0
         return val if val > 0 else 2.0

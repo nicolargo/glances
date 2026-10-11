@@ -639,9 +639,8 @@ class GlancesAlerts:
         candidates.append("min_duration_seconds")
 
         for cand in candidates:
-            raw = self.config.get(plugin_name, cand, -1.0)
             try:
-                fv = float(raw)
+                fv = float(self.config.get(plugin_name, cand, -1.0))
             except (TypeError, ValueError):
                 continue
             if fv >= 0:
