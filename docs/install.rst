@@ -12,17 +12,31 @@ To install, simply use ``pip``:
 
     pip install glances
 
+*Note*: while Glances v5 is in beta (``5.0.0b1``), ``pip`` only installs it
+with the ``--pre`` option (``pip install --pre glances``).
+
 *Note*: Python headers are required to install `psutil`_. For instance,
 on Debian/Ubuntu, you must first install the *python-dev* package.
 On Fedora/CentOS/RHEL, first, install the *python-devel* package. For Windows,
 psutil can be installed from the binary installation file.
 
-You can also install the following libraries to use the optional
-features (such as the web interface, export modules, etc.):
+Glances requires Python 3.10 or higher.
+
+The optional features are installed through extras. For example, the
+server mode (``-s``, REST API and Web UI) needs the ``web`` extra:
 
 .. code-block:: console
 
-    pip install glances[all]
+    pip install 'glances[web]'
+
+Available extras: ``action``, ``browser`` (Zeroconf auto-discovery),
+``cloud``, ``containers``, ``export``, ``gpu``, ``graph``, ``mcp``,
+``raid``, ``sensors``, ``smart``, ``web`` and ``wifi``. To install all of
+them:
+
+.. code-block:: console
+
+    pip install 'glances[all]'
 
 To upgrade Glances and all its dependencies to the latest versions:
 
@@ -30,7 +44,7 @@ To upgrade Glances and all its dependencies to the latest versions:
 
     pip install --upgrade glances
     pip install --upgrade psutil
-    pip install --upgrade glances[all]
+    pip install --upgrade 'glances[all]'
 
 For additional installation methods, read the official `README`_ file.
 
@@ -46,7 +60,7 @@ For example, on a Linux operating system with Bash shell:
     $ glances --print-completion bash | sudo tee -a /etc/bash_completion.d/glances
     $ source /etc/bash_completion.d/glances
 
-Following shells are supported: bash, zsh and tcsh.
+Following shells are supported: bash, zsh, tcsh, fish and powershell (not available on Windows).
 
 .. _psutil: https://github.com/giampaolo/psutil
 .. _README: https://github.com/nicolargo/glances/blob/master/README.rst

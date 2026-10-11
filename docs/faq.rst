@@ -19,23 +19,25 @@ Edit the /boot/firmware/cmdline.txt and add the following configuration key:
 
     cgroup_enable=memory
 
-Netifaces issue ?
------------------
-
-Previously, Glances uses Netifaces to get network interfaces information.
-
-Now, Glances uses Netifaces2.
-
-Please uninstall Netifaces and install Netifaces2 instead.
-
-Extra note: Glances 4.5 or higher do not use Netifaces/Netifaces2 anymore.
-
 On Debian/Ubuntu Operating Systems, Webserver display a blank screen ?
 ----------------------------------------------------------------------
 
-For some reason, the Glances Debian/Ubuntu packages do not include the Web UI static files.
+Some distribution packages do not include the Web UI static files. In this case, the Glances server
+logs a ``WebUI assets not found`` warning and only serves the REST API.
 
-Please read: https://github.com/nicolargo/glances/issues/2021 for workaround and more information.
+Please install Glances from PyPI (``pip install 'glances[web]'``) or use the Docker images, which
+include the Web UI.
+
+I can not reach the Web UI from another machine ?
+-------------------------------------------------
+
+Glances v5 listens on ``127.0.0.1`` by default. Start the server with ``-B 0.0.0.0`` (or set
+``bind_address=0.0.0.0`` in the ``[outputs]`` section of the configuration file) to listen on all the
+interfaces.
+
+A server bound to ``127.0.0.1`` also rejects requests whose ``Host`` header is not ``localhost``,
+``127.0.0.1`` or ``[::1]`` (DNS rebinding protection). Behind a local reverse proxy that forwards its own
+``Host``, list the accepted names in ``webui_allowed_hosts`` (``[outputs]`` section).
 
 Glances said that my computer has no free memory, is it normal ?
 ----------------------------------------------------------------

@@ -325,7 +325,7 @@ run-local-conf-hide-public: ## Start Glances in console mode with the system con
 	$(UV_RUN) run python -m glances --hide-public-info
 
 run-like-htop: ## Start Glances with the same features than Htop
-	$(UV_RUN) run python -m glances --disable-plugin network,ports,wifi,connections,diskio,fs,irq,folders,raid,smart,sensors,vms,containers,ip,amps
+	$(UV_RUN) run python -m glances --disable-plugin network,ports,wifi,connections,diskio,fs,irq,folders,raid,smart,sensors,vms,containers,ip,amps --disable-left-sidebar
 
 run-fetch: ## Start Glances in fetch mode
 	$(UV_RUN) run python -m glances --fetch
