@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import asyncio
 import gc
+import importlib.util
 import os
 import sys
 import threading
@@ -352,6 +353,7 @@ def rst():
         return render(gl), gl.plugins()
 
 
+@pytest.mark.skipif(importlib.util.find_spec("docutils") is None, reason="docutils is not installed (optional)")
 def test_the_generated_page_parses_without_a_docutils_warning(rst):
     import io
 

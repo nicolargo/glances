@@ -261,7 +261,7 @@ def test_extended_stats_survive_a_platform_without_an_optional_psutil_attribute(
     so pinning a process silently never worked there."""
     import os
 
-    monkeypatch.delattr(psutil.Process, missing)
+    monkeypatch.delattr(psutil.Process, missing, raising=False)  # already absent on some OSes
     engine = GlancesProcesses()
     engine.extended_process = {}
     result = engine.set_extended_stats({"pid": os.getpid()})

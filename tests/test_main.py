@@ -455,6 +455,7 @@ def test_disable_config_exec_flag_parses():
     assert build_parser().parse_args(["--disable-config-exec"]).disable_config_exec is True
 
 
+@pytest.mark.skipif(importlib.util.find_spec("chevron") is None, reason="chevron is not installed (optional)")
 def test_disable_config_exec_flag_hardens_the_shell_action(config):
     """CVE-2026-68519: the flag must reach the on-alert action commands.
 
@@ -487,6 +488,7 @@ def test_disable_config_exec_holds_under_issue_and_fetch(mode, flag, tmp_path):
     assert canary.exists() is not bool(flag)
 
 
+@pytest.mark.skipif(importlib.util.find_spec("chevron") is None, reason="chevron is not installed (optional)")
 def test_shell_action_allows_operators_without_the_flag(config):
     args = build_parser().parse_args(["-s"])
     _, scheduler, _, _, _tui = assemble(args, config)
@@ -627,6 +629,7 @@ def test_assemble_server_without_enable_mcp_does_not_mount(config):
     assert not _has_mcp_mount(app)
 
 
+@pytest.mark.skipif(importlib.util.find_spec("mcp") is None, reason="mcp is not installed (optional)")
 def test_assemble_propagates_enable_mcp_overlay(config):
     """``-s --enable-mcp``: the CLI flag flips ``[outputs] enable_mcp`` and
     ``attach_mcp`` mounts /mcp."""

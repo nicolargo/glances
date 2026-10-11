@@ -30,6 +30,8 @@ import argparse
 import asyncio
 import base64
 import contextlib
+import importlib
+import importlib.util
 import logging
 
 import pytest
@@ -385,7 +387,14 @@ def test_trusted_host_rejects_a_request_without_host(config_factory, store):
     [
         ("localhost:61208", 200),
         ("127.0.0.1:61208", 200),
-        ("[::1]:61208", 200),
+        pytest.param(
+            "[::1]:61208",
+            200,
+            marks=pytest.mark.skipif(
+                not hasattr(importlib.import_module("starlette._utils"), "parse_host_header"),
+                reason="this starlette cannot parse a bracketed IPv6 Host header (fixed in 1.7)",
+            ),
+        ),
         ("rebind.attacker.example:61208", 400),
         ("rebind.attacker.example", 400),
     ],
@@ -483,6 +492,7 @@ def test_attach_mcp_skips_when_gate_off(config_factory, store):
     assert not _has_mount(app, "/mcp")
 
 
+@pytest.mark.skipif(importlib.util.find_spec("mcp") is None, reason="mcp is not installed (optional)")
 def test_attach_mcp_mounts_when_gate_on(config_factory, store):
     """[outputs] enable_mcp=true → /mcp is mounted."""
     from glances.webserver import attach_mcp
@@ -523,6 +533,7 @@ def test_mcp_path_that_would_shadow_a_route_falls_back(raw, config_factory, capl
     assert "mcp_path" in caplog.text
 
 
+@pytest.mark.skipif(importlib.util.find_spec("mcp") is None, reason="mcp is not installed (optional)")
 def test_attach_mcp_mounts_at_the_configured_path(config_factory, store):
     from glances.webserver import attach_mcp
 
@@ -545,6 +556,7 @@ def test_a_custom_mcp_path_stays_behind_auth(config_factory, store):
         assert client.get("/glances/mcp/sse").status_code == 401
 
 
+@pytest.mark.skipif(importlib.util.find_spec("mcp") is None, reason="mcp is not installed (optional)")
 def test_a_custom_mcp_path_keeps_the_dns_rebinding_guard(config_factory, store):
     """MCP's own TransportSecuritySettings do not depend on the mount path.
 
@@ -629,6 +641,7 @@ def test_cors_preflight_is_answered_before_auth(path, config_factory, store):
     assert r.headers.get("access-control-allow-origin") == "https://trusted.example"
 
 
+@pytest.mark.skipif(importlib.util.find_spec("mcp") is None, reason="mcp is not installed (optional)")
 def test_attach_mcp_records_server_in_app_state(config_factory, store):
     """Successful attach exposes the MCP server via app.state for diagnostics."""
     from glances.webserver import attach_mcp

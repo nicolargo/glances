@@ -11,6 +11,7 @@
 
 from __future__ import annotations
 
+import importlib.util
 import time
 from types import SimpleNamespace
 from unittest.mock import MagicMock, call, patch
@@ -417,6 +418,7 @@ def _lxd_instance(status, last_used_at="2026-10-06T08:00:00Z"):
     return i
 
 
+@pytest.mark.skipif(importlib.util.find_spec("dateutil") is None, reason="dateutil is not installed (optional)")
 def test_docker_started_at_is_the_start_timestamp():
     stats = _docker_monitor().generate_stats(_docker_container("running"))
     assert stats["started_at"] == _STARTED_AT
@@ -460,6 +462,7 @@ def test_lxd_started_at_is_none_without_a_start(status, last_used_at):
     assert stats["started_at"] is None
 
 
+@pytest.mark.skipif(importlib.util.find_spec("dateutil") is None, reason="dateutil is not installed (optional)")
 @pytest.mark.asyncio
 async def test_grab_publishes_started_at_and_no_uptime(store_with, config_with):
     m = _docker_monitor()

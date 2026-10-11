@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 
+import importlib.util
 import io
 import json
 import os
@@ -61,6 +62,7 @@ def page(config, monkeypatch):
     return out.getvalue()
 
 
+@pytest.mark.skipif(importlib.util.find_spec("docutils") is None, reason="docutils is not installed (optional)")
 def test_the_page_parses_without_a_docutils_warning(page):
     import docutils.core
 

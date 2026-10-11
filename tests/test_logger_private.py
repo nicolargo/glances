@@ -51,8 +51,12 @@ def test_xdg_cache_home_comes_first(tmp_path, monkeypatch):
 
 
 @posix_only
-def test_no_shared_temporary_folder_when_no_private_one_can_be_made(monkeypatch):
-    monkeypatch.setenv("HOME", "/proc/no-such-home")
+def test_no_shared_temporary_folder_when_no_private_one_can_be_made(tmp_path, monkeypatch):
+    # A folder cannot be created below a file, even by root (root can create
+    # `/proc/...` where procfs is not mounted, e.g. on FreeBSD).
+    not_a_folder = tmp_path / "a-file"
+    not_a_folder.write_text("")
+    monkeypatch.setenv("HOME", str(not_a_folder))
     monkeypatch.delenv("XDG_CACHE_HOME", raising=False)
     assert logger_module._log_folder() is None
 
@@ -78,8 +82,10 @@ def test_a_log_left_readable_by_an_older_glances_is_tightened(tmp_path):
 
 
 @posix_only
-def test_the_file_handler_is_a_no_op_without_a_log_folder(monkeypatch):
-    monkeypatch.setenv("HOME", "/proc/no-such-home")
+def test_the_file_handler_is_a_no_op_without_a_log_folder(tmp_path, monkeypatch):
+    not_a_folder = tmp_path / "a-file"
+    not_a_folder.write_text("")
+    monkeypatch.setenv("HOME", str(not_a_folder))
     monkeypatch.delenv("XDG_CACHE_HOME", raising=False)
     try:
         reloaded = importlib.reload(logger_module)

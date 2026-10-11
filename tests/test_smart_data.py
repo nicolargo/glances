@@ -19,7 +19,7 @@ def test_missing_smartctl_returns_no_device(monkeypatch):
     def no_smartctl():
         raise FileNotFoundError("Command smartctl doesn't exist!")
 
-    monkeypatch.setattr(smart_data, 'DeviceList', no_smartctl)
+    monkeypatch.setattr(smart_data, 'DeviceList', no_smartctl, raising=False)  # absent without pySMART
     monkeypatch.setattr(smart_data, 'import_error_tag', False)
     assert smart_data.get_smart_data([]) == []
     assert smart_data.import_error_tag is True

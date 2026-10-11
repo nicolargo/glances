@@ -21,6 +21,7 @@ Coverage:
 
 from __future__ import annotations
 
+import importlib.util
 import logging
 import textwrap
 from pathlib import Path
@@ -229,6 +230,7 @@ def test_discover_ignores_reexported_classes(fake_package):
     assert list(registry.keys()) == ["webhook"]
 
 
+@pytest.mark.skipif(importlib.util.find_spec("chevron") is None, reason="chevron is not installed (optional)")
 def test_discover_real_package_contains_shell_action():
     """Phase 1.4 ships the shell action — it must be discoverable in the real package."""
     registry = discover_actions("glances.actions")
