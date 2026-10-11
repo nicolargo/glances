@@ -2,9 +2,9 @@ name: ci
 
 on:
     pull_request:
-      branches: [ develop ]
+      branches: [ support/glancesv4 ]
     push:
-      branches: [ master, develop ]
+      branches: [ support/glancesv4 ]
       tags:
         - v*
 
@@ -41,7 +41,7 @@ jobs:
       uses: ./.github/workflows/build.yml
       needs: [quality, test]
     build_docker:
-      if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/'))
+      if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/support/glancesv4' || startsWith(github.ref, 'refs/tags/'))
       permissions:
         contents: read
       uses: ./.github/workflows/build_docker.yml
@@ -50,7 +50,7 @@ jobs:
         DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
       needs: [quality, test]
     cyber:
-      if: github.ref == 'refs/heads/develop'
+      if: github.ref == 'refs/heads/support/glancesv4'
       permissions:
         contents: read
         security-events: write
