@@ -18,7 +18,9 @@ sleep 5
 # Create the token
 echo "Creating InfluxDB token..."
 TOKEN_RETURN=$(docker exec influxdb-v3-for-glances influxdb3 create token --admin)
-TOKEN=$(echo -n "$TOKEN_RETURN" | awk '{ print $6 }')
+# The token is the first apiv3_ word: the output's layout (and its ANSI
+# colours) changes between influxdb:3-core releases.
+TOKEN=$(echo -n "$TOKEN_RETURN" | grep -o 'apiv3_[A-Za-z0-9_-]*' | head -n 1)
 echo "Token: $TOKEN"
 
 # Create a new configuration for the test
@@ -37,7 +39,7 @@ TABLES_INIT_COUNT=$(echo "$TABLES_INIT" | jq length)
 # Run glances with export to InfluxDB, stopping after 10 writes
 # This will run synchronously now since we're using --stop-after
 echo "Glances to export system stats to InfluxDB (duration: ~ 20 seconds)"
-.venv/bin/python -m glances --config /tmp/glances.conf --export influxdb3 --stop-after 10 --quiet
+.venv/bin/python -m glances.main --config /tmp/glances.conf --export influxdb3 --stop-after 10 --quiet
 
 echo "Checking if Glances data was successfully exported to InfluxDB..."
 # Query to check if data exists in the glances database
@@ -55,10 +57,12 @@ fi
 # Query to check if data exists in the glances database
 SERIE=$(docker exec -e "INFLUXDB3_AUTH_TOKEN=$TOKEN" influxdb-v3-for-glances influxdb3 query --database glances --format json 'SELECT * FROM cpu')
 SERIE_COUNT=$(echo "$SERIE" | jq length)
-if [ "$SERIE_COUNT" -eq 9 ]; then
+# 10 cycles give 10 points: v5 exports the first cycle too, without the
+# fields that have no value yet (rates), where v4 skipped it.
+if [ "$SERIE_COUNT" -eq 10 ]; then
     echo "Success! Found $SERIE_COUNT series in the Glances database (CPU plugin)."
 else
-    echo "Error: Found $SERIE_COUNT series instead of 9"
+    echo "Error: Found $SERIE_COUNT series instead of 10"
     docker stop influxdb-v3-for-glances
     docker rm influxdb-v3-for-glances
     exit 1

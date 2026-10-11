@@ -33,7 +33,6 @@ hash -r
 You must run the following command from the `glances/outputs/static/` directory.
 
 ```bash
-.venv/bin/python ./generate_webui_conf.py > ./glances/outputs/static/js/uiconfig.json
 cd glances/outputs/static/
 ```
 

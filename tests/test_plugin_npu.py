@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #
 # Glances - An eye on your system
 #
@@ -7,109 +6,229 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
-"""Tests for the NPU plugin views."""
+"""Glances v5 — unit tests for the `npu` plugin (collection)."""
 
-import os
+from __future__ import annotations
+
+from pathlib import Path
 
 import pytest
 
-from glances.config import Config
-from glances.plugins.npu import NpuPlugin
+from glances.config import GlancesConfig
+from glances.plugins.npu.cards.amd import AmdNPU
+from glances.plugins.npu.cards.intel import IntelNPU
+from glances.plugins.npu.cards.rockchip import RockchipNPU
+from glances.plugins.npu.model import PluginModel
+from glances.stats_store import StatsStore
 
 
 @pytest.fixture
-def plugin_for(tmp_path):
-    """Build an NPU plugin from a `[npu]` config body, with one card's stats set."""
-
-    def build(config_body, stats):
-        config_file = tmp_path / f'glances-npu-{abs(hash(tuple(config_body)))}.conf'
-        config_file.write_text('\n'.join(['[npu]', *config_body]), encoding='utf-8')
-        plugin = NpuPlugin(args=None, config=Config(config_dir=os.fspath(config_file)))
-        plugin.stats = [{'key': 'npu_id', 'npu_id': 'npu0', **stats}]
-        plugin.update_views()
-        return plugin
-
-    return build
+def store() -> StatsStore:
+    return StatsStore()
 
 
-DEFAULT_LIMITS = [
-    'load_careful=50',
-    'load_warning=70',
-    'load_critical=90',
-    'freq_careful=50',
-    'freq_warning=70',
-    'freq_critical=90',
-    'temperature_careful=60',
-    'temperature_warning=70',
-    'temperature_critical=80',
-]
+@pytest.fixture
+def config(tmp_path, monkeypatch) -> GlancesConfig:
+    monkeypatch.setattr(GlancesConfig, "SYSTEM_CONFIG_PATH", tmp_path / "etc" / "glances.conf")
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "xdg"))
+    return GlancesConfig()
 
 
-class TestNpuTemperatureAlert:
-    """`msg_curse` and the WebUI both read a temperature decoration that was never set.
+class _FakeCard:
+    def __init__(self, stats, available=True):
+        self._stats = stats
+        self._available = available
+        self.disabled = False
 
-    `update_views` replaced the base class's per-field views with a dict naming only
-    load, freq and mem, so `views[npu_id]['temperature']` did not exist. The curses
-    line fell back to 'DEFAULT' and the WebUI's `getDecoration` returned undefined,
-    which is why a hot Intel NPU -- the one driver that reports the reading -- was
-    printed in the plain style at any temperature.
-    """
+    def is_available(self):
+        return self._available
 
-    def test_a_hot_npu_is_alerted(self, plugin_for):
-        plugin = plugin_for(DEFAULT_LIMITS, {'load': 10, 'freq': 10, 'mem': 10, 'temperature': 85})
+    def get_device_stats(self):
+        return self._stats
 
-        assert plugin.views['npu0']['temperature']['decoration'] == 'CRITICAL'
+    def disable(self):
+        self.disabled = True
+        self._available = False
 
-    @pytest.mark.parametrize(
-        ('celsius', 'expected'),
-        [(20, 'OK'), (59, 'OK'), (60, 'CAREFUL'), (70, 'WARNING'), (80, 'CRITICAL')],
+    def exit(self):
+        pass
+
+
+class _BoomCard(_FakeCard):
+    def get_device_stats(self):
+        raise OSError("boom")
+
+
+def _npu(npu_id="intel_1", name="NPU", load=45, freq=50):
+    return {"npu_id": npu_id, "name": name, "load": load, "freq": freq, "mem": None}
+
+
+def test_plugin_identity(store, config):
+    p = PluginModel(store, config)
+    assert p.plugin_name == "npu"
+    assert p.IS_COLLECTION is True
+    assert p._primary_key == "npu_id"
+
+
+def test_fields_watched():
+    fd = PluginModel.fields_description
+    for key in ("load", "freq", "mem"):
+        assert fd[key]["watched"] is True
+    assert fd["npu_id"].get("primary_key") is True
+    for key in ("freq_current", "freq_max", "power", "name"):
+        assert fd[key].get("internal") is True
+
+
+def test_npu_temperature_thresholds_mirror_v4():
+    # v4 20555568: the temperature both interfaces already ask for must be
+    # watched, with the same 60/70/80 ladder as [gpu].
+    fd = PluginModel.fields_description["temperature"]
+    assert fd["watched"] is True
+    assert fd.get("internal") is not True
+    assert fd["default_thresholds"] == {"careful": 60.0, "warning": 70.0, "critical": 80.0}
+
+
+def test_temperature_level_warning_at_75(store, config):
+    p = PluginModel(store, config)
+    p._stats = [{"npu_id": "intel_1", "temperature": 75}]
+    p._derived_parameters()
+    assert p._levels["intel_1"]["temperature"]["level"] == "warning"
+
+
+def test_temperature_level_ok_at_50(store, config):
+    p = PluginModel(store, config)
+    p._stats = [{"npu_id": "intel_1", "temperature": 50}]
+    p._derived_parameters()
+    assert p._levels["intel_1"]["temperature"]["level"] == "ok"
+
+
+def test_temperature_critical_config_override_wins_over_default(store_with, config_with):
+    config = config_with({"npu": {"temperature_critical": "50"}})
+    p = PluginModel(store_with(), config)
+    p._stats = [{"npu_id": "intel_1", "temperature": 55}]
+    p._derived_parameters()
+    assert p._levels["intel_1"]["temperature"]["level"] == "critical"
+
+
+def test_temperature_none_gets_no_temperature_level(store, config):
+    # AMD/Rockchip cards report no temperature: no decoration for that field.
+    p = PluginModel(store, config)
+    p._stats = [{"npu_id": "amd_1", "load": 20, "temperature": None}]
+    p._derived_parameters()
+    assert "temperature" not in p._levels.get("amd_1", {})
+
+
+def test_load_freq_and_temperature_levels_in_one_pass(store, config):
+    p = PluginModel(store, config)
+    p._stats = [{"npu_id": "intel_1", "load": 95, "freq": 10, "temperature": 20}]
+    p._derived_parameters()
+    lv = p._levels["intel_1"]
+    assert lv["load"]["level"] == "critical"
+    assert lv["freq"]["level"] == "ok"
+    assert lv["temperature"]["level"] == "ok"
+
+
+@pytest.mark.asyncio
+async def test_grab_stats_collects_available_cards(store, config, monkeypatch):
+    p = PluginModel(store, config)
+    p._backends = [_FakeCard(_npu("intel_1")), _FakeCard(_npu("amd_1"), available=False)]
+    out = await p._grab_stats()
+    assert [c["npu_id"] for c in out] == ["intel_1"]
+
+
+@pytest.mark.asyncio
+async def test_grab_stats_disables_card_on_error(store, config, monkeypatch):
+    p = PluginModel(store, config)
+    boom = _BoomCard(_npu("rockship_1"))
+    p._backends = [boom]
+    out = await p._grab_stats()
+    assert out == []
+    assert boom.disabled is True
+
+
+def test_stop_calls_every_card_exit_even_if_one_raises(store, config):
+    """v4 `exit()` closes each card on shutdown; one failing must not leave
+    the others open."""
+    calls = []
+
+    class _Spy(_FakeCard):
+        def __init__(self, error=None):
+            super().__init__(None)
+            self._error = error
+
+        def exit(self):
+            calls.append(self)
+            if self._error:
+                raise self._error
+
+    p = PluginModel(store, config)
+    p._backends = [_Spy(OSError("boom")), _Spy()]
+    p.stop()
+    assert calls == p._backends
+
+
+def test_npu_disabled_by_default(config):
+    # Mirror v4 [npu] disable=True — no user config present here. The gate
+    # is generic: `main.discover_plugins()` does not even instantiate a
+    # plugin whose `is_disabled()` is True.
+    assert PluginModel.DISABLED_BY_DEFAULT is True
+    assert PluginModel.is_disabled(config) is True
+
+
+# ---------------------------------------------------------- shared card drivers on tests-data
+_NPU_DATA = Path(__file__).resolve().parent.parent / "tests-data" / "plugins" / "npu"
+
+
+def _npu_expected(**kw):
+    base = dict.fromkeys(
+        ("load", "freq", "freq_current", "freq_max", "mem", "memory_used", "memory_total", "temperature", "power")
     )
-    def test_each_threshold_boundary(self, plugin_for, celsius, expected):
-        plugin = plugin_for(DEFAULT_LIMITS, {'temperature': celsius})
-
-        assert plugin.views['npu0']['temperature']['decoration'] == expected
-
-    def test_the_curses_line_reads_the_decoration_that_is_written(self, plugin_for):
-        """The wiring: `msg_curse` asks for it by (item, key), not off a bare view."""
-        plugin = plugin_for(DEFAULT_LIMITS, {'temperature': 85})
-
-        assert plugin.get_views(item='npu0', key='temperature', option='decoration') == 'CRITICAL'
-
-    def test_a_card_that_reports_no_temperature_keeps_a_view_without_a_decoration(self, plugin_for):
-        """The AMD and Rockchip drivers leave it None; that must not become an alert."""
-        plugin = plugin_for(DEFAULT_LIMITS, {'load': 10, 'temperature': None})
-
-        assert plugin.views['npu0']['temperature'] == {}
-        assert plugin.get_views(item='npu0', key='temperature', option='decoration') == 'DEFAULT'
-
-    def test_the_other_fields_still_carry_their_own_alerts(self, plugin_for):
-        """Adding a key to the view dict must not disturb the three already there."""
-        plugin = plugin_for(DEFAULT_LIMITS, {'load': 95, 'freq': 10, 'temperature': 20})
-
-        assert plugin.views['npu0']['load']['decoration'] == 'CRITICAL'
-        assert plugin.views['npu0']['freq']['decoration'] == 'OK'
-        assert plugin.views['npu0']['temperature']['decoration'] == 'OK'
+    return {**base, **kw}
 
 
-class TestShippedNpuLimits:
-    """The code half is inert without thresholds: `get_alert` returns DEFAULT when a
-    stat has none configured, so the shipped config has to carry them for the alert to
-    be visible out of the box -- exactly as `[gpu]` already does."""
-
-    @staticmethod
-    def _limits(section):
-        config = Config(config_dir='./conf/glances.conf')
-        return dict(config.as_dict()[section])
-
-    @pytest.mark.parametrize('criticality', ['careful', 'warning', 'critical'])
-    def test_the_npu_section_defines_a_temperature_threshold(self, criticality):
-        assert f'temperature_{criticality}' in self._limits('npu')
-
-    def test_the_npu_thresholds_match_the_gpu_ones(self):
-        """Both read a die temperature in Celsius; two different ladders would be a
-        difference with no reason behind it."""
-        npu, gpu = self._limits('npu'), self._limits('gpu')
-
-        for criticality in ('careful', 'warning', 'critical'):
-            key = f'temperature_{criticality}'
-            assert npu[key] == gpu[key]
+@pytest.mark.parametrize(
+    ("vendor", "card_cls", "expected"),
+    [
+        (
+            "amd",
+            AmdNPU,
+            _npu_expected(
+                npu_id="amd_1", name="AMD NPU (Strix Point)", freq=53, freq_current=800000000, freq_max=1500000000
+            ),
+        ),
+        (
+            "intel",
+            IntelNPU,
+            _npu_expected(
+                npu_id="intel_1",
+                name="Intel NPU (Meteor Lake)",
+                freq=57,
+                freq_current=800000000,
+                freq_max=1400000000,
+                temperature=45.0,
+                power=2.5,
+            ),
+        ),
+        (
+            "rockchip",
+            RockchipNPU,
+            _npu_expected(
+                npu_id="rockship_1",
+                name="Orange Pi 5 Plus",
+                load=25,
+                freq=60,
+                freq_current=600000000,
+                freq_max=1000000000,
+            ),
+        ),
+    ],
+)
+@pytest.mark.asyncio
+async def test_card_drivers_parse_tests_data(store, config, vendor, card_cls, expected):
+    # Same expectations as v4 tests/test_core.py::test_025_npu, read through
+    # the v5 collection path.
+    card = card_cls(npu_root_folder=str(_NPU_DATA / vendor))
+    p = PluginModel(store, config)
+    p._backends = [card]
+    out = await p._grab_stats()
+    assert out[0] == expected

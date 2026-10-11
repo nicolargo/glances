@@ -1,263 +1,263 @@
 #
-# This file is part of Glances.
+# Glances - An eye on your system
 #
-# SPDX-FileCopyrightText: 2024 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2026 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
-"""Manage the servers list used in TUI and WEBUI Central Browser mode"""
+"""Glances v5 — the browser's server list and its poller.
 
+Design: ``docs/superpowers/specs/2026-09-27-glances-v5-phase3-design.md`` §4.5
+(chantier P3-4). v4: ``servers_list.py``, ``servers_list_static.py``.
+
+- **Sources**: ``[serverlist]`` (static). Zeroconf comes with P3-5.
+- **Polling**: one thread, the servers one after the other (one connection
+  at a time, Phase 3 decision 2), each with ``GET /status`` then one
+  ``GET /api/5/<plugin>`` per plugin named in ``[serverlist] columns``.
+- **Credentials never sit in a ``ServerEntry``** (CVE-2026-32633): v4 put the
+  password hash in each server's ``uri``, which ``/api/4/serverslist``
+  served. Here the passwords live in the poller's connections only, and an
+  entry has no field that could carry one.
+"""
+
+from __future__ import annotations
+
+import logging
 import threading
-
-from defusedxml import xmlrpc
+from dataclasses import dataclass, field
+from typing import Any
 
 from glances import __apiversion__
-from glances.client import GlancesClientTransport
-from glances.globals import json_loads
-from glances.logger import logger
-from glances.password_list import GlancesPasswordList as GlancesPassword
-from glances.servers_list_dynamic import GlancesAutoDiscoverServer
-from glances.servers_list_static import GlancesStaticServer
+from glances.client import (
+    DEFAULT_PORT,
+    DEFAULT_TIMEOUT,
+    AuthError,
+    NotAGlancesServer,
+    NotFound,
+    RemoteConnection,
+    RemoteError,
+    parse_target,
+)
 
-try:
-    import requests
-except ImportError as e:
-    import_requests_error_tag = True
-    # Display debug message if import error
-    logger.warning(f"Missing Python Lib ({e}), Client browser will not grab stats from Glances REST server")
-else:
-    import_requests_error_tag = False
+logger = logging.getLogger(__name__)
 
-# Correct issue #1025 by monkey path the xmlrpc lib
-xmlrpc.monkey_patch()
-
+SECTION = "serverlist"
 DEFAULT_COLUMNS = "system:hr_name,load:min5,cpu:total,mem:percent"
+# v4's list, bounded the same way.
+MAX_SERVERS = 256
+
+# v4's statuses, minus SNMP (dropped), plus UNSUPPORTED: something answers
+# on the port, but not the Glances v5 API (a v4 server, for one).
+UNKNOWN = "UNKNOWN"
+ONLINE = "ONLINE"
+OFFLINE = "OFFLINE"
+PROTECTED = "PROTECTED"
+UNSUPPORTED = "UNSUPPORTED"
 
 
-class GlancesServersList:
-    _section = "serverlist"
+@dataclass(frozen=True)
+class Column:
+    """One `[serverlist] columns` entry: `plugin:field` or `plugin:field:key`."""
 
-    def __init__(self, config=None, args=None):
-        # Store the arg/config
-        self.args = args
-        self.config = config
+    plugin: str
+    field: str
+    key: str | None = None
 
-        # Init the servers and passwords list defined in the Glances configuration file
-        self.static_server = None
-        self.password = None
-        self.load()
+    @property
+    def label(self) -> str:
+        return ":".join(p for p in (self.plugin, self.field, self.key) if p)
 
-        # Init the dynamic servers list by starting a Zeroconf listener
-        self.autodiscover_server = None
-        if self.args.browser or not self.args.disable_autodiscover:
-            self.autodiscover_server = GlancesAutoDiscoverServer()
 
-        # Stats are updated in thread
-        # Create a dict of threads
-        self.threads_list = {}
+def parse_columns(text: str) -> list[Column]:
+    """`system:hr_name,sensors:value:Ambient` -> columns. A malformed entry is skipped with a warning."""
+    columns = []
+    for raw in text.split(","):
+        parts = [p.strip() for p in raw.split(":")]
+        if len(parts) not in (2, 3) or not all(parts):
+            logger.warning("[%s] columns: %r is not plugin:field[:key], skipped", SECTION, raw.strip())
+            continue
+        columns.append(Column(*parts))
+    return columns
 
-    def load(self):
-        """Load server and password list from the configuration file."""
-        # Init the static server list
-        self.static_server = GlancesStaticServer(config=self.config)
-        # Init the password list (if defined)
-        self.password = GlancesPassword(config=self.config)
-        # Load columns to grab/display
-        self._columns = self.load_columns()
 
-    def load_columns(self):
-        """Load columns definition from the configuration file.
-        Read:   'system:hr_name,load:min5,cpu:total,mem:percent,sensors:value:Ambient'
-        Return: [{'plugin': 'system', 'field': 'hr_name'},
-                 {'plugin': 'load', 'field': 'min5'},
-                 {'plugin': 'cpu', 'field': 'total'},
-                 {'plugin': 'mem', 'field': 'percent'},
-                 {'plugin': 'sensors', 'field': 'value', 'key': 'Ambient'}]
-        """
-        if self.config is None:
-            logger.debug("No configuration file available. Cannot load columns definition.")
-        elif not self.config.has_section(self._section):
-            logger.warning(f"No [{self._section}] section in the configuration file. Cannot load columns definition.")
+@dataclass
+class ServerEntry:
+    """One server of the list, as the TUI and `/api/5/serverslist` show it. No credential field."""
 
-        columns_def = (
-            self.config.get_value(self._section, 'columns')
-            if self.config.get_value(self._section, 'columns')
-            else DEFAULT_COLUMNS
-        )
+    name: str
+    port: int
+    alias: str | None = None
+    source: str = "static"
+    status: str = UNKNOWN
+    # `Column.label` -> {"value": ..., "level": "ok" | ... | None}. Replaced
+    # whole by the poller, so a reader never sees half a round.
+    columns: dict[str, dict[str, Any]] = field(default_factory=dict)
 
-        return [dict(zip(['plugin', 'field', 'key'], i.split(':'))) for i in columns_def.split(',')]
+    @property
+    def target(self) -> str:
+        """What `-c` would take: `host:port`, or the configured URL."""
+        return self.name if "://" in self.name else f"{self.name}:{self.port}"
 
-    def get_servers_list(self):
-        """Return the current server list (list of dict).
+    @property
+    def key(self) -> str:
+        """The poller's key for its connection, and so its credentials: per source,
+        so a discovered server announcing a static one's address never shares its password."""
+        return f"{self.source}:{self.target}"
 
-        Merge of static + autodiscover servers list.
-        """
-        ret = []
+    def as_dict(self) -> dict[str, Any]:
+        """The `/api/5/serverslist` item: built field by field, never from `vars()`."""
+        return {
+            "name": self.name,
+            "alias": self.alias,
+            "port": self.port,
+            "status": self.status,
+            "source": self.source,
+            "columns": {label: dict(cell) for label, cell in self.columns.items()},
+        }
 
-        if self.args.browser:
-            ret = self.static_server.get_servers_list()
-            if self.autodiscover_server is not None:
-                ret = self.static_server.get_servers_list() + self.autodiscover_server.get_servers_list()
 
-        return ret
+def load_static_servers(config: Any) -> list[ServerEntry]:
+    """`[serverlist] server_N_name/port/alias`, N from 1 to 256 (v4's layout)."""
+    servers = []
+    for n in range(1, MAX_SERVERS + 1):
+        name = str(config.get(SECTION, f"server_{n}_name", "") or "").strip()
+        if not name:
+            continue
+        if config.get_value(SECTION, f"server_{n}_protocol") is not None:
+            # v4 had `rpc` and `rest`; v5 speaks REST only.
+            logger.warning("[%s] server_%d_protocol is ignored: v5 servers speak REST only", SECTION, n)
+        raw_port = str(config.get(SECTION, f"server_{n}_port", "") or "").strip()
+        try:
+            port = int(raw_port) if raw_port else DEFAULT_PORT
+            parse_target(name if "://" in name else f"{name}:{port}")
+        except ValueError as e:
+            logger.warning("[%s] server_%d skipped: %s", SECTION, n, e)
+            continue
+        alias = str(config.get(SECTION, f"server_{n}_alias", "") or "").strip() or None
+        servers.append(ServerEntry(name=name, port=port, alias=alias))
+    logger.info("%d server(s) loaded from [%s]", len(servers), SECTION)
+    return servers
 
-    def get_columns(self):
-        """Return the columns definitions"""
-        return self._columns
 
-    def update_servers_stats(self):
-        """For each server in the servers list, update the stats"""
-        for v in self.get_servers_list():
-            key = v["key"]
-            thread = self.threads_list.get(key, None)
-            if thread is None or thread.is_alive() is False:
-                thread = threading.Thread(target=self.__update_stats, args=[v])
-                self.threads_list[key] = thread
-                thread.start()
-
-    @staticmethod
-    def _get_connect_host(server):
-        """Return the host to use for connecting to the server.
-
-        For dynamic (Zeroconf) servers, use the discovered IP address
-        instead of the untrusted advertised name.
-        """
-        if server.get('type') == 'DYNAMIC':
-            return server['ip']
-        return server['name']
-
-    def _get_preconfigured_password(self, server):
-        """Return the preconfigured password for the server.
-
-        Dynamic (Zeroconf) entries are untrusted and should not inherit
-        saved or default credentials to prevent credential exfiltration
-        via fake Zeroconf services.
-        """
-        if server.get('type') == 'DYNAMIC':
+def _cell(payload: Any, column: Column) -> dict[str, Any] | None:
+    """The column's value and level in a `/api/5/<plugin>` payload, or None if it has none."""
+    if not isinstance(payload, dict):
+        return None
+    levels = payload.get("_levels") or {}
+    if column.key is None:
+        if column.field not in payload:
             return None
-        return self.password.get_password(server['name'])
+        level = (levels.get(column.field) or {}).get("level")
+        return {"value": payload[column.field], "level": level}
+    primary_key = payload.get("_key")
+    for item in payload.get("data") or []:
+        # Case-insensitive, as v4 matches the key.
+        if isinstance(item, dict) and str(item.get(primary_key, "")).lower() == column.key.lower():
+            if column.field not in item:
+                return None
+            item_levels = levels.get(str(item.get(primary_key))) or {}
+            return {"value": item[column.field], "level": (item_levels.get(column.field) or {}).get("level")}
+    return None
 
-    def get_uri(self, server):
-        """Return the URI for the given server dict."""
-        host = self._get_connect_host(server)
-        # Select the connection mode (with or without password)
-        if server['password'] != "":
-            if server['status'] == 'PROTECTED':
-                # Try with the preconfigured password (only if status is PROTECTED)
-                clear_password = self._get_preconfigured_password(server)
-                if clear_password is not None:
-                    server['password'] = self.password.get_hash(clear_password)
-            uri = 'http://{}:{}@{}:{}'.format(server['username'], server['password'], host, server['port'])
-        else:
-            uri = 'http://{}:{}'.format(host, server['port'])
-        return uri
 
-    def set_in_selected(self, selected, key, value):
-        """Set the (key, value) for the selected server in the list."""
-        # Static list then dynamic one
-        if selected >= len(self.static_server.get_servers_list()):
-            self.autodiscover_server.set_server(selected - len(self.static_server.get_servers_list()), key, value)
-        else:
-            self.static_server.set_server(selected, key, value)
+class ServersPoller:
+    """Polls every server of the list, one after the other, in its own thread.
 
-    def __update_stats(self, server):
-        """Update stats for the given server"""
-        server['uri'] = self.get_uri(server)
-        server['columns'] = [self.__get_key(column) for column in self.get_columns()]
-        if server['protocol'].lower() == 'rpc':
-            self.__update_stats_rpc(server['uri'], server)
-        elif server['protocol'].lower() == 'rest' and not import_requests_error_tag:
-            self.__update_stats_rest(f"{server['uri']}/api/{__apiversion__}", server)
+    Holds the connections, and so the credentials: `[passwords] <name>`, then
+    `[passwords] default`, for static servers only (P3-5 keeps Zeroconf
+    servers away from them, CVE-2026-32634), or what the user typed.
+    """
 
-        return server
+    def __init__(self, servers: list[ServerEntry], config: Any, columns: list[Column]) -> None:
+        self.servers = servers
+        self.columns = columns
+        self._config = config
+        self._timeout = float(config.get("client", "timeout", DEFAULT_TIMEOUT))
+        self._connections: dict[str, RemoteConnection] = {}
+        self._passwords: dict[str, str] = {}
+        self._stop = threading.Event()
+        self._thread: threading.Thread | None = None
 
-    def __update_stats_rpc(self, uri, server):
-        # Try to connect to the server
-        t = GlancesClientTransport()
-        t.set_timeout(3)
+    def password_for(self, server: ServerEntry) -> str | None:
+        """The password to open `server` with, if one is known."""
+        if server.key in self._passwords:
+            return self._passwords[server.key]
+        if server.source != "static":
+            return None
+        host = parse_target(server.target)[1]
+        return self._config.get_value("passwords", host) or self._config.get_value("passwords", "default") or None
 
-        # Get common stats from Glances server
+    def set_password(self, server: ServerEntry, password: str) -> None:
+        """A password the user typed for `server`: used from the next round on."""
+        self._passwords[server.key] = password
+        self._connections.pop(server.key, None)
+
+    def _connection(self, server: ServerEntry) -> RemoteConnection:
+        conn = self._connections.get(server.key)
+        if conn is None:
+            base_url = parse_target(server.target)[0]
+            conn = RemoteConnection(base_url, password=self.password_for(server), timeout=self._timeout)
+            self._connections[server.key] = conn
+        return conn
+
+    def poll_server(self, server: ServerEntry) -> None:
+        """One server: its status, then its columns. Never raises."""
+        conn = self._connection(server)
         try:
-            s = xmlrpc.xmlrpc_client.ServerProxy(uri, transport=t)
-        except Exception as e:
-            logger.warning(f"Client browser couldn't create socket ({e})")
-            return server
+            status = conn.get_json("/status")
+            if not isinstance(status, dict) or str(status.get("version")) != __apiversion__:
+                raise NotAGlancesServer(f"{server.target} is not a Glances v5 server")
+            cells: dict[str, dict[str, Any]] = {}
+            for plugin in dict.fromkeys(c.plugin for c in self.columns):
+                try:
+                    payload = conn.get_json(f"/api/5/{plugin}")
+                except NotFound:
+                    continue  # plugin disabled on that server: its columns stay empty
+                for column in self.columns:
+                    if column.plugin == plugin and (cell := _cell(payload, column)) is not None:
+                        cells[column.label] = cell
+        except AuthError:
+            server.status = PROTECTED
+            return
+        except (NotAGlancesServer, NotFound):
+            # Columns answer 404 inside the loop above: a 404 here is `/status`,
+            # which every v5 server serves (a v4 server does not).
+            server.status = UNSUPPORTED
+            return
+        except RemoteError as e:
+            logger.debug("Browser: %s is offline (%s)", server.target, e)
+            server.status = OFFLINE
+            return
+        server.columns = cells
+        server.status = ONLINE
 
-        # Get the stats
-        for column in self.get_columns():
-            server_key = self.__get_key(column)
-            try:
-                # Value
-                v_json = json_loads(s.getPlugin(column['plugin']))
-                if 'key' in column:
-                    v_json = [i for i in v_json if i[i['key']].lower() == column['key'].lower()][0]
-                server[server_key] = v_json[column['field']]
-                # Decoration
-                d_json = json_loads(s.getPluginView(column['plugin']))
-                if 'key' in column:
-                    d_json = d_json.get(column['key'])
-                server[server_key + '_decoration'] = d_json[column['field']]['decoration']
-            except (KeyError, IndexError, xmlrpc.xmlrpc_client.Fault) as e:
-                logger.debug(f"Error while grabbing stats form server ({e})")
-            except OSError as e:
-                logger.debug(f"Error while grabbing stats form server ({e})")
-                server['status'] = 'OFFLINE'
-            except xmlrpc.xmlrpc_client.ProtocolError as e:
-                if e.errcode == 401:
-                    # Error 401 (Authentication failed)
-                    # Password is not the good one...
-                    server['password'] = None
-                    server['status'] = 'PROTECTED'
-                else:
-                    server['status'] = 'OFFLINE'
-                logger.debug(f"Cannot grab stats from server ({e.errcode} {e.errmsg})")
-            else:
-                # Status
-                server['status'] = 'ONLINE'
+    def poll_round(self) -> None:
+        for server in list(self.servers):
+            if self._stop.is_set():
+                return
+            self.poll_server(server)
 
-        return server
+    def start(self, interval: float) -> None:
+        """Poll round after round, `interval` seconds apart, until `stop()`."""
 
-    def __update_stats_rest(self, uri, server):
-        try:
-            requests.get(f'{uri}/status', timeout=3)
-        except requests.exceptions.RequestException as e:
-            logger.debug(f"Error while grabbing stats form server ({e})")
-            server['status'] = 'OFFLINE'
-            return server
-        else:
-            server['status'] = 'ONLINE'
+        def loop() -> None:
+            while not self._stop.is_set():
+                try:
+                    self.poll_round()
+                except Exception:
+                    # A thread that dies says nothing: the list would freeze at UNKNOWN.
+                    logger.exception("Browser: a polling round failed")
+                self._stop.wait(interval)
 
-        for column in self.get_columns():
-            server_key = self.__get_key(column)
-            # Build the URI (URL encoded)
-            request_uri = f"{column['plugin']}/{column['field']}"
-            if 'key' in column:
-                request_uri += f"/{column['key']}"
-            request_uri = f'{uri}/' + requests.utils.quote(request_uri)
-            # Value
-            try:
-                r = requests.get(request_uri, timeout=3)
-            except requests.exceptions.RequestException as e:
-                logger.debug(f"Error while grabbing stats form server ({e})")
-            else:
-                if r.json() and column['field'] in r.json():
-                    server[server_key] = r.json()[column['field']]
-            # Decoration
-            try:
-                d = requests.get(request_uri + '/views', timeout=3)
-            except requests.exceptions.RequestException as e:
-                logger.debug(f"Error while grabbing stats view form server ({e})")
-            else:
-                if d.json() and 'decoration' in d.json():
-                    server[server_key + '_decoration'] = d.json()['decoration']
+        self._thread = threading.Thread(target=loop, name="glances-browser-poller", daemon=True)
+        self._thread.start()
 
-        return server
+    def stop(self) -> None:
+        self._stop.set()
 
-    def __get_key(self, column):
-        server_key = column.get('plugin')
-        if 'field' in column:
-            server_key += '_' + column.get('field')
-        if 'key' in column:
-            server_key += '_' + column.get('key')
-        return server_key
+
+def build_poller(config: Any) -> ServersPoller:
+    """The static list of `[serverlist]` and its `columns`, ready to `start()`."""
+    columns = parse_columns(str(config.get(SECTION, "columns", "") or DEFAULT_COLUMNS))
+    return ServersPoller(load_static_servers(config), config, columns)

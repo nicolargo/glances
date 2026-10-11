@@ -38,9 +38,13 @@ jobs:
           if [[ $GITHUB_REF == refs/tags/* ]]; then
             VERSION=${GITHUB_REF#refs/tags/v}
             TAG_ARRAY="[{ \"target\": \"minimal\", \"tag\": \"${VERSION}\" },"
-            TAG_ARRAY="$TAG_ARRAY { \"target\": \"minimal\", \"tag\": \"latest\" },"
-            TAG_ARRAY="$TAG_ARRAY { \"target\": \"full\", \"tag\": \"${VERSION}-full\" },"
-            TAG_ARRAY="$TAG_ARRAY { \"target\": \"full\", \"tag\": \"latest-full\" }]"
+            TAG_ARRAY="$TAG_ARRAY { \"target\": \"full\", \"tag\": \"${VERSION}-full\" }"
+            # A pre-release (5.0.0b1, 5.0.0rc1...) never moves the latest tags
+            if [[ ! $VERSION =~ (a|b|rc)[0-9]+$ ]]; then
+              TAG_ARRAY="$TAG_ARRAY, { \"target\": \"minimal\", \"tag\": \"latest\" },"
+              TAG_ARRAY="$TAG_ARRAY { \"target\": \"full\", \"tag\": \"latest-full\" }"
+            fi
+            TAG_ARRAY="$TAG_ARRAY]"
           elif [[ $GITHUB_REF == refs/heads/develop ]]; then
             TAG_ARRAY="[{ \"target\": \"dev\", \"tag\": \"dev\" }]"
           else

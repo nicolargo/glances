@@ -1,0 +1,49 @@
+<svg width="680" height="280" viewBox="0 0 680 280" xmlns="http://www.w3.org/2000/svg" font-family="sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="#185FA5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+
+  <rect width="680" height="280" fill="#ffffff"/>
+
+  <!-- Instance A — server mode -->
+  <rect x="25" y="25" width="255" height="195" rx="10" fill="none" stroke="#0F6E56" stroke-width="1.5"/>
+  <text x="152" y="47" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="500" fill="#085041">Instance A</text>
+  <text x="152" y="64" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#0F6E56">server mode</text>
+  <line x1="38" y1="73" x2="268" y2="73" stroke="#D3D1C7" stroke-width="0.5"/>
+
+  <text x="152" y="96" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#444441">Local plugins (psutil)</text>
+  <line x1="152" y1="108" x2="152" y2="119" stroke="#888" stroke-width="1" marker-end="url(#arrow)"/>
+  <text x="152" y="133" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#444441">StatsStore</text>
+  <line x1="152" y1="145" x2="152" y2="156" stroke="#888" stroke-width="1" marker-end="url(#arrow)"/>
+
+  <rect x="42" y="160" width="222" height="34" rx="6" fill="none" stroke="#0F6E56" stroke-width="1.5"/>
+  <text x="152" y="177" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="500" fill="#085041">REST API :61208</text>
+
+  <text x="152" y="210" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#888780">Curses TUI (optional)</text>
+
+  <!-- Instance B — client mode -->
+  <rect x="400" y="25" width="255" height="195" rx="10" fill="none" stroke="#185FA5" stroke-width="1.5"/>
+  <text x="527" y="47" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="500" fill="#0C447C">Instance B</text>
+  <text x="527" y="64" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#185FA5">client mode</text>
+  <line x1="413" y1="73" x2="643" y2="73" stroke="#D3D1C7" stroke-width="0.5"/>
+
+  <rect x="417" y="78" width="222" height="34" rx="6" fill="none" stroke="#185FA5" stroke-width="1.5"/>
+  <text x="527" y="95" text-anchor="middle" dominant-baseline="central" font-size="13" font-weight="500" fill="#0C447C">Remote plugins (httpx)</text>
+
+  <line x1="527" y1="114" x2="527" y2="125" stroke="#888" stroke-width="1" marker-end="url(#arrow)"/>
+  <text x="527" y="139" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#444441">StatsStore</text>
+  <line x1="527" y1="151" x2="527" y2="162" stroke="#888" stroke-width="1" marker-end="url(#arrow)"/>
+  <text x="527" y="178" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#444441">Curses TUI</text>
+  <text x="527" y="196" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#888780">REST API (optional)</text>
+
+  <!-- HTTP REST arrow A → B -->
+  <path d="M264,177 L330,177 L330,95 L400,95" fill="none" stroke="#185FA5" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="330" y="130" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="500" fill="#185FA5">HTTP</text>
+  <text x="330" y="145" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="500" fill="#185FA5">REST</text>
+
+  <!-- Suppression note -->
+  <rect x="70" y="235" width="540" height="22" rx="4" fill="none" stroke="#D3D1C7" stroke-width="0.5" stroke-dasharray="4 3"/>
+  <text x="340" y="246" text-anchor="middle" dominant-baseline="central" font-size="10" fill="#888780">removed: XML-RPC server :61209 (Instance A) + XML-RPC client (Instance B)</text>
+</svg>

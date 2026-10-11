@@ -33,10 +33,12 @@ sleep 10
 # Run glances with export to ClickHouse, stopping after 10 writes
 # This will run synchronously now since we're using --stop-after
 echo "Glances to export system stats to ClickHouse (duration: ~ 20 seconds)"
-.venv/bin/python -m glances --config ./conf/glances.conf --export clickhouse --stop-after 10 --quiet
+.venv/bin/python -m glances.main --config ./conf/glances.conf --export clickhouse --stop-after 10 --quiet
 
 docker exec clickhouse-for-glances clickhouse-client --database=glances --query="SELECT * FROM cpu FORMAT CSV" > /tmp/clickhouse-for-glances_cpu.csv
-.venv/bin/python ./tests-data/tools/csvcheck.py -i /tmp/clickhouse-for-glances_cpu.csv -l 8
+# 10 cycles give 10 rows (v5 exports the first cycle too); FORMAT CSV has no
+# header, so csvcheck.py takes the first row for one and counts 9.
+.venv/bin/python ./tests-data/tools/csvcheck.py -i /tmp/clickhouse-for-glances_cpu.csv -l 9
 
 # Stop and remove the ClickHouse container
 echo "Stopping and removing ClickHouse container..."

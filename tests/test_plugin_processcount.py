@@ -1,326 +1,176 @@
-#!/usr/bin/env python
 #
 # Glances - An eye on your system
 #
-# SPDX-FileCopyrightText: 2024 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2026 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
-"""Tests for the ProcessCount plugin."""
+"""Glances v5 — unit tests for the ``processcount`` plugin (scalar)."""
 
-import json
-from unittest.mock import PropertyMock, patch
+from __future__ import annotations
+
+from unittest.mock import patch
 
 import pytest
 
-from glances.processes import GlancesProcesses
+from glances.config import GlancesConfig
+from glances.plugins.processcount.model import PluginModel
+from glances.stats_store import StatsStore
 
 
 @pytest.fixture
-def processcount_plugin(glances_stats):
-    """Return the ProcessCount plugin instance from glances_stats."""
-    return glances_stats.get_plugin('processcount')
-
-
-class TestProcesscountPluginBasics:
-    """Test basic ProcessCount plugin functionality."""
-
-    def test_plugin_name(self, processcount_plugin):
-        """Test plugin name is correctly set."""
-        assert processcount_plugin.plugin_name == 'processcount'
-
-    def test_plugin_is_enabled(self, processcount_plugin):
-        """Test that the plugin is enabled by default."""
-        assert processcount_plugin.is_enabled() is True
-
-    def test_display_curse_enabled(self, processcount_plugin):
-        """Test that curse display is enabled."""
-        assert processcount_plugin.display_curse is True
-
-    def test_history_items_defined(self, processcount_plugin):
-        """Test that history items are properly defined."""
-        items = processcount_plugin.get_items_history_list()
-        assert items is not None
-        item_names = [item['name'] for item in items]
-        assert 'total' in item_names
-        assert 'running' in item_names
-
-
-class TestProcesscountPluginUpdate:
-    """Test ProcessCount plugin update functionality."""
-
-    def test_update_returns_dict(self, processcount_plugin):
-        """Test that update returns a dictionary."""
-        processcount_plugin.update()
-        stats = processcount_plugin.get_raw()
-        assert isinstance(stats, dict)
-
-    def test_update_contains_total(self, processcount_plugin):
-        """Test that stats contain total count."""
-        processcount_plugin.update()
-        stats = processcount_plugin.get_raw()
-        assert 'total' in stats
-
-    def test_total_positive(self, processcount_plugin):
-        """Test that total process count is positive."""
-        processcount_plugin.update()
-        stats = processcount_plugin.get_raw()
-        assert stats['total'] > 0
-
-    def test_running_present(self, processcount_plugin):
-        """Test that running count is present."""
-        processcount_plugin.update()
-        stats = processcount_plugin.get_raw()
-        assert 'running' in stats
-
-    def test_sleeping_present(self, processcount_plugin):
-        """Test that sleeping count is present."""
-        processcount_plugin.update()
-        stats = processcount_plugin.get_raw()
-        assert 'sleeping' in stats
-
-    def test_thread_count_present(self, processcount_plugin):
-        """Test that thread count is present."""
-        processcount_plugin.update()
-        stats = processcount_plugin.get_raw()
-        assert 'thread' in stats
-
-
-class TestProcesscountPluginValues:
-    """Test ProcessCount plugin values validity."""
-
-    def test_counts_non_negative(self, processcount_plugin):
-        """Test that all counts are non-negative."""
-        processcount_plugin.update()
-        stats = processcount_plugin.get_raw()
-        count_keys = ['total', 'running', 'sleeping', 'thread']
-        for key in count_keys:
-            if key in stats:
-                assert stats[key] >= 0
-
-    def test_running_sleeping_less_than_total(self, processcount_plugin):
-        """Test that running + sleeping <= total."""
-        processcount_plugin.update()
-        stats = processcount_plugin.get_raw()
-        if all(k in stats for k in ['running', 'sleeping', 'total']):
-            assert stats['running'] + stats['sleeping'] <= stats['total']
-
-    def test_thread_count_reasonable(self, processcount_plugin):
-        """Test that thread count is reasonable."""
-        processcount_plugin.update()
-        stats = processcount_plugin.get_raw()
-        if 'thread' in stats and 'total' in stats:
-            # Thread count should be >= process count
-            assert stats['thread'] >= stats['total']
-
-
-class TestProcesscountPluginViews:
-    """Test ProcessCount plugin views functionality."""
-
-    def test_update_views_returns_dict(self, processcount_plugin):
-        """Test that update_views returns a dictionary."""
-        processcount_plugin.update()
-        views = processcount_plugin.update_views()
-        assert isinstance(views, dict)
-
-
-class TestProcesscountPluginJSON:
-    """Test ProcessCount plugin JSON serialization."""
-
-    def test_get_stats_returns_json(self, processcount_plugin):
-        """Test that get_stats returns valid JSON."""
-        processcount_plugin.update()
-        stats_json = processcount_plugin.get_stats()
-        parsed = json.loads(stats_json)
-        assert isinstance(parsed, dict)
-
-    def test_json_contains_expected_fields(self, processcount_plugin):
-        """Test that JSON output contains expected fields."""
-        processcount_plugin.update()
-        stats_json = processcount_plugin.get_stats()
-        parsed = json.loads(stats_json)
-        expected_fields = ['total', 'running', 'sleeping', 'thread']
-        for field in expected_fields:
-            assert field in parsed
-
-
-class TestProcesscountPluginHistory:
-    """Test ProcessCount plugin history functionality."""
-
-    def test_history_enable_check(self, processcount_plugin):
-        """Test that history_enable returns a boolean."""
-        result = processcount_plugin.history_enable()
-        assert isinstance(result, bool)
-
-    def test_get_items_history_list(self, processcount_plugin):
-        """Test that get_items_history_list returns the history items."""
-        items = processcount_plugin.get_items_history_list()
-        if items is not None:
-            assert isinstance(items, list)
-            item_names = [item['name'] for item in items]
-            assert 'total' in item_names
-
-
-class TestProcesscountPluginReset:
-    """Test ProcessCount plugin reset functionality."""
-
-    def test_reset_clears_stats(self, processcount_plugin):
-        """Test that reset clears stats."""
-        processcount_plugin.update()
-        processcount_plugin.reset()
-        stats = processcount_plugin.get_raw()
-        assert stats == processcount_plugin.get_init_value()
-
-    def test_reset_views(self, processcount_plugin):
-        """Test that reset_views clears views."""
-        processcount_plugin.update()
-        processcount_plugin.update_views()
-        processcount_plugin.reset_views()
-        assert processcount_plugin.get_views() == {}
-
-
-class TestProcesscountPluginFieldsDescription:
-    """Test ProcessCount plugin fields description."""
-
-    def test_fields_description_exists(self, processcount_plugin):
-        """Test that fields_description is defined."""
-        assert processcount_plugin.fields_description is not None
-
-    def test_mandatory_fields_described(self, processcount_plugin):
-        """Test that mandatory fields have descriptions."""
-        mandatory_fields = ['total', 'running', 'sleeping', 'thread']
-        for field in mandatory_fields:
-            assert field in processcount_plugin.fields_description
-
-    def test_field_has_description(self, processcount_plugin):
-        """Test that each field has a description."""
-        for field, info in processcount_plugin.fields_description.items():
-            assert 'description' in info, f"Field {field} missing description"
-
-    def test_field_has_unit(self, processcount_plugin):
-        """Test that fields have unit defined."""
-        for field, info in processcount_plugin.fields_description.items():
-            assert 'unit' in info, f"Field {field} missing unit"
-
-
-class TestProcesscountPluginMsgCurse:
-    """Test ProcessCount plugin curse message generation."""
-
-    def test_msg_curse_with_args(self, processcount_plugin):
-        """Test that msg_curse returns a list when args provided."""
-        processcount_plugin.update()
-        # msg_curse requires args with disable_process attribute
-        if hasattr(processcount_plugin, 'args') and processcount_plugin.args:
-            msg = processcount_plugin.msg_curse(args=processcount_plugin.args)
-            assert isinstance(msg, list)
-
-    def test_msg_curse_format_with_args(self, processcount_plugin):
-        """Test that msg_curse returns properly formatted entries."""
-        processcount_plugin.update()
-        if hasattr(processcount_plugin, 'args') and processcount_plugin.args:
-            msg = processcount_plugin.msg_curse(args=processcount_plugin.args)
-            if msg:
-                for entry in msg:
-                    assert isinstance(entry, dict)
-                    assert 'msg' in entry
-
-    def test_msg_curse_content_with_args(self, processcount_plugin):
-        """Test msg_curse output content."""
-        processcount_plugin.update()
-        stats = processcount_plugin.get_raw()
-        if stats and hasattr(processcount_plugin, 'args') and processcount_plugin.args:
-            if not getattr(processcount_plugin.args, 'disable_process', True):
-                msg = processcount_plugin.msg_curse(args=processcount_plugin.args)
-                if msg:
-                    assert len(msg) > 0
-
-
-class TestProcesscountPluginExport:
-    """Test ProcessCount plugin export functionality."""
-
-    def test_get_export_returns_dict(self, processcount_plugin):
-        """Test that get_export returns a dict."""
-        processcount_plugin.update()
-        export = processcount_plugin.get_export()
-        assert isinstance(export, dict)
-
-    def test_export_equals_raw(self, processcount_plugin):
-        """Test that export equals raw stats by default."""
-        processcount_plugin.update()
-        assert processcount_plugin.get_export() == processcount_plugin.get_raw()
-
-
-class TestProcesscountPluginExtended:
-    """Test ProcessCount plugin extended stats functionality."""
-
-    def test_enable_extended_method_exists(self, processcount_plugin):
-        """Test that enable_extended method exists."""
-        assert hasattr(processcount_plugin, 'enable_extended')
-        assert callable(processcount_plugin.enable_extended)
-
-    def test_disable_extended_method_exists(self, processcount_plugin):
-        """Test that disable_extended method exists."""
-        assert hasattr(processcount_plugin, 'disable_extended')
-        assert callable(processcount_plugin.disable_extended)
-
-
-class TestProcesscountPluginPidMax:
-    """Test ProcessCount plugin pid_max field."""
-
-    def test_pid_max_in_fields_description(self, processcount_plugin):
-        """Test that pid_max is in fields description."""
-        assert 'pid_max' in processcount_plugin.fields_description
-
-    def test_pid_max_description(self, processcount_plugin):
-        """Test that pid_max has a description."""
-        assert 'description' in processcount_plugin.fields_description['pid_max']
-
-
-class TestProcessesUpdateProcesscount:
-    """Test GlancesProcesses.update_processcount (see issue #3637)."""
-
-    @pytest.fixture
-    def processes(self):
-        """Return a standalone GlancesProcesses instance."""
-        return GlancesProcesses()
-
-    def test_pid_max_is_not_overwritten_by_the_status_count(self, processes):
-        """Test that pid_max keeps the system value and is not reset to 0."""
-        with patch.object(GlancesProcesses, 'pid_max', new_callable=PropertyMock) as pid_max:
-            pid_max.return_value = 4194304
-            processes.update_processcount([{'status': 'sleeping', 'num_threads': 1}])
-        assert processes.processcount['pid_max'] == 4194304
-
-    def test_status_count_uses_equality(self, processes):
-        """Test that the status count does not rely on the string interning."""
-        plist = [
-            # Build a non interned 'running' string
-            {'status': ''.join(['run', 'ning']), 'num_threads': 1},
-            {'status': 'sleeping', 'num_threads': 2},
-            {'status': 'disk-sleep', 'num_threads': 3},
-        ]
-        processes.update_processcount(plist)
-        assert processes.processcount['running'] == 1
-        assert processes.processcount['sleeping'] == 1
-        assert processes.processcount['total'] == 3
-        assert processes.processcount['thread'] == 6
-
-
-class TestProcessesCount:
-    """Test GlancesProcesses.processes_count (see issue #3221)."""
-
-    @pytest.fixture
-    def processes(self):
-        """Return a standalone GlancesProcesses instance."""
-        return GlancesProcesses()
-
-    def test_processes_count_none_max_processes(self, processes):
-        """processes_count must not crash when max_processes is None (client/server mode)."""
-        processes.max_processes = None
-        assert processes.processes_count == 0  # nosec B101
-
-    def test_processes_count_does_not_raise_with_max_processes(self, processes):
-        """processes_count returns an int (no crash) when max_processes is set."""
-        processes.max_processes = 50
-        assert isinstance(processes.processes_count, int)  # nosec B101
+def store() -> StatsStore:
+    return StatsStore()
+
+
+@pytest.fixture
+def config(tmp_path, monkeypatch) -> GlancesConfig:
+    monkeypatch.setattr(GlancesConfig, "SYSTEM_CONFIG_PATH", tmp_path / "etc" / "glances.conf")
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "xdg"))
+    return GlancesConfig()
+
+
+# ---------------------------------------------------------- contract
+
+
+def test_plugin_identity(store, config):
+    plugin = PluginModel(store, config)
+    assert plugin.plugin_name == "processcount"
+    assert plugin.IS_COLLECTION is False
+
+
+def test_schema_fields(store, config):
+    fields = PluginModel(store, config)._fields
+    for name in ("total", "running", "sleeping", "thread", "pid_max"):
+        assert name in fields, name
+        # None of them are watched — pure aggregate counts.
+        assert fields[name].get("watched", False) is False, name
+
+
+# ---------------------------------------------------------- update pipeline
+
+
+async def test_update_calls_engine_and_surfaces_count(store, config):
+    """``_grab_stats`` triggers ``engine.update()`` and returns the aggregate."""
+    plugin = PluginModel(store, config)
+    fake_count = {"total": 42, "running": 5, "sleeping": 30, "thread": 100, "pid_max": 32768}
+    with (
+        patch("glances.plugins.processcount.model.glances_processes.update") as upd,
+        patch(
+            "glances.plugins.processcount.model.glances_processes.get_count",
+            return_value=fake_count,
+        ),
+    ):
+        await plugin.update()
+        assert upd.called
+    payload = store.get("processcount")
+    assert payload["total"] == 42
+    assert payload["running"] == 5
+    assert payload["sleeping"] == 30
+    assert payload["thread"] == 100
+    assert payload["pid_max"] == 32768
+
+
+async def test_update_returns_copy_of_engine_dict(store, config):
+    """Mutating the stored payload must not affect the engine's internal state."""
+    plugin = PluginModel(store, config)
+    engine_dict = {"total": 1, "running": 0, "sleeping": 1, "thread": 1, "pid_max": 32768}
+    with (
+        patch("glances.plugins.processcount.model.glances_processes.update"),
+        patch(
+            "glances.plugins.processcount.model.glances_processes.get_count",
+            return_value=engine_dict,
+        ),
+    ):
+        await plugin.update()
+    stored = store.get("processcount")
+    stored["total"] = 999
+    # The engine's source dict must be untouched.
+    assert engine_dict["total"] == 1
+
+
+async def test_update_handles_engine_failure(store, config):
+    """If the engine raises, the plugin yields an empty payload (no crash)."""
+    plugin = PluginModel(store, config)
+    with patch(
+        "glances.plugins.processcount.model.glances_processes.update",
+        side_effect=RuntimeError("psutil fault"),
+    ):
+        await plugin.update()
+    payload = store.get("processcount")
+    # Empty dict from grab_stats → no declared fields surface (filter strips them).
+    for name in ("total", "running", "sleeping", "thread", "pid_max"):
+        assert name not in payload, name
+
+
+async def test_update_handles_get_count_non_dict(store, config):
+    """Defensive: if engine.get_count() returns junk, fall back to empty."""
+    plugin = PluginModel(store, config)
+    with (
+        patch("glances.plugins.processcount.model.glances_processes.update"),
+        patch(
+            "glances.plugins.processcount.model.glances_processes.get_count",
+            return_value=None,
+        ),
+    ):
+        await plugin.update()
+    payload = store.get("processcount")
+    for name in ("total", "running", "sleeping", "thread", "pid_max"):
+        assert name not in payload, name
+
+
+# ------------------------------------------ the live sort key (shared sort)
+
+
+async def _update_with_sort(plugin, key, auto):
+    count = {"total": 1, "running": 0, "sleeping": 1, "thread": 1, "pid_max": 32768}
+    with (
+        patch("glances.plugins.processcount.model.glances_processes.update"),
+        patch("glances.plugins.processcount.model.glances_processes.get_count", return_value=count),
+        patch("glances.plugins.processcount.model.glances_processes._sort_key", key),
+        patch("glances.plugins.processcount.model.glances_processes.auto_sort", auto),
+    ):
+        await plugin.update()
+
+
+async def test_the_live_sort_key_is_published(store, config):
+    """The key this cycle's list was sorted with -- what the WebUI underlines
+    and what a client TUI follows."""
+    plugin = PluginModel(store, config)
+    await _update_with_sort(plugin, "memory_percent", False)
+    payload = plugin.get_api_payload()
+    assert payload["sort_key"] == "memory_percent"
+    assert payload["auto_sort"] is False
+
+
+async def test_the_auto_sort_flag_is_published(store, config):
+    plugin = PluginModel(store, config)
+    await _update_with_sort(plugin, "cpu_percent", True)
+    payload = plugin.get_api_payload()
+    assert payload["sort_key"] == "cpu_percent"
+    assert payload["auto_sort"] is True
+
+
+async def test_the_sort_key_is_not_exported(store, config):
+    """A string column in InfluxDB/CSV would be noise: API yes, export no."""
+    plugin = PluginModel(store, config)
+    await _update_with_sort(plugin, "name", False)
+    export = plugin.get_export()
+    assert "sort_key" not in export
+    assert "auto_sort" not in export
+    assert export["total"] == 1
+
+
+# ---------------------------------------------------------- real-host cycle
+
+
+async def test_real_host_counts_are_consistent(store, config):
+    """One unpatched update on the real machine: the counts must hold together."""
+    await PluginModel(store, config).update()
+    payload = store.get("processcount")
+    assert payload["total"] > 0
+    for name in ("total", "running", "sleeping", "thread"):
+        assert payload[name] >= 0, name
+    assert payload["running"] + payload["sleeping"] <= payload["total"]
+    assert payload["thread"] >= payload["total"]

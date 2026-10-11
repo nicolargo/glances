@@ -8,9 +8,13 @@ File System
 Glances displays the used and total file system disk space. The unit is
 adapted dynamically.
 
+To display the free space instead of the used space, use the ``F`` key, the
+``--fs-free-space`` command line option or the ``free_space=True`` key in the
+``[fs]`` section of the configuration file.
+
 Alerts are set for `user disk space usage <https://psutil.readthedocs.io/en/latest/index.html?highlight=disk%20usage#psutil.disk_usage>`_.
 
-Legend:
+Legend (with the default configuration file):
 
 ===================== ============
 User disk space usage Status
@@ -23,7 +27,29 @@ User disk space usage Status
 
 .. note::
     Limit values can be overwritten in the configuration file under
-    the ``[fs]`` section.
+    the ``[fs]`` section (default values if not defined: 70/80/90).
+
+Limits can also be defined per mount point with the
+``<mount_point>_percent_<level>`` keys:
+
+.. code-block:: ini
+
+    [fs]
+    careful=50
+    warning=70
+    critical=90
+    /_percent_careful=40
+    /_percent_warning=60
+    /_percent_critical=80
+
+There is no alert on read-only file systems (squashfs snaps, ISO...).
+
+An alias can be defined for a mount point:
+
+.. code-block:: ini
+
+    [fs]
+    alias=/:Root,/zfspool:ZFS
 
 By default, the plugin only displays physical devices (hard disks, USB
 keys). To allow other file system types, you have to enable them in the
@@ -49,7 +75,7 @@ To hide all mount points starting with /boot and /snap:
     [fs]
     hide=/boot.*,/snap.*
 
-Filtering are also applied on device name (Glances 3.1.4 or higher).
+Filtering are also applied on device name and alias.
 
 It is also possible to configure a white list of devices to display.
 Example to only show /dev/sdb mount points:

@@ -1,409 +1,438 @@
-#!/usr/bin/env python
 #
 # Glances - An eye on your system
 #
-# SPDX-FileCopyrightText: 2024 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2026 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
-"""Tests for the DiskIO plugin."""
+"""Glances v5 — unit tests for the `diskio` plugin (collection)."""
 
-import json
-import time
+from __future__ import annotations
+
+from collections import namedtuple
+from unittest.mock import patch
 
 import pytest
 
+from glances.config import GlancesConfig
+from glances.plugins.diskio.model import PluginModel
+from glances.stats_store import StatsStore
+
+# psutil stub ------------------------------------------------------
+
+DiskIo = namedtuple(
+    "sdiskio",
+    ["read_count", "write_count", "read_bytes", "write_bytes", "read_time", "write_time"],
+)
+
+
+def _io(rc: int = 0, wc: int = 0, rb: int = 0, wb: int = 0, rt: int = 0, wt: int = 0) -> DiskIo:
+    return DiskIo(rc, wc, rb, wb, rt, wt)
+
+
+# ----------------------------------------------------------- fixtures
+
 
 @pytest.fixture
-def diskio_plugin(glances_stats):
-    """Return the DiskIO plugin instance from glances_stats."""
-    return glances_stats.get_plugin('diskio')
-
-
-class TestDiskioPluginBasics:
-    """Test basic DiskIO plugin functionality."""
-
-    def test_plugin_name(self, diskio_plugin):
-        """Test plugin name is correctly set."""
-        assert diskio_plugin.plugin_name == 'diskio'
-
-    def test_plugin_is_enabled(self, diskio_plugin):
-        """Test that the plugin is enabled by default."""
-        assert diskio_plugin.is_enabled() is True
-
-    def test_display_curse_enabled(self, diskio_plugin):
-        """Test that curse display is enabled."""
-        assert diskio_plugin.display_curse is True
-
-    def test_get_key_returns_disk_name(self, diskio_plugin):
-        """Test that get_key returns disk_name."""
-        assert diskio_plugin.get_key() == 'disk_name'
-
-    def test_history_items_defined(self, diskio_plugin):
-        """Test that history items are properly defined."""
-        items = diskio_plugin.get_items_history_list()
-        assert items is not None
-        item_names = [item['name'] for item in items]
-        assert 'read_bytes_rate_per_sec' in item_names
-        assert 'write_bytes_rate_per_sec' in item_names
-
-
-class TestDiskioPluginUpdate:
-    """Test DiskIO plugin update functionality."""
-
-    def test_update_returns_list(self, diskio_plugin):
-        """Test that update returns a list."""
-        diskio_plugin.update()
-        stats = diskio_plugin.get_raw()
-        assert isinstance(stats, list)
-
-    def test_each_disk_has_name(self, diskio_plugin):
-        """Test that each disk entry has a name."""
-        diskio_plugin.update()
-        stats = diskio_plugin.get_raw()
-        for disk in stats:
-            assert 'disk_name' in disk
-
-    def test_read_write_bytes_present(self, diskio_plugin):
-        """Test that read_bytes and write_bytes are present."""
-        diskio_plugin.update()
-        time.sleep(0.1)
-        diskio_plugin.update()
-        stats = diskio_plugin.get_raw()
-        for disk in stats:
-            assert 'read_bytes' in disk
-            assert 'write_bytes' in disk
-
-    def test_bytes_values_non_negative(self, diskio_plugin):
-        """Test that byte values are non-negative."""
-        diskio_plugin.update()
-        stats = diskio_plugin.get_raw()
-        for disk in stats:
-            if 'read_bytes' in disk and disk['read_bytes'] is not None:
-                assert disk['read_bytes'] >= 0
-            if 'write_bytes' in disk and disk['write_bytes'] is not None:
-                assert disk['write_bytes'] >= 0
-
-
-class TestDiskioPluginRateCalculation:
-    """Test DiskIO plugin rate calculation."""
-
-    def test_rate_fields_after_two_updates(self, diskio_plugin):
-        """Test that rate fields are populated after two updates."""
-        diskio_plugin.update()
-        time.sleep(0.2)
-        diskio_plugin.update()
-        stats = diskio_plugin.get_raw()
-        for disk in stats:
-            assert 'read_bytes_rate_per_sec' in disk or 'read_bytes' in disk
-            assert 'write_bytes_rate_per_sec' in disk or 'write_bytes' in disk
-
-
-class TestDiskioPluginLatency:
-    """Test DiskIO plugin latency calculation."""
-
-    def test_latency_fields_present(self, diskio_plugin):
-        """Test that latency fields are present after update."""
-        diskio_plugin.update()
-        time.sleep(0.1)
-        diskio_plugin.update()
-        stats = diskio_plugin.get_raw()
-        for disk in stats:
-            assert 'read_latency' in disk
-            assert 'write_latency' in disk
-
-    def test_latency_values_non_negative(self, diskio_plugin):
-        """Test that latency values are non-negative."""
-        diskio_plugin.update()
-        time.sleep(0.1)
-        diskio_plugin.update()
-        stats = diskio_plugin.get_raw()
-        for disk in stats:
-            if 'read_latency' in disk and disk['read_latency'] is not None:
-                assert disk['read_latency'] >= 0
-            if 'write_latency' in disk and disk['write_latency'] is not None:
-                assert disk['write_latency'] >= 0
-
-
-class TestDiskioPluginCounters:
-    """Test DiskIO plugin read/write counters."""
-
-    def test_read_count_present(self, diskio_plugin):
-        """Test that read_count is present."""
-        diskio_plugin.update()
-        stats = diskio_plugin.get_raw()
-        for disk in stats:
-            assert 'read_count' in disk
-
-    def test_write_count_present(self, diskio_plugin):
-        """Test that write_count is present."""
-        diskio_plugin.update()
-        stats = diskio_plugin.get_raw()
-        for disk in stats:
-            assert 'write_count' in disk
-
-
-class TestDiskioPluginViews:
-    """Test DiskIO plugin views functionality."""
-
-    def test_update_views_creates_views(self, diskio_plugin):
-        """Test that update_views creates views dictionary."""
-        diskio_plugin.update()
-        diskio_plugin.update_views()
-        views = diskio_plugin.get_views()
-        assert isinstance(views, dict)
-
-    def test_views_keyed_by_disk(self, diskio_plugin):
-        """Test that views are keyed by disk name."""
-        diskio_plugin.update()
-        time.sleep(0.1)
-        diskio_plugin.update()
-        diskio_plugin.update_views()
-        views = diskio_plugin.get_views()
-        stats = diskio_plugin.get_raw()
-        for disk in stats:
-            if disk['disk_name'] in views:
-                assert isinstance(views[disk['disk_name']], dict)
-
-
-class TestDiskioPluginJSON:
-    """Test DiskIO plugin JSON serialization."""
-
-    def test_get_stats_returns_json(self, diskio_plugin):
-        """Test that get_stats returns valid JSON."""
-        diskio_plugin.update()
-        stats_json = diskio_plugin.get_stats()
-        parsed = json.loads(stats_json)
-        assert isinstance(parsed, list)
-
-    def test_json_preserves_disk_data(self, diskio_plugin):
-        """Test that JSON output preserves disk data."""
-        diskio_plugin.update()
-        stats_json = diskio_plugin.get_stats()
-        parsed = json.loads(stats_json)
-        for disk in parsed:
-            assert 'disk_name' in disk
-
-
-class TestDiskioPluginHistory:
-    """Test DiskIO plugin history functionality."""
-
-    def test_history_enable(self, diskio_plugin):
-        """Test that history can be enabled."""
-        assert diskio_plugin.history_enable() is not None
-
-
-class TestDiskioPluginReset:
-    """Test DiskIO plugin reset functionality."""
-
-    def test_reset_clears_stats(self, diskio_plugin):
-        """Test that reset clears stats."""
-        diskio_plugin.update()
-        diskio_plugin.reset()
-        stats = diskio_plugin.get_raw()
-        assert stats == diskio_plugin.get_init_value()
-
-    def test_reset_views(self, diskio_plugin):
-        """Test that reset_views clears views."""
-        diskio_plugin.update()
-        diskio_plugin.update_views()
-        diskio_plugin.reset_views()
-        assert diskio_plugin.get_views() == {}
-
-
-class TestDiskioPluginFieldsDescription:
-    """Test DiskIO plugin fields description."""
-
-    def test_fields_description_exists(self, diskio_plugin):
-        """Test that fields_description is defined."""
-        assert diskio_plugin.fields_description is not None
-
-    def test_mandatory_fields_described(self, diskio_plugin):
-        """Test that mandatory fields have descriptions."""
-        mandatory_fields = ['disk_name', 'read_bytes', 'write_bytes']
-        for field in mandatory_fields:
-            assert field in diskio_plugin.fields_description
-
-    def test_rate_fields_described(self, diskio_plugin):
-        """Test that rate-enabled fields have rate flag."""
-        rate_fields = ['read_bytes', 'write_bytes', 'read_count', 'write_count']
-        for field in rate_fields:
-            if field in diskio_plugin.fields_description:
-                assert diskio_plugin.fields_description[field].get('rate') is True
-
-    def test_latency_fields_described(self, diskio_plugin):
-        """Test that latency fields are described."""
-        latency_fields = ['read_latency', 'write_latency']
-        for field in latency_fields:
-            assert field in diskio_plugin.fields_description
-
-
-class TestDiskioPluginConfiguration:
-    """Test DiskIO plugin configuration options."""
-
-    def test_hide_zero_attribute(self, diskio_plugin):
-        """Test that hide_zero attribute exists."""
-        assert hasattr(diskio_plugin, 'hide_zero')
-
-    def test_hide_zero_fields_defined(self, diskio_plugin):
-        """Test that hide_zero_fields is defined."""
-        assert hasattr(diskio_plugin, 'hide_zero_fields')
-        assert isinstance(diskio_plugin.hide_zero_fields, list)
-
-    def test_hide_threshold_bytes_attribute(self, diskio_plugin):
-        """Test that hide_threshold_bytes attribute exists."""
-        assert hasattr(diskio_plugin, 'hide_threshold_bytes')
-
-
-class TestDiskioPluginMsgCurse:
-    """Test DiskIO plugin curse message generation."""
-
-    def test_msg_curse_returns_list(self, diskio_plugin):
-        """Test that msg_curse returns a list."""
-        diskio_plugin.update()
-        diskio_plugin.update_views()
-        msg = diskio_plugin.msg_curse(max_width=80)
-        assert isinstance(msg, list)
-
-    def test_msg_curse_empty_without_max_width(self, diskio_plugin):
-        """Test that msg_curse returns empty without max_width."""
-        diskio_plugin.update()
-        diskio_plugin.update_views()
-        msg = diskio_plugin.msg_curse()
-        assert isinstance(msg, list)
-
-    def test_msg_curse_with_max_width(self, diskio_plugin):
-        """Test that msg_curse works with max_width."""
-        diskio_plugin.update()
-        diskio_plugin.update_views()
-        msg = diskio_plugin.msg_curse(max_width=80)
-        assert isinstance(msg, list)
-
-
-class TestDiskioPluginSorting:
-    """Test DiskIO plugin sorting functionality."""
-
-    def test_sorted_stats_returns_list(self, diskio_plugin):
-        """Test that sorted_stats returns a list."""
-        diskio_plugin.update()
-        diskio_plugin.update_views()
-        sorted_stats = diskio_plugin.sorted_stats()
-        assert isinstance(sorted_stats, list)
-
-    def test_sorted_stats_preserves_count(self, diskio_plugin):
-        """Test that sorted_stats preserves disk count."""
-        diskio_plugin.update()
-        diskio_plugin.update_views()
-        raw_count = len(diskio_plugin.get_raw())
-        sorted_count = len(diskio_plugin.sorted_stats())
-        assert raw_count == sorted_count
-
-
-class TestDiskioPluginExport:
-    """Test DiskIO plugin export functionality."""
-
-    def test_get_export_returns_list(self, diskio_plugin):
-        """Test that get_export returns a list."""
-        diskio_plugin.update()
-        diskio_plugin.update_views()
-        export = diskio_plugin.get_export()
-        assert isinstance(export, list)
-
-    def test_export_equals_raw(self, diskio_plugin):
-        """Test that export equals raw stats by default."""
-        diskio_plugin.update()
-        diskio_plugin.update_views()
-        assert diskio_plugin.get_export() == diskio_plugin.get_raw()
-
-
-class TestDiskioPluginAlerts:
-    """Test DiskIO plugin alert functionality."""
-
-    def test_views_have_decoration(self, diskio_plugin):
-        """Test that disk views have decoration after update."""
-        diskio_plugin.update()
-        diskio_plugin.update_views()
-        time.sleep(0.1)
-        diskio_plugin.update()
-        diskio_plugin.update_views()
-        views = diskio_plugin.get_views()
-        stats = diskio_plugin.get_raw()
-
-        for disk in stats:
-            disk_name = disk['disk_name']
-            if disk_name in views and 'read_bytes' in views[disk_name]:
-                assert 'decoration' in views[disk_name]['read_bytes']
-
-
-class TestDiskioPluginAlias:
-    """Test DiskIO plugin alias functionality."""
-
-    def test_alias_field_may_be_present(self, diskio_plugin):
-        """Test that alias field may be present for disks."""
-        diskio_plugin.update()
-        diskio_plugin.update_views()
-        stats = diskio_plugin.get_raw()
-        # Alias is optional, so just verify the field handling works
-        for disk in stats:
-            if 'alias' in disk:
-                assert disk['alias'] is None or isinstance(disk['alias'], str)
-
-
-class TestDiskioBitrateAlert:
-    """The rx/tx thresholds describe a bitrate, so they must be measured against one."""
-
-    # get_stat_name() builds plugin_name + action_key + header, so a per-disk threshold
-    # is named after the disk, exactly as the network plugin's docstring documents
-    # (network_wlan0_rx_careful).
-    LIMITS = {
-        'diskio_sda_rx_careful': 50,
-        'diskio_sda_rx_warning': 70,
-        'diskio_sda_rx_critical': 90,
-        'diskio_sda_tx_careful': 50,
-        'diskio_sda_tx_warning': 70,
-        'diskio_sda_tx_critical': 90,
-    }
-
-    def _views_for(self, plugin, read_rate, write_rate):
-        plugin._limits.update(self.LIMITS)
-        plugin.stats = [
-            {
-                'disk_name': 'sda',
-                # Lifetime counters, large as they are on any machine with uptime.
-                'read_bytes': 5_000_000_000,
-                'write_bytes': 5_000_000_000,
-                'read_bytes_rate_per_sec': read_rate,
-                'write_bytes_rate_per_sec': write_rate,
-                'read_latency': 0,
-                'write_latency': 0,
-            }
-        ]
-        plugin.update_views()
-        return plugin.views['sda']
-
-    def test_alert_follows_the_rate_not_the_lifetime_counter(self, diskio_plugin):
-        """A quiet disk with terabytes of history is quiet, whatever the counter reads."""
-        views = self._views_for(diskio_plugin, read_rate=10, write_rate=10)
-        assert views['read_bytes']['decoration'] == 'OK'
-        assert views['write_bytes']['decoration'] == 'OK'
-
-    def test_a_busy_disk_still_raises_the_alert(self, diskio_plugin):
-        views = self._views_for(diskio_plugin, read_rate=95, write_rate=95)
-        assert views['read_bytes']['decoration'] == 'CRITICAL'
-        assert views['write_bytes']['decoration'] == 'CRITICAL'
-
-    def test_the_rate_field_the_webui_reads_is_decorated_too(self, diskio_plugin):
-        """plugin-diskio.vue asks for *_rate_per_sec; nothing used to set it."""
-        views = self._views_for(diskio_plugin, read_rate=95, write_rate=10)
-        assert views['read_bytes_rate_per_sec']['decoration'] == 'CRITICAL'
-        assert views['write_bytes_rate_per_sec']['decoration'] == 'OK'
-
-    def test_a_missing_rate_on_the_first_sample_does_not_raise(self, diskio_plugin):
-        """Before the second sample there is no timespan, so no rate field exists yet."""
-        diskio_plugin._limits.update(self.LIMITS)
-        diskio_plugin.stats = [
-            {'disk_name': 'sda', 'read_bytes': 1, 'write_bytes': 1, 'read_latency': 0, 'write_latency': 0}
-        ]
-        diskio_plugin.update_views()
-        assert diskio_plugin.views['sda']['read_bytes']['decoration'] == 'OK'
+def store() -> StatsStore:
+    return StatsStore()
+
+
+@pytest.fixture
+def config(tmp_path, monkeypatch) -> GlancesConfig:
+    monkeypatch.setattr(GlancesConfig, "SYSTEM_CONFIG_PATH", tmp_path / "etc" / "glances.conf")
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "xdg"))
+    return GlancesConfig()
+
+
+def _config_with(tmp_path, monkeypatch, body: str) -> GlancesConfig:
+    monkeypatch.setattr(GlancesConfig, "SYSTEM_CONFIG_PATH", tmp_path / "etc" / "glances.conf")
+    xdg = tmp_path / "xdg"
+    cfg_dir = xdg / "glances"
+    cfg_dir.mkdir(parents=True)
+    (cfg_dir / "glances.conf").write_text(body)
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(xdg))
+    return GlancesConfig()
+
+
+# ---------------------------------------------------------- contract
+
+
+def test_plugin_identity(store, config):
+    plugin = PluginModel(store, config)
+    assert plugin.plugin_name == "diskio"
+    assert plugin.IS_COLLECTION is True
+
+
+def test_disk_name_is_primary_key(store, config):
+    fields = PluginModel(store, config)._fields
+    assert fields["disk_name"].get("primary_key") is True
+
+
+def test_read_write_bytes_are_rate_counters(store, config):
+    fields = PluginModel(store, config)._fields
+    for name in ("read_bytes", "write_bytes"):
+        assert fields[name].get("rate") is True, name
+
+
+def test_read_write_bytes_are_watched_but_not_prominent_with_strict(store, config):
+    """Opt-in alerts: watched=True so the framework wires levels when the
+    user sets thresholds, but no defaults — and strict_thresholds=True so
+    bare ``careful``/``warning``/``critical`` keys in ``[diskio]`` do NOT
+    spill onto these per-disk rates."""
+    fields = PluginModel(store, config)._fields
+    for name in ("read_bytes", "write_bytes"):
+        assert fields[name].get("watched") is True, name
+        assert fields[name].get("prominent") is False, name
+        assert fields[name].get("strict_thresholds") is True, name
+        assert "default_thresholds" not in fields[name], name
+
+
+def test_read_write_count_are_rate_internal(store, config):
+    """read_count / write_count are kept in the payload for IOPS export but
+    flagged ``internal`` so the generic renderer skips them."""
+    fields = PluginModel(store, config)._fields
+    for name in ("read_count", "write_count"):
+        assert fields[name].get("rate") is True, name
+        assert fields[name].get("internal") is True, name
+
+
+# ---------------------------------------------------------- update pipeline
+
+
+async def test_update_yields_one_entry_per_disk(store, config):
+    plugin = PluginModel(store, config)
+    iomap = {"sda": _io(rc=10, wc=5), "sdb": _io(rc=20, wc=15)}
+    with patch("glances.plugins.diskio.model.psutil.disk_io_counters", return_value=iomap):
+        await plugin.update()
+    payload = store.get("diskio")
+    names = sorted(i["disk_name"] for i in payload["data"])
+    assert names == ["sda", "sdb"]
+
+
+async def test_first_cycle_rate_fields_are_none(store, config):
+    plugin = PluginModel(store, config)
+    iomap = {"sda": _io(rc=10, wc=5, rb=1000, wb=500)}
+    with patch("glances.plugins.diskio.model.psutil.disk_io_counters", return_value=iomap):
+        await plugin.update()
+    item = store.get("diskio")["data"][0]
+    # No baseline yet → rate fields kept, value None.
+    for name in ("read_bytes", "write_bytes", "read_count", "write_count"):
+        assert name in item, name
+        assert item[name] is None, name
+
+
+async def test_second_cycle_computes_byte_rates(store, config, monkeypatch):
+    plugin = PluginModel(store, config)
+    fake_now = [100.0]
+    import glances.plugins.plugin.base as base_module
+
+    monkeypatch.setattr(base_module.time, "monotonic", lambda: fake_now[0])
+
+    psutil_path = "glances.plugins.diskio.model.psutil.disk_io_counters"
+    with patch(psutil_path, return_value={"sda": _io(rc=0, wc=0, rb=0, wb=0)}):
+        await plugin.update()
+    fake_now[0] = 101.0
+    with patch(psutil_path, return_value={"sda": _io(rc=10, wc=5, rb=10_000, wb=5_000)}):
+        await plugin.update()
+
+    item = next(i for i in store.get("diskio")["data"] if i["disk_name"] == "sda")
+    assert item["read_bytes"] == 10_000.0  # 10_000 B / 1 s
+    assert item["write_bytes"] == 5_000.0
+    assert item["read_count"] == 10.0
+    assert item["write_count"] == 5.0
+
+
+async def test_update_handles_psutil_failure(store, config):
+    """psutil.disk_io_counters may return None on locked-down hosts or
+    raise on transient kernel hiccups — model degrades gracefully."""
+    plugin = PluginModel(store, config)
+    with patch("glances.plugins.diskio.model.psutil.disk_io_counters", side_effect=OSError("boom")):
+        await plugin.update()
+    assert store.get("diskio")["data"] == []
+
+
+async def test_update_handles_none_return(store, config):
+    """psutil returns ``None`` on platforms without disk I/O support."""
+    plugin = PluginModel(store, config)
+    with patch("glances.plugins.diskio.model.psutil.disk_io_counters", return_value=None):
+        await plugin.update()
+    assert store.get("diskio")["data"] == []
+
+
+# ---------------------------------------------------------- thresholds
+
+
+async def test_no_levels_without_user_thresholds(store, config, monkeypatch):
+    """No ``[diskio] read_bytes_*`` in conf → no _levels entries."""
+    plugin = PluginModel(store, config)
+    fake_now = [100.0]
+    import glances.plugins.plugin.base as base_module
+
+    monkeypatch.setattr(base_module.time, "monotonic", lambda: fake_now[0])
+
+    psutil_path = "glances.plugins.diskio.model.psutil.disk_io_counters"
+    with patch(psutil_path, return_value={"sda": _io()}):
+        await plugin.update()
+    fake_now[0] = 101.0
+    with patch(psutil_path, return_value={"sda": _io(rb=1_000_000, wb=500_000)}):
+        await plugin.update()
+
+    levels = store.get("diskio")["_levels"]
+    # Either no entry for sda or entry with no read/write_bytes keys.
+    sda = levels.get("sda", {})
+    assert "read_bytes" not in sda
+    assert "write_bytes" not in sda
+
+
+async def test_bare_level_keys_do_not_leak_onto_per_disk_rates(tmp_path, monkeypatch, store):
+    """Regression guard: ``[diskio] careful=50`` (bare) must NOT trigger
+    on read_bytes/write_bytes — they ship ``strict_thresholds=True``."""
+    config = _config_with(tmp_path, monkeypatch, "[diskio]\ncareful=50\nwarning=70\ncritical=90\n")
+    plugin = PluginModel(store, config)
+    fake_now = [100.0]
+    import glances.plugins.plugin.base as base_module
+
+    monkeypatch.setattr(base_module.time, "monotonic", lambda: fake_now[0])
+
+    psutil_path = "glances.plugins.diskio.model.psutil.disk_io_counters"
+    with patch(psutil_path, return_value={"sda": _io()}):
+        await plugin.update()
+    fake_now[0] = 101.0
+    with patch(psutil_path, return_value={"sda": _io(rb=1_000, wb=1_000)}):
+        await plugin.update()
+
+    sda = store.get("diskio")["_levels"].get("sda", {})
+    assert "read_bytes" not in sda
+    assert "write_bytes" not in sda
+
+
+async def test_read_bytes_threshold_from_config_triggers_level(tmp_path, monkeypatch, store):
+    """User-set per-field thresholds wire through normally."""
+    config = _config_with(
+        tmp_path,
+        monkeypatch,
+        "[diskio]\nread_bytes_careful=5000\nread_bytes_warning=10000\nread_bytes_critical=20000\n",
+    )
+    plugin = PluginModel(store, config)
+    fake_now = [100.0]
+    import glances.plugins.plugin.base as base_module
+
+    monkeypatch.setattr(base_module.time, "monotonic", lambda: fake_now[0])
+
+    psutil_path = "glances.plugins.diskio.model.psutil.disk_io_counters"
+    with patch(psutil_path, return_value={"sda": _io()}):
+        await plugin.update()
+    fake_now[0] = 101.0
+    with patch(psutil_path, return_value={"sda": _io(rb=15_000)}):  # 15_000 B/s → warning
+        await plugin.update()
+
+    sda = store.get("diskio")["_levels"]["sda"]
+    assert sda["read_bytes"]["level"] == "warning"
+    assert sda["read_bytes"]["prominent"] is False
+
+
+async def test_level_follows_the_rate_not_the_lifetime_counter(tmp_path, monkeypatch, store):
+    """A 5 GB lifetime counter growing by 10 B/s is far under critical=90 B/s:
+    the level is computed on the rate, not on the raw counter."""
+    config = _config_with(tmp_path, monkeypatch, "[diskio]\nsda_read_bytes_critical=90\n")
+    plugin = PluginModel(store, config)
+    await _two_cycles(plugin, monkeypatch, {"sda": _io(rb=5_000_000_000)}, {"sda": _io(rb=5_000_000_010)})
+
+    assert store.get("diskio")["data"][0]["read_bytes"] == 10.0
+    assert store.get("diskio")["_levels"]["sda"]["read_bytes"]["level"] == "ok"
+
+
+# ---------------------------------------------------------- alias (design §5.5)
+
+
+async def test_alias_published_for_matching_disk(tmp_path, monkeypatch, store):
+    config = _config_with(tmp_path, monkeypatch, "[diskio]\nalias=sda:SystemDisk\n")
+    plugin = PluginModel(store, config)
+    iomap = {"sda": _io(), "sdb": _io()}
+    with patch("glances.plugins.diskio.model.psutil.disk_io_counters", return_value=iomap):
+        await plugin.update()
+    data = {i["disk_name"]: i for i in store.get("diskio")["data"]}
+    assert data["sda"]["alias"] == "SystemDisk"
+    assert "alias" not in data["sdb"]
+    assert data["sda"]["disk_name"] == "sda"  # primary key untouched
+
+
+# ---------------------------------------------------------- hide_zero / hide_threshold_bytes (design §5.1)
+
+
+def test_hide_zero_fields_declared(store, config):
+    assert PluginModel.HIDE_ZERO_FIELDS == ["read_bytes", "write_bytes"]
+
+
+async def test_hide_zero_off_by_default_never_hides(store, config, monkeypatch):
+    """diskio ships no `hide_zero` key in conf/glances.conf — defaults to False."""
+    plugin = PluginModel(store, config)
+    fake_now = [100.0]
+    import glances.plugins.plugin.base as base_module
+
+    monkeypatch.setattr(base_module.time, "monotonic", lambda: fake_now[0])
+
+    psutil_path = "glances.plugins.diskio.model.psutil.disk_io_counters"
+    with patch(psutil_path, return_value={"sda": _io()}):
+        await plugin.update()
+    fake_now[0] = 101.0
+    with patch(psutil_path, return_value={"sda": _io()}):
+        await plugin.update()
+
+    item = store.get("diskio")["data"][0]
+    assert item["hidden"] is False
+
+
+async def test_hide_zero_sticky_after_threshold_burst(tmp_path, monkeypatch, store):
+    config = _config_with(tmp_path, monkeypatch, "[diskio]\nhide_zero=True\nhide_threshold_bytes=1000\n")
+    plugin = PluginModel(store, config)
+    fake_now = [100.0]
+    import glances.plugins.plugin.base as base_module
+
+    monkeypatch.setattr(base_module.time, "monotonic", lambda: fake_now[0])
+
+    psutil_path = "glances.plugins.diskio.model.psutil.disk_io_counters"
+    with patch(psutil_path, return_value={"sda": _io(rb=0, wb=0)}):
+        await plugin.update()  # cycle 1, rate None
+
+    assert store.get("diskio")["data"][0]["hidden"] is True
+
+    fake_now[0] = 101.0
+    with patch(psutil_path, return_value={"sda": _io(rb=5000, wb=0)}):
+        await plugin.update()  # rb rate 5000 > 1000 -> unhide
+
+    assert store.get("diskio")["data"][0]["hidden"] is False
+
+    fake_now[0] = 102.0
+    with patch(psutil_path, return_value={"sda": _io(rb=5000, wb=0)}):
+        await plugin.update()  # unchanged counter -> rate 0 -> sticky stays visible
+
+    assert store.get("diskio")["data"][0]["hidden"] is False
+
+
+# ---------------------------------------------------------- latency (v4 update_latency)
+
+
+async def _two_cycles(plugin, monkeypatch, first, second):
+    """Run two updates one second apart with the given psutil maps."""
+    import glances.plugins.plugin.base as base_module
+
+    fake_now = [100.0]
+    monkeypatch.setattr(base_module.time, "monotonic", lambda: fake_now[0])
+    psutil_path = "glances.plugins.diskio.model.psutil.disk_io_counters"
+    with patch(psutil_path, return_value=first):
+        await plugin.update()
+    fake_now[0] = 101.0
+    with patch(psutil_path, return_value=second):
+        await plugin.update()
+
+
+def test_latency_fields_are_internal_opt_in_alerts_under_v4_keys(store, config):
+    fields = PluginModel(store, config)._fields
+    for name, v4_key in (("read_latency", "rx_latency"), ("write_latency", "tx_latency")):
+        schema = fields[name]
+        assert schema["internal"] is True
+        assert schema["watched"] is True and schema["prominent"] is False
+        assert schema["strict_thresholds"] is True
+        assert "default_thresholds" not in schema
+        assert schema["threshold_field"] == v4_key
+    for name in ("read_time", "write_time"):
+        assert fields[name]["rate"] is True and fields[name]["internal"] is True
+
+
+async def test_latency_is_time_rate_over_count_rate(store, config, monkeypatch):
+    """50 ms spent over 10 reads in one second -> 5 ms per read (v4 int())."""
+    plugin = PluginModel(store, config)
+    await _two_cycles(
+        plugin,
+        monkeypatch,
+        {"sda": _io()},
+        {"sda": _io(rc=10, wc=3, rt=50, wt=10)},
+    )
+    sda = store.get("diskio")["data"][0]
+    assert sda["read_latency"] == 5
+    assert sda["write_latency"] == 3  # int(10 / 3)
+
+
+async def test_latency_is_zero_without_operations(store, config, monkeypatch):
+    plugin = PluginModel(store, config)
+    await _two_cycles(plugin, monkeypatch, {"sda": _io()}, {"sda": _io()})
+    sda = store.get("diskio")["data"][0]
+    assert sda["read_latency"] == 0 and sda["write_latency"] == 0
+
+
+async def test_latency_is_none_on_the_first_cycle(store, config):
+    plugin = PluginModel(store, config)
+    with patch("glances.plugins.diskio.model.psutil.disk_io_counters", return_value={"sda": _io()}):
+        await plugin.update()
+    sda = store.get("diskio")["data"][0]
+    assert sda["read_latency"] is None and sda["write_latency"] is None
+
+
+async def test_latency_is_none_when_psutil_has_no_time_counters(store, config, monkeypatch):
+    """Some platforms' psutil omit read_time/write_time: no latency, no crash."""
+    NoTime = namedtuple("sdiskio", ["read_count", "write_count", "read_bytes", "write_bytes"])
+    plugin = PluginModel(store, config)
+    await _two_cycles(plugin, monkeypatch, {"sda": NoTime(0, 0, 0, 0)}, {"sda": NoTime(10, 10, 100, 100)})
+    sda = store.get("diskio")["data"][0]
+    assert sda["read_latency"] is None and sda["write_latency"] is None
+
+
+async def test_v4_latency_threshold_keys_colour_the_latency(tmp_path, monkeypatch, store):
+    """`rx_latency_*` and the per-disk `<disk>_tx_latency_*` of the shipped
+    glances.conf work as written."""
+    config = _config_with(
+        tmp_path,
+        monkeypatch,
+        "[diskio]\nrx_latency_careful=10\nrx_latency_warning=20\nsda_tx_latency_critical=2\n",
+    )
+    plugin = PluginModel(store, config)
+    await _two_cycles(plugin, monkeypatch, {"sda": _io()}, {"sda": _io(rc=10, wc=10, rt=250, wt=30)})
+    levels = store.get("diskio")["_levels"]["sda"]
+    assert levels["read_latency"]["level"] == "warning"  # 25 ms
+    assert levels["write_latency"]["level"] == "critical"  # 3 ms, per-disk key
+
+
+# ---------------------------------------------------------- `U` cumulative counters
+
+
+async def test_cumulative_counters_ride_beside_the_rates(store, config, monkeypatch):
+    plugin = PluginModel(store, config)
+    await _two_cycles(
+        plugin, monkeypatch, {"sda": _io(rc=1, wc=2, rb=10, wb=20)}, {"sda": _io(rc=5, wc=6, rb=50, wb=60)}
+    )
+    sda = store.get("diskio")["data"][0]
+    assert sda["read_bytes"] == 40.0
+    assert (sda["read_bytes_cumul"], sda["write_bytes_cumul"]) == (50, 60)
+    assert (sda["read_count_cumul"], sda["write_count_cumul"]) == (5, 6)
+
+
+def test_cumulative_fields_are_internal(store, config):
+    fields = PluginModel(store, config)._fields
+    for name, label in (
+        ("read_bytes_cumul", "R"),
+        ("write_bytes_cumul", "W"),
+        ("read_count_cumul", "IOR"),
+        ("write_count_cumul", "IOW"),
+    ):
+        assert fields[name]["internal"] is True and fields[name]["short_name"] == label
+
+
+# ---------------------------------------------------------- RAM disks (v4 --diskio-show-ramfs)
+
+
+async def test_ram_disks_are_hidden_by_default(store, config):
+    plugin = PluginModel(store, config)
+    with patch("glances.plugins.diskio.model.psutil.disk_io_counters", return_value={"ram0": _io(), "sda": _io()}):
+        await plugin.update()
+    assert [d["disk_name"] for d in store.get("diskio")["data"]] == ["sda"]
+
+
+async def test_show_ramfs_keeps_the_ram_disks(tmp_path, monkeypatch, store):
+    config = _config_with(tmp_path, monkeypatch, "[diskio]\nshow_ramfs=True\n")
+    plugin = PluginModel(store, config)
+    with patch("glances.plugins.diskio.model.psutil.disk_io_counters", return_value={"ram0": _io(), "sda": _io()}):
+        await plugin.update()
+    assert sorted(d["disk_name"] for d in store.get("diskio")["data"]) == ["ram0", "sda"]

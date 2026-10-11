@@ -103,8 +103,8 @@ COPY docker-bin.sh /usr/local/bin/glances
 RUN chmod a+x /usr/local/bin/glances
 ENV PATH="/venv/bin:$PATH"
 
-# EXPOSE PORT (XMLRPC / WebUI)
-EXPOSE 61209 61208
+# EXPOSE PORT (REST API / WebUI)
+EXPOSE 61208
 
 # Add glances user
 # NOTE: If used, the Glances Docker plugin do not work...

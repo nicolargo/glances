@@ -34,7 +34,7 @@ one_line=true
 systemctl_cmd=/usr/bin/systemctl --plain
 """
 
-from subprocess import CalledProcessError, check_output
+from subprocess import CalledProcessError, TimeoutExpired, check_output
 
 from glances.amps.amp import GlancesAmp
 from glances.globals import to_ascii
@@ -59,8 +59,8 @@ class Amp(GlancesAmp):
         # Get the systemctl status
         logger.debug('{}: Update stats using systemctl {}'.format(self.NAME, self.get('systemctl_cmd')))
         try:
-            res = check_output(self.get('systemctl_cmd').split())
-        except (OSError, CalledProcessError) as e:
+            res = check_output(self.get('systemctl_cmd').split(), timeout=self.timeout())
+        except (OSError, CalledProcessError, TimeoutExpired) as e:
             logger.debug(f'{self.NAME}: Error while executing systemctl ({e})')
         else:
             status = {}

@@ -97,6 +97,12 @@ class GlancesProcesses:
         self.disable_extended_tag = False
         self.extended_process = None
 
+        # v5 TUI: the process to grab extended stats for, named by PID.
+        # None (the default) leaves v4's position-based path
+        # (`is_selected_extended_process`) in sole charge, so nothing changes
+        # for a caller that never sets it.
+        self.extended_pid = None
+
         # Tests (and disable if not available) optionals features
         self._test_grab()
 
@@ -393,7 +399,7 @@ class GlancesProcesses:
             self.extended_process = None
             ret['extended_stats'] = False
         else:
-            # Compute CPU and MEM min/max/mean
+            # Compute CPU (%) and MEM (RES, bytes) min/max/mean
             # Merge the returned dict with the current on
             ret.update(self.__get_min_max_mean(proc))
             self.extended_process = ret
@@ -410,26 +416,41 @@ class GlancesProcesses:
                 return p
         return None
 
-    def __get_min_max_mean(self, proc, prefix=['cpu', 'memory']):
-        """Return the min/max/mean for the given process"""
+    def __get_min_max_mean(self, proc):
+        """Return the min/max/mean for the given process.
+
+        CPU is in percent, MEMORY is the RES (RSS) in bytes.
+        The accumulators live in self.extended_process and are reset on (re)pin.
+        """
         ret = {}
-        for stat_prefix in prefix:
+        memory_info = proc.get('memory_info')
+        if isinstance(memory_info, dict):
+            rss = memory_info.get('rss')
+        else:
+            rss = getattr(memory_info, 'rss', None)
+        for stat_prefix, value in (('cpu', proc.get('cpu_percent')), ('memory', rss)):
             min_key = stat_prefix + '_min'
             max_key = stat_prefix + '_max'
             mean_sum_key = stat_prefix + '_mean_sum'
             mean_counter_key = stat_prefix + '_mean_counter'
+            if value is None:
+                # Not available this cycle (e.g. access denied): keep the previous values
+                for k in (min_key, max_key, mean_sum_key, mean_counter_key, stat_prefix + '_mean'):
+                    if k in self.extended_process:
+                        ret[k] = self.extended_process[k]
+                continue
             if min_key not in self.extended_process:
-                ret[min_key] = proc[stat_prefix + '_percent']
+                ret[min_key] = value
             else:
-                ret[min_key] = min(proc[stat_prefix + '_percent'], self.extended_process[min_key])
+                ret[min_key] = min(value, self.extended_process[min_key])
             if max_key not in self.extended_process:
-                ret[max_key] = proc[stat_prefix + '_percent']
+                ret[max_key] = value
             else:
-                ret[max_key] = max(proc[stat_prefix + '_percent'], self.extended_process[max_key])
+                ret[max_key] = max(value, self.extended_process[max_key])
             if mean_sum_key not in self.extended_process:
-                ret[mean_sum_key] = proc[stat_prefix + '_percent']
+                ret[mean_sum_key] = value
             else:
-                ret[mean_sum_key] = self.extended_process[mean_sum_key] + proc[stat_prefix + '_percent']
+                ret[mean_sum_key] = self.extended_process[mean_sum_key] + value
             if mean_counter_key not in self.extended_process:
                 ret[mean_counter_key] = 1
             else:
@@ -441,10 +462,17 @@ class GlancesProcesses:
         """Return the memory swap for the given process"""
         if not LINUX:
             return None
+        memory_swap = None
         try:
             memory_swap = sum([v.swap for v in process.memory_maps()])
         except (psutil.NoSuchProcess, KeyError):
             # (KeyError catch for issue #1551)
+            # `pass` here left `memory_swap` UNBOUND, so the `return` below
+            # raised UnboundLocalError instead of reporting "no swap figure".
+            # Unreachable until v5 gained the `e` key (2.X-b3): nothing else
+            # calls `set_extended_stats`, and the two ways in are a process
+            # that exits mid-grab and issue #1551 -- the first of which is
+            # exactly what pinning a short-lived process does.
             pass
         except (psutil.AccessDenied, NotImplementedError):
             # NotImplementedError: /proc/${PID}/smaps file doesn't exist
@@ -470,6 +498,18 @@ class GlancesProcesses:
             tcp = None
             udp = None
         return tcp, udp
+
+    def is_extended_pid(self, pid):
+        """Return True if `pid` is the v5 TUI's selected process.
+
+        v4 pushes its cursor POSITION into the engine through `set_args`
+        (`is_selected_extended_process`). v5 does not hand the engine its
+        argparse namespace at all — and a position is the wrong handle
+        regardless: the list is re-sorted on every cycle, so position 3 names
+        a different process from one refresh to the next and the extended
+        block would describe a moving target. A PID does not move.
+        """
+        return self.extended_pid is not None and pid == self.extended_pid
 
     def is_selected_extended_process(self, position):
         """Return True if the process is the selected one for extended stats."""
@@ -637,18 +677,30 @@ class GlancesProcesses:
         # Loop over processes and :
         # - add extended stats for selected process
         # - add metadata
+        # Whether the pinned process was still running this cycle. Without it,
+        # a process that exits leaves `extended_process` holding its last
+        # values forever -- nothing below ever runs again for a pid that is no
+        # longer in the list, so every consumer keeps rendering a frozen block
+        # for a process that no longer exists.
+        extended_seen = False
+
         for position, proc in enumerate(processlist):
             # Extended stats
             ################
 
-            # Get the selected process when the 'e' key is pressed
-            if self.is_selected_extended_process(position):
+            # Get the selected process when the 'e' key is pressed.
+            # Only on a new selection: replacing it on every cycle would wipe
+            # the min/max/mean accumulators, leaving Min == Max == Mean.
+            if (self.is_selected_extended_process(position) or self.is_extended_pid(proc.get('pid'))) and (
+                self.extended_process is None or self.extended_process['pid'] != proc['pid']
+            ):
                 self.extended_process = proc
 
             # Grab extended stats only for the selected process (see issue #2225)
             if self.extended_process is not None and proc['pid'] == self.extended_process['pid']:
-                proc.update(self.set_extended_stats(self.extended_process))
+                proc.update(self.set_extended_stats(proc))
                 self.extended_process = namedtuple_to_dict(proc)
+                extended_seen = True
 
             # Meta data
             ###########
@@ -659,6 +711,20 @@ class GlancesProcesses:
 
             # Manage cached information
             proc = self.maybe_add_cached_stats(is_cached, cached_attrs, proc)
+
+            # The command line is only merged above, after the extended grab:
+            # give it to the pinned process so its title can show it.
+            if self.extended_process is not None and proc['pid'] == self.extended_process['pid']:
+                self.extended_process['cmdline'] = proc.get('cmdline')
+
+        # The pinned process is gone. Forget it, rather than leave the TUI and
+        # the WebUI showing its last numbers under a `extended_stats: True`
+        # that is no longer true. The PIN goes with the accumulator: a pin on
+        # a dead pid can never come back, and leaving it set would keep the
+        # TUI's cursor frozen on a block it no longer draws.
+        if self.extended_process is not None and not extended_seen:
+            self.extended_process = None
+            self.extended_pid = None
 
         # Remove non running process from the cache (avoid issue #2976)
         self.remove_non_running_procs(processlist)
@@ -763,24 +829,36 @@ class GlancesProcesses:
     def nice_decrease(self, pid):
         """Decrease nice level
         On UNIX this is a number which usually goes from -20 to 20.
-        The higher the nice value, the lower the priority of the process."""
+        The higher the nice value, the lower the priority of the process.
+
+        Return True when the new level was applied, False when the OS refused
+        it. The v4 curses UI ignores the return and reads the log; the v5 TUI
+        tells the user on screen, which it cannot do if a refusal only ever
+        becomes a log line."""
         p = psutil.Process(pid)
         try:
             p.nice(p.nice() - 1)
             logger.info(f'Set nice level of process {pid} to {p.nice()} (higher the priority)')
         except psutil.AccessDenied:
             logger.warning(f'Can not decrease (higher the priority) the nice level of process {pid} (access denied)')
+            return False
+        return True
 
     def nice_increase(self, pid):
         """Increase nice level
         On UNIX this is a number which usually goes from -20 to 20.
-        The higher the nice value, the lower the priority of the process."""
+        The higher the nice value, the lower the priority of the process.
+
+        Return True when the new level was applied, False when the OS refused
+        it (see ``nice_decrease``)."""
         p = psutil.Process(pid)
         try:
             p.nice(p.nice() + 1)
             logger.info(f'Set nice level of process {pid} to {p.nice()} (lower the priority)')
         except psutil.AccessDenied:
             logger.warning(f'Can not increase (lower the priority) the nice level of process {pid} (access denied)')
+            return False
+        return True
 
     def kill(self, pid, timeout=3):
         """Kill process with pid"""

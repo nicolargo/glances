@@ -1,4 +1,4 @@
-.. _sensors:
+.. _hddtemp:
 
 HDD temperature sensor
 ======================
@@ -32,8 +32,22 @@ It should appears in the sensors plugin.
 
 .. image:: ../_static/hddtemp.png
 
-There is no alert on this information.
+By default, Glances connects to the hddtemp daemon on ``127.0.0.1:7634``.
+The connection can be configured (or the feature disabled) in the
+``[hddtemp]`` section of the configuration file:
+
+.. code-block:: ini
+
+    [hddtemp]
+    disable=False
+    # Define hddtemp server IP and port (default is 127.0.0.1 and 7634 (TCP))
+    host=127.0.0.1
+    port=7634
+
+If the daemon can not be reached, Glances stops polling it until the next
+restart.
 
 .. note::
-    Limit values and sensors alias names can be defined in the
-    configuration file under the ``[sensors]`` section.
+    Limit values (``temperature_hdd_careful``, ``temperature_hdd_warning``
+    and ``temperature_hdd_critical``) and sensors alias names can be
+    defined in the configuration file under the ``[sensors]`` section.

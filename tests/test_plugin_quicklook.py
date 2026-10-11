@@ -7,282 +7,454 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
-"""Tests for the Quicklook plugin stats list configuration."""
+"""Tests for the v5 quicklook plugin model."""
 
-import os
-from argparse import Namespace
+from __future__ import annotations
+
+from types import SimpleNamespace
+from unittest.mock import mock_open
 
 import pytest
 
-from glances.config import Config
-from glances.plugins.quicklook import QuicklookPlugin
+from glances.config import GlancesConfig
+from glances.plugins.gpu.model import PluginModel as GpuPluginModel
+from glances.plugins.quicklook.model import PluginModel, _collect_sync, _cpu_name
+from glances.stats_store import StatsStore
 
 
 @pytest.fixture
-def plugin_for(tmp_path):
-    """Build a Quicklook plugin from a `[quicklook] list=...` config value."""
-
-    def build(list_value):
-        config_file = tmp_path / f'glances-{abs(hash(list_value))}.conf'
-        config_file.write_text(f'[quicklook]\nlist={list_value}\n', encoding='utf-8')
-        return QuicklookPlugin(args=None, config=Config(config_dir=os.fspath(config_file)))
-
-    return build
+def store() -> StatsStore:
+    return StatsStore()
 
 
-class TestQuicklookStatsList:
-    def test_a_plain_list_is_honoured(self, plugin_for):
-        assert plugin_for('cpu,mem,load').stats_list == ['cpu', 'mem', 'load']
+@pytest.fixture
+def config(tmp_path, monkeypatch) -> GlancesConfig:
+    # v5 idiom (mirrors tests/test_plugin_load.py): real config object
+    # with the system config path redirected to an empty tmp file.
+    monkeypatch.setattr(GlancesConfig, "SYSTEM_CONFIG_PATH", tmp_path / "etc" / "glances.conf")
+    return GlancesConfig()
 
-    @pytest.mark.parametrize(
-        'list_value',
+
+def _cfg_with(tmp_path, monkeypatch, body: str) -> GlancesConfig:
+    """Real config object built from a `[quicklook]` section body."""
+    monkeypatch.setattr(GlancesConfig, "SYSTEM_CONFIG_PATH", tmp_path / "etc" / "glances.conf")
+    xdg = tmp_path / "xdg"
+    cfg_dir = xdg / "glances"
+    cfg_dir.mkdir(parents=True)
+    (cfg_dir / "glances.conf").write_text(body)
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(xdg))
+    return GlancesConfig()
+
+
+def test_plugin_identity(store, config):
+    p = PluginModel(store, config)
+    assert p.plugin_name == "quicklook"
+    assert p.IS_COLLECTION is False
+
+
+def test_quicklook_opts_out_of_alerts(store, config):
+    """quicklook colours its bars from cpu/mem/swap/load `_levels` but must
+    NOT emit alerts events / actions: those aggregate signals are already
+    watched by the cpu/mem/memswap/load plugins, so ingesting quicklook too
+    would duplicate every alert. See base ``EMITS_ALERTS`` doc."""
+    assert PluginModel.EMITS_ALERTS is False
+
+
+def test_fields_description_keys():
+    fd = PluginModel.fields_description
+    for key in ("cpu", "mem", "swap", "load"):
+        assert fd[key]["unit"] == "percent"
+        assert fd[key].get("watched") is True
+    # Render-support fields are internal + not watched (never level-computed).
+    for key in ("percpu", "cpu_name", "cpu_hz", "cpu_hz_current", "cpu_log_core", "cpu_phys_core"):
+        assert fd[key].get("internal") is True
+        assert fd[key].get("watched", False) is False
+
+
+@pytest.mark.asyncio
+async def test_grab_stats_shape(store, config, monkeypatch):
+    """_grab_stats returns the documented scalar shape with a percpu list."""
+    p = PluginModel(store, config)
+
+    class _Sample:
+        idle = 80.0
+
+    class _FakeSampler:
+        cpu_count = 4
+
+        async def get_aggregate(self):
+            return _Sample()
+
+        async def get_per_core(self):
+            return [_Sample(), _Sample()]
+
+    import glances.plugins.quicklook.model as mod
+
+    monkeypatch.setattr(mod, "sampler", _FakeSampler())
+    monkeypatch.setattr(
+        mod,
+        "_collect_sync",
+        lambda: {
+            "mem": 42.0,
+            "swap": 10.0,
+            "load": 25.0,
+            "cpu_log_core": 4,
+            "cpu_phys_core": 2,
+            "cpu_name": "Test CPU",
+            "cpu_hz_current": 2_000_000_000,
+            "cpu_hz": 3_000_000_000,
+        },
+    )
+
+    stats = await p._grab_stats()
+    assert stats["cpu"] == 20.0  # 100 - idle(80)
+    assert stats["mem"] == 42.0
+    assert stats["swap"] == 10.0
+    assert stats["load"] == 25.0
+    assert isinstance(stats["percpu"], list) and len(stats["percpu"]) == 2
+    assert stats["percpu"][0] == {"cpu_number": 0, "total": 20.0}
+    assert stats["cpu_name"] == "Test CPU"
+
+
+@pytest.mark.asyncio
+async def test_grab_stats_survives_sampler_failure(store, config, monkeypatch):
+    """A sampler raising OSError yields a partial dict, not an exception."""
+    p = PluginModel(store, config)
+
+    class _BoomSampler:
+        cpu_count = 1
+
+        async def get_aggregate(self):
+            raise OSError("boom")
+
+        async def get_per_core(self):
+            raise OSError("boom")
+
+    import glances.plugins.quicklook.model as mod
+
+    monkeypatch.setattr(mod, "sampler", _BoomSampler())
+    monkeypatch.setattr(mod, "_collect_sync", lambda: {})
+
+    stats = await p._grab_stats()
+    assert "cpu" not in stats
+    assert "percpu" not in stats
+
+
+def test_cpu_name_parses_proc_cpuinfo(monkeypatch):
+    data = "processor\t: 0\nmodel name\t: Test Chip 9000\nflags\t: fpu\n"
+    monkeypatch.setattr("builtins.open", mock_open(read_data=data))
+    assert _cpu_name() == "Test Chip 9000"
+
+
+def test_cpu_name_falls_back_on_oserror(monkeypatch):
+    def _boom(*args, **kwargs):
+        raise OSError("snap confinement")
+
+    monkeypatch.setattr("builtins.open", _boom)
+    monkeypatch.setattr("platform.processor", lambda: "FallbackCPU")
+    assert _cpu_name() == "FallbackCPU"
+
+
+def test_collect_sync_smoke():
+    out = _collect_sync()
+    assert isinstance(out, dict)
+    assert "cpu_name" in out  # always set, even when other metrics fail
+
+
+def test_collect_sync_load_is_load15_per_core_percent(monkeypatch):
+    import glances.plugins.quicklook.model as mod
+
+    monkeypatch.setattr(mod, "sampler", SimpleNamespace(cpu_count=4))
+    monkeypatch.setattr(mod.psutil, "getloadavg", lambda: (9.0, 5.0, 3.0))
+    assert _collect_sync()["load"] == round(3.0 / 4 * 100, 1)  # 75.0
+
+
+class _NoGpuSampler:
+    cpu_count = 1
+
+    async def get_aggregate(self):
+        class _A:
+            idle = 100.0
+
+        return _A()
+
+    async def get_per_core(self):
+        return []
+
+
+class _FakeGpuBackend:
+    def __init__(self, cards):
+        self._cards = cards
+
+    def get_device_stats(self):
+        return self._cards
+
+    def exit(self):
+        pass
+
+
+async def _publish_gpu(store, config, cards):
+    """Publish `cards` through the gpu plugin's own update pipeline."""
+    gpu = GpuPluginModel(store, config)
+    gpu._backends = [_FakeGpuBackend(cards)]
+    await gpu.update()
+
+
+@pytest.mark.asyncio
+async def test_gpu_means_from_store(store, config, monkeypatch):
+    """quicklook computes gpu_mem/gpu_proc as the mean of the gpu plugin's cards.
+
+    The cards are published by the real gpu plugin: writing a bare list to the
+    store hid that a collection plugin publishes a `{"data": [...]}` envelope.
+    """
+    await _publish_gpu(
+        store,
+        config,
         [
-            'cpu, mem, load',
-            'cpu ,mem ,load',
-            ' cpu , mem , load ',
-            'cpu,\tmem,\tload',
+            {"key": "gpu_id", "gpu_id": "n0", "mem": 40, "proc": 20},
+            {"key": "gpu_id", "gpu_id": "n1", "mem": 60, "proc": 40},
         ],
     )
-    def test_whitespace_around_items_is_ignored(self, plugin_for, list_value):
-        """`list=cpu, mem, load` is how anyone writes a comma-separated value.
+    p = PluginModel(store, config)
 
-        glances.conf writes it that way in its own `# Available stats are:` comment, so
-        a user copying that line got a list where every item but the first carried a
-        leading space, matched nothing, and was discarded whole.
-        """
-        assert plugin_for(list_value).stats_list == ['cpu', 'mem', 'load']
+    import glances.plugins.quicklook.model as mod
 
-    def test_a_typo_falls_back_to_the_default_not_to_everything(self, plugin_for):
-        """A config mistake must not answer by displaying MORE than was asked for.
+    monkeypatch.setattr(mod, "_collect_sync", lambda: {})
+    monkeypatch.setattr(mod, "sampler", _NoGpuSampler())
 
-        The fallback used to be AVAILABLE_STATS_LIST, which includes both GPU entries —
-        and those flip the gpu_stats polling flags. A single typo therefore started
-        polling the GPU on a machine whose owner never asked for it.
-        """
-        plugin = plugin_for('cpu,mem,typo')
-
-        assert plugin.stats_list == QuicklookPlugin.DEFAULT_STATS_LIST
-        assert 'gpu_mem' not in plugin.stats_list
-        assert 'gpu_proc' not in plugin.stats_list
-
-    def test_the_gpu_entries_are_still_selectable_on_purpose(self, plugin_for):
-        """The fallback must not become a filter: an explicit request still works."""
-        assert plugin_for('cpu,gpu_mem,gpu_proc').stats_list == ['cpu', 'gpu_mem', 'gpu_proc']
-
-    def test_no_list_configured_uses_the_default(self, tmp_path):
-        config_file = tmp_path / 'glances-empty.conf'
-        config_file.write_text('[quicklook]\ndisable=False\n', encoding='utf-8')
-        plugin = QuicklookPlugin(args=None, config=Config(config_dir=os.fspath(config_file)))
-
-        assert plugin.stats_list == QuicklookPlugin.DEFAULT_STATS_LIST
+    stats = await p._grab_stats()
+    assert stats["gpu_mem"] == 50.0
+    assert stats["gpu_proc"] == 30.0
 
 
-class TestQuicklookPercpuDecoration:
-    """Every --percpu bar used to be coloured by the aggregate CPU alert.
+@pytest.mark.asyncio
+async def test_no_gpu_keys_when_store_empty(store, config, monkeypatch):
+    p = PluginModel(store, config)
+    import glances.plugins.quicklook.model as mod
 
-    `_msg_create_line` read `views['cpu']['decoration']` for every row, and the WebUI
-    read `getDecoration('cpu')` in the same loop, so a core pegged at 100% was drawn
-    in the colour of the average across all cores.
+    monkeypatch.setattr(mod, "_collect_sync", lambda: {})
+    monkeypatch.setattr(mod, "sampler", _NoGpuSampler())
+
+    stats = await p._grab_stats()
+    assert "gpu_mem" not in stats
+    assert "gpu_proc" not in stats
+
+
+@pytest.mark.asyncio
+async def test_no_gpu_keys_when_all_none(store, config, monkeypatch):
+    await _publish_gpu(store, config, [{"key": "gpu_id", "gpu_id": "n0", "mem": None, "proc": None}])
+    p = PluginModel(store, config)
+    import glances.plugins.quicklook.model as mod
+
+    monkeypatch.setattr(mod, "_collect_sync", lambda: {})
+    monkeypatch.setattr(mod, "sampler", _NoGpuSampler())
+
+    stats = await p._grab_stats()
+    assert "gpu_mem" not in stats
+    assert "gpu_proc" not in stats
+
+
+def test_gpu_fields_declared_watched():
+    fd = PluginModel.fields_description
+    for key in ("gpu_mem", "gpu_proc"):
+        assert fd[key]["watched"] is True
+        assert fd[key]["unit"] == "percent"
+
+
+class TestStatsList:
+    """`[quicklook] list` — v4 parity (glances/plugins/quicklook/__init__.py:110)."""
+
+    def test_default_is_cpu_mem_load(self, tmp_path, monkeypatch, store):
+        # Isolated config on purpose: the module-level `config` fixture only
+        # redirects SYSTEM_CONFIG_PATH, so the developer's real
+        # ~/.config/glances/glances.conf still leaks into it.
+        cfg = _cfg_with(tmp_path, monkeypatch, "")
+        assert PluginModel(store, cfg).stats_list == ["cpu", "mem", "load"]
+
+    def test_a_plain_list_is_honoured(self, tmp_path, monkeypatch, store):
+        cfg = _cfg_with(tmp_path, monkeypatch, "[quicklook]\nlist=cpu,swap\n")
+        assert PluginModel(store, cfg).stats_list == ["cpu", "swap"]
+
+    def test_config_order_is_preserved(self, tmp_path, monkeypatch, store):
+        """v4 loops over the configured list, so the config drives bar order."""
+        cfg = _cfg_with(tmp_path, monkeypatch, "[quicklook]\nlist=load,mem,cpu\n")
+        assert PluginModel(store, cfg).stats_list == ["load", "mem", "cpu"]
+
+    @pytest.mark.parametrize("value", ["cpu, mem, load", " cpu , mem , load ", "cpu,\tmem,\tload"])
+    def test_whitespace_around_items_is_ignored(self, tmp_path, monkeypatch, store, value):
+        cfg = _cfg_with(tmp_path, monkeypatch, f"[quicklook]\nlist={value}\n")
+        assert PluginModel(store, cfg).stats_list == ["cpu", "mem", "load"]
+
+    def test_a_typo_falls_back_to_the_default_not_to_everything(self, tmp_path, monkeypatch, store):
+        """PR #3700 semantics: a config mistake must not display MORE than asked."""
+        cfg = _cfg_with(tmp_path, monkeypatch, "[quicklook]\nlist=cpu,mem,typo\n")
+        assert PluginModel(store, cfg).stats_list == PluginModel.DEFAULT_STATS_LIST
+
+    def test_an_empty_list_falls_back_to_the_default(self, tmp_path, monkeypatch, store):
+        cfg = _cfg_with(tmp_path, monkeypatch, "[quicklook]\nlist=\n")
+        assert PluginModel(store, cfg).stats_list == PluginModel.DEFAULT_STATS_LIST
+
+    def test_gpu_is_opt_in(self, tmp_path, monkeypatch, store):
+        """v4 parity: no GPU bar unless the user lists it."""
+        assert "gpu_mem" not in PluginModel.DEFAULT_STATS_LIST
+        cfg = _cfg_with(tmp_path, monkeypatch, "[quicklook]\nlist=cpu,gpu_mem,gpu_proc\n")
+        assert PluginModel(store, cfg).stats_list == ["cpu", "gpu_mem", "gpu_proc"]
+
+
+class TestBarChar:
+    """`[quicklook] bar_char` — v4 parity (`get_conf_value('bar_char', default=['|'])[0]`)."""
+
+    def test_default_is_a_pipe(self, tmp_path, monkeypatch, store):
+        cfg = _cfg_with(tmp_path, monkeypatch, "")
+        assert PluginModel(store, cfg).bar_char == "|"
+
+    def test_a_configured_char_is_used(self, tmp_path, monkeypatch, store):
+        cfg = _cfg_with(tmp_path, monkeypatch, "[quicklook]\nbar_char=#\n")
+        assert PluginModel(store, cfg).bar_char == "#"
+
+    def test_only_the_first_item_is_kept(self, tmp_path, monkeypatch, store):
+        """v4 reads the value as a list and takes `[0]` — not the first character."""
+        cfg = _cfg_with(tmp_path, monkeypatch, "[quicklook]\nbar_char=#,@\n")
+        assert PluginModel(store, cfg).bar_char == "#"
+
+    def test_an_empty_value_falls_back_to_the_default(self, tmp_path, monkeypatch, store):
+        cfg = _cfg_with(tmp_path, monkeypatch, "[quicklook]\nbar_char=\n")
+        assert PluginModel(store, cfg).bar_char == "|"
+
+
+class TestRenderSupportFields:
+    """The selection reaches the custom renderer through the payload."""
+
+    @pytest.mark.asyncio
+    async def test_grab_publishes_stats_list_and_bar_char(self, tmp_path, monkeypatch, store):
+        cfg = _cfg_with(tmp_path, monkeypatch, "[quicklook]\nlist=cpu,swap\nbar_char=#\n")
+        p = PluginModel(store, cfg)
+        out = await p._grab_stats()
+        assert out["stats_list"] == ["cpu", "swap"]
+        assert out["bar_char"] == "#"
+
+    def test_they_are_internal_and_never_watched(self):
+        fd = PluginModel.fields_description
+        for key in ("stats_list", "bar_char"):
+            assert fd[key].get("internal") is True
+            assert fd[key].get("watched", False) is False
+
+
+class TestPercpuLevels:
+    """v4 26a9fe96 — colour each `--percpu` bar by that core's own load.
+
+    Per-core `level` and `percpu_other` are computed in the MODEL against the
+    SAME resolved thresholds as the `cpu` field (config overrides included),
+    without going through `_levels` / the alert pipeline (EMITS_ALERTS stays
+    False for quicklook — see test_quicklook_opts_out_of_alerts).
     """
 
     @staticmethod
-    def _plugin(tmp_path, cores, max_cpu_display=4):
-        config_file = tmp_path / 'glances-percpu.conf'
-        config_file.write_text(
-            '\n'.join(
-                [
-                    '[quicklook]',
-                    'list=cpu',
-                    'cpu_careful=50',
-                    'cpu_warning=70',
-                    'cpu_critical=90',
-                    '[percpu]',
-                    f'max_cpu_display={max_cpu_display}',
-                ]
-            ),
-            encoding='utf-8',
-        )
-        plugin = QuicklookPlugin(args=None, config=Config(config_dir=os.fspath(config_file)))
-        plugin.stats = {
-            'cpu': sum(cores) / len(cores),
-            'percpu': [
-                {'key': 'cpu_number', 'cpu_number': number, 'total': total} for number, total in enumerate(cores)
-            ],
-        }
-        plugin.update_views()
-        return plugin
+    def _patch_cores(monkeypatch, totals: list[float]) -> None:
+        class _Sample:
+            def __init__(self, idle: float) -> None:
+                self.idle = idle
 
-    def test_a_busy_core_is_not_hidden_by_a_quiet_average(self, tmp_path):
-        """One core at 95% among three idle ones: the aggregate is 24%, an OK value."""
-        plugin = self._plugin(tmp_path, [95.0, 1.0, 1.0, 1.0])
+        class _FakeSampler:
+            cpu_count = len(totals)
 
-        assert plugin.views['cpu']['decoration'] == 'OK'
-        assert plugin.views['percpu_decoration']['0'] == 'CRITICAL'
-        assert plugin.views['percpu_decoration']['1'] == 'OK'
+            async def get_aggregate(self):
+                return _Sample(100.0)  # aggregate value is irrelevant to per-core levels
 
+            async def get_per_core(self):
+                return [_Sample(100.0 - t) for t in totals]
+
+        import glances.plugins.quicklook.model as mod
+
+        monkeypatch.setattr(mod, "sampler", _FakeSampler())
+        monkeypatch.setattr(mod, "_collect_sync", lambda: {})
+
+    @pytest.mark.asyncio
+    async def test_a_pegged_core_is_critical_while_an_idle_one_is_ok(self, tmp_path, monkeypatch, store):
+        cfg = _cfg_with(tmp_path, monkeypatch, "")
+        p = PluginModel(store, cfg)
+        self._patch_cores(monkeypatch, [95.0, 10.0, 5.0, 2.0, 1.0])
+        await p.update()
+        cores = {c["cpu_number"]: c for c in store.get("quicklook")["percpu"]}
+        assert cores[0]["level"] == "critical"
+        assert cores[1]["level"] == "ok"
+
+    @pytest.mark.asyncio
     @pytest.mark.parametrize(
-        ('percent', 'expected'),
-        [(0.0, 'OK'), (49.9, 'OK'), (50.0, 'CAREFUL'), (69.9, 'CAREFUL'), (70.0, 'WARNING'), (90.0, 'CRITICAL')],
+        "totals, expected",
+        [
+            # max_cpu_display=4 (default) keeps the 4 highest [95, 10, 5, 2]; the
+            # single hidden core is the smallest, 1.0.
+            ([95.0, 10.0, 5.0, 2.0, 1.0], {"total": 1.0, "level": "ok"}),
+            # The summary row gets its own level ('careful' at 60), neither the
+            # shown cores' ('critical') nor the aggregate's ('ok').
+            ([95.0, 95.0, 95.0, 95.0, 60.0, 60.0], {"total": 60.0, "level": "careful"}),
+        ],
     )
-    def test_each_threshold_boundary(self, tmp_path, percent, expected):
-        """The cores use the plugin's own quicklook_cpu_* limits, not a second set."""
-        plugin = self._plugin(tmp_path, [percent, 0.0, 0.0, 0.0])
+    async def test_percpu_other_is_the_mean_and_level_of_the_hidden_cores(
+        self, tmp_path, monkeypatch, store, totals, expected
+    ):
+        cfg = _cfg_with(tmp_path, monkeypatch, "")
+        p = PluginModel(store, cfg)
+        self._patch_cores(monkeypatch, totals)
+        await p.update()
+        assert store.get("quicklook")["percpu_other"] == expected
 
-        assert plugin.views['percpu_decoration']['0'] == expected
+    @pytest.mark.asyncio
+    async def test_percpu_other_is_none_at_or_under_max_cpu_display(self, tmp_path, monkeypatch, store):
+        cfg = _cfg_with(tmp_path, monkeypatch, "")
+        p = PluginModel(store, cfg)
+        self._patch_cores(monkeypatch, [95.0, 10.0, 5.0, 2.0])
+        await p.update()
+        assert store.get("quicklook")["percpu_other"] is None
 
-    def test_the_summary_row_is_styled_by_the_cores_it_averages(self, tmp_path):
-        """With more cores than max_cpu_display, both UIs add one averaged row.
+    @pytest.mark.asyncio
+    async def test_a_quicklook_critical_override_changes_the_per_core_levels(self, tmp_path, monkeypatch, store):
+        # Default critical=90 would put the 95% core at 'critical'; raising it
+        # to 96 must be honoured per-core, exactly like it is for the
+        # aggregate 'cpu' field.
+        cfg = _cfg_with(tmp_path, monkeypatch, "[quicklook]\ncritical=96\n")
+        p = PluginModel(store, cfg)
+        self._patch_cores(monkeypatch, [95.0, 10.0, 5.0, 2.0, 1.0])
+        await p.update()
+        cores = {c["cpu_number"]: c for c in store.get("quicklook")["percpu"]}
+        assert cores[0]["level"] == "warning"
 
-        Cores are sorted by load and the four busiest are shown, so the row labelled
-        `CPU*` (`x` in the WebUI) always averages the quietest ones. Here its 60% is
-        CAREFUL, which is neither the shown cores' CRITICAL nor the 83% aggregate's
-        WARNING -- so the assertion fails if the row borrows either.
-        """
-        plugin = self._plugin(tmp_path, [95.0, 95.0, 95.0, 95.0, 60.0, 60.0])
+    def test_max_cpu_display_defaults_to_4(self, tmp_path, monkeypatch, store):
+        cfg = _cfg_with(tmp_path, monkeypatch, "")
+        assert PluginModel(store, cfg).max_cpu_display == 4
 
-        assert plugin.views['cpu']['decoration'] == 'WARNING'
-        assert plugin.views['percpu_decoration']['0'] == 'CRITICAL'
-        assert plugin.views['percpu_decoration']['other'] == 'CAREFUL'
+    def test_max_cpu_display_is_configurable(self, tmp_path, monkeypatch, store):
+        cfg = _cfg_with(tmp_path, monkeypatch, "[percpu]\nmax_cpu_display=6\n")
+        assert PluginModel(store, cfg).max_cpu_display == 6
 
-    def test_no_summary_row_when_every_core_is_shown(self, tmp_path):
-        plugin = self._plugin(tmp_path, [10.0, 10.0, 10.0, 10.0])
+    @pytest.mark.asyncio
+    async def test_max_cpu_display_reaches_the_payload(self, tmp_path, monkeypatch, store):
+        cfg = _cfg_with(tmp_path, monkeypatch, "[percpu]\nmax_cpu_display=6\n")
+        p = PluginModel(store, cfg)
+        self._patch_cores(monkeypatch, [95.0, 10.0, 5.0, 2.0, 1.0])
+        await p.update()
+        assert store.get("quicklook")["max_cpu_display"] == 6
 
-        assert 'other' not in plugin.views['percpu_decoration']
-
-    def test_the_styles_reach_the_curses_bars(self, tmp_path):
-        """The wiring, not just the map: `_msg_per_cpu` must use the per-core style.
-
-        Reverting `_msg_create_line` to the aggregate lookup leaves every assertion
-        above passing and fails only this one.
-        """
-        plugin = self._plugin(tmp_path, [95.0, 1.0, 1.0, 1.0])
-        data = {'cpu': _StubBar()}
-
-        decorations = [
-            line['decoration'] for line in plugin._msg_per_cpu(data, 'cpu', 10) if line['msg'] == _StubBar.RENDERED
-        ]
-
-        assert decorations == ['CRITICAL', 'OK', 'OK', 'OK']
-
-    def test_scanning_the_cores_does_not_move_the_global_threshold(self, tmp_path):
-        """The per-core styles must not be computed with get_alert().
-
-        get_alert() records a threshold the event list reads and can run a [quicklook]
-        action, and both are keyed by 'quicklook_cpu' alone. The per-core pass runs
-        after the aggregate one, so calling get_alert() there would leave the last
-        core — an idle one here — as the value those two see.
-
-        The values are chosen so the two disagree: the aggregate is 71.5% (WARNING)
-        while the last core is 1% (OK).
-        """
-        from glances.thresholds import glances_thresholds
-
-        self._plugin(tmp_path, [95.0, 95.0, 95.0, 1.0])
-
-        assert glances_thresholds.get()['quicklook_cpu'].description() == 'WARNING'
+    def test_percpu_other_and_max_cpu_display_are_internal_and_never_watched(self):
+        fd = PluginModel.fields_description
+        for key in ("percpu_other", "max_cpu_display"):
+            assert fd[key].get("internal") is True
+            assert fd[key].get("watched", False) is False
 
 
-class _StubBar:
-    """Stands in for Bar/Sparkline: `_msg_per_cpu` only sets a value and renders."""
+def test_bar_fields_are_not_prominent_by_default():
+    """Pin `prominent: False` on the five bar-selectable fields (cpu, mem,
+    load, gpu_mem, gpu_proc; `swap` was already False).
 
-    RENDERED = '<bar>'
-
-    def __init__(self):
-        self.percent = None
-
-    def get(self):
-        return self.RENDERED
-
-
-class TestConfigListParsing:
-    """The strip belongs to `load_limits`, so every plugin reading a list gets it."""
-
-    def test_limits_carry_stripped_items(self, plugin_for):
-        assert plugin_for('cpu, mem, load').get_limits('list') == ['cpu', 'mem', 'load']
-
-    def test_a_hide_pattern_written_with_spaces_still_hides(self, tmp_path):
-        """The show/hide filters are the loudest symptom of the same parsing bug.
-
-        Every item in those lists is used as a `re.fullmatch` pattern, so a leading
-        space made the pattern match nothing at all — `hide=sda2, loop.*` hid `sda2`
-        and silently kept showing every loop device.
-        """
-        from glances.plugins.diskio import DiskioPlugin
-
-        config_file = tmp_path / 'glances-hide.conf'
-        config_file.write_text('[diskio]\nhide=sda2, loop.*\n', encoding='utf-8')
-        plugin = DiskioPlugin(args=None, config=Config(config_dir=os.fspath(config_file)))
-
-        assert plugin.get_conf_value('hide') == ['sda2', 'loop.*']
-        assert plugin.is_hide('sda2')
-        assert plugin.is_hide('loop0')
-        assert not plugin.is_hide('sda1')
-
-    def test_internal_spaces_are_kept(self, tmp_path):
-        """Only the edges are stripped — a value may legitimately contain spaces."""
-        config_file = tmp_path / 'glances-alias.conf'
-        config_file.write_text('[quicklook]\nlist=cpu\nalias=sda1:System Disk , sdb1:Data Disk\n', encoding='utf-8')
-        plugin = QuicklookPlugin(args=None, config=Config(config_dir=os.fspath(config_file)))
-
-        assert plugin.get_limits('alias') == ['sda1:System Disk', 'sdb1:Data Disk']
-
-
-class TestQuicklookGpuHistory:
-    """`gpu_mem` and `gpu_proc` can be listed, so --sparkline must find a history for them.
-
-    Only the items in `items_history_list` are historised; for any other key
-    `get_raw_history()` returns None, and the sparkline branch of `_msg_cpu` iterates
-    over it: `[quicklook] list=cpu,gpu_mem` with --sparkline crashed the curses UI
-    with "'NoneType' object is not iterable".
+    A `True` here makes the Web UI paint a filled/reverse badge on that
+    quicklook bar value (`levelClass()` in PluginQuicklook.vue honours the
+    flag verbatim) -- the maintainer rejected that look after smoke-testing
+    the v5 Web UI (it now uses a subtler tier colour only, see G9-8 smoke
+    fix 2). Flipping any of these back to True re-introduces the filled
+    badge; that intentional a change should touch this test, not slip in
+    silently.
     """
-
-    @staticmethod
-    def _plugin(tmp_path, list_value):
-        config_file = tmp_path / 'glances-gpu.conf'
-        config_file.write_text(f'[quicklook]\nlist={list_value}\n', encoding='utf-8')
-        args = Namespace(sparkline=True, client=None, disable_history=False, disable_quicklook=False, percpu=False)
-        plugin = QuicklookPlugin(args=args, config=Config(config_dir=os.fspath(config_file)))
-        for percent in (10.0, 20.0, 30.0):
-            plugin.stats = {
-                'cpu': percent,
-                'percpu': [],
-                'mem': percent,
-                'swap': percent,
-                'load': percent,
-                'gpu_mem': percent,
-                'gpu_proc': percent + 1,
-            }
-            plugin.update_stats_history()
-        plugin.update_views()
-        return plugin, args
-
-    GPU_HISTORY = [('gpu_mem', [10.0, 20.0, 30.0]), ('gpu_proc', [11.0, 21.0, 31.0])]
-
-    @pytest.mark.parametrize(('key', 'expected'), GPU_HISTORY)
-    def test_the_gpu_entries_are_historised(self, tmp_path, key, expected):
-        plugin, _ = self._plugin(tmp_path, f'cpu,{key}')
-
-        assert [value for _, value in plugin.get_raw_history(item=key)] == expected
-
-    @pytest.mark.parametrize(('key', 'expected'), GPU_HISTORY)
-    def test_a_gpu_entry_is_drawn_as_a_sparkline_of_its_history(self, tmp_path, key, expected):
-        sparklines = pytest.importorskip('sparklines').sparklines
-        plugin, args = self._plugin(tmp_path, f'cpu,{key}')
-
-        lines = [line['msg'] for line in plugin.msg_curse(args, max_width=40)]
-
-        # max_width=40 gives a 34-cell sparkline, padded on the right with None
-        drawn = sparklines(expected + [None] * (34 - len(expected)), minimum=0, maximum=100)[0]
-        assert lines[lines.index(f'{key.upper():4} ') + 2] == f'{drawn}{expected[-1]:5.1f}%'
-
-    @pytest.mark.parametrize(('key', 'expected'), GPU_HISTORY)
-    def test_a_gpu_entry_is_historised_even_when_not_in_the_list(self, tmp_path, key, expected):
-        """History is per plugin, not per displayed stat -- exactly like `swap` today.
-
-        `update_stats_history` iterates `get_items_history_list()`, not `stats_list`,
-        so a GPU entry keeps building history while only `cpu` is in `list=`.
-        """
-        plugin, _ = self._plugin(tmp_path, 'cpu')
-
-        assert key not in plugin.stats_list
-        assert [value for _, value in plugin.get_raw_history(item=key)] == expected
+    fd = PluginModel.fields_description
+    for key in ("cpu", "mem", "swap", "load", "gpu_mem", "gpu_proc"):
+        assert fd[key].get("prominent") is False, f"{key} must not be prominent: {fd[key]!r}"

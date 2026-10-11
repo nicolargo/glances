@@ -1,277 +1,301 @@
-#!/usr/bin/env python
 #
 # Glances - An eye on your system
 #
-# SPDX-FileCopyrightText: 2024 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2026 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
-"""Tests for the MemSwap plugin."""
+"""Glances v5 — unit tests for the `memswap` plugin (scalar)."""
 
-import json
+from __future__ import annotations
+
+from collections import namedtuple
+from unittest.mock import patch
 
 import pytest
 
+from glances.config import GlancesConfig
+from glances.plugins.memswap.model import PluginModel
+from glances.stats_store import StatsStore
+
+# psutil result stub ------------------------------------------------------
+
+SwapMemory = namedtuple("sswap", ["total", "used", "free", "percent", "sin", "sout"])
+
+
+def _swap(percent: float = 25.0, sin: int = 0, sout: int = 0) -> SwapMemory:
+    total = 16 * 1024**3  # 16 GiB
+    used = int(total * percent / 100.0)
+    return SwapMemory(total=total, used=used, free=total - used, percent=percent, sin=sin, sout=sout)
+
+
+# ----------------------------------------------------------- fixtures
+
 
 @pytest.fixture
-def memswap_plugin(glances_stats):
-    """Return the MemSwap plugin instance from glances_stats."""
-    return glances_stats.get_plugin('memswap')
+def store() -> StatsStore:
+    return StatsStore()
 
 
-class TestMemswapPluginBasics:
-    """Test basic MemSwap plugin functionality."""
-
-    def test_plugin_name(self, memswap_plugin):
-        """Test plugin name is correctly set."""
-        assert memswap_plugin.plugin_name == 'memswap'
-
-    def test_plugin_is_enabled(self, memswap_plugin):
-        """Test that the plugin is enabled by default."""
-        assert memswap_plugin.is_enabled() is True
-
-    def test_display_curse_enabled(self, memswap_plugin):
-        """Test that curse display is enabled."""
-        assert memswap_plugin.display_curse is True
-
-    def test_history_items_defined(self, memswap_plugin):
-        """Test that history items are properly defined."""
-        items = memswap_plugin.get_items_history_list()
-        assert items is not None
-        item_names = [item['name'] for item in items]
-        assert 'percent' in item_names
+@pytest.fixture
+def config(tmp_path, monkeypatch) -> GlancesConfig:
+    monkeypatch.setattr(GlancesConfig, "SYSTEM_CONFIG_PATH", tmp_path / "etc" / "glances.conf")
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "xdg"))
+    return GlancesConfig()
 
 
-class TestMemswapPluginUpdate:
-    """Test MemSwap plugin update functionality."""
-
-    def test_update_returns_dict(self, memswap_plugin):
-        """Test that update returns a dictionary."""
-        memswap_plugin.update()
-        stats = memswap_plugin.get_raw()
-        assert isinstance(stats, dict)
-
-    def test_update_contains_mandatory_keys(self, memswap_plugin):
-        """Test that stats contain mandatory keys."""
-        memswap_plugin.update()
-        stats = memswap_plugin.get_raw()
-        mandatory_keys = ['total', 'used', 'free', 'percent']
-        for key in mandatory_keys:
-            assert key in stats, f"Missing mandatory key: {key}"
-
-    def test_swap_values_non_negative(self, memswap_plugin):
-        """Test that swap values are non-negative."""
-        memswap_plugin.update()
-        stats = memswap_plugin.get_raw()
-        for key in ['total', 'used', 'free']:
-            if key in stats and stats[key] is not None:
-                assert stats[key] >= 0, f"{key} should be non-negative"
-
-    def test_swap_percent_in_valid_range(self, memswap_plugin):
-        """Test that swap percentage is within valid range."""
-        memswap_plugin.update()
-        stats = memswap_plugin.get_raw()
-        if 'percent' in stats and stats['percent'] is not None:
-            assert 0 <= stats['percent'] <= 100
+def _config_with(tmp_path, monkeypatch, body: str) -> GlancesConfig:
+    monkeypatch.setattr(GlancesConfig, "SYSTEM_CONFIG_PATH", tmp_path / "etc" / "glances.conf")
+    xdg = tmp_path / "xdg"
+    cfg_dir = xdg / "glances"
+    cfg_dir.mkdir(parents=True)
+    (cfg_dir / "glances.conf").write_text(body)
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(xdg))
+    return GlancesConfig()
 
 
-class TestMemswapPluginSwapActivity:
-    """Test MemSwap plugin swap in/out activity."""
-
-    def test_sin_sout_present(self, memswap_plugin):
-        """Test that sin and sout are present if swap is available."""
-        memswap_plugin.update()
-        stats = memswap_plugin.get_raw()
-        # sin/sout may not be present on all systems
-        if stats.get('total', 0) > 0:
-            # If swap exists, sin/sout should be present
-            pass  # These fields are platform-dependent
-
-    def test_time_since_update_present(self, memswap_plugin):
-        """Test that time_since_update is present."""
-        memswap_plugin.update()
-        stats = memswap_plugin.get_raw()
-        if stats:  # If swap exists
-            assert 'time_since_update' in stats
+# ---------------------------------------------------------- contract
 
 
-class TestMemswapPluginViews:
-    """Test MemSwap plugin views functionality."""
-
-    def test_update_views_creates_views(self, memswap_plugin):
-        """Test that update_views creates views dictionary."""
-        memswap_plugin.update()
-        memswap_plugin.update_views()
-        views = memswap_plugin.get_views()
-        assert isinstance(views, dict)
-
-    def test_views_contain_percent_decoration(self, memswap_plugin):
-        """Test that views contain decoration for percent."""
-        memswap_plugin.update()
-        memswap_plugin.update_views()
-        views = memswap_plugin.get_views()
-        if 'percent' in views:
-            assert 'decoration' in views['percent']
+def test_plugin_identity(store, config):
+    plugin = PluginModel(store, config)
+    assert plugin.plugin_name == "memswap"
+    assert plugin.IS_COLLECTION is False
 
 
-class TestMemswapPluginJSON:
-    """Test MemSwap plugin JSON serialization."""
-
-    def test_get_stats_returns_json(self, memswap_plugin):
-        """Test that get_stats returns valid JSON."""
-        memswap_plugin.update()
-        stats_json = memswap_plugin.get_stats()
-        parsed = json.loads(stats_json)
-        assert isinstance(parsed, dict)
-
-    def test_json_contains_expected_fields(self, memswap_plugin):
-        """Test that JSON output contains expected fields."""
-        memswap_plugin.update()
-        stats_json = memswap_plugin.get_stats()
-        parsed = json.loads(stats_json)
-        expected_fields = ['total', 'used', 'free', 'percent']
-        for field in expected_fields:
-            assert field in parsed
+def test_percent_is_watched_prominent(store, config):
+    schema = PluginModel(store, config)._fields["percent"]
+    assert schema["watched"] is True
+    assert schema["prominent"] is True
+    assert schema["unit"] == "percent"
 
 
-class TestMemswapPluginHistory:
-    """Test MemSwap plugin history functionality."""
-
-    def test_history_enable_check(self, memswap_plugin):
-        """Test that history_enable returns a boolean."""
-        result = memswap_plugin.history_enable()
-        assert isinstance(result, bool)
-
-    def test_get_items_history_list(self, memswap_plugin):
-        """Test that get_items_history_list returns the history items."""
-        items = memswap_plugin.get_items_history_list()
-        if items is not None:
-            assert isinstance(items, list)
-            item_names = [item['name'] for item in items]
-            assert 'percent' in item_names
+def test_total_used_free_are_bytes_not_watched(store, config):
+    fields = PluginModel(store, config)._fields
+    for name in ("total", "used", "free"):
+        assert fields[name]["unit"] == "bytes", name
+        assert fields[name].get("watched", False) is False, name
 
 
-class TestMemswapPluginReset:
-    """Test MemSwap plugin reset functionality."""
-
-    def test_reset_clears_stats(self, memswap_plugin):
-        """Test that reset clears stats."""
-        memswap_plugin.update()
-        memswap_plugin.reset()
-        stats = memswap_plugin.get_raw()
-        assert stats == memswap_plugin.get_init_value()
-
-    def test_reset_views(self, memswap_plugin):
-        """Test that reset_views clears views."""
-        memswap_plugin.update()
-        memswap_plugin.update_views()
-        memswap_plugin.reset_views()
-        assert memswap_plugin.get_views() == {}
+def test_sin_sout_are_rate_counters(store, config):
+    """sin/sout are cumulative on psutil — v5 converts them to bytes/s."""
+    fields = PluginModel(store, config)._fields
+    for name in ("sin", "sout"):
+        assert fields[name].get("rate") is True, name
 
 
-class TestMemswapPluginFieldsDescription:
-    """Test MemSwap plugin fields description."""
-
-    def test_fields_description_exists(self, memswap_plugin):
-        """Test that fields_description is defined."""
-        assert memswap_plugin.fields_description is not None
-
-    def test_mandatory_fields_described(self, memswap_plugin):
-        """Test that mandatory fields have descriptions."""
-        mandatory_fields = ['total', 'used', 'free', 'percent']
-        for field in mandatory_fields:
-            assert field in memswap_plugin.fields_description
-
-    def test_sin_sout_fields_described(self, memswap_plugin):
-        """Test that sin and sout fields are described."""
-        assert 'sin' in memswap_plugin.fields_description
-        assert 'sout' in memswap_plugin.fields_description
-
-    def test_field_has_description(self, memswap_plugin):
-        """Test that each field has a description."""
-        for field, info in memswap_plugin.fields_description.items():
-            assert 'description' in info, f"Field {field} missing description"
-
-    def test_byte_fields_have_unit(self, memswap_plugin):
-        """Test that byte fields have unit defined."""
-        byte_fields = ['total', 'used', 'free', 'sin', 'sout']
-        for field in byte_fields:
-            if field in memswap_plugin.fields_description:
-                assert 'unit' in memswap_plugin.fields_description[field]
+def test_sin_sout_are_watched_without_default_thresholds(store, config):
+    """sin/sout are opt-in alerts — watched=True so the framework computes
+    levels when the user sets thresholds in glances.conf, but no
+    ``default_thresholds`` so the field stays silent on a stock install."""
+    fields = PluginModel(store, config)._fields
+    for name in ("sin", "sout"):
+        assert fields[name].get("watched") is True, name
+        assert "default_thresholds" not in fields[name], name
 
 
-class TestMemswapPluginAlerts:
-    """Test MemSwap plugin alert functionality."""
-
-    def test_get_alert_log_returns_valid_status(self, memswap_plugin):
-        """Test that get_alert_log returns a valid status."""
-        memswap_plugin.update()
-        stats = memswap_plugin.get_raw()
-        if 'used' in stats and 'total' in stats and stats['total'] > 0:
-            alert = memswap_plugin.get_alert_log(stats['used'], maximum=stats['total'])
-            valid_statuses = [
-                'OK',
-                'OK_LOG',
-                'CAREFUL',
-                'CAREFUL_LOG',
-                'WARNING',
-                'WARNING_LOG',
-                'CRITICAL',
-                'CRITICAL_LOG',
-                'DEFAULT',
-                'MAX',
-            ]
-            assert any(alert.startswith(status) for status in valid_statuses)
+def test_sin_sout_are_not_prominent(store, config):
+    """sin/sout colour only the foreground when an alert fires — they must
+    NEVER reverse-video the cell. The framework defaults missing
+    ``prominent`` to True, so this requires an *explicit* False in the
+    schema."""
+    fields = PluginModel(store, config)._fields
+    for name in ("sin", "sout"):
+        assert fields[name].get("prominent") is False, name
 
 
-class TestMemswapPluginMsgCurse:
-    """Test MemSwap plugin curse message generation."""
+async def test_sin_sout_ignore_bare_level_keys_in_memswap_section(tmp_path, monkeypatch, store):
+    """Regression guard: a legacy ``[memswap] careful=50`` (no field prefix)
+    must NOT spill onto sin/sout. The ``strict_thresholds=True`` flag on
+    these fields skips the bare-level fallback in ``read_thresholds``.
 
-    def test_msg_curse_returns_list(self, memswap_plugin):
-        """Test that msg_curse returns a list."""
-        memswap_plugin.update()
-        msg = memswap_plugin.msg_curse()
-        assert isinstance(msg, list)
+    Real-world trigger: a v4-era user XDG glances.conf carries
+    ``careful``/``warning``/``critical`` bare keys that get merged with
+    the v5 project conf via the config layering."""
+    config = _config_with(tmp_path, monkeypatch, "[memswap]\ncareful=50\nwarning=70\ncritical=90\n")
+    plugin = PluginModel(store, config)
 
-    def test_msg_curse_not_empty_with_stats(self, memswap_plugin):
-        """Test that msg_curse returns non-empty list with stats."""
-        memswap_plugin.update()
-        stats = memswap_plugin.get_raw()
-        if stats:
-            msg = memswap_plugin.msg_curse()
-            assert len(msg) > 0
+    fake_now = [100.0]
+    import glances.plugins.plugin.base as base_module
 
-    def test_msg_curse_contains_title(self, memswap_plugin):
-        """Test that msg_curse contains SWAP title."""
-        memswap_plugin.update()
-        msg = memswap_plugin.msg_curse()
-        if msg:
-            messages = [m.get('msg', '') for m in msg]
-            assert any('SWAP' in str(m) for m in messages)
+    monkeypatch.setattr(base_module.time, "monotonic", lambda: fake_now[0])
 
+    psutil_path = "glances.plugins.memswap.model.psutil.swap_memory"
+    with patch(psutil_path, return_value=_swap(sin=0, sout=0)):
+        await plugin.update()
+    fake_now[0] = 101.0
+    with patch(psutil_path, return_value=_swap(sin=1_000, sout=1_000)):
+        await plugin.update()
 
-class TestMemswapPluginExport:
-    """Test MemSwap plugin export functionality."""
-
-    def test_get_export_returns_stats(self, memswap_plugin):
-        """Test that get_export returns stats."""
-        memswap_plugin.update()
-        export = memswap_plugin.get_export()
-        assert isinstance(export, dict)
-
-    def test_export_equals_raw(self, memswap_plugin):
-        """Test that export equals raw stats by default."""
-        memswap_plugin.update()
-        assert memswap_plugin.get_export() == memswap_plugin.get_raw()
+    levels = store.get("memswap")["_levels"]
+    # `percent` still picks up the bare keys (it does not opt out of the
+    # legacy fallback — preserves existing behaviour).
+    assert "percent" in levels
+    # sin/sout MUST NOT inherit the bare-level keys.
+    assert "sin" not in levels
+    assert "sout" not in levels
 
 
-class TestMemswapPluginNoSwap:
-    """Test MemSwap plugin behavior when no swap is configured."""
+async def test_sin_threshold_from_config_carries_non_prominent_level(tmp_path, monkeypatch, store):
+    """Even when the user configures thresholds in glances.conf, the resulting
+    _levels entry must carry ``prominent=False`` — sin/sout are coloured but
+    never highlighted."""
+    config = _config_with(tmp_path, monkeypatch, "[memswap]\nsin_careful=5000\nsin_warning=10000\nsin_critical=20000\n")
+    plugin = PluginModel(store, config)
 
-    def test_handles_no_swap_gracefully(self, memswap_plugin):
-        """Test that the plugin handles no swap configuration gracefully."""
-        memswap_plugin.update()
-        stats = memswap_plugin.get_raw()
-        # Even with no swap, should return a dict (possibly empty or with zeros)
-        assert isinstance(stats, dict)
+    fake_now = [100.0]
+    import glances.plugins.plugin.base as base_module
+
+    monkeypatch.setattr(base_module.time, "monotonic", lambda: fake_now[0])
+
+    psutil_path = "glances.plugins.memswap.model.psutil.swap_memory"
+    with patch(psutil_path, return_value=_swap(sin=0)):
+        await plugin.update()
+    fake_now[0] = 101.0
+    with patch(psutil_path, return_value=_swap(sin=15_000)):
+        await plugin.update()
+
+    levels = store.get("memswap")["_levels"]
+    assert levels["sin"]["level"] == "warning"
+    assert levels["sin"]["prominent"] is False
+
+
+async def test_sin_sout_no_levels_without_user_thresholds(store, config):
+    """With no [memswap] sin_*/sout_* config keys, no level entry must
+    appear for sin/sout in the store payload."""
+    plugin = PluginModel(store, config)
+
+    fake_now = [100.0]
+    import glances.plugins.plugin.base as base_module
+
+    monkeypatch_target = base_module.time
+
+    original_monotonic = monkeypatch_target.monotonic
+    monkeypatch_target.monotonic = lambda: fake_now[0]
+    try:
+        psutil_path = "glances.plugins.memswap.model.psutil.swap_memory"
+        with patch(psutil_path, return_value=_swap(sin=0, sout=0)):
+            await plugin.update()
+        fake_now[0] = 101.0
+        with patch(psutil_path, return_value=_swap(sin=1_000_000, sout=500_000)):
+            await plugin.update()
+    finally:
+        monkeypatch_target.monotonic = original_monotonic
+
+    payload = store.get("memswap")
+    levels = payload.get("_levels", {})
+    assert "sin" not in levels
+    assert "sout" not in levels
+
+
+async def test_sin_threshold_from_config_triggers_level(tmp_path, monkeypatch, store):
+    """User-set ``[memswap] sin_warning=10000`` makes sin alert at that level."""
+    config = _config_with(tmp_path, monkeypatch, "[memswap]\nsin_careful=5000\nsin_warning=10000\nsin_critical=20000\n")
+    plugin = PluginModel(store, config)
+
+    fake_now = [100.0]
+    import glances.plugins.plugin.base as base_module
+
+    monkeypatch.setattr(base_module.time, "monotonic", lambda: fake_now[0])
+
+    with patch("glances.plugins.memswap.model.psutil.swap_memory", return_value=_swap(sin=0)):
+        await plugin.update()
+    fake_now[0] = 101.0
+    with patch("glances.plugins.memswap.model.psutil.swap_memory", return_value=_swap(sin=15_000)):
+        # 15_000 bytes / 1s = 15_000 bytes/s → between warning (10000) and critical (20000) → warning
+        await plugin.update()
+
+    payload = store.get("memswap")
+    assert payload["_levels"]["sin"]["level"] == "warning"
+
+
+# ---------------------------------------------------------- update pipeline
+
+
+async def test_update_writes_swap_fields(store, config):
+    plugin = PluginModel(store, config)
+    with patch("glances.plugins.memswap.model.psutil.swap_memory", return_value=_swap(percent=30.0)):
+        await plugin.update()
+    payload = store.get("memswap")
+    assert payload["percent"] == 30.0
+    assert payload["total"] == 16 * 1024**3
+    assert payload["used"] > 0
+    assert payload["free"] > 0
+
+
+async def test_update_handles_no_swap_configured(store, config):
+    """Illumos / OpenBSD without a swap file: psutil raises — store must not crash."""
+    plugin = PluginModel(store, config)
+    with patch("glances.plugins.memswap.model.psutil.swap_memory", side_effect=OSError("no swap")):
+        await plugin.update()
+    # An empty payload is acceptable — the store key may be absent or empty.
+    payload = store.get("memswap")
+    assert payload is None or payload == {} or payload.get("total") is None
+
+
+async def test_first_cycle_rate_fields_are_none(store, config):
+    """sin/sout are present but None on cycle 1 — no previous sample to diff against."""
+    plugin = PluginModel(store, config)
+    with patch("glances.plugins.memswap.model.psutil.swap_memory", return_value=_swap()):
+        await plugin.update()
+    payload = store.get("memswap")
+    assert "sin" in payload
+    assert payload["sin"] is None
+    assert "sout" in payload
+    assert payload["sout"] is None
+
+
+async def test_second_cycle_computes_swap_rates(store, config, monkeypatch):
+    """Second cycle: sin/sout become per-second rates."""
+    plugin = PluginModel(store, config)
+
+    fake_now = [100.0]
+    import glances.plugins.plugin.base as base_module
+
+    monkeypatch.setattr(base_module.time, "monotonic", lambda: fake_now[0])
+
+    with patch("glances.plugins.memswap.model.psutil.swap_memory", return_value=_swap(sin=1_000_000, sout=500_000)):
+        await plugin.update()
+
+    fake_now[0] = 101.0  # +1 s elapsed
+    with patch("glances.plugins.memswap.model.psutil.swap_memory", return_value=_swap(sin=2_000_000, sout=600_000)):
+        await plugin.update()
+
+    payload = store.get("memswap")
+    # delta = 1_000_000 / 1s = 1_000_000 bytes/s
+    assert payload["sin"] == 1_000_000.0
+    # delta = 100_000 / 1s = 100_000 bytes/s
+    assert payload["sout"] == 100_000.0
+
+
+# ---------------------------------------------------------- _levels
+
+
+async def test_percent_level_uses_default_thresholds(store, config):
+    plugin = PluginModel(store, config)
+    with patch("glances.plugins.memswap.model.psutil.swap_memory", return_value=_swap(percent=85.0)):
+        await plugin.update()
+    # 85 between warning (80) and critical (95) → warning, prominent.
+    # Default ladder for swap is 60/80/95 (looser than mem's 50/70/90).
+    assert store.get("memswap")["_levels"]["percent"] == {"level": "warning", "prominent": True}
+
+
+async def test_percent_level_ok_when_low(store, config):
+    plugin = PluginModel(store, config)
+    with patch("glances.plugins.memswap.model.psutil.swap_memory", return_value=_swap(percent=5.0)):
+        await plugin.update()
+    assert store.get("memswap")["_levels"]["percent"]["level"] == "ok"
+
+
+# ---------------------------------------------------------- export
+
+
+async def test_get_export_strips_internals_and_levels(store, config):
+    plugin = PluginModel(store, config)
+    with patch("glances.plugins.memswap.model.psutil.swap_memory", return_value=_swap()):
+        await plugin.update()
+    exported = plugin.get_export()
+    assert "_levels" not in exported
+    assert "time_since_update" not in exported
+    assert exported["percent"] == 25.0
