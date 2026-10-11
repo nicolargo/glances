@@ -70,7 +70,7 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 | Layer | Technology |
 | --- | --- |
 | Backend | Python, psutil, FastAPI (REST API), curses (TUI) |
-| Frontend | Vue.js, Bootstrap 5, SCSS |
+| Frontend | Vue.js 3, plain CSS (design tokens) |
 | Export plugins | InfluxDB, MongoDB, MQTT, DuckDB, and others |
 | Infrastructure | GitHub Actions, Helm/Kubernetes, Snap (snapcraft) |
 | LLM abstraction | LiteLLM (multi-provider) |
@@ -91,10 +91,11 @@ for the general OSS security philosophy (4 rules).
 
 #### Sensitive endpoints
 
-- `/api/4/config` and `/api/4/args` — never expose credentials in plain text
+- `/api/5/config` and `/api/5/args` — never expose credentials in plain text
   (InfluxDB passwords, MongoDB tokens, MQTT passphrases, SSL key paths, etc.)
-  for unauthenticated access. Use the conditional `as_dict_secure()` method,
-  applied when `self.args.password` is `False`.
+  for unauthenticated access. `/api/5/config` serves `as_dict_secure()` when
+  `[outputs] password` is set, and only `as_dict_public()` otherwise;
+  `/api/5/args` is always redacted (`glances/routes.py`).
 - CORS: `allow_origins=["*"]` + `allow_credentials=True` is invalid per the
   CORS spec and reflected by Starlette. Default: `allow_credentials=False`.
 - DNS rebinding: `TrustedHostMiddleware` via `webui_allowed_hosts` (optional).
@@ -111,7 +112,7 @@ for the general OSS security philosophy (4 rules).
 - [ ] New configuration keys are documented
 - [ ] Breaking changes are identified and documented
 - [ ] The PR targets the correct branch
-- [ ] Code should be formated and linted (make lint && make format)
+- [ ] Pre-commit hooks pass (`make pre-commit` — supersedes `make lint && make format`)
 
 #### Glances-specific output formats
 
@@ -124,7 +125,8 @@ for the general OSS security philosophy (4 rules).
 
 #### Web UI
 
-Stack: Vue.js + Bootstrap 5 + SCSS.
+Stack: Vue.js 3 + plain CSS (design tokens in
+`glances/outputs/static/css/glances.css`).
 
 Design principles:
 

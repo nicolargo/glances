@@ -46,13 +46,8 @@ cryptography==50.0.2
     # via
     #   pyjwt
     #   pylxd
-    #   pysnmpcrypto
     #   python-jose
-defusedxml==0.7.1
-    # via glances
-dnspython==2.8.0 ; python_full_version < '3.11'
-    # via pymongo
-dnspython==2.9.0 ; python_full_version >= '3.11'
+dnspython==2.8.0
     # via pymongo
 docker==7.2.0
     # via glances
@@ -100,10 +95,8 @@ influxdb-client==1.50.0
 influxdb3-python==0.21.0
     # via glances
 jinja2==3.1.6
-    # via
-    #   glances
-    #   pysmi-lextudio
-jsonschema==4.26.0
+    # via glances
+jsonschema==4.25.1
     # via mcp
 jsonschema-specifications==2025.9.1
     # via jsonschema
@@ -135,8 +128,6 @@ pbkdf2==1.3
     # via wifi
 pika==1.4.4
     # via glances
-ply==3.11
-    # via pysmi-lextudio
 podman==5.8.0
     # via glances
 potsdb==1.0.3
@@ -157,7 +148,6 @@ pyarrow==26.0.0 ; python_full_version >= '3.11'
     # via influxdb3-python
 pyasn1==0.6.4
     # via
-    #   pysnmp-lextudio
     #   python-jose
     #   rsa
 pycparser==3.11 ; (implementation_name != 'PyPy' and platform_python_implementation != 'PyPy') or (implementation_name == 'pypy' and platform_python_implementation == 'PyPy')
@@ -186,12 +176,6 @@ pyreadline3==3.5.6 ; sys_platform == 'win32'
     # via humanfriendly
 pysmart==1.4.3
     # via glances
-pysmi-lextudio==1.4.3
-    # via pysnmp-lextudio
-pysnmp-lextudio==6.1.2
-    # via glances
-pysnmpcrypto==0.0.4
-    # via pysnmp-lextudio
 python-dateutil==2.9.0.post0
     # via
     #   elasticsearch
@@ -231,7 +215,6 @@ requests==2.34.2
     #   influxdb
     #   podman
     #   pylxd
-    #   pysmi-lextudio
     #   requests-toolbelt
 requests-toolbelt==1.0.0
     # via pylxd
@@ -259,9 +242,7 @@ sniffio==1.3.1
     # via
     #   elastic-transport
     #   elasticsearch
-sparklines==1.0.0
-    # via glances
-sse-starlette==3.5.0
+sse-starlette==3.4.11
     # via mcp
 starlette==1.7.0
     # via
@@ -270,9 +251,7 @@ starlette==1.7.0
     #   sse-starlette
 statsd==4.0.1
     # via glances
-termcolor==3.3.0
-    # via sparklines
-tomli==2.0.2 ; python_full_version < '3.11'
+tomli==2.4.1 ; python_full_version < '3.11'
     # via podman
 truststore==0.10.4 ; sys_platform != 'emscripten'
     # via

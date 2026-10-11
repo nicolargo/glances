@@ -17,9 +17,11 @@ following:
     # Ex: prefix=foo
     #     => foo.cpu
     #     => foo.mem
-    # You can also use dynamic values
-    #prefix=`hostname`
     prefix=glances
+    # Optional system name added after the prefix (default is the host name)
+    # Ex: system_name=myhost
+    #     => glances.myhost.cpu
+    #system_name=myhost
 
 and run Glances with:
 

@@ -5,7 +5,7 @@ services:
     restart: always
 
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:61208/api/4/status"]
+      test: ["CMD", "curl", "-f", "http://localhost:61208/healthz"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -56,11 +56,5 @@ services:
 #               count: 1
 #               capabilities: [gpu]
 
-    # Uncomment to protect Glances WebUI by a login/password (add --password to GLANCES_OPT)
-    # secrets:
-    #   - source: glances_password
-    #     target: /root/.config/glances/<login>.pwd
-
-# secrets:
-#   glances_password:
-#     file: ./secrets/glances_password
+    # To protect the REST API and the WebUI by a password, set [outputs] password
+    # in ./glances.conf to the hash printed by `glances --set-password`.

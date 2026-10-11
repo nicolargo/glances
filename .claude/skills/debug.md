@@ -11,11 +11,14 @@ Help diagnose and fix a bug in Glances.
    - Relevant config section from `glances.conf`
 
 2. **Locate the code path**: Based on the mode and plugin involved:
-   - Standalone TUI: `glances/standalone.py` → `glances/outputs/glances_curses.py`
-   - Web server: `glances/webserver.py` → `glances/outputs/glances_restful_api.py`
-   - Client/server: `glances/client.py` / `glances/server.py`
-   - Plugin issue: `glances/plugins/<name>/__init__.py`
-   - Export issue: `glances/exports/glances_<name>/__init__.py`
+   - Startup / CLI: `glances/main.py`
+   - Standalone TUI: `glances/outputs/glances_curses.py` (`Tui`) → `glances/outputs/curses_renderer.py`
+   - Web server: `glances/webserver.py` → `glances/routes.py`
+   - WebUI: `glances/outputs/static/js/`
+   - Client/server: `glances/client.py` (`-c`, over the REST API) / `glances/webserver.py` (`-s`)
+   - Scheduler / alerts: `glances/scheduler.py` / `glances/alerts.py`
+   - Plugin issue: `glances/plugins/<name>/model.py` (TUI layout: `render_curses.py`)
+   - Export issue: `glances/exports/glances_<name>/export.py`
    - Process list: `glances/processes.py`
    - Configuration: `glances/config.py`
 
@@ -26,18 +29,18 @@ Help diagnose and fix a bug in Glances.
 
 4. **Reproduce with tests** when possible:
    ```bash
-   .venv-uv/bin/uv run pytest tests/test_core.py -v -k "test_name" 2>&1
+   .venv-uv/bin/uv run pytest tests/test_plugin_<name>.py -v -k "test_name" 2>&1
    ```
 
 5. **Fix and verify**:
    - Apply surgical, atomic edits
    - Run the relevant test suite
    - Run `make format && make lint`
-   - Verify no regressions with `make test-core`
+   - Verify no regressions with `make test`
 
 ## Common pitfalls
 
 - **psutil version differences**: Some psutil APIs behave differently across OS — always check `glances/globals.py` for platform flags (`LINUX`, `MACOS`, `WINDOWS`, `BSD`)
-- **Plugin update cycle**: Stats are `None` on first call — handle gracefully
+- **Plugin update cycle**: a plugin has no payload before its first update (`GET /api/5/<plugin>` → `200 null`), and `rate: True` fields are absent on the first cycle — handle gracefully
 - **Snap confinement**: `PermissionError` at `open()`, not at `read()` — wrap the right call
 - **Docker socket access**: Requires mounting `/var/run/docker.sock` and proper permissions

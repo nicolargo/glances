@@ -14,19 +14,27 @@ CSV file description:
 - first line: Stats description (header)
 - others lines: Stats (data)
 
-Columns are fixed by the first sample. If a device disappears, its columns are
-left empty. Devices or fields first seen later are not added to the file; start
-a new export to include them. Existing columns stay aligned with their headers.
+Only the stats are exported (the thresholds defined in the configuration file
+are not). The same columns in another order (for example processes re-sorted by
+CPU) are realigned on the existing header.
 
 By default, data will be append any existing CSV file (if header are compliant).
 
-If the header did not match with a previous one, an error is logged.
+If the column set changes — at startup, because the header did not match a previous
+one, or mid-run, because a network interface, disk or container appeared or
+disappeared — a warning is logged and Glances rolls over to a new file rather than
+losing data. The new file is named after the original path with ``-NNN`` inserted
+before the extension, zero-padded to 3 digits and starting at ``001``
+(``/tmp/glances.csv`` becomes ``/tmp/glances-001.csv``, then ``/tmp/glances-002.csv``,
+and so on), and its first line is the new header. The --export-csv-overwrite tag
+governs what happens if the rotation target already exists: overwrite it, or (default)
+skip to the next free index.
 
 The --export-csv-overwrite tag should be used if you want to delete the existing CSV file when Glances starts.
 
 It is possible to remove some exported data using the --disable-plugin tag:
 
-  $ glances --export csv --export-csv-file /tmp/glances.csv --disable-plugin load,swap --quiet
+  $ glances --export csv --export-csv-file /tmp/glances.csv --disable-plugin load,memswap --quiet
 
 or by only enable some plugins:
 

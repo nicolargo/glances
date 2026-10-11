@@ -6,7 +6,7 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
-"""Docker Extension unit for Glances' Containers plugin."""
+"""Docker Engine Monitoring unit for Glances' Containers plugin."""
 
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -14,6 +14,7 @@ from typing import Any
 
 from glances.globals import nativestr, pretty_date, replace_special_chars
 from glances.logger import logger
+from glances.secure import secure_option
 from glances.stats_streamer import ThreadedIterableStreamer
 
 # Docker-py library (optional and Linux-only)
@@ -237,20 +238,23 @@ class DockerStatsFetcher:
         return stats
 
 
-class DockerExtension:
-    """Glances' Containers Plugin's Docker Extension unit"""
+class DockerEngineMonitor:
+    """Glances' Containers Plugin's Docker Engine Monitoring unit"""
 
+    ENGINE = "docker"
     CONTAINER_ACTIVE_STATUS = ['running', 'healthy', 'paused']
 
-    def __init__(self):
+    def __init__(self, url: str | None = None):
         self.disable = disable_plugin_docker
         if self.disable:
-            raise Exception("Missing libs required to run Docker Extension (Containers) ")
+            raise Exception("Missing libs required to run DockerEngineMonitor (Containers) ")
 
         self.display_error = True
 
         self.client = None
         self.ext_name = "containers (Docker)"
+        self.url = url
+        self.engine_url = secure_option('url', self.url)
         self.stats_fetchers = {}
 
         # Issue #3559: cache the (immutable) image tags per container id to avoid
@@ -264,7 +268,7 @@ class DockerExtension:
         # Init the Docker API Client
         try:
             # Do not use the timeout option (see issue #1878)
-            self.client = docker.from_env()
+            self.client = docker.DockerClient(base_url=self.url) if self.url else docker.from_env()
         except Exception as e:
             logger.error(f"{self.ext_name} plugin - Can't connect to Docker ({e})")
             self.client = None
@@ -395,8 +399,11 @@ class DockerExtension:
         status = container.attrs['State'].get('Health', container.attrs['State']).get('Status', '')
         stats = {
             'key': self.key,
+            'engine': self.ENGINE,
+            'engine_url': self.engine_url,
             'name': nativestr(container.name),
             'id': container.id,
+            'image': self._get_image(container),
             'status': status,
             'created': container.attrs['Created'],
             'command': [],
@@ -412,10 +419,8 @@ class DockerExtension:
             'network_tx': None,
             'ports': '',
             'uptime': None,
+            'started_at': None,
         }
-
-        # Container Image
-        stats['image'] = self._get_image(container)
 
         if container.attrs['Config'].get('Entrypoint', None):
             stats['command'].extend(container.attrs['Config'].get('Entrypoint', []))
@@ -450,6 +455,7 @@ class DockerExtension:
 
         started_at = container.attrs['State']['StartedAt']
         stats['uptime'] = pretty_date(parser.parse(started_at).astimezone(tz.tzlocal()).replace(tzinfo=None))
+        stats['started_at'] = int(parser.parse(started_at).timestamp())
 
         # Manage special chars in command (see issue#2733)
         stats['command'] = replace_special_chars(' '.join(stats['command']))

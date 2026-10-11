@@ -12,13 +12,13 @@ Additionally, on GNU/Linux, it also shows the kernel version.
 In client mode, the server connection status is also displayed.
 
 The system information message can be configured in the configuration file
-(for the moment, it only work for the Curses interface):
+(it is used by both the Curses and the Web interfaces):
 
 .. code-block:: ini
 
     [system]
-    # System information to display (a string where {key} will be replaced by the value) in the Curses interface
-    # Available dynamics information are: hostname, os_name, os_version, os_arch, linux_distro, platform
+    # System information to display (a string where {key} will be replaced by the value)
+    # Available dynamics information are: hostname, os_name, os_version, linux_distro, platform
     system_info_msg= | My {os_name} system |
 
 The header IP message can be configured from the ip ``[ip]`` section, it allows to display private and

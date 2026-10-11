@@ -1,0 +1,8 @@
+# Extend the default ruleset; only whitelist the synthetic secret used as a
+# redaction fixture in tests/test_config.py.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Synthetic test fixtures"
+regexes = ['''ACTIONBEARER''']

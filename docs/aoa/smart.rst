@@ -10,6 +10,8 @@ SMART
 This plugin is disable by default, please use the --enable-plugin smart option
 to enable it.
 
+In the terminal interface, click on ``r`` to show/hide it.
+
 .. image:: ../_static/smart.png
 
 Glances displays all the SMART attributes.
@@ -52,3 +54,8 @@ You can also hide attributes, for example Self-tests, Errors, etc. Use a comma s
 
     [smart]
     hide_attributes=attribute_name1,attribute_name2
+
+.. note::
+    In the REST API (``/api/5/smart``) each device is exposed as an object with a ``name``
+    field (device identification string) and an ``attributes`` list; every
+    entry carries the SMART attribute ``name``, ``key``, ``raw`` and ``value``.

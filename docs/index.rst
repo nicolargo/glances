@@ -9,7 +9,7 @@ or Web-based interface. It can dynamically adapt the displayed
 information depending on the terminal size.
 
 It can also work in client/server mode. Remote monitoring can be
-done via terminal, Web interface, or API (XMLRPC and RESTful).
+done via terminal, Web interface, or RESTful API.
 
 Stats can also be exported to :ref:`files or external databases<gw>`.
 

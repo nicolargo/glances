@@ -16,6 +16,14 @@ following:
     keyspace=glances
     replication_factor=2
     table=localhost
+    # Optional authentication
+    #username=cassandra
+    #password=cassandra
+
+``host``, ``port`` and ``keyspace`` are mandatory. ``table`` defaults to
+the ``host`` value. ``keyspace`` and ``table`` must be valid CQL
+identifiers (a letter followed by letters, digits or underscores), else
+Glances refuses to start the exporter.
 
 and run Glances with:
 

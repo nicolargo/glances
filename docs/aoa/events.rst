@@ -5,33 +5,71 @@ events
 
 .. image:: ../_static/events.png
 
-Events list is displayed in the bottom of the screen if and only if:
+Events list (``ALERTS``) is displayed in the bottom of the right column of
+the screen. When no alert has ever been raised, the block is reduced to a
+single ``ALERT (no alert detected)`` line (``ALERT (initializing)`` during
+the first refresh cycles).
 
-- at least one ``WARNING`` or ``CRITICAL`` alert was occurred
-- space is available in the bottom of the console/terminal
+Only ``WARNING`` and ``CRITICAL`` levels raise an alert: a ``CAREFUL`` level
+colours the stat in its plugin but never creates an event.
 
-Each event message displays the following information:
+The block title displays the number of ongoing and resolved alerts. Then
+one line per alert (up to 10, ongoing alerts first) displays the following
+information:
 
-1. start datetime
-2. duration if alert is terminated or `ongoing` if the alert is still in
-   progress
-3. alert name
-4. {min,avg,max} values or number of running processes for monitored
-   processes list alerts
+1. a glyph (``●`` for an ongoing alert, ``○`` for a resolved one)
+2. start time (``HH:MM:SS`` for today, ``YY-MM-DD`` otherwise)
+3. duration of the alert
+4. target (plugin, item and stat in alert)
+5. top processes during the alert (for CPU, memory, load... alerts)
+6. level (``WARNING`` or ``CRITICAL``)
 
-The configuration should be done in the ``[alert]`` section of the
+Columns are removed when the terminal is too narrow. Use the ``l`` key to
+show/hide the events list.
+
+The alerts engine is configured in the ``[alerts]`` section of the
 Glances configuration file:
 
 .. code-block:: ini
 
-   [alert]
-   disable=False
-   # Maximum number of events to display (default is 10 events)
-   max_events=10
-   # Minimum duration for an event to be taken into account (default is 6 seconds)
-   min_duration=6
-   # Minimum time between two events of the same type (default is 6 seconds)
-   # This is used to avoid too many alerts for the same event
-   # Events will be merged
-   min_interval=6
+   [alerts]
+   # Hold time, in seconds, before a level change is committed and logged
+   # (avoid flapping alerts)
+   min_duration_seconds=5.0
+   # Maximum number of alert events kept in memory (served by /api/5/alert)
+   history_size=200
+   # Number of refresh cycles skipped, per plugin, at startup
+   warmup_cycles=3
+   # Maximum run time, in seconds, of an action command (0 = no timeout)
+   action_timeout=0
 
+The hold time can also be set per plugin, stat, level or item, in the
+plugin section. The most specific key wins:
+
+.. code-block:: ini
+
+   [cpu]
+   # Hold time for all the CPU stats
+   min_duration_seconds=10
+   # Hold time for the steal stat
+   steal_min_duration_seconds=30
+   # Hold time to enter the critical level of the steal stat
+   steal_critical_min_duration_seconds=60
+
+For a plugin with several items, ``<item>_<stat>_min_duration_seconds`` and
+``<item>_<stat>_<level>_min_duration_seconds`` are also available (example:
+``wlan0_bytes_recv_min_duration_seconds`` in the ``[network]`` section).
+
+By default, all the alerts are logged in the events list. To keep a stat
+coloured (and its actions running) but out of the events list, set
+``<stat>_log=False`` (or ``log=False`` for the whole plugin) in the plugin
+section:
+
+.. code-block:: ini
+
+   [cpu]
+   steal_log=False
+
+The events list is also available through the RESTful API:
+``/api/5/alert`` (raw events) and ``/api/5/alert/incidents`` (one entry per
+alert, as displayed in the user interface).

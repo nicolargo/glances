@@ -66,7 +66,7 @@ sleep 2
 # Run glances with export to nats, stopping after 10 writes
 # This will run synchronously now since we're using --stop-after
 echo "Glances to export system stats to nats (duration: ~ 20 seconds)"
-.venv/bin/python -m glances --config ./conf/glances.conf --export nats --stop-after 10 --quiet
+.venv/bin/python -m glances.main --config ./conf/glances.conf --export nats --stop-after 10 --quiet
 
 # Give some time for final messages to be received
 sleep 2

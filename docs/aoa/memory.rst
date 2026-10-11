@@ -40,41 +40,44 @@ Additional stats available in through the API:
   never moved to disk.
 - **shared**: (BSD): memory that may be simultaneously accessed by multiple
   processes.
-- **percent_min**: the minimum memory usage percentage observed since
-  Glances startup.
-- **percent_max**: the maximum memory usage percentage observed since
-  Glances startup.
-- **percent_mean**: the mean memory usage percentage observed since
-  Glances startup.
+- **slab**: (Linux): in-kernel data structures cache.
 
 It is possible to display the available memory instead of the used memory
 by setting the ``available`` option to ``True`` in the configuration file
 under the ``[mem]`` section.
 
-A character is also displayed just after the MEM header and shows the
-trend value:
+The ``SWAP`` column displays the swap usage, the total swap size and the
+swap in (``sin``) and swap out (``sout``) rates (bytes per second).
 
-======== ==============================================================
-Trend    Status
-======== ==============================================================
-``-``    Mean 15 lasts values equal mean 15 previous values
-``↓``    Mean 15 lasts values is lower mean 15 previous values
-``↑``    Mean 15 lasts values is higher mean 15 previous values
-======== ==============================================================
-
-Alerts are only set for used memory and used swap.
+By default, alerts are only set for used memory and used swap.
 
 Legend:
 
-======== ============
-RAM/Swap Status
-======== ============
-``<50%`` ``OK``
-``>50%`` ``CAREFUL``
-``>70%`` ``WARNING``
-``>90%`` ``CRITICAL``
-======== ============
+======== ======== ============
+RAM      Swap     Status
+======== ======== ============
+``<50%`` ``<60%`` ``OK``
+``>50%`` ``>60%`` ``CAREFUL``
+``>70%`` ``>80%`` ``WARNING``
+``>90%`` ``>95%`` ``CRITICAL``
+======== ======== ============
 
 .. note::
     Limit values can be overwritten in the configuration file under
-    the ``[memory]`` and/or ``[memswap]`` sections.
+    the ``[mem]`` and/or ``[memswap]`` sections.
+
+Swap thresholds are set with the ``percent_careful``, ``percent_warning``
+and ``percent_critical`` keys of the ``[memswap]`` section. Alerts on the
+swap in/out rates are disabled by default; they can be enabled with the
+``sin_careful`` (``sin_warning``, ``sin_critical``) and ``sout_careful``
+(``sout_warning``, ``sout_critical``) keys, in bytes per second:
+
+.. code-block:: ini
+
+    [memswap]
+    percent_careful=60
+    percent_warning=80
+    percent_critical=95
+    sin_careful=40960
+    sin_warning=409600
+    sin_critical=819200

@@ -18,6 +18,10 @@ The connection should be defined in the Glances configuration file as following:
     db=glances
     user=default
     password=password
+    # Optional: host name stored with the stats (default is the machine host name)
+    #hostname=myhost
+
+One table per plugin is created (and widened when a new field appears).
 
 and run Glances with:
 

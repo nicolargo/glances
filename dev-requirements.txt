@@ -10,13 +10,13 @@ attrs==26.1.0
     # via
     #   glom
     #   jsonschema
-    #   outcome
     #   referencing
     #   reuse
     #   semgrep
-    #   trio
 babel==2.18.0
     # via sphinx
+backports-asyncio-runner==1.2.0 ; python_full_version < '3.11'
+    # via pytest-asyncio
 boltons==21.0.0
     # via
     #   face
@@ -29,9 +29,8 @@ bracex==3.0.1
 certifi==2026.7.22
     # via
     #   requests
-    #   selenium
-cffi==2.1.1 ; implementation_name != 'pypy' and os_name == 'nt'
-    # via trio
+cffi==2.1.1 ; (implementation_name != 'pypy' and os_name == 'nt') or platform_python_implementation != 'PyPy'
+    # via cryptography
 cfgv==3.5.0
     # via pre-commit
 charset-normalizer==3.5.2
@@ -76,8 +75,6 @@ exceptiongroup==1.2.2
     # via
     #   pytest
     #   semgrep
-    #   trio
-    #   trio-websocket
 face==26.0.1
     # via glom
 filelock==4.1.0
@@ -91,14 +88,23 @@ fonttools==4.66.1 ; python_full_version >= '3.11'
 glom==22.1.0
     # via semgrep
 gprof2dot==2025.4.14
+greenlet==3.5.6
+    # via playwright
 h11==0.16.0
-    # via wsproto
-identify==2.6.20
+    # via
+    #   httpcore
+    #   uvicorn
+httpcore==1.0.9
+    # via httpx
+httpx==0.28.1
+    # via mcp
+httpx-sse==0.4.3
+    # via mcp
+identify==2.6.19
     # via pre-commit
 idna==3.20
     # via
     #   requests
-    #   trio
 imagesize==2.0.1
     # via sphinx
 iniconfig==2.3.1
@@ -149,10 +155,42 @@ numpy==2.5.4 ; python_full_version >= '3.12'
     # via
     #   contourpy
     #   matplotlib
-outcome==1.3.0.post0
+opentelemetry-api==1.37.0
     # via
-    #   trio
-    #   trio-websocket
+    #   opentelemetry-exporter-otlp-proto-http
+    #   opentelemetry-instrumentation
+    #   opentelemetry-instrumentation-requests
+    #   opentelemetry-instrumentation-threading
+    #   opentelemetry-sdk
+    #   opentelemetry-semantic-conventions
+    #   semgrep
+opentelemetry-exporter-otlp-proto-common==1.37.0
+    # via opentelemetry-exporter-otlp-proto-http
+opentelemetry-exporter-otlp-proto-http==1.37.0
+    # via semgrep
+opentelemetry-instrumentation==0.58b0
+    # via
+    #   opentelemetry-instrumentation-requests
+    #   opentelemetry-instrumentation-threading
+opentelemetry-instrumentation-requests==0.58b0
+    # via semgrep
+opentelemetry-instrumentation-threading==0.58b0
+    # via semgrep
+opentelemetry-proto==1.37.0
+    # via
+    #   opentelemetry-exporter-otlp-proto-common
+    #   opentelemetry-exporter-otlp-proto-http
+opentelemetry-sdk==1.37.0
+    # via
+    #   opentelemetry-exporter-otlp-proto-http
+    #   semgrep
+opentelemetry-semantic-conventions==0.58b0
+    # via
+    #   opentelemetry-instrumentation
+    #   opentelemetry-instrumentation-requests
+    #   opentelemetry-sdk
+opentelemetry-util-http==0.58b0
+    # via opentelemetry-instrumentation-requests
 packaging==26.3
     # via
     #   matplotlib
@@ -160,8 +198,6 @@ packaging==26.3
     #   requirements-parser
     #   semgrep
     #   sphinx
-    #   virtualenv
-    #   webdriver-manager
 peewee==3.19.0
     # via semgrep
 pillow==12.3.0
@@ -174,6 +210,7 @@ platformdirs==4.13.0 ; python_full_version >= '3.11'
     # via
     #   textual
     #   virtualenv
+playwright==1.63.0
 pluggy==1.6.0
     # via pytest
 pre-commit==4.6.2
@@ -185,6 +222,10 @@ pydantic==2.14.0
     # via rstcheck-core
 pydantic-core==2.50.0
     # via pydantic
+pydantic-settings==2.15.0
+    # via mcp
+pyee==13.0.1
+    # via playwright
 pygments==2.21.0
     # via
     #   pytest
@@ -195,17 +236,17 @@ pyinstrument==5.1.3
 pyparsing==3.3.3
     # via matplotlib
 pyright==1.1.414
-pysocks==1.7.1
-    # via urllib3
 pytest==9.1.1
+    # via pytest-asyncio
+pytest-asyncio==1.4.0
 python-dateutil==2.9.0.post0
     # via matplotlib
 python-debian==1.1.1
     # via reuse
 python-discovery==1.6.2
     # via virtualenv
-python-dotenv==1.2.4
-    # via webdriver-manager
+python-dotenv==1.2.3
+    # via pydantic-settings
 python-magic==0.4.27
     # via reuse
 pyyaml==6.0.3
@@ -218,7 +259,6 @@ requests==2.34.2
     # via
     #   semgrep
     #   sphinx
-    #   webdriver-manager
 requirements-parser==0.13.1
 reuse==6.2.0
 rich==15.0.0
@@ -242,22 +282,17 @@ rstcheck-core==1.3.2
     # via rstcheck
 ruamel-yaml==0.17.40
     # via semgrep
-ruamel-yaml-clib==0.2.15 ; python_full_version < '3.13' and platform_python_implementation == 'CPython'
-    # via ruamel-yaml
-ruff==0.17.0
-selenium==4.51.0
-semgrep==1.79.0
+ruff==0.16.9
+semantic-version==2.10.0
+    # via semgrep
+semgrep==1.178.0
 setuptools==84.0.0
 shellingham==1.5.4
     # via typer
 six==1.17.0
     # via python-dateutil
-sniffio==1.3.1
-    # via trio
 snowballstemmer==3.1.1
     # via sphinx
-sortedcontainers==2.4.0
-    # via trio
 sphinx==8.1.3 ; python_full_version < '3.11'
     # via
     #   sphinx-rtd-theme
@@ -294,21 +329,17 @@ tomli==2.0.2
     #   sphinx
 tomlkit==0.15.1
     # via reuse
-trio==0.34.0
-    # via
-    #   selenium
-    #   trio-websocket
-trio-websocket==0.12.2
-    # via selenium
-typer==0.27.3
+typer==0.27.2
     # via rstcheck
 typing-extensions==4.16.0
     # via
     #   pydantic
     #   pydantic-core
+    #   pyee
+    #   pyjwt
     #   pyright
+    #   pytest-asyncio
     #   referencing
-    #   selenium
     #   semgrep
     #   textual
     #   typing-inspection
@@ -318,14 +349,14 @@ typing-inspection==0.4.4
 urllib3==2.8.0
     # via
     #   requests
-    #   selenium
     #   semgrep
 virtualenv==21.14.6
     # via pre-commit
 wcmatch==8.5.2
     # via semgrep
-webdriver-manager==4.1.2
-websocket-client==1.9.2
-    # via selenium
-wsproto==1.3.2
-    # via trio-websocket
+wrapt==1.17.3
+    # via
+    #   opentelemetry-instrumentation
+    #   opentelemetry-instrumentation-threading
+zipp==4.1.0
+    # via importlib-metadata

@@ -9,12 +9,12 @@
 """Secures functions for Glances"""
 
 import re
-from subprocess import PIPE, Popen
+from subprocess import PIPE, Popen, TimeoutExpired
 
 from glances.globals import nativestr
 
 
-def secure_popen(cmd, allow_operators=True, render=None):
+def secure_popen(cmd, allow_operators=True, timeout=None, render=None):
     """A more or less secure way to execute system commands.
 
     By default the following shell-like operators are interpreted:
@@ -28,6 +28,11 @@ def secure_popen(cmd, allow_operators=True, render=None):
         then run as a single process that can neither chain, pipe nor write to
         an arbitrary file. Used for commands coming from the configuration file
         when --disable-config-exec is set (GHSA-3vwc-qwhc-3mj7).
+    :param timeout: when set, kill the command after `timeout` seconds and
+        return an error string instead of its output. `None` (the default)
+        means no timeout at all — the historical behaviour, unchanged. With
+        '&&'-chained commands the timeout applies to EACH sub-command, not to
+        the chain as a whole.
     :param render: an optional callable applied to each argument *after* the
         command line has been tokenized. Callers that build a command from a
         trusted template plus untrusted data (the on-alert actions and their
@@ -42,13 +47,13 @@ def secure_popen(cmd, allow_operators=True, render=None):
     if not allow_operators:
         # Run the whole command as a single process: '&&', '|' and '>' are
         # passed verbatim as arguments and never interpreted.
-        return __run_argv(cmd, render)
+        return __run_argv(cmd, timeout=timeout, render=render)
 
     ret = ''
 
     # Split by multiple commands (only '&&' separator is supported)
     for c in cmd.split('&&'):
-        ret += __secure_popen(c, render)
+        ret += __secure_popen(c, timeout=timeout, render=render)
 
     return ret
 
@@ -68,16 +73,35 @@ def __split_args(cmd, render=None):
     return args if render is None else [render(_) for _ in args]
 
 
-def __run_argv(cmd, render=None):
+def __communicate(p_list, timeout):
+    """Wait for the pipeline to finish, killing it if `timeout` expires.
+
+    Returns the (stdout, stderr) tuple, or None when the timeout fired (the
+    caller then reports the error string).
+    """
+    try:
+        return p_list[-1].communicate(timeout=timeout)
+    except TimeoutExpired:
+        for p in p_list:
+            p.kill()
+        # Reap the killed processes so no zombie is left behind.
+        for p in p_list:
+            p.wait()
+        return None
+
+
+def __run_argv(cmd, timeout=None, render=None):
     """Execute cmd as a single process, without interpreting any operator."""
     p = Popen(__split_args(cmd, render), shell=False, stdin=None, stdout=PIPE, stderr=PIPE)
-    p_ret = p.communicate()
+    p_ret = __communicate([p], timeout)
+    if p_ret is None:
+        return f'Glances error: command timeout after {timeout}s ({cmd})'
     if nativestr(p_ret[1]) == '':
         return nativestr(p_ret[0])
     return nativestr(p_ret[1])
 
 
-def __secure_popen(cmd, render=None):
+def __secure_popen(cmd, timeout=None, render=None):
     """A more or less secure way to execute system command
 
     Manage redirection (>) and pipes (|)
@@ -110,10 +134,20 @@ def __secure_popen(cmd, render=None):
         p_list.append(p)
         sub_cmd_stdin = p.stdout
 
-    p_ret = p_list[-1].communicate()
-    # Reap the upstream processes of the pipeline (they exited on their own)
+    p_ret = __communicate(p_list, timeout)
+    if p_ret is None:
+        return f'Glances error: command timeout after {timeout}s ({cmd})'
+    # Reap the upstream processes of the pipeline (they exited on their own).
+    # Bounded by the same `timeout`: `__communicate` only waits on the LAST
+    # stage, so when an earlier stage in the pipe is the one that hangs
+    # (e.g. `sleep 20 | echo done`), communicate() returns normally and this
+    # loop must not block unboundedly on `p.wait()`.
     for p in p_list[:-1]:
-        p.wait()
+        try:
+            p.wait(timeout=timeout)
+        except TimeoutExpired:
+            p.kill()
+            p.wait()
 
     if nativestr(p_ret[1]) == '':
         # No error
@@ -127,3 +161,31 @@ def __secure_popen(cmd, render=None):
         ret = nativestr(p_ret[1])
 
     return ret
+
+
+# Key name patterns redacted in any section
+# Note: `\buser\b` only matches a standalone `user` key, so the CPU/load
+# `user_careful`, `user_warning`... thresholds stay visible (they are not credentials).
+_SECURE_SENSITIVE_KEY_RE = re.compile(
+    r"password|token|secret|api_key|apikey|ssl_keyfile|username|\buser\b|login",
+    re.IGNORECASE,
+)
+
+# Credentials embedded in an URL value (scheme://user:password@host).
+# The class admits '@' and the match is greedy, so a password holding an
+# unencoded '@' (`u:p@ss@host`) is redacted whole.
+_SECURE_URL_CREDENTIALS_RE = re.compile(r"(?<=://)[^/?#\s]+@")
+
+
+def secure_option(key, value):
+    """Return the sanitised value of a configuration option or a command line argument.
+
+    A sensitive key is fully redacted, otherwise only the credentials
+    embedded in an URL value are redacted. Non string values (boolean flags,
+    ports, refresh rates...) can not carry a credential and are returned as is.
+    """
+    if not isinstance(value, str):
+        return value
+    if _SECURE_SENSITIVE_KEY_RE.search(key):
+        return "********"
+    return _SECURE_URL_CREDENTIALS_RE.sub("********@", value)
