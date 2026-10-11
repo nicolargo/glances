@@ -374,7 +374,7 @@ def _docker_monitor():
     return m
 
 
-def _docker_container(status):
+def _docker_container(status, health=None):
     c = MagicMock()
     c.id, c.name, c.ports = "c1", "web", {}
     c.attrs = {
@@ -382,6 +382,8 @@ def _docker_container(status):
         "Created": "2026-10-01T00:00:00Z",
         "Config": {"Cmd": ["sh"]},
     }
+    if health:
+        c.attrs["State"]["Health"] = {"Status": health}
     c.image.tags = ["web:latest"]
     return c
 
@@ -424,6 +426,21 @@ def test_docker_started_at_is_the_start_timestamp():
 
 def test_docker_started_at_is_none_when_not_running():
     stats = _docker_monitor().generate_stats(_docker_container("exited"))
+    assert stats["started_at"] is None
+
+
+@pytest.mark.parametrize("health", ["starting", "healthy", "unhealthy"])
+def test_docker_running_container_with_healthcheck_has_stats(health):
+    stats = _docker_monitor().generate_stats(_docker_container("running", health))
+    assert stats["status"] == health
+    assert stats["cpu_percent"] == 1.0
+    assert stats["started_at"] == _STARTED_AT
+
+
+def test_docker_stopped_container_with_healthcheck_has_no_stats():
+    # Docker reports a stopped container with a healthcheck as unhealthy.
+    stats = _docker_monitor().generate_stats(_docker_container("exited", "unhealthy"))
+    assert stats["cpu_percent"] is None
     assert stats["started_at"] is None
 
 
