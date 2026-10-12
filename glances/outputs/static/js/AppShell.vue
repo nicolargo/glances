@@ -32,7 +32,7 @@
 			cadence on the right. The class name is the one the vertical budget
 			and the render probe already look for; it outlived the alerts. -->
 			<div class="gl-muted gl-about">
-				<span>{{ versionLabel }}</span>
+				<a href="https://github.com/nicolargo/glances" target="_blank" rel="noopener noreferrer">{{ versionLabel }}</a>
 				<span class="gl-about-sep" aria-hidden="true">·</span>
 				<!-- A <button>, styled as a link: it acts on this page rather than
 				navigating, so an <a> would lie to assistive tech and offer a
@@ -46,8 +46,6 @@
 				>
 					Hotkeys
 				</button>
-				<span class="gl-about-sep" aria-hidden="true">·</span>
-				<a href="https://github.com/nicolargo/glances" target="_blank" rel="noopener noreferrer">GitHub</a>
 				<!-- /docs only when [outputs] api_doc is on: that same key decides
 				whether FastAPI mounts Swagger UI at all (webserver.build_app),
 				so linking it unconditionally would offer a 404. Absolute, not
@@ -1136,6 +1134,10 @@ export default {
 .gl-zone {
 	border-bottom: 1px solid var(--gl-border);
 	padding-bottom: var(--gl-gap);
+}
+/* The footer draws its own top border: the last zone must not add a second. */
+.gl-zone:has(+ .gl-alerts) {
+	border-bottom: none;
 }
 /* Header line. The gap is the TUI's _HEADER_GAP = 3 (glances_curses.py),
  * so it is three CHARACTERS and uses --gl-col, not `ch`: `ch` resolves to
