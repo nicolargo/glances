@@ -29,9 +29,10 @@ import re
 from types import SimpleNamespace
 from typing import Any, ClassVar
 
-from glances.globals import natural_keys
+from glances.globals import WINDOWS, natural_keys
 from glances.plugins.plugin.base import GlancesPluginBase
 from glances.plugins.sensors.grab import GlancesGrabSensors, sensors_definition
+from glances.plugins.sensors.sensor import glances_librehardwaremonitor
 from glances.plugins.sensors.sensor.glances_batpercent import GlancesGrabBat
 from glances.plugins.sensors.sensor.glances_hddtemp import GlancesGrabHDDTemp
 
@@ -148,7 +149,23 @@ class PluginModel(GlancesPluginBase[list]):
         self._hdd_args = SimpleNamespace(disable_hddtemp=self.config.get("hddtemp", "disable", False))
         self._grab_hdd = GlancesGrabHDDTemp(host=host, port=port, args=self._hdd_args)
         self._grab_bat = GlancesGrabBat()
+        self._grab_lhm = self._build_lhm_grabber()
         self._grabbers_built = True
+
+    def _build_lhm_grabber(self):
+        """On Windows, psutil exposes no temperature nor fan sensor (#3265):
+        grab them from the LibreHardwareMonitor web server, if enabled."""
+        if not WINDOWS or self.config.get("librehardwaremonitor", "disable", False):
+            return None
+        if not glances_librehardwaremonitor.is_available():
+            logger.debug("sensors: librehardwaremonitor-api lib not found, no temperature on Windows")
+            return None
+        return glances_librehardwaremonitor.GlancesGrabLHM(
+            host=self.config.get("librehardwaremonitor", "host", "127.0.0.1"),
+            port=self.config.get("librehardwaremonitor", "port", 8085),
+            username=self.config.get_value("librehardwaremonitor", "username"),
+            password=self.config.get_value("librehardwaremonitor", "password"),
+        )
 
     def _collect(self) -> list:
         """Synchronous collection (runs in a worker thread).
@@ -184,8 +201,23 @@ class PluginModel(GlancesPluginBase[list]):
             row.setdefault("critical", None)
         return rows
 
+    def stop(self) -> None:
+        """Close the LibreHardwareMonitor HTTP session (base teardown hook)."""
+        if self._grabbers_built and self._grab_lhm is not None:
+            self._grab_lhm.close()
+
     async def _grab_stats(self) -> list:
-        return await asyncio.to_thread(self._collect)
+        rows = await asyncio.to_thread(self._collect)
+        if self._grab_lhm is not None:
+            # Async lib: awaited in the event loop, not in the worker thread
+            try:
+                lhm_rows = await self._grab_lhm.get()
+            except Exception as exc:  # noqa: BLE001 — must not drop the other sensors
+                logger.debug("sensors: librehardwaremonitor grab failed: %s", exc)
+                lhm_rows = {}
+            for sensor_type, type_rows in lhm_rows.items():
+                rows.extend(self._grab_typed(lambda r=type_rows: r, sensor_type))
+        return rows
 
     # ------------------------------------------------- transform: alias + fold
 

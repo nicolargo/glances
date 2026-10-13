@@ -353,6 +353,7 @@ Extra dependencies:
 - ``influxdb`` (for the InfluxDB version 1 export module)
 - ``influxdb-client``  (for the InfluxDB version 2 export module)
 - ``kafka-python`` (for the Kafka export module)
+- ``librehardwaremonitor-api`` (for temperature and fan monitoring through LibreHardwareMonitor) [Windows-only, Python 3.11+]
 - ``nats-py`` (for the NATS export module)
 - ``nvidia-ml-py`` (for the GPU plugin)
 - ``pycouchdb`` (for the CouchDB export module)

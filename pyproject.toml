@@ -49,6 +49,8 @@ dev = [
   "pyright",
   "pytest",
   "pytest-asyncio",
+  # sensors plugin LibreHardwareMonitor tests (the lib is a Windows-only extra)
+  "librehardwaremonitor-api; python_version >= '3.11'",
   "requirements-parser",
   "reuse",
   "rstcheck",
@@ -98,7 +100,10 @@ gpu = ["nvidia-ml-py"]
 graph = ["pygal"]
 mcp = ["mcp>=1.23.0,<3"]
 raid = ["pymdstat"]
-sensors = ["batinfo; platform_system == 'Linux'"]
+sensors = [
+  "batinfo; platform_system == 'Linux'",
+  "librehardwaremonitor-api; platform_system == 'Windows' and python_version >= '3.11'",
+]
 smart = ["pySMART"]
 web = [
   "fastapi>=0.82.0",
