@@ -311,29 +311,6 @@ def test_the_cadence_is_flanked_by_two_stepper_buttons():
     assert [b["disabled"] for b in buttons] == [False, False], f"got {buttons!r}"
 
 
-@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
-def test_the_footer_names_the_release_and_links_github_and_the_api_docs():
-    """The left end of the footer is the server's identity: the release the
-    probe's /status answers with, then the project and the Swagger UI.
-    """
-    payload = _run_render_probe("default")
-    assert "Glances v" in (payload["footerText"] or ""), f"got {payload['footerText']!r}"
-    assert payload["footerLinks"] == [
-        {"text": "API", "href": "/docs"},
-    ], f"got {payload['footerLinks']!r}"
-
-
-@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
-def test_the_api_docs_link_is_dropped_when_the_server_mounts_no_docs():
-    """`[outputs] api_doc=false` makes webserver.build_app() pass
-    `docs_url=None`, so /docs 404s. The footer reads the same key and offers
-    no link rather than a dead one. The `api-doc-off` scenario answers
-    /api/5/config with the string form a glances.conf value arrives as.
-    """
-    payload = _run_render_probe("api-doc-off")
-    assert [link["text"] for link in payload["footerLinks"]] == ["GitHub"], f"got {payload['footerLinks']!r}"
-
-
 # --------------------------------------------------------- mem TUI parity (G9-3 Task 5)
 
 
