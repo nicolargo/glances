@@ -173,10 +173,13 @@ export default {
 		// clause. Counts are derived from `allRows`, not a server field or the
 		// budget-capped `rows`: every incident the block has is the source of
 		// truth for this count, regardless of how many rows fit on screen.
-		titleText() {
+		titleCounts() {
 			const nOngoing = this.allRows.filter((incident) => incident.ongoing).length;
 			const nResolved = this.allRows.length - nOngoing;
-			return `ALERTS  ${nOngoing} ongoing · ${nResolved} resolved`;
+			return `${nOngoing} ongoing · ${nResolved} resolved`;
+		},
+		titleText() {
+			return `ALERTS  ${this.titleCounts}`;
 		},
 		// The TUI's own drop order: TOP first, then LEVEL, then DURATION
 		// (curses_renderer.py:538-540). TARGET is never dropped -- it says
@@ -245,7 +248,24 @@ export default {
 			this.fitBlock().catch(() => {});
 		},
 	},
+	beforeUnmount() {
+		if (this.showAll) this.closeAll();
+	},
 	methods: {
+		openAll() {
+			this.showAll = true;
+			document.addEventListener("keydown", this.onKeydown);
+		},
+		closeAll() {
+			this.showAll = false;
+			document.removeEventListener("keydown", this.onKeydown);
+		},
+		onKeydown(event) {
+			if (event.key === "Escape") {
+				event.preventDefault();
+				this.closeAll();
+			}
+		},
 		// The engine's own incident identity: `(plugin, key, field)` opens and
 		// closes an incident (alerts_incidents.derive_incidents), and `begin`
 		// separates two successive incidents on the same tuple. The list
@@ -366,5 +386,46 @@ export default {
  * for. Same `margin: 0` reason as `.gl-plugin-title h2` (css/glances.css). */
 .gl-alert-collapse {
 	margin: 0;
+}
+
+/* The title's counts are a link: text, not chrome, like the footer steppers. */
+.gl-alert-link {
+	font: inherit;
+	color: inherit;
+	background: none;
+	border: 0;
+	padding: 0;
+	cursor: pointer;
+	text-decoration: underline;
+}
+
+/* Full-history overlay, same shape as AppShell's `.gl-help`. */
+.gl-alert-all {
+	position: fixed;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: color-mix(in srgb, var(--gl-bg) 98%, transparent);
+	z-index: 10;
+	padding: var(--gl-gap);
+}
+.gl-alert-all-panel {
+	background: var(--gl-surface);
+	border: 1px solid var(--gl-border);
+	padding: var(--gl-gap);
+	width: min(100%, calc(150 * var(--gl-col)));
+	max-height: 90vh;
+	overflow: auto;
+	min-width: 0;
+	box-sizing: border-box;
+}
+.gl-alert-all-title {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: var(--gl-gap);
+	font-weight: var(--gl-weight-bold);
+	margin-bottom: var(--gl-gap);
 }
 </style>
