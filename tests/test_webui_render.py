@@ -3109,7 +3109,9 @@ def test_the_alert_title_counts_are_a_link_to_the_full_list():
     the title are a button opening an overlay with every incident. Its text is
     the counts alone, `ALERTS` stays plain text beside it."""
     payload = _run_render_probe("alert")
-    assert payload["pluginTitleButton"].get("alert") == "3 ongoing · 2 resolved", f"got {payload['pluginTitleButton']!r}"
+    assert payload["pluginTitleButton"].get("alert") == "3 ongoing · 2 resolved", (
+        f"got {payload['pluginTitleButton']!r}"
+    )
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
