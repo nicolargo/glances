@@ -496,6 +496,19 @@ async def test_per_plugin_min_duration_overrides_global(tmp_path, monkeypatch, s
     assert len(alerts.get_history()) == 1
 
 
+async def test_non_numeric_plugin_min_duration_falls_back_to_global(tmp_path, monkeypatch, store):
+    config = _config_with(
+        tmp_path,
+        monkeypatch,
+        "[alerts]\nmin_duration_seconds=0\n[fakescalar]\nmin_duration_seconds=10s\n",
+    )
+    alerts = GlancesAlerts(config)
+    plugin = _FakeScalarPlugin(store, config)
+    await _run_with_levels(plugin, alerts, {"percent": {"level": "warning", "prominent": True}})
+    # The invalid plugin value is skipped, the global 0 commits immediately.
+    assert len(alerts.get_history()) == 1
+
+
 # ----------------------- min_duration precedence (Phase 1.2 fix) -----------
 
 

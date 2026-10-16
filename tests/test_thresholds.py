@@ -186,6 +186,13 @@ def test_read_thresholds_non_numeric_value_is_skipped():
     assert out == {"critical": 90.0}
 
 
+def test_read_thresholds_non_numeric_value_is_skipped_with_glances_config(config_with):
+    # The real GlancesConfig.get() coerces the value to the type of the default.
+    config = config_with({"mem": {"critical": "95%"}})
+    out = read_thresholds(config, "mem", "percent", defaults={"critical": 90.0})
+    assert out == {"critical": 90.0}
+
+
 def test_read_thresholds_per_level_layering():
     # User overrides only `critical`; the others come from defaults.
     config = FakeConfig({("mem", "critical"): "95"})

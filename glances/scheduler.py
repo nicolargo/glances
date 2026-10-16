@@ -225,9 +225,8 @@ class AsyncScheduler:
     def _config_refresh(self, section: str) -> float:
         """Return the refresh interval from `[section] refresh|refresh_time`, else -1.0."""
         for key in ("refresh", "refresh_time"):
-            raw = self.config.get(section, key, -1.0)
             try:
-                value = float(raw)
+                value = float(self.config.get(section, key, -1.0))
             except (TypeError, ValueError):
                 continue
             if value > 0:
