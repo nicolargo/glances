@@ -3104,6 +3104,15 @@ def test_the_alert_grid_renders_the_tui_columns():
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_alert_title_counts_are_a_link_to_the_full_list():
+    """The row budget caps the grid, so the "N ongoing · M resolved" counts in
+    the title are a button opening an overlay with every incident. Its text is
+    the counts alone, `ALERTS` stays plain text beside it."""
+    payload = _run_render_probe("alert")
+    assert payload["pluginTitleButton"].get("alert") == "3 ongoing · 2 resolved", f"got {payload['pluginTitleButton']!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
 def test_only_an_ongoing_incident_colours_its_level():
     """curses_renderer.py:1056 -- a resolved incident's LEVEL goes neutral
     so colour there means "still happening"; the glyph keeps the level
