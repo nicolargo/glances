@@ -13,7 +13,9 @@
 		grid get it: the ones that do not collapse to the single line below
 		instead, which already carries the bare `ALERT`. -->
 		<div v-if="hasGrid" class="gl-plugin-title">
-			<h2 class="gl-header">{{ headerText }}</h2>
+			<h2 class="gl-header">
+				{{ "ALERTS  " }}<button type="button" class="gl-alert-link" aria-haspopup="dialog" @click="openAll">{{ titleCounts }}</button>
+			</h2>
 		</div>
 		<!-- Every grid-less state is ONE glued line, `ALERT <state>`, not a
 		title line above a separate paragraph: that is what
@@ -79,6 +81,41 @@
 				</tr>
 			</tbody>
 		</table>
+		<!-- The full history, past the row budget: same overlay shape as the
+		`h` help panel (AppShell.vue), but its own, since that one's styles
+		are scoped to AppShell. Teleported so no ancestor can clip a fixed box. -->
+		<Teleport v-if="showAll" to="body">
+			<div class="gl-alert-all" role="dialog" aria-modal="true" aria-label="All alerts" @click="closeAll">
+				<div class="gl-alert-all-panel" @click.stop>
+					<div class="gl-alert-all-title">
+						<span class="gl-header">{{ titleText }}</span>
+						<button type="button" class="gl-alert-link" aria-label="Close" @click="closeAll">×</button>
+					</div>
+					<table class="gl-table">
+						<thead>
+							<tr>
+								<th class="gl-header"></th>
+								<th class="gl-header">TIME</th>
+								<th class="gl-header">DURATION</th>
+								<th class="gl-header">TARGET</th>
+								<th class="gl-header">TOP PROCESSES</th>
+								<th class="gl-header">LEVEL</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr v-for="incident in allRows" :key="incidentKey(incident)">
+								<td><span :class="glyphClass(incident)">{{ glyphOf(incident) }}</span></td>
+								<td>{{ timeOf(incident) }}</td>
+								<td>{{ incident.duration || "-" }}</td>
+								<td>{{ targetOf(incident) }}</td>
+								<td>{{ topOf(incident) }}</td>
+								<td><span :class="levelClassOf(incident)">{{ levelTextOf(incident) }}</span></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</Teleport>
 	</article>
 </template>
 
@@ -116,6 +153,9 @@ export default {
 	// not the `{ data: [...] }` every other collection plugin gets: it is fed
 	// by /api/5/alert/incidents and validated against no registry `spec`.
 	props: { ...PLUGIN_PROPS },
+	data() {
+		return { showAll: false };
+	},
 	computed: {
 		TITLE: () => TITLE,
 		// The full incident list, unbudgeted. titleText's ongoing/resolved

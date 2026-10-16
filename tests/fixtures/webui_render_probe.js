@@ -639,6 +639,9 @@ function collect() {
 		// how a test can tell a title that lives on its own line from one that
 		// was folded into the grid's first <th> (PluginAlert's used to be).
 		pluginTitleLine: {},
+		// The text of the <button> inside each plugin's <h2>, null when the
+		// title has none -- the alert block's counts are a link to its overlay.
+		pluginTitleButton: {},
 		// The trimmed <th> texts of each plugin's <thead>, keyed by
 		// data-plugin -- [] when the plugin renders no <thead> at all (e.g.
 		// `amps`, `ports`: no title row and no column header, v4 parity).
@@ -804,6 +807,8 @@ function collect() {
 				result.pluginNames.push(name);
 				const title = findDescendantTag(article, "H2");
 				result.pluginTitleLine[name] = title ? title.textContent.trim() : null;
+				const titleButton = title ? findDescendantTag(title, "BUTTON") : null;
+				result.pluginTitleButton[name] = titleButton ? titleButton.textContent.trim() : null;
 				result.pluginText[name] = article.textContent;
 				result.pluginAttrs[name] = article.getAttributeNames();
 				result.pluginHidden[name] = article.style.display === "none";
