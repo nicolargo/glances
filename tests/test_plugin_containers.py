@@ -437,6 +437,7 @@ def test_docker_started_at_is_none_when_not_running():
     assert stats["started_at"] is None
 
 
+@pytest.mark.skipif(importlib.util.find_spec("dateutil") is None, reason="dateutil is not installed (optional)")
 @pytest.mark.parametrize("health", ["starting", "healthy", "unhealthy"])
 def test_docker_running_container_with_healthcheck_has_stats(health):
     stats = _docker_monitor().generate_stats(_docker_container("running", health))

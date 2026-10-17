@@ -109,6 +109,8 @@ def kernel(monkeypatch):
     def install(**kwargs):
         fake = FakeKernel(**kwargs)
         monkeypatch.setattr(nl.socket, "socket", lambda *a, **k: fake)
+        # AF_NETLINK only exists on Linux: the fake socket ignores its value
+        monkeypatch.setattr(nl.socket, "AF_NETLINK", 16, raising=False)
         return fake
 
     return install
