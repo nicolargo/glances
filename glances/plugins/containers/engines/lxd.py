@@ -116,9 +116,9 @@ class LxdStatsFetcher:
             if limit:
                 stats['limit'] = float(limit)
             else:
-                stats['limit'] = float(psutil.cpu_count())
+                stats['limit'] = float(psutil.cpu_count() or 1)
         except (ValueError, TypeError):
-            stats['limit'] = float(psutil.cpu_count())
+            stats['limit'] = float(psutil.cpu_count() or 1)
 
         return stats
 

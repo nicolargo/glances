@@ -106,7 +106,7 @@ class PodmanContainerStatsFetcher:
                     stats['cpu']['limit'] = cpu_quota / cpu_period
                 else:
                     # Fallback to the number of available cores
-                    stats['cpu']['limit'] = float(psutil.cpu_count())
+                    stats['cpu']['limit'] = float(psutil.cpu_count() or 1)
 
             stats["memory"]["usage"] = api_stats["MemUsage"]
             stats["memory"]["limit"] = api_stats["MemLimit"]
