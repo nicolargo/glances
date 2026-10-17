@@ -201,7 +201,12 @@ class PodmanPodStatsFetcher:
             self._log_debug("Missing CPU usage fields")
             return None
 
-        cpu_usage = string_value_to_float(stats["CPU"].rstrip("%"))
+        try:
+            cpu_usage = string_value_to_float(stats["CPU"].rstrip("%"))
+        except (AttributeError, KeyError, ValueError) as e:
+            self._log_debug("Compute CPU usage failed", e)
+            return None
+
         return {"total": cpu_usage}
 
     def _get_memory_stats(self, stats) -> dict | None:
@@ -219,7 +224,7 @@ class PodmanPodStatsFetcher:
         try:
             usage = string_value_to_float(usage_str)
             limit = string_value_to_float(limit_str)
-        except ValueError as e:
+        except (KeyError, ValueError) as e:
             self._log_debug("Compute MEM usage failed", e)
             return None
 
@@ -244,7 +249,7 @@ class PodmanPodStatsFetcher:
         try:
             rx = string_value_to_float(rx_str)
             tx = string_value_to_float(tx_str)
-        except ValueError as e:
+        except (KeyError, ValueError) as e:
             self._log_debug("Compute MEM usage failed", e)
             return None
 
@@ -270,7 +275,7 @@ class PodmanPodStatsFetcher:
         try:
             ior = string_value_to_float(ior_str)
             iow = string_value_to_float(iow_str)
-        except ValueError as e:
+        except (KeyError, ValueError) as e:
             self._log_debug("Compute BlockIO usage failed", e)
             return None
 
