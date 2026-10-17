@@ -15,6 +15,7 @@ import pytest
 
 from glances.config import GlancesConfig
 from glances.plugins.wifi import model as wifi_mod
+from glances.plugins.wifi import nl80211
 from glances.plugins.wifi.model import PluginModel
 from glances.stats_store import StatsStore
 
@@ -46,6 +47,15 @@ def test_fields_description_flags():
     assert fd["quality_link"].get("watched", False) is False
 
 
+def _nl80211_unavailable(monkeypatch) -> None:
+    """Force the /proc/net/wireless fallback, whatever hardware the tests run on."""
+
+    def _raise():
+        raise nl80211.Nl80211Unavailable("test")
+
+    monkeypatch.setattr(nl80211, "station_signals", _raise)
+
+
 _WIRELESS_CONTENT = """Inter-| sta-|   Quality        |   Discarded packets               | Missed | WE
  face | tus | link level noise |  nwid  crypt   frag  retry   misc | beacon | 22
 wlp2s0: 0000   51.  -59.  -256        0      0      0      0   5881        0
@@ -55,6 +65,7 @@ wlan1: 0000   60.  -50.  -256        0      0      0      0      0        0
 
 @pytest.mark.asyncio
 async def test_grab_parses_and_skips_two_header_lines(store, config, monkeypatch, tmp_path):
+    _nl80211_unavailable(monkeypatch)
     wireless_file = tmp_path / "wireless"
     wireless_file.write_text(_WIRELESS_CONTENT)
     monkeypatch.setattr(wifi_mod, "WIRELESS_FILE", str(wireless_file))
@@ -69,9 +80,58 @@ async def test_grab_parses_and_skips_two_header_lines(store, config, monkeypatch
 
 @pytest.mark.asyncio
 async def test_grab_missing_file_returns_empty(store, config, monkeypatch, tmp_path):
+    _nl80211_unavailable(monkeypatch)
     monkeypatch.setattr(wifi_mod, "WIRELESS_FILE", str(tmp_path / "does-not-exist"))
     p = PluginModel(store, config)
     assert await p._grab_stats() == []
+
+
+# ------------------------------------------------------------ nl80211 source
+
+
+@pytest.mark.asyncio
+async def test_grab_uses_nl80211(store, config, monkeypatch, tmp_path):
+    """nl80211 is the primary source: /proc/net/wireless is not touched."""
+    monkeypatch.setattr(nl80211, "station_signals", lambda: {"wlp2s0": -59, "wlan1": -50})
+    monkeypatch.setattr(wifi_mod, "WIRELESS_FILE", str(tmp_path / "must-not-be-read"))
+    (tmp_path / "must-not-be-read").write_text(_WIRELESS_CONTENT.replace("wlp2s0", "stale0"))
+    rows = await PluginModel(store, config)._grab_stats()
+    by_ssid = {r["ssid"]: r for r in rows}
+    assert set(by_ssid) == {"wlp2s0", "wlan1"}
+    assert by_ssid["wlp2s0"] == {"ssid": "wlp2s0", "quality_link": 51.0, "quality_level": -59.0}
+    assert by_ssid["wlan1"]["quality_link"] == 60.0
+
+
+@pytest.mark.parametrize(
+    ("signal", "quality_link"),
+    [(-30, 70.0), (-40, 70.0), (-75, 35.0), (-110, 0.0), (-120, 0.0)],
+)
+@pytest.mark.asyncio
+async def test_nl80211_quality_link_matches_wext(store, config, monkeypatch, signal, quality_link):
+    """quality_link is derived exactly like cfg80211's wext: signal clamped to [-110, -40] then +110."""
+    monkeypatch.setattr(nl80211, "station_signals", lambda: {"wlan0": signal})
+    rows = await PluginModel(store, config)._grab_stats()
+    assert rows == [{"ssid": "wlan0", "quality_link": quality_link, "quality_level": float(signal)}]
+
+
+@pytest.mark.asyncio
+async def test_nl80211_no_associated_interface_is_empty(store, config, monkeypatch):
+    monkeypatch.setattr(nl80211, "station_signals", lambda: {})
+    assert await PluginModel(store, config)._grab_stats() == []
+
+
+@pytest.mark.asyncio
+async def test_nl80211_transient_failure_is_empty_not_fallback(store, config, monkeypatch, tmp_path):
+    """A transient nl80211 error must not re-open /proc/net/wireless (it would log the wext warning)."""
+
+    def _fail():
+        raise TimeoutError("netlink timeout")
+
+    monkeypatch.setattr(nl80211, "station_signals", _fail)
+    wireless_file = tmp_path / "wireless"
+    wireless_file.write_text(_WIRELESS_CONTENT)
+    monkeypatch.setattr(wifi_mod, "WIRELESS_FILE", str(wireless_file))
+    assert await PluginModel(store, config)._grab_stats() == []
 
 
 # -------------------------------------------------------- alert levels (Task 2)
