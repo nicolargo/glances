@@ -38,7 +38,7 @@ jobs:
           if [[ $GITHUB_REF == refs/tags/* ]]; then
             VERSION=${GITHUB_REF#refs/tags/v}
             TAG_ARRAY="[{ \"target\": \"minimal\", \"tag\": \"${VERSION}\" },"
-            TAG_ARRAY="$TAG_ARRAY { \"target\": \"full\", \"tag\": \"${VERSION}-full\" },"
+            TAG_ARRAY="$TAG_ARRAY { \"target\": \"full\", \"tag\": \"${VERSION}-full\" }]"
           elif [[ $GITHUB_REF == refs/heads/develop ]]; then
             TAG_ARRAY="[{ \"target\": \"dev\", \"tag\": \"dev\" }]"
           else
