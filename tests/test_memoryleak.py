@@ -43,4 +43,5 @@ def test_memoryleak_no_history(tmp_path, monkeypatch):
         tracemalloc.stop()
 
     per_cycle = sum(stat.size_diff for stat in diff) // cycles
-    assert per_cycle < _THRESHOLD, f"Memory leak: {per_cycle} bytes per refresh"
+    top = "\n".join(str(stat) for stat in diff[:5])
+    assert per_cycle < _THRESHOLD, f"Memory leak: {per_cycle} bytes per refresh\n{top}"
