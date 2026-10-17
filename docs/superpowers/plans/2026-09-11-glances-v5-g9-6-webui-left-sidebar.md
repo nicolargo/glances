@@ -1496,9 +1496,9 @@ In `tests/test_webui_v5_render.py`:
 (a) In `test_the_registry_renders_every_registered_plugin` and `test_an_unreadable_pluginslist_renders_the_whole_registry`, replace in both expected lists the final `"network",` line with:
 
 ```python
-        "network",
-        "diskio",
-        "fs",
+("network",)
+("diskio",)
+("fs",)
 ```
 
 (b) In `test_server_args_does_not_leak_into_the_dom_as_an_attribute`, replace `== 11` with `== 13` and "Eleven is the registry size" with "Thirteen is the registry size", and `f"expected all eleven plugins' attributes` with `f"expected all thirteen plugins' attributes`.
@@ -1506,10 +1506,10 @@ In `tests/test_webui_v5_render.py`:
 (c) In `test_a_table_value_carries_its_tier_on_the_text_not_the_cell`'s parameters, add after the `gpu` param:
 
 ```python
-        # Columns: name, R/s, W/s -> row 1 (sdb) cell 4 is its read rate.
-        pytest.param("diskio", "diskio", 4, {"gl-level-warning"}, id="diskio"),
-        # Columns: name, Used, Total -> row 1 (/home) cell 4 is its used space.
-        pytest.param("fs", "fs", 4, {"gl-level-careful"}, id="fs"),
+# Columns: name, R/s, W/s -> row 1 (sdb) cell 4 is its read rate.
+(pytest.param("diskio", "diskio", 4, {"gl-level-warning"}, id="diskio"),)
+# Columns: name, Used, Total -> row 1 (/home) cell 4 is its used space.
+(pytest.param("fs", "fs", 4, {"gl-level-careful"}, id="fs"),)
 ```
 
 (d) Extend the parameters of the three parametrized G9-6 tests of Task 4:
@@ -1517,22 +1517,22 @@ In `tests/test_webui_v5_render.py`:
 `test_a_loaded_collection_puts_its_title_in_the_header_row`:
 
 ```python
-        pytest.param("diskio", "diskio", "DISK I/O", id="diskio"),
-        pytest.param("fs", "fs", "FILE SYS", id="fs"),
+(pytest.param("diskio", "diskio", "DISK I/O", id="diskio"),)
+(pytest.param("fs", "fs", "FILE SYS", id="fs"),)
 ```
 
 `test_a_collection_keeps_its_title_heading_while_loading`:
 
 ```python
-        pytest.param("diskio", "DISK I/O", id="diskio"),
-        pytest.param("fs", "FILE SYS", id="fs"),
+(pytest.param("diskio", "DISK I/O", id="diskio"),)
+(pytest.param("fs", "FILE SYS", id="fs"),)
 ```
 
 `test_a_path_like_name_keeps_its_tail_and_its_full_text_on_hover`:
 
 ```python
-        pytest.param("diskio", "diskio", id="diskio"),
-        pytest.param("fs", "fs", id="fs"),
+(pytest.param("diskio", "diskio", id="diskio"),)
+(pytest.param("fs", "fs", id="fs"),)
 ```
 
 (e) Append after `test_a_path_like_name_keeps_its_tail_and_its_full_text_on_hover`:
@@ -1554,13 +1554,21 @@ def test_diskio_renders_the_tui_rows_sorted_by_raw_name():
         pytest.param(
             "fs",
             "Used",
-            [["root", "125.0G", "500.0G"], ["/home", "512.0G", "1.0T"], ["/var/snap/firefox/common/host-hunspell", "1.2K", "1.2K"]],
+            [
+                ["root", "125.0G", "500.0G"],
+                ["/home", "512.0G", "1.0T"],
+                ["/var/snap/firefox/common/host-hunspell", "1.2K", "1.2K"],
+            ],
             id="used",
         ),
         pytest.param(
             "fs-free-space",
             "Free",
-            [["root", "375.0G", "500.0G"], ["/home", "512.0G", "1.0T"], ["/var/snap/firefox/common/host-hunspell", "0B", "1.2K"]],
+            [
+                ["root", "375.0G", "500.0G"],
+                ["/home", "512.0G", "1.0T"],
+                ["/var/snap/firefox/common/host-hunspell", "0B", "1.2K"],
+            ],
             id="free",
         ),
     ],
@@ -1927,19 +1935,19 @@ In `tests/test_webui_v5_render.py`:
 (a) In both registry name lists (see Task 5 (a)), replace:
 
 ```python
-        "network",
-        "diskio",
-        "fs",
+("network",)
+("diskio",)
+("fs",)
 ```
 
 with:
 
 ```python
-        "network",
-        "wifi",
-        "diskio",
-        "fs",
-        "sensors",
+("network",)
+("wifi",)
+("diskio",)
+("fs",)
+("sensors",)
 ```
 
 (b) `test_server_args_does_not_leak_into_the_dom_as_an_attribute`: `== 13` → `== 15`, "Thirteen" → "Fifteen", "thirteen" → "fifteen".
@@ -1947,24 +1955,24 @@ with:
 (c) `test_a_table_value_carries_its_tier_on_the_text_not_the_cell` parameters, add:
 
 ```python
-        # Columns: name, dBm -> row 0 (wlan0) cell 1 is its signal.
-        pytest.param("wifi", "wifi", 1, {"gl-level-warning"}, id="wifi"),
-        # Columns: name, value -> row 2 (Core 0) cell 5 is its value.
-        pytest.param("sensors", "sensors", 5, {"gl-level-critical", "gl-prominent"}, id="sensors"),
+# Columns: name, dBm -> row 0 (wlan0) cell 1 is its signal.
+(pytest.param("wifi", "wifi", 1, {"gl-level-warning"}, id="wifi"),)
+# Columns: name, value -> row 2 (Core 0) cell 5 is its value.
+(pytest.param("sensors", "sensors", 5, {"gl-level-critical", "gl-prominent"}, id="sensors"),)
 ```
 
 (d) `test_a_loaded_collection_puts_its_title_in_the_header_row` parameters, add:
 
 ```python
-        pytest.param("wifi", "wifi", "WIFI", id="wifi"),
-        pytest.param("sensors", "sensors", "SENSORS", id="sensors"),
+(pytest.param("wifi", "wifi", "WIFI", id="wifi"),)
+(pytest.param("sensors", "sensors", "SENSORS", id="sensors"),)
 ```
 
 `test_a_collection_keeps_its_title_heading_while_loading` parameters, add:
 
 ```python
-        pytest.param("wifi", "WIFI", id="wifi"),
-        pytest.param("sensors", "SENSORS", id="sensors"),
+(pytest.param("wifi", "WIFI", id="wifi"),)
+(pytest.param("sensors", "SENSORS", id="sensors"),)
 ```
 
 (e) Append at the end of the G9-6 section:
@@ -1995,7 +2003,9 @@ def test_wifi_renders_the_tui_rows_sorted_by_ssid():
     ("scenario", "values"),
     [
         pytest.param("sensors", ["42C", "1200R", "44C", "80%↓", "100%✓", "55%↑", "ERR", "36C"], id="celsius"),
-        pytest.param("sensors-fahrenheit", ["108F", "1200R", "110F", "80%↓", "100%✓", "55%↑", "ERR", "97F"], id="fahrenheit"),
+        pytest.param(
+            "sensors-fahrenheit", ["108F", "1200R", "110F", "80%↓", "100%✓", "55%↑", "ERR", "97F"], id="fahrenheit"
+        ),
     ],
 )
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
@@ -2007,7 +2017,16 @@ def test_sensors_renders_the_tui_values_in_payload_order(scenario, values):
     """
     payload = _run_render_probe(scenario)
     assert payload["pluginColumnHeaders"]["sensors"] == ["SENSORS", ""]
-    labels = ["Composite", "fan1", "Core 0", "BAT BAT0", "BAT BAT2", "BAT BAT3", "sda", "Composite temperature of the NVMe controller"]
+    labels = [
+        "Composite",
+        "fan1",
+        "Core 0",
+        "BAT BAT0",
+        "BAT BAT2",
+        "BAT BAT3",
+        "sda",
+        "Composite temperature of the NVMe controller",
+    ]
     assert _table_rows(payload, "sensors", 2) == [list(pair) for pair in zip(labels, values)]
 ```
 
@@ -2337,10 +2356,20 @@ def shoot(theme: str, width: int) -> None:
         time.sleep(12)  # two rate cycles, and the first fs/sensors publication
         png = os.path.join(OUT, f"left-{theme}-{width}.png")
         subprocess.run(
-            ["google-chrome", "--headless=new", "--disable-gpu", "--no-first-run", "--hide-scrollbars",
-             f"--screenshot={png}", f"--window-size={width},1600", "--virtual-time-budget=8000",
-             f"http://127.0.0.1:{PORT}/"],
-            check=True, timeout=120, capture_output=True,
+            [
+                "google-chrome",
+                "--headless=new",
+                "--disable-gpu",
+                "--no-first-run",
+                "--hide-scrollbars",
+                f"--screenshot={png}",
+                f"--window-size={width},1600",
+                "--virtual-time-budget=8000",
+                f"http://127.0.0.1:{PORT}/",
+            ],
+            check=True,
+            timeout=120,
+            capture_output=True,
         )
         print(png)
     finally:

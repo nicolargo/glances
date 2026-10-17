@@ -1413,8 +1413,7 @@ def test_the_command_column_carries_no_character_cap():
     classes = payload["pluginValueClasses"]["processlist"]
     assert classes, "the scenario must actually render process rows"
     assert not any("gl-command" in c for c in classes), (
-        "the cap belongs to containers, which keeps the measure-driven cascade; "
-        "here the column width truncates instead"
+        "the cap belongs to containers, which keeps the measure-driven cascade; here the column width truncates instead"
     )
 ```
 

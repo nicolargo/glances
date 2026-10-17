@@ -107,7 +107,7 @@ Consequence on cost: at most **two** distinct sort keys per plugin cycle
 ```python
 top_counter: Counter[str] | None = None
 top_sort: str | None = None
-top_event: dict[str, Any] | None = None   # the incident's opening event
+top_event: dict[str, Any] | None = None  # the incident's opening event
 ```
 
 `top_event` is a reference to the dict already appended to `_history`.

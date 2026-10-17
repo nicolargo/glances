@@ -242,7 +242,7 @@ class DockerEngineMonitor:
     """Glances' Containers Plugin's Docker Engine Monitoring unit"""
 
     ENGINE = "docker"
-    CONTAINER_ACTIVE_STATUS = ['running', 'healthy', 'paused']
+    CONTAINER_ACTIVE_STATUS = ['running', 'paused']
 
     def __init__(self, url: str | None = None):
         self.disable = disable_plugin_docker
@@ -395,8 +395,9 @@ class DockerEngineMonitor:
 
     def generate_stats(self, container) -> dict[str, Any]:
         # Init the stats for the current container
+        state = container.attrs['State']
         # Manage healthy status (see issue #3402)
-        status = container.attrs['State'].get('Health', container.attrs['State']).get('Status', '')
+        status = state.get('Health', state).get('Status', '')
         stats = {
             'key': self.key,
             'engine': self.ENGINE,
@@ -429,7 +430,9 @@ class DockerEngineMonitor:
         if not stats['command']:
             stats['command'] = None
 
-        if stats['status'] not in self.CONTAINER_ACTIVE_STATUS:
+        # The health status hides the container state: a running container can be
+        # starting or unhealthy, and a stopped one is reported as unhealthy
+        if state.get('Status', '') not in self.CONTAINER_ACTIVE_STATUS:
             return stats
 
         stats_fetcher = self.stats_fetchers[container.id]

@@ -88,8 +88,14 @@ def test_data_count_counts_collection_items():
 def test_data_count_on_alert_block_is_history_length():
     """The synthesized alert block carries the history length."""
     history = [
-        {"ts": "2026-08-05T10:00:00+00:00", "plugin": "cpu", "key": None,
-         "field": "total", "level": "warning", "previous_level": "ok"}
+        {
+            "ts": "2026-08-05T10:00:00+00:00",
+            "plugin": "cpu",
+            "key": None,
+            "field": "total",
+            "level": "warning",
+            "previous_level": "ok",
+        }
         for _ in range(17)
     ]
     frame = build_frame(
@@ -300,8 +306,7 @@ def _plan(body_height, **overrides):
     return plan_right_column(**kwargs)
 
 
-def _cost(plan, *, n_vms=4, n_containers=30, n_processes=400, n_alerts=40,
-          static=1, amps=0):
+def _cost(plan, *, n_vms=4, n_containers=30, n_processes=400, n_alerts=40, static=1, amps=0):
     """Hauteur réellement occupée par un plan — miroir de _paint_sidebar :
     somme des hauteurs des blocs visibles + une ligne vide entre blocs."""
     heights = []
@@ -569,7 +574,9 @@ def plan_right_column(
         # Growth: workloads first (step A), then processes absorb the rest
         # (step B). One row at a time so the result provably fills the
         # terminal without overflowing it.
-        while state["workloads"] < _MAX_WORKLOADS and cost({**state, "workloads": state["workloads"] + 1}) <= body_height:
+        while (
+            state["workloads"] < _MAX_WORKLOADS and cost({**state, "workloads": state["workloads"] + 1}) <= body_height
+        ):
             state["workloads"] += 1
         while state["processes"] < n_processes and cost({**state, "processes": state["processes"] + 1}) <= body_height:
             state["processes"] += 1
@@ -765,8 +772,13 @@ Dans `tests/test_plugin_containers_render_curses_v5.py` :
 ```python
 def _many(n):
     return [
-        {"name": f"ctr{i}", "status": "running", "cpu_percent": 1.0,
-         "memory_usage_no_cache": 1024, "memory_limit": 4096}
+        {
+            "name": f"ctr{i}",
+            "status": "running",
+            "cpu_percent": 1.0,
+            "memory_usage_no_cache": 1024,
+            "memory_limit": 4096,
+        }
         for i in range(n)
     ]
 
@@ -895,10 +907,14 @@ Dans `render`, après le calcul de `name_w` (ligne ~186) :
 Enfin passer le libellé :
 
 ```python
-    header = _build_header_row(
-        disable, show_engine=show_engine, show_pod=show_pod, name_w=name_w,
-        sort_key=sort_key, name_label=name_label,
-    )
+header = _build_header_row(
+    disable,
+    show_engine=show_engine,
+    show_pod=show_pod,
+    name_w=name_w,
+    sort_key=sort_key,
+    name_label=name_label,
+)
 ```
 
 - [ ] **Step 5: Implémenter dans vms**
@@ -941,12 +957,10 @@ Côté vms, remplacer dans `_build_header_row` :
 par :
 
 ```python
-    # The sort underline is resolved on the CANONICAL label: `name_label` may
-    # carry a truncation counter ("Name 3/12"), which is not a table key.
-    name_underline = bool(sort_key) and _HEADER_SORT_FIELD.get("Name") == sort_key
-    cells.append(
-        Cell(text=name_label.ljust(name_w), color=ColorRole.HEADER, bold=True, underline=name_underline)
-    )
+# The sort underline is resolved on the CANONICAL label: `name_label` may
+# carry a truncation counter ("Name 3/12"), which is not a table key.
+name_underline = bool(sort_key) and _HEADER_SORT_FIELD.get("Name") == sort_key
+cells.append(Cell(text=name_label.ljust(name_w), color=ColorRole.HEADER, bold=True, underline=name_underline))
 ```
 
 Côté containers, dans `_build_header_row`, remplacer :
@@ -959,11 +973,9 @@ Côté containers, dans `_build_header_row`, remplacer :
 par :
 
 ```python
-    if "name" not in disable:
-        name_underline = bool(sort_key) and _HEADER_SORT_KEY.get("CONTAINER") == sort_key
-        h.append(
-            Cell(text=f"{name_label:<{name_w}}", color=ColorRole.HEADER, bold=True, underline=name_underline)
-        )
+if "name" not in disable:
+    name_underline = bool(sort_key) and _HEADER_SORT_KEY.get("CONTAINER") == sort_key
+    h.append(Cell(text=f"{name_label:<{name_w}}", color=ColorRole.HEADER, bold=True, underline=name_underline))
 ```
 
 - [ ] **Step 6: Ajouter le test de non-régression du soulignement**
@@ -975,7 +987,8 @@ Containers (`_HEADER_SORT_KEY["CONTAINER"] == "name"`) :
 ```python
 def test_sort_underline_survives_the_truncation_counter():
     rows = render(
-        _payload(_many(25)), {},
+        _payload(_many(25)),
+        {},
         view={"row_budget": {"containers": 7}, "sort_key": "name"},
     )
     assert rows[0].cells[0].underline is True
@@ -986,7 +999,8 @@ vms (`_HEADER_SORT_FIELD["Name"] == "name"`) :
 ```python
 def test_sort_underline_survives_the_truncation_counter():
     rows = render(
-        _payload(_many_vms(12)), {},
+        _payload(_many_vms(12)),
+        {},
         view={"row_budget": {"vms": 3}, "sort_key": "name"},
     )
     assert rows[0].cells[0].underline is True
@@ -1022,8 +1036,14 @@ Le bloc `alert` n'est pas un renderer de plugin : il est synthétisé par `build
 ```python
 def _alert_history(n):
     return [
-        {"ts": f"2026-08-05T10:{i:02d}:00+00:00", "plugin": "cpu", "key": None,
-         "field": "total", "level": "warning", "previous_level": "ok"}
+        {
+            "ts": f"2026-08-05T10:{i:02d}:00+00:00",
+            "plugin": "cpu",
+            "key": None,
+            "field": "total",
+            "level": "warning",
+            "previous_level": "ok",
+        }
         for i in range(n)
     ]
 
@@ -1085,17 +1105,19 @@ par :
 Dans `build_frame`, remplacer l'appel final :
 
 ```python
-            rows=render_alert_block(alerts_history, limit=alerts_limit, is_initializing=alerts_initializing),
+rows = (render_alert_block(alerts_history, limit=alerts_limit, is_initializing=alerts_initializing),)
 ```
 
 par :
 
 ```python
-            rows=render_alert_block(
-                alerts_history,
-                limit=row_budget(view, "alert", alerts_limit),
-                is_initializing=alerts_initializing,
-            ),
+rows = (
+    render_alert_block(
+        alerts_history,
+        limit=row_budget(view, "alert", alerts_limit),
+        is_initializing=alerts_initializing,
+    ),
+)
 ```
 
 - [ ] **Step 5: Lancer les tests**
@@ -1129,8 +1151,7 @@ Rappel du contrat : `amps` n'a pas de ligne d'en-tête ; son budget compte **tou
 def _verbose_amp(n_lines):
     return {
         "data": [
-            {"name": "myamp", "regex": None, "count": None,
-             "result": "\n".join(f"line {i}" for i in range(n_lines))}
+            {"name": "myamp", "regex": None, "count": None, "result": "\n".join(f"line {i}" for i in range(n_lines))}
         ],
         "_levels": {},
     }
@@ -1221,8 +1242,12 @@ def _tui_with(store, alerts, config, registry, fields):
     from glances.outputs import glances_curses_v5 as tui_mod
 
     return tui_mod.TuiV5(
-        store=store, alerts=alerts, config=config,
-        registry=registry, fields_by_plugin=fields, refresh_interval=0.01,
+        store=store,
+        alerts=alerts,
+        config=config,
+        registry=registry,
+        fields_by_plugin=fields,
+        refresh_interval=0.01,
     )
 
 
@@ -1253,9 +1278,18 @@ def test_tall_terminal_shows_more_than_twenty_processes(fake_alerts, fake_config
     from unittest.mock import MagicMock
 
     procs = [
-        {"pid": 100 + i, "name": f"p{i}", "cmdline": [f"p{i}"], "cpu_percent": 1.0,
-         "memory_percent": 1.0, "username": "root", "num_threads": 1, "nice": 0,
-         "status": "S", "memory_info": {"vms": 1024, "rss": 512}}
+        {
+            "pid": 100 + i,
+            "name": f"p{i}",
+            "cmdline": [f"p{i}"],
+            "cpu_percent": 1.0,
+            "memory_percent": 1.0,
+            "username": "root",
+            "num_threads": 1,
+            "nice": 0,
+            "status": "S",
+            "memory_info": {"vms": 1024, "rss": 512},
+        }
         for i in range(300)
     ]
     store = MagicMock()
@@ -1272,16 +1306,31 @@ def test_short_terminal_keeps_the_alert_block_visible(fake_alerts, fake_config):
     from unittest.mock import MagicMock
 
     procs = [
-        {"pid": 100 + i, "name": f"p{i}", "cmdline": [f"p{i}"], "cpu_percent": 1.0,
-         "memory_percent": 1.0, "username": "root", "num_threads": 1, "nice": 0,
-         "status": "S", "memory_info": {"vms": 1024, "rss": 512}}
+        {
+            "pid": 100 + i,
+            "name": f"p{i}",
+            "cmdline": [f"p{i}"],
+            "cpu_percent": 1.0,
+            "memory_percent": 1.0,
+            "username": "root",
+            "num_threads": 1,
+            "nice": 0,
+            "status": "S",
+            "memory_info": {"vms": 1024, "rss": 512},
+        }
         for i in range(300)
     ]
     store = MagicMock()
     store.as_dict.return_value = {"processlist": {"data": procs, "_levels": {}}}
     fake_alerts.get_history.return_value = [
-        {"ts": f"2026-08-05T10:{i:02d}:00+00:00", "plugin": "cpu", "key": None,
-         "field": "total", "level": "warning", "previous_level": "ok"}
+        {
+            "ts": f"2026-08-05T10:{i:02d}:00+00:00",
+            "plugin": "cpu",
+            "key": None,
+            "field": "total",
+            "level": "warning",
+            "previous_level": "ok",
+        }
         for i in range(20)
     ]
 
@@ -1300,14 +1349,28 @@ def test_right_column_never_overflows_across_heights(fake_alerts, fake_config):
     from unittest.mock import MagicMock
 
     procs = [
-        {"pid": 100 + i, "name": f"p{i}", "cmdline": [f"p{i}"], "cpu_percent": 1.0,
-         "memory_percent": 1.0, "username": "root", "num_threads": 1, "nice": 0,
-         "status": "S", "memory_info": {"vms": 1024, "rss": 512}}
+        {
+            "pid": 100 + i,
+            "name": f"p{i}",
+            "cmdline": [f"p{i}"],
+            "cpu_percent": 1.0,
+            "memory_percent": 1.0,
+            "username": "root",
+            "num_threads": 1,
+            "nice": 0,
+            "status": "S",
+            "memory_info": {"vms": 1024, "rss": 512},
+        }
         for i in range(300)
     ]
     containers = [
-        {"name": f"ctr{i}", "status": "running", "cpu_percent": 1.0,
-         "memory_usage_no_cache": 1024, "memory_limit": 4096}
+        {
+            "name": f"ctr{i}",
+            "status": "running",
+            "cpu_percent": 1.0,
+            "memory_usage_no_cache": 1024,
+            "memory_limit": 4096,
+        }
         for i in range(25)
     ]
     store = MagicMock()
@@ -1318,7 +1381,9 @@ def test_right_column_never_overflows_across_heights(fake_alerts, fake_config):
     fake_alerts.get_history.return_value = []
 
     tui = _tui_with(
-        store, fake_alerts, fake_config,
+        store,
+        fake_alerts,
+        fake_config,
         [("processlist", True), ("containers", True)],
         {"processlist": {}, "containers": {}},
     )
@@ -1441,56 +1506,58 @@ from glances.outputs.curses_renderer_v5 import (
 Puis la méthode, juste après `_fit_proclist_width` :
 
 ```python
-    # RIGHT-column blocks whose height the vertical budget controls. Anything
-    # else in the column (currently `processcount`) is non-elastic.
-    _ELASTIC_RIGHT = frozenset({"vms", "containers", "processlist", "programlist", "alert", "amps"})
+# RIGHT-column blocks whose height the vertical budget controls. Anything
+# else in the column (currently `processcount`) is non-elastic.
+_ELASTIC_RIGHT = frozenset({"vms", "containers", "processlist", "programlist", "alert", "amps"})
 
-    def _fit_right_column(self, view: dict[str, Any], frame: Frame, max_y: int) -> Frame:
-        """Give each RIGHT-column block the number of rows the terminal height
-        allows, then rebuild once if that changes anything.
 
-        Mirrors ``_fit_proclist_width`` on the vertical axis: the plan is
-        computed by the pure ``plan_right_column`` solver from the real item
-        counts (``PluginBlock.data_count``), so a single rebuild settles it.
-        """
-        _, body_height = self._body_geometry(frame, max_y)
-        if body_height <= 0:
-            return frame
+def _fit_right_column(self, view: dict[str, Any], frame: Frame, max_y: int) -> Frame:
+    """Give each RIGHT-column block the number of rows the terminal height
+    allows, then rebuild once if that changes anything.
 
-        by_name = {b.name: b for b in frame.right}
+    Mirrors ``_fit_proclist_width`` on the vertical axis: the plan is
+    computed by the pure ``plan_right_column`` solver from the real item
+    counts (``PluginBlock.data_count``), so a single rebuild settles it.
+    """
+    _, body_height = self._body_geometry(frame, max_y)
+    if body_height <= 0:
+        return frame
 
-        def count(name: str) -> int:
-            block = by_name.get(name)
-            return block.data_count or 0 if block else 0
+    by_name = {b.name: b for b in frame.right}
 
-        # processlist and programlist are mutually exclusive — exactly one is
-        # in the frame at any time (see `_frame_for_view`).
-        n_processes = count("processlist") or count("programlist")
-        plan = plan_right_column(
-            body_height=body_height,
-            static_heights={b.name: b.height for b in frame.right if b.name not in self._ELASTIC_RIGHT},
-            amps_height=by_name["amps"].height if "amps" in by_name else 0,
-            n_vms=count("vms"),
-            n_containers=count("containers"),
-            n_processes=n_processes,
-            n_alerts=count("alert"),
-        )
+    def count(name: str) -> int:
+        block = by_name.get(name)
+        return block.data_count or 0 if block else 0
 
-        current = view.get("row_budget") or {}
-        # Compare the EFFECTIVE row counts, not the raw quotas: a quota above
-        # the item count renders exactly the same block, and rebuilding for
-        # that would cost one extra frame on every single cycle.
-        def effective(budget: dict[str, int], name: str) -> int:
-            available = count(name) if name != "amps" else (by_name["amps"].height if "amps" in by_name else 0)
-            quota = budget.get(name)
-            return available if quota is None else min(available, quota)
+    # processlist and programlist are mutually exclusive — exactly one is
+    # in the frame at any time (see `_frame_for_view`).
+    n_processes = count("processlist") or count("programlist")
+    plan = plan_right_column(
+        body_height=body_height,
+        static_heights={b.name: b.height for b in frame.right if b.name not in self._ELASTIC_RIGHT},
+        amps_height=by_name["amps"].height if "amps" in by_name else 0,
+        n_vms=count("vms"),
+        n_containers=count("containers"),
+        n_processes=n_processes,
+        n_alerts=count("alert"),
+    )
 
-        names = set(plan) | set(current)
-        if all(effective(plan, n) == effective(current, n) for n in names):
-            return frame
+    current = view.get("row_budget") or {}
 
-        view["row_budget"] = plan
-        return self._frame_for_view(view)
+    # Compare the EFFECTIVE row counts, not the raw quotas: a quota above
+    # the item count renders exactly the same block, and rebuilding for
+    # that would cost one extra frame on every single cycle.
+    def effective(budget: dict[str, int], name: str) -> int:
+        available = count(name) if name != "amps" else (by_name["amps"].height if "amps" in by_name else 0)
+        quota = budget.get(name)
+        return available if quota is None else min(available, quota)
+
+    names = set(plan) | set(current)
+    if all(effective(plan, n) == effective(current, n) for n in names):
+        return frame
+
+    view["row_budget"] = plan
+    return self._frame_for_view(view)
 ```
 
 - [ ] **Step 8: Câbler `max_y` dans le pipeline**
