@@ -8,9 +8,10 @@
 
 """Glances v5 — wifi plugin (collection, per-hotspot).
 
-Migrated from `glances/plugins/wifi/__init__.py`. Stats are read from
-`/proc/net/wireless` (Linux only). The v4 dead `_thread`/`exit()`
-scaffolding (never actually populated) is not ported.
+Migrated from `glances/plugins/wifi/__init__.py`. Stats are read over
+nl80211 (Linux only, see `nl80211.py`), falling back to
+`/proc/net/wireless` when nl80211 is not available. The v4 dead
+`_thread`/`exit()` scaffolding (never actually populated) is not ported.
 """
 
 from __future__ import annotations
@@ -22,6 +23,7 @@ from typing import Any, ClassVar
 
 from glances.plugins.plugin.base import GlancesPluginBase
 from glances.plugins.plugin.thresholds import compute_level
+from glances.plugins.wifi import nl80211
 
 logger = logging.getLogger(__name__)
 
@@ -30,9 +32,17 @@ _DEFAULT_CAREFUL = -65.0
 _DEFAULT_WARNING = -75.0
 _DEFAULT_CRITICAL = -85.0
 
-# Use stats available in the /proc/net/wireless file.
-# Note: it only gives signal information about the current hotspot.
+# Fallback when nl80211 is unavailable: the /proc/net/wireless file. It goes
+# through the legacy wireless extensions, which the kernel warns about (and
+# which return nothing for Wi-Fi 7 hardware), hence nl80211 first.
+# Note: both only give signal information about the current hotspot.
 WIRELESS_FILE = "/proc/net/wireless"
+
+# nl80211 has no link quality value: derive it like the cfg80211 wireless
+# extensions did, so the field is unchanged: the signal clamped to
+# [-110, -40] dBm, shifted to 0..70.
+_QUALITY_MIN_DBM = -110
+_QUALITY_MAX_DBM = -40
 
 
 class PluginModel(GlancesPluginBase[list]):
@@ -70,6 +80,32 @@ class PluginModel(GlancesPluginBase[list]):
     @staticmethod
     def _collect() -> list:
         """Synchronous grab (runs in a worker thread).
+
+        Reads nl80211 first. Only when nl80211 cannot be reached at all
+        (no netlink, no cfg80211) does it fall back to `/proc/net/wireless`.
+        A transient nl80211 failure yields an empty collection, a valid
+        state like "no wireless hardware".
+        """
+        try:
+            signals = nl80211.station_signals()
+        except nl80211.Nl80211Unavailable as exc:
+            logger.debug("wifi: nl80211 unavailable (%s), falling back to %s", exc, WIRELESS_FILE)
+            return PluginModel._collect_proc()
+        except OSError as exc:
+            logger.debug("wifi: nl80211 grab failed: %s", exc)
+            return []
+        return [
+            {
+                "ssid": name,
+                "quality_link": float(min(max(signal, _QUALITY_MIN_DBM), _QUALITY_MAX_DBM) - _QUALITY_MIN_DBM),
+                "quality_level": float(signal),
+            }
+            for name, signal in signals.items()
+        ]
+
+    @staticmethod
+    def _collect_proc() -> list:
+        """Read `/proc/net/wireless` (legacy wireless extensions fallback).
 
         Existence is checked at grab time (not import time) — hardware
         can appear/disappear, and an empty collection is a valid startup
