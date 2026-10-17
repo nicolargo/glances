@@ -95,10 +95,14 @@ class FakeCollectionPlugin(GlancesPluginBase[list]):
 
     def __init__(self, store, config, payload=None):
         super().__init__(store, config)
-        self._payload = payload if payload is not None else [
-            {"name": "eth0", "rx": 10},
-            {"name": "eth1", "rx": 20},
-        ]
+        self._payload = (
+            payload
+            if payload is not None
+            else [
+                {"name": "eth0", "rx": 10},
+                {"name": "eth1", "rx": 20},
+            ]
+        )
 
     async def _grab_stats(self) -> list:
         return [dict(item) for item in self._payload]
@@ -498,105 +502,106 @@ from glances.globals import json_dumps
 Then add to `GlancesExportBase`, in a `# ---- wire format` section placed between the config helpers and the lifecycle hooks:
 
 ```python
-    def build_export(self, stats: dict | list) -> tuple[list[str], list[Any]]:
-        """Flatten a payload into parallel (names, values) lists.
+def build_export(self, stats: dict | list) -> tuple[list[str], list[Any]]:
+    """Flatten a payload into parallel (names, values) lists.
 
-        Ported verbatim from v4 ``GlancesExport.build_export``. Behaviour
-        that looks like an oversight but is not:
+    Ported verbatim from v4 ``GlancesExport.build_export``. Behaviour
+    that looks like an oversight but is not:
 
-        - the dict is NOT sorted — sorting broke several exporters (#3449);
-        - booleans become the JSON strings "true"/"false", not 0/1;
-        - a list value is joined with spaces rather than expanded.
+    - the dict is NOT sorted — sorting broke several exporters (#3449);
+    - booleans become the JSON strings "true"/"false", not 0/1;
+    - a list value is joined with spaces rather than expanded.
 
-        For a collection item, ``stats["key"]`` names the field holding the
-        item's identity, and its VALUE becomes the ``<value>.`` prefix.
-        ``GlancesExportBase._inject_key()`` puts that field there — v5 store
-        payloads do not carry one.
-        """
-        export_names: list[str] = []
-        export_values: list[Any] = []
+    For a collection item, ``stats["key"]`` names the field holding the
+    item's identity, and its VALUE becomes the ``<value>.`` prefix.
+    ``GlancesExportBase._inject_key()`` puts that field there — v5 store
+    payloads do not carry one.
+    """
+    export_names: list[str] = []
+    export_values: list[Any] = []
 
-        if isinstance(stats, dict):
-            if "key" in stats and stats["key"] in stats:
-                pre_key = "{}.".format(stats[stats["key"]])
-            else:
-                pre_key = ""
-            for key, value in stats.items():
-                key = str(key).lower()
-                if isinstance(value, bool):
-                    value = json_dumps(value).decode()
-                if isinstance(value, list):
-                    value = " ".join([str(v) for v in value])
-                if isinstance(value, dict):
-                    item_names, item_values = self.build_export(value)
-                    item_names = [pre_key + key + str(i) for i in item_names]
-                    export_names += item_names
-                    export_values += item_values
-                else:
-                    if self.is_excluded(pre_key + key):
-                        continue
-                    export_names.append(pre_key + key)
-                    export_values.append(value)
-        elif isinstance(stats, list):
-            for item in stats:
-                item_names, item_values = self.build_export(item)
+    if isinstance(stats, dict):
+        if "key" in stats and stats["key"] in stats:
+            pre_key = "{}.".format(stats[stats["key"]])
+        else:
+            pre_key = ""
+        for key, value in stats.items():
+            key = str(key).lower()
+            if isinstance(value, bool):
+                value = json_dumps(value).decode()
+            if isinstance(value, list):
+                value = " ".join([str(v) for v in value])
+            if isinstance(value, dict):
+                item_names, item_values = self.build_export(value)
+                item_names = [pre_key + key + str(i) for i in item_names]
                 export_names += item_names
                 export_values += item_values
-
-        return export_names, export_values
-
-    def normalize_for_influxdb(self, name: str, columns: list[str], points: list[Any]) -> list[dict[str, Any]]:
-        """Convert flattened stats into InfluxDB measurements.
-
-        Ported verbatim from v4 ``GlancesExport.normalize_for_influxdb``.
-        Requires the subclass to define ``self.tags`` and ``self.hostname``.
-        """
-        ret: list[dict[str, Any]] = []
-
-        # Converted to tags to avoid InfluxDB type mismatches and to allow filtering.
-        FIELD_TO_TAG = ["name", "cmdline", "type"]
-        # The AMP 'result' field is a string or a number depending on the AMP (#3419).
-        FIELD_TO_STRING = ["result"]
-
-        data_dict = dict(zip(columns, points))
-
-        # issue1871 — a '<x>.key' column marks '<x>' as a measurement identity.
-        keys_list = [k.split(".")[0] for k in columns if k.endswith(".key")]
-        if not keys_list:
-            keys_list = [None]
-
-        for measurement in keys_list:
-            if measurement is not None:
-                fields = {
-                    k.replace(f"{measurement}.", ""): data_dict[k] for k in data_dict if k.startswith(f"{measurement}.")
-                }
             else:
-                fields = data_dict
-            for k in fields:
-                if fields[k] is None:
+                if self.is_excluded(pre_key + key):
                     continue
+                export_names.append(pre_key + key)
+                export_values.append(value)
+    elif isinstance(stats, list):
+        for item in stats:
+            item_names, item_values = self.build_export(item)
+            export_names += item_names
+            export_values += item_values
+
+    return export_names, export_values
+
+
+def normalize_for_influxdb(self, name: str, columns: list[str], points: list[Any]) -> list[dict[str, Any]]:
+    """Convert flattened stats into InfluxDB measurements.
+
+    Ported verbatim from v4 ``GlancesExport.normalize_for_influxdb``.
+    Requires the subclass to define ``self.tags`` and ``self.hostname``.
+    """
+    ret: list[dict[str, Any]] = []
+
+    # Converted to tags to avoid InfluxDB type mismatches and to allow filtering.
+    FIELD_TO_TAG = ["name", "cmdline", "type"]
+    # The AMP 'result' field is a string or a number depending on the AMP (#3419).
+    FIELD_TO_STRING = ["result"]
+
+    data_dict = dict(zip(columns, points))
+
+    # issue1871 — a '<x>.key' column marks '<x>' as a measurement identity.
+    keys_list = [k.split(".")[0] for k in columns if k.endswith(".key")]
+    if not keys_list:
+        keys_list = [None]
+
+    for measurement in keys_list:
+        if measurement is not None:
+            fields = {
+                k.replace(f"{measurement}.", ""): data_dict[k] for k in data_dict if k.startswith(f"{measurement}.")
+            }
+        else:
+            fields = data_dict
+        for k in fields:
+            if fields[k] is None:
+                continue
+            try:
+                fields[k] = float(fields[k])
+            except (TypeError, ValueError):
                 try:
-                    fields[k] = float(fields[k])
-                except (TypeError, ValueError):
-                    try:
-                        fields[k] = str(fields[k])
-                    except (TypeError, ValueError):
-                        pass
-                if k in FIELD_TO_STRING:
                     fields[k] = str(fields[k])
-            tags = self.parse_tags(self.tags)
-            tags["hostname"] = self.hostname
-            if "hostname" in fields:
-                fields.pop("hostname")
-            if "key" in fields and fields["key"] in fields:
-                tags[fields["key"]] = str(fields[fields["key"]])
-                fields.pop(fields["key"])
-            for k in FIELD_TO_TAG:
-                if k in fields:
-                    tags[k] = str(fields[k])
-                    fields.pop(k)
-            ret.append({"measurement": name, "tags": tags, "fields": fields})
-        return ret
+                except (TypeError, ValueError):
+                    pass
+            if k in FIELD_TO_STRING:
+                fields[k] = str(fields[k])
+        tags = self.parse_tags(self.tags)
+        tags["hostname"] = self.hostname
+        if "hostname" in fields:
+            fields.pop("hostname")
+        if "key" in fields and fields["key"] in fields:
+            tags[fields["key"]] = str(fields[fields["key"]])
+            fields.pop(fields["key"])
+        for k in FIELD_TO_TAG:
+            if k in fields:
+                tags[k] = str(fields[k])
+                fields.pop(k)
+        ret.append({"measurement": name, "tags": tags, "fields": fields})
+    return ret
 ```
 
 Declare the two attributes `normalize_for_influxdb` reads on the class so type checkers and readers see them:
@@ -679,10 +684,12 @@ async def test_inject_key_leaves_a_scalar_payload_untouched():
 
 
 def test_limits_for_flattens_the_plugin_section():
-    config = make_config({
-        "fakescalar": {"careful": "50", "warning": "70", "critical": "90"},
-        "global": {"history_size": "1200"},
-    })
+    config = make_config(
+        {
+            "fakescalar": {"careful": "50", "warning": "70", "critical": "90"},
+            "global": {"history_size": "1200"},
+        }
+    )
     store = StatsStoreV5()
     plugin = FakeScalarPlugin(store, config)
     exporter = FakeExport(config, args=None)
@@ -710,13 +717,15 @@ def test_limits_for_never_exports_action_templates():
     v4 merges the whole plugin section into the exported payload, so a
     shell command configured as an action leaves the machine in clear text.
     """
-    config = make_config({
-        "fakescalar": {
-            "careful": "50",
-            "critical_action": "/usr/bin/mail -s alert ops@example.com",
-            "warning_action_repeat": "/usr/bin/logger boom",
+    config = make_config(
+        {
+            "fakescalar": {
+                "careful": "50",
+                "critical_action": "/usr/bin/mail -s alert ops@example.com",
+                "warning_action_repeat": "/usr/bin/logger boom",
+            }
         }
-    })
+    )
     store = StatsStoreV5()
     plugin = FakeScalarPlugin(store, config)
     exporter = FakeExport(config, args=None)
@@ -777,88 +786,91 @@ Expected: FAIL — `AttributeError: 'FakeExport' object has no attribute '_injec
 Add a `# ---- payload preparation (v5-specific)` section to `GlancesExportBase`:
 
 ```python
-    # Config keys that are command templates, never metrics. Excluded from
-    # the exported payload — see design §5.4. v4 exported them in clear text.
-    _ACTION_KEY_MARKER = "_action"
+# Config keys that are command templates, never metrics. Excluded from
+# the exported payload — see design §5.4. v4 exported them in clear text.
+_ACTION_KEY_MARKER = "_action"
 
-    # v4 default: 3 points per second for one day.
-    _DEFAULT_HISTORY_SIZE = 28800.0
+# v4 default: 3 points per second for one day.
+_DEFAULT_HISTORY_SIZE = 28800.0
 
-    def _inject_key(self, plugin: GlancesPluginBase, payload: dict | list) -> dict | list:
-        """Add the ``key`` field v4 payloads carried and v5 payloads do not.
 
-        v4's ``build_export`` reads ``stats["key"]`` to learn which field
-        holds an item's identity: it builds the ``<value>.`` prefix from it
-        (``eth0.rx``) and emits a ``<value>.key`` column that
-        ``normalize_for_influxdb`` uses to decide which fields become tags.
+def _inject_key(self, plugin: GlancesPluginBase, payload: dict | list) -> dict | list:
+    """Add the ``key`` field v4 payloads carried and v5 payloads do not.
 
-        v5 store payloads have no such field — the primary key is declared
-        in ``fields_description`` (``primary_key: True``) and resolved into
-        ``plugin._primary_key``. Without this injection, every interface's
-        ``rx`` collapses onto a single unprefixed series and InfluxDB
-        tagging degrades to hostname-only.
+    v4's ``build_export`` reads ``stats["key"]`` to learn which field
+    holds an item's identity: it builds the ``<value>.`` prefix from it
+    (``eth0.rx``) and emits a ``<value>.key`` column that
+    ``normalize_for_influxdb`` uses to decide which fields become tags.
 
-        Scalar plugins have no primary key and are returned unchanged.
-        """
-        primary_key = getattr(plugin, "_primary_key", None)
-        if not primary_key or not isinstance(payload, list):
-            return payload
-        return [{**item, "key": primary_key} for item in payload]
+    v5 store payloads have no such field — the primary key is declared
+    in ``fields_description`` (``primary_key: True``) and resolved into
+    ``plugin._primary_key``. Without this injection, every interface's
+    ``rx`` collapses onto a single unprefixed series and InfluxDB
+    tagging degrades to hostname-only.
 
-    def _limits_for(self, plugin: GlancesPluginBase) -> dict[str, Any]:
-        """Return the plugin's config section flattened v4-style.
+    Scalar plugins have no primary key and are returned unchanged.
+    """
+    primary_key = getattr(plugin, "_primary_key", None)
+    if not primary_key or not isinstance(payload, list):
+        return payload
+    return [{**item, "key": primary_key} for item in payload]
 
-        Shape: ``{"<plugin>_<option>": float | list[str]}`` plus
-        ``history_size`` from ``[global]`` — the exact shape v4 builds in
-        ``GlancesPluginModel.load_limits`` and merges into the exported
-        payload, so field names reaching a backend are unchanged.
 
-        Two departures from v4:
+def _limits_for(self, plugin: GlancesPluginBase) -> dict[str, Any]:
+    """Return the plugin's config section flattened v4-style.
 
-        - keys containing ``_action`` are skipped (design §5.4): they hold
-          shell commands and Mustache templates, never measurements;
-        - the result is cached per plugin name — the config does not change
-          between ticks.
+    Shape: ``{"<plugin>_<option>": float | list[str]}`` plus
+    ``history_size`` from ``[global]`` — the exact shape v4 builds in
+    ``GlancesPluginModel.load_limits`` and merges into the exported
+    payload, so field names reaching a backend are unchanged.
 
-        This lives in the export layer, not on the plugin: the flat
-        ``<plugin>_<key>`` form is an output-format convention. The plugin's
-        own ``get_limits()`` answers a different question (effective
-        thresholds, structured) for the REST API and MCP; the two must not
-        be unified.
-        """
-        cached = self._limits_cache.get(plugin.plugin_name)
-        if cached is not None:
-            return cached
+    Two departures from v4:
 
-        limits: dict[str, Any] = {
-            "history_size": self.config.get_float_value("global", "history_size", self._DEFAULT_HISTORY_SIZE)
-        }
+    - keys containing ``_action`` are skipped (design §5.4): they hold
+      shell commands and Mustache templates, never measurements;
+    - the result is cached per plugin name — the config does not change
+      between ticks.
 
-        for option, _ in self.config.items(plugin.plugin_name):
-            if self._ACTION_KEY_MARKER in option:
-                continue
-            name = f"{plugin.plugin_name}_{option}"
-            try:
-                limits[name] = self.config.get_float_value(plugin.plugin_name, option)
-            except ValueError:
-                raw = self.config.get_value(plugin.plugin_name, option)
-                limits[name] = str(raw).split(",")
+    This lives in the export layer, not on the plugin: the flat
+    ``<plugin>_<key>`` form is an output-format convention. The plugin's
+    own ``get_limits()`` answers a different question (effective
+    thresholds, structured) for the REST API and MCP; the two must not
+    be unified.
+    """
+    cached = self._limits_cache.get(plugin.plugin_name)
+    if cached is not None:
+        return cached
 
-        self._limits_cache[plugin.plugin_name] = limits
-        return limits
+    limits: dict[str, Any] = {
+        "history_size": self.config.get_float_value("global", "history_size", self._DEFAULT_HISTORY_SIZE)
+    }
 
-    def _merge_limits(self, plugin: GlancesPluginBase, payload: dict | list) -> dict | list:
-        """Merge the flat limits into the payload, v4-style.
+    for option, _ in self.config.items(plugin.plugin_name):
+        if self._ACTION_KEY_MARKER in option:
+            continue
+        name = f"{plugin.plugin_name}_{option}"
+        try:
+            limits[name] = self.config.get_float_value(plugin.plugin_name, option)
+        except ValueError:
+            raw = self.config.get_value(plugin.plugin_name, option)
+            limits[name] = str(raw).split(",")
 
-        ``<plugin>_disable`` is dropped, as v4 does — it describes the
-        plugin's activation, not its measurements.
-        """
-        limits = dict(self._limits_for(plugin))
-        limits.pop(f"{plugin.plugin_name}_disable", None)
+    self._limits_cache[plugin.plugin_name] = limits
+    return limits
 
-        if isinstance(payload, list):
-            return [{**item, **limits} for item in payload]
-        return {**payload, **limits}
+
+def _merge_limits(self, plugin: GlancesPluginBase, payload: dict | list) -> dict | list:
+    """Merge the flat limits into the payload, v4-style.
+
+    ``<plugin>_disable`` is dropped, as v4 does — it describes the
+    plugin's activation, not its measurements.
+    """
+    limits = dict(self._limits_for(plugin))
+    limits.pop(f"{plugin.plugin_name}_disable", None)
+
+    if isinstance(payload, list):
+        return [{**item, **limits} for item in payload]
+    return {**payload, **limits}
 ```
 
 - [ ] **Step 4: Run tests to verify they pass**

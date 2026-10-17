@@ -353,77 +353,82 @@ Extend `_AlertState` (after `has_committed`):
 In `glances/alerts_v5.py`, after `_update_auto_sort` (around line 365):
 
 ```python
-    # ---------------------------------------------------- top processes
+# ---------------------------------------------------- top processes
 
-    @staticmethod
-    def _top_sort_key(plugin: GlancesPluginBase, field_name: str) -> str | None:
-        """The field's declared process sort key, or None if it has none.
 
-        Read from `fields_description` rather than from a table here, so a
-        plugin opts in without `alerts_v5` knowing it exists (spec §4).
-        """
-        schema = type(plugin).fields_description.get(field_name, {})
-        key = schema.get("top_processes_sort")
-        return key if isinstance(key, str) and key else None
+@staticmethod
+def _top_sort_key(plugin: GlancesPluginBase, field_name: str) -> str | None:
+    """The field's declared process sort key, or None if it has none.
 
-    def _open_top(self, state: _AlertState, sort_key: str | None, event: dict[str, Any]) -> None:
-        """Start accumulating for an incident that just opened."""
-        if sort_key is None:
-            return
-        state.top_counter = Counter()
-        state.top_sort = sort_key
-        state.top_event = event
+    Read from `fields_description` rather than from a table here, so a
+    plugin opts in without `alerts_v5` knowing it exists (spec §4).
+    """
+    schema = type(plugin).fields_description.get(field_name, {})
+    key = schema.get("top_processes_sort")
+    return key if isinstance(key, str) and key else None
 
-    @staticmethod
-    def _release_top(state: _AlertState) -> None:
-        """Stop accumulating; the last value stays frozen in the opening event."""
-        state.top_counter = None
-        state.top_sort = None
-        state.top_event = None
 
-    def _sample_processes(self, sort_key: str) -> list[dict[str, Any]]:
-        """The `_TOP_PROCESSES_SAMPLE` highest processes for `sort_key`.
+def _open_top(self, state: _AlertState, sort_key: str | None, event: dict[str, Any]) -> None:
+    """Start accumulating for an incident that just opened."""
+    if sort_key is None:
+        return
+    state.top_counter = Counter()
+    state.top_sort = sort_key
+    state.top_event = event
 
-        Empty when no engine is wired or the process plugins are disabled —
-        the caller then writes nothing at all, so the payload key stays
-        absent rather than becoming an empty list.
-        """
-        engine = self._process_engine
-        if engine is None:
-            return []
-        try:
-            procs = engine.get_list()
-        except Exception as e:  # pragma: no cover - defensive
-            logger.debug("top-process sampling failed: %s", e)
-            return []
-        if not procs:
-            return []
-        return sort_stats(procs, sort_key)[:_TOP_PROCESSES_SAMPLE]
 
-    def _accumulate_top(self, state: _AlertState, cache: dict[str, list[dict[str, Any]]]) -> None:
-        """One cycle of accumulation, then rewrite the opening event in place.
+@staticmethod
+def _release_top(state: _AlertState) -> None:
+    """Stop accumulating; the last value stays frozen in the opening event."""
+    state.top_counter = None
+    state.top_sort = None
+    state.top_event = None
 
-        `cache` is per-`ingest_plugin`-call, so the process list is sorted at
-        most once per distinct sort key per cycle — and not at all while no
-        annotated field is in alert.
-        """
-        if state.top_event is None or state.top_sort is None or state.top_counter is None:
-            return
-        sampled = cache.get(state.top_sort)
-        if sampled is None:
-            sampled = self._sample_processes(state.top_sort)
-            cache[state.top_sort] = sampled
-        if not sampled:
-            return
-        for proc in sampled:
-            name = proc.get("name")
-            if name:
-                state.top_counter[str(name)] += 1
-        # `most_common` is v4's `sorted(..., reverse=True)[0:3]`: Counter
-        # keeps insertion order and the sort is stable, so ties break
-        # identically — in O(n) instead of O(n log n).
-        state.top_event["top"] = [name for name, _ in state.top_counter.most_common(_TOP_PROCESSES_KEEP)]
-        state.top_event["top_sort"] = state.top_sort
+
+def _sample_processes(self, sort_key: str) -> list[dict[str, Any]]:
+    """The `_TOP_PROCESSES_SAMPLE` highest processes for `sort_key`.
+
+    Empty when no engine is wired or the process plugins are disabled —
+    the caller then writes nothing at all, so the payload key stays
+    absent rather than becoming an empty list.
+    """
+    engine = self._process_engine
+    if engine is None:
+        return []
+    try:
+        procs = engine.get_list()
+    except Exception as e:  # pragma: no cover - defensive
+        logger.debug("top-process sampling failed: %s", e)
+        return []
+    if not procs:
+        return []
+    return sort_stats(procs, sort_key)[:_TOP_PROCESSES_SAMPLE]
+
+
+def _accumulate_top(self, state: _AlertState, cache: dict[str, list[dict[str, Any]]]) -> None:
+    """One cycle of accumulation, then rewrite the opening event in place.
+
+    `cache` is per-`ingest_plugin`-call, so the process list is sorted at
+    most once per distinct sort key per cycle — and not at all while no
+    annotated field is in alert.
+    """
+    if state.top_event is None or state.top_sort is None or state.top_counter is None:
+        return
+    sampled = cache.get(state.top_sort)
+    if sampled is None:
+        sampled = self._sample_processes(state.top_sort)
+        cache[state.top_sort] = sampled
+    if not sampled:
+        return
+    for proc in sampled:
+        name = proc.get("name")
+        if name:
+            state.top_counter[str(name)] += 1
+    # `most_common` is v4's `sorted(..., reverse=True)[0:3]`: Counter
+    # keeps insertion order and the sort is stable, so ties break
+    # identically — in O(n) instead of O(n log n).
+    state.top_event["top"] = [name for name, _ in state.top_counter.most_common(_TOP_PROCESSES_KEEP)]
+    state.top_event["top_sort"] = state.top_sort
 ```
 
 - [ ] **Step 5: Hook the accumulator into `ingest_plugin`**
@@ -620,8 +625,9 @@ def _evt_top(*args, top=None, top_sort=None, **kwargs):
 
 def test_derive_incidents_carries_top_from_the_opening_event():
     history = [
-        _evt_top("2026-08-16T14:02:11+00:00", "cpu", "total", "warning",
-                 top=["python3", "chrome"], top_sort="cpu_percent"),
+        _evt_top(
+            "2026-08-16T14:02:11+00:00", "cpu", "total", "warning", top=["python3", "chrome"], top_sort="cpu_percent"
+        ),
         _evt("2026-08-16T14:03:11+00:00", "cpu", "total", "critical", previous="warning"),
     ]
     incidents = _derive_incidents(history)
@@ -639,8 +645,7 @@ def test_derive_incidents_defaults_top_to_an_empty_list():
 def test_derive_incidents_ongoing_top_overrides_the_history():
     """The engine is the authority for an active incident (spec §5.4)."""
     history = [
-        _evt_top("2026-08-16T14:02:11+00:00", "cpu", "total", "warning",
-                 top=["stale"], top_sort="cpu_percent"),
+        _evt_top("2026-08-16T14:02:11+00:00", "cpu", "total", "warning", top=["stale"], top_sort="cpu_percent"),
     ]
     ongoing = {("cpu", None, "total"): "warning"}
     ongoing_top = {("cpu", None, "total"): {"top": ["fresh", "node"], "top_sort": "cpu_percent"}}
@@ -650,8 +655,7 @@ def test_derive_incidents_ongoing_top_overrides_the_history():
 
 def test_derive_incidents_ongoing_top_does_not_touch_resolved_incidents():
     history = [
-        _evt_top("2026-08-16T14:02:11+00:00", "cpu", "total", "warning",
-                 top=["frozen"], top_sort="cpu_percent"),
+        _evt_top("2026-08-16T14:02:11+00:00", "cpu", "total", "warning", top=["frozen"], top_sort="cpu_percent"),
         _evt("2026-08-16T14:04:11+00:00", "cpu", "total", "ok", previous="warning"),
     ]
     ongoing_top = {("cpu", None, "total"): {"top": ["nope"], "top_sort": "cpu_percent"}}
@@ -758,8 +762,14 @@ Append to `tests/test_curses_renderer_v5.py`:
 
 ```python
 _TOP_HISTORY = [
-    _evt_top("2026-08-16T14:02:11+00:00", "cpu", "total", "critical",
-             top=["python3", "chrome", "node"], top_sort="cpu_percent"),
+    _evt_top(
+        "2026-08-16T14:02:11+00:00",
+        "cpu",
+        "total",
+        "critical",
+        top=["python3", "chrome", "node"],
+        top_sort="cpu_percent",
+    ),
 ]
 _TOP_ONGOING = {("cpu", None, "total"): "critical"}
 
@@ -805,11 +815,16 @@ def test_alert_grid_pads_incidents_that_have_no_top():
 
 def test_alert_grid_truncates_a_long_top_with_the_ascii_ellipsis():
     history = [
-        _evt_top("2026-08-16T14:02:11+00:00", "cpu", "total", "critical",
-                 top=["systemd-journald", "containerd-shim", "postgres"], top_sort="cpu_percent"),
+        _evt_top(
+            "2026-08-16T14:02:11+00:00",
+            "cpu",
+            "total",
+            "critical",
+            top=["systemd-journald", "containerd-shim", "postgres"],
+            top_sort="cpu_percent",
+        ),
     ]
-    rows = render_alert_block(history, limit=10, now=_GRID_NOW, ongoing=_TOP_ONGOING,
-                              width=80, unicode_ok=False)
+    rows = render_alert_block(history, limit=10, now=_GRID_NOW, ongoing=_TOP_ONGOING, width=80, unicode_ok=False)
     top_cell = rows[2].cells[-2]
     assert len(top_cell.text) == 22
     assert top_cell.text.rstrip().endswith(".")
@@ -854,7 +869,7 @@ _ALERT_W_WITH_TOP = _ALERT_W_WITH_LEVEL + 1 + _ALERT_W_TOP  # 66
 Add the parameter to the signature, after `ongoing_since`:
 
 ```python
-    ongoing_top: dict[tuple[str, Any, str], dict[str, Any]] | None = None,
+ongoing_top: dict[tuple[str, Any, str], dict[str, Any]] | None = (None,)
 ```
 
 document it in the docstring `Args:` block:
@@ -876,40 +891,43 @@ Then replace the column-fit block (currently "Which columns fit …" through
 `target_width = max(0, target_width)`) with:
 
 ```python
-    visible = incidents[:limit] if limit > 0 else []
+visible = incidents[:limit] if limit > 0 else []
 
-    def target_of(incident: dict[str, Any]) -> str:
-        return _humanise_target(incident["plugin"], incident["key"], incident["field"])
 
-    def top_of(incident: dict[str, Any]) -> str:
-        return ", ".join(str(name) for name in (incident.get("top") or []))
+def target_of(incident: dict[str, Any]) -> str:
+    return _humanise_target(incident["plugin"], incident["key"], incident["field"])
 
-    # Which columns fit. TARGET is the only elastic one and never drops.
-    show_level = width is None or width >= _ALERT_W_WITH_LEVEL
-    show_duration = width is None or width >= _ALERT_W_WITH_DURATION
-    # TOP is BOTH width-gated and data-conditional: a host whose only alerts
-    # are fs or sensors ones never pays 23 columns for an empty header, and a
-    # history with no `top` key renders exactly as it did before the column
-    # existed.
-    show_top = any(top_of(incident) for incident in visible) and (width is None or width >= _ALERT_W_WITH_TOP)
-    if width is None:
-        top_width = max((len(top_of(incident)) for incident in visible), default=0)
-    else:
-        top_width = _ALERT_W_TOP
 
-    if width is None:
-        target_width = max((len(target_of(i)) for i in visible), default=_ALERT_MIN_TARGET)
-        target_width = max(target_width, _ALERT_MIN_TARGET)
-    elif show_level:
-        target_width = width - (_ALERT_W_WITH_LEVEL - _ALERT_MIN_TARGET)
-    elif show_duration:
-        target_width = width - (_ALERT_W_WITH_DURATION - _ALERT_MIN_TARGET)
-    else:
-        target_width = width - _ALERT_MIN_TARGET
-    if show_top and width is not None:
-        # The painter's one-space separator plus the column itself.
-        target_width -= top_width + 1
-    target_width = max(0, target_width)
+def top_of(incident: dict[str, Any]) -> str:
+    return ", ".join(str(name) for name in (incident.get("top") or []))
+
+
+# Which columns fit. TARGET is the only elastic one and never drops.
+show_level = width is None or width >= _ALERT_W_WITH_LEVEL
+show_duration = width is None or width >= _ALERT_W_WITH_DURATION
+# TOP is BOTH width-gated and data-conditional: a host whose only alerts
+# are fs or sensors ones never pays 23 columns for an empty header, and a
+# history with no `top` key renders exactly as it did before the column
+# existed.
+show_top = any(top_of(incident) for incident in visible) and (width is None or width >= _ALERT_W_WITH_TOP)
+if width is None:
+    top_width = max((len(top_of(incident)) for incident in visible), default=0)
+else:
+    top_width = _ALERT_W_TOP
+
+if width is None:
+    target_width = max((len(target_of(i)) for i in visible), default=_ALERT_MIN_TARGET)
+    target_width = max(target_width, _ALERT_MIN_TARGET)
+elif show_level:
+    target_width = width - (_ALERT_W_WITH_LEVEL - _ALERT_MIN_TARGET)
+elif show_duration:
+    target_width = width - (_ALERT_W_WITH_DURATION - _ALERT_MIN_TARGET)
+else:
+    target_width = width - _ALERT_MIN_TARGET
+if show_top and width is not None:
+    # The painter's one-space separator plus the column itself.
+    target_width -= top_width + 1
+target_width = max(0, target_width)
 ```
 
 Note the `visible` / `target_of` definitions move **above** the column-fit
@@ -925,10 +943,8 @@ In the header row, between the `TARGET` and `LEVEL` cells:
 In the per-incident row, between the `TARGET` and `LEVEL` cells:
 
 ```python
-        if show_top:
-            cells.append(
-                Cell(text=_fit_text(top_of(incident), top_width, ellipsis="…" if unicode_ok else "."))
-            )
+if show_top:
+    cells.append(Cell(text=_fit_text(top_of(incident), top_width, ellipsis="…" if unicode_ok else ".")))
 ```
 
 - [ ] **Step 5: Update `_alert_block_height`'s docstring**
@@ -997,7 +1013,7 @@ Expected: FAIL — `build_frame() got an unexpected keyword argument 'alerts_ong
 Add the parameter after `alerts_ongoing_since`:
 
 ```python
-    alerts_ongoing_top: dict[tuple[str, Any, str], dict[str, Any]] | None = None,
+alerts_ongoing_top: dict[tuple[str, Any, str], dict[str, Any]] | None = (None,)
 ```
 
 document it in the `Args:` block:
@@ -1010,9 +1026,7 @@ document it in the `Args:` block:
 and pass it at the single derivation point:
 
 ```python
-    alert_incidents = _derive_incidents(
-        alerts_history, alerts_ongoing, alerts_ongoing_since, alerts_ongoing_top
-    )
+alert_incidents = _derive_incidents(alerts_history, alerts_ongoing, alerts_ongoing_since, alerts_ongoing_top)
 ```
 
 `render_alert_block` still receives `incidents=alert_incidents`, so it needs
@@ -1032,7 +1046,7 @@ In `glances/outputs/glances_curses_v5.py`, after the `ongoing_since` line:
 and add to the `build_frame(...)` call, after `alerts_ongoing_since=ongoing_since,`:
 
 ```python
-            alerts_ongoing_top=ongoing_top,
+alerts_ongoing_top = (ongoing_top,)
 ```
 
 - [ ] **Step 5: Run the tests and verify they pass**

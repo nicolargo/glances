@@ -780,9 +780,7 @@ def test_json_exit_calls_super_first(tmp_path, monkeypatch):
 
     calls = []
     real_exit = GlancesExportBase.exit
-    monkeypatch.setattr(
-        GlancesExportBase, "exit", lambda self: (calls.append("base"), real_exit(self))[1]
-    )
+    monkeypatch.setattr(GlancesExportBase, "exit", lambda self: (calls.append("base"), real_exit(self))[1])
 
     exporter = Export(make_config({}), make_args(tmp_path / "g.json"))
     exporter.exit()

@@ -74,9 +74,7 @@ field, so `_remove_parameters()` keeps it in the store payload.)
 @pytest.mark.asyncio
 async def test_get_api_payload_keeps_levels_and_drops_non_exportable(config):
     store = StatsStoreV5()
-    plugin = FakeScalarPlugin(
-        store, config, payload={"percent": 50.0, "total": 1024, "internal_only": "secret"}
-    )
+    plugin = FakeScalarPlugin(store, config, payload={"percent": 50.0, "total": 1024, "internal_only": "secret"})
     await plugin.update()
 
     assert "internal_only" in store.get("fakescalar"), "guard: the fixture must publish it"
@@ -121,9 +119,7 @@ async def test_get_api_payload_projects_inside_the_collection_data(config):
     )
     await plugin.update()
 
-    assert any("internal_only" in i for i in store.get("fakecollection")["data"]), (
-        "guard: the fixture must publish it"
-    )
+    assert any("internal_only" in i for i in store.get("fakecollection")["data"]), "guard: the fixture must publish it"
 
     payload = plugin.get_api_payload()
 
@@ -145,9 +141,7 @@ async def test_get_api_payload_is_empty_before_the_first_cycle(config):
 async def test_get_export_is_unchanged_by_the_refactor(config):
     """get_export() still strips every `_*` key, unlike get_api_payload()."""
     store = StatsStoreV5()
-    plugin = FakeScalarPlugin(
-        store, config, payload={"percent": 50.0, "total": 1024, "internal_only": "secret"}
-    )
+    plugin = FakeScalarPlugin(store, config, payload={"percent": 50.0, "total": 1024, "internal_only": "secret"})
     await plugin.update()
 
     exported = plugin.get_export()
@@ -170,45 +164,46 @@ Expected: FAIL — `AttributeError: 'FakeScalarPlugin' object has no attribute '
 Replace `_project_exportable()` with the parameterised helper and add the new view:
 
 ```python
-    def _project(self, d: dict[str, Any], *, keep_internal: bool) -> dict[str, Any]:
-        """Filter one payload dict for a consumer.
+def _project(self, d: dict[str, Any], *, keep_internal: bool) -> dict[str, Any]:
+    """Filter one payload dict for a consumer.
 
-        `keep_internal=False` (exporters): drop every `_*` key and every
-        field declared `exportable: False`.
-        `keep_internal=True` (REST, MCP): keep `_*` keys — `_levels` is what
-        a UI colours cells from — while still dropping non-exportable fields.
+    `keep_internal=False` (exporters): drop every `_*` key and every
+    field declared `exportable: False`.
+    `keep_internal=True` (REST, MCP): keep `_*` keys — `_levels` is what
+    a UI colours cells from — while still dropping non-exportable fields.
 
-        One helper, two views, so the REST and export projections cannot
-        drift apart (issue #3211).
-        """
-        return {
-            k: v
-            for k, v in d.items()
-            if (keep_internal and k.startswith("_"))
-            or (not k.startswith("_") and self._fields.get(k, {}).get("exportable", True))
-        }
+    One helper, two views, so the REST and export projections cannot
+    drift apart (issue #3211).
+    """
+    return {
+        k: v
+        for k, v in d.items()
+        if (keep_internal and k.startswith("_"))
+        or (not k.startswith("_") and self._fields.get(k, {}).get("exportable", True))
+    }
 
-    def get_api_payload(self) -> dict[str, Any]:
-        """Filtered view for the REST API and the MCP adapter (issue #3211).
 
-        Drops fields declared `exportable: False`; KEEPS `_levels`.
+def get_api_payload(self) -> dict[str, Any]:
+    """Filtered view for the REST API and the MCP adapter (issue #3211).
 
-        Always returns a dict, unlike `get_export()`, which returns a bare
-        list for collection plugins: the API serves the payload shape its
-        clients already know, envelope included.
-        """
-        payload = self.store.get(self.plugin_name, {})
-        if not isinstance(payload, dict):
-            # Defensive: the store always holds a dict for plugins.
-            return {}
+    Drops fields declared `exportable: False`; KEEPS `_levels`.
 
-        out = self._project(payload, keep_internal=True)
-        if self.IS_COLLECTION:
-            # `data` is not a declared field, so the envelope projection
-            # above passes the list through untouched. Each item must be
-            # projected on its own or every non-exportable field survives.
-            out["data"] = [self._project(item, keep_internal=True) for item in payload.get("data", [])]
-        return out
+    Always returns a dict, unlike `get_export()`, which returns a bare
+    list for collection plugins: the API serves the payload shape its
+    clients already know, envelope included.
+    """
+    payload = self.store.get(self.plugin_name, {})
+    if not isinstance(payload, dict):
+        # Defensive: the store always holds a dict for plugins.
+        return {}
+
+    out = self._project(payload, keep_internal=True)
+    if self.IS_COLLECTION:
+        # `data` is not a declared field, so the envelope projection
+        # above passes the list through untouched. Each item must be
+        # projected on its own or every non-exportable field survives.
+        out["data"] = [self._project(item, keep_internal=True) for item in payload.get("data", [])]
+    return out
 ```
 
 and rewrite `get_export()`'s body to call `self._project(..., keep_internal=False)` in place of `self._project_exportable(...)`, leaving its docstring, signature and return shape exactly as they are.

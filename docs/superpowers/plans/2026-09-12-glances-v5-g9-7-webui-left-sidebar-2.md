@@ -619,13 +619,15 @@ no `label`, no `unit` change.
 `glances.outputs.curses_renderer_v5` and replace the literal in the header row:
 
 ```python
-Cell(
-    text="{:>{w}}".format(
-        field_label(fields_desc.get("irq_rate", {}), "irq_rate", prefer_short=True), w=_RATE_WIDTH
+(
+    Cell(
+        text="{:>{w}}".format(
+            field_label(fields_desc.get("irq_rate", {}), "irq_rate", prefer_short=True), w=_RATE_WIDTH
+        ),
+        color=ColorRole.HEADER,
+        bold=True,
     ),
-    color=ColorRole.HEADER,
-    bold=True,
-),
+)
 ```
 
 `raid/render_curses_v5.py` — `fields_desc` is optional there, so resolve once at
@@ -952,15 +954,24 @@ def test_ports_renders_every_status_branch():
     payload = _run_render_probe("ports")
     texts = [cell["text"] for cell in payload["pluginTableCells"]["ports"]]
     assert texts == [
-        "Home Box", "12ms",
-        "Internet ICMP", "Timeout",
-        "Mail relay", "Timeout",
-        "SSH", "Open",
-        "Still scanning", "Scanning",
-        "No gateway", "None",
-        "My Blog", "Code 200",
-        "Broken site", "Error",
-        "Web scanning", "Scanning",
+        "Home Box",
+        "12ms",
+        "Internet ICMP",
+        "Timeout",
+        "Mail relay",
+        "Timeout",
+        "SSH",
+        "Open",
+        "Still scanning",
+        "Scanning",
+        "No gateway",
+        "None",
+        "My Blog",
+        "Code 200",
+        "Broken site",
+        "Error",
+        "Web scanning",
+        "Scanning",
     ], f"got {texts!r}"
 
 
@@ -980,7 +991,9 @@ def test_ports_has_no_header_row():
     is still named for assistive technology.
     """
     payload = _run_render_probe("ports")
-    assert "ports" not in payload["pluginColumnHeaders"], f"ports must render no <th>: {payload['pluginColumnHeaders']!r}"
+    assert "ports" not in payload["pluginColumnHeaders"], (
+        f"ports must render no <th>: {payload['pluginColumnHeaders']!r}"
+    )
     assert "PORTS" not in payload["pluginText"]["ports"], "the title must not be visible"
     assert "aria-label" in payload["pluginAttrs"]["ports"]
 
@@ -1279,11 +1292,25 @@ insert their entries **in `LEFT_SLOT` order** — `ports` right after `network`,
 asserts the exact ordered list of rendered names. It becomes:
 
 ```python
-    assert payload["pluginNames"] == [
-        "system", "ip", "uptime", "cloud", "now",
-        "cpu", "gpu", "mem", "memswap", "load",
-        "network", "ports", "wifi", "diskio", "fs", "folders", "sensors",
-    ], f"expected the whole registry, got {payload['pluginNames']!r}"
+assert payload["pluginNames"] == [
+    "system",
+    "ip",
+    "uptime",
+    "cloud",
+    "now",
+    "cpu",
+    "gpu",
+    "mem",
+    "memswap",
+    "load",
+    "network",
+    "ports",
+    "wifi",
+    "diskio",
+    "fs",
+    "folders",
+    "sensors",
+], f"expected the whole registry, got {payload['pluginNames']!r}"
 ```
 
 Keep the file's existing one-name-per-line formatting if `ruff format` asks for
@@ -1421,14 +1448,16 @@ def test_connections_renders_the_tui_rows_in_order():
     """
     payload = _run_render_probe("connections")
     grid = payload["pluginGrid"]["connections"]
-    assert grid == [[
-        ["TCP CONNECTIONS", ""],
-        ["Listen", "3"],
-        ["Initiated", "0"],
-        ["Established", "12"],
-        ["Terminated", "204"],
-        ["Tracked", "512/1024"],
-    ]], f"got {grid!r}"
+    assert grid == [
+        [
+            ["TCP CONNECTIONS", ""],
+            ["Listen", "3"],
+            ["Initiated", "0"],
+            ["Established", "12"],
+            ["Terminated", "204"],
+            ["Tracked", "512/1024"],
+        ]
+    ], f"got {grid!r}"
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
@@ -1474,11 +1503,16 @@ def test_irq_keeps_the_five_busiest_lines_ranked():
     payload = _run_render_probe("irq")
     texts = [cell["text"] for cell in payload["pluginTableCells"]["irq"]]
     assert texts == [
-        "RES", "501",
-        "LOC", "340",
-        "1_i8042", "95",
-        "0", "12",
-        "CAL", "7",
+        "RES",
+        "501",
+        "LOC",
+        "340",
+        "1_i8042",
+        "95",
+        "0",
+        "12",
+        "CAL",
+        "7",
     ], f"got {texts!r}"
 
 
@@ -1669,7 +1703,17 @@ Insert in `LEFT_SLOT` order: `connections` right after `wifi`, `irq` right after
 `test_an_unreadable_pluginslist_renders_the_whole_registry` becomes:
 
 ```python
-        "network", "ports", "wifi", "connections", "diskio", "fs", "irq", "folders", "sensors",
+(
+    "network",
+    "ports",
+    "wifi",
+    "connections",
+    "diskio",
+    "fs",
+    "irq",
+    "folders",
+    "sensors",
+)
 ```
 (the header and top rows above it are unchanged).
 
@@ -2129,12 +2173,29 @@ list in `test_an_unreadable_pluginslist_renders_the_whole_registry` reaches its
 final, 21-name form:
 
 ```python
-    assert payload["pluginNames"] == [
-        "system", "ip", "uptime", "cloud", "now",
-        "cpu", "gpu", "mem", "memswap", "load",
-        "network", "ports", "wifi", "connections", "diskio", "fs",
-        "irq", "folders", "raid", "smart", "sensors",
-    ], f"expected the whole registry, got {payload['pluginNames']!r}"
+assert payload["pluginNames"] == [
+    "system",
+    "ip",
+    "uptime",
+    "cloud",
+    "now",
+    "cpu",
+    "gpu",
+    "mem",
+    "memswap",
+    "load",
+    "network",
+    "ports",
+    "wifi",
+    "connections",
+    "diskio",
+    "fs",
+    "irq",
+    "folders",
+    "raid",
+    "smart",
+    "sensors",
+], f"expected the whole registry, got {payload['pluginNames']!r}"
 ```
 
 - [ ] **Step 9: Rebuild, run, stage**

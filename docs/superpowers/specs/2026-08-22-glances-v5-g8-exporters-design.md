@@ -92,17 +92,17 @@ An exporter the user *did* ask for that fails to import is fatal (§8).
 
 ```python
 class GlancesExportBase(ABC):
-    export_name: ClassVar[str] = ""       # "csv", "influxdb2", ...
+    export_name: ClassVar[str] = ""  # "csv", "influxdb2", ...
 
     def __init__(self, config: GlancesConfigV5, args: argparse.Namespace) -> None: ...
 
     # --- config helpers (ported from v4 GlancesExport) ---
     def load_conf(self, section, mandatories=("host", "port"), options=()) -> bool: ...
-    def _limits_for(self, plugin: GlancesPluginBase) -> dict[str, Any]: ...   # §5.3
+    def _limits_for(self, plugin: GlancesPluginBase) -> dict[str, Any]: ...  # §5.3
 
     # --- payload preparation (v5-specific) ---
-    def _inject_key(self, plugin, payload): ...     # §5.2
-    def _merge_limits(self, plugin, payload): ...   # §5.3, uses _limits_for
+    def _inject_key(self, plugin, payload): ...  # §5.2
+    def _merge_limits(self, plugin, payload): ...  # §5.3, uses _limits_for
 
     # --- wire format (ported from v4 GlancesExport) ---
     def build_export(self, stats: dict | list) -> tuple[list[str], list[Any]]: ...
@@ -111,7 +111,7 @@ class GlancesExportBase(ABC):
     def normalize_for_influxdb(self, name, columns, points) -> list[dict]: ...
 
     # --- lifecycle ---
-    def update(self, plugins: list[GlancesPluginBase]) -> None:   # sync, runs in a thread
+    def update(self, plugins: list[GlancesPluginBase]) -> None:  # sync, runs in a thread
         ...
     @abstractmethod
     def export(self, name: str, columns: list[str], points: list[Any]) -> None: ...

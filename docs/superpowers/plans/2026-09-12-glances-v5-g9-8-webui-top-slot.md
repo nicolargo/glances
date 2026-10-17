@@ -387,9 +387,13 @@ def test_mpp_renders_one_row_per_engine():
     payload = _run_render_probe("mpp")
     texts = [cell["text"] for cell in payload["pluginTableCells"]["mpp"]]
     assert texts == [
-        "RKVENC enc", "24.8%", "2 sess",
-        "JPEGD jpeg", "0.0%",
-        "RKVDEC dec", "N/A",
+        "RKVENC enc",
+        "24.8%",
+        "2 sess",
+        "JPEGD jpeg",
+        "0.0%",
+        "RKVDEC dec",
+        "N/A",
     ], f"got {texts!r}"
 
 
@@ -756,9 +760,7 @@ def test_a_prominent_bar_value_still_renders_its_badge():
     """`cpu` is prominent in the fixture: the VALUE keeps the badge every other
     prominent value in the UI renders, independently of the fill's colour."""
     payload = _run_render_probe("quicklook")
-    assert "gl-prominent" in payload["bars"]["quicklook"][0]["valueClass"], (
-        f"got {payload['bars']['quicklook'][0]!r}"
-    )
+    assert "gl-prominent" in payload["bars"]["quicklook"][0]["valueClass"], f"got {payload['bars']['quicklook'][0]!r}"
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")

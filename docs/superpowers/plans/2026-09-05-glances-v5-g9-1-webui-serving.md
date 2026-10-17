@@ -417,13 +417,12 @@ In `glances/main_v5.py`, beside the other server options:
 and widen the `-s` help text, which currently says the server is REST-only:
 
 ```python
-    parser.add_argument(
-        "-s",
-        "--server",
-        action="store_true",
-        help="Run as a REST API server (FastAPI) and serve the Web UI. "
-        "Use --disable-webui for a headless REST deployment.",
-    )
+parser.add_argument(
+    "-s",
+    "--server",
+    action="store_true",
+    help="Run as a REST API server (FastAPI) and serve the Web UI. Use --disable-webui for a headless REST deployment.",
+)
 ```
 
 Copy the existing `-s` declaration's other keyword arguments verbatim; only `help` changes.

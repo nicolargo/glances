@@ -116,7 +116,7 @@ bloc déjà tronqué ne les révèle pas.
 class PluginBlock:
     name: str
     rows: list[Row] = field(default_factory=list)
-    data_count: int | None = None   # len(payload["data"]) pour les collections
+    data_count: int | None = None  # len(payload["data"]) pour les collections
 ```
 
 Renseigné par `build_frame` pour les plugins collection, et explicitement pour

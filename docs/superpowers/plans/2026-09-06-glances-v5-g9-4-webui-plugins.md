@@ -875,10 +875,25 @@ def test_cpu_renders_the_linux_three_column_grid():
     payload = _run_render_probe("cpu")
     text = payload["pluginText"].get("cpu", "")
 
-    for expected in ("CPU", "4.5%", "idle", "95.5%", "ctx_sw", "6.7K",
-                     "user", "3.8%", "inter", "3.0K",
-                     "system", "0.7%", "sw_int", "1.8K",
-                     "iowait", "steal", "guest"):
+    for expected in (
+        "CPU",
+        "4.5%",
+        "idle",
+        "95.5%",
+        "ctx_sw",
+        "6.7K",
+        "user",
+        "3.8%",
+        "inter",
+        "3.0K",
+        "system",
+        "0.7%",
+        "sw_int",
+        "1.8K",
+        "iowait",
+        "steal",
+        "guest",
+    ):
         assert expected in text, f"expected {expected!r} in the CPU plugin text, got {text!r}"
 
 

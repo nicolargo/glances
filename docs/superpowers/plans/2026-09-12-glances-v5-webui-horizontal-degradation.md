@@ -1187,10 +1187,20 @@ def shoot(theme: str, width: int) -> None:
         time.sleep(12)
         png = os.path.join(OUT, f"deg-{theme}-{width}.png")
         subprocess.run(
-            ["google-chrome", "--headless=new", "--disable-gpu", "--no-first-run", "--hide-scrollbars",
-             f"--screenshot={png}", f"--window-size={width},900", "--virtual-time-budget=8000",
-             f"http://127.0.0.1:{PORT}/"],
-            check=True, timeout=120, capture_output=True,
+            [
+                "google-chrome",
+                "--headless=new",
+                "--disable-gpu",
+                "--no-first-run",
+                "--hide-scrollbars",
+                f"--screenshot={png}",
+                f"--window-size={width},900",
+                "--virtual-time-budget=8000",
+                f"http://127.0.0.1:{PORT}/",
+            ],
+            check=True,
+            timeout=120,
+            capture_output=True,
         )
         print(png)
     finally:

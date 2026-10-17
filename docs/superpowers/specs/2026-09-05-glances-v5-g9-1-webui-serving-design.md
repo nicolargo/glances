@@ -87,6 +87,7 @@ alive, with the plugin views arriving over G9-2+.
 ```python
 app.mount("/static", StaticFiles(directory=STATIC_PATH), name="static")
 
+
 @app.get("/", response_class=FileResponse)
 async def index() -> FileResponse: ...
 ```

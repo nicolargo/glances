@@ -55,22 +55,22 @@ This group gives the WebUI the TUI's behaviour:
 `glances/outputs/glances_curses_v5.py`:
 
 ```python
-_DEGRADE_STEPS = [                    # TOP row, lines 62-70
-    ("mem_cols", 1),                  # (a) hide MEM 2nd column
-    ("cpu_cols", 2),                  # (b) hide CPU 3rd column
-    ("cpu_cols", 1),                  # (c) hide CPU 2nd column
-    ("quicklook_freq_only", True),    # (d) "Frequency" header + shrink quicklook
-    ("hide_quicklook", True),         # (e) hide quicklook block
-    ("hide_memswap", True),           # (f) hide swap block
-    ("hide_gpu", True),               # (g) hide gpu block (last resort)
+_DEGRADE_STEPS = [  # TOP row, lines 62-70
+    ("mem_cols", 1),  # (a) hide MEM 2nd column
+    ("cpu_cols", 2),  # (b) hide CPU 3rd column
+    ("cpu_cols", 1),  # (c) hide CPU 2nd column
+    ("quicklook_freq_only", True),  # (d) "Frequency" header + shrink quicklook
+    ("hide_quicklook", True),  # (e) hide quicklook block
+    ("hide_memswap", True),  # (f) hide swap block
+    ("hide_gpu", True),  # (g) hide gpu block (last resort)
 ]
-_HEADER_DEGRADE_STEPS = [             # header, lines 87-94
-    ("hide_cloud", True),             # (0) opt-in block, first to go
-    ("hide_ip_location", True),       # (1) drop the ip geolocation string
-    ("hide_os_info", True),           # (2) drop the system OS/kernel string
-    ("hide_now", True),               # (3)
-    ("hide_ip", True),                # (4)
-    ("hide_uptime", True),            # (5) last resort
+_HEADER_DEGRADE_STEPS = [  # header, lines 87-94
+    ("hide_cloud", True),  # (0) opt-in block, first to go
+    ("hide_ip_location", True),  # (1) drop the ip geolocation string
+    ("hide_os_info", True),  # (2) drop the system OS/kernel string
+    ("hide_now", True),  # (3)
+    ("hide_ip", True),  # (4)
+    ("hide_uptime", True),  # (5) last resort
 ]
 ```
 

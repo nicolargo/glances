@@ -121,8 +121,7 @@ def test_no_colour_literal_outside_the_token_file(path: Path):
         if _COLOUR.search(line)
     ]
     assert not hits, (
-        "Colour literals must live in css/v5.css so a user theme can override "
-        "them (spec 5.1 R1):\n" + "\n".join(hits)
+        "Colour literals must live in css/v5.css so a user theme can override them (spec 5.1 R1):\n" + "\n".join(hits)
     )
 
 
