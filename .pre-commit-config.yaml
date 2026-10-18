@@ -68,6 +68,8 @@ repos:
         name: "📁 filesystem/🔗 symlink · Detect broken symlinks"
       - id: check-merge-conflict
         name: "🌳 git · Detect conflict markers"
+        # RST title underlines of exactly 7 "=" look like a conflict marker
+        exclude: ^docs/.*\.rst$
       - id: forbid-new-submodules
         name: "🌳 git · Prevent submodule creation"
       # - id: no-commit-to-branch

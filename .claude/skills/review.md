@@ -28,9 +28,10 @@ Review the current changes (staged or unstaged) against Glances project guidelin
 - [ ] Default behaviour unchanged (or breaking change explicitly documented)
 - [ ] Cross-platform considerations (Linux/macOS/Windows)
 - [ ] Configuration keys documented in `conf/glances.conf`
+- [ ] PR targets the right branch: `develop` for Glances v5, `support/glancesv4` for a v4 bugfix or security fix
 
 ### Style
-- [ ] Code passes `make format && make lint`
+- [ ] Code passes `make pre-commit` (supersedes `make format && make lint`)
 - [ ] No unnecessary comments, docstrings, or type annotations on unchanged code
 - [ ] Plugin/export conventions followed (class naming, auto-discovery, fields_description)
 

@@ -1,366 +1,379 @@
-#!/usr/bin/env python
 #
 # Glances - An eye on your system
 #
-# SPDX-FileCopyrightText: 2024 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2026 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
-"""Tests for the FileSystem plugin."""
+"""Glances v5 — unit tests for the `fs` plugin (collection)."""
 
-import json
-from types import SimpleNamespace
+from __future__ import annotations
+
+from collections import namedtuple
+from unittest.mock import patch
 
 import pytest
 
+from glances.config import GlancesConfig
+from glances.plugins.fs.model import PluginModel
+from glances.stats_store import StatsStore
+
+# psutil stubs ------------------------------------------------------
+
+Partition = namedtuple("sdiskpart", ["device", "mountpoint", "fstype", "opts"])
+DiskUsage = namedtuple("sdiskusage", ["total", "used", "free", "percent"])
+
+
+def _root(percent: float = 25.0) -> tuple[Partition, DiskUsage]:
+    total = 500 * 1024**3
+    used = int(total * percent / 100.0)
+    return Partition("/dev/sda1", "/", "ext4", "rw,relatime"), DiskUsage(total, used, total - used, percent)
+
+
+def _home(percent: float = 50.0) -> tuple[Partition, DiskUsage]:
+    total = 1 * 1024**4
+    used = int(total * percent / 100.0)
+    return Partition("/dev/sda2", "/home", "ext4", "rw,relatime"), DiskUsage(total, used, total - used, percent)
+
+
+# ----------------------------------------------------------- fixtures
+
 
 @pytest.fixture
-def fs_plugin(glances_stats):
-    """Return the FileSystem plugin instance from glances_stats."""
-    return glances_stats.get_plugin('fs')
-
-
-class TestFsPluginBasics:
-    """Test basic FileSystem plugin functionality."""
-
-    def test_plugin_name(self, fs_plugin):
-        """Test plugin name is correctly set."""
-        assert fs_plugin.plugin_name == 'fs'
-
-    def test_plugin_is_enabled(self, fs_plugin):
-        """Test that the plugin is enabled by default."""
-        assert fs_plugin.is_enabled() is True
-
-    def test_display_curse_enabled(self, fs_plugin):
-        """Test that curse display is enabled."""
-        assert fs_plugin.display_curse is True
-
-    def test_get_key_returns_mnt_point(self, fs_plugin):
-        """Test that get_key returns mnt_point."""
-        assert fs_plugin.get_key() == 'mnt_point'
-
-    def test_history_items_defined(self, fs_plugin):
-        """Test that history items are properly defined."""
-        items = fs_plugin.get_items_history_list()
-        assert items is not None
-        item_names = [item['name'] for item in items]
-        assert 'percent' in item_names
-
-
-class TestFsPluginUpdate:
-    """Test FileSystem plugin update functionality."""
-
-    def test_update_returns_list(self, fs_plugin):
-        """Test that update returns a list."""
-        fs_plugin.update()
-        stats = fs_plugin.get_raw()
-        assert isinstance(stats, list)
-
-    def test_each_fs_has_mnt_point(self, fs_plugin):
-        """Test that each filesystem entry has a mount point."""
-        fs_plugin.update()
-        stats = fs_plugin.get_raw()
-        for fs in stats:
-            assert 'mnt_point' in fs
-
-    def test_each_fs_has_device_name(self, fs_plugin):
-        """Test that each filesystem entry has a device name."""
-        fs_plugin.update()
-        stats = fs_plugin.get_raw()
-        for fs in stats:
-            assert 'device_name' in fs
-
-    def test_size_used_free_present(self, fs_plugin):
-        """Test that size, used, and free are present."""
-        fs_plugin.update()
-        stats = fs_plugin.get_raw()
-        for fs in stats:
-            assert 'size' in fs
-            assert 'used' in fs
-            assert 'free' in fs
-
-    def test_percent_present(self, fs_plugin):
-        """Test that percent is present."""
-        fs_plugin.update()
-        stats = fs_plugin.get_raw()
-        for fs in stats:
-            assert 'percent' in fs
-
-
-class TestFsPluginValues:
-    """Test FileSystem plugin values validity."""
-
-    def test_size_values_positive(self, fs_plugin):
-        """Test that size values are positive."""
-        fs_plugin.update()
-        stats = fs_plugin.get_raw()
-        for fs in stats:
-            if fs['size'] is not None:
-                assert fs['size'] > 0
-
-    def test_used_values_non_negative(self, fs_plugin):
-        """Test that used values are non-negative."""
-        fs_plugin.update()
-        stats = fs_plugin.get_raw()
-        for fs in stats:
-            if fs['used'] is not None:
-                assert fs['used'] >= 0
-
-    def test_free_values_non_negative(self, fs_plugin):
-        """Test that free values are non-negative."""
-        fs_plugin.update()
-        stats = fs_plugin.get_raw()
-        for fs in stats:
-            if fs['free'] is not None:
-                assert fs['free'] >= 0
-
-    def test_percent_in_valid_range(self, fs_plugin):
-        """Test that percent is within valid range."""
-        fs_plugin.update()
-        stats = fs_plugin.get_raw()
-        for fs in stats:
-            if fs['percent'] is not None:
-                assert 0 <= fs['percent'] <= 100
-
-    def test_used_plus_free_equals_size(self, fs_plugin):
-        """Test that used + free approximately equals size."""
-        fs_plugin.update()
-        stats = fs_plugin.get_raw()
-        for fs in stats:
-            if all(fs.get(k) is not None for k in ['used', 'free', 'size']):
-                calculated = fs['used'] + fs['free']
-                # Allow some tolerance due to reserved space
-                assert calculated <= fs['size'] * 1.1
-
-
-class TestFsPluginFsType:
-    """Test FileSystem plugin filesystem type information."""
-
-    def test_fs_type_present(self, fs_plugin):
-        """Test that fs_type is present."""
-        fs_plugin.update()
-        stats = fs_plugin.get_raw()
-        for fs in stats:
-            assert 'fs_type' in fs
-
-    def test_options_present(self, fs_plugin):
-        """Test that options field is present."""
-        fs_plugin.update()
-        stats = fs_plugin.get_raw()
-        for fs in stats:
-            assert 'options' in fs
-
-
-class TestFsPluginViews:
-    """Test FileSystem plugin views functionality."""
-
-    def test_update_views_creates_views(self, fs_plugin):
-        """Test that update_views creates views dictionary."""
-        fs_plugin.update()
-        fs_plugin.update_views()
-        views = fs_plugin.get_views()
-        assert isinstance(views, dict)
-
-    def test_views_keyed_by_mnt_point(self, fs_plugin):
-        """Test that views are keyed by mount point."""
-        fs_plugin.update()
-        fs_plugin.update_views()
-        views = fs_plugin.get_views()
-        stats = fs_plugin.get_raw()
-        for fs in stats:
-            if fs['mnt_point'] in views:
-                assert isinstance(views[fs['mnt_point']], dict)
-
-    def test_views_have_used_decoration(self, fs_plugin):
-        """Test that views have decoration for used field."""
-        fs_plugin.update()
-        fs_plugin.update_views()
-        views = fs_plugin.get_views()
-        stats = fs_plugin.get_raw()
-        for fs in stats:
-            mnt = fs['mnt_point']
-            if mnt in views and 'used' in views[mnt]:
-                assert 'decoration' in views[mnt]['used']
-
-
-class TestFsPluginJSON:
-    """Test FileSystem plugin JSON serialization."""
-
-    def test_get_stats_returns_json(self, fs_plugin):
-        """Test that get_stats returns valid JSON."""
-        fs_plugin.update()
-        stats_json = fs_plugin.get_stats()
-        parsed = json.loads(stats_json)
-        assert isinstance(parsed, list)
-
-    def test_json_preserves_fs_data(self, fs_plugin):
-        """Test that JSON output preserves filesystem data."""
-        fs_plugin.update()
-        stats_json = fs_plugin.get_stats()
-        parsed = json.loads(stats_json)
-        for fs in parsed:
-            assert 'mnt_point' in fs
-            assert 'device_name' in fs
-
-
-class TestFsPluginHistory:
-    """Test FileSystem plugin history functionality."""
-
-    def test_history_enable(self, fs_plugin):
-        """Test that history can be enabled."""
-        assert fs_plugin.history_enable() is not None
-
-
-class TestFsPluginReset:
-    """Test FileSystem plugin reset functionality."""
-
-    def test_reset_clears_stats(self, fs_plugin):
-        """Test that reset clears stats."""
-        fs_plugin.update()
-        fs_plugin.reset()
-        stats = fs_plugin.get_raw()
-        assert stats == fs_plugin.get_init_value()
-
-    def test_reset_views(self, fs_plugin):
-        """Test that reset_views clears views."""
-        fs_plugin.update()
-        fs_plugin.update_views()
-        fs_plugin.reset_views()
-        assert fs_plugin.get_views() == {}
-
-
-class TestFsPluginFieldsDescription:
-    """Test FileSystem plugin fields description."""
-
-    def test_fields_description_exists(self, fs_plugin):
-        """Test that fields_description is defined."""
-        assert fs_plugin.fields_description is not None
-
-    def test_mandatory_fields_described(self, fs_plugin):
-        """Test that mandatory fields have descriptions."""
-        mandatory_fields = ['device_name', 'mnt_point', 'size', 'used', 'free', 'percent']
-        for field in mandatory_fields:
-            assert field in fs_plugin.fields_description
-
-    def test_byte_fields_have_unit(self, fs_plugin):
-        """Test that byte fields have unit defined."""
-        byte_fields = ['size', 'used', 'free']
-        for field in byte_fields:
-            if field in fs_plugin.fields_description:
-                assert 'unit' in fs_plugin.fields_description[field]
-
-
-class TestFsPluginMsgCurse:
-    """Test FileSystem plugin curse message generation."""
-
-    def test_msg_curse_returns_list(self, fs_plugin):
-        """Test that msg_curse returns a list."""
-        fs_plugin.update()
-        fs_plugin.update_views()
-        msg = fs_plugin.msg_curse(max_width=80)
-        assert isinstance(msg, list)
-
-    def test_msg_curse_empty_without_max_width(self, fs_plugin):
-        """Test that msg_curse returns empty without max_width."""
-        fs_plugin.update()
-        fs_plugin.update_views()
-        msg = fs_plugin.msg_curse()
-        assert isinstance(msg, list)
-
-    def test_msg_curse_with_max_width(self, fs_plugin):
-        """Test that msg_curse works with max_width."""
-        fs_plugin.update()
-        fs_plugin.update_views()
-        msg = fs_plugin.msg_curse(max_width=80)
-        assert isinstance(msg, list)
-
-
-class TestFsPluginExport:
-    """Test FileSystem plugin export functionality."""
-
-    def test_get_export_returns_list(self, fs_plugin):
-        """Test that get_export returns a list."""
-        fs_plugin.update()
-        export = fs_plugin.get_export()
-        assert isinstance(export, list)
-
-    def test_export_equals_raw(self, fs_plugin):
-        """Test that export equals raw stats by default."""
-        fs_plugin.update()
-        assert fs_plugin.get_export() == fs_plugin.get_raw()
-
-
-class TestFsPluginAlias:
-    """Test FileSystem plugin alias functionality."""
-
-    def test_alias_field_may_be_present(self, fs_plugin):
-        """Test that alias field may be present for filesystems."""
-        fs_plugin.update()
-        stats = fs_plugin.get_raw()
-        for fs in stats:
-            if 'alias' in fs:
-                assert fs['alias'] is None or isinstance(fs['alias'], str)
-
-    def test_alias_matches_mixed_case_mount_point(self, fs_plugin, monkeypatch):
-        """Test that aliases match mount points even when the path contains uppercase characters."""
-        partition = SimpleNamespace(device='/dev/disk7s1', mountpoint='/Volumes/SSD', fstype='apfs', opts='rw')
-        usage = SimpleNamespace(total=100, used=20, free=80, percent=20.0)
-
-        monkeypatch.setattr(fs_plugin, 'get_disk_partitions', lambda fetch_all=False: [partition])
-        monkeypatch.setattr('glances.plugins.fs.get_disk_usage', lambda fs: usage)
-
-        fs_plugin._limits['fs_alias'] = ['/Volumes/SSD:SSD']
-        fs_plugin.alias = fs_plugin.read_alias()
-
-        stats = fs_plugin.update_local()
-
-        assert stats[0]['alias'] == 'SSD'
-
-
-class TestFsPluginDiskPartitions:
-    """Test FileSystem plugin disk partitions method."""
-
-    def test_get_disk_partitions_returns_list(self, fs_plugin):
-        """Test that get_disk_partitions returns a list-like object."""
-        partitions = fs_plugin.get_disk_partitions()
-        assert hasattr(partitions, '__iter__')
-
-    def test_get_disk_partitions_fetch_all(self, fs_plugin):
-        """Test get_disk_partitions with fetch_all=True."""
-        partitions = fs_plugin.get_disk_partitions(fetch_all=True)
-        assert hasattr(partitions, '__iter__')
-
-    def test_physical_partitions_subset_of_all(self, fs_plugin):
-        """Test that physical partitions are a subset of all partitions."""
-        physical = {p.mountpoint for p in fs_plugin.get_disk_partitions(fetch_all=False)}
-        all_partitions = {p.mountpoint for p in fs_plugin.get_disk_partitions(fetch_all=True)}
-        assert physical.issubset(all_partitions)
-
-
-class TestFsPluginReadOnlyHandling:
-    """Test FileSystem plugin read-only mount handling."""
-
-    def test_views_skip_ro_mounts_for_threshold(self, fs_plugin):
-        """Test that views handle read-only mounts appropriately."""
-        fs_plugin.update()
-        fs_plugin.update_views()
-        stats = fs_plugin.get_raw()
-        fs_plugin.get_views()
-
-        # Read-only mounts should still have views, but decoration handling differs
-        for fs in stats:
-            if 'ro' in fs.get('options', '').split(','):
-                # The mount point should still be in views
-                # (decoration logic is handled differently for ro mounts)
-                pass
-
-
-class TestFsPluginConfiguration:
-    """Test FileSystem plugin configuration."""
-
-    def test_can_get_conf_value(self, fs_plugin):
-        """Test that configuration values can be retrieved."""
-        # 'allow' is a valid config option for fs plugin
-        allowed = fs_plugin.get_conf_value('allow')
-        assert isinstance(allowed, list)
+def store() -> StatsStore:
+    return StatsStore()
+
+
+@pytest.fixture
+def config(tmp_path, monkeypatch) -> GlancesConfig:
+    monkeypatch.setattr(GlancesConfig, "SYSTEM_CONFIG_PATH", tmp_path / "etc" / "glances.conf")
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "xdg"))
+    return GlancesConfig()
+
+
+def _config_with(tmp_path, monkeypatch, body: str) -> GlancesConfig:
+    monkeypatch.setattr(GlancesConfig, "SYSTEM_CONFIG_PATH", tmp_path / "etc" / "glances.conf")
+    xdg = tmp_path / "xdg"
+    cfg_dir = xdg / "glances"
+    cfg_dir.mkdir(parents=True)
+    (cfg_dir / "glances.conf").write_text(body)
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(xdg))
+    return GlancesConfig()
+
+
+def _patch_psutil(parts_and_usage):
+    """Build patches for psutil.disk_partitions + disk_usage from a list of
+    (Partition, DiskUsage) pairs. Returns an ExitStack-like context."""
+    from contextlib import ExitStack
+
+    stack = ExitStack()
+    partitions = [p for p, _ in parts_and_usage]
+    usages = {p.mountpoint: u for p, u in parts_and_usage}
+
+    stack.enter_context(patch("glances.plugins.fs.model.psutil.disk_partitions", return_value=partitions))
+    stack.enter_context(patch("glances.plugins.fs.model.psutil.disk_usage", side_effect=lambda mp: usages[mp]))
+    return stack
+
+
+# ---------------------------------------------------------- contract
+
+
+def test_plugin_identity(store, config):
+    plugin = PluginModel(store, config)
+    assert plugin.plugin_name == "fs"
+    assert plugin.IS_COLLECTION is True
+
+
+def test_mnt_point_is_primary_key(store, config):
+    fields = PluginModel(store, config)._fields
+    assert fields["mnt_point"].get("primary_key") is True
+
+
+def test_percent_is_watched_but_not_prominent(store, config):
+    """fs.percent colours the Used cell when an alert fires but must NOT
+    reverse-video it — the framework defaults missing ``prominent`` to
+    True, so this requires an explicit False in the schema."""
+    schema = PluginModel(store, config)._fields["percent"]
+    assert schema["watched"] is True
+    assert schema["prominent"] is False
+    assert schema["unit"] == "percent"
+
+
+def test_percent_default_thresholds_are_70_80_90(store, config):
+    """Looser ladder than ``mem``/``memswap`` — filesystems often sit at
+    60-70% on healthy hosts."""
+    schema = PluginModel(store, config)._fields["percent"]
+    assert schema["default_thresholds"] == {"careful": 70.0, "warning": 80.0, "critical": 90.0}
+
+
+def test_size_used_free_are_bytes_not_watched(store, config):
+    fields = PluginModel(store, config)._fields
+    for name in ("size", "used", "free"):
+        assert fields[name]["unit"] == "bytes", name
+        assert fields[name].get("watched", False) is False, name
+
+
+def test_fs_type_and_options_are_internal(store, config):
+    """fs_type and options are kept in the payload for export but never
+    surfaced in the UI."""
+    fields = PluginModel(store, config)._fields
+    assert fields["fs_type"].get("internal") is True
+    assert fields["options"].get("internal") is True
+
+
+# ---------------------------------------------------------- update pipeline
+
+
+async def test_update_yields_one_entry_per_partition(store, config):
+    plugin = PluginModel(store, config)
+    with _patch_psutil([_root(), _home()]):
+        await plugin.update()
+    payload = store.get("fs")
+    items = payload["data"]
+    mnts = sorted(i["mnt_point"] for i in items)
+    assert mnts == ["/", "/home"]
+
+
+async def test_update_carries_size_used_free_percent(store, config):
+    plugin = PluginModel(store, config)
+    with _patch_psutil([_root(percent=30.0)]):
+        await plugin.update()
+    root = next(i for i in store.get("fs")["data"] if i["mnt_point"] == "/")
+    assert root["percent"] == 30.0
+    assert root["size"] == 500 * 1024**3
+    assert root["used"] > 0
+    assert root["free"] > 0
+    assert root["device_name"] == "/dev/sda1"
+    assert root["fs_type"] == "ext4"
+
+
+async def test_allow_off_by_default_does_not_call_fetch_all(store, config):
+    """`[fs] allow` absent — the built-in `disk_partitions(all=False)` list
+    is used as-is, and the extra `all=True` call is never made (v4 parity,
+    `fs/__init__.py:162-163`: "Avoid Psutil call unless mounts need to be
+    allowed")."""
+    plugin = PluginModel(store, config)
+    root, root_usage = _root()
+
+    def fake_disk_partitions(all=False):
+        assert all is False, "disk_partitions(all=True) must not be called when [fs] allow is unset"
+        return [root]
+
+    with patch("glances.plugins.fs.model.psutil.disk_partitions", side_effect=fake_disk_partitions):
+        with patch("glances.plugins.fs.model.psutil.disk_usage", return_value=root_usage):
+            await plugin.update()
+
+    mnts = [i["mnt_point"] for i in store.get("fs")["data"]]
+    assert mnts == ["/"]
+
+
+async def test_allow_adds_extra_fs_types_from_fetch_all(tmp_path, monkeypatch, store):
+    """`[fs] allow=tmpfs` merges logical mounts of that type from
+    `disk_partitions(all=True)` on top of the built-in list (issue #448)."""
+    config = _config_with(tmp_path, monkeypatch, "[fs]\nallow=tmpfs\n")
+    plugin = PluginModel(store, config)
+
+    root, root_usage = _root()
+    shm = Partition("shm", "/dev/shm", "tmpfs", "rw,nosuid")
+    shm_usage = DiskUsage(1024**3, 0, 1024**3, 0.0)
+    ext4_extra = Partition("/dev/sdb1", "/mnt/extra", "ext4", "rw")  # not tmpfs -> must NOT be added
+
+    def fake_disk_partitions(all=False):
+        return [root, shm, ext4_extra] if all else [root]
+
+    usages = {"/": root_usage, "/dev/shm": shm_usage}
+
+    with patch("glances.plugins.fs.model.psutil.disk_partitions", side_effect=fake_disk_partitions):
+        with patch("glances.plugins.fs.model.psutil.disk_usage", side_effect=lambda mp: usages[mp]):
+            await plugin.update()
+
+    mnts = sorted(i["mnt_point"] for i in store.get("fs")["data"])
+    assert mnts == ["/", "/dev/shm"]
+
+
+async def test_allow_does_not_duplicate_already_tracked_mount(tmp_path, monkeypatch, store):
+    """A mountpoint already returned by `disk_partitions(all=False)` is not
+    added a second time even if it also matches `allow` (issue #2299)."""
+    config = _config_with(tmp_path, monkeypatch, "[fs]\nallow=ext4\n")
+    plugin = PluginModel(store, config)
+
+    root, root_usage = _root()
+
+    def fake_disk_partitions(all=False):
+        return [root]  # same list either way -> root.fstype ('ext4') matches allow
+
+    with patch("glances.plugins.fs.model.psutil.disk_partitions", side_effect=fake_disk_partitions):
+        with patch("glances.plugins.fs.model.psutil.disk_usage", return_value=root_usage):
+            await plugin.update()
+
+    mnts = [i["mnt_point"] for i in store.get("fs")["data"]]
+    assert mnts == ["/"]
+
+
+async def test_update_skips_partition_when_disk_usage_raises(store, config):
+    """A disk_usage() OSError on one partition (e.g. lazy-unmount) must
+    not propagate — the partition is dropped from the payload."""
+    plugin = PluginModel(store, config)
+
+    parts = [_root()[0], _home()[0]]
+    usages = {"/": _root()[1]}  # /home raises
+
+    def fake_usage(mp):
+        if mp == "/home":
+            raise OSError("ejected")
+        return usages[mp]
+
+    with patch("glances.plugins.fs.model.psutil.disk_partitions", return_value=parts):
+        with patch("glances.plugins.fs.model.psutil.disk_usage", side_effect=fake_usage):
+            await plugin.update()
+
+    mnts = [i["mnt_point"] for i in store.get("fs")["data"]]
+    assert "/" in mnts
+    assert "/home" not in mnts
+
+
+async def test_update_handles_permission_error_globally(store, config):
+    """psutil.disk_partitions() can raise PermissionError on locked-down
+    hosts — model returns an empty list, not a crash."""
+    plugin = PluginModel(store, config)
+    with patch("glances.plugins.fs.model.psutil.disk_partitions", side_effect=PermissionError("denied")):
+        await plugin.update()
+    payload = store.get("fs")
+    assert payload["data"] == []
+
+
+# ---------------------------------------------------------- _levels
+
+
+async def test_levels_indexed_by_mnt_point(store, config):
+    plugin = PluginModel(store, config)
+    with _patch_psutil([_root(percent=85.0), _home(percent=30.0)]):
+        await plugin.update()
+    levels = store.get("fs")["_levels"]
+    # New ladder is 70/80/90 → 85% sits in warning, 30% in ok.
+    assert levels["/"]["percent"]["level"] == "warning"
+    # prominent: False per schema — the cell is coloured, never reversed.
+    assert levels["/"]["percent"]["prominent"] is False
+    assert levels["/home"]["percent"]["level"] == "ok"
+
+
+async def test_levels_skip_read_only_mounts(store, config):
+    """v4 parity (`fs/__init__.py:270-271`, issue #3143): a mount whose
+    options carry `ro` (squashfs snaps, ISO) is full by design -- no level,
+    so no colour and no alert. `rw` mounts and an `ro`-prefixed option
+    (`rootcontext=`) still get one."""
+    total = 100 * 1024**2
+    full = DiskUsage(total, total, 0, 100.0)
+    plugin = PluginModel(store, config)
+    with _patch_psutil(
+        [
+            (Partition("/dev/loop0", "/snap/core/1", "squashfs", "ro,nodev,relatime"), full),
+            (Partition("/dev/sr0", "/media/iso", "iso9660", "nosuid,ro"), full),
+            (Partition("/dev/sdb1", "/data", "ext4", "rw,rootcontext=x"), full),
+        ]
+    ):
+        await plugin.update()
+    levels = store.get("fs")["_levels"]
+    assert "/snap/core/1" not in levels
+    assert "/media/iso" not in levels
+    assert levels["/data"]["percent"]["level"] == "critical"
+
+
+# ---------------------------------------------------------- alias (design §5.5)
+
+
+async def test_alias_published_for_matching_mountpoint(tmp_path, monkeypatch, store):
+    config = _config_with(tmp_path, monkeypatch, "[fs]\nalias=/:Root\n")
+    plugin = PluginModel(store, config)
+    with _patch_psutil([_root(), _home()]):
+        await plugin.update()
+    data = {i["mnt_point"]: i for i in store.get("fs")["data"]}
+    assert data["/"]["alias"] == "Root"
+    assert "alias" not in data["/home"]
+    assert data["/"]["mnt_point"] == "/"  # primary key untouched
+
+
+async def test_alias_matches_mixed_case_mount_point(tmp_path, monkeypatch, store):
+    config = _config_with(tmp_path, monkeypatch, "[fs]\nalias=/Volumes/SSD:SSD\n")
+    plugin = PluginModel(store, config)
+    ssd = Partition("/dev/disk2s1", "/Volumes/SSD", "apfs", "rw"), DiskUsage(100, 50, 50, 50.0)
+    with _patch_psutil([ssd]):
+        await plugin.update()
+    item = store.get("fs")["data"][0]
+    assert item["alias"] == "SSD"
+    assert item["mnt_point"] == "/Volumes/SSD"
+
+
+# ---------------------------------------------------------- free_space (design §5.4)
+
+
+async def test_free_space_off_by_default(store, config):
+    """`[fs] free_space` absent -> metadata flag stays False (v4 default,
+    `main.py:643`)."""
+    plugin = PluginModel(store, config)
+    with _patch_psutil([_root()]):
+        await plugin.update()
+    assert store.get("fs")["free_space"] is False
+
+
+async def test_free_space_reads_config_key(tmp_path, monkeypatch, store):
+    """`[fs] free_space=True` (v4 `main.py:832`) publishes the flag in the
+    payload — the renderer has no other way to reach the config."""
+    config = _config_with(tmp_path, monkeypatch, "[fs]\nfree_space=True\n")
+    plugin = PluginModel(store, config)
+    with _patch_psutil([_root()]):
+        await plugin.update()
+    assert store.get("fs")["free_space"] is True
+
+
+# ---------------------------------------------------------- export
+
+
+async def test_get_export_strips_levels_but_keeps_metadata(store, config):
+    """``get_export`` filters ``_*`` keys and ``exportable=False`` fields,
+    not ``internal=True``. fs_type / options stay exportable — useful for
+    InfluxDB / Prometheus / ... downstream consumers."""
+    plugin = PluginModel(store, config)
+    with _patch_psutil([_root()]):
+        await plugin.update()
+    exported = plugin.get_export()
+    assert isinstance(exported, list)
+    item = exported[0]
+    assert "_levels" not in item
+    assert "time_since_update" not in item
+    # internal flag affects UI only — these fields ARE exported.
+    assert item["fs_type"] == "ext4"
+    assert "options" in item
+    # user-facing fields present
+    assert item["mnt_point"] == "/"
+    assert item["percent"] == 25.0
+
+
+# ---------------------------------------------------------- show / hide on the device name
+# v4 `is_display_any(fs.mountpoint, fs.device)`; docs/aoa/fs.rst documents
+# `show=/dev/sdb.*`. The generic collection filter only matched mnt_point.
+
+
+async def test_show_matches_the_device_name(tmp_path, monkeypatch, store):
+    config = _config_with(tmp_path, monkeypatch, "[fs]\nshow=/dev/sda1\n")
+    plugin = PluginModel(store, config)
+    with _patch_psutil([_root(), _home()]):
+        await plugin.update()
+    assert [item["mnt_point"] for item in store.get("fs")["data"]] == ["/"]
+
+
+async def test_hide_matches_the_device_name(tmp_path, monkeypatch, store):
+    config = _config_with(tmp_path, monkeypatch, "[fs]\nhide=/dev/sda2\n")
+    plugin = PluginModel(store, config)
+    with _patch_psutil([_root(), _home()]):
+        await plugin.update()
+    assert [item["mnt_point"] for item in store.get("fs")["data"]] == ["/"]
+
+
+async def test_hide_still_matches_the_mount_point(tmp_path, monkeypatch, store):
+    config = _config_with(tmp_path, monkeypatch, "[fs]\nhide=/home\n")
+    plugin = PluginModel(store, config)
+    with _patch_psutil([_root(), _home()]):
+        await plugin.update()
+    assert [item["mnt_point"] for item in store.get("fs")["data"]] == ["/"]

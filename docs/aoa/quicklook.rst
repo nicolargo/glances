@@ -14,14 +14,8 @@ If the per CPU mode is on (by clicking the ``1`` key):
 
 .. image:: ../_static/quicklook-percpu.png
 
-In the Curses/terminal interface, it is also possible to switch from bar to
-sparkline using 'S' hot key or --sparkline command line option (need the
-sparklines Python lib on your system). Please be aware that sparklines use
-the Glances history and will not be available if the history is disabled
-from the command line. For the moment sparkline is not available in
-client/server mode (see issue ).
-
-.. image:: ../_static/sparkline.png
+In the terminal interface, click on ``4`` to display the quicklook plugin
+in full width (the other plugins of the top row are hidden).
 
 .. note::
     Limit values can be overwritten in the configuration file under

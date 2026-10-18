@@ -71,7 +71,7 @@ line interface. It is easy to install and use and can be customized to show only
 the information that you are interested in.
 
 In client/server mode, remote monitoring could be done via terminal,
-Web interface or API (XML-RPC and RESTful).
+Web interface or RESTful API.
 Stats can also be exported to files or external time/value databases, CSV or direct
 output to STDOUT.
 
@@ -93,26 +93,50 @@ For the standalone (TUI) mode, just run:
 
 .. image:: ./docs/_static/glances-summary.png
 
-For the Web server mode (WebUI), run:
+For the Web server mode (REST API and WebUI), run:
 
 .. code-block:: console
 
-    $ glances -w
+    $ glances -s
 
-and enter the URL ``http://<ip>:61208`` in your favorite web browser.
+(``-w`` is an alias of ``-s``) and enter the URL ``http://localhost:61208`` in your favorite web browser.
 
-In this mode, a HTTP/Restful API is exposed, see document `RestfulApi`_ for more details.
+The server listens on ``127.0.0.1`` by default. To monitor the machine from another one,
+listen on all interfaces with ``-B 0.0.0.0`` (or ``bind_address`` in the ``[outputs]``
+section of the configuration file) and enter the URL ``http://<ip>:61208``.
+
+In this mode, a HTTP/Restful API is exposed under ``/api/5``, see document `RestfulApi`_ for more details.
+Use ``--disable-webui`` to serve the API without the WebUI.
 
 .. image:: ./docs/_static/screenshot-web.png
+
+The server is not protected by default. To protect it with a password, generate a
+password hash:
+
+.. code-block:: console
+
+    $ glances --set-password
+
+and paste the printed value into the ``password`` key of the ``[outputs]`` section of
+your ``glances.conf`` file.
 
 To also expose a `MCP (Model Context Protocol)`_ server (for AI assistants), add ``--enable-mcp``:
 
 .. code-block:: console
 
-    $ glances -w --enable-mcp
+    $ glances -s --enable-mcp
 
 The MCP endpoint (SSE transport) is then available at ``http://<ip>:61208/mcp/sse``.
 See the `McpApi`_ documentation for client configuration and usage.
+
+To monitor a remote Glances server from your terminal (client mode), run:
+
+.. code-block:: console
+
+    $ glances -c <ip>
+
+The client reads the stats from the server REST API (use ``--password`` to be prompted
+for the server password).
 
 You can also detect and display all Glances servers available on your
 network (or defined in the configuration file) in TUI:
@@ -121,11 +145,11 @@ network (or defined in the configuration file) in TUI:
 
     $ glances --browser
 
-or WebUI:
+or WebUI (at the URL ``http://<ip>:61208/browser``):
 
 .. code-block:: console
 
-    $ glances -w --browser
+    $ glances -s --browser
 
 It possible to display raw stats on stdout:
 
@@ -134,10 +158,10 @@ It possible to display raw stats on stdout:
     $ glances --stdout cpu.user,mem.used,load
     cpu.user: 30.7
     mem.used: 3278204928
-    load: {'cpucore': 4, 'min1': 0.21, 'min5': 0.4, 'min15': 0.27}
+    load: {'min1': 0.21, 'min5': 0.4, 'min15': 0.27, 'cpucore': 4}
     cpu.user: 3.4
     mem.used: 3275251712
-    load: {'cpucore': 4, 'min1': 0.19, 'min5': 0.39, 'min15': 0.27}
+    load: {'min1': 0.19, 'min5': 0.39, 'min15': 0.27, 'cpucore': 4}
     ...
 
 or in a CSV format thanks to the stdout-csv option:
@@ -145,19 +169,24 @@ or in a CSV format thanks to the stdout-csv option:
 .. code-block:: console
 
     $ glances --stdout-csv now,cpu.user,mem.used,load
-    now,cpu.user,mem.used,load.cpucore,load.min1,load.min5,load.min15
-    2018-12-08 22:04:20 CEST,7.3,5948149760,4,1.04,0.99,1.04
-    2018-12-08 22:04:23 CEST,5.4,5949136896,4,1.04,0.99,1.04
+    now.iso,now.custom,cpu.user,mem.used,load.min1,load.min5,load.min15,load.cpucore
+    2026-10-11T15:12:54+00:00,2026-10-11 15:12:54 UTC,7.3,5948149760,1.04,0.99,1.04,4
+    2026-10-11T15:12:56+00:00,2026-10-11 15:12:56 UTC,5.4,5949136896,1.04,0.99,1.04,4
     ...
 
-or in a JSON format thanks to the stdout-json option (attribute not supported in this mode in order to have a real JSON object in output):
+or in a JSON format thanks to the stdout-json option (one JSON object per refresh, attribute not supported in this mode):
 
 .. code-block:: console
 
     $ glances --stdout-json cpu,mem
-    cpu: {"total": 29.0, "user": 24.7, "nice": 0.0, "system": 3.8, "idle": 71.4, "iowait": 0.0, "irq": 0.0, "softirq": 0.0, "steal": 0.0, "guest": 0.0, "guest_nice": 0.0, "time_since_update": 1, "cpucore": 4, "ctx_switches": 0, "interrupts": 0, "soft_interrupts": 0, "syscalls": 0}
-    mem: {"total": 7837949952, "available": 2919079936, "percent": 62.8, "used": 4918870016, "free": 2919079936, "active": 2841214976, "inactive": 3340550144, "buffers": 546799616, "cached": 3068141568, "shared": 788156416}
+    {"cpu": {"user": 24.7, "system": 3.8, "idle": 71.4, "nice": 0.0, "iowait": 0.0, "irq": 0.0, "steal": 0.0, "guest": 0.0, "total": 29.0, "ctx_switches": 0, "interrupts": 0, "soft_interrupts": 0, "syscalls": 0, "cpucore": 4}, "mem": {"total": 7837949952, "available": 2919079936, "percent": 62.8, "used": 4918870016, "free": 2919079936, "active": 2841214976, "inactive": 3340550144, "buffers": 546799616, "cached": 3068141568, "shared": 788156416, "slab": 158588928}}
     ...
+
+Stats can also be exported without any interface, thanks to the quiet mode:
+
+.. code-block:: console
+
+    $ glances -q --export csv --export-csv-file /tmp/glances.csv
 
 Last but not least, you can use the fetch mode to get a quick look of a machine:
 
@@ -168,9 +197,6 @@ Last but not least, you can use the fetch mode to get a quick look of a machine:
 Results look like this:
 
 .. image:: ./docs/_static/screenshot-fetch.png
-
-For the record, Glances also have a XML-RPC client/server mode, run the following command on the server:
-
 
 Use Glances as a Python library 📚
 ==================================
@@ -197,6 +223,7 @@ use the following code:
      'steal': 0.0,
      'syscalls': 0,
      'system': 5.4,
+     'time_since_update': 2.0016403198242188,
      'total': 7.3,
      'user': 3.0}
     >>> gl.cpu.get("total")
@@ -214,20 +241,18 @@ access them by their name:
     >>> gl.network.keys()
     ['wlp0s20f3', 'veth33b370c', 'veth19c7711']
     >>> gl.network.get("wlp0s20f3")
-    {'alias': None,
-     'bytes_all': 362,
-     'bytes_all_gauge': 9242285709,
-     'bytes_all_rate_per_sec': 1032.0,
-     'bytes_recv': 210,
-     'bytes_recv_gauge': 7420522678,
-     'bytes_recv_rate_per_sec': 599.0,
-     'bytes_sent': 152,
-     'bytes_sent_gauge': 1821763031,
-     'bytes_sent_rate_per_sec': 433.0,
+    {'bytes_recv': 599.0,
+     'bytes_recv_cumul': 7420522678,
+     'bytes_sent': 433.0,
+     'bytes_sent_cumul': 1821763031,
+     'bytes_speed_rate_per_sec': 0.0,
+     'dropped_in': 0.0,
+     'dropped_out': 0.0,
+     'errors_in': 0.0,
+     'errors_out': 0.0,
+     'hidden': False,
      'interface_name': 'wlp0s20f3',
-     'key': 'interface_name',
-     'speed': 0,
-     'time_since_update': 0.3504955768585205}
+     'is_up': True}
 
 For a complete example of how to use Glances as a library, have a look to the `PythonApi`_.
 
@@ -299,13 +324,10 @@ Features list:
 - export: install dependencies for all exports modules
 - gpu: install dependencies for GPU plugin
 - graph: install dependencies for graph export
-- ip: install dependencies for IP public option
 - mcp: install dependencies for the MCP server (AI assistant integration)
 - raid: install dependencies for RAID plugin
 - sensors: install dependencies for sensors plugin
 - smart: install dependencies for smart plugin
-- snmp: install dependencies for SNMP
-- sparklines: install dependencies for sparklines option
 - web: install dependencies for Webserver (WebUI) and Web API
 - wifi: install dependencies for Wifi plugin
 
@@ -363,6 +385,9 @@ The following tags are available:
 - *ubuntu-latest-full* for a full Ubuntu Glances image (latest release) with all dependencies
 - *ubuntu-latest* for a basic Ubuntu Glances (latest release) version with minimal dependencies (FastAPI and Docker)
 - *ubuntu-dev* for a basic Ubuntu Glances image (based on development branch) with all dependencies (Warning: may be instable)
+- *<version>* and *<version>-full* (for example *5.0.0b1-full*), and their *ubuntu-* variants, for a given release
+
+A pre-release (beta or release candidate) is only published under its version tags: it never moves the *latest* tags.
 
 Run last version of Glances container in *console mode*:
 
@@ -371,6 +396,8 @@ Run last version of Glances container in *console mode*:
     docker run --rm -e TZ="${TZ}" -v /var/run/docker.sock:/var/run/docker.sock:ro -v /run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock:ro --pid host --network host -it nicolargo/glances:latest-full
 
 By default, the /etc/glances/glances.conf file is used (based on docker-compose/glances.conf).
+This file sets ``bind_address=0.0.0.0`` in the ``[outputs]`` section, so that the Web server mode
+is reachable from outside the container.
 
 Additionally, if you want to use your own glances.conf file, you can
 create your own Dockerfile:
@@ -391,11 +418,14 @@ variable setting parameters for the glances startup command):
 
 Where $HOME/.config/glances/glances.conf is a local directory containing your glances.conf file.
 
+With ``-C``, only the given file is read: set ``bind_address=0.0.0.0`` in its ``[outputs]`` section
+(or add ``-B 0.0.0.0`` to ``GLANCES_OPT``) to use the Web server mode.
+
 Run the container in *Web server mode* (and MCP server):
 
 .. code-block:: console
 
-    docker run -d --restart="always" -p 61208-61209:61208-61209 -e TZ="${TZ}" -e GLANCES_OPT="-w --enable-mcp" -v /var/run/docker.sock:/var/run/docker.sock:ro -v /run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock:ro --pid host nicolargo/glances:latest-full
+    docker run -d --restart="always" -p 61208:61208 -e TZ="${TZ}" -e GLANCES_OPT="-w --enable-mcp" -v /var/run/docker.sock:/var/run/docker.sock:ro -v /run/user/1000/podman/podman.sock:/run/user/1000/podman/podman.sock:ro --pid host nicolargo/glances:latest-full
 
 For a full list of options, see the Glances `Docker`_ documentation page.
 
@@ -445,8 +475,9 @@ plugins are enabled.
 Note: The Debian package (and all other Debian-based distributions) do
 not include anymore the JS statics files used by the Web interface
 (see `issue 2021 <https://github.com/nicolargo/glances/issues/2021>`_). If you want to add it to your Glances installation,
-follow the instructions `here: <https://github.com/nicolargo/glances/issues/2021#issuecomment-1197831157>`_. In Glances version 4 and
-higher, the path to the statics file is configurable (see `issue 2621 <https://github.com/nicolargo/glances/issues/2612>`_).
+follow the instructions `here: <https://github.com/nicolargo/glances/issues/2021#issuecomment-1197831157>`_. In Glances version 4,
+the path to the statics file is configurable (see `issue 2621 <https://github.com/nicolargo/glances/issues/2612>`_). Glances version 5
+serves the WebUI files shipped in its Python package.
 
 FreeBSD
 -------
@@ -571,8 +602,7 @@ Please uses Glances version 3.4.x if you need Python 2 support.
 Dependencies:
 
 - ``psutil`` (better with latest version)
-- ``defusedxml`` (in order to monkey patch xmlrpc)
-- ``packaging`` (for the version comparison)
+- ``requests`` (for the client mode, the Ports and Cloud plugins and the RESTful export module)
 - ``windows-curses`` (Windows Curses implementation) [Windows-only]
 - ``shtab`` (Shell autocompletion) [All but Windows]
 - ``jinja2`` (for fetch mode and templating)
@@ -605,11 +635,8 @@ Extra dependencies:
 - ``pygal`` (for the graph export module)
 - ``pymdstat`` (for RAID support) [Linux-only]
 - ``pymongo`` (for the MongoDB export module)
-- ``pysnmp-lextudio`` (for SNMP support)
 - ``pySMART.smartx`` (for HDD Smart support) [Linux-only]
 - ``pyzmq`` (for the ZeroMQ export module)
-- ``requests`` (for the Ports, Cloud plugins and RESTful export module)
-- ``sparklines`` (for the Quick Plugin sparklines option)
 - ``statsd`` (for the StatsD export module)
 - ``wifi`` (for the wifi plugin) [Linux-only]
 - ``zeroconf`` (for the autodiscover mode)

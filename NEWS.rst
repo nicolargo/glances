@@ -2,6 +2,171 @@
                                 Glances ChangeLog
 ==============================================================================
 
+===============
+Version 5.0.0b1
+===============
+
+First beta of Glances version 5, a complete rewrite of Glances:
+
+* an asyncio collection scheduler: each plugin is collected on its own refresh
+  rate into a shared stats store, read by the TUI, the REST API, the exporters
+  and the MCP server
+* a REST API served by FastAPI under ``/api/5``, with a new data model
+* a new curses TUI and a new Vue 3 WebUI
+* a new exporter base shared by all the export modules
+* a new alerts engine
+
+Glances version 4 continues on the ``support/glancesv4`` branch, which
+receives the 4.5.x bugfix and security releases.
+
+As a beta, 5.0.0b1 is published on PyPI and as versioned Docker image tags
+only: a pre-release never moves the Docker ``latest`` and ``latest-full`` tags.
+
+**BREAKING CHANGES:**
+
+Command line:
+
+* The ``glances`` command runs Glances 5 (the ``glances-v5`` command used during
+  the development of version 5 is gone)
+* The XML-RPC server and client are removed (no more port 61209). ``-s/--server``
+  now runs the REST API and WebUI server on port 61208 (``-w/--webserver`` is kept
+  as an alias), and ``-c/--client`` connects the TUI to a Glances 5 server through
+  the REST API. A Glances 5 client cannot talk to a Glances 4 server, and the
+  reverse
+* ``-B/--bind`` defaults to ``127.0.0.1`` (Glances 4: ``0.0.0.0``). Set
+  ``[outputs] bind_address`` or pass ``-B 0.0.0.0`` to listen on all interfaces.
+  The Docker images listen on ``0.0.0.0`` through their shipped configuration file
+* ``--password`` only prompts for the server password in client mode. A server is
+  protected by ``[outputs] password``, set to the hash printed by
+  ``glances --set-password``. Glances 4 password hashes are not compatible and must
+  be regenerated
+* ``-u/--username`` takes the user name as a value (Glances 4 ``--username``
+  prompted for it)
+* ``--api-doc`` no longer prints the Python API documentation: ``--api-doc`` /
+  ``--no-api-doc`` turn the Swagger (``/docs``) and ReDoc (``/redoc``) pages on or off
+* ``--fetch`` templates written for Glances 4 break: they are rendered against the
+  Glances 5 Python API and field names changed (for example, no
+  ``bytes_recv_rate_per_sec`` / ``bytes_sent_rate_per_sec`` in the network plugin,
+  ``gl.uptime`` is no longer a string)
+* Removed options:
+
+  * ``--cached-time``: a Glances 5 server always collects on its own schedule,
+    use ``[<plugin>] refresh`` to tune its CPU usage
+  * ``--disable-check-update``: the PyPI update check is removed (no outbound
+    request at startup)
+  * ``-P/--plugins`` and ``[global] plugin_dir``: external plugins are removed,
+    plugins are only loaded from the installed ``glances.plugins`` package
+  * ``--enable-process-extended``: select the process and press ``ENTER`` instead
+  * ``--trace-malloc``: set ``PYTHONTRACEMALLOC`` by hand when needed
+    (``--memory-leak`` is still available)
+  * ``--snmp-community``, ``--snmp-port``, ``--snmp-version``, ``--snmp-user``,
+    ``--snmp-auth`` and ``--snmp-force``: the SNMP fallback of the client mode is
+    removed (and the ``snmp`` extra with it)
+  * ``--sparkline`` (and the ``sparklines`` extra)
+
+* New options: ``--set-password``, ``--no-api-doc`` and ``--no-tui`` (alias of
+  ``-q/--quiet``)
+
+Configuration file:
+
+* Threshold keys are renamed, without alias:
+
+  * ``[network] rx_*`` / ``tx_*`` are now ``bytes_recv_*`` / ``bytes_sent_*``,
+    and their values are ratios of the link capacity in [0,1]
+    (``bytes_recv_careful=0.7``), not percents
+  * ``[processlist] cpu_*`` / ``mem_*`` are now ``cpu_percent_*`` /
+    ``memory_percent_*``
+  * ``[fs] <mnt>_careful`` (and warning, critical) are now
+    ``<mnt>_percent_careful``
+
+  An unrecognised threshold key is ignored, with a WARNING at startup
+* Backtick command substitution in configuration values is removed
+  (CVE-2026-33641)
+* The graph export writes by default in ``$XDG_DATA_HOME/glances/graphs``
+  (``~/.local/share/glances/graphs``), not in the shared temporary folder
+
+TUI:
+
+* Key ``4`` shows the quicklook alone, full width (Glances 4 left LOAD and the
+  per-CPU block on the row)
+* Process management: ``F4`` opens the process filter (Glances 4: ``ENTER``) and
+  ``ENTER`` pins the selected process for its extended stats (Glances 4: ``e``)
+* The trend arrows next to MEM, SWAP and LOAD are removed
+* The containers block has no ``CONTAINERS N (served by …)`` title row any more:
+  the ``CONTAINER`` column header is the title
+
+REST API:
+
+* The API is ``/api/5``, with a new data model: Glances 4 API clients must be
+  migrated (see the RESTful API documentation)
+* The ``_min``, ``_max`` and ``_mean`` fields of ``cpu.total``, ``load.min1`` and
+  ``mem.percent`` (``mmm``) are removed, from the API and from the exports
+* ``/api/5/<plugin>/history`` returns a columnar ``{timestamps, series}`` object,
+  with the ``nb``, ``field`` and ``item`` query parameters (the Glances 4
+  ``/history/<nb>`` and ``/<item>/history`` paths are gone). The default history
+  size is 1200 points (``[global] history_size``)
+* Fine-grained routes: ``/api/5/<plugin>/<field>/value/<value>`` and
+  ``/api/5/<plugin>/<field>/<item>`` compare values as text, an unknown field
+  answers ``404`` (Glances 4: ``200 null``), and the ``top``, ``value`` and item
+  routes answer ``404`` on a plugin which is not a collection
+* ``/api/5/config/<section>`` and ``/api/5/config/<section>/<key>`` are removed:
+  read the key from ``/api/5/config``
+* Without a password, ``/api/5/config`` only returns the keys the WebUI uses; the
+  full (redacted) configuration needs a password
+* A server bound on a loopback address only accepts the ``localhost``,
+  ``127.0.0.1`` and ``[::1]`` Host headers (DNS rebinding protection): a reverse
+  proxy on the same host which forwards its own Host header must be listed in
+  ``[outputs] webui_allowed_hosts``
+
+Special notes for package maintainers:
+
+* Minimal Python version is still 3.10
+* Core dependencies are psutil, requests, jinja2, shtab (all but Windows) and
+  windows-curses (Windows only): defusedxml and packaging are no longer needed
+* The ``snmp`` and ``sparklines`` extras are removed
+* The Docker images run ``python -m glances`` with
+  ``/etc/glances/glances.conf`` (copied from ``docker-compose/glances.conf``) and
+  expose port 61208 only
+
+=============
+Version 4.5.8
+=============
+
+Bugs corrected:
+
+* Stdout: CSV data blocks use the first list item's fields instead of each item's own #3746
+* Stdout: raw selector with a dotted item key (network.eth0.100.bytes_recv) raises UnboundLocalError #3748
+* Folders: a second configured FolderList appends its entries to the first instance #3750
+* JSON export: --stop-after leaves an empty file, the last sample is lost on shutdown #3752
+* DuckDB export turns the string 'False' into TRUE #3754
+* InfluxDB export truncates dotted list item identifiers (VLAN interfaces lose their tags) #3756
+* IP plugin: a non-object public IP response raises AttributeError in the main thread #3758
+* CSV export: rows are shifted under another device's column when the field order changes #3760
+* Export: exporters mutate the live plugin statistics when merging limits #3766
+* Elasticsearch export: a mapping type per plugin is rejected by ES 6/7/8+, only the first plugin is stored #3780
+* Exports: an optional key missing from the config overwrote the module default with None #3781
+* MQTT export: crash at startup when port or callback_api_version is omitted #3777
+* Uptime: export the SNMP uptime instead of the local one #3779
+* Cloud: do not report a platform whose metadata API returns nothing (OpenStack reported on Amazon EC2) #3778
+* IRQ: divide the interrupt count by the refresh time (Rate/s was multiplied by the refresh time) #3771
+* Programs: KeyError when a process stat is listed in [processlist] disable_stats #3776
+* Containers: WebUI throws on a restarting container whose cpu/mem stats are empty #3768
+* WebUI: the browser caches glances.js heuristically, revalidate the static files #3763
+* Processes: io_old keeps one entry per pid ever seen (slow memory leak on hosts spawning short-lived processes)
+* Smart: a missing smartctl (pySMART >= 1.4) crashes the server at startup
+
+Enhancements:
+
+* WebUI: make the container table sortable by status #3763
+* Processlist: only build curses rows for the processes that fit on screen (performance) #3762
+
+Continuous integration and documentation:
+
+* Mark regression test assertions for Bandit
+
+Thanks to all the contributors for this version: Luis Figueroa, Param Tanna, Iain, Juice-de-Orange,
+xu91102, Artem Lytkin and Hassan Rady.
+
 =============
 Version 4.5.7
 =============

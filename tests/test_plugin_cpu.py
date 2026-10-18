@@ -2,277 +2,375 @@
 #
 # Glances - An eye on your system
 #
-# SPDX-FileCopyrightText: 2024 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2026 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
-"""Tests for the CPU plugin."""
+"""Glances v5 — unit tests for the `cpu` plugin (scalar)."""
 
-import json
-import time
+from __future__ import annotations
+
+from collections import namedtuple
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from glances.globals import WINDOWS
+from glances.config import GlancesConfig
+from glances.plugins.cpu.model import PluginModel
+from glances.stats_store import StatsStore
+
+# psutil result stubs ------------------------------------------------------
+
+CpuTimesPercent = namedtuple(
+    "scputimes_percent",
+    ["user", "system", "idle", "nice", "iowait", "irq", "softirq", "steal", "guest", "guest_nice"],
+)
+
+CpuStats = namedtuple("scpustats", ["ctx_switches", "interrupts", "soft_interrupts", "syscalls"])
+
+
+def _agg(idle: float = 70.0, system: float = 15.0, user: float = 10.0, steal: float = 0.0) -> CpuTimesPercent:
+    return CpuTimesPercent(
+        user=user,
+        system=system,
+        idle=idle,
+        nice=0.5,
+        iowait=2.0,
+        irq=0.1,
+        softirq=0.1,
+        steal=steal,
+        guest=0.0,
+        guest_nice=0.0,
+    )
+
+
+def _stats(ctx: int = 12_000) -> CpuStats:
+    return CpuStats(ctx_switches=ctx, interrupts=2_000, soft_interrupts=1_000, syscalls=0)
+
+
+# ---------------------------------------------------------- fixtures
 
 
 @pytest.fixture
-def cpu_plugin(glances_stats):
-    """Return the CPU plugin instance from glances_stats."""
-    return glances_stats.get_plugin('cpu')
+def store() -> StatsStore:
+    return StatsStore()
 
 
-class TestCpuPluginBasics:
-    """Test basic CPU plugin functionality."""
-
-    def test_plugin_name(self, cpu_plugin):
-        """Test plugin name is correctly set."""
-        assert cpu_plugin.plugin_name == 'cpu'
-
-    def test_plugin_is_enabled(self, cpu_plugin):
-        """Test that the plugin is enabled by default."""
-        assert cpu_plugin.is_enabled() is True
-
-    def test_display_curse_enabled(self, cpu_plugin):
-        """Test that curse display is enabled."""
-        assert cpu_plugin.display_curse is True
-
-    def test_history_items_defined(self, cpu_plugin):
-        """Test that history items are properly defined."""
-        items = cpu_plugin.get_items_history_list()
-        assert items is not None
-        assert len(items) >= 2
-        item_names = [item['name'] for item in items]
-        assert 'user' in item_names
-        assert 'system' in item_names
+@pytest.fixture
+def config(tmp_path, monkeypatch) -> GlancesConfig:
+    monkeypatch.setattr(GlancesConfig, "SYSTEM_CONFIG_PATH", tmp_path / "etc" / "glances.conf")
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "xdg"))
+    return GlancesConfig()
 
 
-class TestCpuPluginUpdate:
-    """Test CPU plugin update functionality."""
-
-    def test_update_returns_dict(self, cpu_plugin):
-        """Test that update returns a dictionary."""
-        cpu_plugin.update()
-        stats = cpu_plugin.get_raw()
-        assert isinstance(stats, dict)
-
-    def test_update_contains_mandatory_keys(self, cpu_plugin):
-        """Test that stats contain mandatory keys."""
-        cpu_plugin.update()
-        stats = cpu_plugin.get_raw()
-        mandatory_keys = ['total', 'system', 'user', 'idle']
-        for key in mandatory_keys:
-            assert key in stats, f"Missing mandatory key: {key}"
-
-    def test_cpu_percentages_in_valid_range(self, cpu_plugin):
-        """Test that CPU percentages are within valid range."""
-        cpu_plugin.update()
-        stats = cpu_plugin.get_raw()
-        percentage_keys = ['total', 'system', 'user', 'idle']
-        for key in percentage_keys:
-            if key in stats and stats[key] is not None:
-                assert 0 <= stats[key] <= 100, f"{key} percentage out of range: {stats[key]}"
-
-    def test_total_cpu_calculation(self, cpu_plugin):
-        """Test that total CPU is correctly calculated."""
-        cpu_plugin.update()
-        stats = cpu_plugin.get_raw()
-        assert 'total' in stats
-        assert stats['total'] >= 0
-
-    def test_cpucore_count(self, cpu_plugin):
-        """Test that CPU core count is reported."""
-        cpu_plugin.update()
-        stats = cpu_plugin.get_raw()
-        assert 'cpucore' in stats
-        assert stats['cpucore'] >= 1
+def _config_with(tmp_path, monkeypatch, body: str) -> GlancesConfig:
+    monkeypatch.setattr(GlancesConfig, "SYSTEM_CONFIG_PATH", tmp_path / "etc" / "glances.conf")
+    xdg = tmp_path / "xdg"
+    cfg_dir = xdg / "glances"
+    cfg_dir.mkdir(parents=True)
+    (cfg_dir / "glances.conf").write_text(body)
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(xdg))
+    return GlancesConfig()
 
 
-class TestCpuPluginContextSwitches:
-    """Test CPU context switches and interrupts stats."""
+def _patch_sampler(agg=None, stats=None, cpu_count: int = 4):
+    """Patch the module-level sampler used by cpu/model.py.
 
-    def test_ctx_switches_present(self, cpu_plugin):
-        """Test that context switches stat is present."""
-        cpu_plugin.update()
-        time.sleep(0.1)
-        cpu_plugin.update()
-        stats = cpu_plugin.get_raw()
-        assert 'ctx_switches' in stats
+    Returns an ExitStack — usable as a `with` block — that wires
+    `get_aggregate`, `get_stats` and `cpu_count` to deterministic values
+    for the duration of the test.
+    """
+    from contextlib import ExitStack
 
-    def test_interrupts_present(self, cpu_plugin):
-        """Test that interrupts stat is present."""
-        cpu_plugin.update()
-        time.sleep(0.1)
-        cpu_plugin.update()
-        stats = cpu_plugin.get_raw()
-        assert 'interrupts' in stats
+    # Reset the cached cpu_count on the module-level singleton so the
+    # patched psutil.cpu_count is honoured for this test.
+    from glances.cpu_sampler import sampler
 
-    @pytest.mark.skipif(WINDOWS, reason="soft_interrupts not available on Windows")
-    def test_soft_interrupts_present(self, cpu_plugin):
-        """Test that soft interrupts stat is present on non-Windows."""
-        cpu_plugin.update()
-        time.sleep(0.1)
-        cpu_plugin.update()
-        stats = cpu_plugin.get_raw()
-        assert 'soft_interrupts' in stats
+    sampler._cpu_count = None
 
-
-class TestCpuPluginViews:
-    """Test CPU plugin views functionality."""
-
-    def test_update_views_creates_views(self, cpu_plugin):
-        """Test that update_views creates views dictionary."""
-        cpu_plugin.update()
-        cpu_plugin.update_views()
-        views = cpu_plugin.get_views()
-        assert isinstance(views, dict)
-
-    def test_views_contain_decoration(self, cpu_plugin):
-        """Test that views contain decoration for total CPU."""
-        cpu_plugin.update()
-        cpu_plugin.update_views()
-        views = cpu_plugin.get_views()
-        assert 'total' in views
-        assert 'decoration' in views['total']
+    stack = ExitStack()
+    stack.enter_context(
+        patch(
+            "glances.plugins.cpu.model.sampler.get_aggregate",
+            new_callable=AsyncMock,
+            return_value=agg if agg is not None else _agg(),
+        )
+    )
+    stack.enter_context(
+        patch(
+            "glances.plugins.cpu.model.sampler.get_stats",
+            new_callable=AsyncMock,
+            return_value=stats if stats is not None else _stats(),
+        )
+    )
+    # cpu_count is a property on the singleton; patch the underlying
+    # psutil call so the sampler computes the desired value lazily.
+    stack.enter_context(patch("glances.cpu_sampler.psutil.cpu_count", return_value=cpu_count))
+    return stack
 
 
-class TestCpuPluginJSON:
-    """Test CPU plugin JSON serialization."""
-
-    def test_get_stats_returns_json(self, cpu_plugin):
-        """Test that get_stats returns valid JSON."""
-        cpu_plugin.update()
-        stats_json = cpu_plugin.get_stats()
-        parsed = json.loads(stats_json)
-        assert isinstance(parsed, dict)
-
-    def test_json_contains_expected_fields(self, cpu_plugin):
-        """Test that JSON output contains expected fields."""
-        cpu_plugin.update()
-        stats_json = cpu_plugin.get_stats()
-        parsed = json.loads(stats_json)
-        assert 'total' in parsed
-        assert 'user' in parsed
-        assert 'system' in parsed
+# ---------------------------------------------------------- contract
 
 
-class TestCpuPluginHistory:
-    """Test CPU plugin history functionality."""
-
-    def test_history_enable_check(self, cpu_plugin):
-        """Test that history_enable returns a boolean."""
-        result = cpu_plugin.history_enable()
-        assert isinstance(result, bool)
-
-    def test_get_items_history_list(self, cpu_plugin):
-        """Test that get_items_history_list returns the history items."""
-        items = cpu_plugin.get_items_history_list()
-        if items is not None:
-            assert isinstance(items, list)
-            assert len(items) >= 2
+def test_plugin_identity(store, config):
+    plugin = PluginModel(store, config)
+    assert plugin.plugin_name == "cpu"
+    assert plugin.IS_COLLECTION is False
 
 
-class TestCpuPluginReset:
-    """Test CPU plugin reset functionality."""
-
-    def test_reset_clears_stats(self, cpu_plugin):
-        """Test that reset clears stats."""
-        cpu_plugin.update()
-        cpu_plugin.reset()
-        stats = cpu_plugin.get_raw()
-        assert stats == cpu_plugin.get_init_value()
-
-    def test_reset_views(self, cpu_plugin):
-        """Test that reset_views clears views."""
-        cpu_plugin.update()
-        cpu_plugin.update_views()
-        cpu_plugin.reset_views()
-        assert cpu_plugin.get_views() == {}
+def test_total_is_watched_prominent(store, config):
+    schema = PluginModel(store, config)._fields["total"]
+    assert schema["watched"] is True
+    assert schema["prominent"] is True
 
 
-class TestCpuPluginFieldsDescription:
-    """Test CPU plugin fields description."""
-
-    def test_fields_description_exists(self, cpu_plugin):
-        """Test that fields_description is defined."""
-        assert cpu_plugin.fields_description is not None
-
-    def test_mandatory_fields_described(self, cpu_plugin):
-        """Test that mandatory fields have descriptions."""
-        mandatory_fields = ['total', 'system', 'user', 'idle']
-        for field in mandatory_fields:
-            assert field in cpu_plugin.fields_description
-
-    def test_field_has_description(self, cpu_plugin):
-        """Test that each field has a description."""
-        for field, info in cpu_plugin.fields_description.items():
-            assert 'description' in info, f"Field {field} missing description"
+def test_system_user_dpc_are_watched_non_prominent(store, config):
+    fields = PluginModel(store, config)._fields
+    for name in ("system", "user", "dpc"):
+        assert fields[name]["watched"] is True, name
+        assert fields[name]["prominent"] is False, name
 
 
-class TestCpuPluginAlerts:
-    """Test CPU plugin alert functionality."""
-
-    def test_get_alert_returns_valid_status(self, cpu_plugin):
-        """Test that get_alert returns a valid status."""
-        cpu_plugin.update()
-        alert = cpu_plugin.get_alert(50, minimum=0, maximum=100, header='total')
-        valid_statuses = [
-            'OK',
-            'OK_LOG',
-            'CAREFUL',
-            'CAREFUL_LOG',
-            'WARNING',
-            'WARNING_LOG',
-            'CRITICAL',
-            'CRITICAL_LOG',
-            'DEFAULT',
-            'MAX',
-        ]
-        assert any(alert.startswith(status) for status in valid_statuses)
-
-    def test_alert_levels(self, cpu_plugin):
-        """Test different alert levels based on CPU usage."""
-        cpu_plugin.update()
-        # Low usage should be OK
-        alert_low = cpu_plugin.get_alert(10, minimum=0, maximum=100, header='total')
-        # The result depends on config, but should not be CRITICAL for 10%
-        assert not alert_low.startswith('CRITICAL')
+def test_iowait_is_watched_non_prominent(store, config):
+    """iowait is watched (level-coloured) but not prominent — the maintainer
+    rejected the filled/reverse-video badge on iowait after smoke-testing the
+    v5 Web UI (G9-8 smoke fix 5; see `test_iowait_is_not_prominent_by_default`
+    for the pinned schema value)."""
+    schema = PluginModel(store, config)._fields["iowait"]
+    assert schema["watched"] is True
+    assert schema["prominent"] is False
 
 
-class TestCpuPluginMsgCurse:
-    """Test CPU plugin curse message generation."""
+def test_iowait_is_not_prominent_by_default():
+    """Pin `prominent: False` on `iowait`.
 
-    def test_msg_curse_returns_list(self, cpu_plugin):
-        """Test that msg_curse returns a list."""
-        cpu_plugin.update()
-        msg = cpu_plugin.msg_curse()
-        assert isinstance(msg, list)
+    A `True` here makes both surfaces paint a filled badge on an alerting
+    `iowait` (the TUI's reverse-video cell and the Web UI's filled badge,
+    `levelClass()` in levels.js honours the `entry.prominent` flag verbatim)
+    -- the maintainer rejected that look after smoke-testing the v5 Web UI
+    (G9-8 smoke fix 5, the same call already made for quicklook's bar fields
+    in `test_bar_fields_are_not_prominent_by_default`, G9-8 smoke fix 2).
+    Only the tier colour remains, like every other cpu field except `total`.
+    Flipping this back to True re-introduces the badge; that intentional a
+    change should touch this test, not slip in silently.
+    """
+    fd = PluginModel.fields_description
+    assert fd["iowait"].get("prominent") is False, f"got {fd['iowait']!r}"
 
-    def test_msg_curse_format(self, cpu_plugin):
-        """Test that msg_curse returns properly formatted entries."""
-        cpu_plugin.update()
-        # Ensure args.percpu is not set to get output
-        if hasattr(cpu_plugin.args, 'percpu'):
-            original_percpu = cpu_plugin.args.percpu
-            cpu_plugin.args.percpu = False
-        msg = cpu_plugin.msg_curse()
-        if msg:  # May be empty if percpu mode or disabled
-            for entry in msg:
-                assert isinstance(entry, dict)
-                assert 'msg' in entry
-        if hasattr(cpu_plugin.args, 'percpu'):
-            cpu_plugin.args.percpu = original_percpu
 
-    def test_msg_curse_has_title_when_enabled(self, cpu_plugin):
-        """Test that msg_curse contains CPU title when not in percpu mode."""
-        cpu_plugin.update()
-        if hasattr(cpu_plugin.args, 'percpu'):
-            original_percpu = cpu_plugin.args.percpu
-            cpu_plugin.args.percpu = False
-        msg = cpu_plugin.msg_curse()
-        if msg:
-            messages = [m.get('msg', '') for m in msg]
-            assert any('CPU' in str(m) for m in messages)
-        if hasattr(cpu_plugin.args, 'percpu'):
-            cpu_plugin.args.percpu = original_percpu
+def test_steal_is_watched_non_prominent_with_strict_thresholds(store, config):
+    schema = PluginModel(store, config)._fields["steal"]
+    assert schema["watched"] is True
+    assert schema["prominent"] is False
+    # Strict — any non-trivial steal is worth surfacing (level only, not prominent).
+    assert schema["default_thresholds"]["critical"] == 30.0
+
+
+def test_ctx_switches_is_rate_watched_with_per_core_thresholds(store, config):
+    """``ctx_switches`` is watched with **per-core** thresholds.
+
+    V4-compatible: v4 calls ``get_alert(..., maximum=100 * cpucore)``,
+    which compares ``rate / cpucore`` against the configured value.
+    Defaults follow the ``50000 * cpucore`` reference of
+    ``conf/glances.conf``, scaled by 0.5 / 0.75 / 1.
+    """
+    schema = PluginModel(store, config)._fields["ctx_switches"]
+    assert schema["rate"] is True
+    assert schema["watched"] is True
+    assert schema["prominent"] is False
+    assert schema["normalize_by"] == "cpucore"
+    assert schema["default_thresholds"] == {
+        "careful": 50000.0 * 0.5,
+        "warning": 50000.0 * 0.75,
+        "critical": 50000.0,
+    }
+
+
+def test_interrupts_and_soft_interrupts_and_syscalls_are_rate_only(store, config):
+    fields = PluginModel(store, config)._fields
+    for name in ("interrupts", "soft_interrupts", "syscalls"):
+        assert fields[name].get("rate") is True, name
+        assert fields[name].get("watched", False) is False, name
+
+
+# ---------------------------------------------------------- update pipeline
+
+
+async def test_update_writes_aggregate_fields(store, config):
+    plugin = PluginModel(store, config)
+    with _patch_sampler():
+        await plugin.update()
+    payload = store.get("cpu")
+    assert payload["user"] == 10.0
+    assert payload["system"] == 15.0
+    assert payload["idle"] == 70.0
+    # total = 100 - idle (single source of truth, no extra psutil call)
+    assert payload["total"] == 30.0
+    assert payload["cpucore"] == 4
+
+
+async def test_update_drops_undeclared_psutil_fields(store, config):
+    """psutil fields not declared in fields_description are stripped."""
+
+    class WeirdNamedTuple(tuple):
+        # Simulate a future psutil attribute we don't know about.
+        @property
+        def some_future_field(self) -> float:
+            return 99.9
+
+    plugin = PluginModel(store, config)
+    with _patch_sampler():
+        await plugin.update()
+    payload = store.get("cpu")
+    assert "some_future_field" not in payload
+
+
+async def test_first_cycle_rate_fields_are_none(store, config):
+    """Counter fields (ctx_switches, interrupts, ...) are present but None on the first cycle."""
+    plugin = PluginModel(store, config)
+    with _patch_sampler():
+        await plugin.update()
+    payload = store.get("cpu")
+    # `rate: True` fields kept, value None — no previous sample to diff against.
+    assert "ctx_switches" in payload
+    assert payload["ctx_switches"] is None
+    assert "interrupts" in payload
+    assert payload["interrupts"] is None
+    assert "soft_interrupts" in payload
+    assert payload["soft_interrupts"] is None
+    assert "syscalls" in payload
+    assert payload["syscalls"] is None
+
+
+async def test_second_cycle_computes_ctx_switches_rate(store, config, monkeypatch):
+    """Second cycle: ctx_switches becomes a per-second rate."""
+    plugin = PluginModel(store, config)
+
+    fake_now = [100.0]
+    import glances.plugins.plugin.base as base_module
+
+    monkeypatch.setattr(base_module.time, "monotonic", lambda: fake_now[0])
+
+    with _patch_sampler(stats=_stats(ctx=10_000)):
+        await plugin.update()  # cycle 1 — ctx_switches is None
+
+    fake_now[0] = 102.0  # +2 s elapsed
+    with _patch_sampler(stats=_stats(ctx=10_500)):
+        await plugin.update()  # cycle 2
+
+    payload = store.get("cpu")
+    # delta = 500 over 2 s = 250 events/s
+    assert payload["ctx_switches"] == 250.0
+
+
+# ---------------------------------------------------------- _levels
+
+
+async def test_total_level_uses_default_thresholds(store, config):
+    plugin = PluginModel(store, config)
+    with _patch_sampler(agg=_agg(idle=20.0, user=50.0, system=30.0)):
+        await plugin.update()
+    payload = store.get("cpu")
+    # total = 100 - 20 = 80 → between warning (70) and critical (90) → warning
+    assert payload["total"] == 80.0
+    assert payload["_levels"]["total"] == {"level": "warning", "prominent": True}
+
+
+async def test_steal_strict_thresholds(store, config):
+    """`steal=20` exceeds warning (15) but not critical (30)."""
+    plugin = PluginModel(store, config)
+    with _patch_sampler(agg=_agg(steal=20.0)):
+        await plugin.update()
+    assert store.get("cpu")["_levels"]["steal"] == {"level": "warning", "prominent": False}
+
+
+async def test_ctx_switches_level_scales_with_core_count(store, config, monkeypatch):
+    """Thresholds scale with the logical core count (v4 semantics).
+
+    With 4 cores the defaults are 100_000 / 150_000 / 200_000 in absolute
+    rate; 160_000/s lands between warning and critical.
+    """
+    plugin = PluginModel(store, config)
+
+    fake_now = [100.0]
+    import glances.plugins.plugin.base as base_module
+
+    monkeypatch.setattr(base_module.time, "monotonic", lambda: fake_now[0])
+
+    with _patch_sampler(stats=_stats(ctx=0), cpu_count=4):
+        await plugin.update()
+
+    fake_now[0] = 101.0  # +1 s — 160_000/s over 4 cores = 40_000/core → warning
+    with _patch_sampler(stats=_stats(ctx=160_000), cpu_count=4):
+        await plugin.update()
+
+    payload = store.get("cpu")
+    assert payload["ctx_switches"] == 160_000.0
+    assert payload["_levels"]["ctx_switches"] == {"level": "warning", "prominent": False}
+
+
+async def test_ctx_switches_same_rate_is_ok_on_a_bigger_machine(store, config, monkeypatch):
+    """Same absolute rate, twice the cores → half the per-core pressure.
+
+    160_000/s over 8 cores = 20_000/core, below careful (25_000).
+    """
+    plugin = PluginModel(store, config)
+
+    fake_now = [100.0]
+    import glances.plugins.plugin.base as base_module
+
+    monkeypatch.setattr(base_module.time, "monotonic", lambda: fake_now[0])
+
+    with _patch_sampler(stats=_stats(ctx=0), cpu_count=8):
+        await plugin.update()
+
+    fake_now[0] = 101.0
+    with _patch_sampler(stats=_stats(ctx=160_000), cpu_count=8):
+        await plugin.update()
+
+    assert store.get("cpu")["_levels"]["ctx_switches"]["level"] == "ok"
+
+
+async def test_ctx_switches_level_ok_at_typical_desktop_rate(store, config, monkeypatch):
+    """Typical desktop ctx rate (~4k/s) must stay at level ``ok`` — regression
+    guard against defaults low enough to alert on an idle desktop.
+    """
+    plugin = PluginModel(store, config)
+
+    fake_now = [100.0]
+    import glances.plugins.plugin.base as base_module
+
+    monkeypatch.setattr(base_module.time, "monotonic", lambda: fake_now[0])
+
+    with _patch_sampler(stats=_stats(ctx=0), cpu_count=8):
+        await plugin.update()
+
+    fake_now[0] = 101.0  # +1 s — ctx rate = 4_000/s = 500/core, well below careful=25_000
+    with _patch_sampler(stats=_stats(ctx=4_000), cpu_count=8):
+        await plugin.update()
+
+    payload = store.get("cpu")
+    assert payload["_levels"]["ctx_switches"]["level"] == "ok"
+
+
+async def test_user_config_overrides_total_threshold(tmp_path, monkeypatch, store):
+    config = _config_with(tmp_path, monkeypatch, "[cpu]\ntotal_warning=85\n")
+    plugin = PluginModel(store, config)
+    with _patch_sampler(agg=_agg(idle=20.0)):
+        await plugin.update()
+    # total = 80, override warning to 85 → still careful (default 50)
+    assert store.get("cpu")["_levels"]["total"]["level"] == "careful"
+
+
+# ---------------------------------------------------------- export
+
+
+async def test_get_export_strips_internals_and_levels(store, config):
+    plugin = PluginModel(store, config)
+    with _patch_sampler():
+        await plugin.update()
+    exported = plugin.get_export()
+    assert "_levels" not in exported
+    assert "time_since_update" not in exported
+    assert exported["total"] == 30.0

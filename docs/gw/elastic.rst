@@ -11,9 +11,14 @@ should be defined in the Glances configuration file as following:
 .. code-block:: ini
 
     [elasticsearch]
+    # https or http
+    scheme=http
     host=localhost
     port=9200
     index=glances
+
+All the keys are mandatory. Stats are stored in a daily index named
+``<index>-YYYY.MM.DD``.
 
 and run Glances with:
 

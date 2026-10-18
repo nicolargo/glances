@@ -13,53 +13,6 @@ import socket
 
 from glances.globals import nativestr
 from glances.logger import logger
-from glances.plugins.plugin.model import GlancesPluginModel
-
-
-class HddtempPlugin(GlancesPluginModel):
-    """Glances HDD temperature sensors plugin.
-
-    stats is a list
-    """
-
-    def __init__(self, args=None, config=None):
-        """Init the plugin."""
-        super().__init__(args=args, config=config, stats_init_value=[])
-
-        # The module path gives 'sensors', but the settings live in [hddtemp]
-        self.plugin_name = 'hddtemp'
-        self.load_limits(config)
-
-        # Init the sensor class
-        hddtemp_host = self.get_conf_value("host", default=["127.0.0.1"])[0]
-        hddtemp_port = int(self.get_conf_value("port", default="7634"))
-        self.hddtemp = GlancesGrabHDDTemp(args=args, host=hddtemp_host, port=hddtemp_port)
-
-        # We do not want to display the stat in a dedicated area
-        # The HDD temp is displayed within the sensors plugin
-        self.display_curse = False
-
-    # @GlancesPluginModel._check_decorator
-    @GlancesPluginModel._log_result_decorator
-    def update(self):
-        """Update HDD stats using the input method."""
-        # Init new stats
-        stats = self.get_init_value()
-
-        # disable_hddtemp comes from the config, --disable-plugin or a failed connect in fetch()
-        if self.input_method == 'local' and not getattr(self.args, 'disable_hddtemp', False):
-            # Update stats using the standard system lib
-            stats = self.hddtemp.get()
-
-        else:
-            # Update stats using SNMP
-            # Not available for the moment
-            pass
-
-        # Update the stats
-        self.stats = stats
-
-        return self.stats
 
 
 class GlancesGrabHDDTemp:

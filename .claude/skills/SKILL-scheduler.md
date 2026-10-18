@@ -1,0 +1,108 @@
+# Skill: Glances v5 — Asyncio scheduler (`AsyncScheduler`)
+
+The asyncio scheduler (`glances.scheduler.AsyncScheduler`) is the
+component that actually runs registered plugins concurrently. It owns one
+`asyncio.Task` per plugin and calls `plugin.update()` at each plugin's
+`refresh_time`.
+
+The scheduler itself takes **manual registration only**: `glances/main.py`
+discovers the plugins (`discover_plugins()`) and exporters
+(`discover_exporters()`) and registers each one. Exporters go through
+`scheduler.register_exporter(exporter)`: one export loop calls each
+exporter's `update()` in a worker thread at the `[export] refresh` cadence
+(see `SKILL-exporter.md`).
+
+## Lifecycle
+
+```python
+import asyncio
+from glances.config import GlancesConfig
+from glances.scheduler import AsyncScheduler
+from glances.stats_store import StatsStore
+
+store = StatsStore()
+config = GlancesConfig()
+
+scheduler = AsyncScheduler(store, config)
+scheduler.register(MemPlugin(store, config))
+scheduler.register(NetworkPlugin(store, config), refresh_time=5.0)
+
+# Blocks until cancelled.
+await scheduler.run_forever()
+```
+
+To stop from another coroutine:
+
+```python
+await scheduler.stop()
+```
+
+`run_forever()` returns cleanly once `stop()` finishes.
+
+## `refresh_time` precedence
+
+When you call `scheduler.register(plugin, refresh_time=...)` the resolved
+interval comes from the first match in this order:
+
+1. Explicit `refresh_time=` argument
+2. `[<plugin_name>] refresh_time = …` from `glances.conf`
+3. `[global] refresh_time = …` from `glances.conf`
+4. Hardcoded fallback: `2.0` seconds (matches v4 default)
+
+Negative or zero values raise `ValueError` — the scheduler refuses
+intervals that would busy-loop or block forever.
+
+## Resilience
+
+The scheduler is the second safety net for plugin failures:
+
+| Layer | Behaviour |
+|---|---|
+| `GlancesPluginBase.update()` | Catches every exception, logs at WARNING, leaves the previous payload in the store |
+| `AsyncScheduler._plugin_loop()` | Defensive try/except around `update()` — catches anything a future `update()` override might leak |
+| `AsyncScheduler.run_forever()` | `asyncio.gather(*, return_exceptions=True)` — one task crashing never tears down the others |
+
+In other words: **a single misbehaving plugin can never crash the
+scheduler**. It can only stop producing fresh data for itself; every other
+plugin keeps refreshing on its own cadence.
+
+## Cancellation
+
+`stop()` calls `task.cancel()` on every plugin loop and awaits clean
+termination via `asyncio.gather(..., return_exceptions=True)` — the
+`CancelledError` raised by cancellation is absorbed, no exception escapes.
+
+## Registration guards
+
+| Situation | Behaviour |
+|---|---|
+| `register()` called twice with the same plugin instance | `ValueError` |
+| `register()` called while the scheduler is running | `RuntimeError` |
+| `run_forever()` called with no registered plugins | `RuntimeError` |
+| `run_forever()` called while already running | `RuntimeError` |
+
+## What's deferred
+
+- **Drift / phase compensation** (subtract update duration from sleep) — only if needed
+- **Hot reload of `refresh_time`** — Phase 4 (architecture §1.2 / §2)
+- **Per-plugin task supervision** beyond the gather safety net — only if real-world failure modes warrant
+
+## Testing the scheduler
+
+Test stack: `pytest` + `pytest-asyncio` (`asyncio_mode = "auto"`) +
+`unittest.mock` (architecture decision §9). Style: pytest-native top-level
+functions with fixtures and `assert` statements.
+
+Pattern: register fake plugins with very short `refresh_time` (e.g.
+`0.01`), `asyncio.create_task(scheduler.run_forever())`, sleep briefly,
+`await scheduler.stop()`, then assert on the store and on per-plugin call
+counters. See `tests/test_scheduler.py` for reference fakes
+(`FastPlugin`, `SlowPlugin`, `RaisingPlugin`).
+
+## Module path
+
+```
+glances/scheduler.py        # AsyncScheduler implementation
+glances/main.py             # discovery + registration (assemble())
+tests/test_scheduler.py     # contract + smoke tests
+```

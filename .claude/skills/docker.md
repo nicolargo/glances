@@ -37,7 +37,8 @@ Located in `docker-files/`:
 - Prefer `SYS_PTRACE` capability over `privileged: true`
 - Mount Docker socket read-only: `-v /var/run/docker.sock:/var/run/docker.sock:ro`
 - For Kubernetes: use DaemonSet (one pod per node) for system monitoring
-- CI builds Docker images on `develop` branch and tags only (see `.github/workflows/build_docker.yml`)
+- The images run Glances v5 (`python -m glances ${GLANCES_OPT}`); in server mode (`-w`) bind to `0.0.0.0` (`bind_address` in `docker-compose/glances.conf`, or `-B 0.0.0.0`), v5 defaults to loopback
+- CI builds Docker images on `develop` (the `dev` image) and on tags only (see `.github/workflows/build_docker.yml`); a pre-release tag (`v5.0.0b1`, `rc`) never moves `latest`
 
 ### Troubleshooting
 - **Socket permission errors**: Ensure the user is in the `docker` group or use Podman

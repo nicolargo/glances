@@ -38,7 +38,7 @@ docker exec influxdb-v1-for-glances influx -execute 'CREATE DATABASE glances'
 # Run glances with export to InfluxDB, stopping after 10 writes
 # This will run synchronously now since we're using --stop-after
 echo "Glances to export system stats to InfluxDB (duration: ~ 20 seconds)"
-.venv/bin/python -m glances --export influxdb --stop-after 10 --quiet
+.venv/bin/python -m glances.main --config ./conf/glances.conf --export influxdb --stop-after 10 --quiet
 
 echo "Checking if Glances data was successfully exported to InfluxDB..."
 # Query to check if data exists in the glances database
@@ -54,10 +54,12 @@ fi
 
 # Query to check if data exists in the glances database
 SERIE_COUNT=$(docker exec influxdb-v1-for-glances influx -database 'glances' -format json -execute 'SELECT * FROM cpu' | jq '.results[0].series[0].values' | jq length)
-if [ "$SERIE_COUNT" -eq 9 ]; then
+# 10 cycles give 10 points: v5 exports the first cycle too, without the
+# fields that have no value yet (rates), where v4 skipped it.
+if [ "$SERIE_COUNT" -eq 10 ]; then
     echo "Success! Found $SERIE_COUNT series in the Glances database (CPU plugin)."
 else
-    echo "Error: Found $SERIE_COUNT series instead of 9"
+    echo "Error: Found $SERIE_COUNT series instead of 10"
     docker stop influxdb-v1-for-glances
     docker rm influxdb-v1-for-glances
     exit 1

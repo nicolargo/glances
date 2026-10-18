@@ -20,6 +20,8 @@ following:
     # :memory:glances (see https://duckdb.org/docs/stable/clients/python/dbapi#in-memory-connection)
     # Or anyone else supported by the API (see https://duckdb.org/docs/stable/clients/python/dbapi)
     database=/tmp/glances.db
+    # Optional: host name stored with the stats (default is the machine host name)
+    #hostname=myhost
 
 and run Glances with:
 
@@ -30,7 +32,8 @@ and run Glances with:
 Data model
 -----------
 
-The data model is composed of one table per Glances plugin.
+The data model is composed of one table per Glances plugin (the ``sensors``
+and ``fs`` plugins are not exported).
 
 Example:
 
@@ -108,5 +111,4 @@ Example:
     └───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 
 
-.. _duckdb: https://duckdb.org/
 

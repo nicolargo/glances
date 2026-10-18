@@ -18,12 +18,11 @@ classifiers = [
   "Topic :: System :: Monitoring",
 ]
 dependencies = [
-  "defusedxml",
-  "packaging",
   "psutil>=5.6.7",
+  "requests>=2.32.4",
   "windows-curses; platform_system == 'Windows'",
   "shtab; platform_system != 'Windows'",
-  "jinja2",
+  "jinja2>=3.1.6",
 ]
 description = "An all-in-one system monitoring tool"
 dynamic = ["version"]
@@ -46,26 +45,26 @@ dev = [
   "pillow>=10.0.1",
   "pre-commit",
   "pyinstrument>=5.1.2",
+  "playwright",
   "pyright",
   "pytest",
+  "pytest-asyncio",
   "requirements-parser",
   "reuse",
   "rstcheck",
   "ruff",
-  "selenium",
   "semgrep",
   "setuptools>=65.5.1",
   "sphinx",
   "sphinx_rtd_theme",
-  "webdriver-manager",
 ]
 
 [project.optional-dependencies]
 action = ["chevron"]
 # all but not dev
-all = ["glances[action,browser,cloud,containers,export,gpu,graph,ip,mcp,raid,sensors,smart,snmp,sparklines,web,wifi]"]
+all = ["glances[action,browser,cloud,containers,export,gpu,graph,mcp,raid,sensors,smart,web,wifi]"]
 browser = ["zeroconf"]
-cloud = ["requests"]
+cloud = ["requests>=2.32.4"]
 containers = [
   "docker>=6.1.1",
   "packaging",
@@ -97,16 +96,17 @@ export = [
 ]
 gpu = ["nvidia-ml-py"]
 graph = ["pygal"]
-mcp = ["mcp>=1.0.0,<3"]
+mcp = ["mcp>=1.23.0,<3"]
 raid = ["pymdstat"]
 sensors = ["batinfo; platform_system == 'Linux'"]
 smart = ["pySMART"]
-snmp = ["pysnmp-lextudio<6.2.0"]
-sparklines = ["sparklines"]
 web = [
   "fastapi>=0.82.0",
-  "python-jose[cryptography]>=3.3.0",
-  "requests",
+  "python-jose[cryptography]>=3.4.0",
+  "requests>=2.32.4",
+  # Not used directly: a floor under what fastapi pulls in (CVE-2025-62727,
+  # FileResponse Range header, reachable through the WebUI's static files).
+  "starlette>=0.49.1",
   "uvicorn",
 ]
 wifi = ["wifi"]
@@ -132,7 +132,7 @@ glances = "glances:main"
 version = {attr = "glances.__version__"}
 
 [tool.setuptools.packages.find]
-exclude = ["*__pycache__*"]
+exclude = ["*__pycache__*", "glances.outputs.static.node_modules*"]
 include = ["glances*"]
 where = ["."]
 
@@ -260,6 +260,11 @@ log_cli = false
 log_level = "INFO"
 #log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
 #log_cli_date_format = "%Y-%m-%d %H:%M:%S"
+# v5 tests use async functions; auto mode avoids per-test @pytest.mark.asyncio.
+asyncio_mode = "auto"
+# Some v5 tests import shared helpers as `tests.<module>`: the editable install
+# only maps `glances`, so the repo root must be on sys.path explicitly.
+pythonpath = ["."]
 
 [tool.flake8]
 max-line-length = 120

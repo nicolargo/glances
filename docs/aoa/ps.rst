@@ -45,7 +45,8 @@ automatically sorted by:
 
 You can also set the sort key in the UI:
 
-- by clicking on left and right arrows
+- by clicking on ``SHIFT-LEFT`` and ``SHIFT-RIGHT`` (or on ``LEFT`` and ``RIGHT``
+  if Glances is started with the ``--arrow-keys-sort`` option)
 - by clicking on the following shortcuts or command line option:
 
 .. list-table:: Title
@@ -61,9 +62,9 @@ You can also set the sort key in the UI:
    * - c
      - --sort-processes cpu_percent
      - Sort by CPU
-   * - e
+   * - ENTER
      - N/A
-     - Pin the process and display extended stats
+     - Pin the selected process and display extended stats
    * - i
      - --sort-processes io_counters
      - Sort by DISK I/O
@@ -73,6 +74,9 @@ You can also set the sort key in the UI:
    * - m
      - --sort-processes memory_percent
      - Sort by MEM
+   * - o
+     - --sort-processes cpu_num
+     - Sort by CPU core number
    * - p
      - --sort-processes name
      - Sort by process name
@@ -83,13 +87,21 @@ You can also set the sort key in the UI:
      - --sort-processes username
      - Sort by process username
 
+In the Web UI, the same shortcuts apply, and clicking a column header
+(``CPU%``, ``MEM%``, ``USER``, ``TIME+``, ``R/s``, ``W/s``, ``Command``, and the
+``CONTAINER``/``CPU%``/``MEM`` and ``Name``/``CPU%``/``MEM/MAX`` headers of the
+containers and VMs) sorts by that column. The sort key belongs to the server:
+the containers and the VMs follow it, and so does every Web UI and client
+(``-c``) connected to the same server. It can also be set through the API with
+``POST /api/5/processes/sort/<key>``.
+
 The number of processes in the list is adapted to the screen size.
 
 Columns display
 ---------------
 
 .. list-table:: Title
-   :widths: 10 60
+   :widths: 10 20 50
    :header-rows: 0
 
    * - ``CPU%``
@@ -153,32 +165,21 @@ Columns display
 
                           Available on Linux, FreeBSD, and SunOS only.
                           Automatically disabled on Windows and macOS.
-
-                          Can be disabled via configuration with:
-                          ``disable_stats=cpu_num`` in the ``[processlist]``
-                          section of glances.conf
 ``COMMAND``               Process command line or command name
 
                           User can switch to the process name by
                           pressing on the ``'/'`` key
 ========================= ==============================================
 
-Disable display of virtual memory
----------------------------------
-
-It's possible to disable the display of the VIRT column (virtual memory) by adding the
-``disable_virtual_memory=True`` option in the ``[processlist]`` section of the configuration
-file (glances.conf):
-
-.. code-block:: ini
-
-    [processlist]
-    disable_virtual_memory=True
+When the terminal is too narrow, the less important columns (``CPU``,
+``VIRT``, ``TIME+``, ``RES``...) are automatically hidden.
 
 Process filtering
 -----------------
 
-It's possible to filter the processes list using the ``ENTER`` key.
+It's possible to filter the processes list using the ``F4`` key (the
+``E`` key erases the current filter). The filter can also be set from the
+command line with the ``--process-filter`` option.
 
 Glances filter syntax is the following (examples):
 
@@ -213,7 +214,7 @@ Extended info
 
 .. image:: ../_static/processlist-top.png
 
-In standalone mode, additional information are provided for the top
+In standalone mode, additional information are provided for the pinned
 process:
 
 ========================= ==============================================
@@ -227,18 +228,33 @@ process:
 ``IO nice``               The process I/O niceness (priority)
 ========================= ==============================================
 
-The extended stats feature can be enabled using the
-``--enable-process-extended`` option (command line) or the ``e`` key
-(curses interface).
+The CPU and MEM min/max/mean values of the pinned process are also
+displayed.
 
-In curses/standalone mode, you can select a process using ``UP`` and ``DOWN`` and press:
-- ``k`` to kill the selected process
+In curses/standalone mode, you can select a process using ``UP`` and ``DOWN``
+(the selection cursor can be disabled with the ``--disable-cursor`` option)
+and press:
+
+- ``ENTER`` to pin the selected process and display its extended stats
+  (press ``ENTER`` again to unpin it)
+- ``k`` to kill the selected process (a confirmation is asked)
+- ``+`` to increase the nice value (lower priority) of the selected process
+- ``-`` to decrease the nice value of the selected process (needs admin rights)
+- ``LEFT`` and ``RIGHT`` to scroll the command column (``SHIFT-LEFT`` and
+  ``SHIFT-RIGHT`` with the ``--arrow-keys-sort`` option)
+
+Process actions are not available in the accumulated per program view.
 
 .. note::
     Limit for CPU and MEM percent values can be overwritten in the
-    configuration file under the ``[processlist]`` section. It is also
-    possible to define limit for Nice values (comma-separated list).
-    For example: nice_warning=-20,-19,-18
+    configuration file under the ``[processlist]`` section with the
+    ``cpu_percent_<level>`` and ``memory_percent_<level>`` keys (default
+    values: 50/70/90). It is also possible to define limit for Nice and
+    Status values (comma-separated list).
+    For example: nice_warning=-20,-19,-18 or status_critical=Z,D
+
+    Limits are only used to colour the processes list: no alert is
+    raised for a single process.
 
 Accumulated per program — key 'j'
 ---------------------------------
@@ -255,7 +271,8 @@ Glances version 4 introduces a new feature to export specifics processes. In ord
 feature, you need to use the export option in the processlist section of the Glances configuration
 file or the --export-process-filter option in the command line.
 
-The export option is a list of Glances filters.
+The export option is a list of regular expressions, matched against the
+process name or command line.
 
 Example number one, export all processes named 'python' (or with a command line containing 'python'):
 
@@ -274,15 +291,6 @@ Example number two, export all processes with the name 'python' or 'bash':
     export=.*python.*,.*bash.*
 
 Note: or the --export-process-filter ".*python.*,.*bash.*" option in the command line.
-
-Example number three, export all processes belong to 'nicolargo' user:
-
-.. code-block:: ini
-
-    [processlist]
-    export=username:nicolargo
-
-Note: or the --export-process-filter "username:nicolargo" option in the command line.
 
 The output of the export use the PID as the key (for example if you want to export firefox process
 to a CSV file):

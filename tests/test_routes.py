@@ -1,0 +1,1671 @@
+#!/usr/bin/env python
+#
+# Glances - An eye on your system
+#
+# SPDX-FileCopyrightText: 2026 Nicolas Hennion <nicolas@nicolargo.com>
+#
+# SPDX-License-Identifier: LGPL-3.0-only
+#
+
+"""Glances v5 — unit tests for the REST API routes (Phase 1.6).
+
+Test stack: pytest + pytest-asyncio (auto mode). See architecture decisions §9.
+
+Coverage:
+- /api/5/pluginslist: sorted plugin names; empty when no registration
+- /api/5/all: returns store.as_dict() verbatim; excludes unregistered plugins
+- /api/5/<plugin>: 200 + payload (with _levels); 200 + null on cycle 0; 404 unknown
+- /api/5/<plugin>/info: 200 + fields_description; 404 unknown
+- /api/5/all/info: every registered schema, published or not; {} when empty
+- /api/5/alert: 200 + history; 404 when alerts is None
+- /api/5/alert/incidents: 200 + derive_incidents() synthesis; partial flag
+  preserved; every incident carries a `duration` (`>`-prefixed when partial);
+  404 when alerts is None
+- /api/5/config: 200 + redacted via as_dict_secure()
+- /api/5/token: Basic round-trip → JWT usable on other routes; wrong creds → 401;
+  missing creds → 401; auth not configured → 404; token is exempt from global auth
+- Auth integration: token endpoint reachable when password is set; protected
+  routes require Bearer or Basic; minted token unlocks /api/5/all
+- register_plugin: rejects duplicate registrations
+"""
+
+from __future__ import annotations
+
+import argparse
+import asyncio
+import base64
+from typing import Any, ClassVar
+
+import pytest
+from fastapi.testclient import TestClient
+
+from glances.alerts import GlancesAlerts, _AlertState
+from glances.config import GlancesConfig
+from glances.history import HistoryStore
+from glances.plugins.plugin.base import GlancesPluginBase
+from glances.security import hash_password
+from glances.stats_store import StatsStore
+from glances.webserver import build_app, register_plugin
+
+# ------------------------------------------------------- fake plugins
+
+
+class FakeScalarPlugin(GlancesPluginBase[dict]):
+    plugin_name: ClassVar[str] = "fakescalar"
+    IS_COLLECTION: ClassVar[bool] = False
+    fields_description: ClassVar[dict[str, dict[str, Any]]] = {
+        "percent": {"description": "Usage percentage.", "unit": "percent"},
+        "total": {"description": "Total.", "unit": "bytes"},
+        "secret": {"description": "Not for export.", "unit": "string", "exportable": False},
+    }
+
+    async def _grab_stats(self) -> dict:
+        return {"percent": 42.0, "total": 1024, "secret": "hunter2"}
+
+
+class FakeCollectionPlugin(GlancesPluginBase[list]):
+    plugin_name: ClassVar[str] = "fakecollection"
+    IS_COLLECTION: ClassVar[bool] = True
+    fields_description: ClassVar[dict[str, dict[str, Any]]] = {
+        "name": {"description": "Item name.", "unit": "string", "primary_key": True},
+        "rx": {"description": "Received bytes.", "unit": "bytes"},
+        "secret": {"description": "Not for export.", "unit": "string", "exportable": False},
+    }
+
+    async def _grab_stats(self) -> list:
+        return [
+            {"name": "eth0", "rx": 100, "secret": "hunter2"},
+            {"name": "lo", "rx": 0, "secret": "hunter2"},
+        ]
+
+
+# ------------------------------------------------------- fixtures
+
+
+@pytest.fixture
+def config_factory(tmp_path, monkeypatch):
+    monkeypatch.setattr(GlancesConfig, "SYSTEM_CONFIG_PATH", tmp_path / "no-system.conf")
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "xdg"))
+    monkeypatch.delenv("GLANCES_CONFIG_FILE", raising=False)
+    for env_key in list(__import__("os").environ):
+        if env_key.startswith("GLANCES_"):
+            monkeypatch.delenv(env_key, raising=False)
+
+    def make(**outputs) -> GlancesConfig:
+        for key, value in outputs.items():
+            monkeypatch.setenv(f"GLANCES_OUTPUTS__{key.upper()}", str(value))
+        return GlancesConfig()
+
+    return make
+
+
+@pytest.fixture
+def store() -> StatsStore:
+    return StatsStore()
+
+
+def _make_app_with_plugins(config, store, *, alerts=None, plugins=()):
+    app = build_app(config=config, store=store, alerts=alerts)
+    for plugin in plugins:
+        register_plugin(app, plugin)
+    return app
+
+
+def _populate(store, plugin) -> None:
+    """Drive ``plugin.update()`` once so the store has fresh data."""
+    asyncio.run(plugin.update())
+
+
+def _basic_header(user: str, password: str) -> dict[str, str]:
+    encoded = base64.b64encode(f"{user}:{password}".encode()).decode("ascii")
+    return {"Authorization": f"Basic {encoded}"}
+
+
+# ------------------------------------------------------- pluginslist
+
+
+def test_pluginslist_empty(config_factory, store):
+    app = _make_app_with_plugins(config_factory(), store)
+    with TestClient(app) as client:
+        r = client.get("/api/5/pluginslist")
+    assert r.status_code == 200
+    assert r.json() == []
+
+
+def test_pluginslist_sorted(config_factory, store):
+    config = config_factory()
+    scalar = FakeScalarPlugin(store, config)
+    collection = FakeCollectionPlugin(store, config)
+    app = _make_app_with_plugins(config, store, plugins=[collection, scalar])
+    with TestClient(app) as client:
+        r = client.get("/api/5/pluginslist")
+    assert r.status_code == 200
+    assert r.json() == ["fakecollection", "fakescalar"]
+
+
+# ------------------------------------------------------- /all
+
+
+def test_all_returns_store_dict(config_factory, store):
+    config = config_factory()
+    plugin = FakeScalarPlugin(store, config)
+    _populate(store, plugin)
+    app = _make_app_with_plugins(config, store, plugins=[plugin])
+    with TestClient(app) as client:
+        r = client.get("/api/5/all")
+    body = r.json()
+    assert r.status_code == 200
+    assert "fakescalar" in body
+    assert body["fakescalar"]["percent"] == 42.0
+
+
+def test_all_excludes_unwritten_plugins(config_factory, store):
+    config = config_factory()
+    written = FakeScalarPlugin(store, config)
+    unwritten = FakeCollectionPlugin(store, config)
+    _populate(store, written)
+    app = _make_app_with_plugins(config, store, plugins=[written, unwritten])
+    with TestClient(app) as client:
+        body = client.get("/api/5/all").json()
+    assert "fakescalar" in body
+    assert "fakecollection" not in body  # never updated → not in store
+
+
+# ------------------------------------------------------- /<plugin>
+
+
+def test_plugin_payload_scalar(config_factory, store):
+    config = config_factory()
+    plugin = FakeScalarPlugin(store, config)
+    _populate(store, plugin)
+    app = _make_app_with_plugins(config, store, plugins=[plugin])
+    with TestClient(app) as client:
+        r = client.get("/api/5/fakescalar")
+    assert r.status_code == 200
+    payload = r.json()
+    assert payload["percent"] == 42.0
+    assert payload["total"] == 1024
+    assert "_levels" in payload  # baseline contract: levels included
+    assert "time_since_update" in payload
+
+
+def test_plugin_payload_collection(config_factory, store):
+    config = config_factory()
+    plugin = FakeCollectionPlugin(store, config)
+    _populate(store, plugin)
+    app = _make_app_with_plugins(config, store, plugins=[plugin])
+    with TestClient(app) as client:
+        r = client.get("/api/5/fakecollection")
+    assert r.status_code == 200
+    payload = r.json()
+    assert isinstance(payload["data"], list)
+    assert payload["data"][0]["name"] == "eth0"
+    assert "_levels" in payload
+
+
+def test_plugin_payload_cycle_zero_returns_null(config_factory, store):
+    """Registered but never-updated plugin → 200 null (transient, not error)."""
+    config = config_factory()
+    plugin = FakeScalarPlugin(store, config)
+    app = _make_app_with_plugins(config, store, plugins=[plugin])
+    with TestClient(app) as client:
+        r = client.get("/api/5/fakescalar")
+    assert r.status_code == 200
+    assert r.json() is None
+
+
+def test_plugin_payload_unknown_404(config_factory, store):
+    app = _make_app_with_plugins(config_factory(), store)
+    with TestClient(app) as client:
+        r = client.get("/api/5/doesnotexist")
+    assert r.status_code == 404
+    assert "doesnotexist" in r.json()["detail"]
+
+
+# ------------------------------------------------------- /<plugin>/info
+
+
+def test_plugin_info_returns_schema(config_factory, store):
+    config = config_factory()
+    plugin = FakeScalarPlugin(store, config)
+    app = _make_app_with_plugins(config, store, plugins=[plugin])
+    with TestClient(app) as client:
+        r = client.get("/api/5/fakescalar/info")
+    assert r.status_code == 200
+    body = r.json()
+    assert "percent" in body
+    assert body["percent"]["unit"] == "percent"
+
+
+def test_plugin_info_unknown_404(config_factory, store):
+    app = _make_app_with_plugins(config_factory(), store)
+    with TestClient(app) as client:
+        r = client.get("/api/5/missing/info")
+    assert r.status_code == 404
+
+
+def test_all_info_returns_every_registered_schema(config_factory, store):
+    """One request for every schema: the WebUI resolves its labels once at
+    page load instead of one /info call per plugin (G9-5 spec §6.2).
+
+    Neither plugin is populated. Unlike /api/5/all, which skips a plugin that
+    has not published, a schema is static and must be served regardless --
+    otherwise a plugin still at cycle 0 when the tab opens would keep
+    field-name labels for the tab's whole life.
+
+    Also the route-ordering guard: before the handler exists, `all` is read as
+    a plugin name by /{plugin_name}/info and the request 404s.
+    """
+    config = config_factory()
+    scalar = FakeScalarPlugin(store, config)
+    collection = FakeCollectionPlugin(store, config)
+    app = _make_app_with_plugins(config, store, plugins=[scalar, collection])
+    with TestClient(app) as client:
+        r = client.get("/api/5/all/info")
+    assert r.status_code == 200
+    assert r.json() == {
+        "fakescalar": FakeScalarPlugin.fields_description,
+        "fakecollection": FakeCollectionPlugin.fields_description,
+    }
+
+
+def test_all_info_empty_registry(config_factory, store):
+    app = _make_app_with_plugins(config_factory(), store)
+    with TestClient(app) as client:
+        r = client.get("/api/5/all/info")
+    assert r.status_code == 200
+    assert r.json() == {}
+
+
+# ------------------------------------------------------- /alert
+
+
+def test_alert_404_when_disabled(config_factory, store):
+    app = _make_app_with_plugins(config_factory(), store, alerts=None)
+    with TestClient(app) as client:
+        r = client.get("/api/5/alert")
+    assert r.status_code == 404
+
+
+def test_alert_returns_history(config_factory, store):
+    config = config_factory()
+    alerts = GlancesAlerts(config)
+    # Inject a fake event directly into the ring buffer.
+    fake_event = {
+        "ts": "2026-05-12T10:00:00+00:00",
+        "plugin": "mem",
+        "key": None,
+        "field": "percent",
+        "level": "warning",
+        "previous_level": "ok",
+        "value": 75.0,
+        "prominent": True,
+        "hostname": "test-host",
+    }
+    alerts._history.append(fake_event)
+    app = _make_app_with_plugins(config, store, alerts=alerts)
+    with TestClient(app) as client:
+        r = client.get("/api/5/alert")
+    assert r.status_code == 200
+    body = r.json()
+    assert body == [fake_event]
+
+
+def test_alert_route_exposes_top_processes(config_factory, store):
+    """`/api/5/alert` returns `get_history()` verbatim, so the top-process
+    keys added by the alert engine reach the API with no route change."""
+    config = config_factory()
+    alerts = GlancesAlerts(config)
+    # Inject a fake event directly into the ring buffer, same as
+    # test_alert_returns_history, but carrying the top-process keys an
+    # opening event on the field allowlist would hold.
+    fake_event = {
+        "ts": "2026-05-12T10:00:00+00:00",
+        "plugin": "cpu",
+        "key": None,
+        "field": "total",
+        "level": "warning",
+        "previous_level": "ok",
+        "value": 92.0,
+        "prominent": True,
+        "hostname": "test-host",
+        "top": ["python3", "chrome", "node"],
+        "top_sort": "cpu_percent",
+    }
+    alerts._history.append(fake_event)
+    app = _make_app_with_plugins(config, store, alerts=alerts)
+    with TestClient(app) as client:
+        r = client.get("/api/5/alert")
+    assert r.status_code == 200
+    payload = r.json()
+    assert payload[0]["top"] == ["python3", "chrome", "node"]
+    assert payload[0]["top_sort"] == "cpu_percent"
+
+
+def test_alert_empty_history(config_factory, store):
+    config = config_factory()
+    alerts = GlancesAlerts(config)
+    app = _make_app_with_plugins(config, store, alerts=alerts)
+    with TestClient(app) as client:
+        r = client.get("/api/5/alert")
+    assert r.status_code == 200
+    assert r.json() == []
+
+
+# ------------------------------------------------------- /alert/incidents
+
+
+def test_alert_incidents_serves_the_synthesis(config_factory, store):
+    """Same function the TUI calls (glances/alerts_incidents.py), so the
+    browser cannot drift from the terminal."""
+    config = config_factory()
+    alerts = GlancesAlerts(config)
+    # A resolved incident: opening and closing transitions both in history.
+    alerts._history.append(
+        {
+            "ts": "2026-05-12T09:00:00+00:00",
+            "plugin": "cpu",
+            "key": None,
+            "field": "total",
+            "level": "warning",
+            "previous_level": "ok",
+            "value": 90.0,
+            "prominent": True,
+            "hostname": "test-host",
+        }
+    )
+    alerts._history.append(
+        {
+            "ts": "2026-05-12T09:05:00+00:00",
+            "plugin": "cpu",
+            "key": None,
+            "field": "total",
+            "level": "ok",
+            "previous_level": "warning",
+            "value": 10.0,
+            "prominent": False,
+            "hostname": "test-host",
+        }
+    )
+    # An ongoing incident: opening transition in history, engine still active.
+    alerts._history.append(
+        {
+            "ts": "2026-05-12T10:00:00+00:00",
+            "plugin": "mem",
+            "key": None,
+            "field": "percent",
+            "level": "warning",
+            "previous_level": "ok",
+            "value": 75.0,
+            "prominent": True,
+            "hostname": "test-host",
+        }
+    )
+    alerts._state[("mem", None, "percent")] = _AlertState(
+        committed_level="warning", committed_since="2026-05-12T10:00:00+00:00", has_committed=True
+    )
+    app = _make_app_with_plugins(config, store, alerts=alerts)
+    with TestClient(app) as client:
+        r = client.get("/api/5/alert/incidents")
+    assert r.status_code == 200
+    incidents = r.json()["incidents"]
+    # Ongoing first (newest first within each group) — derive_incidents' own
+    # sort contract (design §5.3), unchanged by the route.
+    assert [i["ongoing"] for i in incidents] == [True, False]
+    assert incidents[0]["plugin"] == "mem"
+    assert incidents[1]["plugin"] == "cpu"
+
+
+def test_alert_incidents_exposes_is_initializing(config_factory, store):
+    """Fix round 2, IMPORTANT 2: the route answers an envelope, not a bare
+    array, so the browser can tell "warm-up" from "no alert detected" —
+    the same distinction `render_alert_block` already makes
+    (curses_renderer.py:738-745). A fresh `GlancesAlerts` that never
+    ingested anything is still initializing."""
+    config = config_factory()
+    alerts = GlancesAlerts(config)
+    app = _make_app_with_plugins(config, store, alerts=alerts)
+    with TestClient(app) as client:
+        r = client.get("/api/5/alert/incidents")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["is_initializing"] is True
+    assert body["incidents"] == []
+
+
+def test_alert_incidents_marks_a_partial_incident(config_factory, store):
+    """`partial` says the opening event aged out of the bounded history, so
+    the duration is a LOWER BOUND. A client that lost the flag would print
+    a lower bound as if it were exact.
+
+    The engine reports the tuple active (`get_ongoing()`), but neither its
+    opening transition (evicted from the ring buffer) nor its start time
+    (`get_ongoing_since()` — nothing was ever committed here) survive
+    anywhere: exactly what a long-running alert does to a bounded history.
+    """
+    config = config_factory()
+    alerts = GlancesAlerts(config)
+    alerts._state[("cpu", None, "total")] = _AlertState(committed_level="critical", has_committed=True)
+    app = _make_app_with_plugins(config, store, alerts=alerts)
+    with TestClient(app) as client:
+        r = client.get("/api/5/alert/incidents")
+    assert r.status_code == 200
+    incidents = r.json()["incidents"]
+    assert len(incidents) == 1
+    assert incidents[0]["ongoing"] is True
+    assert incidents[0]["partial"] is True
+
+
+def test_alert_incidents_404_when_disabled(config_factory, store):
+    """Same contract as /api/5/alert."""
+    app = _make_app_with_plugins(config_factory(), store, alerts=None)
+    with TestClient(app) as client:
+        r = client.get("/api/5/alert/incidents")
+    assert r.status_code == 404
+
+
+def test_alert_incidents_every_incident_has_a_duration_key(config_factory, store):
+    """`duration` is always present in the response, `null` or not, so a
+    consumer can rely on the key existing rather than guarding for it."""
+    config = config_factory()
+    alerts = GlancesAlerts(config)
+    alerts._history.append(
+        {
+            "ts": "2026-05-12T09:00:00+00:00",
+            "plugin": "cpu",
+            "key": None,
+            "field": "total",
+            "level": "warning",
+            "previous_level": "ok",
+            "value": 90.0,
+            "prominent": True,
+            "hostname": "test-host",
+        }
+    )
+    alerts._history.append(
+        {
+            "ts": "2026-05-12T09:05:00+00:00",
+            "plugin": "cpu",
+            "key": None,
+            "field": "total",
+            "level": "ok",
+            "previous_level": "warning",
+            "value": 10.0,
+            "prominent": False,
+            "hostname": "test-host",
+        }
+    )
+    alerts._history.append(
+        {
+            "ts": "2026-05-12T10:00:00+00:00",
+            "plugin": "mem",
+            "key": None,
+            "field": "percent",
+            "level": "warning",
+            "previous_level": "ok",
+            "value": 75.0,
+            "prominent": True,
+            "hostname": "test-host",
+        }
+    )
+    alerts._state[("mem", None, "percent")] = _AlertState(
+        committed_level="warning", committed_since="2026-05-12T10:00:00+00:00", has_committed=True
+    )
+    app = _make_app_with_plugins(config, store, alerts=alerts)
+    with TestClient(app) as client:
+        r = client.get("/api/5/alert/incidents")
+    assert r.status_code == 200
+    incidents = r.json()["incidents"]
+    assert len(incidents) == 2
+    assert all("duration" in incident for incident in incidents)
+
+
+def test_alert_incidents_partial_duration_has_lower_bound_prefix(config_factory, store):
+    """The whole reason `duration` is computed server-side: a `partial`
+    incident's opening event aged out of the bounded history, so its
+    duration is a LOWER BOUND and must be `>`-prefixed. A client that
+    recomputed this in JS and dropped the prefix would print a lower bound
+    as if it were exact.
+
+    Seeded like the existing partial test — a tuple present in
+    `get_ongoing()` but absent from `get_ongoing_since()` (`committed_since`
+    left `None`) — except here the surviving history event is an
+    ESCALATION (`previous_level` != "ok"), which gives the incident a real
+    `begin` so `incident_duration()` has something to format instead of
+    returning `None` outright (the fully-evicted-with-no-history case used
+    by the earlier partial test has `begin=None`, which formats to no
+    duration at all, not a `>`-prefixed one).
+    """
+    config = config_factory()
+    alerts = GlancesAlerts(config)
+    alerts._history.append(
+        {
+            "ts": "2026-05-12T08:00:00+00:00",
+            "plugin": "cpu",
+            "key": None,
+            "field": "total",
+            "level": "critical",
+            "previous_level": "warning",
+            "value": 97.0,
+            "prominent": True,
+            "hostname": "test-host",
+        }
+    )
+    alerts._state[("cpu", None, "total")] = _AlertState(committed_level="critical", has_committed=True)
+    app = _make_app_with_plugins(config, store, alerts=alerts)
+    with TestClient(app) as client:
+        r = client.get("/api/5/alert/incidents")
+    assert r.status_code == 200
+    incidents = r.json()["incidents"]
+    assert len(incidents) == 1
+    assert incidents[0]["partial"] is True
+    assert incidents[0]["duration"] is not None
+    assert incidents[0]["duration"].startswith(">")
+
+
+def test_alert_incidents_resolved_duration_has_no_prefix(config_factory, store):
+    """Control for the test above: a resolved (non-partial) incident's
+    duration must NOT carry the `>` prefix, so the prefix assertion above
+    cannot pass by accident (e.g. a route that always prepends `>`)."""
+    config = config_factory()
+    alerts = GlancesAlerts(config)
+    alerts._history.append(
+        {
+            "ts": "2026-05-12T09:00:00+00:00",
+            "plugin": "cpu",
+            "key": None,
+            "field": "total",
+            "level": "warning",
+            "previous_level": "ok",
+            "value": 90.0,
+            "prominent": True,
+            "hostname": "test-host",
+        }
+    )
+    alerts._history.append(
+        {
+            "ts": "2026-05-12T09:05:00+00:00",
+            "plugin": "cpu",
+            "key": None,
+            "field": "total",
+            "level": "ok",
+            "previous_level": "warning",
+            "value": 10.0,
+            "prominent": False,
+            "hostname": "test-host",
+        }
+    )
+    app = _make_app_with_plugins(config, store, alerts=alerts)
+    with TestClient(app) as client:
+        r = client.get("/api/5/alert/incidents")
+    assert r.status_code == 200
+    incidents = r.json()["incidents"]
+    assert len(incidents) == 1
+    assert incidents[0]["ongoing"] is False
+    assert incidents[0]["duration"] is not None
+    assert not incidents[0]["duration"].startswith(">")
+    assert incidents[0]["duration"] == "5m00s"
+
+
+# ------------------------------------------------------- /config
+
+
+def test_config_returns_redacted_dict(config_factory, store):
+    config = config_factory(password=hash_password("hunter2"))
+    app = _make_app_with_plugins(config, store)
+    # /api/5/config is *behind* the auth middleware since password is set —
+    # authenticate to fetch it.
+    with TestClient(app) as client:
+        r = client.get("/api/5/config", headers=_basic_header("glances", "hunter2"))
+    assert r.status_code == 200
+    body = r.json()
+    # Secret-bearing keys are present but redacted.
+    assert body["outputs"]["password"] == "***"
+
+
+def test_config_open_when_no_auth(config_factory, store):
+    config = config_factory()
+    app = _make_app_with_plugins(config, store)
+    with TestClient(app) as client:
+        r = client.get("/api/5/config")
+    assert r.status_code == 200
+    assert isinstance(r.json(), dict)
+
+
+def test_config_without_auth_serves_only_the_public_options(config_factory, store, monkeypatch):
+    """Audit M1: the unauthenticated view is an allowlist, not a redacted dump."""
+    monkeypatch.setenv("GLANCES_CPU__CRITICAL_ACTION", "curl https://hooks.example/T0/ACTIONSECRET")
+    config = config_factory(theme="white", cors_origins="https://ok.example")
+    with TestClient(_make_app_with_plugins(config, store)) as client:
+        body = client.get("/api/5/config").json()
+    assert "ACTIONSECRET" not in str(body)
+    assert "cpu" not in body
+    assert body["outputs"] == {"theme": "white", "api_doc": True}
+    assert set(body) <= set(GlancesConfig.PUBLIC_OPTIONS)
+
+
+def test_config_with_auth_serves_the_redacted_dump(config_factory, store):
+    """Behind a password, the whole config is served, still redacted."""
+    config = config_factory(password=hash_password("hunter2"), cors_origins="https://ok.example")
+    with TestClient(_make_app_with_plugins(config, store)) as client:
+        body = client.get("/api/5/config", headers=_basic_header("glances", "hunter2")).json()
+    assert body["outputs"]["cors_origins"] == "https://ok.example"
+    assert body["outputs"]["password"] == "***"
+
+
+# ------------------------------------------------------- /token
+
+
+def test_token_404_when_auth_not_configured(config_factory, store):
+    app = _make_app_with_plugins(config_factory(), store)
+    with TestClient(app) as client:
+        r = client.post("/api/5/token")
+    assert r.status_code == 404
+    assert "JWT auth not configured" in r.json()["detail"]
+
+
+def test_token_401_without_credentials(config_factory, store):
+    config = config_factory(password=hash_password("hunter2"))
+    app = _make_app_with_plugins(config, store)
+    with TestClient(app) as client:
+        r = client.post("/api/5/token")
+    assert r.status_code == 401
+    assert "Basic" in r.headers.get("WWW-Authenticate", "")
+
+
+def test_token_401_with_wrong_password(config_factory, store):
+    config = config_factory(password=hash_password("hunter2"))
+    app = _make_app_with_plugins(config, store)
+    with TestClient(app) as client:
+        r = client.post("/api/5/token", headers=_basic_header("glances", "wrong"))
+    assert r.status_code == 401
+
+
+def test_token_round_trip(config_factory, store):
+    config = config_factory(password=hash_password("hunter2"), jwt_secret_key="stable")
+    app = _make_app_with_plugins(config, store)
+    with TestClient(app) as client:
+        r = client.post("/api/5/token", headers=_basic_header("glances", "hunter2"))
+    assert r.status_code == 200
+    body = r.json()
+    assert body["token_type"] == "bearer"
+    assert isinstance(body["expires_in"], int) and body["expires_in"] > 0
+    # The minted token must be accepted on a protected route.
+    with TestClient(app) as client:
+        r2 = client.get("/api/5/all", headers={"Authorization": f"Bearer {body['access_token']}"})
+    assert r2.status_code == 200
+
+
+def test_token_endpoint_exempt_from_global_auth(config_factory, store):
+    """``/api/5/token`` must NOT 401 because of the global auth middleware.
+
+    Without an exemption, the middleware would short-circuit the request
+    before the route's own ``Depends(HTTPBasic)`` can read credentials.
+    """
+    config = config_factory(password=hash_password("hunter2"))
+    app = _make_app_with_plugins(config, store)
+    with TestClient(app) as client:
+        # No credentials at all → the *route* (not the middleware) emits 401.
+        r = client.post("/api/5/token")
+    assert r.status_code == 401
+    assert r.headers.get("WWW-Authenticate", "").startswith("Basic")
+
+
+# ------------------------------------------------------- auth integration
+
+
+def test_protected_route_requires_auth(config_factory, store):
+    config = config_factory(password=hash_password("hunter2"))
+    plugin = FakeScalarPlugin(store, config)
+    _populate(store, plugin)
+    app = _make_app_with_plugins(config, store, plugins=[plugin])
+    with TestClient(app) as client:
+        assert client.get("/api/5/all").status_code == 401
+        assert client.get("/api/5/all", headers=_basic_header("glances", "hunter2")).status_code == 200
+
+
+# ------------------------------------------------------- register_plugin
+
+
+def test_register_plugin_rejects_duplicate(config_factory, store):
+    config = config_factory()
+    app = build_app(config=config, store=store)
+    plugin = FakeScalarPlugin(store, config)
+    register_plugin(app, plugin)
+    with pytest.raises(ValueError, match="already registered"):
+        register_plugin(app, plugin)
+
+
+# ------------------------------------------------------- /limits
+
+
+class FakeLimitsPlugin(GlancesPluginBase[dict]):
+    """Scalar plugin carrying thresholds, for the /limits routes."""
+
+    plugin_name: ClassVar[str] = "fakelimits"
+    IS_COLLECTION: ClassVar[bool] = False
+    fields_description: ClassVar[dict[str, dict[str, Any]]] = {
+        "percent": {
+            "description": "Usage percentage.",
+            "unit": "percent",
+            "watched": True,
+            "watch_direction": "high",
+            "default_thresholds": {"careful": 50.0, "warning": 70.0, "critical": 90.0},
+        },
+    }
+
+    async def _grab_stats(self) -> dict:
+        return {"percent": 42.0}
+
+
+def test_plugin_limits_returns_thresholds(config_factory, store):
+    config = config_factory()
+    plugin = FakeLimitsPlugin(store, config)
+    app = _make_app_with_plugins(config, store, plugins=[plugin])
+    with TestClient(app) as client:
+        r = client.get("/api/5/fakelimits/limits")
+    assert r.status_code == 200
+    assert r.json() == {"percent": {"careful": 50.0, "warning": 70.0, "critical": 90.0}}
+
+
+def test_plugin_limits_answers_before_the_first_cycle(config_factory, store):
+    """No _populate() call: thresholds come from config + schema, so unlike
+    /api/5/<plugin> this route never returns null at cycle 0."""
+    config = config_factory()
+    plugin = FakeLimitsPlugin(store, config)
+    app = _make_app_with_plugins(config, store, plugins=[plugin])
+    with TestClient(app) as client:
+        r = client.get("/api/5/fakelimits/limits")
+    assert r.status_code == 200
+    assert r.json()["percent"]["warning"] == 70.0
+
+
+def test_plugin_limits_empty_dict_when_no_watched_field(config_factory, store):
+    config = config_factory()
+    plugin = FakeScalarPlugin(store, config)
+    app = _make_app_with_plugins(config, store, plugins=[plugin])
+    with TestClient(app) as client:
+        r = client.get("/api/5/fakescalar/limits")
+    assert r.status_code == 200
+    assert r.json() == {}
+
+
+def test_plugin_limits_404_on_unknown_plugin(config_factory, store):
+    app = _make_app_with_plugins(config_factory(), store)
+    with TestClient(app) as client:
+        r = client.get("/api/5/nosuchplugin/limits")
+    assert r.status_code == 404
+
+
+def test_plugin_limits_404_on_reserved_name(config_factory, store):
+    app = _make_app_with_plugins(config_factory(), store)
+    with TestClient(app) as client:
+        r = client.get("/api/5/config/limits")
+    assert r.status_code == 404
+
+
+def test_all_limits_is_not_captured_by_the_dynamic_route(config_factory, store):
+    """Route-ordering guard: /all/limits must be declared before
+    /{plugin_name}/limits, otherwise `all` is read as a plugin name."""
+    config = config_factory()
+    plugin = FakeLimitsPlugin(store, config)
+    app = _make_app_with_plugins(config, store, plugins=[plugin])
+    with TestClient(app) as client:
+        r = client.get("/api/5/all/limits")
+    assert r.status_code == 200
+    body = r.json()
+    assert "fakelimits" in body
+    assert body["fakelimits"]["percent"]["critical"] == 90.0
+
+
+def test_all_limits_omits_plugins_without_thresholds(config_factory, store):
+    config = config_factory()
+    with_limits = FakeLimitsPlugin(store, config)
+    without_limits = FakeScalarPlugin(store, config)
+    app = _make_app_with_plugins(config, store, plugins=[with_limits, without_limits])
+    with TestClient(app) as client:
+        r = client.get("/api/5/all/limits")
+    body = r.json()
+    assert "fakelimits" in body
+    assert "fakescalar" not in body
+
+
+def test_limits_routes_require_auth_when_password_is_set(config_factory, store):
+    config = config_factory(password=hash_password("hunter2"))
+    plugin = FakeLimitsPlugin(store, config)
+    app = _make_app_with_plugins(config, store, plugins=[plugin])
+    with TestClient(app) as client:
+        assert client.get("/api/5/all/limits").status_code == 401
+        assert client.get("/api/5/fakelimits/limits").status_code == 401
+        ok = client.get("/api/5/fakelimits/limits", headers=_basic_header("glances", "hunter2"))
+    assert ok.status_code == 200
+
+
+# ------------------------------------------------- export filter (issue #3211)
+#
+# The routes used to hand back the RAW store payload, so a field declared
+# `exportable: False` reached every unauthenticated HTTP client while the
+# exporters correctly dropped it. Both handlers now go through
+# `plugin.get_api_payload()`.
+
+
+def test_plugin_payload_drops_non_exportable_fields(config_factory, store):
+    config = config_factory()
+    plugin = FakeScalarPlugin(store, config)
+    _populate(store, plugin)
+    app = _make_app_with_plugins(config, store, plugins=[plugin])
+
+    assert "secret" in store.get("fakescalar"), "guard: the fixture must publish it"
+
+    with TestClient(app) as client:
+        payload = client.get("/api/5/fakescalar").json()
+
+    assert "secret" not in payload
+    assert payload["percent"] == 42.0
+
+
+def test_plugin_payload_projects_each_collection_item(config_factory, store):
+    config = config_factory()
+    plugin = FakeCollectionPlugin(store, config)
+    _populate(store, plugin)
+    app = _make_app_with_plugins(config, store, plugins=[plugin])
+
+    with TestClient(app) as client:
+        payload = client.get("/api/5/fakecollection").json()
+
+    assert payload["data"], "fixture must produce at least one item"
+    for item in payload["data"]:
+        assert "secret" not in item
+        assert "rx" in item
+
+
+def test_all_drops_non_exportable_fields(config_factory, store):
+    config = config_factory()
+    scalar = FakeScalarPlugin(store, config)
+    collection = FakeCollectionPlugin(store, config)
+    _populate(store, scalar)
+    _populate(store, collection)
+    app = _make_app_with_plugins(config, store, plugins=[scalar, collection])
+
+    with TestClient(app) as client:
+        body = client.get("/api/5/all").json()
+
+    assert "secret" not in body["fakescalar"]
+    assert all("secret" not in i for i in body["fakecollection"]["data"])
+    # `_levels` is what a UI colours cells from -- the API keeps it.
+    assert "_levels" in body["fakescalar"]
+
+
+def test_api_keeps_time_since_update(config_factory, store):
+    """Regression guard. `time_since_update` is declared `exportable: False`
+    (it is not a metric), so filtering the API on `exportable` alone would
+    strip it from every endpoint. The WebUI divides counters by it to get
+    rates -- see `plugin-cpu.vue` (ctx_switches) and `plugin-processlist.vue`
+    (per-process IO). Dropping it renders those values as NaN.
+    """
+    config = config_factory()
+    plugin = FakeScalarPlugin(store, config)
+    _populate(store, plugin)
+    app = _make_app_with_plugins(config, store, plugins=[plugin])
+
+    with TestClient(app) as client:
+        payload = client.get("/api/5/fakescalar").json()
+        body = client.get("/api/5/all").json()
+
+    assert "time_since_update" in payload
+    assert "time_since_update" in body["fakescalar"]
+    # ... but it must still never reach an exporter.
+    assert "time_since_update" not in plugin.get_export()
+
+
+def test_all_still_excludes_a_collection_plugin_that_never_published(config_factory, store):
+    """A collection plugin's envelope is built by get_api_payload(); without an
+    emptiness guard it would answer `{"data": []}` before its first cycle and
+    appear in /all a cycle too early."""
+    config = config_factory()
+    scalar = FakeScalarPlugin(store, config)
+    collection = FakeCollectionPlugin(store, config)
+    _populate(store, scalar)  # collection deliberately NOT updated
+    app = _make_app_with_plugins(config, store, plugins=[scalar, collection])
+
+    with TestClient(app) as client:
+        body = client.get("/api/5/all").json()
+        single = client.get("/api/5/fakecollection")
+
+    assert "fakescalar" in body
+    assert "fakecollection" not in body
+    assert single.status_code == 200
+    assert single.json() is None
+
+
+def test_every_real_plugin_answers_through_rest(config_factory):
+    """v4 `test_restful::test_003_plugins`: the fake plugins above stand in for
+    the real ones everywhere else. One update each, then every listed plugin
+    serves a scalar dict or the collection envelope."""
+    from glances.main import assemble, build_parser
+
+    app, *_ = assemble(build_parser().parse_args(["-s"]), config_factory())
+
+    async def update_all():
+        for plugin in app.state.plugins.values():
+            await plugin.update()
+
+    asyncio.run(update_all())
+    with TestClient(app) as client:
+        names = client.get("/api/5/pluginslist").json()
+        assert names
+        for name in names:
+            response = client.get(f"/api/5/{name}")
+            assert response.status_code == 200, name
+            payload = response.json()
+            assert isinstance(payload, dict), name
+            if app.state.plugins[name].IS_COLLECTION:
+                assert all(isinstance(item, dict) for item in payload["data"]), name
+
+
+# ------------------------------------------------------------------ /args
+
+
+def _make_app_with_args(config, store, args):
+    """build_app() with an args namespace attached, for the /args route."""
+    from glances.webserver import build_app
+
+    return build_app(config=config, store=store, alerts=None, args=args)
+
+
+def test_args_returns_the_argument_namespace(config_factory, store):
+    config = config_factory()
+    args = argparse.Namespace(port=61208, bind="127.0.0.1", server=True)
+    app = _make_app_with_args(config, store, args)
+
+    with TestClient(app) as client:
+        response = client.get("/api/5/args")
+
+    assert response.status_code == 200
+    assert response.json() == {"port": 61208, "bind": "127.0.0.1", "server": True}
+
+
+def test_args_redacts_credentials_embedded_in_a_value(config_factory, store):
+    """CVE-2026-68520 is a VALUE-level bypass: a credential inside a URL
+    survives any key-name check. Asserted on the value, not on a key name."""
+    config = config_factory()
+    args = argparse.Namespace(export_url="http://alice:s3cr3t@influx.example:8086")
+    app = _make_app_with_args(config, store, args)
+
+    with TestClient(app) as client:
+        payload = client.get("/api/5/args").json()
+
+    assert "s3cr3t" not in payload["export_url"]
+    assert "alice" not in payload["export_url"]
+    assert "influx.example" in payload["export_url"]
+
+
+def test_args_redacts_a_secret_key_name(config_factory, store):
+    config = config_factory()
+    args = argparse.Namespace(some_token="abcdef", port=61208)
+    app = _make_app_with_args(config, store, args)
+
+    with TestClient(app) as client:
+        payload = client.get("/api/5/args").json()
+
+    assert payload["some_token"] == "***"
+    assert payload["port"] == 61208
+
+
+def test_args_returns_an_empty_dict_when_no_namespace_was_supplied(config_factory, store):
+    """build_app() is called without args by several tests and by any future
+    embedder. The route must answer, not raise."""
+    config = config_factory()
+    app = _make_app_with_args(config, store, None)
+
+    with TestClient(app) as client:
+        response = client.get("/api/5/args")
+
+    assert response.status_code == 200
+    assert response.json() == {}
+
+
+def test_args_redacts_the_config_file_path(config_factory, store):
+    """The config file PATH discloses the local username and directory layout,
+    which the config CONTENTS served by /api/5/config do not. v4 redacts its
+    equivalent (`conf_file`); `_secure_value()` alone does not catch it."""
+    config = config_factory()
+    args = argparse.Namespace(config_path="/home/alice/.config/glances/glances.conf")
+    app = _make_app_with_args(config, store, args)
+
+    with TestClient(app) as client:
+        payload = client.get("/api/5/args").json()
+
+    assert payload["config_path"] == "***"
+    assert "alice" not in payload["config_path"]
+
+
+def test_args_redacts_the_username(config_factory, store):
+    """v4 `test_api_secure`: `-u` names the account a password opens."""
+    app = _make_app_with_args(config_factory(), store, argparse.Namespace(username="alice"))
+
+    with TestClient(app) as client:
+        payload = client.get("/api/5/args").json()
+
+    assert payload["username"] == "***"
+
+
+def test_args_matches_the_real_argument_set(config_factory, store):
+    """Freeze the key set. Adding a CLI option fails this test on purpose, so
+    its author has to decide whether the new argument is sensitive (spec 4.3).
+
+    `set_password` comes back as "***" because `_secure_value()` matches
+    "password" as a SUBSTRING of the key name and returns before its
+    non-string check. It is a boolean flag, not a credential. This is the
+    "over-redact rather than under-redact" behaviour the shared helper
+    documents; do NOT special-case it here -- the helper is shared with
+    /api/5/config and must not be loosened for cosmetics.
+    """
+    import glances.main as glances_main
+    from glances.main import build_parser
+
+    config = config_factory()
+    args = build_parser().parse_args(["-s"])
+    app = _make_app_with_args(config, store, args)
+
+    with TestClient(app) as client:
+        payload = client.get("/api/5/args").json()
+
+    expected = {
+        "api_doc",
+        # `--arrow-keys-sort`: which arrow pair steps the sort and which
+        # scrolls the command column. A display preference, like
+        # `disable_cursor` and `disable_unicode` — nothing sensitive.
+        "arrow_keys_sort",
+        "bind",
+        "byte",
+        "config_path",
+        "debug",
+        "disable_config_exec",
+        # A boolean display preference, like `disable_unicode` two lines down:
+        # whether the curses UI offers a process-selection cursor. Nothing
+        # sensitive, and the WebUI would read this key if the cursor ever
+        # reaches the browser (2.X-b design 8.1).
+        "disable_cursor",
+        # `--disable-history`: whether the stats history is kept. A boolean
+        # like its neighbours; nothing sensitive.
+        "disable_history",
+        # `-c/--client`, `-u/--username`, `--password`: client mode (P3-1).
+        # On a server they are None/False. `--password` is a boolean asking
+        # for a getpass() prompt, never the password itself.
+        "client",
+        "username",
+        "password_prompt",
+        # `--browser`: a boolean mode switch (P3-4).
+        "browser",
+        # `--disable-autodiscover`: Zeroconf off (P3-5). A boolean.
+        "disable_autodiscover",
+        # `--export-graph-path`: the graph exporter's output folder (P3-3).
+        # A local path, like the CSV/JSON export files already listed.
+        "export_graph_path",
+        "disable_plugin",
+        "disable_unicode",
+        "disable_webui",
+        # `--diskio-latency` / `--diskio-iops`: display modes the WebUI seeds
+        # `L` / `B` from, like `byte` and `fs_free_space`. Nothing sensitive.
+        "diskio_latency",
+        "diskio_iops",
+        # `--process-short/long-name` (the `/` key's seed), `-t` (a refresh
+        # rate) and `--strftime` (a date format): display settings only.
+        "process_short_name",
+        "time",
+        "strftime_format",
+        # v4's startup/display flags: which blocks start hidden (the WebUI
+        # seeds its SHOW/HIDE set from them), the irix mode, and terminal
+        # rendering choices. All booleans, nothing sensitive.
+        "disable_left_sidebar",
+        "disable_quicklook",
+        "disable_top",
+        "disable_process",
+        "enable_light",
+        "enable_irq",
+        "load_irix",
+        "no_kernel_threads",
+        "diskio_show_ramfs",
+        "disable_bold",
+        "disable_bg",
+        "disable_separator",
+        # The stdout outputs and their companions: selections of plugin names,
+        # a refresh count, a list-and-exit switch. Never set on a server
+        # (validate_args refuses --stdout* with -s), nothing sensitive.
+        "stdout",
+        "stdout_json",
+        "stdout_csv",
+        "stop_after",
+        # `--api-restful-doc`: a boolean run mode, nothing sensitive.
+        "api_restful_doc",
+        # `--fetch` / `--fetch-template`: a run mode and a template path.
+        "fetch",
+        "fetch_template",
+        # `--issue`: a boolean run mode, nothing sensitive.
+        "issue",
+        # `--memory-leak`: a boolean run mode, nothing sensitive.
+        # `--mcp-path`: where MCP is mounted, a URL path; nothing sensitive.
+        "mcp_path",
+        "memory_leak",
+        "modules_list",
+        # `--open-web-browser`: a startup convenience, boolean.
+        "open_web_browser",
+        "enable_mcp",
+        "enable_plugin",
+        "export",
+        "export_csv_file",
+        "export_csv_overwrite",
+        "export_json_file",
+        "export_process_filter",
+        # The TUI's process filter (`-f`). A regex the operator typed, the
+        # same shape as `export_process_filter` above it — not a credential.
+        # It is also always None here: `--process-filter` is applied in TUI
+        # mode, and TUI mode serves no REST API at all.
+        "process_filter",
+        # `--process-focus`: the same kind of operator-typed patterns as
+        # `process_filter`, TUI mode only, so always None here too.
+        "process_focus",
+        "fahrenheit",
+        "fs_free_space",
+        "full_quicklook",
+        "hide_public_info",
+        "meangpu",
+        "no_tui",
+        "percpu",
+        "port",
+        # `--print-completion` (shtab): the shell whose completion script to
+        # print, None otherwise. Nothing sensitive.
+        "print_completion",
+        "programs",
+        "server",
+        "set_password",
+        "sort_processes_key",
+    }
+    if glances_main.shtab is None:
+        # shtab is not installed on Windows: the option is then absent.
+        expected.discard("print_completion")
+    assert set(payload) == expected
+    assert payload["set_password"] == "***"
+    assert payload["config_path"] == "***"
+    assert payload["server"] is True
+
+
+def test_token_hashes_off_the_event_loop(config_factory, store, monkeypatch):
+    """Same contract as the auth middleware: PBKDF2 must not run on the loop
+    the scheduler shares with the API."""
+    import glances.routes as routes
+
+    calls: list[bool] = []
+    real = routes.verify_password
+
+    def spy(plaintext, stored):
+        try:
+            asyncio.get_running_loop()
+            calls.append(True)
+        except RuntimeError:
+            calls.append(False)
+        return real(plaintext, stored)
+
+    monkeypatch.setattr(routes, "verify_password", spy)
+    config = config_factory(password=hash_password("hunter2"))
+    app = _make_app_with_plugins(config, store)
+    with TestClient(app) as client:
+        assert client.post("/api/5/token", headers=_basic_header("glances", "hunter2")).status_code == 200
+        assert client.post("/api/5/token", headers=_basic_header("glances", "wrong")).status_code == 401
+    assert calls == [False, False]
+
+
+def test_token_rejects_a_non_ascii_username_with_401(config_factory, store):
+    config = config_factory(password=hash_password("hunter2"))
+    app = _make_app_with_plugins(config, store)
+    with TestClient(app, raise_server_exceptions=False) as client:
+        r = client.post("/api/5/token", headers=_basic_header("glancés", "hunter2"))
+    assert r.status_code == 401
+
+
+# ------------------------------------- the pinned process (2.X-b3-web)
+
+
+@pytest.fixture
+def engine(monkeypatch):
+    """The process engine's pin state, isolated per test."""
+    from glances.processes import glances_processes
+
+    monkeypatch.setattr(glances_processes, "extended_pid", None, raising=False)
+    monkeypatch.setattr(glances_processes, "extended_process", None, raising=False)
+    monkeypatch.setattr(glances_processes, "disable_extended_tag", True, raising=False)
+    return glances_processes
+
+
+def _app_with_processes(config_factory, store, pids=(1, 42)):
+    config = config_factory()
+    app = _make_app_with_plugins(config, store)
+    asyncio.run(store.set("processlist", {"data": [{"pid": p, "name": f"p{p}"} for p in pids]}))
+    return app
+
+
+def test_pinning_a_process_sets_the_engine_pin(engine, config_factory, store):
+    """The same `extended_pid` the TUI's `e` sets — one pin, two ways to ask
+    for it. v4 reaches the same engine from its own two POSTs
+    (`glances_restful_api.py:534-537`)."""
+    app = _app_with_processes(config_factory, store)
+
+    with TestClient(app) as client:
+        response = client.post("/api/5/processes/extended/42")
+
+    assert response.status_code == 200
+    assert response.json() is True
+    assert engine.extended_pid == 42
+    assert engine.disable_extended_tag is False
+
+
+def test_pinning_clears_the_previous_accumulation(engine, config_factory, store):
+    """min/max/mean accumulate into `extended_process`. Carrying the previous
+    process' numbers into the new pin would misreport it."""
+    app = _app_with_processes(config_factory, store)
+    engine.extended_pid = 1
+    engine.extended_process = {"pid": 1, "cpu_max": 99.0}
+
+    with TestClient(app) as client:
+        client.post("/api/5/processes/extended/42")
+
+    assert engine.extended_process is None
+
+
+def test_unpinning_stops_the_grab(engine, config_factory, store):
+    """Clearing `extended_process` is what actually stops it — the grab is
+    keyed on that being set (`processes.py:663-669`), not on the tag."""
+    app = _app_with_processes(config_factory, store)
+    engine.extended_pid = 42
+    engine.extended_process = {"pid": 42}
+    engine.disable_extended_tag = False
+
+    with TestClient(app) as client:
+        response = client.post("/api/5/processes/extended/disable")
+
+    assert response.status_code == 200
+    assert engine.extended_pid is None
+    assert engine.extended_process is None
+    assert engine.disable_extended_tag is True
+
+
+def test_an_unknown_pid_is_refused(engine, config_factory, store):
+    """A pid the caller cannot see in /api/5/processlist is not pinnable."""
+    app = _app_with_processes(config_factory, store)
+
+    with TestClient(app) as client:
+        response = client.post("/api/5/processes/extended/9999")
+
+    assert response.status_code == 404
+    assert engine.extended_pid is None
+
+
+def test_a_non_numeric_pid_is_rejected_before_the_handler(engine, config_factory, store):
+    """v4 reaches this through `int(pid)`, which raises ValueError → 500.
+    FastAPI's path type answers 422 without the handler running."""
+    app = _app_with_processes(config_factory, store)
+
+    with TestClient(app) as client:
+        response = client.post("/api/5/processes/extended/notapid")
+
+    assert response.status_code == 422
+    assert engine.extended_pid is None
+
+
+def test_the_pin_route_is_not_captured_by_the_plugin_catch_all(engine, config_factory, store):
+    """`/{plugin_name}` sits at the end of the router. If the pin route were
+    declared after it, `processes` would be read as a plugin name."""
+    app = _app_with_processes(config_factory, store)
+
+    with TestClient(app) as client:
+        assert client.post("/api/5/processes/extended/42").status_code == 200
+        # ... and the catch-all still answers for a real unknown plugin.
+        assert client.get("/api/5/nosuchplugin").status_code == 404
+
+
+def test_pinning_is_refused_when_nothing_has_been_published(engine, config_factory, store):
+    """Cycle 0: no process list, so no pid is pinnable — and the handler must
+    say 404 rather than raise on an absent payload."""
+    config = config_factory()
+    app = _make_app_with_plugins(config, store)
+
+    with TestClient(app) as client:
+        assert client.post("/api/5/processes/extended/1").status_code == 404
+
+
+# ------------------------------------------------- /api/5/<plugin>/history
+#
+# History design 2026-09-26 §5.5: columnar, nested by field then raw item,
+# filters as query parameters (an item can be `/home`).
+
+
+class FakeHistScalar(GlancesPluginBase[dict]):
+    plugin_name: ClassVar[str] = "fakehistscalar"
+    IS_COLLECTION: ClassVar[bool] = False
+    fields_description: ClassVar[dict[str, dict[str, Any]]] = {
+        "percent": {"description": "Usage.", "unit": "percent", "history": True},
+        "total": {"description": "Total.", "unit": "bytes"},
+    }
+
+    async def _grab_stats(self) -> dict:
+        return {"percent": 42.0, "total": 1024}
+
+
+class FakeHistFs(GlancesPluginBase[list]):
+    plugin_name: ClassVar[str] = "fakehistfs"
+    IS_COLLECTION: ClassVar[bool] = True
+    fields_description: ClassVar[dict[str, dict[str, Any]]] = {
+        "mnt_point": {"description": "Mount point.", "unit": "string", "primary_key": True},
+        "percent": {"description": "Usage.", "unit": "percent", "history": True},
+        "free": {"description": "Free.", "unit": "bytes", "history": True},
+    }
+
+    async def _grab_stats(self) -> list:
+        return [{"mnt_point": "/home", "percent": 50.0, "free": 1}, {"mnt_point": "/", "percent": 10.0, "free": 2}]
+
+
+def _history_app(config, store, cycles=1, size=10):
+    scalar, fs = FakeHistScalar(store, config), FakeHistFs(store, config)
+    history = HistoryStore(size)
+    for plugin in (scalar, fs):
+        plugin.history = history
+        for _ in range(cycles):
+            _populate(store, plugin)
+    return _make_app_with_plugins(config, store, plugins=[scalar, fs, FakeScalarPlugin(store, config)])
+
+
+def test_history_scalar_shape(config_factory, store):
+    app = _history_app(config_factory(), store, cycles=2)
+    with TestClient(app) as client:
+        body = client.get("/api/5/fakehistscalar/history").json()
+    assert len(body["timestamps"]) == 2
+    assert body["series"] == {"percent": [42.0, 42.0]}
+
+
+def test_history_collection_nests_by_field_then_raw_item(config_factory, store):
+    app = _history_app(config_factory(), store)
+    with TestClient(app) as client:
+        body = client.get("/api/5/fakehistfs/history").json()
+    assert body["series"] == {"percent": {"/home": [50.0], "/": [10.0]}, "free": {"/home": [1], "/": [2]}}
+
+
+def test_history_nb_field_and_an_item_with_a_slash(config_factory, store):
+    app = _history_app(config_factory(), store, cycles=3)
+    with TestClient(app) as client:
+        body = client.get("/api/5/fakehistfs/history", params={"nb": 2, "field": "percent", "item": "/home"}).json()
+    assert len(body["timestamps"]) == 2
+    assert body["series"] == {"percent": {"/home": [50.0, 50.0]}}
+
+
+def test_history_item_alone_keeps_every_field(config_factory, store):
+    app = _history_app(config_factory(), store)
+    with TestClient(app) as client:
+        body = client.get("/api/5/fakehistfs/history", params={"item": "/"}).json()
+    assert body["series"] == {"percent": {"/": [10.0]}, "free": {"/": [2]}}
+
+
+@pytest.mark.parametrize(
+    ("path", "params"),
+    [
+        ("/api/5/nope/history", {}),
+        ("/api/5/fakehistfs/history", {"field": "mnt_point"}),
+        ("/api/5/fakehistfs/history", {"item": "/nope"}),
+        ("/api/5/fakehistscalar/history", {"item": "x"}),
+    ],
+)
+def test_history_404s(path, params, config_factory, store):
+    app = _history_app(config_factory(), store)
+    with TestClient(app) as client:
+        assert client.get(path, params=params).status_code == 404
+
+
+def test_history_negative_nb_is_rejected(config_factory, store):
+    app = _history_app(config_factory(), store)
+    with TestClient(app) as client:
+        assert client.get("/api/5/fakehistscalar/history", params={"nb": -1}).status_code == 422
+
+
+def test_history_is_empty_not_an_error_when_there_is_none(config_factory, store):
+    """No history field, cycle 0, and history disabled all read the same."""
+    config = config_factory()
+    idle = FakeHistScalar(store, config)  # never updated, no store attached
+    app = _make_app_with_plugins(config, store, plugins=[idle, FakeScalarPlugin(store, config)])
+    empty = {"timestamps": [], "series": {}}
+    with TestClient(app) as client:
+        assert client.get("/api/5/fakehistscalar/history").json() == empty
+        assert client.get("/api/5/fakescalar/history").json() == empty
+
+
+def test_history_requires_auth_when_password_is_set(config_factory, store):
+    config = config_factory(password=hash_password("hunter2"))
+    app = _history_app(config, store)
+    with TestClient(app) as client:
+        assert client.get("/api/5/fakehistscalar/history").status_code == 401
+        ok = client.get("/api/5/fakehistscalar/history", headers=_basic_header("glances", "hunter2"))
+    assert ok.status_code == 200
+
+
+# ------------------------------------------- the shared sort (2026-09-30)
+
+
+@pytest.fixture
+def sort_engine(monkeypatch):
+    """The process engine's sort state, isolated per test."""
+    from glances.processes import glances_processes
+
+    monkeypatch.setattr(glances_processes, "_sort_key", "cpu_percent", raising=False)
+    monkeypatch.setattr(glances_processes, "auto_sort", True, raising=False)
+    return glances_processes
+
+
+@pytest.mark.parametrize(
+    "key", ["cpu_percent", "memory_percent", "username", "cpu_times", "io_counters", "name", "cpu_num"]
+)
+def test_sorting_sets_a_manual_engine_key(sort_engine, config_factory, store, key):
+    """The same `set_sort_key(key, False)` the TUI's letter keys call."""
+    app = _make_app_with_plugins(config_factory(), store)
+    with TestClient(app) as client:
+        response = client.post(f"/api/5/processes/sort/{key}")
+    assert response.status_code == 200
+    assert response.json() is True
+    assert sort_engine.sort_key == key
+    assert sort_engine.auto_sort is False
+
+
+def test_sorting_auto_restores_the_automatic_sort(sort_engine, config_factory, store):
+    sort_engine.set_sort_key("name", False)
+    app = _make_app_with_plugins(config_factory(), store)
+    with TestClient(app) as client:
+        assert client.post("/api/5/processes/sort/auto").status_code == 200
+    assert sort_engine.auto_sort is True
+    assert sort_engine.sort_key == "cpu_percent"
+
+
+def test_an_unknown_sort_key_is_refused_and_changes_nothing(sort_engine, config_factory, store):
+    sort_engine.set_sort_key("name", False)
+    app = _make_app_with_plugins(config_factory(), store)
+    with TestClient(app) as client:
+        response = client.post("/api/5/processes/sort/pid")
+    assert response.status_code == 400
+    assert "memory_percent" in response.json()["detail"]
+    assert sort_engine.sort_key == "name"
+    assert sort_engine.auto_sort is False
+
+
+def test_sorting_requires_auth_when_a_password_is_set(sort_engine, config_factory, store):
+    app = _make_app_with_plugins(config_factory(password=hash_password("hunter2")), store)
+    with TestClient(app) as client:
+        response = client.post("/api/5/processes/sort/name")
+    assert response.status_code == 401
+    assert sort_engine.sort_key == "cpu_percent"
+
+
+# ------------------------------- v4's field routes (test_restful.py ports)
+
+
+class FakeEmptyCollection(GlancesPluginBase[list]):
+    plugin_name: ClassVar[str] = "fakeempty"
+    IS_COLLECTION: ClassVar[bool] = True
+    fields_description: ClassVar[dict[str, dict[str, Any]]] = {
+        "name": {"description": "Item name.", "unit": "string", "primary_key": True},
+    }
+
+    async def _grab_stats(self) -> list:
+        return []
+
+
+def _fields_app(config, store, populate=True):
+    plugins = [
+        FakeScalarPlugin(store, config),
+        FakeCollectionPlugin(store, config),
+        FakeHistFs(store, config),
+        FakeEmptyCollection(store, config),
+    ]
+    if populate:
+        for plugin in plugins:
+            _populate(store, plugin)
+    return _make_app_with_plugins(config, store, alerts=GlancesAlerts(config, actions={}), plugins=plugins)
+
+
+def test_field_of_a_scalar_plugin(config_factory, store):
+    """v4 test_004_items: every key of the payload answers on its own."""
+    with TestClient(_fields_app(config_factory(), store)) as client:
+        payload = client.get("/api/5/fakescalar").json()
+        for key, value in payload.items():
+            assert client.get(f"/api/5/fakescalar/{key}").json() == {key: value}
+
+
+def test_field_of_a_collection_is_a_list(config_factory, store):
+    """v4 test_011_issue1401 (`/network/interface_name`)."""
+    with TestClient(_fields_app(config_factory(), store)) as client:
+        assert client.get("/api/5/fakecollection/name").json() == {"name": ["eth0", "lo"]}
+        assert client.get("/api/5/fakeempty/name").json() == {"name": []}
+
+
+def test_field_of_one_item(config_factory, store):
+    """v4 test_017_item_key: `/<plugin>/<field>/<primary key value>`."""
+    with TestClient(_fields_app(config_factory(), store)) as client:
+        assert client.get("/api/5/fakecollection/rx/eth0").json() == {"rx": 100}
+        assert client.get("/api/5/fakecollection/name/lo").json() == {"name": "lo"}
+        # A primary key with a slash, raw or encoded.
+        assert client.get("/api/5/fakehistfs/percent//home").json() == {"percent": 50.0}
+        assert client.get("/api/5/fakehistfs/percent/%2Fhome").json() == {"percent": 50.0}
+        assert client.get("/api/5/fakehistfs/free//").json() == {"free": 2}
+
+
+def test_items_by_value(config_factory, store):
+    """v4 test_005_values: `/<plugin>/<field>/value/<value>`, numbers compared as text."""
+    with TestClient(_fields_app(config_factory(), store)) as client:
+        assert client.get("/api/5/fakecollection/rx/value/100").json() == {"100": [{"name": "eth0", "rx": 100}]}
+        assert client.get("/api/5/fakecollection/rx/value/7").json() == {"7": []}
+        assert client.get("/api/5/fakehistfs/mnt_point/value//home").json()["/home"][0]["free"] == 1
+
+
+def test_top(config_factory, store):
+    """v4 test_013_top: a bare list of the first n items."""
+    with TestClient(_fields_app(config_factory(), store)) as client:
+        assert client.get("/api/5/fakecollection/top/1").json() == [{"name": "eth0", "rx": 100}]
+        assert len(client.get("/api/5/fakecollection/top/5").json()) == 2
+
+
+@pytest.mark.parametrize("n", ["0", "-1", "two"])
+def test_top_rejects_a_bad_n(n, config_factory, store):
+    with TestClient(_fields_app(config_factory(), store)) as client:
+        assert client.get(f"/api/5/fakecollection/top/{n}").status_code == 422
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "/api/5/nope/total",
+        "/api/5/nope/top/1",
+        "/api/5/nope/rx/eth0",
+        "/api/5/nope/rx/value/1",
+        "/api/5/fakescalar/nope",
+        "/api/5/fakecollection/nope",
+        "/api/5/fakeempty/nope",
+        "/api/5/fakecollection/nope/eth0",
+        "/api/5/fakecollection/rx/nope",
+        "/api/5/fakecollection/nope/value/1",
+        # A scalar plugin has no items.
+        "/api/5/fakescalar/top/1",
+        "/api/5/fakescalar/total/x",
+        "/api/5/fakescalar/total/value/1024",
+        # A reserved name is not a plugin.
+        "/api/5/args/x",
+        "/api/5/config/outputs",
+    ],
+)
+def test_field_routes_404(path, config_factory, store):
+    with TestClient(_fields_app(config_factory(), store)) as client:
+        assert client.get(path).status_code == 404
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "/api/5/fakescalar/secret",
+        "/api/5/fakecollection/secret",
+        "/api/5/fakecollection/secret/eth0",
+        "/api/5/fakecollection/secret/value/hunter2",
+    ],
+)
+def test_field_routes_do_not_serve_a_non_exportable_field(path, config_factory, store):
+    with TestClient(_fields_app(config_factory(), store)) as client:
+        response = client.get(path)
+    assert response.status_code == 404
+    assert "hunter2" not in response.text
+
+
+def test_top_and_value_project_each_item(config_factory, store):
+    with TestClient(_fields_app(config_factory(), store)) as client:
+        assert "hunter2" not in client.get("/api/5/fakecollection/top/2").text
+        assert "hunter2" not in client.get("/api/5/fakecollection/name/value/eth0").text
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "/api/5/fakescalar/total",
+        "/api/5/fakecollection/top/1",
+        "/api/5/fakecollection/rx/eth0",
+        "/api/5/fakecollection/rx/value/100",
+    ],
+)
+def test_field_routes_return_null_before_the_first_cycle(path, config_factory, store):
+    with TestClient(_fields_app(config_factory(), store, populate=False)) as client:
+        response = client.get(path)
+    assert response.status_code == 200
+    assert response.json() is None
+
+
+def test_field_routes_do_not_capture_the_static_routes(config_factory, store):
+    """`/{plugin}/{field}` is declared last: every older route still answers."""
+    with TestClient(_fields_app(config_factory(), store)) as client:
+        assert client.get("/api/5/fakescalar/info").json() == FakeScalarPlugin.fields_description
+        assert client.get("/api/5/fakescalar/limits").json() == {}
+        assert set(client.get("/api/5/fakehistfs/history").json()) == {"timestamps", "series"}
+        assert client.get("/api/5/all/limits").json() == {}
+        assert "fakeempty" in client.get("/api/5/all/info").json()
+        assert set(client.get("/api/5/alert/incidents").json()) == {"is_initializing", "incidents"}
+        assert isinstance(client.get("/api/5/alert").json(), list)
+        assert client.get("/api/5/config").status_code == 200
+        assert client.get("/api/5/args").json() == {}
+        assert "Browser mode" in client.get("/api/5/serverslist").json()["detail"]
+
+
+def test_field_routes_do_not_capture_the_process_routes(engine, sort_engine, config_factory, store):
+    with TestClient(_app_with_processes(config_factory, store)) as client:
+        assert client.post("/api/5/processes/extended/42").json() is True
+        assert client.post("/api/5/processes/extended/disable").json() is True
+        assert client.post("/api/5/processes/sort/name").json() is True
+
+
+def test_field_routes_require_auth_when_password_is_set(config_factory, store):
+    app = _fields_app(config_factory(password=hash_password("hunter2")), store)
+    with TestClient(app) as client:
+        for path in ("/api/5/fakescalar/total", "/api/5/fakecollection/top/1", "/api/5/fakecollection/rx/eth0"):
+            assert client.get(path).status_code == 401
+        ok = client.get("/api/5/fakecollection/rx/value/100", headers=_basic_header("glances", "hunter2"))
+    assert ok.status_code == 200

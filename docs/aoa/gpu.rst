@@ -4,6 +4,7 @@ GPU
 ===
 
 For the moment, following GPU are supported:
+
 - NVidia (thanks to the `nvidia-ml-py`_ library)
 - NVidia Jetson / Tegra integrated GPU (NVML reports the device but not its
   telemetry, so usage and temperature are read from Tegra sysfs)
@@ -33,33 +34,38 @@ refresh time. It displays:
 
 .. image:: ../_static/gpu.png
 
-If you click on the ``6`` short key, the per-GPU view is displayed:
+If you have more than one GPU, the per-GPU view (one line per GPU) is
+displayed by default. Click on the ``6`` short key to switch between the
+per-GPU view and the mean view (above):
 
 .. image:: ../_static/pergpu.png
 
 .. note::
     You can also start Glances with the ``--meangpu`` option to display
-    the first view by default.
+    the mean view by default.
 
 You can change the threshold limits in the configuration file:
 
 .. code-block:: ini
 
     [gpu]
-    # Default processor values if not defined: 50/70/90
+    # Default processor values if not defined: 70/80/90
     proc_careful=50
     proc_warning=70
     proc_critical=90
-    # Default memory values if not defined: 50/70/90
+    # Default memory values if not defined: 70/80/90
     mem_careful=50
     mem_warning=70
     mem_critical=90
-    # Temperature
+    # Temperature (default values if not defined: 60/70/80)
     temperature_careful=60
     temperature_warning=70
     temperature_critical=80
 
-Legend:
+Thresholds can also be defined for a specific GPU with the
+``<gpu_id>_<stat>_<level>`` keys (example: ``nvidia0_temperature_critical=85``).
+
+Legend (with the default configuration file):
 
 ============== ============
 GPU (PROC/MEM) Status

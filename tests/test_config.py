@@ -1,0 +1,803 @@
+#!/usr/bin/env python
+#
+# Glances - An eye on your system
+#
+# SPDX-FileCopyrightText: 2026 Nicolas Hennion <nicolas@nicolargo.com>
+#
+# SPDX-License-Identifier: LGPL-3.0-only
+#
+
+"""Glances v5 — unit tests for GlancesConfig.
+
+Test stack: pytest + pytest-asyncio (auto mode). See architecture decisions §9.
+
+Tests cover the **single-file** loading model (v4-aligned):
+- DEFAULTS layer always applied (codebase baseline).
+- ``-C`` selects exactly one file (no search). Missing path → DEFAULTS only.
+- Without ``-C``, v4 search order: user (XDG) → system. First existing wins.
+- No cross-file merging — keys present in /etc but absent from XDG are
+  **not** inherited when XDG is the chosen file.
+- ``GLANCES_<SECTION>__<KEY>`` env vars overlay (orthogonal — kept).
+- Typed accessor: int, float, bool variants, list, str, missing keys.
+- Bool parsing rejects unknown values.
+- ``as_dict_secure()`` redacts secret-like keys, preserves the rest.
+- ``reload()`` picks up file changes.
+- ``loaded_sources`` reports the (at most one) file actually read.
+- ``has_section`` / ``sections`` introspection.
+"""
+
+from __future__ import annotations
+
+import os
+import textwrap
+from pathlib import Path
+
+import pytest
+
+from glances.config import ConfigFileError, GlancesConfig
+
+
+@pytest.fixture
+def env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """Isolated config environment.
+
+    - All real env vars are cleared.
+    - SYSTEM_CONFIG_PATH is redirected to <tmp>/etc/glances.conf.
+    - XDG_CONFIG_HOME is set to <tmp>/xdg.
+    - HOME (USERPROFILE on Windows) is set to <tmp>/home (fallback when XDG is unset).
+    """
+    for key in list(os.environ.keys()):
+        monkeypatch.delenv(key, raising=False)
+
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "xdg"))
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    # Windows resolves `~` from USERPROFILE and ignores HOME.
+    monkeypatch.setenv("USERPROFILE", str(tmp_path / "home"))
+    monkeypatch.setattr(GlancesConfig, "SYSTEM_CONFIG_PATH", tmp_path / "etc" / "glances.conf")
+    return tmp_path
+
+
+def write(path: Path, content: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(textwrap.dedent(content).lstrip("\n"))
+
+
+def etc_path(env: Path) -> Path:
+    return env / "etc" / "glances.conf"
+
+
+def xdg_path(env: Path) -> Path:
+    return env / "xdg" / "glances" / "glances.conf"
+
+
+def home_path(env: Path) -> Path:
+    return env / "home" / ".config" / "glances" / "glances.conf"
+
+
+# ============================================================================
+# Defaults
+# ============================================================================
+
+
+def test_defaults_only(env: Path) -> None:
+    config = GlancesConfig()
+    assert config.get("global", "refresh_time", 999) == 2
+    assert config.get("outputs", "api_doc", False) is True
+
+
+def test_defaults_section_present(env: Path) -> None:
+    assert GlancesConfig().has_section("global")
+
+
+@pytest.mark.parametrize("section", ["ip", "fs", "folders", "sensors", "ports"])
+def test_no_per_plugin_refresh_in_defaults(env: Path, section: str) -> None:
+    """Per-plugin cadences must NOT live in this central dict any more — they
+    are `GlancesPluginBase.DEFAULT_REFRESH_TIME` on the plugin classes, so a
+    new plugin never requires editing config.py. Guarded explicitly so the
+    two mechanisms cannot silently diverge (a value here would shadow the
+    class attribute, since the config section is consulted first)."""
+    assert section not in GlancesConfig.DEFAULTS
+    assert GlancesConfig().get(section, "refresh", -1) == -1
+
+
+@pytest.mark.parametrize("section", ["ip", "fs", "folders", "sensors", "ports"])
+def test_per_plugin_refresh_read_from_config_file(env: Path, section: str) -> None:
+    """A user who sets the key in their own config is still read normally."""
+    write(xdg_path(env), f"[{section}]\nrefresh = 42\n")
+    assert GlancesConfig().get(section, "refresh", -1) == 42
+
+
+# ============================================================================
+# Layered file overlay
+# ============================================================================
+
+
+def test_etc_loaded_when_no_xdg(env: Path) -> None:
+    """/etc is read when XDG file is absent."""
+    write(etc_path(env), "[global]\nrefresh_time = 5\n")
+    assert GlancesConfig().get("global", "refresh_time", 999) == 5
+
+
+def test_xdg_wins_over_etc_when_both_present(env: Path) -> None:
+    """User XDG conf is preferred over /etc. v4-style first-found-wins."""
+    write(etc_path(env), "[global]\nrefresh_time = 5\n")
+    write(xdg_path(env), "[global]\nrefresh_time = 7\n")
+    assert GlancesConfig().get("global", "refresh_time", 999) == 7
+
+
+def test_xdg_does_not_inherit_etc_keys(env: Path) -> None:
+    """Regression guard: a key present only in /etc must NOT bleed into
+    the loaded config when XDG is the chosen file. The pre-rewrite loader
+    merged across files, which caused legacy v4-era ``careful=50`` keys
+    in /etc to silently apply to v5 plugins reading from XDG."""
+    write(etc_path(env), "[memswap]\ncareful = 50\nwarning = 70\ncritical = 90\n")
+    write(xdg_path(env), "[memswap]\npercent_careful = 60\n")
+    config = GlancesConfig()
+    # XDG selected → only its keys appear in [memswap].
+    assert config.get("memswap", "percent_careful", -1) == 60
+    # /etc keys must NOT have been carried over.
+    assert config.get("memswap", "careful", "absent") == "absent"
+    assert config.get("memswap", "warning", "absent") == "absent"
+
+
+def test_xdg_fallback_to_home_when_xdg_unset(env: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("XDG_CONFIG_HOME")
+    write(home_path(env), "[global]\nrefresh_time = 9\n")
+    assert GlancesConfig().get("global", "refresh_time", 999) == 9
+
+
+def test_glances_config_file_env_is_ignored(env: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """``$GLANCES_CONFIG_FILE`` was a v5-only convenience that introduced
+    cross-file merging surprises. v5 now aligns with v4: only ``-C`` can
+    explicitly select a config file. The env var is silently ignored."""
+    custom = env / "custom.conf"
+    write(xdg_path(env), "[global]\nrefresh_time = 7\n")
+    write(custom, "[global]\nrefresh_time = 10\n")
+    monkeypatch.setenv("GLANCES_CONFIG_FILE", str(custom))
+    # XDG still wins; the env var was ignored.
+    assert GlancesConfig().get("global", "refresh_time", 999) == 7
+
+
+def test_cli_path_bypasses_search(env: Path) -> None:
+    """``-C`` selects exactly one file. XDG / /etc are ignored entirely."""
+    cli_file = env / "cli.conf"
+    write(etc_path(env), "[global]\nrefresh_time = 5\n")
+    write(xdg_path(env), "[global]\nrefresh_time = 7\n")
+    write(cli_file, "[global]\nrefresh_time = 12\n")
+    assert GlancesConfig(cli_config_path=str(cli_file)).get("global", "refresh_time", 999) == 12
+
+
+def test_cli_path_does_not_merge_with_other_files(env: Path) -> None:
+    """A key present only in /etc must NOT show up when -C selects another file."""
+    cli_file = env / "cli.conf"
+    write(etc_path(env), "[memswap]\ncareful = 50\n")
+    write(cli_file, "[global]\nrefresh_time = 12\n")
+    config = GlancesConfig(cli_config_path=str(cli_file))
+    assert config.get("global", "refresh_time", 999) == 12
+    assert config.get("memswap", "careful", "absent") == "absent"
+
+
+def test_missing_cli_path_falls_back_to_defaults_only(env: Path, caplog: pytest.LogCaptureFixture) -> None:
+    """A non-existent ``-C`` path logs a WARNING and uses DEFAULTS only —
+    does NOT silently fall back to the search path."""
+    write(xdg_path(env), "[global]\nrefresh_time = 7\n")  # exists but must be ignored
+    with caplog.at_level("WARNING"):
+        config = GlancesConfig(cli_config_path=str(env / "nonexistent.conf"))
+    # Default value, not the XDG one.
+    assert config.get("global", "refresh_time", 999) == 2
+    assert any("does not exist" in r.message for r in caplog.records)
+
+
+def test_missing_files_silently_skipped(env: Path) -> None:
+    """No XDG, no /etc → DEFAULTS only. No crash, no warning."""
+    assert GlancesConfig().get("global", "refresh_time", 0) == 2
+
+
+# ============================================================================
+# Unloadable file — fail closed
+# ============================================================================
+#
+# A config file that exists but cannot be loaded must NOT be skipped: skipping
+# it silently drops security keys such as `[outputs] password` (the REST API
+# then starts unauthenticated) or `disable_config_exec`. v4 stops on the same
+# files; v5 raises ConfigFileError and lets the entry point exit.
+
+
+@pytest.mark.parametrize(
+    "content",
+    [
+        pytest.param("[outputs]\npassword = secret\n[outputs]\napi_doc = false\n", id="duplicate-section"),
+        pytest.param("[outputs]\npassword = secret\npassword = other\n", id="duplicate-option"),
+        pytest.param("password = secret\n", id="missing-section-header"),
+    ],
+)
+def test_unparsable_file_raises(env: Path, content: str) -> None:
+    write(xdg_path(env), content)
+    with pytest.raises(ConfigFileError, match="glances.conf"):
+        GlancesConfig()
+
+
+def test_unparsable_cli_file_raises(env: Path) -> None:
+    cli_file = env / "cli.conf"
+    write(cli_file, "[outputs]\npassword = secret\n[outputs]\n")
+    with pytest.raises(ConfigFileError, match="cli.conf"):
+        GlancesConfig(cli_config_path=str(cli_file))
+
+
+def test_non_utf8_file_raises(env: Path) -> None:
+    path = xdg_path(env)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(b"[outputs]\npassword = s\xe9cret\n")
+    with pytest.raises(ConfigFileError):
+        GlancesConfig()
+
+
+@pytest.mark.skipif(os.name != "posix" or os.geteuid() == 0, reason="needs a non-root POSIX user")
+def test_unreadable_file_raises(env: Path) -> None:
+    """``ConfigParser.read(path)`` silently skips a file it cannot open —
+    the permission error must surface instead."""
+    path = xdg_path(env)
+    write(path, "[outputs]\npassword = secret\n")
+    path.chmod(0)
+    try:
+        with pytest.raises(ConfigFileError):
+            GlancesConfig()
+    finally:
+        path.chmod(0o600)
+
+
+# ============================================================================
+# Environment variable overlay (highest priority)
+# ============================================================================
+
+
+def test_env_overlay_top_priority(env: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    write(etc_path(env), "[global]\nrefresh_time = 5\n")
+    monkeypatch.setenv("GLANCES_GLOBAL__REFRESH_TIME", "11")
+    assert GlancesConfig().get("global", "refresh_time", 0) == 11
+
+
+def test_env_overlay_creates_new_section(env: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("GLANCES_NEWSECTION__SOMEKEY", "value")
+    assert GlancesConfig().get("newsection", "somekey", "") == "value"
+
+
+def test_env_overlay_key_with_underscores(env: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    # Section names have no '_' by convention; keys may have any number.
+    monkeypatch.setenv("GLANCES_MEM__CRITICAL_ACTION", "echo critical")
+    assert GlancesConfig().get("mem", "critical_action", "") == "echo critical"
+
+
+def test_env_var_without_separator_ignored(env: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("GLANCES_BADVAR", "value")
+    assert "badvar" not in GlancesConfig().sections()
+
+
+def test_env_var_wrong_prefix_ignored(env: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("NOTGLANCES_GLOBAL__REFRESH_TIME", "99")
+    assert GlancesConfig().get("global", "refresh_time", 0) == 2
+
+
+def test_env_var_empty_section_ignored(env: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("GLANCES___KEY", "value")
+    assert "" not in GlancesConfig().sections()
+
+
+# ============================================================================
+# Typed accessor
+# ============================================================================
+
+
+@pytest.fixture
+def typed_config(env: Path) -> GlancesConfig:
+    write(
+        etc_path(env),
+        """
+        [test]
+        int_val = 42
+        float_val = 3.14
+        list_val = a, b, c
+        string_val = hello
+    """,
+    )
+    return GlancesConfig()
+
+
+def test_get_int(typed_config: GlancesConfig) -> None:
+    assert typed_config.get("test", "int_val", 0) == 42
+
+
+def test_get_float(typed_config: GlancesConfig) -> None:
+    assert typed_config.get("test", "float_val", 0.0) == pytest.approx(3.14)
+
+
+def test_get_str(typed_config: GlancesConfig) -> None:
+    assert typed_config.get("test", "string_val", "") == "hello"
+
+
+def test_get_list(typed_config: GlancesConfig) -> None:
+    assert typed_config.get("test", "list_val", []) == ["a", "b", "c"]
+
+
+def test_get_list_strips_whitespace_and_empty(env: Path) -> None:
+    write(etc_path(env), "[test]\nlist_val = a,, b ,c \n")
+    assert GlancesConfig().get("test", "list_val", []) == ["a", "b", "c"]
+
+
+def test_get_missing_section_returns_default(env: Path) -> None:
+    assert GlancesConfig().get("absent", "absent", "default") == "default"
+
+
+def test_get_missing_option_returns_default(typed_config: GlancesConfig) -> None:
+    assert typed_config.get("test", "absent", 99) == 99
+
+
+def test_get_value_alias(typed_config: GlancesConfig) -> None:
+    assert typed_config.get_value("test", "int_val", 0) == typed_config.get("test", "int_val", 0)
+
+
+def test_default_native_type_passes_through(env: Path) -> None:
+    # DEFAULTS hold int/bool natively — they must reach get() without coercion.
+    result = GlancesConfig().get("global", "refresh_time", 0)
+    assert isinstance(result, int)
+    assert result == 2
+
+
+# ============================================================================
+# Bool coercion
+# ============================================================================
+
+
+@pytest.mark.parametrize("value", ["yes", "true", "1", "on", "YES", "TRUE", "On"])
+def test_bool_true_variants(env: Path, value: str) -> None:
+    write(etc_path(env), f"[test]\nflag = {value}\n")
+    assert GlancesConfig().get("test", "flag", False) is True
+
+
+@pytest.mark.parametrize("value", ["no", "false", "0", "off", "NO", "False"])
+def test_bool_false_variants(env: Path, value: str) -> None:
+    write(etc_path(env), f"[test]\nflag = {value}\n")
+    assert GlancesConfig().get("test", "flag", True) is False
+
+
+def test_bool_invalid_raises(env: Path) -> None:
+    write(etc_path(env), "[test]\nflag = maybe\n")
+    config = GlancesConfig()
+    with pytest.raises(ValueError):
+        config.get("test", "flag", False)
+
+
+# ============================================================================
+# as_dict_secure() — secret redaction
+# ============================================================================
+
+
+@pytest.fixture
+def secret_config(env: Path) -> GlancesConfig:
+    write(
+        etc_path(env),
+        """
+        [influxdb]
+        host = localhost
+        port = 8086
+        password = secret123
+
+        [smtp]
+        user = bob
+        passphrase = topsecret
+        api_key = ak_xxx
+
+        [serverlist]
+        uri = http://user:pass@example.com
+
+        [snmp]
+        snmp_community = public
+        snmp_authkey = mykey
+
+        [cpu]
+        user_careful = 50
+        user_warning = 70
+    """,
+    )
+    return GlancesConfig()
+
+
+@pytest.fixture
+def url_config(env: Path) -> GlancesConfig:
+    write(
+        etc_path(env),
+        """
+        [influxdb]
+        url = https://admin:s3cr3t@influx.example.com/write?db=glances
+        host = influx.example.com
+
+        [smtp]
+        username = bob
+        login = bob
+        from = glances@example.com
+
+        [outputs]
+        port = 61208
+    """,
+    )
+    return GlancesConfig()
+
+
+def test_redacts_passwords(secret_config: GlancesConfig) -> None:
+    assert secret_config.as_dict_secure()["influxdb"]["password"] == "***"
+
+
+def test_redacts_passphrases_and_api_keys(secret_config: GlancesConfig) -> None:
+    d = secret_config.as_dict_secure()
+    assert d["smtp"]["passphrase"] == "***"
+    assert d["smtp"]["api_key"] == "***"
+
+
+def test_redacts_uri(secret_config: GlancesConfig) -> None:
+    assert secret_config.as_dict_secure()["serverlist"]["uri"] == "***"
+
+
+def test_redacts_snmp_secrets(secret_config: GlancesConfig) -> None:
+    d = secret_config.as_dict_secure()
+    assert d["snmp"]["snmp_community"] == "***"
+    assert d["snmp"]["snmp_authkey"] == "***"
+
+
+def test_preserves_non_secret(secret_config: GlancesConfig) -> None:
+    d = secret_config.as_dict_secure()
+    assert d["influxdb"]["host"] == "localhost"
+    assert d["influxdb"]["port"] == "8086"
+
+
+def test_redacts_bare_user_key(secret_config: GlancesConfig) -> None:
+    """A standalone `user` option is a credential — CVE-2026-68520."""
+    assert secret_config.as_dict_secure()["smtp"]["user"] == "***"
+
+
+def test_preserves_user_prefixed_thresholds(secret_config: GlancesConfig) -> None:
+    """`user_careful` / `user_warning` are thresholds, not credentials.
+
+    Guards the reason `user` lives in SECRET_KEYS_EXACT and not in the
+    substring-matched SECRET_KEYS.
+    """
+    d = secret_config.as_dict_secure()
+    assert d["cpu"]["user_careful"] == "50"
+    assert d["cpu"]["user_warning"] == "70"
+
+
+def test_includes_all_sections(secret_config: GlancesConfig) -> None:
+    d = secret_config.as_dict_secure()
+    for section in ["influxdb", "smtp", "serverlist", "snmp"]:
+        assert section in d
+
+
+def test_as_dict_unmodified(secret_config: GlancesConfig) -> None:
+    # as_dict() returns the raw data without redaction.
+    assert secret_config.as_dict()["influxdb"]["password"] == "secret123"
+
+
+# ============================================================================
+# as_dict_secure() — value-level redaction (CVE-2026-68520)
+# ============================================================================
+
+
+def test_redacts_credentials_embedded_in_url_value(url_config: GlancesConfig) -> None:
+    """An innocuous key name must not let a URL credential leak."""
+    url = url_config.as_dict_secure()["influxdb"]["url"]
+    assert url == "https://***@influx.example.com/write?db=glances"
+    assert "s3cr3t" not in url
+    assert "admin" not in url
+
+
+def test_preserves_url_without_credentials(url_config: GlancesConfig) -> None:
+    assert url_config.as_dict_secure()["influxdb"]["host"] == "influx.example.com"
+
+
+def test_preserves_at_sign_outside_url_authority(url_config: GlancesConfig) -> None:
+    """A bare '@' with no `://` before it is not a credential separator."""
+    assert url_config.as_dict_secure()["smtp"]["from"] == "glances@example.com"
+
+
+def test_redacts_username_and_login_keys(url_config: GlancesConfig) -> None:
+    d = url_config.as_dict_secure()
+    assert d["smtp"]["username"] == "***"
+    assert d["smtp"]["login"] == "***"
+
+
+def test_secure_value_passes_through_non_string() -> None:
+    """Ports, flags and refresh rates cannot carry a credential."""
+    assert GlancesConfig._secure_value("refresh", 10) == 10
+    assert GlancesConfig._secure_value("enable", True) is True
+    assert GlancesConfig._secure_value("missing", None) is None
+
+
+def test_redacts_a_password_holding_an_unencoded_at_sign() -> None:
+    """`urlparse` and requests split the userinfo on the LAST '@': so must the redaction."""
+    assert GlancesConfig._secure_value("url", "https://u:p@ssW0RD@host.example/x") == "https://***@host.example/x"
+
+
+def test_backticks_in_a_value_are_never_executed(env: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """CVE-2026-33641: v4 ran `` `cmd` `` found in a config value (`system_exec`).
+
+    v5 never executes anything from the config, through the file or through
+    a `GLANCES_<SECTION>__<KEY>` variable: the value is kept as written.
+    """
+    canary = tmp_path / "executed"
+    value = f"`touch {canary}`"
+    cli = tmp_path / "glances.conf"
+    write(cli, f"[influxdb]\nprefix = {value}\n")
+    monkeypatch.setenv("GLANCES_INFLUXDB__TAGS", f"`touch {canary}`")
+    config = GlancesConfig(cli_config_path=str(cli))
+    assert config.get("influxdb", "prefix", "") == value
+    assert config.get_value("influxdb", "prefix") == value
+    assert config.get("influxdb", "tags", "") == value
+    assert config.as_dict()["influxdb"]["prefix"] == value
+    assert not canary.exists()
+
+
+# ============================================================================
+# as_dict_public() — what an unauthenticated /api/5/config serves (audit M1)
+# ============================================================================
+
+
+def test_public_view_serves_only_the_webui_keys(env: Path) -> None:
+    """Secrets in free-form values never reach the public view, whatever the key name."""
+    write(
+        etc_path(env),
+        """
+        [global]
+        refresh = 3
+
+        [outputs]
+        theme = white
+        max_processes_display = 25
+        api_doc = false
+        cors_origins = https://ok.example
+
+        [cpu]
+        critical_action = curl -H "Authorization: Bearer ACTIONBEARER" https://hooks.example/T0/SECRET
+
+        [amp_mysql]
+        command = mysqladmin -uroot -pAMPMYSQLPW status
+
+        [ip]
+        public_api = https://ipinfo.io/json?token=IPINFOTOKEN
+    """,
+    )
+    public = GlancesConfig().as_dict_public()
+    assert public == {
+        "global": {"refresh": "3"},
+        "outputs": {"theme": "white", "max_processes_display": "25", "api_doc": "false"},
+    }
+
+
+def test_public_view_never_serves_a_key_outside_the_allowlist(env: Path) -> None:
+    """With DEFAULTS only, the view stays within `PUBLIC_OPTIONS`."""
+    public = GlancesConfig().as_dict_public()
+    assert set(public) <= set(GlancesConfig.PUBLIC_OPTIONS)
+    for section, options in public.items():
+        assert set(options) <= GlancesConfig.PUBLIC_OPTIONS[section]
+
+
+# ============================================================================
+# reload()
+# ============================================================================
+
+
+def test_reload_picks_up_changes(env: Path) -> None:
+    write(etc_path(env), "[global]\nrefresh_time = 5\n")
+    config = GlancesConfig()
+    assert config.get("global", "refresh_time", 0) == 5
+
+    write(etc_path(env), "[global]\nrefresh_time = 11\n")
+    assert config.get("global", "refresh_time", 0) == 5  # cached
+
+    config.reload()
+    assert config.get("global", "refresh_time", 0) == 11
+
+
+def test_reload_preserves_cli_override(env: Path) -> None:
+    cli_file = env / "cli.conf"
+    write(cli_file, "[global]\nrefresh_time = 13\n")
+    config = GlancesConfig(cli_config_path=str(cli_file))
+    assert config.get("global", "refresh_time", 0) == 13
+
+    write(cli_file, "[global]\nrefresh_time = 17\n")
+    config.reload()
+    assert config.get("global", "refresh_time", 0) == 17
+
+
+# ============================================================================
+# Introspection
+# ============================================================================
+
+
+def test_has_section_true(env: Path) -> None:
+    write(etc_path(env), "[outputs]\napi_doc = no\n")
+    assert GlancesConfig().has_section("outputs")
+
+
+def test_has_section_false(env: Path) -> None:
+    assert not GlancesConfig().has_section("absent")
+
+
+def test_sections_includes_defaults_and_files(env: Path) -> None:
+    write(etc_path(env), "[a]\nx = 1\n[b]\ny = 2\n")
+    sections = set(GlancesConfig().sections())
+    assert "a" in sections
+    assert "b" in sections
+    assert "global" in sections
+
+
+# ============================================================================
+# loaded_sources
+# ============================================================================
+
+
+def test_loaded_sources_empty_with_no_files(env: Path) -> None:
+    assert GlancesConfig().loaded_sources == []
+
+
+def test_loaded_sources_lists_etc_when_only_etc_present(env: Path) -> None:
+    write(etc_path(env), "[global]\nrefresh_time = 5\n")
+    assert GlancesConfig().loaded_sources == [etc_path(env)]
+
+
+def test_loaded_sources_contains_only_the_chosen_file(env: Path) -> None:
+    """When both XDG and /etc exist, only XDG (the chosen file) appears."""
+    write(etc_path(env), "[global]\nrefresh_time = 5\n")
+    write(xdg_path(env), "[global]\nrefresh_time = 7\n")
+    sources = GlancesConfig().loaded_sources
+    assert sources == [xdg_path(env)]
+
+
+def test_loaded_sources_returns_a_copy(env: Path) -> None:
+    write(etc_path(env), "[global]\nrefresh_time = 5\n")
+    config = GlancesConfig()
+    sources = config.loaded_sources
+    sources.clear()
+    assert len(config.loaded_sources) == 1
+
+
+# ============================================================================
+# Interpolation — percent-literal values must not be mangled
+# ============================================================================
+
+
+def test_percent_values_are_not_interpolated(env: Path) -> None:
+    """Regression guard for ConfigParser(interpolation=None).
+
+    strftime format strings (and any value containing ``%``) must be stored
+    and returned verbatim.  Before the fix, the default BasicInterpolation
+    raised ``InterpolationSyntaxError`` on ``%Y``, ``%H``, etc.
+    """
+    raw = "%Y-%m-%d %H:%M:%S"
+    write(etc_path(env), f"[global]\nstrftime_format = {raw}\n")
+    config = GlancesConfig()
+    assert config.get("global", "strftime_format", "") == raw
+
+
+# ============================================================================
+# get_value() — no-default passthrough (v4 untyped compatibility)
+# ============================================================================
+
+
+def test_get_value_without_default_returns_none_when_absent(env: Path) -> None:
+    assert GlancesConfig().get_value("folders", "folder_1_path") is None
+
+
+def test_get_value_without_default_returns_raw_string_when_present(env: Path) -> None:
+    write(xdg_path(env), "[folders]\nfolder_1_path = /tmp\n")
+    assert GlancesConfig().get_value("folders", "folder_1_path") == "/tmp"
+
+
+def test_get_value_explicit_none_default_also_passes_through(env: Path) -> None:
+    write(xdg_path(env), "[folders]\nfolder_1_careful = 2500\n")
+    assert GlancesConfig().get_value("folders", "folder_1_careful", None) == "2500"
+
+
+def test_get_value_with_non_none_default_still_coerces(env: Path) -> None:
+    # Unchanged boundary: an explicit, non-None default still routes
+    # through get() for typed coercion — locks in test_get_value_alias's
+    # existing guarantee against this change.
+    assert GlancesConfig().get_value("global", "refresh_time", 0) == 2
+
+
+# ============================================================================
+# v4-compatibility accessors used by verbatim-reused v4 code (GlancesAmp)
+# ============================================================================
+
+
+def test_items_returns_section_pairs(env: Path) -> None:
+    write(xdg_path(env), "[amp_foo]\nenable = true\nrefresh = 3\n")
+    items = dict(GlancesConfig().items("amp_foo"))
+    assert items == {"enable": "true", "refresh": "3"}
+
+
+def test_items_missing_section_returns_empty_list(env: Path) -> None:
+    assert GlancesConfig().items("amp_does_not_exist") == []
+
+
+def test_get_float_value_reads_a_number(env: Path) -> None:
+    write(xdg_path(env), "[amp_foo]\nrefresh = 3\n")
+    assert GlancesConfig().get_float_value("amp_foo", "refresh") == 3.0
+
+
+def test_get_float_value_missing_option_returns_default(env: Path) -> None:
+    write(xdg_path(env), "[amp_foo]\nrefresh = 3\n")
+    assert GlancesConfig().get_float_value("amp_foo", "countmin", 7) == 7.0
+
+
+def test_get_float_value_missing_section_returns_default(env: Path) -> None:
+    assert GlancesConfig().get_float_value("nope", "nope", 1.5) == 1.5
+
+
+def test_get_float_value_raises_on_non_numeric_value(env: Path) -> None:
+    """Load-bearing: GlancesAmp.load_config() routes every string and
+    comma-list config value through the `except ValueError` branch. If this
+    returned the default instead of raising, `regex=`, `command=` and
+    `enable=` would all silently become 0.0 and every AMP would break."""
+    write(xdg_path(env), "[amp_foo]\nregex = .*python.*\n")
+    with pytest.raises(ValueError):
+        GlancesConfig().get_float_value("amp_foo", "regex")
+
+
+def test_get_bool_value_reads_a_boolean(env: Path) -> None:
+    write(xdg_path(env), "[ports]\nweb_1_ssl_verify = false\nweb_2_ssl_verify = true\n")
+    config = GlancesConfig()
+    assert config.get_bool_value("ports", "web_1_ssl_verify") is False
+    assert config.get_bool_value("ports", "web_2_ssl_verify") is True
+
+
+def test_get_bool_value_missing_option_returns_default(env: Path) -> None:
+    """v4 `GlancesConfig.get_bool_value` defaults to True, not False."""
+    config = GlancesConfig()
+    assert config.get_bool_value("ports", "web_1_ssl_verify") is True
+    assert config.get_bool_value("ports", "web_1_ssl_verify", False) is False
+
+
+def test_get_bool_value_raises_on_non_boolean_value(env: Path) -> None:
+    """Load-bearing: `GlancesWebList` (reused verbatim) catches ValueError to
+    let `web_N_ssl_verify` also hold the path to a CA bundle. Returning the
+    default instead would turn every custom bundle into `verify=True`."""
+    write(xdg_path(env), "[ports]\nweb_1_ssl_verify = /etc/ssl/certs/ca-bundle.crt\n")
+    with pytest.raises(ValueError):
+        GlancesConfig().get_bool_value("ports", "web_1_ssl_verify")
+
+
+# ============================================================================
+# Shipped conf/glances.conf — [alerts] section is documented (design §8.1)
+# ============================================================================
+
+
+def test_shipped_conf_documents_the_alerts_section():
+    """The three [alerts] keys must be present and COMMENTED, so the shipped
+    file documents them without changing any default (design §8.1)."""
+    from pathlib import Path
+
+    text = Path("conf/glances.conf").read_text(encoding="utf-8")
+    assert "[alerts]" in text
+    # Scoped to the [alerts] section itself: `history_size` is also a
+    # pre-existing, legitimately-active key in [global] (unrelated stats
+    # history), so a whole-file substring check would false-positive on it.
+    alerts_section = text.split("[alerts]", 1)[1].split("\n[", 1)[0]
+    for key in ("min_duration_seconds", "history_size", "warmup_cycles"):
+        assert f"#{key}=" in alerts_section, f"{key} must be documented, commented out"
+        assert f"\n{key}=" not in alerts_section, f"{key} must NOT be active by default"
+
+
+def test_shipped_conf_documents_the_api_doc_gate():
+    """`[outputs] api_doc` decides whether the v5 server mounts Swagger UI at
+    /docs and ReDoc at /redoc (webserver.build_app), and the WebUI footer
+    reads the same key to decide whether to link /docs. A security-relevant
+    switch nobody can find in the shipped file may as well not exist.
+
+    Commented out, like the [alerts] keys above: documenting a key must not
+    change its default (DEFAULTS has api_doc=True).
+    """
+    from pathlib import Path
+
+    text = Path("conf/glances.conf").read_text(encoding="utf-8")
+    outputs_section = text.split("[outputs]", 1)[1].split("\n[", 1)[0]
+    assert "#api_doc=" in outputs_section, "api_doc must be documented, commented out"
+    assert "\napi_doc=" not in outputs_section, "api_doc must NOT be active by default"

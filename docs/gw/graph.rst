@@ -14,8 +14,9 @@ The graph export module can be configured through the Glances configuration file
     [graph]
     # Configuration for the --export graph option
     # Set the path where the graph (.svg files) will be created
-    # Can be overwrite by the --graph-path command line option
-    path=/tmp
+    # Can be overwrite by the --export-graph-path command line option
+    # Default: $XDG_DATA_HOME/glances/graphs (~/.local/share/glances/graphs)
+    path=/var/lib/glances/graphs
     # It is possible to generate the graphs automatically by setting the
     # generate_every to a non zero value corresponding to the seconds between
     # two generation. Set it to 0 to disable graph auto generation.
@@ -30,7 +31,12 @@ and run Glances with:
 
 .. code-block:: console
 
-    $ glances --export graph --export-graph-path /tmp
+    $ glances --export graph --export-graph-path ~/glances-graphs
+
+Without a path, the graphs go to ``$XDG_DATA_HOME/glances/graphs``
+(``~/.local/share/glances/graphs``), a folder private to the user. Do not
+point the path to a folder other users can write to, such as ``/tmp``:
+Glances warns about it, because they could replace the graphs.
 
 Example of output (load graph)
 

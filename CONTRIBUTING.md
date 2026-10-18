@@ -85,10 +85,18 @@ implementing features, refactoring code, porting to a different language),
 otherwise you risk spending a lot of time working on something that the
 project's developers might not want to merge into the project.
 
-First of all, all pull request should be done on the `develop` branch.
+First of all, choose the target branch of your pull request:
+
+* `develop` for Glances v5 (new features, bugfixes, documentation). This is
+  the main development branch.
+* `support/glancesv4` for Glances v4: bugfixes and security fixes only
+  (4.5.x maintenance releases).
+
+The `master` branch only holds the tagged stable releases: never open a pull
+request against it.
 
 Glances uses PEP8 compatible code, so use a PEP validator before submitting
-your pull request. Also uses the unitaries tests scripts (unitest-all.py).
+your pull request. Also run the unit tests (make test).
 
 Similarly, when contributing to Glances's documentation, you should edit the
 documentation source files in
@@ -110,7 +118,8 @@ included in the project:
    git remote add upstream https://github.com/nicolargo/glances.git
    ```
 
-2. Get the latest changes from upstream:
+2. Get the latest changes from upstream (replace `develop` by
+   `support/glancesv4` for a Glances v4 fix):
 
    ```bash
    git checkout develop
@@ -155,7 +164,8 @@ included in the project:
    ```
 
 9. [Open a Pull Request](https://help.github.com/articles/using-pull-requests/)
-    with a clear title and description against the `develop` branch.
+    with a clear title and description against the `develop` branch (or the
+    `support/glancesv4` branch for a Glances v4 fix).
 
 **IMPORTANT**: By submitting a patch, you agree to allow the project owners to
 license your work under the terms of the [LGPLv3](COPYING) (if it

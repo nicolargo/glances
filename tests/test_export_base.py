@@ -1,0 +1,601 @@
+#!/usr/bin/env python
+#
+# Glances - An eye on your system
+#
+# SPDX-FileCopyrightText: 2026 Nicolas Hennion <nicolas@nicolargo.com>
+#
+# SPDX-License-Identifier: LGPL-3.0-only
+#
+
+"""Glances v5 — unit tests for GlancesExportBase.
+
+Test stack: pytest + pytest-asyncio (auto mode). See architecture decisions §9.
+"""
+
+from __future__ import annotations
+
+import pytest
+
+from glances.config import GlancesConfig
+from glances.exports.export_base import GlancesExportBase
+from glances.plugins.plugin.base import GlancesPluginBase
+from glances.stats_store import StatsStore
+from tests.export_fakes import assert_plugins_untouched, plugins
+
+
+class FakeScalarPlugin(GlancesPluginBase[dict]):
+    plugin_name = "fakescalar"
+    IS_COLLECTION = False
+    fields_description = {
+        "percent": {"description": "p", "unit": "percent"},
+        "total": {"description": "t", "unit": "bytes"},
+        "secret": {"description": "s", "unit": "string", "exportable": False},
+    }
+
+    def __init__(self, store, config, payload=None):
+        super().__init__(store, config)
+        self._payload = payload if payload is not None else {"percent": 50.0, "total": 1024, "secret": "x"}
+
+    async def _grab_stats(self) -> dict:
+        return dict(self._payload)
+
+
+class FakeCollectionPlugin(GlancesPluginBase[list]):
+    plugin_name = "fakecollection"
+    IS_COLLECTION = True
+    fields_description = {
+        "name": {"description": "n", "unit": "string", "primary_key": True},
+        "rx": {"description": "r", "unit": "bytespers"},
+    }
+
+    def __init__(self, store, config, payload=None):
+        super().__init__(store, config)
+        self._payload = (
+            payload
+            if payload is not None
+            else [
+                {"name": "eth0", "rx": 10},
+                {"name": "eth1", "rx": 20},
+            ]
+        )
+
+    async def _grab_stats(self) -> list:
+        return [dict(item) for item in self._payload]
+
+
+def test_exportable_defaults_to_true():
+    assert GlancesPluginBase.EXPORTABLE is True
+    assert FakeScalarPlugin.EXPORTABLE is True
+
+
+def test_non_exportable_plugins_declare_the_flag():
+    from glances.plugins.psutilversion.model import PluginModel as PsutilVersion
+    from glances.plugins.quicklook.model import PluginModel as Quicklook
+    from glances.plugins.version.model import PluginModel as Version
+
+    assert Quicklook.EXPORTABLE is False
+    assert Version.EXPORTABLE is False
+    assert PsutilVersion.EXPORTABLE is False
+
+
+class FakeExport(GlancesExportBase):
+    export_name = "fake"
+
+    def __init__(self, config, args):
+        super().__init__(config, args)
+        self.exported: list[tuple[str, list, list]] = []
+
+    def export(self, name, columns, points):
+        self.exported.append((name, list(columns), list(points)))
+
+
+def make_config(sections: dict) -> GlancesConfig:
+    config = GlancesConfig()
+    config._merged = {s: dict(opts) for s, opts in sections.items()}
+    return config
+
+
+def test_load_conf_reads_mandatories_and_options():
+    config = make_config({"backend": {"host": "localhost", "port": "8086", "prefix": "gl"}})
+    exporter = FakeExport(config, args=None)
+    ok = exporter.load_conf("backend", mandatories=("host", "port"), options=("prefix", "tags"))
+    assert ok is True
+    assert exporter.host == "localhost"
+    assert exporter.port == "8086"
+    assert exporter.prefix == "gl"
+    assert getattr(exporter, "tags", None) is None
+
+
+def test_load_conf_keeps_the_exporter_default_of_a_missing_optional_key():
+    """v4 #3781 (`test_export_load_conf.py`): an absent optional key leaves the module default."""
+    exporter = FakeExport(make_config({"backend": {"host": "localhost", "port": "8086"}}), args=None)
+    exporter.protocol = "http"
+    assert exporter.load_conf("backend", mandatories=("host", "port"), options=("protocol",))
+    assert exporter.protocol == "http"
+    configured = FakeExport(make_config({"backend": {"host": "h", "port": "1", "protocol": "https"}}), args=None)
+    configured.protocol = "http"
+    configured.load_conf("backend", mandatories=("host", "port"), options=("protocol",))
+    assert configured.protocol == "https"
+
+
+def test_load_conf_returns_false_on_missing_section():
+    exporter = FakeExport(make_config({}), args=None)
+    assert exporter.load_conf("backend") is False
+
+
+def test_load_conf_returns_false_on_missing_mandatory():
+    config = make_config({"backend": {"host": "localhost"}})
+    exporter = FakeExport(config, args=None)
+    assert exporter.load_conf("backend", mandatories=("host", "port")) is False
+
+
+def test_is_excluded_uses_full_match_case_insensitive():
+    config = make_config({"export": {"exclude_fields": r".*_critical,.*\.key$"}})
+    exporter = FakeExport(config, args=None)
+    assert exporter.is_excluded("cpu_critical") is True
+    assert exporter.is_excluded("CPU_CRITICAL") is True
+    assert exporter.is_excluded("eth0.key") is True
+    assert exporter.is_excluded("percent") is False
+
+
+def test_is_excluded_is_false_when_key_absent():
+    exporter = FakeExport(make_config({}), args=None)
+    assert exporter.is_excluded("anything") is False
+
+
+def test_parse_tags():
+    exporter = FakeExport(make_config({}), args=None)
+    assert exporter.parse_tags("foo:bar,spam:eggs") == {"foo": "bar", "spam": "eggs"}
+    assert exporter.parse_tags(None) == {}
+    assert exporter.parse_tags("broken") == {}
+
+
+def test_build_export_flattens_a_scalar_payload():
+    exporter = FakeExport(make_config({}), args=None)
+    names, values = exporter.build_export({"percent": 50.0, "total": 1024})
+    assert names == ["percent", "total"]
+    assert values == [50.0, 1024]
+
+
+def test_build_export_prefixes_items_with_the_key_value():
+    exporter = FakeExport(make_config({}), args=None)
+    names, values = exporter.build_export(
+        [
+            {"key": "name", "name": "eth0", "rx": 10},
+            {"key": "name", "name": "eth1", "rx": 20},
+        ]
+    )
+    assert names == ["eth0.key", "eth0.name", "eth0.rx", "eth1.key", "eth1.name", "eth1.rx"]
+    assert values == ["name", "eth0", 10, "name", "eth1", 20]
+
+
+def test_build_export_serialises_bool_and_joins_list():
+    exporter = FakeExport(make_config({}), args=None)
+    names, values = exporter.build_export({"flag": True, "cpus": [1, 2, 3]})
+    assert dict(zip(names, values)) == {"flag": "true", "cpus": "1 2 3"}
+
+
+def test_build_export_drops_excluded_fields():
+    config = make_config({"export": {"exclude_fields": ".*_critical"}})
+    exporter = FakeExport(config, args=None)
+    names, _ = exporter.build_export({"percent": 1.0, "cpu_critical": 90.0})
+    assert names == ["percent"]
+
+
+def test_normalize_for_influxdb_turns_the_key_into_a_tag():
+    exporter = FakeExport(make_config({}), args=None)
+    exporter.tags = None
+    exporter.hostname = "testhost"
+    names, values = exporter.build_export([{"key": "name", "name": "eth0", "rx": 10}])
+    measurements = exporter.normalize_for_influxdb("network", names, values)
+    assert len(measurements) == 1
+    measurement = measurements[0]
+    assert measurement["measurement"] == "network"
+    assert measurement["tags"]["hostname"] == "testhost"
+    assert measurement["tags"]["name"] == "eth0"
+    assert measurement["fields"]["rx"] == 10.0
+
+
+@pytest.mark.asyncio
+async def test_inject_key_adds_the_primary_key_field_to_each_item():
+    store = StatsStore()
+    plugin = FakeCollectionPlugin(store, make_config({}))
+    await plugin.update()
+    exporter = FakeExport(make_config({}), args=None)
+
+    payload = exporter._inject_key(plugin, plugin.get_export())
+
+    assert [item["key"] for item in payload] == ["name", "name"]
+    names, _ = exporter.build_export(payload)
+    assert "eth0.rx" in names
+    assert "eth0.key" in names
+
+
+@pytest.mark.asyncio
+async def test_inject_key_leaves_a_scalar_payload_untouched():
+    store = StatsStore()
+    plugin = FakeScalarPlugin(store, make_config({}))
+    await plugin.update()
+    exporter = FakeExport(make_config({}), args=None)
+
+    payload = exporter._inject_key(plugin, plugin.get_export())
+
+    assert "key" not in payload
+
+
+def test_limits_for_flattens_the_plugin_section():
+    config = make_config(
+        {
+            "fakescalar": {"careful": "50", "warning": "70", "critical": "90"},
+            "global": {"history_size": "1200"},
+        }
+    )
+    store = StatsStore()
+    plugin = FakeScalarPlugin(store, config)
+    exporter = FakeExport(config, args=None)
+
+    limits = exporter._limits_for(plugin)
+
+    assert limits["fakescalar_careful"] == 50.0
+    assert limits["fakescalar_warning"] == 70.0
+    assert limits["fakescalar_critical"] == 90.0
+    assert limits["history_size"] == 1200.0
+
+
+def test_limits_for_splits_non_numeric_values_on_commas():
+    config = make_config({"fakescalar": {"status_ok": "R,S,D"}})
+    store = StatsStore()
+    plugin = FakeScalarPlugin(store, config)
+    exporter = FakeExport(config, args=None)
+
+    assert exporter._limits_for(plugin)["fakescalar_status_ok"] == ["R", "S", "D"]
+
+
+def test_limits_for_strips_whitespace_around_split_items():
+    """`status_ok=R, S, D` is how a comma-separated value is normally written.
+
+    v5 mirror of the v4 `load_limits` fix (PR #3700): a bare split kept the
+    spaces, so the exported limit carried `' S'` and `' D'` into InfluxDB,
+    MongoDB, MQTT and friends.
+    """
+    config = make_config({"fakescalar": {"status_ok": "R, S, D"}})
+    store = StatsStore()
+    plugin = FakeScalarPlugin(store, config)
+    exporter = FakeExport(config, args=None)
+
+    assert exporter._limits_for(plugin)["fakescalar_status_ok"] == ["R", "S", "D"]
+
+
+def test_limits_for_keeps_spaces_inside_an_item():
+    """Only the edges are trimmed — `alias=sda1:System Disk` must survive."""
+    config = make_config({"fakescalar": {"alias": "sda1:System Disk, sdb1:Backup Disk"}})
+    store = StatsStore()
+    plugin = FakeScalarPlugin(store, config)
+    exporter = FakeExport(config, args=None)
+
+    assert exporter._limits_for(plugin)["fakescalar_alias"] == ["sda1:System Disk", "sdb1:Backup Disk"]
+
+
+def test_limits_for_never_exports_action_templates():
+    """Security divergence from v4 — design §5.4.
+
+    v4 merges the whole plugin section into the exported payload, so a
+    shell command configured as an action leaves the machine in clear text.
+    """
+    config = make_config(
+        {
+            "fakescalar": {
+                "careful": "50",
+                "critical_action": "/usr/bin/mail -s alert ops@example.com",
+                "warning_action_repeat": "/usr/bin/logger boom",
+            }
+        }
+    )
+    store = StatsStore()
+    plugin = FakeScalarPlugin(store, config)
+    exporter = FakeExport(config, args=None)
+
+    limits = exporter._limits_for(plugin)
+
+    assert limits["fakescalar_careful"] == 50.0
+    assert not [k for k in limits if "_action" in k]
+    assert "/usr/bin/mail -s alert ops@example.com" not in str(limits.values())
+
+
+def test_limits_for_never_exports_a_credential():
+    """Audit M10: a backend usually has wider readers than the host.
+
+    `[ip] public_username` / `public_password` and a `[ports] web_N_url`
+    carrying `user:password@` or a query-string token used to leave in clear.
+    """
+    config = make_config(
+        {
+            "fakescalar": {
+                "careful": "50",
+                "user_careful": "60",
+                "public_username": "alice",
+                "public_password": "S3CRET-PW",
+                "api_token": "TOKEN-1",
+                "web_1_url": "https://bob:hunter2@intranet.example/health?access_token=TOKEN-2#frag",
+                "web_2_url": "https://public.example:8443/health",
+            }
+        }
+    )
+    plugin = FakeScalarPlugin(StatsStore(), config)
+    limits = FakeExport(config, args=None)._limits_for(plugin)
+
+    for secret in ("alice", "S3CRET-PW", "TOKEN-1", "bob", "hunter2", "TOKEN-2"):
+        assert secret not in str(limits), secret
+    assert limits["fakescalar_web_1_url"] == ["https://intranet.example/health"]
+    assert limits["fakescalar_web_2_url"] == ["https://public.example:8443/health"]
+    assert limits["fakescalar_careful"] == 50.0
+    assert limits["fakescalar_user_careful"] == 60.0, "a `user` CPU threshold is not a credential"
+
+
+def test_limits_for_is_cached_per_plugin():
+    config = make_config({"fakescalar": {"careful": "50"}})
+    store = StatsStore()
+    plugin = FakeScalarPlugin(store, config)
+    exporter = FakeExport(config, args=None)
+
+    first = exporter._limits_for(plugin)
+    second = exporter._limits_for(plugin)
+
+    assert first is second
+
+
+@pytest.mark.asyncio
+async def test_merge_limits_drops_the_disable_key():
+    config = make_config({"fakescalar": {"careful": "50", "disable": "False"}})
+    store = StatsStore()
+    plugin = FakeScalarPlugin(store, config)
+    await plugin.update()
+    exporter = FakeExport(config, args=None)
+
+    payload = exporter._merge_limits(plugin, plugin.get_export())
+
+    assert payload["fakescalar_careful"] == 50.0
+    assert "fakescalar_disable" not in payload
+    # Guards against _merge_limits() aliasing the cached dict instead of
+    # copying it before popping — a bare `self._limits_for(plugin)` would
+    # delete "fakescalar_disable" from the cache itself, so this key would
+    # then silently vanish from every subsequent call too.
+    assert "fakescalar_disable" in exporter._limits_for(plugin)
+
+
+@pytest.mark.asyncio
+async def test_merge_limits_applies_to_every_item_of_a_collection():
+    config = make_config({"fakecollection": {"rx_careful": "60"}})
+    store = StatsStore()
+    plugin = FakeCollectionPlugin(store, config)
+    await plugin.update()
+    exporter = FakeExport(config, args=None)
+
+    payload = exporter._merge_limits(plugin, plugin.get_export())
+
+    assert all(item["fakecollection_rx_careful"] == 60.0 for item in payload)
+
+
+@pytest.mark.asyncio
+async def test_merge_limits_and_inject_key_build_new_objects():
+    """Port of v4 #3767: the payload a plugin handed over is never mutated."""
+    config = make_config({"fakescalar": {"careful": "50"}, "fakecollection": {"rx_careful": "60"}})
+    store = StatsStore()
+    scalar = FakeScalarPlugin(store, config)
+    collection = FakeCollectionPlugin(store, config)
+    await scalar.update()
+    await collection.update()
+    exporter = FakeExport(config, args=None)
+
+    scalar_in, collection_in = scalar.get_export(), collection.get_export()
+    scalar_before, collection_before = dict(scalar_in), [dict(item) for item in collection_in]
+
+    merged = exporter._merge_limits(scalar, scalar_in)
+    keyed = exporter._inject_key(collection, collection_in)
+    keyed_merged = exporter._merge_limits(collection, keyed)
+
+    assert merged is not scalar_in and "fakescalar_careful" in merged
+    assert keyed is not collection_in and keyed_merged is not keyed
+    assert all(new is not old for new, old in zip(keyed + keyed_merged, collection_in * 2))
+    assert scalar_in == scalar_before
+    assert collection_in == collection_before
+    assert keyed == [{**item, "key": "name"} for item in collection_before]
+
+
+@pytest.mark.asyncio
+async def test_update_exports_one_call_per_plugin():
+    store = StatsStore()
+    config = make_config({})
+    scalar = FakeScalarPlugin(store, config)
+    collection = FakeCollectionPlugin(store, config)
+    await scalar.update()
+    await collection.update()
+    exporter = FakeExport(config, args=None)
+
+    exporter.update([scalar, collection])
+
+    assert [name for name, _, _ in exporter.exported] == ["fakescalar", "fakecollection"]
+
+
+@pytest.mark.asyncio
+async def test_update_skips_non_exportable_plugins():
+    class NotExportable(FakeScalarPlugin):
+        plugin_name = "hidden"
+        EXPORTABLE = False
+
+    store = StatsStore()
+    config = make_config({})
+    plugin = NotExportable(store, config)
+    await plugin.update()
+    exporter = FakeExport(config, args=None)
+
+    exporter.update([plugin])
+
+    assert exporter.exported == []
+
+
+@pytest.mark.asyncio
+async def test_update_skips_a_plugin_with_no_payload_yet():
+    store = StatsStore()
+    config = make_config({})
+    plugin = FakeScalarPlugin(store, config)  # never updated → store empty
+    exporter = FakeExport(config, args=None)
+
+    exporter.update([plugin])
+
+    assert exporter.exported == []
+
+
+@pytest.mark.asyncio
+async def test_update_isolates_a_failing_plugin(caplog):
+    class Boom(FakeExport):
+        def export(self, name, columns, points):
+            if name == "fakescalar":
+                raise RuntimeError("backend down")
+            super().export(name, columns, points)
+
+    store = StatsStore()
+    config = make_config({})
+    scalar = FakeScalarPlugin(store, config)
+    collection = FakeCollectionPlugin(store, config)
+    await scalar.update()
+    await collection.update()
+    exporter = Boom(config, args=None)
+
+    with caplog.at_level("WARNING"):
+        exporter.update([scalar, collection])
+
+    assert [name for name, _, _ in exporter.exported] == ["fakecollection"]
+    assert "backend down" in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_update_output_carries_stats_limits_and_key():
+    store = StatsStore()
+    config = make_config({"fakecollection": {"rx_careful": "60"}})
+    collection = FakeCollectionPlugin(store, config)
+    await collection.update()
+    exporter = FakeExport(config, args=None)
+
+    exporter.update([collection])
+
+    _, names, values = exporter.exported[0]
+    row = dict(zip(names, values))
+    assert row["eth0.rx"] == 10
+    assert row["eth0.key"] == "name"
+    assert row["eth0.fakecollection_rx_careful"] == 60.0
+
+
+def test_update_leaves_the_plugin_view_and_the_store_untouched():
+    """Port of v4 #3767: limits, history_size and key exist only in the export."""
+    config = make_config({"fakecollection": {"rx_careful": "60"}})
+    built = plugins(config)
+    exporter = FakeExport(config, args=None)
+
+    exporter.update(built)
+
+    _, names, _ = exporter.exported[1]
+    assert {"eth0.key", "eth0.history_size", "eth0.fakecollection_rx_careful"} <= set(names)
+    assert_plugins_untouched(built)
+
+
+# ------------------------------------------------------- normalize_for_influxdb
+
+
+def make_influx_exporter() -> FakeExport:
+    """A FakeExport with the two attributes normalize_for_influxdb() reads."""
+    exporter = FakeExport(make_config({}), args=None)
+    exporter.tags = "src:glances"
+    exporter.hostname = "testhost"
+    return exporter
+
+
+def test_normalize_for_influxdb_builds_one_measurement_for_a_scalar_plugin():
+    exporter = make_influx_exporter()
+
+    ret = exporter.normalize_for_influxdb("cpu", ["total", "user"], [15.7, 4.2])
+
+    assert ret == [
+        {
+            "measurement": "cpu",
+            "tags": {"src": "glances", "hostname": "testhost"},
+            "fields": {"total": 15.7, "user": 4.2},
+        }
+    ]
+
+
+def test_normalize_for_influxdb_splits_a_collection_on_the_key_column():
+    """issue1871 -- a `<x>.key` column marks `<x>` as a measurement identity."""
+    exporter = make_influx_exporter()
+
+    ret = exporter.normalize_for_influxdb(
+        "network",
+        ["eth0.key", "eth0.interface_name", "eth0.rx", "lo.key", "lo.interface_name", "lo.rx"],
+        ["interface_name", "eth0", 10, "interface_name", "lo", 20],
+    )
+
+    assert [m["tags"]["interface_name"] for m in ret] == ["eth0", "lo"]
+    assert [m["fields"]["rx"] for m in ret] == [10.0, 20.0]
+    # The field NAMED by `key` becomes a tag and is popped; `key` itself stays
+    # a field, carrying the name of that column. Surprising, but iso-v4
+    # (glances/exports/export.py:221-226) -- dashboards may select on it.
+    assert [m["fields"]["key"] for m in ret] == ["interface_name", "interface_name"]
+    assert all("interface_name" not in m["fields"] for m in ret)
+
+
+def test_normalize_for_influxdb_keeps_dotted_item_keys_as_separate_measurements():
+    """Port of v4 #3757 -- a VLAN interface `eth0.100` is one measurement."""
+    exporter = make_influx_exporter()
+
+    ret = exporter.normalize_for_influxdb(
+        "network",
+        [
+            "eth0.100.key",
+            "eth0.100.interface_name",
+            "eth0.100.rx",
+            "eth0.200.key",
+            "eth0.200.interface_name",
+            "eth0.200.rx",
+        ],
+        ["interface_name", "eth0.100", 10, "interface_name", "eth0.200", 20],
+    )
+
+    assert [m["tags"]["interface_name"] for m in ret] == ["eth0.100", "eth0.200"]
+    assert [m["fields"] for m in ret] == [
+        {"key": "interface_name", "rx": 10.0},
+        {"key": "interface_name", "rx": 20.0},
+    ]
+
+
+def test_normalize_for_influxdb_drops_fields_left_at_none():
+    """v5 keeps a rate field present with the value None on the first cycle,
+    and roughly 46 optional fields (unset thresholds, unreported GPU sensors)
+    stay None for the whole run. A field with no value is not a measurement."""
+    exporter = make_influx_exporter()
+
+    ret = exporter.normalize_for_influxdb("network", ["speed", "bytes_recv"], [1000.0, None])
+
+    assert ret[0]["fields"] == {"speed": 1000.0}
+    assert "bytes_recv" not in ret[0]["fields"]
+
+
+def test_normalize_for_influxdb_skips_a_measurement_with_no_field_left():
+    """InfluxDB 1.x serialises a field-less point as a tags-only line, which
+    the server rejects -- costing that plugin its whole cycle. 2.x and 3.x
+    serialise it to an empty string. Neither is useful: skip it here."""
+    exporter = make_influx_exporter()
+
+    ret = exporter.normalize_for_influxdb("gpu", ["fan_speed", "temperature"], [None, None])
+
+    assert ret == []
+
+
+def test_normalize_for_influxdb_does_not_mutate_the_caller_s_values():
+    """The `measurement is None` branch used to alias `data_dict` and convert
+    in place. Nothing depends on that today, but the aliasing is a trap."""
+    exporter = make_influx_exporter()
+    points = [15.7, None]
+
+    exporter.normalize_for_influxdb("cpu", ["total", "idle"], points)
+
+    assert points == [15.7, None]

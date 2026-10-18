@@ -1,7 +1,7 @@
 .. _actions:
 
 Actions
-=======
+========
 
 Glances can trigger actions on events for warning and critical thresholds.
 
@@ -18,12 +18,25 @@ then add the ``_action`` line to the Glances configuration file:
 All the stats are available in the command line through the use of the
 `Mustache`_ syntax. `Chevron`_ is required to render the mustache's template syntax.
 
+For a plugin with several items (network interfaces, file systems,
+containers, processes...), the stats are the ones of the item in alert.
+
 Additionaly to the stats of the current plugin, the following variables are
 also available:
-- ``{{time}}``: current time in ISO format
-- ``{{critical}}``: critical threshold value
-- ``{{warning}}``: warning threshold value
-- ``{{careful}}``: careful threshold value
+
+- ``{{_glances_timestamp}}``: current time in ISO 8601 format (UTC)
+- ``{{_glances_hostname}}``: hostname of the Glances instance
+- ``{{_glances_plugin}}``: plugin name (``mem``, ``fs``...)
+- ``{{_glances_level}}``: alert level (``warning`` or ``critical``)
+
+The action key can be set for a whole plugin section or restricted to a
+given stat and/or item. The most specific key wins:
+
+1. ``<item>_<stat>_<level>_action`` (example: ``wlan0_bytes_recv_critical_action``
+   in the ``[network]`` section)
+2. ``<stat>_<level>_action`` (example: ``user_critical_action`` in the
+   ``[cpu]`` section)
+3. ``<level>_action`` (example: ``critical_action``)
 
 Another example would be to create a log file
 containing used vs total disk space if a space trigger warning is
@@ -85,7 +98,7 @@ Then reference it in the configuration file:
 
     [fs]
     critical=90
-    critical_action_repeat=/etc/glances/actions.d/fs-critical.sh {{time}} {{device_name}} {{percent}}
+    critical_action_repeat=/etc/glances/actions.d/fs-critical.sh {{_glances_timestamp}} {{device_name}} {{percent}}
 
 Within ``/etc/glances/actions.d/fs-critical.py``:
 
@@ -107,8 +120,7 @@ Within ``/etc/glances/actions.d/fs-critical.py``:
 .. note::
 
     You can use all the stats for the current plugin. See
-    https://github.com/nicolargo/glances/wiki/The-Glances-RESTFUL-JSON-API
-    for the stats list.
+    :ref:`api_restful` for the stats list.
 
 It is also possible to repeat action until the end of the alert.
 Keep in mind that the command line is executed every refresh time so
@@ -119,6 +131,23 @@ use with caution:
     [load]
     critical=5.0
     critical_action_repeat=/home/myhome/bin/bipper.sh
+
+An action is never started twice at the same time for the same stat: while
+a previous run of the same command is still in progress, the next trigger
+is skipped (a warning is logged once). Actions have no time limit by
+default. To kill a command that runs for too long, set a timeout, in
+seconds, in the ``[alerts]`` section:
+
+.. code-block:: ini
+
+    [alerts]
+    action_timeout=60
+
+With ``--disable-config-exec``, the shell operators (``&&``, ``|``,
+``>``) of an action command are no longer interpreted, as for the AMP
+commands. The command itself still runs, and a command that starts a shell
+(``sh -c "..."``) still interprets what it is given: see the warning in
+:ref:`amps`. The option is not a sandbox.
 
 .. _Mustache: https://mustache.github.io/
 .. _Chevron: https://github.com/noahmorrison/chevron

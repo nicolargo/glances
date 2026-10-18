@@ -5,7 +5,7 @@
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 
-"""LXD Extension unit for Glances' Containers plugin."""
+"""LXD Engine Monitoring unit for Glances' Containers plugin."""
 
 import threading
 import time
@@ -16,6 +16,7 @@ import psutil
 
 from glances.globals import nativestr, pretty_date
 from glances.logger import logger
+from glances.secure import secure_option
 
 # pylxd library (optional and Linux-only)
 # https://github.com/canonical/pylxd
@@ -115,9 +116,9 @@ class LxdStatsFetcher:
             if limit:
                 stats['limit'] = float(limit)
             else:
-                stats['limit'] = float(psutil.cpu_count())
+                stats['limit'] = float(psutil.cpu_count() or 1)
         except (ValueError, TypeError):
-            stats['limit'] = float(psutil.cpu_count())
+            stats['limit'] = float(psutil.cpu_count() or 1)
 
         return stats
 
@@ -191,20 +192,22 @@ class LxdStatsFetcher:
         return stats
 
 
-class LxdExtension:
-    """Glances' Containers Plugin's LXD Extension unit"""
+class LxdEngineMonitor:
+    """Glances' Containers Plugin's LXD Engine Monitoring unit"""
 
+    ENGINE = "lxd"
     CONTAINER_ACTIVE_STATUS = ['Running']
 
-    def __init__(self, endpoint=None, poll_interval=2):
+    def __init__(self, url: str | None = None, poll_interval: int = 2):
         self.disable = disable_plugin_lxd
         if self.disable:
-            raise Exception("Missing libs required to run LXD Extension (Containers)")
+            raise Exception("Missing libs required to run LxdEngineMonitor (Containers)")
 
         self.display_error = True
         self.client = None
         self.ext_name = "containers (LXD)"
-        self.endpoint = endpoint
+        self.url = url
+        self.engine_url = secure_option('url', self.url)
         self.poll_interval = poll_interval
         self.stats_fetchers = {}
         self.local_node = None
@@ -214,10 +217,7 @@ class LxdExtension:
     def connect(self) -> None:
         """Connect to the LXD server."""
         try:
-            if self.endpoint:
-                self.client = LxdClient(endpoint=self.endpoint)
-            else:
-                self.client = LxdClient()
+            self.client = LxdClient(endpoint=self.url) if self.url else LxdClient()
             # Verify connectivity
             self.client.has_api_extension('instances')
             # In a cluster, determine local member name so we can filter to instances
@@ -230,7 +230,7 @@ class LxdExtension:
             except Exception:
                 self.local_node = None
         except Exception as e:
-            logger.error(f"{self.ext_name} plugin - Can't connect to LXD ({e})")
+            logger.debug(f"{self.ext_name} plugin - Can't connect to LXD ({e})")
             self.client = None
             self.disable = True
 
@@ -290,6 +290,8 @@ class LxdExtension:
     def generate_stats(self, instance) -> dict[str, Any]:
         stats = {
             'key': self.key,
+            "engine": self.ENGINE,
+            'engine_url': self.engine_url,
             'name': nativestr(instance.name),
             'id': instance.name,
             'image': instance.config.get('image.description', ''),
@@ -308,6 +310,7 @@ class LxdExtension:
             'network_tx': None,
             'ports': '',
             'uptime': None,
+            'started_at': None,
         }
 
         if instance.status not in self.CONTAINER_ACTIVE_STATUS:
@@ -359,8 +362,9 @@ class LxdExtension:
         try:
             last_used = instance.last_used_at
             if last_used and last_used != '1970-01-01T00:00:00Z':
-                started = datetime.fromisoformat(last_used.replace('Z', '+00:00')).replace(tzinfo=None)
-                stats['uptime'] = pretty_date(started)
+                started = datetime.fromisoformat(last_used.replace('Z', '+00:00'))
+                stats['uptime'] = pretty_date(started.replace(tzinfo=None))
+                stats['started_at'] = int(started.timestamp())
         except (ValueError, AttributeError) as e:
             logger.debug(f"{self.ext_name} plugin - Can't compute uptime for {instance.name} ({e})")
 

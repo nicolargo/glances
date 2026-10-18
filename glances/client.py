@@ -1,299 +1,413 @@
 #
-# This file is part of Glances.
+# Glances - An eye on your system
 #
-# SPDX-FileCopyrightText: 2022 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2026 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
-"""Manage the Glances client."""
+"""Glances v5 — the remote client: a local store filled from a v5 server.
 
-import sys
+Design: ``docs/superpowers/specs/2026-09-27-glances-v5-phase3-design.md`` §4.1
+to §4.4 (chantier P3-1).
+
+- One ``GET /api/5/all`` per cycle, written to the local store as is,
+  ``_levels`` included: the TUI shows the server's thresholds, as v4's client
+  did. The server's schema (``/api/5/all/info``) drives the display, so a newer
+  client shows an older server faithfully.
+- The client polls at its own ``[global] refresh``. A server that collects less
+  often answers with the same data until it has new data; that is not a
+  failure, only a failed request counts toward ``DISCONNECTED``.
+- The alert block mirrors the server's (``/api/5/alert`` and
+  ``/api/5/alert/incidents``, same cycle): the client runs no alert engine,
+  so no alert actions either; the server is the one that acts.
+- ``--export`` works under ``-c`` (issue #1527): a ``RemotePlugin`` per server
+  plugin, built from the server's schema, answers ``get_export()`` from the
+  local store.
+- A disconnected client keeps showing the last values it received, with
+  the time they were received (maintainer, 2026-09-27): the store is never
+  cleared.
+- Authentication: one token per connection (``POST /api/5/token``), not Basic
+  credentials on every poll, because the server checks a password with PBKDF2,
+  which is slow by design. Credentials never go into a URL.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import ipaddress
+import logging
 import time
+from typing import Any
+from urllib.parse import urlsplit
 
-from defusedxml import xmlrpc
+import requests
 
-from glances import __version__
-from glances.globals import json_loads
-from glances.logger import logger
-from glances.outputs.glances_curses import GlancesCursesClient
-from glances.outputs.glances_stdout import GlancesStdout
-from glances.outputs.glances_stdout_csv import GlancesStdoutCsv
-from glances.outputs.glances_stdout_fetch import GlancesStdoutFetch
-from glances.outputs.glances_stdout_json import GlancesStdoutJson
-from glances.stats_client import GlancesStatsClient
-from glances.timer import Counter
+from glances import __apiversion__
+from glances.plugins.plugin.base import GlancesPluginBase
+from glances.plugins.processlist.model import PluginModel as _Processlist
 
-# Correct issue #1025 by monkey path the xmlrpc lib
-xmlrpc.monkey_patch()
+logger = logging.getLogger(__name__)
+
+DEFAULT_PORT = 61208
+DEFAULT_TIMEOUT = 3.0
 
 
-class GlancesClientTransport(xmlrpc.xmlrpc_client.Transport):
-    """This class overwrite the default XML-RPC transport and manage timeout."""
-
-    def set_timeout(self, timeout):
-        self.timeout = timeout
+class RemoteError(Exception):
+    """The server could not be read (unreachable, timeout, unexpected answer)."""
 
 
-class GlancesClient:
-    """This class creates and manages the TCP client."""
+class AuthError(RemoteError):
+    """The server refused the credentials, or wants some and got none."""
 
-    def __init__(self, config=None, args=None, timeout=7, return_to_browser=False):
-        # Store the arg/config
-        self.args = args
-        self.config = config
 
-        self._quiet = args.quiet
-        self.refresh_time = args.time
+class NotAGlancesServer(RemoteError):
+    """Something answered, but not the Glances v5 API."""
 
-        # Default client mode
-        self._client_mode = 'glances'
 
-        # Return to browser or exit
-        self.return_to_browser = return_to_browser
+class NotFound(RemoteError):
+    """The server answered 404: a route it does not serve (alerts disabled, unknown pid)."""
 
-        # Build the URI
-        if args.password != "":
-            self.uri = f'http://{args.username}:{args.password}@{args.client}:{args.port}'
-        else:
-            self.uri = f'http://{args.client}:{args.port}'
 
-        # Avoid logging user credentials
-        logger.debug(f"Try to connect to 'http://{args.client}:{args.port}'")
+def parse_target(target: str, default_port: int = DEFAULT_PORT) -> tuple[str, str]:
+    """`host`, `host:port`, `[v6]:port` or an `http(s)://` URL -> (base URL, host).
 
-        # Try to connect to the URI
-        transport = GlancesClientTransport()
-        # Configure the server timeout
-        transport.set_timeout(timeout)
-        try:
-            self.client = xmlrpc.xmlrpc_client.ServerProxy(self.uri, transport=transport)
-        except Exception as e:
-            # Do not log self.uri here because it may contain credentials
-            self.log_and_exit(f"Client couldn't create socket to http://{args.client}:{args.port}: {e}")
+    `default_port` applies when the target names none (`-c host --port N`);
+    a port written in the target wins.
+    """
+    if "://" not in target:
+        target = f"http://{target}"
+    parts = urlsplit(target)
+    if parts.scheme not in ("http", "https") or not parts.hostname:
+        raise ValueError(f"not a server address: {target!r}")
+    host = parts.hostname
+    port = parts.port or default_port
+    netloc = f"[{host}]:{port}" if ":" in host else f"{host}:{port}"
+    return f"{parts.scheme}://{netloc}{parts.path.rstrip('/')}", host
 
-    @property
-    def quiet(self):
-        return self._quiet
 
-    def log_and_exit(self, msg=''):
-        """Log and exit."""
-        if not self.return_to_browser:
-            # Do not include msg here because it may contain sensitive information
-            logger.critical("Error when connecting to Glances server")
-            sys.exit(2)
-        else:
-            # Avoid logging potentially sensitive details contained in msg
-            logger.error("Error when connecting to Glances server")
-
-    @property
-    def client_mode(self):
-        """Get the client mode."""
-        return self._client_mode
-
-    @client_mode.setter
-    def client_mode(self, mode):
-        """Set the client mode.
-
-        - 'glances' = Glances server (default)
-        - 'snmp' = SNMP (fallback)
-        """
-        self._client_mode = mode
-
-    def _login_glances(self):
-        """Login to a Glances server"""
-        client_version = None
-        try:
-            client_version = self.client.init()
-        except OSError as err:
-            # Fallback to SNMP
-            self.client_mode = 'snmp'
-            logger.error(f"Connection to Glances server failed ({err.errno} {err.strerror})")
-            fall_back_msg = 'No Glances server found. Trying fallback to SNMP...'
-            if not self.return_to_browser:
-                print(fall_back_msg)
-            else:
-                logger.info(fall_back_msg)
-        except xmlrpc.xmlrpc_client.ProtocolError as err:
-            # Other errors
-            msg = f"Connection to server {self.uri} failed"
-            if err.errcode == 401:
-                msg += " (Bad username/password)"
-            else:
-                msg += f" ({err.errcode} {err.errmsg})"
-            self.log_and_exit(msg)
-            return False
-
-        if self.client_mode == 'glances':
-            # Check that both client and server are in the same major version
-            if __version__.split('.')[0] == client_version.split('.')[0]:
-                # Init stats
-                self.stats = GlancesStatsClient(config=self.config, args=self.args)
-                self.stats.set_plugins(json_loads(self.client.getAllPlugins()))
-                logger.debug(f"Client version: {__version__} / Server version: {client_version}")
-            else:
-                self.log_and_exit(
-                    'Client and server not compatible: '
-                    f'Client version: {__version__} / Server version: {client_version}'
-                )
-                return False
-
+def _is_loopback(host: str) -> bool:
+    if host == "localhost":
         return True
+    try:
+        return ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        return False
 
-    def _login_snmp(self):
-        """Login to a SNMP server"""
-        logger.info("Trying to grab stats by SNMP...")
 
-        from glances.stats_client_snmp import GlancesStatsClientSNMP
+class RemoteConnection:
+    """One `requests` session to one server, with its token. Synchronous: callers use `to_thread`."""
 
-        # Init stats
-        self.stats = GlancesStatsClientSNMP(config=self.config, args=self.args)
+    def __init__(
+        self,
+        base_url: str,
+        username: str = "glances",
+        password: str | None = None,
+        timeout: float = DEFAULT_TIMEOUT,
+        verify: bool | str = True,
+    ) -> None:
+        self.base_url = base_url
+        self._username = username
+        self._password = password
+        self._timeout = timeout
+        self._session = requests.Session()
+        self._session.verify = verify
+        self._token: str | None = None
+        self._auth_checked = False
+        plain_http = base_url.startswith("http://")
+        if password and plain_http and not _is_loopback(urlsplit(base_url).hostname or ""):
+            logger.warning(
+                "Sending credentials to %s over plain HTTP: use an https:// URL behind a TLS proxy", base_url
+            )
 
-        if not self.stats.check_snmp():
-            self.log_and_exit("Connection to SNMP server failed")
-            return False
-
-        return True
-
-    def login(self):
-        """Logon to the server."""
-
-        if self.args.snmp_force:
-            # Force SNMP instead of Glances server
-            self.client_mode = 'snmp'
+    def _authenticate(self) -> None:
+        """Trade the password for a token, once. A server without auth answers 404: go on without."""
+        self._auth_checked = True
+        try:
+            response = self._session.post(
+                f"{self.base_url}/api/5/token", auth=(self._username, self._password or ""), timeout=self._timeout
+            )
+        except requests.RequestException as e:
+            self._auth_checked = False
+            raise RemoteError(f"{self.base_url}: {e}") from e
+        if response.status_code == 404:
+            self._token = None
+        elif response.status_code == 401:
+            raise AuthError(f"{self.base_url} refused the username or password")
+        elif response.ok:
+            self._token = response.json().get("access_token")
         else:
-            # First of all, trying to connect to a Glances server
-            if not self._login_glances():
-                return False
+            raise RemoteError(f"{self.base_url}/api/5/token answered HTTP {response.status_code}")
 
-        # Try SNMP mode
-        if self.client_mode == 'snmp':
-            if not self._login_snmp():
-                return False
+    def get_json(self, path: str) -> Any:
+        """`GET base_url + path` as JSON. Takes a token first if a password is set."""
+        return self._request("get", path)
 
-        # Load limits from the configuration file
-        # Each client can choose its owns limits
-        logger.debug("Load limits from the client configuration file")
-        self.stats.load_limits(self.config)
+    def post_json(self, path: str) -> Any:
+        """`POST base_url + path`, no body, as JSON: the server's pin routes."""
+        return self._request("post", path)
 
-        # Init screen
-        if self.quiet:
-            # In quiet mode, nothing is displayed
-            logger.info("Quiet mode is ON: Nothing will be displayed")
-        elif self.args.stdout:
-            logger.info(f"Stdout mode is ON, following stats will be displayed: {self.args.stdout}")
-            # Init screen
-            self.screen = GlancesStdout(config=self.config, args=self.args)
-        elif self.args.stdout_json:
-            logger.info(f"Stdout JSON mode is ON, following stats will be displayed: {self.args.stdout_json}")
-            # Init screen
-            self.screen = GlancesStdoutJson(config=self.config, args=self.args)
-        elif self.args.stdout_csv:
-            logger.info(f"Stdout CSV mode is ON, following stats will be displayed: {self.args.stdout_csv}")
-            # Init screen
-            self.screen = GlancesStdoutCsv(config=self.config, args=self.args)
-        elif self.args.stdout_fetch:
-            logger.info("Fetch mode is ON")
-            self.screen = GlancesStdoutFetch(config=self.config, args=self.args)
-        else:
-            self.screen = GlancesCursesClient(config=self.config, args=self.args)
+    def _request(self, method: str, path: str) -> Any:
+        if self._password and not self._auth_checked:
+            self._authenticate()
+        send = getattr(self._session, method)
+        for attempt in (1, 2):
+            headers = {"Authorization": f"Bearer {self._token}"} if self._token else {}
+            try:
+                response = send(f"{self.base_url}{path}", headers=headers, timeout=self._timeout)
+            except requests.RequestException as e:
+                raise RemoteError(f"{self.base_url}: {e}") from e
+            if response.status_code == 401:
+                if self._password and attempt == 1:
+                    self._authenticate()  # the token may have expired: one new one, then give up
+                    continue
+                raise AuthError(f"{self.base_url} requires a password: use --password, or [passwords] in glances.conf")
+            if response.status_code == 404:
+                raise NotFound(f"{self.base_url}{path} answered HTTP 404")
+            if not response.ok:
+                raise RemoteError(f"{self.base_url}{path} answered HTTP {response.status_code}")
+            try:
+                return response.json()
+            except ValueError as e:
+                raise NotAGlancesServer(f"{self.base_url}{path} did not answer JSON") from e
+        raise AuthError(f"{self.base_url} refused the new token")  # pragma: no cover -- loop always returns or raises
 
-        # Return True: OK
-        return True
 
-    def update(self):
-        """Update stats from Glances/SNMP server."""
-        if self.client_mode == 'glances':
-            return self.update_glances()
-        if self.client_mode == 'snmp':
-            return self.update_snmp()
+class RemoteAlerts:
+    """The server's alert engine, read-only: the methods the TUI calls on `GlancesAlerts`.
 
-        self.end()
-        logger.critical(f"Unknown server mode: {self.client_mode}")
-        sys.exit(2)
+    Built from `/api/5/alert` (the transition log) and `/api/5/alert/incidents`.
+    The incidents' ongoing rows give back the engine's `ongoing`, `since` and
+    `top` maps, so the TUI derives exactly the incidents the server does.
+    Each `update` replaces whole objects: the TUI thread never sees a half.
+    """
 
-    def update_glances(self):
-        """Get stats from Glances server.
+    def __init__(self) -> None:
+        self._history: list[dict[str, Any]] = []
+        self._initializing = False
+        self._ongoing: dict[tuple[str, Any, str], str] = {}
+        self._since: dict[tuple[str, Any, str], str] = {}
+        self._top: dict[tuple[str, Any, str], dict[str, Any]] = {}
 
-        Return the client/server connection status:
-        - Connected: Connection OK
-        - Disconnected: Connection NOK
+    def update(self, history: Any, incidents: Any) -> None:
+        if not isinstance(history, list) or not isinstance(incidents, dict):
+            raise NotAGlancesServer("the alert routes did not answer as Glances v5 does")
+        ongoing, since, top = {}, {}, {}
+        for incident in incidents.get("incidents") or []:
+            if not isinstance(incident, dict) or not incident.get("ongoing"):
+                continue
+            state_key = (str(incident.get("plugin", "")), incident.get("key"), str(incident.get("field", "")))
+            ongoing[state_key] = str(incident.get("level", ""))
+            if incident.get("begin") and not incident.get("partial"):
+                since[state_key] = incident["begin"]
+            top[state_key] = {"top": list(incident.get("top") or []), "top_sort": incident.get("top_sort")}
+        self._history, self._ongoing, self._since, self._top = history, ongoing, since, top
+        self._initializing = bool(incidents.get("is_initializing"))
+
+    def clear(self) -> None:
+        """The server runs no alert engine: nothing to mirror."""
+        self.update([], {})
+
+    def get_history(self) -> list[dict[str, Any]]:
+        return list(self._history)
+
+    def is_initializing(self) -> bool:
+        return self._initializing
+
+    def get_ongoing(self) -> dict[tuple[str, Any, str], str]:
+        return dict(self._ongoing)
+
+    def get_ongoing_since(self) -> dict[tuple[str, Any, str], str]:
+        return dict(self._since)
+
+    def get_ongoing_top(self) -> dict[tuple[str, Any, str], dict[str, Any]]:
+        return dict(self._top)
+
+
+class RemotePlugin(GlancesPluginBase):
+    """A server's plugin, for the exporters: `get_export()` from the local store.
+
+    Built from the server's `fields_description` (`remote_plugins`), never
+    from the local plugin class: some do real work in `__init__` (`ports`
+    starts a scan thread), and a newer client must export an older server's
+    fields as the server has them. It never collects.
+    """
+
+    # `[processlist] export` (or `--export-process-filter`) applies here as
+    # on a server: by default no process is exported (v4 #794).
+    _PROCESS_LISTS = ("processlist", "programlist")
+
+    def __init__(self, store: Any, config: Any) -> None:
+        super().__init__(store, config)
+        self._export_patterns = (
+            self._compile_filter("export", section="processlist") if self.plugin_name in self._PROCESS_LISTS else []
+        )
+
+    async def _grab_stats(self) -> Any:  # pragma: no cover -- never scheduled
+        raise RuntimeError("a remote plugin never collects")
+
+    def get_export(self) -> dict[str, Any] | list[dict[str, Any]]:
+        export = super().get_export()
+        if self.plugin_name not in self._PROCESS_LISTS:
+            return export
+        if not self._export_patterns:
+            return []
+        # The processlist model's own rule, not a copy: it reads `_export_patterns` only.
+        return [item for item in export if _Processlist._matches_export(self, item)]  # type: ignore[arg-type]
+
+
+def remote_plugins(schema: dict[str, Any], store: Any, config: Any, not_exportable: set[str]) -> list[RemotePlugin]:
+    """One `RemotePlugin` per plugin of the server's schema (`/api/5/all/info`), for the exporters."""
+    plugins = []
+    for name, fields in schema.items():
+        if name in not_exportable or not isinstance(fields, dict):
+            continue
+        is_collection = any(isinstance(f, dict) and f.get("primary_key") for f in fields.values())
+        cls = type(
+            f"Remote_{name}",
+            (RemotePlugin,),
+            {"plugin_name": name, "fields_description": fields, "IS_COLLECTION": is_collection},
+        )
+        plugins.append(cls(store, config))
+    return plugins
+
+
+class RemoteSource:
+    """Fills a store from one server, and tells the TUI what to show.
+
+    `registry` and `fields_by_plugin` are the objects the TUI reads. They are
+    filled in place on the first successful connection, so a TUI started while
+    the server was unreachable shows the server's blocks once it answers.
+    Until then the registry holds `system` alone: its renderer draws the
+    "Disconnected from <host>" line with no payload at all.
+    """
+
+    def __init__(
+        self,
+        connection: RemoteConnection,
+        store: Any,
+        host: str,
+        hidden_plugins: set[str] | None = None,
+    ) -> None:
+        self.connection = connection
+        self.store = store
+        self.host = host
+        self.registry: list[tuple[str, bool]] = [("system", False)]
+        self.fields_by_plugin: dict[str, dict[str, Any]] = {"system": {}}
+        # Every plugin's schema, hidden ones included: what the exporters get.
+        self.schema: dict[str, Any] = {}
+        self._hidden = hidden_plugins or set()
+        self.alerts = RemoteAlerts()
+        self._schema_loaded = False
+        self._last_error: str | None = None
+        self.connected = False
+        # The pid this client pinned on the server (`e`), None otherwise.
+        self.pinned: int | None = None
+        # When the values in the store were received (epoch seconds), None
+        # before the first. Shown in the header while disconnected.
+        self.last_update: float | None = None
+
+    def status(self) -> tuple[str, str, float | None]:
+        """`("connected" | "disconnected", host, last_update)`, for the TUI's header."""
+        return ("connected" if self.connected else "disconnected", self.host, self.last_update)
+
+    def connect(self) -> None:
+        """Check the server speaks API 5, then load its schema. Synchronous."""
+        status = self.connection.get_json("/status")
+        if not isinstance(status, dict) or str(status.get("version")) != __apiversion__:
+            raise NotAGlancesServer(
+                f"{self.connection.base_url} is not a Glances v5 server (its /status says {status!r})"
+            )
+        info = self.connection.get_json("/api/5/all/info")
+        if not isinstance(info, dict):
+            raise NotAGlancesServer(f"{self.connection.base_url}/api/5/all/info is not a schema")
+        self.schema = info
+        registry = []
+        for name, fields in info.items():
+            if not isinstance(fields, dict) or name in self._hidden:
+                continue
+            is_collection = any(isinstance(f, dict) and f.get("primary_key") for f in fields.values())
+            registry.append((name, is_collection))
+            self.fields_by_plugin[name] = fields
+        if "system" not in info:
+            # The header line carries the connection status: keep it.
+            registry.insert(0, ("system", False))
+        # One assignment, so the TUI thread never reads a half-built list.
+        self.registry[:] = registry
+        self._schema_loaded = True
+        # The server answered: that is "Connected to", even before the first
+        # /api/5/all has landed.
+        self.connected = True
+
+    async def poll_once(self) -> None:
+        """One cycle: connect if needed, read `/api/5/all`, publish it. Never raises."""
+        try:
+            if not self._schema_loaded:
+                await asyncio.to_thread(self.connect)
+            payloads = await asyncio.to_thread(self.connection.get_json, "/api/5/all")
+            if not isinstance(payloads, dict):
+                raise NotAGlancesServer(f"{self.connection.base_url}/api/5/all is not a dict")
+            for name, payload in payloads.items():
+                if isinstance(payload, (dict, list)):
+                    await self.store.set(name, payload)
+            await asyncio.to_thread(self._poll_alerts)
+        except RemoteError as e:
+            # The store keeps the last values: the TUI goes on showing them.
+            self._failed(str(e))
+            return
+        if not self.connected and self._last_error:
+            logger.info("Reconnected to %s", self.connection.base_url)
+        self.connected = True
+        self.last_update = time.time()
+        self._last_error = None
+
+    def _poll_alerts(self) -> None:
+        try:
+            history = self.connection.get_json("/api/5/alert")
+            incidents = self.connection.get_json("/api/5/alert/incidents")
+        except NotFound:
+            self.alerts.clear()
+            return
+        self.alerts.update(history, incidents)
+
+    def _failed(self, error: str) -> None:
+        self.connected = False
+        if error != self._last_error:
+            # Once per distinct error, not once per cycle.
+            logger.warning("Cannot read %s: %s", self.connection.base_url, error)
+            self._last_error = error
+
+    def pin_extended(self, pid: int | None) -> None:
+        """Pin `pid` for extended stats on the SERVER, or unpin (None). Synchronous.
+
+        The pin is global to the server, as the Web UI's is: the server
+        collects one pinned process' extended stats and publishes them in
+        `processlist`'s `extended`. Raises `RemoteError`.
         """
-        # Update the stats
-        try:
-            server_stats = json_loads(self.client.getAll())
-        except OSError:
-            # Client cannot get server stats
-            return "Disconnected"
-        except xmlrpc.xmlrpc_client.Fault:
-            # Client cannot get server stats (issue #375)
-            return "Disconnected"
-        else:
-            # Put it in the internal dict
-            self.stats.update(server_stats)
-            return "Connected"
+        self.connection.post_json(
+            "/api/5/processes/extended/disable" if pid is None else f"/api/5/processes/extended/{pid}"
+        )
+        self.pinned = pid
 
-    def update_snmp(self):
-        """Get stats from SNMP server.
+    def set_sort(self, key: str) -> None:
+        """Sort the SERVER's processes (and containers, VMs) by `key`, or "auto". Synchronous.
 
-        Return the client/server connection status:
-        - SNMP: Connection with SNMP server OK
-        - Disconnected: Connection NOK
+        The sort is global to the server, as the pin is: every Web UI and
+        client attached to it follows. Raises `RemoteError`.
         """
-        # Update the stats
+        self.connection.post_json(f"/api/5/processes/sort/{key}")
+
+    def unpin_on_exit(self) -> None:
+        """Leaving the client: drop the pin it set, or the server keeps paying for it. Never raises."""
+        if self.pinned is None:
+            return
         try:
-            self.stats.update()
-        except Exception:
-            # Client cannot get SNMP server stats
-            return "Disconnected"
-        else:
-            # Grab success
-            return "SNMP"
+            self.pin_extended(None)
+        except RemoteError as e:
+            logger.warning("Cannot unpin pid %s on %s: %s", self.pinned, self.connection.base_url, e)
 
-    def serve_forever(self):
-        """Main client loop."""
-
-        # Test if client and server are in the same major version
-        if not self.login():
-            logger.critical("The server version is not compatible with the client")
-            self.end()
-            return self.client_mode
-
-        exit_key = False
-
-        try:
-            while True and not exit_key:
-                # Update the stats
-                counter = Counter()
-                cs_status = self.update()
-                logger.debug(f'Stats updated duration: {counter.get()} seconds')
-
-                # Export stats using export modules
-                counter_export = Counter()
-                self.stats.export(self.stats)
-                logger.debug(f'Stats exported duration: {counter_export.get()} seconds')
-
-                # Patch for issue1326 to avoid < 0 refresh
-                adapted_refresh = self.refresh_time - counter.get()
-                adapted_refresh = adapted_refresh if adapted_refresh > 0 else 0
-
-                # Update the screen
-                if not self.quiet:
-                    exit_key = self.screen.update(
-                        self.stats,
-                        duration=adapted_refresh,
-                        cs_status=cs_status,
-                        return_to_browser=self.return_to_browser,
-                    )
-                else:
-                    # In quiet mode, we only wait adapated_refresh seconds
-                    time.sleep(adapted_refresh)
-        except Exception:
-            logger.critical("Critical error in client serve_forever loop")
-            self.end()
-
-        return self.client_mode
-
-    def end(self):
-        """End of the client session."""
-        if not self.quiet:
-            self.screen.end()
+    async def run_forever(self, refresh: float) -> None:
+        """Poll every `refresh` seconds, the client's own cadence, until cancelled."""
+        while True:
+            await self.poll_once()
+            await asyncio.sleep(refresh)

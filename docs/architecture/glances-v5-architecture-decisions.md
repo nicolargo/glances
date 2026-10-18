@@ -1,0 +1,1960 @@
+# Glances v5.0 — Architecture Decisions
+
+## Status: Baseline locked — ready for implementation
+_Last updated: 2026-04-06_
+
+---
+
+## Diagrams
+
+### Overall architecture
+
+![Glances v5.0 — overall architecture](./glances-v5-architecture.svg)
+
+### Remote monitoring topology (server / client modes)
+
+![Glances v5.0 — remote monitoring topology](./glances-v5-network-topology.svg)
+
+---
+
+## 1. Core architecture
+
+### 1.1 Removal of XML-RPC server
+
+- The XML-RPC server (`:61209`) and its client are **removed entirely**.
+- The remote monitoring feature (client TUI monitoring a remote server) is **preserved**, migrated to HTTP REST.
+- A Glances instance in **server mode** exposes a single REST API on `:61208`.
+- A Glances instance in **client mode** instantiates `GlancesPluginRemote` objects (httpx async) instead of local psutil plugins. Same `GlancesPluginBase` interface, different data source.
+- **No backward compatibility** between v4 and v5. A v5 client cannot talk to a v4 server. Assumed breaking change for a major version.
+
+### 1.2 Async plugin update loop
+
+- Core architecture is **asyncio-based**.
+- The `Asyncio Scheduler` runs `asyncio.gather()` with per-plugin `refresh_time`.
+- All blocking psutil calls are wrapped with `asyncio.to_thread()` — uniformly, without exception, regardless of actual blocking duration.
+- A plugin that fails during `update()` logs a warning and leaves stale data in the store. It **never crashes the gather loop**.
+
+### 1.3 StatsStore
+
+- Single shared `dict` protected by `asyncio.Lock` for writes.
+- Reads (TUI thread, REST API, exporters) are **lockless** — consumers read between two scheduler cycles.
+- No pub/sub, no event queue in v5.0.
+- A `subscribe()` stub interface may be prepared for future migration but is not implemented in v5.
+
+### 1.4 Curses TUI integration
+
+- The TUI runs in a **dedicated `threading.Thread`** spawned by `serve()` in
+  `main_v5.py` after the scheduler and before `uvicorn.Server.serve()`. It
+  reads the StatsStore synchronously and without a lock (same lockless
+  contract as exporters and the REST API — §1.3).
+- The thread is implemented in `glances/outputs/glances_curses_v5.py` and is
+  split into three units:
+  - `curses_formatters_v5.py` — pure unit-driven formatters keyed by the
+    `unit` value declared in `fields_description` (§3.2).
+  - `curses_renderer_v5.py` — pure renderer producing a structured `Frame`
+    (`Row`s of `Cell`s) from a store snapshot + an alerts history. No
+    curses, no threading — fully unit-testable in isolation.
+  - `glances_curses_v5.py` — `TuiV5(threading.Thread)` owning the curses
+    event loop, the color pair initialisation, and the `addstr` paint
+    pipeline. Listens to `q` / `ESC` for shutdown; honours a
+    `threading.Event` set by the asyncio task in its `finally` clause.
+- **Layout** — two-column grid. Scalar plugins (cpu, mem, load, …) populate
+  the left column; collection plugins (network, fs, …) populate the right
+  column. Order within each column follows registry order
+  (`[(plugin_name, is_collection), …]`), itself derived from discovery
+  order at startup. The bottom of the screen carries the alerts footer
+  (`ALERTS (n)` header + up to 10 most-recent events, configurable).
+- **Color mapping** — renderer `ColorRole` (HEADER, OK, CAREFUL, WARNING,
+  CRITICAL, DEFAULT) → curses color pairs. `prominent: True` on a
+  WARNING/CRITICAL cell adds `A_REVERSE` for background highlight; on
+  non-alert cells `prominent` only changes color. No 256-color advanced
+  support in this iteration — base ANSI palette only.
+- **Renderer hints** in `fields_description` (§3.2) — `format` and
+  `column_width` give plugin authors a controlled way to override the
+  unit-driven defaults without re-introducing the rejected `view_layout`
+  mechanism (§3.6). They describe per-field formatting, never overall
+  layout.
+- **Per-plugin TUI renderer** (optional) — when v4's layout for a plugin
+  cannot be expressed by the generic 2-col / N-col table fallback
+  (e.g. CPU's 3-col × 4-row grid), the plugin opts in by providing a
+  `render_curses_v5.py` module next to `model_v5.py`. The module exports
+  `render(payload, fields_desc) -> list[Row]`. `build_frame()`
+  auto-discovers and caches the lookup; absence falls back to the
+  generic renderer; runtime exceptions fall back for that cycle. The
+  plugin model itself stays pure (no curses imports) — the split file
+  satisfies §3.6 (no declarative view descriptor) while restoring v4's
+  per-plugin layout freedom.
+- **CLI control** — mode dispatch (§1.5) selects whether the TUI is built.
+  By default (no flag) the TUI is on and uvicorn is NOT started.
+  `-s` / `--server` runs headless (REST API only, no TUI). The legacy
+  `--quiet` / `--no-tui` flag is retained as a deprecated path —
+  see §1.5 "Open points".
+- **Refresh cadence** — configurable via `[outputs] tui_refresh_interval`
+  (default `1.0` second). Independent of plugin `refresh_time` (plugin
+  cadence) — the TUI repaints from the store at its own rhythm.
+- **Shutdown** — `q` or `ESC` keypress, or `Ctrl-C` propagating through
+  the event loop, sets the shared `threading.Event`. The TUI's main loop
+  polls the event between curses cycles and exits gracefully, restoring
+  the terminal via `curses.wrapper`. In TUI mode the `on_quit` callback
+  raises `SIGINT` to wake `asyncio.run()` so the process terminates with
+  the shell prompt restored.
+
+### §1.5 Mode dispatch (CLI ↔ runtime)
+
+v5 runs in one of two modes selected at startup by the CLI:
+
+| Mode | Flag(s) | Scheduler | TUI | REST | MCP |
+|---|---|---|---|---|---|
+| **TUI** (default) | _(none)_ | ✅ | ✅ | ❌ | ❌ |
+| **Server** | `-s` / `--server` | ✅ | ❌ | ✅ | ❌ |
+| **Server + MCP** | `-s --enable-mcp` | ✅ | ❌ | ✅ | ⏳ (G3-MCP) |
+| **Legacy / scheduler-only** | `--quiet` / `--no-tui` | ✅ | ❌ | ❌ | ❌ |
+
+```
+                       ┌────────────────────────────────┐
+                       │ build_parser() + validate_args │
+                       └─────────────┬──────────────────┘
+                                     │
+                  ┌──────────────────┴────────────────┐
+            args.server                          NOT args.server
+                  │                                   │
+                  ▼                                   ▼
+         ┌─────────────────┐                ┌──────────────────┐
+         │ build FastAPI   │                │ skip FastAPI app │
+         │ register plugins│                │ build TuiV5      │
+         │ tui = None      │                │ (unless --no-tui)│
+         └────────┬────────┘                └────────┬─────────┘
+                  │                                   │
+                  ▼                                   ▼
+        ┌─────────────────┐                ┌──────────────────┐
+        │ serve(args, …)  │                │ serve(args, …)   │
+        │ uvicorn.Server  │                │ await scheduler  │
+        │ + scheduler     │                │ (no socket bound)│
+        └─────────────────┘                └──────────────────┘
+```
+
+**Why TUI by default does not start uvicorn:** Glances v4 mental model
+(`glances` = TUI, `glances -s` = server) is the user's expectation.
+Binding the REST API in TUI mode opens a network surface unannounced —
+the user must explicitly opt in. This restores the v4 behaviour and
+removes an unauthenticated-default footgun (cf. §8).
+
+**Why MCP is gated by an additional flag:** the MCP endpoint is opt-in
+even in server mode — mirrors v4's `--enable-mcp` opt-in. The flag is
+validated in `validate_args()` to reject `--enable-mcp` without `-s`.
+The actual mount wiring is deferred to a dedicated **G3-MCP plan**
+because MCP is not yet ported into v5 `build_app`.
+
+**Implementation:** `glances/main_v5.py::assemble` returns a 5-tuple
+`(app, scheduler, host, port, tui)` where `app` is `None` in TUI mode
+and `tui` is `None` in server mode. `glances/main_v5.py::serve(args, …)`
+branches on `args.server` inside a single `try`/`finally`, sharing the
+scheduler-stop and TUI-join cleanup across both modes.
+
+**Open points (carried forward):**
+
+1. **Fate of `--quiet` / `--no-tui`.** Currently means "no TUI" — which
+   `-s` already covers when REST is desired. The orthogonal use case
+   ("scheduler only, no TUI, no REST", useful for test rigs and the
+   future `--export` modes) is also covered by `--no-tui` today. A
+   decision on whether to rename, deprecate, or repurpose this flag is
+   pending — see the plan
+   `docs/superpowers/plans/2026-05-15-glances-v5-phase2-g2.md`.
+2. **Client mode.** v4 has a `-c` client mode that connects to a remote
+   v4 server. Not yet ported to v5 — orthogonal to G2.
+
+---
+
+## 2. Configuration — GlancesConfig
+
+- Backend: `ConfigParser` (stdlib). No new mandatory dependency.
+- Loading priority (ascending):
+  1. Hardcoded defaults in the class
+  2. `/etc/glances/glances.conf`
+  3. `~/.config/glances/glances.conf` (XDG_CONFIG_HOME respected)
+  4. `$GLANCES_CONFIG_FILE` environment variable
+  5. `-C <path>` CLI flag
+  6. `GLANCES_<SECTION>__<KEY>=<value>` environment variable overlay (highest priority)
+- Typed accessor: `get(section, option, default: T) -> T` — type inferred from default.
+- `get_value()` kept as a compatibility alias. No dead code, no breakage.
+- **Hot reload**: `mtime` polling every 5 seconds. Only safe keys reloaded (alert thresholds, display options). Credentials and `refresh_time` require a restart.
+- `as_dict_secure()` strips passwords, SSL key paths, SNMP community strings — used by the REST API config endpoint and enforced by CVE-2026-32609.
+
+---
+
+## 3. Plugin system
+
+### 3.1 GlancesPluginBase — generic base class
+
+```python
+class GlancesPluginBase(Generic[T], ABC):  # T = dict | list
+```
+
+- `GlancesPluginBase[dict]` — scalar plugins (cpu, mem, load, …)
+- `GlancesPluginBase[list]` — collection plugins (network, fs, containers, …)
+- The distinction is carried by the type parameter and `_grab_stats()` return type. No `is_list` flag. No discriminator field in the data.
+- API semantics preserved: scalar plugins → JSON object, collection plugins → JSON array.
+- **Maximum logic in the base class.** Following the same principle as v4 `GlancesPluginModel`, all generic behaviour is implemented once in `GlancesPluginBase` and never duplicated in individual plugins. Any logic that appears in more than one plugin belongs in the base class. This includes `get_export()` — exporters never access the StatsStore directly (see §7).
+
+#### update() pipeline — based on glancesarena/asyncio/plugin.py
+
+The `update()` method structure is derived directly from the [arena prototype](https://github.com/nicolargo/glancesarena/blob/main/asyncio/plugin.py), made async, and stripped of all view-related methods (`update_views()`, `msg_curse()` — rejected, see §3.6). The pipeline is implemented once in `GlancesPluginBase` and is not overridable by individual plugins:
+
+```python
+async def update(self) -> None:
+    # Orchestration pipeline. Implemented in base class. Never overridden.
+    try:
+        self._stats_previous = self._stats  # 1. save previous cycle for rate computation
+        await self._grab_stats()  # 2. collect raw data (psutil via asyncio.to_thread)
+        self._add_metadata()  # 3. add time_since_update and other metadata
+        self._transform()  # 4. transformation pipeline (see below)
+        await self.store.set(self.plugin_name, self._stats)  # 5. write to StatsStore
+    except Exception as e:
+        logger.warning("Plugin %s update failed: %s", self.plugin_name, e)
+```
+
+The `_transform()` method is itself a pipeline of four ordered steps, all implemented in the base class with per-plugin override hooks:
+
+| Step | Base class method | Role | Override? |
+|---|---|---|---|
+| 1 | `_transform_gauge()` | Convert cumulative counters to per-second rates by walking every field declared with `rate: True` and computing `(current - previous) / time_since_update`. Uses a dedicated `_raw_previous` snapshot taken before transform so cross-cycle diffs work even after `_remove_parameters` strips internals. | Rarely — only for non-standard rate computation |
+| 2 | `_expand_parameters()` | Expand compound psutil fields into sub-fields (e.g. `cpu_times` → `user`, `system`, `iowait`) | Per plugin if needed |
+| 3 | `_derived_parameters()` | Compute derived fields and `_levels`. Honours `watched`, `watch_direction`, `prominent`, `default_thresholds`, and `normalize_by` (per-core / per-divisor normalisation before threshold comparison). | Per plugin if needed |
+| 4 | `_remove_parameters()` | Filter out fields not in `fields_description` and strip internal keys | Never — base class only |
+
+**Only `_grab_stats()` is mandatory** in individual plugins — it is the psutil call, wrapped in `asyncio.to_thread()`. All other steps have a working default in the base class that covers the common case. A plugin overrides only the steps specific to its data model (e.g. `_transform_gauge()` for network rate computation, `_expand_parameters()` for cpu times).
+
+### 3.2 fields_description
+
+- Module-level variable in each plugin. Same contract as v4, revised key structure (breaking change from v4 — intentional, v5 is a clean break).
+
+| Key | Type | Description |
+|---|---|---|
+| `description` | `str` | Human-readable field description. Used by `/api/5/<plugin>/info` and `--api-doc`. |
+| `unit` | `str` | Semantic unit: `bytes`, `percent`, `bytespers`, `string`, `seconds`, … Drives numeric formatting in all renderers. |
+| `label` | `str` | Short display label, renderer-neutral. Replaces v4 `short_name`. Single source of truth for compact labels across TUI and WebUI. |
+| `history` | `bool` | Whether this field is recorded into the stats history store (bounded in-memory time series, `glances/history_v5.py`). Replaces v4's per-plugin `items_history_list`. **Not** v4's `mmm` (min/max/mean fields in the payload), which v5 drops (§10, maintainer decision 2026-09-26). Design: `docs/superpowers/specs/2026-09-26-glances-v5-history-store-design.md`. |
+| `watched` | `bool` | If `True`, this field gets a `_levels` entry computed each cycle. Defaults to `False`. |
+| `watch_direction` | `"high"` / `"low"` | Threshold direction. `"high"` = alert when `value >= threshold` (e.g. mem percent used). `"low"` = alert when `value <= threshold` (e.g. fs free percent). Defaults to `"high"`. |
+| `prominent` | `bool` | When `True`, the field is rendered with **background highlight** in the TUI/WebUI and every level transition is tagged `prominent: True` in the alert event feed. When `False`, only the font color changes and the event is tagged `prominent: False`. Replaces v4 `log` **code default**; the user-facing `[<plugin>] <field>_log` config key is kept (§3.4). Defaults to `True` for watched fields (a watched field is meant to be visible by default). |
+| `default_thresholds` | `dict` | Default alert thresholds (`careful`, `warning`, `critical`). Replaces v4 flat threshold keys. Overridable per-level via `glances.conf [<plugin>] careful=N` or `<field>_careful=N` for multi-watched plugins. |
+| `normalize_by` | `str` | Optional. Name of another field in the same payload whose value is used as a divisor before threshold comparison: `level = compute_level(value / stats[normalize_by], thresholds, direction)`. Used for per-core normalisation (e.g. `load.min15` divided by `cpucore`) and for percent-of-capacity comparisons (`network.bytes_recv` divided by `bytes_speed_rate_per_sec`). When the divisor is **missing, `None`, or zero**, the level is **skipped** for this field on this item — meaning "no meaningful threshold computable" (e.g. an interface whose link speed is unknown). Thresholds whose result is a ratio in `[0, 1]` (capacity-relative) should declare ratio-valued `default_thresholds` (e.g. `{"careful": 0.7, "warning": 0.8, "critical": 0.9}`). **Note:** `cpu.ctx_switches` is **not** normalised in v5 — system-wide ctx-switch rate is signalled by an absolute threshold (10k/15k/20k) regardless of core count. v4 documents `50000*cpucore` but its `get_limit` fallback chain never resolves the default, so v4 ships effectively no threshold; v5 ships a real one. Documented in NEWS.rst at 5.0.0. |
+| `rate` | `bool` | When `True`, the field is treated as a cumulative counter and converted to a per-second rate by `_transform_gauge` (`(current - previous) / time_since_update`). On the first cycle the field is **present with value `None`** (no previous sample to diff against yet) — `fields_description` is the contract consumers (REST, exporters) rely on, so the field set must stay stable rather than appearing/disappearing across cycles. Counter wrap or reboot (delta < 0) clamps to `0.0`. |
+| `primary_key` | `bool` | Marks the join key for `_levels` indexing in list plugins. |
+| `exportable` | `bool` | Whether the field is included in `get_export()` output. Defaults to `True`. Set to `False` for internal fields (`time_since_update`, etc.). |
+| `format` | `str` | Optional. Explicit Python format string for the renderer (`"%5.1f%%"`, `"%>10s"`). Overrides the default unit-driven formatter. Pure formatting hint — does **not** influence threshold computation, export, or any non-rendering logic. |
+| `column_width` | `int` | Optional. Fixed width (characters) for this field's column in the TUI. Overrides the auto-sizing computed from the label and observed max content width. Pure formatting hint. |
+| `internal` | `bool` | Optional. When `True`, the field is **never displayed** in any UI (TUI, WebUI). It is still stored in the StatsStore, returned by the REST API (subject to `exportable`), and available to threshold computation (`normalize_by`) and rate calculation (`rate`). Use for support fields that the plugin needs internally but should not surface visually — e.g. `time_since_update` (every plugin) or `cpucore` (cpu, load). Distinct from `exportable: False`: an `internal` field can still be exported if `exportable` is not also set to `False`. |
+| `short_name` | `str` | Optional. Compact display label used by per-plugin renderers in tight layouts (e.g. cpu's 3-column top-row grid). Falls back to `label`, then the field name. Mirrors v4's `short_name` (cf. `curse_add_stat` in `glances/plugins/plugin/model.py`). Example: ``ctx_switches.short_name = "ctx_sw"``. |
+
+- `min_symbol` (v4) is **removed**. Display floor is derived from `unit` by the renderer. Plugin-specific behaviour belongs in `msg_curse()`.
+- User overrides from `glances.conf` are layered over `default_thresholds` per level (per-key merge — overriding only `critical` keeps `careful` and `warning` at their declared defaults).
+- **Threshold key precedence** (3 levels, first non-empty wins per level):
+  1. ``<pk_value>_<field>_<level>``  — per-item, per-field (collection plugins only — e.g. ``wlan0_bytes_recv_warning``).
+  2. ``<field>_<level>``             — per-field, all items (e.g. ``bytes_recv_warning``).
+  3. ``<level>``                     — applies to any watched field in the plugin section (e.g. ``warning``).
+- **Startup WARNING on an unrecognised threshold key** (parity wave 1, 2026-09-10 — `docs/superpowers/specs/2026-09-10-glances-v5-parity-wave1-design.md` §3). v5 renamed several v4 threshold keys (`[network] rx_*`/`tx_*` → `bytes_recv_*`/`bytes_sent_*`, `[processlist] cpu_*`/`mem_*` → `cpu_percent_*`/`memory_percent_*`, `[fs] <mnt>_careful` → `<mnt>_percent_careful`) without accepting the old spellings — a stale key otherwise stops applying silently. `GlancesPluginBase.__init__` (`base_v5.py::_warn_unknown_threshold_keys`) scans the plugin's config section once at construction: any key shaped like a threshold key (bare `careful`/`warning`/`critical`, or ending in `_careful`/`_warning`/`_critical`) is checked against the accepted names built from `_watched_fields` (the threshold key precedence above), and logged with one WARNING per unrecognised key if it does not match.
+  **Extension point — `GlancesPluginBase._recognises_threshold_key(remainder)`.** A plugin that resolves its own thresholds outside the generic watched-field pipeline (a custom `_derived_parameters()`) owns key shapes the generic `<field>`/`<pk>_<field>` suffix rule cannot express, and **must override this hook** to declare them — otherwise the startup WARNING false-positives on every one of its threshold keys. This happened to `sensors` (`<type>_<level>` and `<type>_<label>_<level>` tiers, resolved in `sensors/model_v5.py::_resolve_thresholds`) before the hook existed; `sensors/model_v5.py::_recognises_threshold_key` now declares both shapes and its keys are recognised. Default `False`: the overwhelming majority of plugins are driven entirely by the base class's watched-field pipeline and have nothing extra to recognise.
+- `_transform()` filters output to declared fields only. Undeclared psutil fields do not reach the StatsStore or the API.
+- Exposed via `GET /api/5/<plugin>/info`.
+
+**Renderer hints are not layout descriptors.** `format` and `column_width` describe *how a single field is formatted*, never *where it sits relative to other fields*. The plugin's overall layout (which fields appear, in which order, in which column) remains the renderer's responsibility (§1.4) — consistent with the §3.6 rejection of `view_layout`.
+
+**Canonical example:**
+```python
+fields_description = {
+    "percent": {
+        "description": "Usage percentage.",
+        "unit": "percent",
+        "label": "MEM",
+        "history": True,
+        "watched": True,
+        "watch_direction": "high",
+        "prominent": True,
+        "default_thresholds": {
+            "careful": 50.0,
+            "warning": 70.0,
+            "critical": 90.0,
+        },
+    },
+    "total": {
+        "description": "Total physical memory.",
+        "unit": "bytes",
+        "label": "total",
+    },
+    "interface_name": {
+        "description": "Network interface name.",
+        "unit": "string",
+        "primary_key": True,
+    },
+}
+```
+
+### 3.3 Alert levels — _levels computed in _transform()
+
+`_transform()` computes `_levels` as a **pure functional operation** (`f(value, thresholds, direction) → level`), stored at root level in the StatsStore, cleanly separated from metric values.
+
+Levels: `"ok"` / `"careful"` / `"warning"` / `"critical"`.
+
+Each entry in `_levels` is a **nested dict** carrying both the level and the `prominent` flag:
+
+```python
+{"level": "warning", "prominent": True}
+```
+
+The nested shape — chosen over a flat string for v5 — keeps every consumer self-sufficient with a single payload (one REST request, one dict access). `prominent` is sourced from `fields_description.<field>.prominent` (see §3.2) and replaces the v4 `_log` flag. It drives:
+
+- **rendering** — TUI/WebUI surface `prominent: True` fields with background highlight; `prominent: False` fields use font color only.
+- **alert-event tagging** — `GlancesAlerts` (§3.4) ingests **every** level transition, prominent or not, and copies the flag into each event so downstream consumers (LLM diagnostic, alert history view, exporters) can filter by prominence. This is a deliberate evolution from v4, which only fed `_log=True` fields into the alert system. The user can still opt a field out with `<field>_log=False` (§3.4).
+
+**Scalar plugin (dict):**
+```python
+# store["mem"]
+{
+    "percent": 72.0,
+    "total": 16000000000,
+    # ...
+    "_levels": {
+        "percent": {"level": "warning", "prominent": True},
+        "swap_percent": {"level": "ok", "prominent": False},
+    },
+}
+```
+
+**Collection plugin (list):**
+```python
+# store["network"]
+{
+    "data": [
+        {"interface_name": "eth0", "rx": 1200, "tx": 300},
+        {"interface_name": "lo", "rx": 0, "tx": 0},
+    ],
+    "_levels": {  # indexed by primary key, not inline
+        "eth0": {
+            "rx": {"level": "warning", "prominent": True},
+            "tx": {"level": "ok", "prominent": True},
+        },
+        "lo": {
+            "rx": {"level": "ok", "prominent": True},
+            "tx": {"level": "ok", "prominent": True},
+        },
+    },
+}
+```
+
+Primary key is declared in `fields_description` with `"primary_key": True` on the relevant field (`interface_name` for network, `device_name` for fs, etc.).
+
+### 3.4 GlancesAlerts
+
+- Reads `_levels` from the StatsStore. **Never recomputes thresholds.**
+- Manages stateful logic: minimum duration before firing, hysteresis to prevent flapping.
+- Maintains an alert history exposed via `GET /api/5/alert`. Datamodel may differ from v4 (see §9 constraints).
+- **Ingests every level transition** — including transitions to `ok` (resolution events) and including `prominent: False` fields. The `prominent` flag is copied into each event so downstream consumers can filter (e.g. v4-equivalent view = `prominent: True` only; LLM diagnostic = full feed). This is a deliberate evolution from v4, which only fed `_log=True` fields and never recorded resolution events.
+- **Opt-out with `<field>_log=False`** (v4 `get_limit_log` parity, 2026-09-24). Resolved once per `(plugin, key, field)` tuple, most specific first: `<pk>_<field>_log`, `<field>_log`, then the bare `log` of the plugin section (v4's `[load] log`). `<field>` is the field's **threshold name** (`threshold_field` when declared), so the flag sits beside the thresholds it silences. Default `True` — every watched field is historised, as before; a non-boolean value is skipped. An unlogged tuple keeps its `_levels` (colouring unchanged) and its state machine, so **actions still fire** — v4's `manage_action` ran whatever `_log` said — but it writes no event, is not reported by `get_ongoing()` (the TUI/WebUI alert block and `/api/5/alert/incidents`), and does not steer the process auto-sort, which in v4 hung off events. `_log=True` on a field that is not `watched` does nothing: there is no level to log. Consequence of the shipped `conf/glances.conf`, which sets `[cpu] user_log=False` / `system_log=False`: those two fields leave the history, as in v4. v4 keys whose field was renamed (`[network] wlan0_rx_log`, `[diskio] dm-0_rx_log`) do not match, exactly like their threshold siblings (see the rename row of the parity backlog).
+- Export triggers from alert actions are **not** in scope (not a v4 feature).
+- **Alert scope in client/server mode (Option C):** each instance — server and client — runs its own `GlancesAlerts` stack independently. The server evaluates thresholds against locally collected data and triggers its own configured actions. The client does the same locally. The two configurations are fully independent, covering both headless server deployments and client-specific rules.
+
+**Alert event shape** (Phase 1.4):
+```python
+{
+    "ts": "2026-05-04T12:34:56+00:00",  # ISO 8601, UTC
+    "plugin": "network",
+    "key": "eth0",  # pk_value for collections; None for scalars
+    "field": "bytes_recv",
+    "level": "warning",  # ok | careful | warning | critical
+    "previous_level": "ok",  # transition source
+    "value": 53125000.0,
+    "prominent": True,  # copied from fields_description
+    "hostname": "myhost",  # server hostname (client/server scope)
+}
+```
+
+**Hysteresis & history config** (Phase 1.4):
+
+```ini
+[alerts]
+# Minimum time a new level must persist before the transition fires.
+# Prevents flapping on bursty signals (network rate, CPU spikes).
+min_duration_seconds=5.0
+
+# Number of events kept in the in-memory ring buffer exposed via
+# `GET /api/5/alert` (Phase 1.6).
+history_size=200
+
+[<plugin>]
+# Optional per-plugin override — useful for very volatile plugins
+# (e.g. network) where 5 s may not be enough.
+min_duration_seconds=10.0
+```
+
+A new level becomes "committed" only after it has been observed
+continuously for ``min_duration_seconds``. Oscillations during the
+debounce window reset the timer. ``min_duration_seconds=0`` disables
+hysteresis entirely (mostly useful for tests).
+
+**Hysteresis precedence — `min_duration_seconds`** (symmetric with thresholds and action keys). The resolution walks the chain below at *each* observation; the first non-negative float wins.
+
+Scalar plugins (`key is None`):
+
+1. `<field>_<level>_min_duration_seconds`
+2. `<field>_min_duration_seconds`
+3. `min_duration_seconds`                     (plugin section)
+4. `[alerts] min_duration_seconds`            (global default)
+
+Collection plugins (`key` = primary-key value, e.g. `wlan0`):
+
+1. `<pk>_<field>_<level>_min_duration_seconds`
+2. `<pk>_<field>_min_duration_seconds`
+3. `<field>_<level>_min_duration_seconds`
+4. `<field>_min_duration_seconds`
+5. `min_duration_seconds`                     (plugin section)
+6. `[alerts] min_duration_seconds`            (global default)
+
+```ini
+[cpu]
+# CRITICAL on ctx_switches fires only after 300 s sustained above the threshold.
+# Other levels (careful/warning) of the same field keep the plugin or global default.
+ctx_switches_critical_min_duration_seconds=300
+
+[network]
+# Tighten min_duration only for wlan0's bytes_recv at the warning level.
+wlan0_bytes_recv_warning_min_duration_seconds=60
+```
+
+The most-specific key depends on the **observed** level (not the committed one), so a value transitioning ok → warning → critical sees three independent windows, each scoped to its own configured key.
+
+**Symmetry note (open improvement):** the resolved `min_duration` is applied to *every* transition direction (any → ok, any → non-ok). A possible future refinement is a parallel ``_recovery_min_duration_seconds`` family of keys that would let users have fast entry into a non-ok level and slow drop back to ok (or the reverse). Not implemented today to keep the config surface small. Captured as a TODO in `glances/alerts_v5.py::_min_duration_for`.
+
+**Action dispatch** is **fire-and-forget** — the scheduler never waits
+on `action.execute()`. The monitoring loop's latency is independent of
+how slow a shell command or webhook is. Action failures are logged at
+WARNING level with full context; they never propagate.
+
+**Action config key precedence** (3 levels, from most-specific to
+least-specific — the first non-empty key wins per action):
+
+```ini
+[network]
+# Level 3 — bare (any watched field, any item)
+critical_action=logger any-field-any-iface
+
+# Level 2 — field-specific (any item)
+bytes_recv_critical_action=logger bytes-recv-on-any-iface
+
+# Level 1 — (pk_value, field)-specific
+wlan0_bytes_recv_critical_action=ifconfig wlan0 down
+```
+
+The same precedence applies to threshold keys (§3.2).
+
+#### Action system architecture (issues #2328, #2600)
+
+Actions follow the same modularity pattern as plugins and exporters. Adding a new action type requires creating one file — no changes to any core module.
+
+**Directory layout:**
+```
+glances/actions/
+├── action_base.py      ← GlancesActionBase (abstract base class)
+├── shell/              ← shell command (v4 behaviour, migrated)
+│   └── __init__.py
+├── apprise/            ← multi-service notifications (Slack, email, Telegram, …)
+│   └── __init__.py
+└── llm/                ← LLM health report via LiteLLM
+    └── __init__.py
+```
+
+**GlancesActionBase contract:**
+```python
+class GlancesActionBase(ABC):
+    action_name: str = ""  # key suffix in glances.conf
+    requires: list[str] = []  # optional Python dependencies
+
+    def is_available(self) -> bool: ...  # False if requires missing
+
+    @abstractmethod
+    async def execute(
+        self,
+        plugin_name: str,
+        level: str,  # "careful" | "warning" | "critical"
+        context: dict,  # get_export() + built-in vars (see below)
+        action_value: str,  # raw value from glances.conf
+        repeat: bool = False,
+    ) -> None: ...
+```
+
+Actions are auto-discovered at startup from the `glances/actions/` folder using the same `importlib` pattern as plugins. An action whose `requires` are not installed is skipped with a `WARNING` log — Glances always starts.
+
+**Config key pattern:**
+```
+<plugin_section>.<level>_<action_name>[_repeat] = <value>
+```
+
+| Key suffix | Action type | Example value |
+|---|---|---|
+| `_action` / `_action_repeat` | Shell command | `echo {{percent}} > /tmp/mem.alert` |
+| `_apprise` / `_apprise_repeat` | Apprise notification | `slack://token@channel` or `true` |
+| `_llm` / `_llm_repeat` | LLM health report | `true` |
+
+`_repeat` triggers the action every refresh cycle while the alert is active. Without it, the action fires once at alert entry.
+
+Shell commands are shell-escaped before execution (CVE-2026-32608).
+
+Apprise URLs can be defined globally once and reused across all plugins:
+```ini
+[outputs]
+apprise_url=slack://token@channel,mailto://user:pass@smtp.example.com
+apprise_body={{_glances_plugin}} is {{_glances_level}} on {{_glances_hostname}}
+
+[mem]
+critical=90
+critical_apprise=true               # uses global apprise_url + apprise_body
+warning_apprise=tgram://bot@channel # or override per-trigger
+```
+
+`apprise` is an **optional dependency** — only required if `_apprise` actions are configured.
+
+**Adding a new action (contributor guide):**
+
+Create `glances/actions/<name>/__init__.py` with a class inheriting `GlancesActionBase`. No other file needs to change. The action is auto-discovered and available as `<level>_<name>=<value>` in any plugin section of `glances.conf`. This must be documented in `SKILL-actions.md`.
+
+Example — webhook action:
+```python
+# glances/actions/webhook/__init__.py
+class WebhookAction(GlancesActionBase):
+    """POST alert context to a webhook URL.
+
+    Config: [mem] critical_webhook=https://hooks.example.com/alert
+    """
+
+    action_name = "webhook"
+    requires = []  # httpx is already a core v5 dependency
+
+    async def execute(self, plugin_name, level, context, action_value, repeat=False):
+        url = chevron.render(action_value, context)
+        async with httpx.AsyncClient() as client:
+            await client.post(url, json=context, timeout=5.0)
+```
+
+#### Mustache template engine (issue #2600)
+
+- Library: **`chevron`** (already a v4 dependency). No new dependency.
+- Template context passed to `chevron.render()` is `plugin.get_export()` output — a `dict` for scalar plugins, `{"data": [...]}` for list plugins — plus built-in variables:
+
+| Built-in variable | Value |
+|---|---|
+| `{{_glances_hostname}}` | Hostname of the Glances instance |
+| `{{_glances_plugin}}` | Plugin name (`mem`, `fs`, …) |
+| `{{_glances_level}}` | Alert level (`careful`, `warning`, `critical`) |
+| `{{_glances_timestamp}}` | ISO 8601 timestamp of the alert |
+
+- **Full Mustache spec supported**, including sections and list iteration:
+
+```ini
+# Simple substitution — v4 compatible, unchanged
+warning_action=echo "mem at {{percent}}%" > /tmp/alert
+
+# List iteration — new in v5, works for list plugins (fs, network, …)
+critical_action=echo "{{#data}}{{mnt_point}} at {{percent}}% {{/data}}" > /tmp/fs.alert
+
+# Conditional section
+warning_action=echo "{{#device_name}}[{{device_name}}] {{/device_name}}{{percent}}%"
+```
+
+- All v4 templates using `{{field}}` substitution are **fully backward compatible**.
+
+### 3.5 Plugin naming convention
+
+- Main class: `PluginModel` (v4 convention preserved).
+- Inherits from `GlancesPluginBase` instead of `GlancesPluginModel` — the only mandatory line change per plugin during migration.
+
+### 3.6 view_layout / view_description — rejected
+
+Both are rejected. Each renderer (TUI, WebUI) is fully responsible for its own display logic. The TUI requires dynamic layout that no declarative descriptor can encode.
+
+### 3.7 Shared samplers — coalescing psutil calls between sibling plugins
+
+When two plugins share the same psutil source — typically a system-wide
+plugin and its per-item companion (`cpu` ↔ `percpu`, future `network`
+aggregate ↔ per-interface, etc.) — a **shared sampler module** caches
+the psutil result under a TTL window so the cost is paid once per
+window regardless of how many plugins consume it.
+
+Pattern:
+
+```
+glances/<resource>_sampler_v5.py
+├── class <Resource>SamplerV5:
+│   ├── async def get_<sub_sample>() → cached psutil call
+│   └── ...
+└── sampler = <Resource>SamplerV5()        # module-level singleton
+```
+
+Properties:
+
+- **TTL coalescing** — repeated callers within the TTL window receive
+  the cached value. Default TTL: `1.0 s` (transparent at the default
+  `refresh_time = 2 s`).
+- **asyncio-safe** — concurrent samples are serialised under an
+  `asyncio.Lock` so two parallel plugin updates can't trigger two
+  psutil calls for the same sub-sample.
+- **No state across cycles** — the sampler is a pure cache, never the
+  source of truth for cumulative counter rates (which live in the
+  consuming plugin's `_raw_previous` via `_transform_gauge`).
+- **Implementations** — first instance: `glances/cpu_sampler_v5.py`
+  (consumed by `cpu/model_v5.py` and `percpu/model_v5.py`). Equivalent
+  of v4's `glances/cpu_percent.py` shared singleton.
+
+Plugins import the singleton and consume it from `_grab_stats`:
+
+```python
+from glances.cpu_sampler_v5 import sampler
+
+
+class PluginModel(GlancesPluginBase[dict]):
+    plugin_name = "cpu"
+
+    async def _grab_stats(self) -> dict:
+        agg = await sampler.get_aggregate()
+        ...
+```
+
+### 3.8 Collection filtering — `show` / `hide`
+
+Collection plugins (`network`, future `fs`, `containers`, …) expose a
+generic regex-based item filter, driven from the plugin's config section
+and applied **inside the base class** — concrete plugins inherit it for
+free.
+
+```ini
+[network]
+# Both keys are optional. Regex list, comma-separated.
+# show: if set, only items whose primary-key value matches at least one
+#       pattern pass through (re.search, substring-friendly).
+# hide: matching items are dropped (applied after show).
+show=eth.*,wlan.*
+hide=docker.*,veth.*
+```
+
+Properties:
+
+- **Generic, not per-plugin** — the base class reads `show` / `hide` from
+  `[<plugin_name>]` and applies them by `primary_key` value. Any collection
+  plugin gets the feature without writing code.
+- **Both API and UI** — filtering happens at the data layer, before
+  `_snapshot_raw` / `_transform`. Hidden items never appear in the REST
+  payload (`/api/5/<plugin>`), nor in exporters, nor in any UI consuming
+  the StatsStore. This matters for the client/server topology: hiding an
+  interface on the server hides it for every connected client.
+- **Filtered items have no `_raw_previous` entry** — re-showing an item
+  via config reload starts a fresh rate window (rate fields present with
+  value `None` on that first cycle — a stable field set is required by
+  any consumer with a fixed schema), same as a newly appearing interface.
+- **Invalid regexes are logged and skipped** — never raise. A typo in
+  the config can't crash a plugin.
+- **One field per plugin must declare `primary_key: True`** — validated
+  at plugin construction. Collection plugins without exactly one primary
+  key raise `ValueError`.
+
+### 3.9 Migration scope
+
+- **All v4 plugins** must be migrated. No plugin omitted.
+- Migration order: `mem` → `network` → remaining by increasing complexity.
+
+---
+
+## 4. REST API server — FastAPI
+
+**Opt-in:** the FastAPI app + uvicorn are only built and started when the
+CLI receives `-s` / `--server` (cf. §1.5 mode dispatch). The default
+mode (TUI) does NOT bind any TCP socket — so everything below applies
+to server mode exclusively.
+
+### 4.1 Topology
+
+- Single server on `:61208`, replacing both Bottle (`:61208`) and XML-RPC (`:61209`).
+- **No v4 API compatibility.** API version is `5`. Entry point: `/api/5/`.
+- Route structure identical to v4, version number updated: `/api/5/cpu`, `/api/5/mem`, `/api/5/all`, etc.
+- WebUI static files served by the same FastAPI instance. Root path configurable via `webui_root_path` in `glances.conf`, as in v4.
+- `/docs` (Swagger UI) and `/redoc` exposed **by default**. Can be disabled via `glances.conf`:
+  ```ini
+  [outputs]
+  api_doc=false
+  ```
+- Liveness / readiness probes: `GET /status` (v4-compat) and `GET /healthz` (Kubernetes / Prometheus / Docker healthcheck convention). Both return the same payload, both are **hard-coded as exempt from authentication** so probes work even on a locked-down deployment.
+
+### 4.2 `build_app(config, store, alerts=None)` — Phase 1.5
+
+The app skeleton lives in `glances/webserver_v5.py`. It builds the FastAPI instance, wires the security middlewares, and exposes the runtime objects via `app.state`:
+
+| `app.state.<name>` | Type | Set by |
+|---|---|---|
+| `config` | `GlancesConfigV5` | `build_app()` argument |
+| `store` | `StatsStoreV5` | `build_app()` argument |
+| `alerts` | `GlancesAlerts \| None` | `build_app()` argument |
+| `jwt_handler` | `JWTHandler \| None` | populated by `_wire_auth()` when `[outputs] password` is set |
+
+Phase 1.6 routes consume these via the FastAPI `Request.app.state` channel. The scheduler is not started inside `build_app()` — that wiring lives in the Phase 1.7 CLI entrypoint, so the same app can be reused for testing without an async loop.
+
+### 4.3 Middleware stack
+
+Composed outer → inner:
+
+```
+TrustedHostMiddleware    ← DNS rebinding (CVE-2026-32632)
+    ↓
+RateLimitMiddleware      ← per-address limits (§4.5)
+    ↓
+CORSMiddleware           ← Cross-origin policy (CVE-2026-32610 / 34839)
+    ↓
+AuthMiddleware           ← Basic / Bearer (CVE-2026-32596)
+    ↓
+route handler / probe
+```
+
+Starlette applies middlewares in reverse registration order; `build_app()` registers them inner-first (auth, CORS, rate limit, trusted-hosts) so the runtime order is the one above.
+
+#### TrustedHost — `[outputs] webui_allowed_hosts`
+
+```ini
+[outputs]
+# Comma-separated list. When empty, the middleware is not wired and a
+# WARNING is logged at startup if bind_address is not loopback.
+webui_allowed_hosts=glances.example,glances.local
+```
+
+Default behaviour matches v4: no allowlist → no filtering → WARNING. Setting an allowlist activates Starlette's `TrustedHostMiddleware`, which 400s requests whose `Host` header is not on the list.
+
+#### CORS — `[outputs] cors_origins`
+
+```ini
+[outputs]
+# Comma-separated list of allowed origins. Wildcard '*' is honoured but
+# is incompatible with cors_allow_credentials=True (CVE-2026-32610); if
+# both are set, allow_credentials is forced to False with a WARNING.
+cors_origins=https://glances.example,https://dashboard.example
+cors_allow_credentials=false
+```
+
+Default: no `cors_origins` → CORS middleware not wired → browsers block cross-origin requests, which is the safe stance. Allowed methods are hard-coded to `GET, POST`; allowed headers to `Authorization, Content-Type` (REST API surface only).
+
+#### Authentication — `[outputs] password` + JWT
+
+| Key | Default | Purpose |
+|---|---|---|
+| `password` | unset | PBKDF2-SHA256 `salt$hex` hash. Set to enable Basic + Bearer. Unset → API is open + startup WARNING (CVE-2026-32596). |
+| `username` | `glances` | Basic-Auth username. |
+| `jwt_secret_key` | random per-process | HS256 signing key. Random default → tokens invalidate on restart; set to a stable value in production. |
+| `jwt_expire_minutes` | 60 | JWT lifetime. |
+
+When `password` is unset, the auth middleware is not wired and `app.state.jwt_handler` is `None`. JWT Bearer is only enabled when Basic Auth is configured, because `/api/5/token` (Phase 1.6) is the only path to mint a token and that endpoint authenticates via Basic.
+
+The middleware checks **Bearer first** (so `Authorization: Bearer …` is never misinterpreted as Basic), then Basic. Failed Bearer → `401` with `WWW-Authenticate: Bearer`. Failed/missing Basic → `401` with `WWW-Authenticate: Basic realm="Glances"` so browsers pop the auth dialog.
+
+`/status` and `/healthz` are in a hard-coded `UNAUTH_PATHS` set checked before any credential is read.
+
+### 4.4 Hash format & migration
+
+v5 passwords are stored as `salt$pbkdf2_hex` with PBKDF2-SHA256, 100 000 iterations, `dklen=128`. The plaintext is never stored.
+
+This is **not byte-compatible** with the v4 stored hash, which applies an extra `pbkdf2(plain, salt='')` pre-hash before the salted PBKDF2. v4 → v5 migration requires regenerating the hash via the Phase 1.7 CLI (`glances-v5 --set-password`). The algorithmic strength is preserved.
+
+### 4.5 Rate limiting
+
+**Shipped 2026-10-03** (`glances/ratelimit_v5.py`, wired by `webserver_v5._wire_rate_limit`). One pure ASGI middleware between TrustedHost and CORS, so outside authentication, with two token buckets per client address. No dependency (`slowapi` was the alternative).
+
+```ini
+[outputs]
+# General limit, per client address. 0 (the default) turns it off.
+rate_limit_per_minute=0
+# Requests allowed at once; 0 means one minute's worth (rate_limit_per_minute).
+rate_limit_burst=0
+# Failed authentications per client address and minute; 0 turns it off.
+auth_fail_per_minute=10
+```
+
+- **The general limit is off by default** (maintainer, 2026-10-03): a WebUI tab polls ~30 times a minute, a `-c` client ~90, and several can share one address behind a NAT.
+- **The failed-authentication limit is on by default** (maintainer, 2026-10-03), because with a password configured every Basic guess costs the server ~50 ms of PBKDF2, on any route. A request carrying an `Authorization` header reserves a try on its way in and gets it back unless it ends in a 401, so parallel guesses cannot overspend; an address with no try left gets 429 **before** PBKDF2. A request without credentials (a browser's first visit, which gets the 401 challenge) is not counted. **Credentials already known good spend no try and are never refused** (security audit 2026-10-04, M3; `security_v5.KnownCredentials`): a Bearer token that verifies, or a Basic header that has passed PBKDF2 once since the server started (kept as an HMAC under a per-process key, and no longer re-checked by PBKDF2). Behind a proxy or a NAT, an attacker sharing the users' address can therefore no longer lock out the clients already logged in. A right password not yet seen from a locked-out address still waits.
+- **A lockout is logged** (maintainer, 2026-10-03): the 401 that spends an address's last try logs one WARNING, `Too many failed authentications from <address>: refused for <n> s` (the address is the IPv6 /64 when it is one), for a log watcher such as fail2ban. Refused requests log nothing; an attacker who keeps guessing gets one line each time a try comes back and is spent.
+- **429** carries `Retry-After` (whole seconds, at least 1) and `{"detail": "Too many requests"}`.
+- **Exempt: `/status` and `/healthz` only.** `/api/5/token` is limited: it is where a password is guessed. The middleware also covers `/mcp` and `/static`.
+- **Client address**: the one uvicorn reports, which honours `X-Forwarded-For` only from a proxy on 127.0.0.1 (uvicorn's `forwarded_allow_ips`); the header is never read by Glances. An IPv6 client counts per /64. The table holds 10 000 addresses at most; past it the least recently seen is forgotten (and gets a full bucket back).
+
+### 4.6 REST routes — Phase 1.6
+
+Routes live in `glances/routes_v5.py` as a single `APIRouter(prefix="/api/5")`, mounted by `build_app()` after middleware wiring.
+
+| Path | Method | Auth | Source | Notes |
+|---|---|---|---|---|
+| `/api/5/token` | POST | Basic (route-level) | `app.state.jwt_handler` | Exempt from the global Auth middleware (listed in `UNAUTH_PATHS`). Returns `{access_token, token_type:"bearer", expires_in}`. 404 if `[outputs] password` is unset. |
+| `/api/5/pluginslist` | GET | per-config | `app.state.plugins` keys | Sorted plugin-name list. |
+| `/api/5/all` | GET | per-config | `store.as_dict()` | Every plugin's payload in a single dict. Plugins that have never written are absent. |
+| `/api/5/all/limits` | GET | per-config | per-plugin `get_limits()` | Effective thresholds for every registered plugin. Plugins with no watched field are omitted. |
+| `/api/5/<plugin>/limits` | GET | per-config | `plugin.get_limits()` | Effective thresholds — config layered over `default_thresholds`. `200 {}` when the plugin has no watched field, or for the 6 plugins that override `_derived_parameters()` (`sensors`, `wifi`, `folders`, `raid`, `ports`, `amps`) even when thresholds are active; `404` if not registered. Never subject to cycle-0 `null`: thresholds come from config + schema. See `docs/superpowers/specs/2026-08-03-glances-v5-limits-routes-design.md`. |
+| `/api/5/alert` | GET | per-config | `alerts.get_history()` | Returns the ring buffer. 404 if `alerts is None`. |
+| `/api/5/config` | GET | per-config | `config.as_dict_secure()` | Redacted via `as_dict_secure()` — CVE-2026-32609 / 30928. |
+| `/api/5/<plugin>` | GET | per-config | `store.get(plugin)` | Raw payload **with `_levels`**. `200 null` if the plugin is registered but has not yet published (scheduler cycle 0). `404` if the plugin is not registered. |
+| `/api/5/<plugin>/info` | GET | per-config | `plugin.fields_description` | Schema for clients. 404 if the plugin is not registered. |
+| `/api/5/<plugin>/history` | GET | per-config | `plugin.get_history()` | The fields declared `history: True`, columnar: `{timestamps, series}`. `series` is `{field: [...]}` for a scalar plugin and `{field: {item: [...]}}` for a collection, keyed by the raw primary-key value. Query parameters `nb` (last N points, 0 = all), `field`, `item` (a query parameter because an item can be `/home`). `200` with empty `timestamps`/`series` when history is disabled, before the first cycle, or for a plugin with no history field; `404` for an unknown plugin, an unhistorised field or an unknown item. Not v4's `{"<item>_<field>": [[iso, v], ...]}`, nor its `/history/{nb}` and `/{item}/history` paths, and the default size is 1200 points (v4's code default: 28800) — breaking for v4 API clients, for the 5.0.0 release notes. Design: `docs/superpowers/specs/2026-09-26-glances-v5-history-store-design.md`. |
+
+**"per-config"** = the global Auth middleware applies its policy: when `[outputs] password` is set the request must carry Bearer or Basic credentials; otherwise the route is open.
+
+#### Plugin registry — `app.state.plugins`
+
+`build_app()` initialises `app.state.plugins = {}`. The Phase 1.7 CLI registers each plugin with both the scheduler (so it gets updated) and the FastAPI app (so `/pluginslist` and `/<plugin>/info` can find it) via `register_plugin(app, plugin)`. The registry is *only* consulted by `/pluginslist` and `/<plugin>/info`; routes that read store data go through `app.state.store` directly.
+
+#### Cycle-0 semantics
+
+A plugin registered but not yet updated returns `200 null` rather than `404` or `503`. Distinguishes "unknown plugin" (404) from "data not yet available" (transient — clients poll). Decision recorded for clarity: the API never serves a stale-or-empty fallback dict for cycle 0, so consumers do not have to differentiate "no data" from "all zeros".
+
+#### Deferred for follow-up
+- `/api/5/<plugin>/<field>` — single-field accessor (scalar convenience)
+- `/api/5/<plugin>/<pk_value>` — collection item lookup
+- **Decided 2026-10-05 (maintainer): port** the v4 fine-grained routes,
+  `/<plugin>/<field>`, `/<plugin>/<field>/<pk>`, `/<plugin>/<pk>/value/<v>`
+  and `/<plugin>/top/<n>` (v4 tests migration, GAP rows of
+  `test_restful.py`). `/config/<section>[/<key>]` is dropped (§10).
+- `/api/5/args` — depends on the Phase 1.7 CLI args module
+- `/api/5/serverslist` — Phase 3 (browser mode, CVE-2026-32633)
+
+### 4.7 CLI entrypoint — Phase 1.7
+
+The runnable assembly lives in `glances/main_v5.py`. Exposed as console script `glances-v5` (renamed to `glances` at the end of the migration when v4 is retired).
+
+```
+config (file + env + CLI overlay)
+    ↓
+discover_plugins(store, config)         ← walks glances.plugins.*.model_v5
+    ↓
+discover_actions("glances.actions_v5")  ← registry { "action": ShellAction(), ... }
+    ↓
+GlancesAlerts(config, actions=registry)
+    ↓
+build_app(config, store, alerts)        ← FastAPI + middlewares + routes
+register_plugin(app, plugin)            ← for each discovered plugin
+    ↓
+AsyncScheduler(store, config, alerts)   ← scheduler.register(plugin) for each
+    ↓
+asyncio.gather(scheduler.run_forever(), uvicorn.Server.serve())
+```
+
+CLI arguments (overlay on top of `glances.conf`):
+
+| Flag | Effect |
+|---|---|
+| `-C, --config <path>` | Additional config file (overlays system + user defaults). |
+| `--bind <addr>` | Bind address (overrides `[outputs] bind_address`; default `127.0.0.1`). |
+| `--port <n>` | Listening port (overrides `[outputs] port`; default `61208`). |
+| `--api-doc` / `--no-api-doc` | Enable / disable Swagger + ReDoc (overrides `[outputs] api_doc`). |
+| `-d, --debug` | Debug-level logging. |
+| `--set-password` | Interactive PBKDF2 hash generator. Prints to stdout. Does **not** modify any file. |
+| `--version` | Print `Glances <version>` and exit. |
+
+Bind/port precedence: **CLI > config > default** (`127.0.0.1:61208`).
+
+#### Zero-plugin startup is a valid state
+
+`discover_plugins()` returning `[]` is **not** treated as an error. The server starts, logs a WARNING ("No v5 plugins discovered. The server will start with an empty registry; plugins can be activated later via the REST API"), and waits. Forward-looking design for [issue #3548](https://github.com/nicolargo/glances/issues/3548) (runtime plugin toggling via REST).
+
+#### Lifecycle
+
+```python
+async def serve(app, scheduler, host, port):
+    scheduler_task = asyncio.create_task(scheduler.run_forever())  # only if entries > 0
+    server = uvicorn.Server(uvicorn.Config(app, host=host, port=port, ...))
+    try:
+        await server.serve()
+    finally:
+        await scheduler.stop()
+        await scheduler_task   # swallowed CancelledError
+```
+
+`Ctrl-C` / `SIGTERM` → uvicorn shuts down → finally branch → scheduler.stop() cancels every plugin task → drain. No fuite, no zombie tasks.
+
+#### `--set-password` flow
+
+```
+$ glances-v5 --set-password
+Password: ********
+Confirm:  ********
+
+Paste this value into [outputs] password of your glances.conf:
+
+<hex-salt>$<256-hex-digest>
+```
+
+Stdout only — never writes the config file. Operator owns the paste. v4 → v5 hash migration documented in `NEWS.rst`.
+
+#### Makefile entry points
+
+```
+make run-v5            # Start the v5 REST server with conf/glances.conf
+make run-v5-debug      # Same, debug logging
+make test-v5           # Run only v5 unit tests
+make set-password-v5   # Interactive hash helper
+```
+
+(The `make help` regex was extended to recognize digits in target names — pre-existing bug exposed by these v5 targets.)
+
+#### Logging — the console threshold depends on who owns the terminal
+
+`setup_logging(debug, server)` (`main_v5.py`) delegates to `glances.logger`,
+v4's configuration: a rotating file handler (XDG-aware path, `$LOG_CFG`
+override, 1 MB × 3) that takes everything, plus a console handler whose level
+is decided per mode.
+
+| Mode | Console | Why |
+|---|---|---|
+| TUI (default) | **CRITICAL** | stderr *is* the terminal curses paints |
+| `-s` / `--server` | INFO, or DEBUG under `--debug` | no curses to protect |
+| `--quiet` / `--no-tui` | CRITICAL | no curses either, but the flag's name promises quiet |
+
+**The TUI row is a correctness requirement, not a preference.** One WARNING
+scrolls the screen and desynchronises ncurses' model of it, so text bleeds
+across columns and stays corrupted. v5 originally called
+`logging.basicConfig()`, whose default handler writes every INFO and WARNING
+there; fixed 2026-09-22 after a TUI smoke test.
+
+**The server row is a deliberate v4 divergence** (maintainer's call, the same
+day). v4 pins the console to CRITICAL in *every* mode, which leaves an operator
+running a foreground server — or reading `docker logs` — with a silent
+process, including for the unauthenticated-API warning and the bind address.
+Server mode also promotes the console to v4's own `standard` format, since
+v4's `console` handler carries a bare `%(message)s` that drops the severity
+from a stream now read as a log.
+
+Two further consequences:
+
+- Every fatal startup path in `main_v5.py` logs at `critical` before
+  `sys.exit(2)`, so it reaches the terminal in every mode. That is exactly
+  what the CRITICAL threshold is for — fatal errors surface, routine noise
+  does not.
+- `--debug` raises the **root** level, making the file verbose in every mode.
+  It lowers the console threshold only where the console is already verbose,
+  i.e. server mode: debugging must never make the TUI unusable.
+
+### 4.8 Security audit — end of v5 development
+
+Before merging `develop-v5 → develop`, schedule a **full cybersecurity audit on the `develop-v5` branch**. Open items the audit must explicitly address:
+
+- Is `/api/5/config` returning redacted data sufficient to keep it unauthenticated when the global API is unauthenticated? Or should the endpoint require auth even when `as_dict_secure()` redacts the obvious secrets? (Captured during Phase 1.6 review.)
+- Confirm `UNAUTH_PATHS` (probes + `/api/5/token`) cannot be abused for enumeration or oracle attacks.
+- Confirm rate limiting is wired before any release candidate (Phase 2+). **Wired 2026-10-03**, §4.5: the audit reviews it.
+- Re-check every CVE in §8 against the actual v5 code, not just against the original v4 fix.
+- Confirm no v4 module that has reached EOL leaks through `from glances.<x> import ...` in any `_v5` file.
+
+The audit produces a downloadable `.md` report (per the contribution guidelines) and is a **release blocker** for `5.0.0`.
+
+---
+
+## 5. Browser / multi-server mode
+
+> **Designed 2026-09-27** in `docs/superpowers/specs/2026-09-27-glances-v5-phase3-design.md`
+> §4.5 to §4.7: TUI, Web UI and Zeroconf (maintainer decision), servers polled
+> sequentially with `requests`, and credentials never carried in a URI.
+
+- The `--browser` mode is **preserved** in v5, migrated to HTTP REST.
+- Static server list defined in `glances.conf [serverlist]`, contacted via HTTP REST (replacing XML-RPC polling).
+- CVE-2026-32633 and CVE-2026-32634 fixes are **mandatory** (browser mode is not removed).
+- **Network autodiscovery**: to be studied. `python-zeroconf` (already used in v4 for XML-RPC discovery) is the natural candidate for broadcasting HTTP REST server announcements on the local network. Decision deferred to implementation phase.
+
+---
+
+## 6. Remote client — GlancesPluginRemote
+
+> **Revised 2026-09-27** by `docs/superpowers/specs/2026-09-27-glances-v5-phase3-design.md`
+> §4.1 to §4.4 (maintainer decisions):
+> - The client reads **one `/api/5/all` per cycle** into its store, instead of
+>   running one remote plugin per plugin.
+> - The HTTP library is **`requests`**, which closes the OPEN item below.
+> - The **SNMP fallback is dropped**: `--snmp-*` and `pysnmp`, a removed v4
+>   feature for the 5.0.0 release notes.
+>
+> The timeout and stale-data rules below stand.
+
+- Implemented with **httpx async**. Supports both Bearer token and Basic Auth, matching whatever the target server requires.
+- Credentials read from `glances.conf [passwords]` keyed by hostname, same as the v4 client.
+- **DECIDED (maintainer, 2026-09-27): `requests`**, a core dependency, one library across v5 — a client talks to one server at a time, so async HTTP buys nothing. Shipped with P3-1 (`glances/client_v5.py`), see `docs/superpowers/specs/2026-09-27-glances-v5-phase3-design.md` §4.2 and §6. The bullet above ("httpx async") is superseded. Earlier context: as of G6C every v5 plugin that speaks HTTP uses `requests` behind `asyncio.to_thread` (`ports`, `containers`, `cloud`, the `nginx` AMP); `httpx` is still only a transitive dependency of FastAPI's `TestClient` and no v5 code imports it. The remote client is the first workload where async HTTP genuinely pays (N servers polled every cycle), but adopting `httpx` for it means shipping two HTTP clients unless `requests` can be removed from the graph — which the reused v4 Docker engine and the `nginx` AMP currently prevent. Decide deliberately, with that picture, before writing the remote client. See `docs/superpowers/specs/2026-08-04-glances-v5-g6c-design.md` §4.1b.
+
+**Timeout:**
+- Global default configurable in `glances.conf`:
+  ```ini
+  [client]
+  timeout=3
+  ```
+- Overridable per server in the server list configuration.
+
+**Startup behaviour (server unreachable):**
+- Non-fatal. Client starts with an empty store for the affected plugin.
+- TUI displays `N/A`. Scheduler retries at every refresh cycle.
+
+**Stale data (server disappears after successful connection):**
+- **Revised (maintainer, 2026-09-27, P3-2):** the last values received stay
+  in the store and on screen for as long as the server is unreachable; they
+  are never cleared, and `[client] stale_max_cycles` is gone. The header
+  reads `Disconnected from <host> (last update HH:MM:SS)` in red, so every
+  value on screen is dated. Shipped in `glances/client_v5.py`.
+
+---
+
+## 7. Export modules
+
+### 7.1 Enabled in all modes (issue #1527)
+
+> **Client mode shipped 2026-09-27 (P3-2).** `glances-v5 -c <host> --export
+> <name>` exports the server's stats through one `RemotePlugin` per server
+> plugin (`glances/client_v5.py`), built from `/api/5/all/info`; the
+> `[processlist] export` filter applies as on a server. Nothing is exported
+> while the server is unreachable.
+
+- Export is available in **all modes**: standalone, server, and client.
+- In v4, the server was passive (data collected only on client request). In v5, the asyncio scheduler always runs plugins at their `refresh_time` regardless of connected clients — this is a fundamental architectural change required for a responsive REST API. Export and `GlancesAlerts` are lightweight consumers of already-computed StatsStore data; their marginal CPU overhead is small.
+- The primary lever for CPU control in server mode is `refresh_time` per plugin. A headless server with no TUI should use longer refresh intervals.
+- An `[export] refresh` option controls how frequently exporters flush data. A
+  value lower than the global refresh is clamped up to it — exporting faster
+  than the plugins are polled duplicates points without adding information:
+  ```ini
+  [export]
+  refresh=10   # export every 10s even if plugins refresh every 2s
+  ```
+  Superseded decision: earlier drafts of this section proposed a separate
+  `[exports]` section with a `refresh_time` key. A second section one letter
+  away from the existing `[export]` (which already holds `exclude_fields`) is a
+  configuration trap, and `refresh` is the key name every other section uses.
+  Implemented as `[export] refresh` in G8.
+- **Documentation must warn** that v5 server mode has higher baseline CPU consumption than v4 server mode (always-on scheduler vs. lazy collection). `refresh_time` is the mitigation.
+
+### 7.2 get_export() — consistent field filtering (issue #3211)
+
+- Every exporter calls `plugin.get_export()` instead of reading the StatsStore directly. This is the **only** permitted access pattern for exporters.
+- `get_export()` is implemented once in `GlancesPluginBase`. It returns only fields where `exportable` is not `False` in `fields_description`, and strips internal keys (`_levels`, `_mmm`, `_stale`).
+- A plugin can override `get_export()` for exporter-specific transformations, but the base implementation covers the common case.
+
+```python
+# GlancesPluginBase
+def get_export(self) -> dict | list:
+    data = self.store.get(self.plugin_name, {})
+    if isinstance(data, dict):
+        return {
+            k: v for k, v in data.items() if not k.startswith('_') and self._fields.get(k, {}).get('exportable', True)
+        }
+    # list plugin
+    return [
+        {k: v for k, v in item.items() if not k.startswith('_') and self._fields.get(k, {}).get('exportable', True)}
+        for item in data.get('data', [])
+    ]
+```
+
+### 7.3 Migration scope
+
+- **All v4 export modules** must be migrated. No exporter omitted.
+- `GlancesExportBase.update()` stays **synchronous**; the coroutine boundary
+  lives in `AsyncScheduler._export_loop()`, which calls
+  `await asyncio.to_thread(exporter.update, plugins)` once per exporter per
+  tick. Every backend client is blocking (file IO, `influxdb_client`,
+  `prometheus_client`), so an `async def` whose body is entirely blocking would
+  still need a finer-grained `to_thread` for no gain — and one handoff per
+  exporter per tick beats one per plugin per exporter (~307 µs each).
+  Superseded decision: this section previously required an async `update()`.
+- Every migrated exporter replaces direct StatsStore access with `plugin.get_export()`.
+- No new export module added during the v5 migration phase.
+
+---
+
+## 8. Security constraints (non-negotiable)
+
+All v4.x published security advisories are reproduced or resolved in v5.0. v5 starts from the hardened baseline. The table below lists every published GitHub Security advisory for the project and how v5 addresses each one.
+
+_Last synced against the published advisory list on 2026-08-01 — includes the post-v4.5.5 batch fixed on `develop`: GHSA-73wf-9vmv-5pv9, GHSA-59fj-m2j6-hcxh, GHSA-fp27-88fp-2phg, GHSA-qcpp-8x79-hhp3 (incomplete-fix follow-ups to CVE-2026-32608 / 53925 / CORS), and CVE-2026-68520._
+
+**v5 status** uses four values:
+- `Carry forward` — same fix mechanism as v4, ported into the v5 module structure
+- `Resolved by architecture` — vulnerability does not exist in v5 because the affected component was removed (e.g. XML-RPC) or the affected feature was deliberately not carried over (e.g. backtick command substitution in config)
+- `New v5 mitigation` — additional v5-specific work required beyond what v4 shipped
+- `Covered by a different v5 mechanism` — the vulnerability class cannot occur in v5 because the v5 implementation uses a different technique than the v4 fix. A regression test locking the v5 property in is mandatory.
+
+| CVE | Severity | Fix in v5 | v5 status |
+|---|---|---|---|
+| CVE-2026-30928 | high | Redact secrets from `/api/5/config` for unauthenticated callers via `GlancesConfigV5.as_dict_secure()` (Phase 0.2). Same mechanism as CVE-2026-32609. | Carry forward |
+| CVE-2026-30930 | high | Parameterized SQL in TimescaleDB export. Process names, mount points, interface names, container names — every string drawn from monitored data — must be parameterized, never f-string-interpolated. | Fixed in P3-3 (2026-09-28), stronger than v4: every value is a bound parameter, the table and every column go through `psycopg.sql.Identifier` (v4 split `"name TYPE"` strings, so a field name with a space reached `sql.SQL` raw), and the connection takes keyword arguments instead of an f-string DSN. Tests carry hostile process and mount names. **Verified in P3-7 (2026-09-28)** on a real PostgreSQL 16 with psycopg 3.3 (`tests/test_phase3_cve_v5.py`, set `GLANCES_TEST_PG`): nine hostile names as values, item names and column names; the canary table survives and every string is stored as data. The pass found that psycopg reads `%s` placeholders inside a quoted identifier: no injection (the statement fails), but a `%` in a field name stopped that plugin's export. Identifiers now double `%` (hardening). |
+| CVE-2026-32596 | high | `WARNING` at startup when REST API runs unauthenticated. Default behaviour unchanged. | Carry forward (Phase 1) |
+| CVE-2026-32608 | high | Shell-escape process names in `[action]` command templates before Mustache substitution. Implemented in the concrete `shell` action under `glances/actions_v5/shell/`, not in `GlancesActionBase`. | Carry forward (Phase 1) |
+| CVE-2026-32609 | high | Redact password hash, SSL key paths, SNMP community strings from `/api/5/args` (and any other unauthenticated endpoint) via `as_dict_secure()`. | Carry forward (Phase 0.2 ✅) |
+| CVE-2026-32610 | high | No wildcard `Access-Control-Allow-Origin`. Allowed origins via `cors_origins` in `[outputs]`. `allow_credentials=False` is the FastAPI default. | Carry forward (Phase 1) |
+| CVE-2026-32611 | high | Parameterized DDL in DuckDB export. Plugin/metric names sanitized, never string-interpolated. | Fixed in P3-3 (2026-09-28): table and columns double-quoted with embedded quotes doubled, every value a `?` parameter, types from a fixed map; a test against a real DuckDB database checks nothing extra is created or dropped. **Verified in P3-7 (2026-09-28)** on a real DuckDB 1.5 with the same nine hostile names: canary intact, strings stored as data and as quoted column names. |
+| CVE-2026-32632 | medium | Host validation against DNS rebinding. `webui_allowed_hosts` config key. Startup warning when unset in non-loopback mode. | Carry forward (Phase 1) |
+| CVE-2026-32633 | critical | `/api/5/serverslist` must not return credential-bearing `uri` fields. Strip `password` and `uri` before serialization. | Fixed by construction in P3-4 (2026-09-27): a `ServerEntry` has no credential field, `as_dict()` names its keys, and `test_serverslist_never_carries_a_credential` checks the response. **Verified in P3-7 (2026-09-28)**: `/api/5/serverslist` and `/browser` answer 401 without credentials when a password is set; the client's request URLs never carry userinfo. |
+| CVE-2026-32634 | high | Browser autodiscovery must not forward configured credentials to discovered servers. | Fixed in P3-5 (2026-09-27): a Zeroconf entry gets no `[passwords]` entry, not even `default`, connects to the address it was seen at, and never shares a static entry's connection; `test_a_discovered_server_is_sent_no_configured_credential` checks no token request or `Authorization` header is sent. **Verified in P3-7 (2026-09-28)** (tests unchanged since P3-5, re-read against the code). |
+| CVE-2026-33533 | high | XML-RPC server is removed in v5 (§1.1). The vulnerable code path no longer exists. | Resolved by architecture |
+| CVE-2026-33641 | high | Backtick command substitution in configuration values is **not** ported to `GlancesConfigV5`. The `re_pattern = r'(\`.+?\`)'` regex and `system_exec()` call paths from v4 `glances/config.py` are deliberately absent. Documented as a breaking change in NEWS.rst at v5.0.0. | Resolved by architecture |
+| CVE-2026-34839 | high | REST API CORS hardening — same mechanism as CVE-2026-32610 applied to `/api/5/*`. `cors_origins` enforced; wildcard rejected when credentials are allowed. | Carry forward (Phase 1) |
+| CVE-2026-35587 | high | SSRF in IP plugin via `public_api`. v5 plugin migration must validate the URL scheme (allow `http`/`https` only), reject loopback / link-local / RFC1918 / cloud metadata IPs unless explicitly opted in via a new `public_api_allow_internal=true` config key, and **never** send `public_username`/`public_password` to a hostname not on an allowlist. | New v5 mitigation (Phase 2 — `ip` plugin migration) |
+| CVE-2026-35588 | medium | Parameterized CQL in Cassandra export. `keyspace`, `table`, `replication_factor` validated against an allowlist regex (`^[A-Za-z][A-Za-z0-9_]*$`) before being interpolated into DDL. Same family as CVE-2026-32611 / CVE-2026-30930. | Fixed in P3-3 (2026-09-28): `keyspace` and `table` checked with `fullmatch` against the allowlist (a plain `match` let a trailing newline through, fixed during review), `replication_factor`, `port` and `protocol_version` must be positive integers, a bad value is fatal before any statement; the stat map is bound to a prepared statement. **Verified in P3-7 (2026-09-28)**: the allowlist refuses every hostile name of the battery, a trailing newline, fullwidth letters, combining marks and non-ASCII digits, before any statement runs. |
+| P3-7 finding (no CVE) | high | `/api/5/config` must not serve `[passwords]`: the section maps HOST NAMES to other servers' clear passwords, which the key-name rules of CVE-2026-32609 / 30928 cannot recognise. v4 leaves the section out (`_SECURE_BLOCKED_SECTIONS`); the v5 port had dropped that. | Fixed in P3-7 (2026-09-28): `GlancesConfigV5.BLOCKED_SECTIONS` leaves it out of `as_dict_secure()`, as v4; `test_config_route_never_serves_the_passwords_section`. v4 is not affected. |
+| CVE-2026-46606 | high | Command injection via KVM/QEMU VM domain names (v4 `glances/plugins/vms/engines/virsh.py`). The v5 `vms` plugin migration must run `virsh` via `subprocess.run([...], shell=False)` with the domain name passed as a single opaque list argument — never through a shell or a `secure_popen` path that interprets `;`, `&&`, `\|`, `>`. Same family as CVE-2026-32608. | Carry forward (Phase 2 — `vms` plugin migration) |
+| CVE-2026-46607 | high | Insecure pickle deserialization of the version-update cache → arbitrary code execution (v4 `glances/outdated.py`, cache `~/.cache/glances/glances-version.db`). The v5 port of the update check must persist the cache as **JSON** (datetimes via `isoformat()`), never `pickle`; a malformed or legacy pickle file is treated as a silent cache miss, not loaded. | **Not applicable: the update check is dropped** (maintainer decision 2026-10-05, §10) — no version cache exists in v5. |
+| CVE-2026-46608 | high | XML-RPC multi-origin CORS silently fell back to wildcard (incomplete fix for CVE-2026-33533). XML-RPC server is removed in v5 (§1.1). The v5 FastAPI CORS layer (`webserver_v5._wire_cors`) reflects only exact-match origins from `cors_origins` and never emits `*` for a multi-origin allowlist. | Resolved by architecture |
+| CVE-2026-46611 | medium | XML-RPC server lacked Host-header validation → DNS rebinding. XML-RPC server is removed in v5 (§1.1). REST/WebUI DNS-rebinding protection is already covered by `TrustedHostMiddleware` / `webui_allowed_hosts` (`webserver_v5._wire_trusted_hosts`, see CVE-2026-32632). | Resolved by architecture |
+| CVE-2026-53925 | high | Arbitrary file write and command execution via shell redirection / chaining operators (`>`, `>>`, `;`, `&&`, `\|`) in AMP command configuration through `secure_popen` (v4 `glances/secure.py` + `glances/amps/`). The v5 AMP/actions port must default to `shell=False` / explicit arg lists for config-sourced commands and only interpret operators behind an explicit opt-in (v4's `allow_operators` gate, hardened by `--disable-config-exec`). Same family as CVE-2026-32608 / CVE-2026-33641. | Done — actions (`ShellAction.allow_shell()`) and AMP (`AmpsListV5` builds the `args` shim from `[global] disable_config_exec`, so `GlancesAmp.allow_operators()` gates `secure_popen`) — G6C-amps. Applied in `main()` since 2026-10-04, so `--issue` and `--fetch` honour it too (security audit M4). **Scope, maintainer decision 2026-10-04:** the flag strips the operators, it is not a sandbox — a configured `sh -c "…"` still gets a shell; documented in `docs/aoa/amps.rst` and `actions.rst`, not blocked. |
+| GHSA-73wf-9vmv-5pv9 | high | Incomplete fix of CVE-2026-32608 (v4 `ea4cf2f5`): the action-template sanitizer only scrubbed top-level string values, so a shell operator nested in a list/dict value (notably a process `cmdline`) survived. v5 does not use v4's operator-stripping sanitizer at all — `ShellAction.execute()` (`glances/actions_v5/shell/__init__.py`) pre-quotes every context value with `shlex.quote(str(value))`, so a stringified list is one shell-safe token. Regression test: `tests/test_action_shell_v5.py::test_nested_list_value_reaches_shell_as_single_token`. | Covered by a different v5 mechanism |
+| GHSA-qcpp-8x79-hhp3 | high | Incomplete fix of CVE-2026-32608 (v4 `9c280eae`): with per-field operator stripping, two adjacent unescaped Mustache variables `{{{a}}}{{{b}}}` could rejoin a trailing `&` and a leading `&` into a real `&&` across the boundary. v5's `shlex.quote` closes and reopens a quote at every variable boundary, so the joined text is a single literal word — verified `'foo&''&bar'` → shell reads `foo&&bar`. Regression test: `tests/test_action_shell_v5.py::test_adjacent_unescaped_variables_cannot_reconstruct_operator`. | Covered by a different v5 mechanism |
+| GHSA-59fj-m2j6-hcxh | high | Incomplete fix of CVE-2026-53925 (v4 `5c07c0d9`): the `--disable-config-exec` hardening covered AMP commands but not the on-alert action command lines read from the same `glances.conf`. v4 added `GlancesActions.allow_operators()` → `secure_popen(..., allow_operators=)`. v5 ports the gate as CVE-2026-68519: `--disable-config-exec` overlays `[global] disable_config_exec`, `discover_actions()` carries the config into every action, and `ShellAction.allow_shell()` switches `execute()` from `create_subprocess_shell(cmd)` to `create_subprocess_exec(*shlex.split(cmd))` — no shell, operators stay literal. The v4 second surface (backtick substitution in config *values*) needs no port: `GlancesConfigV5` never executes anything (CVE-2026-33641). AMP commands follow with the amps port. | Done — actions ✅ (CVE-2026-68519) and AMP ✅ (G6C-amps): the v5 AMP runner keeps `secure_popen`'s restricted grammar (`&&`, `\|`, `>` — no shell) and honours `--disable-config-exec` |
+| GHSA-fp27-88fp-2phg | high | The REST-API CORS credentials guard used exact list equality (`cors_origins == ["*"]`), so a multi-origin allowlist containing `*` (e.g. `*,https://trusted`) — which Starlette still treats as "allow all origins" — bypassed the downgrade (v4 `89085894`). v5 `webserver_v5._wire_cors` already uses a membership test (`any(o == "*" for o in origins)`), so the bug cannot occur. Regression test: `tests/test_webserver_v5.py::test_cors_multi_origin_allowlist_with_wildcard_downgrades`. | Carry forward (Phase 1.5 ✅) |
+| CVE-2026-68520 | high | `as_dict_secure()` value-level bypass: v4's redaction keyed on the option **name** only, so a credential embedded in an URL **value** (`scheme://user:pass@host`) leaked through `/api/4/config` unauthenticated (v4 `8d0f8276`). v5 `config_v5.as_dict_secure()` now scrubs URL userinfo in every string value via `_URL_CREDENTIALS_RE` and redacts the `username` / `user` / `login` key names (`user` / `login` via exact match to keep the `user_careful` / `user_warning` thresholds visible). When `/api/5/args` lands it must run its payload through the same `_secure_value()`. Regression tests: `tests/test_config_v5.py` (URL userinfo, bare `user`/`login`/`username`, threshold preservation, non-string pass-through). | Carry forward (Phase 0.2, extended 2026-08-01 ✅) |
+
+### Watching — unpublished advisories
+
+| GHSA | Severity | State | v5 plan |
+|---|---|---|---|
+| GHSA-mcm7-fmh3-v6v3 | medium | draft | **Arbitrary code execution via malicious Glances plugin loading without signature verification.** v5 auto-discovery (`main_v5.discover_plugins`) must only import `model_v5.py` modules from the trusted installed package namespace — never from user-writable or config-specified paths. The planned runtime plugin toggling over REST (issue #3548) must only enable/disable already-discovered trusted plugins, never import an arbitrary module path. Tracked until the advisory is published. |
+
+> **Additional v5 hardening (no advisory assigned).** When the v5 alerts plugin and TUI render strings drawn from monitored data (process names, container names), they must sanitize terminal control sequences (`re.sub(r'[\x00-\x1f\x7f]', '?', name)`) and cap rendered string length, to prevent curses escape injection and memory exhaustion. _(This concern was previously mis-filed under GHSA-mcm7-fmh3-v6v3 in this doc; that GHSA actually covers plugin-signature verification — see the row above.)_
+
+### Closed — fixed in v4, no v5 action required
+
+The following advisories were fixed in v4 before the v5 effort began. The fixes are present in the v4 codebase that `develop-v5` inherits via the weekly merge, and no additional v5-specific work is needed.
+
+- GHSA-93gr-c454-3xw7 — Passwords exposed in plain text
+- GHSA-w4m6-4mpc-gq25 — BasicAuth Bypass
+- GHSA-f533-jmqq-4www — Public IP visible on documentation screenshot
+
+---
+
+## 9. Non-negotiable constraints
+
+- **No regression on defaults.** Local users with zero configuration must experience no behaviour change relative to v4 defaults.
+- **Conservative defaults.** All new security or behavioural options are opt-in via `glances.conf`, with a `WARNING`-level log when running permissively.
+- **No dead code.** Every new class and method must be wired and used.
+- **Surgical edits over rewrites.** Plugin migration is incremental, one plugin at a time.
+- **Test stack.** `pytest` + `pytest-asyncio` (`asyncio_mode = "auto"`) + `unittest.mock`. Style: pytest-native (top-level functions + fixtures, `assert` statements). No `unittest.TestCase` for new v5 tests.
+- **Existing v4 unit tests must pass.** All v4 unit tests are migrated to v5 and adapted where necessary (API changes, datamodel changes). A v5 release is not valid if any migrated test is failing or has been silently dropped.
+- **Datamodel changes between v4 and v5 are allowed.** v5 is a clean break; API consumers must migrate. Changes must be documented in release notes.
+- **All v4 plugins migrated.**
+- **All v4 export modules migrated.**
+- **All v4 security fixes reproduced** (§8).
+
+---
+
+## 10. Development strategy
+
+### Branch model
+
+```
+main               ───────────────────────────────────────────────► stable releases (v4, then v5)
+support/glancesv4          (1) ┌──────────────────────────────────► v4 hotfixes (4.5.x)
+develop            ────────────┴──────┬──── 5.0.0b1 → rc → 5.0.0 ─► v4 fixes, then v5
+                     │ weekly merge   ▲ (2) merge
+develop-v5         ──▼────────────────┘                             v5 development, nothing published
+```
+
+- The v5 development branch is **`develop-v5`**.
+- A **weekly automated merge** `develop → develop-v5` is configured in CI. Security fixes and bugfixes land in v5 without manual action. Conflicts (restructured files) are resolved immediately, not accumulated.
+- **No pre-release is published from `develop-v5`** (maintainer, 2026-10-03): no alpha, no beta. The first v5 published on PyPI is a beta, from `develop`, after the merge. This replaces the earlier plan of alphas and betas from `develop-v5`.
+- **Before the merge, `develop` is branched to `support/glancesv4`** (maintainer, 2026-10-03), the v4 hotfix branch: v4 bugfix and security releases are cut from it once `develop` carries v5.
+- The merge `develop-v5 → develop` happens once Phase 4's hardening is done (all plugins, exporters and tests green, security audit passed). The weekly `develop → develop-v5` merge stops with it.
+- After the merge, `develop` publishes `5.0.0b1`, `5.0.0b2`…, then `5.0.0rc1`… and `5.0.0`.
+- **Cutover decisions (maintainer, 2026-10-10)**, the full run in
+  `glances-v5-cutover-plan.md`: `glances-v5` is dropped and `glances`
+  runs v5 (D1); release `5.0.0b1`, API stays `/api/5` (D2); every `_v5`
+  file, module and `…V5` class loses its suffix, the WebUI bundles become
+  `glances.js` / `browser.js` (D3, D4); design history in
+  `docs/architecture` and `docs/superpowers` is kept as dated archive
+  (D5); the cleanup runs on a `cutover/v5` branch merged into `develop`
+  with a merge commit (D6); the Docker image binds `0.0.0.0` and a beta
+  never publishes `latest` (D7); Windows, macOS and FreeBSD CI run the v5
+  suite minus the Linux-only tests (D8).
+
+### Migration phases
+
+#### Phase 0 — Scaffolding
+_Goal: async skeleton running, no plugin migrated yet. All contributor skills written before any PR is accepted._
+
+**Core architecture:**
+- `GlancesPluginBase[T]` generic base class
+- `GlancesActionBase` + auto-discovery
+- `StatsStore` with `asyncio.Lock`
+- `Asyncio Scheduler` with `asyncio.gather()`
+- `GlancesConfig` v5 (env overlay, typed accessor, hot reload stub)
+- CI pipeline on `develop-v5` (weekly `develop → develop-v5` merge job)
+- Empty asyncio loop passes all structural tests
+
+**Contributor skills — all written in Phase 0, before the first external PR:**
+
+| File | Content |
+|---|---|
+| `.claude/skills/SKILL-plugin.md` | `GlancesPluginBase[T]`, `fields_description` v5 keys, `_transform()`, `get_export()`, async pattern, unit test requirement |
+| `.claude/skills/SKILL-exporter.md` | `GlancesExportBase` (synchronous — see §7.3), `get_export()` as the only permitted data access, migration pattern from v4 |
+| `.claude/skills/SKILL-actions.md` | `GlancesActionBase`, auto-discovery, Mustache context, Apprise optional dependency, webhook example |
+| `.claude/skills/SKILL-security.md` | FastAPI security model, CVE list (§8), `as_dict_secure()`, CORS defaults, startup warnings |
+| `.claude/skills/SKILL-config.md` | Env overlay, typed `get()`, `thresholds` structure, hot-reload safe vs unsafe keys |
+| `.claude/skills/SKILL-ci-cd.md` | `develop-v5` pipeline, weekly merge job, release tagging |
+| `.claude/skills/SKILL-rest-api.md` | FastAPI route structure, auth middleware, `/api/5` conventions _(Phase 1)_ |
+| `.claude/skills/SKILL-webui.md` | Vue.js 3, Bootstrap 5, SCSS — largely unchanged from v4 _(Phase 2)_ |
+
+#### Phase 1 — Core plugins + minimal REST API
+_Goal: first runnable v5 instance. Internal milestone (no PyPI release, see Branch model)._
+
+- Plugins: `mem`, `cpu`, `load`, `network`
+- `GlancesAlerts` with `_levels` pipeline
+- REST API `/api/5/<plugin>` for the 4 core plugins
+- Curses TUI thread displaying core plugins
+- Migrated unit tests for Phase 1 plugins
+
+#### Phase 2 — All local plugins + core exporters
+_Goal: feature parity with v4 for local monitoring. Internal milestone (no PyPI release)._
+
+- All remaining local plugins migrated
+- Exporters: InfluxDB, Prometheus, CSV, JSON (most widely used)
+- Full REST API `/api/5/all`
+- WebUI served by FastAPI
+
+#### Phase 3 — Remote client + all exporters + browser mode
+_Goal: feature parity with v4 for all modes. Internal milestone (no PyPI release); done 2026-09-28._
+
+- `GlancesPluginRemote` (httpx, auth, stale data handling) — became `RemoteSource` on `requests`, shipped 2026-09-27 (P3-1, `glances/client_v5.py`)
+- Client mode TUI with `DISCONNECTED` banner
+- All remaining export modules — shipped 2026-09-28 (P3-3): the 18 v4 exporters now have a `export_v5.py`
+- Browser / multi-server mode (static list + Zeroconf study)
+- All CVE fixes verified
+
+#### Phase 4 — Hardening & release
+_Goal: production-ready. Release `5.0.0b1` (the first published v5), `5.0.0rc1`, then `5.0.0`, all from `develop` after the merge._
+
+- All v4 unit tests migrated and passing
+- Performance validation (no regression on refresh latency)
+- **Full cybersecurity audit on the `develop-v5` branch** — release blocker. See §4.8 for the open items the audit must address (each CVE in §8 re-verified against actual v5 code, `/api/5/config` auth posture decision, `UNAUTH_PATHS` review, rate limiting wired, no v4 module leaks into v5 imports). Output: downloadable `.md` audit report.
+- Release notes documenting all breaking changes and datamodel differences
+- Branch `develop` to `support/glancesv4` (the v4 hotfix branch), then merge `develop-v5 → develop`
+- **One version source** (maintainer, 2026-09-27): at the merge, v5 reads its
+  release and its API version from `glances/__init__.py` (`__version__`,
+  `__apiversion__`), and the v5-only copies go. **Intermediate step shipped
+  2026-10-03** (maintainer's choice): until the merge, every v5 surface reads
+  one v5-only pair, `glances/version_v5.py` (`__version__ = "5.0.0a1"`,
+  `__apiversion__ = "5"`), because `glances/__init__.py` still serves v4 on
+  this branch (its `__apiversion__` mounts `/api/4`). That covers `-V`,
+  `--issue`, `GlancesAPI.__version__`, `/status`, the OpenAPI version, the
+  router prefix, `UNAUTH_PATHS`, `API_URL`, the Zeroconf `api=` TXT, the
+  client's and the browser's version check, the `version` plugin and the TUI
+  help title (the last two showed the v4 release). `tests/test_version_v5.py`
+  holds them together. `5.0.0a1` is a label only: it is never published
+  (no pre-release from `develop-v5`, maintainer 2026-10-03). At the merge,
+  the two lines move into `glances/__init__.py`, with the release set for
+  the first published v5 (`5.0.0b1`), the `glances.version_v5` imports are
+  re-pointed and the module goes. Still written out as `/api/5/...`: the request paths of
+  `client_v5.py`, `servers_list_v5.py` and `restful_doc_v5.py`'s examples,
+  and the WebUI's JavaScript.
+- From `develop`: `5.0.0b1` (first published v5), then `5.0.0rc1` and `5.0.0`; PyPI, Docker, Snap, Helm packages published
+
+#### Phase 2.X — TUI interactive surface (owned group)
+_Goal: close the largest gap the v4 → v5 parity inventory found — the interactive
+curses surface — as its own owned group. No implementation in parity wave 1
+(2026-09-10); scope decision recorded in
+`docs/superpowers/specs/2026-09-10-glances-v5-parity-wave1-design.md` §6._
+
+- **Process management** (2.X-b). Designed as one group and **split into
+  four** because the roadmap line above is six features with three different
+  prerequisites — and because a destructive key must not land in the same
+  push as its own scaffolding. Design:
+  `docs/superpowers/specs/2026-09-23-glances-v5-tui-process-management-design.md`.
+
+  **Which of it reaches the browser was decided per key** on 2026-09-23
+  (design §8.1), not for the group as a whole:
+
+  - **`k`, `+`, `-` stay TUI-only.** They change the process, and that would
+    need a mutating REST endpoint on an API Glances leaves unauthenticated by
+    default — a different product decision from "show fewer plugins".
+  - **`e` is in the browser too**, as a **click on the process row** rather
+    than a key, which is how v4's web UI already offers it
+    (`plugin-processlist.vue:59`, `:720`, `:726`). Chantier b3-web.
+  - **`ENTER`/`E` (b4) is still open**: not destructive, but engine-global —
+    a filter typed in one tab changes what the TUI and every other consumer
+    sees.
+
+  This line first recorded the decision as "the whole group is TUI-only",
+  generalising from the three mutating keys. That was a misreading, and it
+  would have silently dropped a v4 feature against the standing rule above.
+
+  **Shipped (b1 + b2, 2026-09-23)**: the selection cursor (`UP`/`DOWN`,
+  `--disable-cursor`), `k` kill, `+`/`-` nice, and the popup machinery the
+  last three need. The engine already carried every action
+  (`processes.py:758`, `:769`, `:780`) — the whole chantier was on the TUI
+  side.
+
+  **Shipped (b3, 2026-09-23)**: `e`, extended stats for the selected process.
+  Three things this one had to settle:
+
+  - **The engine is given a PID, not a position.** v4 pushes its cursor
+    position in through `set_args`; v5 never hands the engine an argparse
+    namespace, and a position is the wrong handle regardless — the list
+    re-sorts every cycle, so the block would describe a moving target.
+    `glances_processes.extended_pid` is additive and None unless the v5 TUI
+    sets it, so v4's path is untouched.
+  - **The data reaches the renderer through the per-cycle `view`**, read from
+    the engine by the TUI. The renderers stay pure functions of (payload,
+    fields, view), and the extended stats stay out of the REST payload
+    entirely. (b3-web then gives the browser its own read path — see below —
+    rather than widening the collection payload.)
+  - **The vertical solver is told what the block costs.**
+    `plan_right_column` models an elastic block as "one line per data row
+    plus one header"; the `e` block breaks that, so it declares its height
+    (`process_extra_rows`) rather than overflowing the body by it. The height
+    is derived from the rows themselves, not a constant. The WebUI's copy of
+    the solver needs no change: the parameter defaults to 0 and the browser
+    has no `e`.
+
+  Two smaller divergences: `e` may target Glances itself (it only *looks* at
+  the process, unlike `k`), and turning it off clears `extended_process` —
+  which is what actually stops the engine grabbing, since the grab is keyed
+  on that being set (`processes.py:663-669`), not on `disable_extended_tag`.
+  v4 keeps paying for it after `e` is pressed again; only its renderer stops
+  looking.
+
+  **Shipped (b3-web, 2026-09-23)**: the same feature in the browser, as a
+  **click on the process row** — v4's gesture, and the maintainer's
+  correction to §8.1's first, over-broad reading. Three decisions:
+
+  - **The payload rides in `/api/5/all`, as plugin METADATA.** `fetchAll`
+    makes one request per tick on purpose (api.js: 34 components at a 2 s
+    cadence would otherwise be 17 req/s per tab), so a per-tick
+    `GET /processes/extended` was out for a feature that is off almost all
+    the time. `processlist._add_metadata` publishes `extended` the way `fs`
+    publishes `free_space`. NOT v4's shape — v4 merges the extended fields
+    into the pinned list ITEM, which v5 cannot do without declaring twenty
+    fields that are null on every process but one (`_remove_parameters`
+    filters each item to `fields_description`).
+  - **Two POST routes**, `/api/5/processes/extended/{pid}` and `.../disable`,
+    setting the same `extended_pid` the TUI's `e` sets: one pin, two ways to
+    ask. They are the only state-changing pair in an otherwise read-only API.
+    What an unauthenticated caller gains is one pinned process' affinity,
+    ionice, fd count, swap and connection counts — the same nature of
+    information as the process list it can already GET, and exactly v4's
+    exposure (`glances_restful_api.py:534-537`). Nothing on the host is
+    modified, and under `[outputs] password` they sit behind the same auth
+    middleware as every other route.
+  - **The two surfaces are held equal by a drift test.** `process_extended.js`
+    mirrors `_extended_rows` segment for segment, and
+    `tests/test_webui_v5_extended_drift.py` compares the labels each emits
+    for the same payload — the `hotkeys.js` pattern, applied to a stats
+    block. The browser therefore shows v5's OWN terminal lines, including the
+    IO nice line v4 never renders, rather than v4's narrower three.
+
+  Two things measured rather than assumed. The header stays **"Command"**:
+  v4's web UI says "Command (click to pin)", but in Chromium that column is
+  the elastic remainder and lands at 72–161px across 640/900/1280 viewports
+  while the wording needs 186, so it would wrap the header row at nearly
+  every width; the affordance is carried by `cursor: pointer` and a `title`
+  instead. And the block is titled with the process **name**, not its command
+  line: the engine has not added `cmdline` yet when it captures the
+  accumulator, so v4's title works only because v4 reads the published list
+  item instead.
+
+  **A fifth v4 defect, found in a real browser rather than in a test**: pin a
+  process, let it exit, and the block stays on screen showing its last
+  numbers forever, still flagged `extended_stats: True`. Nothing in the update
+  loop runs again for a pid that has left the list, so `extended_process` is
+  never refreshed and never cleared. Fixed at the engine, which is where both
+  surfaces read it: a pin whose process was not seen this cycle is dropped,
+  the pin with it — otherwise the TUI's cursor stays frozen on a block it no
+  longer draws.
+
+  **And a sixth, which b3 made reachable rather than introduced**:
+  `__get_extended_memory_swap` caught `NoSuchProcess`/`KeyError` with a bare
+  `pass`, leaving `memory_swap` unbound — so the `return` below raised
+  `UnboundLocalError` instead of reporting "no swap figure". Nothing but the
+  `e` path calls `set_extended_stats`, so no v5 release could hit it until
+  now; the two ways in are issue #1551 and a process that exits mid-grab,
+  which is exactly what pinning a short-lived process does. One line, plus
+  the three swap-read paths pinned as one decision.
+
+  **Shipped (b4, 2026-09-23) — and with it, Phase 2.X-b is complete**: the
+  process filter. `ENTER` prompts for a pattern, `E` erases it,
+  `-f/--process-filter` sets it from the command line, the three aggregate
+  rows appear under a filtered table, and `M` resets their min/max.
+
+  **§8.1's last open question answered itself**, on two facts rather than a
+  judgement: v4's own web UI has **no** process filter (grepping its
+  components for `process_filter` finds only `help.vue`, documenting the
+  terminal key), and v5's TUI and REST API are **mutually exclusive** —
+  `main_v5.assemble` is `if args.server: … elif not no_tui: …`, so when the
+  TUI runs there is no FastAPI app in the process and the engine-global leak
+  the objection was about cannot happen. A filter in v5's browser would be a
+  new feature, not parity.
+
+  Three decisions:
+
+  - **A third popup type, with a CANCEL.** `curses.textpad.Textbox` — which
+    v4 wraps in a `GlancesTextbox` subclass just to make Enter submit
+    (`glances_curses.py:1426-1435`) — has no cancel at all, so a prompt
+    opened by accident has to be cleared by hand. ESC returns None and
+    nothing is touched.
+  - **An invalid pattern is reported.** `GlancesFilter`'s setter compiles the
+    regex and, on failure, quietly sets the filter back to None and writes a
+    log line (`glances/filter.py:141-145`). In v4 that makes a typo a
+    keypress that does nothing, with no feedback anywhere the user is
+    looking. Comparing what went in against what came back is the only way to
+    tell "cleared" from "rejected" through that API.
+  - **The min/max live in the TUI, not the renderer.** v4 keeps them on the
+    plugin instance (`mmm_min`/`mmm_max`), which makes its renderer stateful;
+    v5's renderers are pure functions of (payload, fields, view), so the
+    renderer exports a pure `summarise()` and the memory across frames sits
+    beside `_cursor_max`. The rows are declared to the vertical solver
+    through the same `process_extra_rows` the `e` block uses — one number,
+    because that is what the solver wants.
+
+  `-f` is applied in TUI mode only: `glances_processes.process_filter` is
+  global to the process, so a server-wide filter would silently narrow what
+  every REST client sees. v4 refuses it outside standalone for the same
+  reason (`main.py:150-152`).
+
+  Four decisions worth carrying forward:
+
+  - **The cursor is clamped to the rows the last frame DREW**, not to
+    `glances_processes.processes_count` — which reads 0 in v5, because
+    `_max_processes` is never set (`processes.py:247-254`). The renderer is
+    the authority. The property this buys is the one that makes `k`
+    trustworthy: the selected process is always on screen, so a confirmation
+    can never name something the user cannot see.
+  - **A mutation names its target before it acts.** The pid is captured from
+    the frame on screen, once, before any popup, and the engine is called
+    with that captured value. The list re-sorts every cycle, so an index
+    re-resolved after a confirmation can address a different process than the
+    one the confirmation named.
+  - **`_handle_key` stays pure.** A popup is curses I/O, so a key that needs
+    one returns a new result kind, `"modal"`, and `_loop` runs it. Same
+    separation v4 reaches by accident (its handler sets a flag, `display()`
+    draws the popup), made deliberate — and it is what keeps ~40 unit tests
+    running without a terminal.
+  - **A refused renice is now visible.** v4 logs it and shows nothing
+    (`processes.py:767`, `:778`), so pressing `+` on someone else's process
+    does literally nothing a TUI user can perceive. `nice_increase` /
+    `nice_decrease` now return whether the OS accepted, and the TUI puts the
+    refusal on screen. Additive: v4's callers ignore the return.
+
+  **Three v4 defects this chantier surfaced**, all recorded in the design
+  rather than fixed in v4:
+
+  1. `k`, `+` and `-` read the pid from the `processlist` plugin
+     unconditionally (`glances_curses.py:638`, `:641`, `:647`) — **even while
+     the program list is on screen**, so they act on a row other than the one
+     displayed. v5 refuses in program view; its `programlist` schema carries
+     no pid at all.
+  2. v4 runs **both** of its dispatch tables on every keypress
+     (`glances_curses.py:303-305`), and its second table binds the raw codes
+     65 / 66 as arrow fallbacks — which are `ord("A")` and `ord("B")`. So
+     pressing `A` in v4 toggles AMPs *and* moves the cursor up. v5 does not
+     carry the aliases.
+  3. `M` (reset min/max) reads its flag inside
+     `if glances_processes.process_filter is not None:`
+     (`processlist/__init__.py:648-650`). With no filter set it does nothing
+     at all — it is a sub-feature of the filter, not a peer of it, which is
+     why it ships with b4 and not before.
+  4. `maybe_add_ionice_line` (`processlist/__init__.py:728-742`) guards on
+     `hasattr(prog['ionice'], 'ioclass')`, but the engine stores
+     `namedtuple_to_dict(proc)` (`processes.py:669`) — psutil's `pionice`
+     namedtuple is a **dict** by then, and a dict has no `.ioclass`. The
+     guard is always False, so **v4 never renders its IO nice line**. Checked
+     against the live engine, not inferred. v5 reads the dict.
+
+  And **one v5 defect it found in the live smoke test**: an escape sequence
+  ncurses does not translate arrives byte by byte, and 27 is `quit` — so the
+  first arrow key **exited Glances**. The bug predates 2.X-b (a mouse report,
+  a bracketed paste or an unmapped function key did the same), but binding the
+  arrows is what makes it the first thing a user hits. `_read_key` peeks once,
+  non-blocking, behind a 27: nothing there is a real Esc; something there is a
+  sequence to resolve or swallow. Design §5.7.
+- ~~**The 23 per-plugin show/hide toggles**~~ — **shipped (2.X-a, 2026-09-21)**,
+  and there are **24** of them, not 23. `A C d D f G I K l n N P Q r R s V W z
+  7 8 2 3 5`, each one a `hide` entry in `_HOTKEYS` naming the plugins it
+  reaches, hidden through `ViewState.hidden_plugins`. Two corrections the
+  chantier had to make to the figure above, both defects in Part 3 of
+  `glances-v5-v4-parity-inventory.md` rather than in this table: `C`
+  (`disable_cloud`, `glances_curses.py:58`) is missing from Part 3 entirely,
+  and `r` (`disable_smart`, `:84`) is filed there under MISCELLANEOUS though it
+  is a visibility toggle. Conversely `e` (extended stats) is listed in Part 3's
+  SHOW/HIDE section but needs the process cursor, so it stays with process
+  management below. Part 3 itself is NOT amended — a dated snapshot, corrected
+  in its own pass. Design and the divergences it records (a config-disabled
+  plugin cannot be revealed by a hotkey; `z` does not stop the shared process
+  engine):
+  `docs/superpowers/specs/2026-09-21-glances-v5-tui-show-hide-toggles-design.md`.
+  `F` (fs free space) is NOT part of this: it changes what `fs` *displays*, not
+  whether it displays, so it moves to the data-type toggles below.
+  **The WebUI binds the same 24 keys** (2026-09-22), reversing §6.5 of that
+  design at the maintainer's request. The two surfaces keep independent hidden
+  sets — two viewers, two states — but share the *table*: `hotkeys.js` mirrors
+  the `hide` entries of `_HOTKEYS`, targets and descriptions alike, so the two
+  help screens cannot describe a key differently
+  (`tests/test_webui_v5_hotkeys_drift.py`). The browser unions its set into
+  `AppShell.slots()` exactly as `build_frame` unions `user_hidden`, and `h`
+  opens an overlay generated from that same table. The two slot keys (`2`,
+  `5`) resolve against the live plugin registry rather than carrying a second
+  copy of the slot lists.
+- **The TOGGLE VIEW keys (`1`, `j`, `4`, `/`) are bound in the browser too**
+  (2026-09-22). These do not remove a block, they flip *how* something is
+  shown, and each has a server-side default in `/api/5/args`. **A browser
+  keystroke overrides server state, per key, for that viewer only** — the
+  question this line previously left open. `AppShell.viewOverrides` holds an
+  entry only for a key that was actually pressed; every other flag keeps
+  following `serverArgs`, which is re-read on each tick. The override flips
+  the *effective* value, not a `false` default, so the first press of `4` on a
+  server started with `--full-quicklook` turns the mode off rather than doing
+  nothing.
+  The merged result is published as `effectiveArgs` and passed down under the
+  existing `server-args` prop, so `PluginPercpu`, `PluginQuicklook` and the two
+  process blocks pick the toggles up unchanged; the prop's meaning is now "the
+  effective view flags", documented at its computed. Renaming it would touch
+  all 32 components for no behavioural gain.
+  `/` was not merely unbound but unimplemented: `commandText()` hardcoded
+  `short_name=True`. It now takes the flag, with **a divergence the browser
+  cannot avoid** — the TUI shows the path prefix only when
+  `os.path.isdir(path)` holds (`render_curses_v5.py:329`), and a browser has
+  no filesystem, so it shows the prefix whenever `cmdline[0]` carried one.
+- **The data-type toggles** (2.X-c, 2026-09-22). **Six of the nine shipped**,
+  on both surfaces, plus `F` (fs free space) which moved here from the
+  show/hide line above. Three are blocked, and NONE of the three is a hotkey
+  problem — the key is one table entry either way; what is missing is the
+  second render mode's DATA.
+
+  Shipped because v5 already rendered both modes, so the key was the whole
+  feature: `b` (network bit/s ↔ byte/s), `6` (GPU per-card ↔ mean), `F`
+  (filesystem used ↔ free).
+
+  Shipped after writing the second mode, the data being already collected:
+  `B` (disk I/O byte/s ↔ IOPS — `read_count`/`write_count` were collected and
+  `internal`, and now carry the `IOR/s`/`IOW/s` short names v4 uses), `0`
+  (load average ↔ Irix percentage — `cpucore` was collected and `internal`),
+  `T` (network Rx/Tx apart ↔ combined).
+
+  `T` carries a deliberate divergence in route, not in value: v4 renders a
+  `bytes_all` field its model computes; v5's schema has no such field, so both
+  renderers sum the two rates they already have. The sum of two rates over one
+  interval is the combined rate.
+
+  **`T` also folds DISK I/O (2026-09-24, maintainer request — a v5 addition,
+  v4's `T` is network-only).** Same key, same `network_sum` flag (the name
+  `/api/5/args` already publishes), so one press folds both blocks; the
+  description in both help tables becomes "Network and disk I/O apart or
+  combined". Diskio shows `R+W/s` (or `IOR+W/s` under `B`), one uncoloured
+  column spanning the two it replaces. **Not in latency mode**: the sum of
+  two per-operation means is not a latency, so `L` keeps its two columns.
+
+  **Blocked, each needing model or infrastructure work first:**
+  - ~~`U` (network live ↔ cumulative)~~ — **shipped 2026-09-24, on network
+    AND disk I/O** (the disk half is a v5 addition at the maintainer's
+    request; v4's `U` is network-only). The field-contract change the line
+    above anticipated is **additive**: `_transform_gauge` still replaces each
+    counter with its rate, and the model now ALSO copies the raw counter into
+    an internal `*_cumul` field in `_grab_stats` — `bytes_recv_cumul` /
+    `bytes_sent_cumul` (`Rx` / `Tx`, v4's headers) and, for diskio,
+    `read_bytes_cumul` / `write_bytes_cumul` (`R` / `W`) and
+    `read_count_cumul` / `write_count_cumul` (`IOR` / `IOW`). No base-class
+    change; exported like every internal field. One key, one `network_cumul`
+    flag (v4's name) switching both blocks, like `T`. Choices worth keeping:
+    - The cells keep the **rate's** level colour — v4 reads the same
+      `bytes_recv` decoration in both modes. `_levels` is not recomputed on
+      the counters.
+    - A row with no rate yet (cycle 1, new interface/disk) **is** shown:
+      the counter exists, and v4 tests the raw counter in that mode.
+    - `U` + `T` gives `Rx+Tx` / `R+W` / `IOR+W` — no `/s`, a total is not a
+      rate (v4 drops it the same way).
+    - Disk I/O: `U` applies to byte and IOPS mode alike, **not to latency
+      mode**, which has no counter to show.
+    - No `--network-cumul` CLI flag: v4 has none either (`main.py` forces
+      `args.network_cumul = False`).
+  - ~~`L` (disk I/O byte/s ↔ latency)~~ — **shipped 2026-09-24**, with
+    `--diskio-latency` to seed it. The model now collects `read_time` /
+    `write_time` (internal ms/s rates) and derives `read_latency` /
+    `write_latency` in `_expand_parameters` (v4 `update_latency`:
+    `int(time_rate / count_rate)`, 0 without operations, `None` while a rate
+    is unknown or on a platform whose psutil has no time counters). Columns
+    `ms/opR` / `ms/opW`, v4's headers. `B` wins when both are on (v4's
+    if/elif). The latencies are opt-in watched fields with **no default
+    thresholds** (v4 has none) and `threshold_field: rx_latency / tx_latency`,
+    so v4's keys — `[diskio] rx_latency_careful`, per disk
+    `dm-0_tx_latency_warning`, and `dm-0_rx_latency_log` — work unchanged.
+  - `S` (quicklook bar ↔ sparkline) — **unblocked** by the history store
+    (2026-09-26), but set aside by the maintainer (2026-09-25). Which series
+    it draws per core is left to its own design: v4 historised
+    `quicklook.percpu` as a list, and v5 records numbers only.
+
+  `F` needed a shape neither group had used: `[fs] free_space` is plugin
+  CONFIG and reaches the renderer as payload metadata, so the TUI's ViewState
+  field is tri-state (`None` = follow the payload) and the browser seeds it
+  from the fs payload rather than from `serverArgs`, which carries only the
+  CLI flag and reads `false` for a config-set `true`.
+- ~~**`F5` / `Ctrl-R`** forced refresh and the sort-navigation arrow keys.~~
+  **Shipped (2026-09-23)**, and with it **Phase 2.X is complete**. Four keys,
+  plus the `--arrow-keys-sort` flag (v4 issue #3385) that swaps which arrow
+  pair steps the sort column and which scrolls the command text.
+
+  Two things worth carrying forward:
+
+  - **The swappable pair is resolved, not tabulated.** The same keycode does
+    different things in the two configurations, so a static entry would
+    describe the wrong binding in one of them — and "the `h` overlay cannot
+    drift from what the TUI does" is the property 2.X-a built and every
+    chantier since has kept. One method returns the four bindings; the
+    dispatcher and the overlay both call it, so the help is right by
+    construction rather than by care.
+  - **The scroll moves the ARGUMENTS only.** The executable name — and its
+    path prefix in full mode — stays put: it is the part that identifies the
+    row, and scrolling the whole cell would push it off the left edge. v4
+    does the same (`processlist/__init__.py:566-567`), and `programlist`
+    shares the renderer so both blocks behave alike.
+
+  **A gap 2.X-b1 left, found in a pty rather than in a test**: the escape
+  resolver knew `[A`/`OA`/`[B`/`OB` and nothing else, because only Up and
+  Down had been bound. An untranslated `\x1b[C` was therefore swallowed as an
+  unknown sequence and the command column simply did not scroll — while
+  `SHIFT+arrow` worked, because its terminfo entry translates. The table now
+  carries all four directions, and a test asserts that every plain arrow the
+  dispatcher binds is one the resolver can produce, so the next key to be
+  bound cannot repeat it.
+
+The `ViewState` mechanism this group builds on already exists
+(`glances_curses_v5.py:107`); each toggle is one `_HOTKEYS` entry plus a
+renderer gate — 2.X-a replaced that gate's seven hardcoded `if` statements with
+a single `hide_{plugin_name}` lookup, so the remaining groups add entries only. The exhaustive key-by-key list — v4 key, action, v5 status,
+`file:line` proof — is **not duplicated here**: see Part 3 of
+`glances-v5-v4-parity-inventory.md`.
+
+#### v4 feature parity backlog
+
+**Standing rule — every v4 feature is ported to v5.** A v4 feature is dropped or
+changed only when the maintainer has explicitly decided so, and that decision is
+recorded in this document. "Not covered by a group plan yet" never means
+"dropped": it means the gap belongs in the table below until a group owns it.
+
+Gaps known today, none of them owned by a group yet. Found by the v4 → v5
+backport sweep of 2026-09-10 (develop `2bf3aadb`):
+
+| Gap | v4 reference | v5 state | Target |
+|---|---|---|---|
+| `[percpu] max_cpu_display` ignored by the `percpu` plugin | `percpu/__init__.py:119` and `quicklook/__init__.py:108` — v4 reads the same key from the same `[percpu]` section in both blocks and they stay in sync. | `quicklook/model_v5.py` now honours it (npu/quicklook/vms backport, 2026-09-10), but `percpu/render_curses_v5.py:35-37` still carries the open `TODO(G2+)` and its own `_DEFAULT_MAX_CPU_DISPLAY = 4` (line 48) — a user setting `max_cpu_display=8` sees 8 bars in quicklook and 4 in percpu. | Phase 2.X — apply the pattern quicklook just established: the model reads the config key and publishes it as an `internal` payload field. |
+| Threshold keys renamed, one of them re-scaled | `[network] rx_*` / `tx_*` (percent), `[processlist] cpu_*` / `mem_*`, `[fs] <mnt>_careful` | v5 reads `bytes_recv_*` / `bytes_sent_*` **as a ratio in [0,1]** (`normalize_by: bytes_speed_rate_per_sec`), `cpu_percent_*` / `memory_percent_*`, `<mnt>_percent_careful`. The v4 keys — the ones the shipped `conf/glances.conf` still documents — are silently ignored. | **Decided** (parity wave 1, 2026-09-10): rename kept, no v4 aliases; a startup WARNING now fires on any unrecognised threshold key (`base_v5.py::_warn_unknown_threshold_keys`, §3.2 above). The rename itself is still a breaking change to document in the 5.0.0 release notes. |
+| CLI — the options still missing (25, plus the set-aside `--sparkline`) | `glances/main.py` argparse | Shipped 2026-09-25, see the note below. ~~`--disable-autodiscover`~~ **shipped 2026-09-27** with P3-5 (Zeroconf). ~~`--export-graph-path`~~ **shipped 2026-09-28** with the graph exporter (P3-3). ~~`--browser`~~ **shipped 2026-09-27** with P3-4 (TUI browser; with `-s`, `/api/5/serverslist`). ~~`-c`/`--client`, `-u`/`--username`/`--password`~~ **shipped 2026-09-27** with P3-1 (`glances/client_v5.py`; `--password` prompts, else `[passwords]`). **Dropped**: `--cached-time` (maintainer, 2026-09-27, see "Dropped — `--cached-time`" below) and the SNMP family (Phase 3 decision 3). **Need a feature v5 does not have**: `--disable-check-update` (no PyPI check), `--export-graph-path` (no graph exporter), `-P`/`--plugins` (external plugins: the v5 plugin API needs its own design). **Decided 2026-09-26, to port** — see the next row. **Decided 2026-09-26, dropped**: see "Dropped — four v4 CLI options" below. `--sparkline` is set aside by the maintainer (2026-09-25). `--disable-history` shipped 2026-09-26 with the history store. | Phase 3 for client/browser/SNMP. |
+| CLI — decided to port (maintainer, 2026-09-26) | `glances/main.py` | Not started. Each is its own small chantier: ~~**`--mcp-path` + `[outputs] mcp_path`**~~ **shipped 2026-09-26**, see §11.1. ~~**`--issue`**~~ **shipped 2026-09-26** (`glances/outputs/issue_v5.py`; v4 `glances_stdout_issue.py`, requested by the bug-report template): per-plugin status, collection time and a payload excerpt, plus Python/psutil/OS versions — **with an output improved for pasting into a ticket** (maintainer's request). Mockups validated 2026-09-26: Markdown on stdout, no ANSI, progress on stderr; the redaction list (hostnames, IP/MAC addresses, user names, command-line arguments, folder paths) is approved. ~~**`--fetch` / `--fetch-template`**~~ **shipped 2026-09-26** (`glances/outputs/fetch_v5.py`; **v4's layout in the TUI's colours**, maintainer decision 2026-09-27, replacing a first version that copied the TUI's blocks: bars and values coloured by their alert level; templates get `gl` = `api_v5` and `ui`; v4 `glances_stdout_fetch.py`, `conf/*.jinja`): the look and feel must echo the TUI and the WebUI (maintainer's request: design consistency), and the templates' v4 field names must be checked against v5's; improvements to be proposed before implementing. Decided 2026-09-26 on the mockups: **v4 custom templates break** (no aliases for `bytes_recv_rate_per_sec`, `bytes_sent_rate_per_sec`, `gl.uptime` as a string; release notes), and the output keeps the TUI's ANSI colours, **warning in magenta** (the WebUI's amber is left as is). Templates render against `glances.api_v5`, now shipped. ~~**`--api-restful-doc`**~~ **shipped 2026-09-26** (`glances/outputs/restful_doc_v5.py`, behind `make docs`): RST generated from the `/api/5` routes and each plugin's `fields_description`, so `docs/api/restful.rst` describes v5 and cannot drift from the code. ~~**`--print-completion`**~~ **shipped 2026-09-26** (shtab, already a core dependency; `-C` completes file names, as in v4). ~~**`--memory-leak`**~~ **shipped 2026-09-26** (v4 `glances/__init__.py:85-113`): the scheduler alone, 1 s refresh, no history, `--stop-after` seconds (default 60) of warm-up then as long measured; the total is printed, the top 5 logged, as in v4. | One chantier per option. |
+| Python API (`from glances import api`, `glances/api.py`) | `glances/api.py`, documented by v4's `--api-doc` into `docs/api/python.rst` | No v5 equivalent. Found while deciding `--api-doc` (2026-09-26). | **Decided (maintainer, 2026-09-26): port to v5.** Designed 2026-09-26: `docs/superpowers/specs/2026-09-26-glances-v5-python-api-design.md` (`glances.api_v5`, on demand by default and `background=True` as an option, read-only `PluginView`, docs through `make docs`). **Shipped 2026-09-26**: `glances/api_v5.py`, and `glances/api_v5_doc.py` behind `make docs`; `glances.ipynb` rewritten on it. The planned MCP view sharing was dropped (nothing to share). `docs/api/python.rst` is regenerated by the next `make docs` on a representative machine. |
+
+**2026-09-10 — parity wave 1 closures.** `hide_zero` + `hide_threshold_bytes`,
+`hide_no_up`/`hide_no_ip`, `[fs] allow`, `[fs] free_space` and the generic
+`alias` (network/diskio/fs; `sensors` already had its own) shipped this wave
+and are removed from the table above — see
+`docs/superpowers/specs/2026-09-10-glances-v5-parity-wave1-design.md` §5. The
+threshold-rename row above was resolved from "decision needed" to "decided" the
+same wave (§3). TUI interactive process management and the per-plugin
+show/hide toggles are removed from this table because they are now owned by
+the Phase 2.X — TUI interactive surface group above, not because they are
+closed.
+
+**2026-09-24 — `<stat>_log` family shipped** and removed from the table:
+`thresholds_v5.read_log_flag` reads it, `alerts_v5` gates the history write
+on it — semantics in §3.4.
+
+**2026-09-25 — 32 v4 CLI options shipped** (59 were missing): the short
+aliases (`-B -p -q -1/--per-cpu -4 -6 -V`, `-w`/`--webserver` for `-s`), `-t`
+and `--strftime` over their config keys, the startup seeds of live toggles
+(`--diskio-iops`, `--process-short/long-name`, `-0`, and `-2 -3 -5
+--disable-process --light` spelled as the SHOW/HIDE keys they press, on both
+surfaces), `--enable-irq`, `--hide-kernel-threads`, `--diskio-show-ramfs`
+(RAM disks now hidden by default, v4 parity), `--disable-bold/-bg/-separator`,
+the stdout outputs (`--stdout`, `--stdout-json`, `--stdout-csv`),
+`--stop-after`, `--modules-list`, `--open-web-browser` and `--process-focus`.
+`-0` also brought the process half of v4's Irix mode (CPU% per core). What is
+left is listed in the CLI row above.
+
+**2026-09-25 — `--process-focus` shipped** and removed from the table (the
+filter half shipped with 2.X-b4). `--process-focus`, else `[processlist]
+focus`, is written to `glances_processes.process_focus` in TUI mode only —
+process-global like `-f`, so a server-wide focus would narrow every REST
+client. The setter replaces the list, so the flag narrows the config rather
+than widening it. The process block names the focus above its header, as v4
+does (`processlist/__init__.py:844-847`).
+
+**2026-09-24 — `diskio` latency family shipped** and removed from the table
+(`L` / `--diskio-latency`, v4 threshold keys kept) — see the `L` line under
+Phase 2.X above.
+
+**2026-09-24 — `percpu` threshold colouring shipped** and removed from the
+table. The design question the row left open, answered:
+- **Which fields are `watched`**: every column the block can display
+  (`total` + the OS `stat_fields` superset) — v4 runs `get_alert` on each
+  of them. **Only `user` and `system` carry `default_thresholds`** (50/70/90,
+  v4 `config.py` `set_default_cwc`); every other column stays uncoloured
+  until `[percpu] <column>_careful/_warning/_critical` is set, as in v4.
+- **Through the generic pipeline**, no `threshold_field` alias: v4's keys
+  already are `<column>_<level>` in `[percpu]`, which is exactly what
+  `_watched_fields` reads. Bare `careful=` applies to every column — v4's
+  `get_limit` falls back to the plugin-level key the same way.
+- **Colour, not alert**: fields are `prominent: False` (font colour, no
+  background — v4 never tagged them `_LOG`) and `percpu` sets
+  `EMITS_ALERTS = False`. Divergence: v4 would have run a
+  `[percpu] <column>_<level>_action`; v5 does not, like `processlist`.
+- **The `CPU*` mean row** has no `_levels` of its own. The model publishes its
+  effective plugin-level thresholds as the internal `thresholds` field, and
+  both renderers grade the mean against it (`render_curses_v5._mean_levels`,
+  `levels.js` `computeLevel`) — v4 ran `get_alert` on the mean too.
+
+Every backport sweep appends what it finds here (see the sweep method in the
+maintainer notes); the table is the single list of "v4 has it, v5 does not yet".
+
+The table lists the *chantiers*. The line-by-line inventory they come from — every
+v4 CLI option, config key and TUI hotkey with its v5 status and a `file:line`
+proof — is `glances-v5-v4-parity-inventory.md`, alongside this document.
+
+**Dropped — four v4 CLI options (maintainer decision, 2026-09-26).**
+
+- `--enable-process-extended`: v4 starts with its `e` mode on, following the
+  row under the cursor (the top process). In v5, `e` pins one pid
+  (2.X-b3), and pressing `e` at startup does the job.
+- `--api-doc` in v4's sense, printing the Python API doc. The name keeps its
+  v5 meaning (Swagger `/docs` / `/redoc` on or off). What happens to the
+  Python API itself is a separate backlog row.
+- `--trace-malloc`: set `PYTHONTRACEMALLOC` by hand when needed.
+  `--memory-leak` is ported instead (see the backlog).
+
+All three are removed v4 features, for the 5.0.0 release notes.
+
+**Dropped — `--cached-time` (maintainer decision, 2026-09-27).** v4's
+`--cached-time` sized the cache of a passive server, collected on demand. A
+v5 server always collects on its own schedule, so there is no cache to size;
+`[<plugin>] refresh` is the lever for server CPU. The client polls at its own
+`[global] refresh` (or `-t`): a slower server answers with the same data
+until it has new data, which is not a failure. A removed v4 feature, for
+the 5.0.0 release notes.
+
+**Dropped — min/max/mean `mmm` (maintainer decision, 2026-09-26).** v4
+publishes `<field>_min`, `_max` and `_mean` in the payload for `cpu.total`,
+`load.min1` and `mem.percent` (`plugins/plugin/model.py:188-300`, issue #3462,
+Glances 4.5.1). No v4 renderer reads them: only REST, MCP and the exporters
+carry them, as part of the payload. v5 does not port the mechanism; a new
+one will be designed if users ask for it. A removed v4 feature — nine
+payload fields `/api/4/{cpu,load,mem}` served that `/api/5` does not, and
+that no export carries any more — for the 5.0.0 release notes.
+
+**Dropped — the TUI trend arrows (maintainer decision, 2026-09-26).** v4
+draws ↑/↓ next to MEM, SWAP and LOAD from `get_trend()`
+(`plugins/plugin/model.py:413`, used by `mem/__init__.py:304`,
+`memswap/__init__.py:166`, `load/__init__.py:157`). The history store made
+them implementable; the maintainer decided on 2026-09-26 that v5 does not
+carry them. A removed v4 feature, for the 5.0.0 release notes.
+
+**Dropped — the PyPI update check (maintainer decision, 2026-10-05).** v4
+asks PyPI at startup whether a newer Glances exists and caches the answer
+(`glances/outdated.py`; its pickle cache was CVE-2026-46607). v5 does not
+carry it: no outbound request at startup, one attack surface less, and the
+distributions' package managers already tell users about updates.
+`--disable-check-update` has nothing left to disable and is not ported.
+The six `tests/test_outdated.py` tests, kept as the acceptance tests of a
+future port, are dropped with the v4 code. A removed v4 feature, for the
+5.0.0 release notes.
+
+**Dropped — external plugins, `-P` / `[global] plugin_dir` (maintainer
+decision, 2026-10-05).** v4 loads extra plugins from a directory
+(`glances/stats.py:212-250`). v5 imports plugins from the installed
+`glances.plugins` package only (GHSA-mcm7-fmh3-v6v3,
+`tests/test_plugin_discovery_v5.py`): code loaded from a directory is code
+run by Glances, often as root, from wherever that directory is writable. A
+v5 plugin API for third parties, if users ask for one, gets its own design
+(loading, the `GlancesPluginBase` contract, who may write the directory).
+A removed v4 feature, for the 5.0.0 release notes.
+
+**Dropped — `/api/5/config/<section>` and `/api/5/config/<section>/<key>`
+(maintainer decision, 2026-10-05).** v4 serves one section or one option
+of the configuration. In v5, `/api/5/config` serves only the WebUI keys
+without a password (security audit M1, `GlancesConfigV5.PUBLIC_OPTIONS`)
+and the redacted dump behind one; a per-key route would be a second door
+on the same data to keep in step. Clients read the key from
+`/api/5/config`. A removed v4 feature, for the 5.0.0 release notes.
+
+**Kept as is — wifi thresholds cannot be switched off (maintainer decision,
+2026-10-05).** v4 leaves a wifi signal undecorated when no threshold is
+set; v5 `wifi/model_v5.py::_read_thresholds` falls back to its code
+defaults, so the signal is always coloured. Kept: the defaults are the
+documented v4 ones, and a user who wants no colour sets them out of range.
+
+**Kept as is — no `CONTAINERS N (served by <engine>)` title row
+(maintainer decision, 2026-10-05).** v4 draws a title row above the
+containers table; in v5 the `CONTAINER` column header is the title (G9-6
+D6, G9-9A design §5.4), and `vms` follows the same convention (G6B §5).
+Folding v4's title into the header widens the name column on every row
+(about 19 characters for docker), so the responsive columns drop much
+earlier; a separate row would cost a line in the right-column solver,
+the WebUI and both blocks. The two v4 tests
+(`TestContainersTitle::test_one_engine_*`) are OBSOLETE. A v4 display
+difference, for the 5.0.0 release notes.
+
+**Reversed decision — `vms EMITS_ALERTS`.** G6A set `vms EMITS_ALERTS = False`
+(`docs/superpowers/specs/2026-07-14-glances-v5-g6a-design.md`, decision 3) because
+v4's vms alert decorations were dead code at the time. v4 `f8657a0a` (2026-09-08)
+brought them to life, so the premise is gone; v5 now flips `EMITS_ALERTS` to
+`True` for `vms`, mirroring `containers`. Default behaviour is unchanged — the
+shipped `[vms]` threshold keys stay commented, so no threshold resolves, no
+level is computed, and nothing fires.
+
+**Reversed decision — full quicklook (`4`) hides the whole TOP row.**
+v4's `enable_fullquicklook` (`glances/outputs/glances_curses.py:451-455`)
+disables `cpu`/`npu`/`mpp`/`gpu`/`mem`/`memswap` and leaves `load` and `percpu`
+on the row; v5 mirrored that exactly, and a guard test
+(`test_full_quicklook_leaves_room_for_load`) pinned it after the bars were
+found overflowing and pushing LOAD off screen. Reversed by the maintainer on
+2026-09-22, from a TUI smoke test: `4` now hides **every** TOP sibling, so the
+mode means what its name says — quicklook alone, full width. The mode's own
+help text had always advertised the wider behaviour, and leaving two blocks
+behind made `4` read as an arbitrary subset rather than a mode.
+`_FULL_QUICKLOOK_HIDDEN` (`curses_renderer_v5.py:91`) is now derived from
+`TOP_SLOT` instead of being listed, so a TOP plugin added later is covered
+without a second edit. The overflow guard the old test carried is kept, moved
+from "LOAD still fits" to "quicklook is exactly the row width". A breaking
+change against v4 behaviour, for the 5.0.0 release notes.
+
+---
+
+## 11. MCP endpoint — Model Context Protocol
+
+### 11.1 Opt-in lifecycle
+
+The MCP server is **doubly opt-in**:
+
+1. **CLI** — pass `--enable-mcp`. Validated by `validate_args` to
+   require `-s` / `--server` (cf. §1.5 mode dispatch). The flag flips
+   `[outputs] enable_mcp` via the config overlay used elsewhere for
+   `--api-doc`.
+2. **Config** — `[outputs] enable_mcp=true` standalone (no CLI) is
+   also honoured. Either path produces the same result.
+
+Default behaviour (no flag, no config key): the FastAPI app is built
+without any `/mcp` mount. No SSE socket. No MCP-related logs.
+
+```
+glances-v5 --server                       # REST API, no MCP
+glances-v5 --server --enable-mcp          # REST API + /mcp mount
+glances-v5 --server --enable-mcp --mcp-path /glances/mcp   # mounted elsewhere
+glances-v5                                # TUI only, no REST, no MCP
+```
+
+**Mount path** (2026-09-26, v4 parity). `/mcp` unless `[outputs] mcp_path`
+or `--mcp-path` (CLI wins; requires `--server`) says otherwise, normalised
+as v4 does (leading `/` added, trailing one dropped). A path that would
+shadow a route the server serves — `/`, `/api…`, `/docs`, `/redoc`,
+`/openapi.json`, `/static`, `/status`, `/healthz`, or a parent of one —
+falls back to `/mcp` with a WARNING (`webserver_v5.resolve_mcp_path`).
+Neither the auth middleware (§11.6) nor the DNS-rebinding guard (§11.7)
+depends on the path; tests hold both on a custom mount.
+
+### 11.2 Adapter architecture
+
+The v4 ``GlancesMcpServer`` class
+(`glances/outputs/glances_mcp.py`) is **reused unchanged** in v5. A
+thin adapter — ``McpStatsAdapter`` in
+``glances/outputs/mcp_adapter_v5.py`` — bridges v5's lockless
+``StatsStoreV5`` + plugin registry + ``GlancesAlerts`` to the
+v4-``GlancesStats``-shape duck-typed surface the MCP class consumes
+(``getPluginsList`` / ``getAllAsDict`` / ``getAllLimitsAsDict`` /
+``get_plugin``).
+
+```
+   MCP client (SSE)
+        │
+        ▼
+   FastAPI app  ── auth middleware (Basic+Bearer) ──┐
+        │                                           │
+   app.mount("/mcp", …)                             │ no body buffering
+        │                                           │ → SSE passes through
+        ▼                                           │
+   GlancesMcpServer  (v4 module, unchanged) ◄───────┘
+        │
+        ▼
+   McpStatsAdapter   ──→  StatsStoreV5 (read)
+   (v5 module)       ──→  list[GlancesPluginBase]  (.fields, .plugin_name)
+                     ──→  GlancesAlerts.get_history()
+```
+
+Decision rationale: porting MCP "natively" to v5 would mean rewriting
+every resource and prompt against new APIs. The adapter is ~150 lines,
+preserves the v4 class verbatim (single source of MCP truth), and
+keeps the upgrade path trivial when v5 absorbs more v4 plugins — the
+adapter automatically picks them up via the dynamic registry.
+
+### 11.3 Resource and prompt inventory (v5 status)
+
+| MCP entity | Underlying source | v5 status |
+|---|---|---|
+| `glances://plugins` | `StatsStoreV5.keys()` + synthetic `alert` | ✅ |
+| `glances://stats` | `StatsStoreV5.as_dict()` | ✅ |
+| `glances://stats/{plugin}` | `StatsStoreV5.get(plugin)` | ✅ for ported plugins; `ValueError("Plugin not found")` otherwise |
+| `glances://stats/{plugin}/history` | `GlancesPluginBase.get_history()` | ✅ (v5-native columnar shape, the same as `/api/5/<plugin>/history`) |
+| `glances://limits` | `plugin.get_limits()` — effective thresholds (config over schema defaults) | ✅ |
+| `glances://limits/{plugin}` | idem, per plugin | ✅ |
+| Prompt `system_health_summary` | cpu, mem, memswap, load, fs, network | partial (memswap, fs absent → empty dicts) |
+| Prompt `alert_analysis` | `GlancesAlerts.get_history()` | ✅ (v5-native schema, see §11.5) |
+| Prompt `top_processes_report` | processlist | ⚠ processlist not ported — empty list |
+| Prompt `storage_health` | fs, diskio | ⚠ not ported — empty dicts |
+
+### 11.4 Known v5 gaps (logged on mount)
+
+`KNOWN_V5_MISSING_PLUGINS` in `mcp_adapter_v5.py` lists the v4 plugins
+not yet ported (``processlist``, ``fs``, ``diskio``, ``memswap`` at
+the time of writing). When ``attach_mcp`` mounts the endpoint, an INFO
+log line names the missing plugins, so operators see the gap without
+having to read the source. (A second line announced the missing history;
+it went with the history store, 2026-09-26.)
+
+The list is a moving target: each future phase that ports a v4 plugin
+to v5 removes one entry. The adapter logic itself does not branch on
+this list — it stays data-driven via the actual plugin registry.
+
+### 11.5 Alert schema (v5-native)
+
+The synthetic `alert` plugin exposed by the adapter forwards
+`GlancesAlerts.get_history()` unchanged. The schema is the **v5-native
+event shape**:
+
+```python
+{
+    "ts": "2026-05-15T13:54:09.123",
+    "plugin": "cpu",
+    "key": None,  # primary-key value for collection plugins
+    "field": "total",
+    "level": "warning",
+    "previous_level": "ok",
+    "prominent": True,
+    "value": 75.0,
+    "thresholds": {"careful": 50.0, "warning": 70.0, "critical": 90.0},
+}
+```
+
+No translation to v4's flatter `type` / `start` / `end` shape — the
+`alert_analysis` prompt is a free-form "Analyze these alerts" template
+so the LLM consumer absorbs the schema variation. Decision recorded
+in the G3-MCP plan.
+
+### 11.6 Authentication
+
+The MCP mount inherits the v5 auth middleware
+(``glances/webserver_v5.py::_wire_auth`` — Basic + Bearer). The
+middleware is an HTTP-level FastAPI middleware: `call_next(request)`
+returns a `StreamingResponse` for SSE, which passes through without
+body buffering. No special MCP-only auth middleware is needed
+(v4 had ``GlancesMcpAuthMiddleware`` because it used Bottle, not
+FastAPI).
+
+When no password is configured, the MCP endpoint is unauthenticated
+just like the rest of the REST API — same security posture, same
+CVE-2026-32596 startup WARNING applies.
+
+### 11.7 DNS rebinding protection
+
+Independent from the REST API's `[outputs] webui_allowed_hosts` (which
+backs Starlette's `TrustedHostMiddleware`). The MCP SSE transport
+applies its own check via `TransportSecuritySettings` driven by
+`[outputs] mcp_allowed_hosts` (default: `localhost,127.0.0.1`).
+Wildcard `*` disables protection — only acceptable behind a trusted
+reverse proxy.
+
+### 11.8 Out of scope
+
+1. ~~**History storage in v5.**~~ Shipped 2026-09-26 as its own design
+   (`glances/history_v5.py`); `McpPluginView.get_raw_history` serves it.
+2. **Porting v4 plugins to v5.** Each plugin in
+   `KNOWN_V5_MISSING_PLUGINS` is its own plan-sized chunk.
+3. **WebSocket transport for MCP.** v5 keeps SSE.

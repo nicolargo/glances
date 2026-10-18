@@ -11,9 +11,12 @@ make webui
 This runs `npm ci && npm run build` in `glances/outputs/static/`.
 
 ### Development workflow
-1. Source files are in `glances/outputs/static/`
-2. Built output goes to `glances/outputs/static/public/`
-3. Stack: Vue.js + Bootstrap 5 + SCSS
+1. Source files are in `glances/outputs/static/` (`js/*.vue`, `js/*.js`,
+   `css/glances.css`, `templates/index.html` and `browser.html`)
+2. Built output goes to `glances/outputs/static/public/` (`glances.js`,
+   `browser.js`; entries `js/app.js` and `js/browser_app.js`)
+3. Stack: Vue.js 3 + plain CSS (design tokens) — see `SKILL-webui.md`
+4. Test: `make test-js` (JavaScript unit tests) and `make test-webui`
 
 ### Never commit the build artifacts
 

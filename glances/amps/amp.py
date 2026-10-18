@@ -135,6 +135,25 @@ class GlancesAmp:
         """Return refresh time in seconds for the current application monitoring process."""
         return self.get('refresh')
 
+    def timeout(self):
+        """Return the optional command timeout in seconds, or None.
+
+        Optional `timeout=N` key of the `[amp_<name>]` section. `None` — the
+        default when the key is absent — means no timeout at all, which is the
+        historical v4 behaviour and stays the shipped default. A configured
+        value that cannot be coerced to `float` (e.g. `timeout=10s`) is logged
+        and treated as unset, rather than reaching `Popen.communicate()` /
+        `check_output()` as a string and raising a TypeError there.
+        """
+        value = self.get('timeout')
+        if value is None:
+            return None
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            logger.warning(f"AMP - {self.NAME}: invalid timeout value {value!r} (must be numeric) — ignoring")
+            return None
+
     def one_line(self):
         """Return True|False if the AMP should be displayed in one line (one_line=true|false)."""
         ret = self.get('one_line')

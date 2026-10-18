@@ -8,7 +8,7 @@ alpine_images     := $(IMAGES_TYPES:%=docker-alpine-%)
 ubuntu_images     := $(IMAGES_TYPES:%=docker-ubuntu-%)
 DOCKER_IMAGES     := $(alpine_images) $(ubuntu_images)
 DOCKER_RUNTIMES   := $(DOCKER_IMAGES:%=run-%)
-UNIT_TESTS        := test-core test-restful test-xmlrpc
+UNIT_TESTS        := test-core test-restful
 DOCKER_BUILD      := docker buildx build
 DOCKER_RUN        := docker run
 PODMAN_SOCK       ?= /run/user/$(shell id -u)/podman/podman.sock
@@ -23,7 +23,7 @@ UV_RUN		   	  := .venv-uv/bin/uv
 .PHONY: help test docs docs-server venv requirements profiling docker all clean all test
 
 help: ## List all make commands available
-	@grep -E '^[\.a-zA-Z_%-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
+	@grep -E '^[\.a-zA-Z0-9_%-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 	awk -F ":" '{print $1}' | \
 	grep -v % | sed 's/\\//g' | sort | \
 	awk 'BEGIN {FS = ":[^:]*?##"}; {printf "\033[1;34mmake %-50s\033[0m %s\n", $$1, $$2}'
@@ -44,7 +44,6 @@ install-uv: ## Install UV tool in a specific virtualenv
 	.venv-uv/bin/pip install uv
 
 upgrade-uv: ## Upgrade the UV tool
-	.venv-uv/bin/pip install --upgrade pip
 	.venv-uv/bin/pip install --upgrade uv
 
 venv: ## Create the virtualenv with all dependencies
@@ -60,7 +59,7 @@ venv-upgrade-min venv-switch-to-min: ## Upgrade the virtualenv with minimal depe
 	$(UV_RUN) sync --upgrade
 
 venv-clean: ## Remove the virtualenv
-	rm -rf .venv
+	rm -rf .venv .venv-uv
 
 venv-dev: ## Create the virtualenv with dev dependencies
 	$(UV_RUN) sync --dev --all-extras
@@ -105,20 +104,14 @@ test-plugins: ## Run Plugins unit tests
 test-api: ## Run API unit tests
 	$(UV_RUN) run pytest tests/test_api.py
 
-test-memoryleak: ## Run Memory-leak unit tests
-	$(UV_RUN) run pytest tests/test_memoryleak.py
-
-test-perf: ## Run Perf unit tests
-	$(UV_RUN) run pytest tests/test_perf.py
-
 test-restful: ## Run Restful API unit tests
-	$(UV_RUN) run pytest tests/test_restful.py
+	$(UV_RUN) run pytest tests/test_routes.py tests/test_webserver.py
 
-test-webui: ## Run WebUI unit tests
-	$(UV_RUN) run pytest tests/test_webui.py
+test-webui: ## Run WebUI unit tests (the browser tests need Playwright and Chromium)
+	$(UV_RUN) run pytest tests/test_webui_*.py
 
-test-xmlrpc: ## Run XMLRPC API unit tests
-	$(UV_RUN) run pytest tests/test_xmlrpc.py
+test-js: ## Run the WebUI JavaScript unit tests (Node.js)
+	node --test tests/js/*.mjs
 
 test-with-upgrade: venv-upgrade test ## Upgrade deps and run unit tests
 
@@ -202,10 +195,6 @@ profiling-memray: ## Flame profiling (memory)
 
 profiling: profiling-gprof profiling-pyinstrument profiling-memray ## Profiling of the Glances software
 
-trace-malloc: ## Trace the malloc() calls
-	@echo "Malloc test is running, please wait ~30 secondes..."
-	$(UV_RUN) run python -m glances -C $(CONF) --trace-malloc --stop-after 15 --quiet
-
 memory-leak: ## Profile memory leaks
 	$(UV_RUN) run python -m glances -C $(CONF) --memory-leak
 
@@ -236,7 +225,7 @@ bandit: ## Run Bandit to find vulnerabilities
 # ===================================================================
 
 docs: ## Create the documentation
-	$(UV_RUN) run python -m glances -C $(CONF) --api-doc > ./docs/api/python.rst
+	$(UV_RUN) run python -m glances.api_doc -C $(CONF) > ./docs/api/python.rst
 	$(UV_RUN) run python ./generate_openapi.py
 	$(UV_RUN) run python -m glances -C $(CONF) --api-restful-doc > ./docs/api/restful.rst
 	cd docs && ./build.sh && cd ..
@@ -263,19 +252,16 @@ install: ## Open a Web Browser to the installation procedure
 
 webui webui%: DIR = glances/outputs/static/
 
-webui-gen-config: ## Generate the Web UI config file
-	$(UV_RUN) run python ./generate_webui_conf.py > ./glances/outputs/static/js/uiconfig.json
-
-webui: webui-gen-config ## Build the Web UI
+webui: ## Build the Web UI
 	cd $(DIR) && npm ci && npm run build
 
 webui-audit: ## Audit the Web UI
 	cd $(DIR) && npm audit
 
-webui-audit-fix: webui-gen-config ## Fix audit the Web UI
+webui-audit-fix: ## Fix audit the Web UI
 	cd $(DIR) && npm ci && { npm audit fix || true; } && npm run build
 
-webui-update: webui-gen-config ## Update JS dependencies
+webui-update: ## Update JS dependencies
 	cd $(DIR) && npm update --save && npm ci && npm run build
 
 # ===================================================================
@@ -344,6 +330,9 @@ run-like-htop: ## Start Glances with the same features than Htop
 run-fetch: ## Start Glances in fetch mode
 	$(UV_RUN) run python -m glances --fetch
 
+set-password: ## Generate a PBKDF2 hash for [outputs] password
+	$(UV_RUN) run python -m glances --set-password
+
 $(DOCKER_RUNTIMES): run-docker-%:
 	$(DOCKER_RUN) $(DOCKER_OPTS) $(DOCKER_SOCKS) -it glances:local-$*
 
@@ -377,13 +366,10 @@ run-webui: run-webserver  ## Start Glances in Web server mode
 run-restapiserver: ## Start Glances in REST API server mode
 	$(UV_RUN) run python -m glances -C $(CONF) -w --disable-webui
 
-run-server: ## Start Glances in server mode (RPC)
-	$(UV_RUN) run python -m glances -C $(CONF) -s
-
-run-client: ## Start Glances in client mode (RPC)
+run-client: ## Start Glances in client mode
 	$(UV_RUN) run python -m glances -C $(CONF) -c localhost
 
-run-browser: ## Start Glances in browser mode (RPC)
+run-browser: ## Start Glances in browser mode
 	$(UV_RUN) run python -m glances -C $(CONF) --browser
 
 run-web-browser: ## Start Web Central Browser

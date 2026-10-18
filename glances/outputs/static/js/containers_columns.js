@@ -1,0 +1,95 @@
+// Glances v5 WebUI -- which container columns are visible.
+//
+// Pure: no DOM and no fetch, so `node --test` can load it. Logic inside a
+// .vue file cannot be unit-tested, and these rules are the ones most likely
+// to drift from the TUI, so they live here.
+//
+// Two unrelated families, kept apart on purpose (spec §5):
+//   - DATA-DRIVEN: the data (or the config) makes a column irrelevant. No
+//     measurement, no window size -- containers/render_curses.py:286-292
+//     and the `disable_stats` seed at :259.
+//   - WIDTH-DRIVEN: the row does not fit, so the cascade in drop_order.js
+//     hides the least useful column first. That is `flags` below.
+//
+// The geometry helpers at the bottom answer a third question -- how WIDE each
+// surviving column is -- for the <colgroup> the block renders (its table is
+// `table-layout: fixed`, like processlist's).
+
+import { droppedColumns } from "./drop_order.js";
+import {
+	COL_SEPARATOR,
+	CONTAINER_COL_CELLS,
+	CONTAINER_COL_KEYS,
+	CONTAINER_MAX_NAME_SIZE,
+	WEBUI_CONTAINER_COL_WIDTHS,
+} from "./process_widths.js";
+import { displayName } from "./rows.js";
+
+// containers/render_curses.py:286-292 plus the config's own list.
+export function dataDrivenHidden(rows, disableStats) {
+	const hidden = new Set(disableStats || []);
+	const items = rows || [];
+	// render_curses.py:287-288 -- disabling `mem` takes `/MAX` with it:
+	// a limit column with no value column would be meaningless.
+	if (hidden.has("mem")) hidden.add("memory_max");
+	// `show_engine`: strictly MORE than one distinct engine. An empty
+	// collection has none, so the column is hidden -- as the TUI's `len({...})
+	// > 1` also resolves to false.
+	if (new Set(items.map((item) => String(item.engine ?? ""))).size <= 1) hidden.add("engine");
+	// `show_pod`: any item with a pod name.
+	if (!items.some((item) => item.pod_name)) hidden.add("pod");
+	return hidden;
+}
+
+// The union of both families. Never the difference: a cascade flag can only
+// ADD to what the data already made irrelevant, so a column the config
+// disabled cannot come back when the window widens.
+export function hiddenColumns(rows, disableStats, flags) {
+	const hidden = dataDrivenHidden(rows, disableStats);
+	for (const column of droppedColumns(flags)) hidden.add(column);
+	return hidden;
+}
+
+// The visible columns, expanded to the CELLS a browser paints, in display
+// order: `diskio` and `networkio` are one key over two cells of 7, and `name`
+// is sized from the data like the terminal's own `name_w`. This is the walk
+// `_hidden_columns`' row_width() does (containers/render_curses.py:85-92),
+// with the per-cell split a <colgroup> additionally needs.
+export function visibleCells(hidden, nameWidth) {
+	const cells = [];
+	for (const key of CONTAINER_COL_KEYS) {
+		if (hidden.has(key)) continue;
+		if (key === "name") {
+			cells.push({ key, width: nameWidth });
+			continue;
+		}
+		const count = CONTAINER_COL_CELLS[key];
+		for (let index = 0; index < count; index += 1) {
+			cells.push({ key, width: WEBUI_CONTAINER_COL_WIDTHS[key] / count });
+		}
+	}
+	return cells;
+}
+
+// The terminal's own row width (row_width() again): the painted cells plus
+// one separator between two consecutive ones. The component turns it into the
+// table's `min-width`, so the width cascade fires at the same point the TUI
+// drops its own column at -- in the browser's own characters, which include
+// `COL_SEPARATOR` rather than the terminal's single space.
+export function rowWidth(cells) {
+	const total = cells.reduce((sum, cell) => sum + cell.width, 0);
+	return total + COL_SEPARATOR * Math.max(0, cells.length - 1);
+}
+
+// containers/render_curses.py:261-262 and :280: the narrower of the
+// configured cap and the longest name, but never below the header label --
+// which is this block's own title, `CONTAINER`.
+//
+// Measured on the name the BROWSER paints (the alias when there is one,
+// rows.js `displayName`), not on the raw `name` the terminal reads: the WebUI
+// shows the alias, so that is what the column has to hold.
+export function nameWidth(rows, maxNameSize, label) {
+	const longest = (rows || []).reduce((widest, item) => Math.max(widest, displayName(item, "name").length), 1);
+	const cap = Number.isInteger(maxNameSize) && maxNameSize > 0 ? maxNameSize : CONTAINER_MAX_NAME_SIZE;
+	return Math.max(Math.min(cap, longest), String(label).length);
+}

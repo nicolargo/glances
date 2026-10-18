@@ -31,10 +31,11 @@ docker exec timescaledb-for-glances psql -d "postgres://postgres:password@localh
 # Run glances with export to TimescaleDB, stopping after 10 writes
 # This will run synchronously now since we're using --stop-after
 echo "Glances to export system stats to TimescaleDB (duration: ~ 20 seconds)"
-.venv/bin/python -m glances --config ./conf/glances.conf --export timescaledb --stop-after 10 --quiet
+.venv/bin/python -m glances.main --config ./conf/glances.conf --export timescaledb --stop-after 10 --quiet
 
 docker exec timescaledb-for-glances psql -d "postgres://postgres:password@localhost/glances" -c "SELECT * from cpu;" --csv > /tmp/timescaledb-for-glances_cpu.csv
-.venv/bin/python ./tests-data/tools/csvcheck.py -i /tmp/timescaledb-for-glances_cpu.csv -l 9
+# 10 cycles give 10 rows: v5 exports the first cycle too (see test_export_influxdb_v1.sh).
+.venv/bin/python ./tests-data/tools/csvcheck.py -i /tmp/timescaledb-for-glances_cpu.csv -l 10
 
 # Stop and remove the TimescaleDB container
 echo "Stopping and removing TimescaleDB container..."

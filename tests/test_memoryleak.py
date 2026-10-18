@@ -2,38 +2,46 @@
 #
 # Glances - An eye on your system
 #
-# SPDX-FileCopyrightText: 2024 Nicolas Hennion <nicolas@nicolargo.com>
+# SPDX-FileCopyrightText: 2026 Nicolas Hennion <nicolas@nicolargo.com>
 #
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
-"""Glances unitary tests suite for Glances memory leak."""
+"""Glances v5 — memory leak check on the real scheduler (port of v4 `test_memoryleak`).
 
-import time
+Drives the `--memory-leak` machinery of `main`: every enabled plugin, a 1 s
+refresh, no history. Takes about twice `_CYCLES` seconds.
+"""
+
+from __future__ import annotations
+
+import asyncio
 import tracemalloc
 
+from glances.config import GlancesConfig
+from glances.main import _MEMORY_LEAK_REFRESH, apply_memory_leak_flags, assemble, build_parser, measure_memory_leak
 
-def test_memoryleak_no_history(glances_stats_no_history, logger):
-    """
-    Test Glances memory leak.
-    """
+# Refreshes in each window: the warm-up, then the measured one. Five is too
+# short: on Python 3.10, psutil allocates ~1 KB per process once, at the 7th
+# refresh, which reads as ~130 KB per refresh with 600 processes.
+_CYCLES = 10
+# Bytes per refresh, as in v4.
+_THRESHOLD = 15000
+
+
+def test_memoryleak_no_history(tmp_path, monkeypatch):
+    monkeypatch.setattr(GlancesConfig, "SYSTEM_CONFIG_PATH", tmp_path / "no-system.conf")
+    config = GlancesConfig()
+    args = build_parser().parse_args(["--memory-leak", "--stop-after", str(_CYCLES)])
+    cycles = apply_memory_leak_flags(args, config)
+    _app, scheduler, _host, _port, _tui = assemble(args, config)
+
     tracemalloc.start()
-    # First iterations just to init the stats and fill the memory
-    logger.info('Please wait during memory leak test initialisation')
-    iteration = 3
-    for _ in range(iteration):
-        glances_stats_no_history.update()
-        time.sleep(1)
+    try:
+        diff = asyncio.run(measure_memory_leak(scheduler, cycles, _MEMORY_LEAK_REFRESH))
+    finally:
+        tracemalloc.stop()
 
-    # Then iteration to measure memory leak
-    logger.info('Please wait during memory leak test')
-    iteration = 10
-    snapshot_begin = tracemalloc.take_snapshot()
-    for _ in range(iteration):
-        glances_stats_no_history.update()
-        time.sleep(1)
-    snapshot_end = tracemalloc.take_snapshot()
-    snapshot_diff = snapshot_end.compare_to(snapshot_begin, 'filename')
-    memory_leak = sum([s.size_diff for s in snapshot_diff]) // iteration
-    logger.info(f'Memory consume per iteration: {memory_leak} bytes')
-    assert memory_leak < 15000, f'Memory leak: {memory_leak} bytes'
+    per_cycle = sum(stat.size_diff for stat in diff) // cycles
+    top = "\n".join(str(stat) for stat in diff[:5])
+    assert per_cycle < _THRESHOLD, f"Memory leak: {per_cycle} bytes per refresh\n{top}"
