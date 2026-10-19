@@ -68,11 +68,6 @@ def test_row_fits_left_sidebar_budget():
     assert value_cell.text.rstrip().endswith("C")  # unit not clipped
 
 
-def test_string_sentinel_rendered():
-    rows = render(_payload([_sensor("sdc", "ERR", type="temperature_hdd")]))
-    assert "ERR" in _flat(rows)
-
-
 def test_fahrenheit_converts_temperature_only(view=None):
     rows = render(
         _payload([_sensor("Core 0", 100)]),

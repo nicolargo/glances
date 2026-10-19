@@ -46,7 +46,7 @@ B1 est donc coupé en deux :
 | Module partagé | Dépendance v4 |
 |---|---|
 | `glances.web_list`, `plugins/containers/engines/{docker,lxd,podman}.py` | `glances.config.secure_option` |
-| `plugins/sensors/sensor/glances_{batpercent,hddtemp}.py` | héritent de `glances.plugins.plugin.model.GlancesPluginModel` |
+| `plugins/sensors/sensor/glances_batpercent.py` | hérite de `glances.plugins.plugin.model.GlancesPluginModel` |
 
 ### L'effet « paquet parent »
 
@@ -133,7 +133,7 @@ Chaque étape se termine par la suite de tests, `make pre-commit` et un commit.
 | `GlancesGrabSensors`, `sensors_definition` (`plugins/sensors/__init__.py:26, 325`) | `glances/plugins/sensors/grab.py` | `sensors/model_v5.py` idem |
 | `get_smart_data`, `import_error_tag`, `LARGE_VALUE_KEYS` et les `convert_*` / `_process_*` dont ils dépendent (`plugins/smart/__init__.py:37-186`) | `glances/plugins/smart/data.py` | `smart/model_v5.py`, `smart/render_curses_v5.py` ; la dépendance à `glances.main.disable` disparaît |
 | `secure_option` et ses deux regex (`glances/config.py:27-52`) | `glances/secure.py` | `web_list.py` et les trois moteurs de conteneurs l'importent de là |
-| `BatpercentPlugin`, `HddtempPlugin` héritent de `GlancesPluginModel` | classes autonomes (seuls `update()` et les stats servent à `GlancesGrabSensors`) | — |
+| `BatpercentPlugin` hérite de `GlancesPluginModel` | classe autonome (seuls `update()` et les stats servent à `GlancesGrabSensors`) | — |
 
 Vérification : `BORROWED` de `tests/test_v4_boundary_v5.py` est vide, hors
 la racine `glances` (étape C2).
