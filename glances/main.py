@@ -40,6 +40,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import contextlib
+import gc
 import getpass
 import importlib
 import logging
@@ -1351,7 +1352,9 @@ async def measure_memory_leak(
 
     Every plugin is refreshed in lock-step (`run_cycle`), never through
     `run_forever()`: a snapshot of the running loops counts whatever the
-    plugins hold at that instant, which swamps any real growth.
+    plugins hold at that instant, which swamps any real growth. A garbage
+    collection before each snapshot keeps the unreachable cycles the
+    collector has not yet freed out of it too.
     """
 
     async def refresh() -> None:
@@ -1363,8 +1366,10 @@ async def measure_memory_leak(
     own = [tracemalloc.Filter(False, tracemalloc.__file__)]
     try:
         await refresh()
+        gc.collect()
         begin = tracemalloc.take_snapshot().filter_traces(own)
         await refresh()
+        gc.collect()
         end = tracemalloc.take_snapshot().filter_traces(own)
     finally:
         await scheduler.stop()

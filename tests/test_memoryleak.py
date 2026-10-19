@@ -29,7 +29,8 @@ _CYCLES = 10
 _THRESHOLD = 15000
 
 
-def test_memoryleak_no_history(tmp_path, monkeypatch):
+def _measure(tmp_path, monkeypatch) -> tuple[int, str]:
+    """Bytes per refresh, and the top 5 growing files, of one fresh scheduler."""
     monkeypatch.setattr(GlancesConfig, "SYSTEM_CONFIG_PATH", tmp_path / "no-system.conf")
     config = GlancesConfig()
     args = build_parser().parse_args(["--memory-leak", "--stop-after", str(_CYCLES)])
@@ -42,6 +43,16 @@ def test_memoryleak_no_history(tmp_path, monkeypatch):
     finally:
         tracemalloc.stop()
 
-    per_cycle = sum(stat.size_diff for stat in diff) // cycles
-    top = "\n".join(str(stat) for stat in diff[:5])
-    assert per_cycle < _THRESHOLD, f"Memory leak: {per_cycle} bytes per refresh\n{top}"
+    return sum(stat.size_diff for stat in diff) // cycles, "\n".join(str(stat) for stat in diff[:5])
+
+
+def test_memoryleak_no_history(tmp_path, monkeypatch):
+    # The processes started and ended on the host during a window move the
+    # psutil allocations by several KB (macOS runners: up to ~25 KB per
+    # refresh). That noise does not repeat, a leak does: a measure over the
+    # threshold is only a failure if a second, independent one confirms it.
+    per_cycle, top = _measure(tmp_path, monkeypatch)
+    if per_cycle >= _THRESHOLD:
+        first = f"first measure: {per_cycle} bytes per refresh\n{top}"
+        per_cycle, top = _measure(tmp_path, monkeypatch)
+        assert per_cycle < _THRESHOLD, f"Memory leak: {per_cycle} bytes per refresh\n{top}\n{first}"
