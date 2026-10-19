@@ -8,13 +8,12 @@
 
 """Glances v5 — sensors plugin (collection, per-label).
 
-Migrated from `glances/plugins/sensors/__init__.py`. Merges four
-sub-types (temperature_core, fan_speed, temperature_hdd, battery) into
-one flat list, keyed by sensor `label`.
+Migrated from `glances/plugins/sensors/__init__.py`. Merges three
+sub-types (temperature_core, fan_speed, battery) into one flat list,
+keyed by sensor `label`.
 
 Hardware collection reuses the v4 grab classes verbatim:
 - `GlancesGrabSensors` — psutil sensors_temperatures() / sensors_fans()
-- `GlancesGrabHDDTemp`  — hddtemp daemon socket client
 - `GlancesGrabBat`      — batinfo / psutil battery grabber
 
 The v4 alias, hide/show, per-prefix "mean" fold, and per-sensor system
@@ -26,28 +25,25 @@ from __future__ import annotations
 import asyncio
 import logging
 import re
-from types import SimpleNamespace
 from typing import Any, ClassVar
 
 from glances.globals import natural_keys
 from glances.plugins.plugin.base import GlancesPluginBase
 from glances.plugins.sensors.grab import GlancesGrabSensors, sensors_definition
 from glances.plugins.sensors.sensor.glances_batpercent import GlancesGrabBat
-from glances.plugins.sensors.sensor.glances_hddtemp import GlancesGrabHDDTemp
 
 logger = logging.getLogger(__name__)
 
 # Sensor type strings (mirror v4 sensors_definition values).
 _TEMP_CORE = "temperature_core"
 _FAN_SPEED = "fan_speed"
-_TEMP_HDD = "temperature_hdd"
 _BATTERY = "battery"
 
 # Threshold-key shapes _resolve_thresholds() reads itself, outside the base
 # class's watched-field pipeline (base.GlancesPluginBase._recognises_threshold_key):
 # per-type `<type>_<level>` and per-sensor `<type>_<label>_<level>`. Derived
 # from the sensor-type constants already declared above, not a pasted list.
-_SENSOR_TYPES = frozenset({_TEMP_CORE, _FAN_SPEED, _TEMP_HDD, _BATTERY})
+_SENSOR_TYPES = frozenset({_TEMP_CORE, _FAN_SPEED, _BATTERY})
 
 
 def _label_prefix(label: str) -> str:
@@ -87,7 +83,7 @@ class PluginModel(GlancesPluginBase[list]):
             "primary_key": True,
         },
         "type": {
-            "description": "Sensor type (temperature_core, fan_speed, temperature_hdd, battery).",
+            "description": "Sensor type (temperature_core, fan_speed, battery).",
             "unit": "string",
             "internal": True,
             "watched": False,
@@ -136,17 +132,11 @@ class PluginModel(GlancesPluginBase[list]):
         self._grabbers_built = False
 
     def _build_grabbers(self) -> None:
-        """Construct the four sub-grabbers. Idempotent — first call wins."""
+        """Construct the three sub-grabbers. Idempotent — first call wins."""
         if self._grabbers_built:
             return
         self._grab_temp_core = GlancesGrabSensors(sensors_definition["cpu_temp"])
         self._grab_fan = GlancesGrabSensors(sensors_definition["fan_speed"])
-        host = self.config.get("hddtemp", "host", "127.0.0.1")
-        port = self.config.get("hddtemp", "port", 7634)
-        # fetch() sets disable_hddtemp after a failed connect: the daemon is
-        # then not polled again until Glances is restarted (as v4 does).
-        self._hdd_args = SimpleNamespace(disable_hddtemp=self.config.get("hddtemp", "disable", False))
-        self._grab_hdd = GlancesGrabHDDTemp(host=host, port=port, args=self._hdd_args)
         self._grab_bat = GlancesGrabBat()
         self._grabbers_built = True
 
@@ -161,8 +151,6 @@ class PluginModel(GlancesPluginBase[list]):
         out: list[dict[str, Any]] = []
         out.extend(self._grab_typed(self._grab_temp_core.update, _TEMP_CORE))
         out.extend(self._grab_typed(self._grab_fan.update, _FAN_SPEED))
-        if not self._hdd_args.disable_hddtemp:
-            out.extend(self._grab_typed(self._grab_hdd.get, _TEMP_HDD))
         out.extend(self._grab_typed(self._grab_battery, _BATTERY))
         return out
 
@@ -231,8 +219,7 @@ class PluginModel(GlancesPluginBase[list]):
         (see `_mean_enabled`). Within a folded type, rows sharing a label
         prefix (label minus its trailing number) with >= 2 numeric members
         collapse to one row: value = round(mean), other fields copied from
-        the first matched row. Non-numeric values (ERR/SLP/UNK) and
-        singletons pass through unchanged.
+        the first matched row. Non-numeric values and singletons pass through unchanged.
         """
         result: list = []
         # Partition rows by type, preserving non-folded types verbatim.
@@ -319,7 +306,7 @@ class PluginModel(GlancesPluginBase[list]):
     def _resolve_level(self, row: dict) -> str | None:
         value = row.get("value")
         if not isinstance(value, (int, float)):
-            return None  # ERR/SLP/UNK/NOS — no numeric comparison
+            return None  # empty battery ([]) — no numeric comparison
         sensor_type = str(row.get("type", ""))
         label = str(row.get("label", ""))
         current = (100 - value) if sensor_type == _BATTERY else value

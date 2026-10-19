@@ -22,7 +22,6 @@ from glances.logger import logger
 sensors_definition = {
     'cpu_temp': {'type': 'temperature_core', 'unit': 'C'},
     'fan_speed': {'type': 'fan_speed', 'unit': 'R'},
-    'hdd_temp': {'type': 'temperature_hdd', 'unit': 'C'},
     'battery': {'type': 'battery', 'unit': '%'},
 }
 

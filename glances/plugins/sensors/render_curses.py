@@ -27,7 +27,6 @@ fs renderer's documented budget).
 - Fahrenheit (`view["fahrenheit"]`) converts temperature rows only
   (not battery / fan_speed).
 - Battery rows show a trend arrow from `status`.
-- hddtemp string sentinels (ERR/SLP/UNK/NOS) render verbatim.
 - Empty-value battery rows are skipped.
 """
 
@@ -45,7 +44,6 @@ _VALUE_COL_WIDTH = 14
 # spans _NAME_MAX_WIDTH + 1 + _VALUE_COL_WIDTH. Must stay <= the left-sidebar
 # maximum or the trailing unit/trend is clipped (see module docstring).
 _LEFT_SIDEBAR_MAX_WIDTH = 34
-_SENTINELS = ("ERR", "SLP", "UNK", "NOS")
 _NO_FAHRENHEIT_TYPES = ("battery", "fan_speed")
 
 
@@ -78,9 +76,6 @@ def _value_text(row: dict[str, Any], fahrenheit: bool) -> str:
     value = row.get("value")
     sensor_type = str(row.get("type", ""))
     unit = str(row.get("unit", ""))
-
-    if isinstance(value, str) and value in _SENTINELS:
-        return value.rjust(_VALUE_COL_WIDTH)
 
     if not isinstance(value, (int, float)):
         return ""  # empty battery ([]) or unknown -> caller skips
