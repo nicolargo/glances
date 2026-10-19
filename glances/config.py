@@ -267,9 +267,14 @@ class GlancesConfig:
 
     # ------------------------------------------------------------------ read
 
+    # Option names are stored lower-cased (ConfigParser's optionxform, and the
+    # env overlay), so they are looked up lower-cased, like ConfigParser.get()
+    # in v4: a key built from a mixed-case item name (a `~/Videos` folder, a
+    # `/Volumes/Data` mount point) would never match otherwise.
+
     def get(self, section: str, option: str, default: T) -> T:
         """Return option from section coerced to type(default), else default."""
-        raw = self._merged.get(section, {}).get(option)
+        raw = self._merged.get(section, {}).get(option.lower())
         if raw is None:
             return default
         return self._coerce(raw, type(default))
@@ -289,7 +294,7 @@ class GlancesConfig:
         `get()` for typed coercion.
         """
         if default is None:
-            return self._merged.get(section, {}).get(option)  # type: ignore[return-value]
+            return self._merged.get(section, {}).get(option.lower())  # type: ignore[return-value]
         return self.get(section, option, default)
 
     def get_float_value(self, section: str, option: str, default: float = 0.0) -> float:
@@ -306,7 +311,7 @@ class GlancesConfig:
         `one_line`, …) to its fallback branch. Swallowing it and returning the
         default would coerce all of them to 0.0 and silently break every AMP.
         """
-        raw = self._merged.get(section, {}).get(option)
+        raw = self._merged.get(section, {}).get(option.lower())
         if raw is None:
             return float(default)
         return float(raw)
@@ -325,7 +330,7 @@ class GlancesConfig:
         CA bundle. Swallowing it and returning the default would silently
         turn every custom bundle into `verify=True`.
         """
-        raw = self._merged.get(section, {}).get(option)
+        raw = self._merged.get(section, {}).get(option.lower())
         if raw is None:
             return bool(default)
         return _coerce_bool(raw) if isinstance(raw, str) else bool(raw)

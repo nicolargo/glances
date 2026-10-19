@@ -336,6 +336,27 @@ def test_get_value_alias(typed_config: GlancesConfig) -> None:
     assert typed_config.get_value("test", "int_val", 0) == typed_config.get("test", "int_val", 0)
 
 
+def test_option_names_are_case_insensitive(env: Path) -> None:
+    # ConfigParser lower-cases the option names it reads: a key looked up with
+    # upper-case letters (built from a mixed-case item name) must still match,
+    # as with v4's ConfigParser.get().
+    write(
+        etc_path(env),
+        """
+        [folders]
+        /home/user/Videos_size_critical_action = notify
+        [test]
+        Int_Val = 42
+        Flag = yes
+    """,
+    )
+    config = GlancesConfig()
+    assert config.get("test", "Int_Val", 0) == 42
+    assert config.get_value("folders", "/home/user/Videos_size_critical_action") == "notify"
+    assert config.get_float_value("test", "INT_VAL") == 42.0
+    assert config.get_bool_value("test", "Flag", False) is True
+
+
 def test_default_native_type_passes_through(env: Path) -> None:
     # DEFAULTS hold int/bool natively — they must reach get() without coercion.
     result = GlancesConfig().get("global", "refresh_time", 0)

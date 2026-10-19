@@ -74,16 +74,3 @@ In client/server mode, the list is defined on the ``server`` side.
     ``folder_<N>_<level>_action`` key to the new shape, otherwise the action
     is silently ignored. The available levels are ``warning`` and
     ``critical`` (a ``careful`` level never triggers an action).
-
-    **The path must be written in lower case.** Configuration option names
-    are lower-cased when the file is read, so a key containing an upper-case
-    character can never be matched and the action is silently ignored::
-
-        # WRONG — never matches, whatever the folder is called
-        /home/user/Videos_size_critical_action=notify-send "full"
-        # RIGHT
-        /home/user/videos_size_critical_action=notify-send "full"
-
-    This affects any folder whose path is not already lower case
-    (``~/Videos``, ``~/Documents``, ``~/Downloads``, ``/Users/Name/...`` on
-    macOS).

@@ -193,6 +193,14 @@ def test_read_thresholds_non_numeric_value_is_skipped_with_glances_config(config
     assert out == {"critical": 90.0}
 
 
+def test_read_thresholds_pk_with_upper_case_with_glances_config(config_with):
+    # The option names are stored lower-cased: the per-item key of a mixed-case
+    # item (a macOS volume) must still be found.
+    config = config_with({"fs": {"/Volumes/Data_percent_critical": "80"}})
+    out = read_thresholds(config, "fs", "percent", pk_value="/Volumes/Data")
+    assert out == {"critical": 80.0}
+
+
 def test_read_thresholds_per_level_layering():
     # User overrides only `critical`; the others come from defaults.
     config = FakeConfig({("mem", "critical"): "95"})
