@@ -302,6 +302,24 @@ def test_limits_for_never_exports_action_templates():
     assert "/usr/bin/mail -s alert ops@example.com" not in str(limits.values())
 
 
+def test_limits_for_exports_option_names_lower_cased():
+    """Option names keep their case in the config: the exported names stay
+    lower-case, as in v4, and an `_ACTION` key is still left out."""
+    config = make_config(
+        {
+            "fakescalar": {
+                "CRITICAL": "90",
+                "Critical_ACTION": "/usr/bin/mail -s alert ops@example.com",
+            }
+        }
+    )
+    plugin = FakeScalarPlugin(StatsStore(), config)
+    limits = FakeExport(config, args=None)._limits_for(plugin)
+
+    assert limits["fakescalar_critical"] == 90.0
+    assert "/usr/bin/mail -s alert ops@example.com" not in str(limits.values())
+
+
 def test_limits_for_never_exports_a_credential():
     """Audit M10: a backend usually has wider readers than the host.
 

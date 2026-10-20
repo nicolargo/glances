@@ -927,6 +927,9 @@ class GlancesPluginBase(Generic[T], ABC):
         except AttributeError:
             return out  # config object without introspection API → skip optim
         for key in section_keys:
+            # Option names keep their case (`/srv/Data_percent_CRITICAL`),
+            # and the per-item lookup matches them case-insensitively too.
+            key = key.lower()
             for field_name, schema in self._watched_fields:
                 tkey = self._threshold_key(field_name, schema)
                 # Pattern: `<pk>_<tkey>_<level>` — `<pk>` must be non-empty

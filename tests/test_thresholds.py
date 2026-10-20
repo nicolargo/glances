@@ -193,6 +193,25 @@ def test_read_thresholds_non_numeric_value_is_skipped_with_glances_config(config
     assert out == {"critical": 90.0}
 
 
+def test_read_thresholds_pk_with_upper_case_with_glances_config(config_with):
+    # The per-item key of a mixed-case item (a macOS volume) must be found.
+    config = config_with({"fs": {"/Volumes/Data_percent_critical": "80"}})
+    out = read_thresholds(config, "fs", "percent", pk_value="/Volumes/Data")
+    assert out == {"critical": 80.0}
+
+
+def test_read_thresholds_pks_differing_only_by_case_with_glances_config(config_with):
+    # `/srv/Data` and `/srv/data` are two mount points: each gets its own value.
+    config = config_with({"fs": {"/srv/Data_percent_critical": "80", "/srv/data_percent_critical": "90"}})
+    assert read_thresholds(config, "fs", "percent", pk_value="/srv/Data") == {"critical": 80.0}
+    assert read_thresholds(config, "fs", "percent", pk_value="/srv/data") == {"critical": 90.0}
+
+
+def test_read_thresholds_upper_case_generic_key_with_glances_config(config_with):
+    config = config_with({"cpu": {"CRITICAL": "90"}})
+    assert read_thresholds(config, "cpu", "user") == {"critical": 90.0}
+
+
 def test_read_thresholds_per_level_layering():
     # User overrides only `critical`; the others come from defaults.
     config = FakeConfig({("mem", "critical"): "95"})

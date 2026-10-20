@@ -116,6 +116,24 @@ def test_config_is_loaded_into_the_amp(cfg):
     assert amp.regex() == ".*foo.*"
 
 
+def test_config_keys_with_upper_case_letters_are_loaded(cfg):
+    amps = AmpsList(
+        cfg(
+            """
+            [amp_foo]
+            Enable=true
+            Regex=.*foo.*
+            REFRESH=3
+            Command=echo hello
+            """
+        )
+    )
+    amp = amps._amps["foo"]
+    assert amp.enable() is True
+    assert amp.refresh() == 3.0
+    assert amp.regex() == ".*foo.*"
+
+
 def test_invalid_amp_name_falls_back_to_the_default_module(cfg):
     amps = AmpsList(
         cfg(

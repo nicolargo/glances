@@ -75,15 +75,16 @@ In client/server mode, the list is defined on the ``server`` side.
     is silently ignored. The available levels are ``warning`` and
     ``critical`` (a ``careful`` level never triggers an action).
 
-    **The path must be written in lower case.** Configuration option names
-    are lower-cased when the file is read, so a key containing an upper-case
-    character can never be matched and the action is silently ignored::
+    **Write the path with the same case as the folder.** The key is matched
+    against the folder's path exactly first, so two folders whose paths
+    differ only by case (``/srv/Data`` and ``/srv/data``) each get their
+    own action::
 
-        # WRONG — never matches, whatever the folder is called
         /home/user/Videos_size_critical_action=notify-send "full"
-        # RIGHT
-        /home/user/videos_size_critical_action=notify-send "full"
 
-    This affects any folder whose path is not already lower case
-    (``~/Videos``, ``~/Documents``, ``~/Downloads``, ``/Users/Name/...`` on
-    macOS).
+    A key whose case does not match is still accepted when there is no
+    ambiguity, so a lower-case key such as
+    ``/home/user/videos_size_critical_action`` keeps working for
+    ``~/Videos``. If no key has the exact case of the path and several
+    keys differ from it only by case, none of them is used and Glances
+    logs a warning.
