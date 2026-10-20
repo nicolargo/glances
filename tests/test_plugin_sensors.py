@@ -360,6 +360,17 @@ def test_per_type_true_overrides_global_false(tmp_path, monkeypatch, store):
     assert {"fan 0", "fan 1"} <= set(by_label)  # fan inherits global false -> not folded
 
 
+def test_per_type_mean_key_with_mixed_case(tmp_path, monkeypatch, store):
+    """The per-type key is found whatever its case: `Temperature_Core_mean=false`
+    still opts the type out of the global mean."""
+    config = _cfg_with(tmp_path, monkeypatch, "[sensors]\nmean=true\nTemperature_Core_mean=false\n")
+    p = PluginModel(store, config)
+    out = _expand(p, _rows_core(40, 42, 44) + _rows_fan(1000, 1200))
+    by_label = {r["label"]: r for r in out}
+    assert {"Core 0", "Core 1", "Core 2"} <= set(by_label)
+    assert "fan (mean)" in by_label
+
+
 def _levels(p, rows):
     p._stats = rows
     p._derived_parameters()

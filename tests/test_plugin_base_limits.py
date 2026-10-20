@@ -193,6 +193,15 @@ def test_per_item_reports_override_for_an_item_in_the_store(store_with, config_w
     assert limits["_per_item"] == {"wlan0": {"rx": {"careful": 70.0, "warning": 60.0}}}
 
 
+def test_per_item_override_with_an_upper_case_level_suffix(store_with, config_with):
+    """Option names keep their case: `wlan0_rx_WARNING` is still a per-item override."""
+    config = config_with({"limitscoll": {"wlan0_rx_WARNING": "60"}})
+    store = store_with()
+    plugin = _LimitsCollection(store, config)
+    asyncio.run(plugin.update())
+    assert plugin.get_limits()["_per_item"] == {"wlan0": {"rx": {"careful": 70.0, "warning": 60.0}}}
+
+
 def test_per_item_skips_items_absent_from_the_store(store_with, config_with):
     """Documented limitation (design §4.3): an override configured for an
     item that is not currently present is not reported."""

@@ -74,11 +74,13 @@ class GlancesAmp:
         amp_section = 'amp_' + self.amp_name
         if hasattr(config, 'has_section') and config.has_section(amp_section):
             logger.debug(f"AMP - {self.NAME}: Load configuration")
-            for param, _ in config.items(amp_section):
+            for option, _ in config.items(amp_section):
+                # The option names keep their case: `Enable=true` is `enable`.
+                param = option.lower()
                 try:
-                    self.configs[param] = config.get_float_value(amp_section, param)
+                    self.configs[param] = config.get_float_value(amp_section, option)
                 except ValueError:
-                    self.configs[param] = config.get_value(amp_section, param).split(',')
+                    self.configs[param] = config.get_value(amp_section, option).split(',')
                     if len(self.configs[param]) == 1:
                         self.configs[param] = self.configs[param][0]
                 logger.debug(f"AMP - {self.NAME}: Load parameter: {param} = {self.configs[param]}")

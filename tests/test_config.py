@@ -268,6 +268,17 @@ def test_env_overlay_key_with_underscores(env: Path, monkeypatch: pytest.MonkeyP
     assert GlancesConfig().get("mem", "critical_action", "") == "echo critical"
 
 
+def test_env_overlay_still_applies_to_mixed_case_items(env: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    # An env var name cannot carry the case: it overrides the file's key
+    # whatever its case, and reaches a mixed-case item through the fallback.
+    write(etc_path(env), "[folders]\n/home/user/Videos_size_critical_action = from-file\n")
+    monkeypatch.setenv("GLANCES_FOLDERS__/HOME/USER/VIDEOS_SIZE_CRITICAL_ACTION", "from-env")
+    monkeypatch.setenv("GLANCES_FOLDERS__/HOME/USER/MUSIC_SIZE_WARNING_ACTION", "music-env")
+    config = GlancesConfig()
+    assert config.get_value("folders", "/home/user/Videos_size_critical_action") == "from-env"
+    assert config.get_value("folders", "/home/user/Music_size_warning_action") == "music-env"
+
+
 def test_env_var_without_separator_ignored(env: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("GLANCES_BADVAR", "value")
     assert "badvar" not in GlancesConfig().sections()
@@ -334,6 +345,73 @@ def test_get_missing_option_returns_default(typed_config: GlancesConfig) -> None
 
 def test_get_value_alias(typed_config: GlancesConfig) -> None:
     assert typed_config.get_value("test", "int_val", 0) == typed_config.get("test", "int_val", 0)
+
+
+def test_option_names_are_case_insensitive(env: Path) -> None:
+    # A key written with upper-case letters (built from a mixed-case item
+    # name) must match, and a lookup whose case differs still finds it when
+    # there is no exact match, as with v4's ConfigParser.get().
+    write(
+        etc_path(env),
+        """
+        [folders]
+        /home/user/Videos_size_critical_action = notify
+        [test]
+        Int_Val = 42
+        Flag = yes
+    """,
+    )
+    config = GlancesConfig()
+    assert config.get("test", "Int_Val", 0) == 42
+    assert config.get_value("folders", "/home/user/Videos_size_critical_action") == "notify"
+    assert config.get_float_value("test", "INT_VAL") == 42.0
+    assert config.get_bool_value("test", "Flag", False) is True
+
+
+def test_option_names_differing_only_by_case_are_two_options(env: Path) -> None:
+    # `/srv/Data` and `/srv/data` are two folders: the file loads (it used to
+    # be rejected as a duplicate option) and each key keeps its own value.
+    write(
+        etc_path(env),
+        """
+        [folders]
+        /srv/Data_size_critical_action = data-upper
+        /srv/data_size_critical_action = data-lower
+    """,
+    )
+    config = GlancesConfig()
+    assert config.get_value("folders", "/srv/Data_size_critical_action") == "data-upper"
+    assert config.get_value("folders", "/srv/data_size_critical_action") == "data-lower"
+
+
+def test_lower_case_key_still_matches_a_mixed_case_item(env: Path) -> None:
+    # The form the folders docs used to ask for keeps working for `~/Videos`.
+    write(etc_path(env), "[folders]\n/home/user/videos_size_critical_action = legacy\n")
+    config = GlancesConfig()
+    assert config.get_value("folders", "/home/user/Videos_size_critical_action") == "legacy"
+
+
+def test_ambiguous_case_fallback_returns_the_default_and_warns_once(
+    env: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    # Neither stored key matches `/srv/DATA` exactly: don't guess between them.
+    write(
+        etc_path(env),
+        """
+        [fs]
+        /srv/Data_percent_critical = 80
+        /srv/data_percent_critical = 90
+    """,
+    )
+    config = GlancesConfig()
+    with caplog.at_level("WARNING"):
+        for _ in range(2):
+            assert config.get("fs", "/srv/DATA_percent_critical", -1.0) == -1.0
+            assert config.get_value("fs", "/srv/DATA_percent_critical") is None
+            assert config.get_float_value("fs", "/srv/DATA_percent_critical", -1.0) == -1.0
+    warnings = [r for r in caplog.records if r.levelname == "WARNING"]
+    assert len(warnings) == 1
+    assert "/srv/DATA_percent_critical" in warnings[0].getMessage()
 
 
 def test_default_native_type_passes_through(env: Path) -> None:
@@ -571,6 +649,23 @@ def test_public_view_serves_only_the_webui_keys(env: Path) -> None:
     }
 
 
+def test_public_view_resolves_option_names_like_get(env: Path) -> None:
+    """`Refresh=` is the refresh Glances runs with: the WebUI gets it, under the allowlisted name."""
+    write(
+        etc_path(env),
+        """
+        [global]
+        Refresh = 5
+
+        [outputs]
+        Theme = white
+        Cors_Origins = https://ok.example
+    """,
+    )
+    public = GlancesConfig().as_dict_public()
+    assert public == {"global": {"refresh": "5"}, "outputs": {"api_doc": True, "theme": "white"}}
+
+
 def test_public_view_never_serves_a_key_outside_the_allowlist(env: Path) -> None:
     """With DEFAULTS only, the view stays within `PUBLIC_OPTIONS`."""
     public = GlancesConfig().as_dict_public()
@@ -594,6 +689,16 @@ def test_reload_picks_up_changes(env: Path) -> None:
 
     config.reload()
     assert config.get("global", "refresh_time", 0) == 11
+
+
+def test_reload_picks_up_a_change_of_case(env: Path) -> None:
+    write(etc_path(env), "[cpu]\nCRITICAL = 90\n")
+    config = GlancesConfig()
+    assert config.get("cpu", "critical", 0) == 90
+
+    write(etc_path(env), "[cpu]\nCritical = 80\n")
+    config.reload()
+    assert config.get("cpu", "critical", 0) == 80
 
 
 def test_reload_preserves_cli_override(env: Path) -> None:
