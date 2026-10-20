@@ -29,6 +29,8 @@ so ``main.serve`` runs it in the TUI's place.
 
 from __future__ import annotations
 
+import csv
+import io
 import json
 import logging
 import sys
@@ -39,7 +41,6 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 _NA = "N/A"
-_SEP = ","
 
 
 def parse_selection(spec: str) -> list[tuple[str, str | None, str | None]]:
@@ -63,6 +64,18 @@ def parse_selection(spec: str) -> list[tuple[str, str | None, str | None]]:
 
 def _item_key(item: dict[str, Any], pk: str | None) -> str:
     return str(item.get(pk)) if pk else "?"
+
+
+def _csv_line(cells: list[str]) -> str:
+    """Join the cells like the CSV export does: a cell holding a comma, a
+    double quote or a line break is quoted, any other one is left as is.
+
+    The writer keeps its default line terminator, stripped afterwards: with
+    an empty one, Python 3.10 leaves a line break in a cell unquoted.
+    """
+    out = io.StringIO()
+    csv.writer(out).writerow(cells)
+    return out.getvalue().removesuffix("\r\n")
 
 
 def render_plain(
@@ -134,7 +147,7 @@ class CsvRenderer:
             else:
                 cells.extend(self._header(plugin, attribute, stat, primary_keys.get(plugin)))
         self._header_done = True
-        return _SEP.join(cells)
+        return _csv_line(cells)
 
     def _header(self, plugin: str, attribute: str | None, stat: Any, pk: str | None) -> list[str]:
         if attribute is not None:
