@@ -242,12 +242,12 @@ class PluginModel(GlancesPluginBase[list]):
         — so a type can be opted OUT (`<type>_mean=false`) while the global
         is on, or opted IN while the global is off. Both default to false.
 
-        Option names are stored lower-cased (ConfigParser optionxform) and
-        the sensor-type constants are already lower-case, so the composed
-        key matches the stored key directly.
+        The per-type key is looked up through the config, not searched in
+        `section_keys()`, so it is found whatever its case
+        (`Temperature_Core_mean`).
         """
         per_type_key = f"{sensor_type}_mean"
-        if per_type_key in self.config.section_keys("sensors"):
+        if self.config.get_value("sensors", per_type_key) is not None:
             return self.config.get("sensors", per_type_key, False)
         return self.config.get("sensors", "mean", False)
 
@@ -340,10 +340,9 @@ class PluginModel(GlancesPluginBase[list]):
         high/critical), so careful is only ever supplied by a config tier —
         this preserves the shipped default `[sensors] temperature_core_careful`.
 
-        Config option names are stored lower-cased (ConfigParser
-        optionxform), so composed keys are lower-cased before lookup —
-        otherwise a mixed-case label (`Core 0`) never matches the stored
-        `temperature_core_core 0_critical` key.
+        Composed keys keep the label's case (`temperature_core_Core 0_critical`);
+        the config lookup falls back to a case-insensitive match, so the
+        lower-case form (`temperature_core_core 0_critical`) is read as well.
         """
         # Tier 1: per-sensor config (#2058).
         per_sensor = self._conf_tier(f"{sensor_type}_{label}")
@@ -387,6 +386,6 @@ class PluginModel(GlancesPluginBase[list]):
         )
 
     def _conf_value(self, key: str) -> float | None:
-        """Read a `[sensors]` threshold key (lower-cased) as float, else None."""
-        raw = self.config.get("sensors", key.lower(), "")
+        """Read a `[sensors]` threshold key as float, else None."""
+        raw = self.config.get("sensors", key, "")
         return _as_float(raw) if raw != "" else None

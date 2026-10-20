@@ -74,3 +74,17 @@ In client/server mode, the list is defined on the ``server`` side.
     ``folder_<N>_<level>_action`` key to the new shape, otherwise the action
     is silently ignored. The available levels are ``warning`` and
     ``critical`` (a ``careful`` level never triggers an action).
+
+    **Write the path with the same case as the folder.** The key is matched
+    against the folder's path exactly first, so two folders whose paths
+    differ only by case (``/srv/Data`` and ``/srv/data``) each get their
+    own action::
+
+        /home/user/Videos_size_critical_action=notify-send "full"
+
+    A key whose case does not match is still accepted when there is no
+    ambiguity, so a lower-case key such as
+    ``/home/user/videos_size_critical_action`` keeps working for
+    ``~/Videos``. If no key has the exact case of the path and several
+    keys differ from it only by case, none of them is used and Glances
+    logs a warning.

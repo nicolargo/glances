@@ -27,6 +27,12 @@ Loading model (v4-aligned, **single config file**):
    because env-driven overrides are useful for containers / CI and are
    orthogonal to the config-file question.
 
+Option names keep the case they are written with in the file, so a key
+built from an item name (``/srv/Data_percent_critical``) only matches that
+item. A lookup with no exact match falls back to a case-insensitive one:
+lower-case keys, upper-case ones (``CRITICAL=90``) and the env overlay
+(always lower-cased) keep working.
+
 Note: prior versions of this loader merged keys across all available
 config files (the "layered overlay" design). That introduced surprising
 cross-file inheritance — e.g. a legacy v4-era ``~/.config/glances/glances.conf``
@@ -170,6 +176,9 @@ class GlancesConfig:
         self._cli_config_path: str | None = cli_config_path
         self._loaded_sources: list[Path] = []
         self._merged: dict[str, dict[str, Any]] = {}
+        # Per section: lower-cased option name -> the stored option names.
+        self._lower_index: dict[str, dict[str, list[str]]] = {}
+        self._ambiguous_warned: set[tuple[str, str]] = set()
         self._load()
 
     # ------------------------------------------------------------------ load
@@ -177,6 +186,7 @@ class GlancesConfig:
     def _load(self) -> None:
         self._loaded_sources = []
         self._merged = {}
+        self._ambiguous_warned = set()
 
         # 1. Defaults — codebase baseline. Always applied; not a "file
         # merge", just the set of keys the codebase guarantees to read.
@@ -191,6 +201,14 @@ class GlancesConfig:
         # 3. Environment variable overlay (orthogonal to the file
         # question — useful for containers / CI / per-run overrides).
         self._overlay_env()
+
+        # Built once here rather than on every lookup: get() is on the hot
+        # path (thresholds and actions are resolved every cycle).
+        self._lower_index = {}
+        for section, options in self._merged.items():
+            index = self._lower_index[section] = {}
+            for key in options:
+                index.setdefault(key.lower(), []).append(key)
 
     def _resolve_config_file(self) -> Path | None:
         """Pick the single glances.conf to load, or ``None``.
@@ -236,6 +254,9 @@ class GlancesConfig:
         if not path.is_file():
             return
         parser = configparser.ConfigParser(interpolation=None)
+        # Keep the option names as written: `/srv/Data` and `/srv/data` are
+        # two mount points, and their keys must not collide.
+        parser.optionxform = str  # type: ignore[method-assign]
         # Fail closed: skipping a file that exists would silently drop keys
         # such as `[outputs] password` (API exposed unauthenticated) — v4
         # stops too. The open() is inside the try: ConfigParser.read(path)
@@ -263,18 +284,48 @@ class GlancesConfig:
             key = key.lower()
             if not section or not key:
                 continue
-            self._merged.setdefault(section, {})[key] = env_value
+            options = self._merged.setdefault(section, {})
+            # An environment variable name cannot carry the case of the
+            # option it overrides: replace that option whatever its case in
+            # the file.
+            for stored in [k for k in options if k.lower() == key]:
+                del options[stored]
+            options[key] = env_value
 
     # ------------------------------------------------------------------ read
 
-    # Option names are stored lower-cased (ConfigParser's optionxform, and the
-    # env overlay), so they are looked up lower-cased, like ConfigParser.get()
-    # in v4: a key built from a mixed-case item name (a `~/Videos` folder, a
-    # `/Volumes/Data` mount point) would never match otherwise.
+    def _lookup(self, section: str, option: str) -> Any:
+        """Return the raw value of `option` in `section`, or None if absent.
+
+        The option name is matched exactly first, then case-insensitively,
+        so a lower-case key (the only form v4 and the env overlay know) still
+        reaches a mixed-case item (a `~/Videos` folder, a `/Volumes/Data`
+        mount point). When several stored names differ from `option` only by
+        case, none of them is picked: the option is treated as absent and a
+        warning is logged once.
+        """
+        options = self._merged.get(section, {})
+        raw = options.get(option)
+        if raw is not None:
+            return raw
+        lower = option.lower()
+        candidates = self._lower_index.get(section, {}).get(lower, [])
+        if len(candidates) == 1:
+            return options.get(candidates[0])
+        if len(candidates) > 1 and (section, lower) not in self._ambiguous_warned:
+            self._ambiguous_warned.add((section, lower))
+            logger.warning(
+                "Config option %r in section [%s] is ignored: %s differ from it only by case and none matches "
+                "it exactly. Write the key with the exact case of the item.",
+                option,
+                section,
+                ", ".join(candidates),
+            )
+        return None
 
     def get(self, section: str, option: str, default: T) -> T:
         """Return option from section coerced to type(default), else default."""
-        raw = self._merged.get(section, {}).get(option.lower())
+        raw = self._lookup(section, option)
         if raw is None:
             return default
         return self._coerce(raw, type(default))
@@ -294,7 +345,7 @@ class GlancesConfig:
         `get()` for typed coercion.
         """
         if default is None:
-            return self._merged.get(section, {}).get(option.lower())  # type: ignore[return-value]
+            return self._lookup(section, option)
         return self.get(section, option, default)
 
     def get_float_value(self, section: str, option: str, default: float = 0.0) -> float:
@@ -311,7 +362,7 @@ class GlancesConfig:
         `one_line`, …) to its fallback branch. Swallowing it and returning the
         default would coerce all of them to 0.0 and silently break every AMP.
         """
-        raw = self._merged.get(section, {}).get(option.lower())
+        raw = self._lookup(section, option)
         if raw is None:
             return float(default)
         return float(raw)
@@ -330,7 +381,7 @@ class GlancesConfig:
         CA bundle. Swallowing it and returning the default would silently
         turn every custom bundle into `verify=True`.
         """
-        raw = self._merged.get(section, {}).get(option.lower())
+        raw = self._lookup(section, option)
         if raw is None:
             return bool(default)
         return _coerce_bool(raw) if isinstance(raw, str) else bool(raw)
@@ -364,7 +415,9 @@ class GlancesConfig:
         """Return the option names declared in ``section`` (empty list if
         the section is missing). Used by hot-path callers that need to
         introspect which keys exist without forcing them through
-        ``as_dict()`` (which deep-copies)."""
+        ``as_dict()`` (which deep-copies). The names keep the case they are
+        written with: compare them lower-cased, or look one up with
+        ``get()``."""
         return list(self._merged.get(section, {}).keys())
 
     def items(self, section: str) -> list[tuple[str, Any]]:
@@ -373,7 +426,8 @@ class GlancesConfig:
         v4 compatibility accessor: `GlancesAmp.load_config()` iterates
         `config.items(amp_section)` to discover an AMP's keys, which are
         arbitrary (`status_url`, `systemctl_cmd`, any user-defined option)
-        and therefore cannot be enumerated statically.
+        and therefore cannot be enumerated statically. The option names keep
+        the case they are written with, as `section_keys()`.
         """
         return list(self._merged.get(section, {}).items())
 
@@ -398,11 +452,14 @@ class GlancesConfig:
     def as_dict_public(self) -> dict[str, dict[str, Any]]:
         """Return only the `PUBLIC_OPTIONS`, for an unauthenticated API.
 
-        A section with none of its public options set is left out.
+        A section with none of its public options set is left out. Each
+        option is resolved as `get()` resolves it, so a `Refresh=` key (the
+        refresh Glances runs with) still reaches the WebUI, and it is served
+        under its allowlisted name: no other name ever leaves.
         """
         result: dict[str, dict[str, Any]] = {}
         for section, keys in self.PUBLIC_OPTIONS.items():
-            options = {k: v for k, v in self._merged.get(section, {}).items() if k in keys}
+            options = {k: v for k in sorted(keys) if (v := self._lookup(section, k)) is not None}
             if options:
                 result[section] = options
         return result
