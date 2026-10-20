@@ -86,3 +86,13 @@ async def test_no_watched_field_means_empty_levels(store, config, monkeypatch):
     plugin = PluginModel(store, config)
     await plugin.update()
     assert store.get("system")["_levels"] == {}
+
+
+async def test_platform_is_read_once(store, config, monkeypatch):
+    calls = []
+    monkeypatch.setattr("glances.plugins.system.model.platform.architecture", lambda: calls.append(1) or ("64bit", ""))
+    plugin = PluginModel(store, config)
+    await plugin.update()
+    await plugin.update()
+    assert store.get("system")["platform"] == "64bit"
+    assert len(calls) == 1

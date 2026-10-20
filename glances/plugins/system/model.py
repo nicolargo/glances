@@ -85,6 +85,8 @@ class PluginModel(GlancesPluginBase[dict]):
         super().__init__(store, config)
         # Optional operator override for the human-readable name (v4 parity).
         self._info_msg = self.config.get("system", "system_info_msg", "")
+        # Constant for the process, and `platform.architecture()` forks `file`.
+        self._platform = platform.architecture()[0]
 
     async def _grab_stats(self) -> dict:
         return await asyncio.to_thread(self._collect)
@@ -93,7 +95,7 @@ class PluginModel(GlancesPluginBase[dict]):
         stats: dict[str, Any] = {
             "os_name": platform.system(),
             "hostname": platform.node(),
-            "platform": platform.architecture()[0],
+            "platform": self._platform,
             "linux_distro": "",
             "os_version": "",
         }

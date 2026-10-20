@@ -106,10 +106,11 @@ Classés par ce qu'ils coûtent à un utilisateur v4 qui passerait à v5 aujourd
 
 ## Deux trouvailles hors périmètre
 
-- **`[hddtemp] host`/`port` est une section morte dans les deux branches** :
+- ~~**`[hddtemp] host`/`port` est une section morte dans les deux branches** :
   le `plugin_name` de `HddtempPlugin` se résout à `sensors`, donc v4 comme v5
   lisent `[sensors] host`/`port`. C'est un bug de documentation de
-  `conf/glances.conf`, à corriger côté v4.
+  `conf/glances.conf`, à corriger côté v4.~~ — **caduc** : hddtemp est retiré
+  de la v5 (#3486, PR #3530).
 - **La touche `r` de v4 ne fait pas ce que son aide annonce** : l'aide intégrée
   et `docs/cmds.rst` disent « Reset history », le code bascule `disable_smart`.
   Bug v4, indépendant de v5.
@@ -597,6 +598,11 @@ et sont détaillées dans leur sous-table.
 
 ### 25. `[hddtemp]` (conf:545-549)
 
+**Section retirée en 5.0** (#3486, PR #3530) : le support du démon hddtemp,
+abandonné en amont, est supprimé ; les clés ci-dessous n'ont plus d'effet
+(breaking change, voir `glances-v5-architecture-decisions.md`). Tableau
+conservé pour l'historique.
+
 | Clé | v4 lit où (file:line) | Statut v5 | Preuve v5 (file:line) | Note |
 |---|---|---|---|---|
 | `disable` | `glances/main.py:734` | ❌ absent | — | v4 fabriquait `args.disable_hddtemp` ; v5 n'a pas de plugin `hddtemp` (fusionné dans `sensors`), la clé n'a plus d'effet. |
@@ -614,13 +620,13 @@ et sont détaillées dans leur sous-table.
 | `refresh` | `glances/plugins/plugin/model.py:773` | ✅ porté | `glances/scheduler_v5.py:157-159` | |
 | `hide` / `show` | `glances/plugins/plugin/model.py:741-754` | ✅ porté | `glances/plugins/plugin/base_v5.py:202-203` | Filtre sur `label`. |
 | `mean` | `glances/plugins/plugin/model.py:741-754` | ✅ porté | `glances/plugins/sensors/model_v5.py:255` | Bascule globale du repli « `<préfixe> (mean)` ». |
-| `<type>_mean` (`temperature_core_mean`, `fan_speed_mean`, `temperature_hdd_mean`, `battery_mean`) | `glances/plugins/plugin/model.py:741-754` | ✅ porté | `glances/plugins/sensors/model_v5.py:252-254` | Surcharge par type ; gagne sur `mean`. |
-| `<type>_<level>` (`temperature_core_careful`, `temperature_hdd_*`, `battery_*`, `fan_speed_careful`) | `glances/plugins/plugin/model.py:964` | ✅ porté | `glances/plugins/sensors/model_v5.py:353-355`, `367-380` (tier 2) | |
+| `<type>_mean` (`temperature_core_mean`, `fan_speed_mean`, `battery_mean`) | `glances/plugins/plugin/model.py:741-754` | ✅ porté | `glances/plugins/sensors/model_v5.py:252-254` | Surcharge par type ; gagne sur `mean`. |
+| `<type>_<level>` (`temperature_core_careful`, `battery_*`, `fan_speed_careful`) | `glances/plugins/plugin/model.py:964` | ✅ porté | `glances/plugins/sensors/model_v5.py:353-355`, `367-380` (tier 2) | |
 | `<type>_<label>_<level>` (ex. `temperature_core_Ambient_careful`) | `glances/plugins/plugin/model.py:964` | ✅ porté | `glances/plugins/sensors/model_v5.py:350-352` (tier 1, issue #2058) | |
 | `<type>_<label>_log` | `glances/plugins/plugin/model.py:1002` | ❌ absent | — | |
 | `<type>_<label>_<level>_action` (ex. `temperature_core_Ambient_critical_action`) | `glances/plugins/plugin/model.py:980` | ❌ absent | `glances/alerts_v5.py:761-789` interroge `<label>_value_<level>_action`, `value_<level>_action`, `<level>_action` | Forme v4 non reconnue ; seule `<label>_value_<level>_action` (label = clé primaire) fonctionne. |
 | `alias` | `glances/plugins/plugin/model.py:1075` | ✅ porté | `glances/plugins/sensors/model_v5.py:194-214` | Mécanisme propre à `sensors` (label / `label_type`), inchangé. Depuis parity wave 1 (2026-09-10) un `alias` générique existe aussi dans `base_v5` pour `network`/`diskio`/`fs` (§14, §18, §19) — `sensors` n'est plus le seul, mais garde le sien, plus riche. |
-| `host` / `port` (hddtemp) | `glances/plugins/sensors/sensor/glances_hddtemp.py:30-31` | ✅ porté | `glances/plugins/sensors/model_v5.py:137-138` | Non livrées dans `[sensors]` (elles apparaissent, à tort, sous `[hddtemp]`). |
+| ~~`host` / `port` (hddtemp)~~ | `glances/plugins/sensors/sensor/glances_hddtemp.py:30-31` | retiré | — | hddtemp retiré en 5.0 (#3486). |
 
 ### 27. `[processcount]` (conf:604-607)
 
@@ -819,9 +825,9 @@ ligne par section** (cf. consigne), pas clé par clé.
 - `[alert] min_duration` → `[alerts] min_duration_seconds` : sémantique
   différente (rejet a posteriori vs. debounce), avertissement déjà présent
   conf:31-33.
-- La section `[hddtemp]` est morte **dans les deux branches** : v4 comme v5
+- ~~La section `[hddtemp]` est morte **dans les deux branches** : v4 comme v5
   lisent `host`/`port` dans `[sensors]` — bug de documentation à corriger dans
-  `conf/glances.conf`.
+  `conf/glances.conf`.~~ — **caduc** : hddtemp est retiré de la v5 (#3486).
 
 
 ---

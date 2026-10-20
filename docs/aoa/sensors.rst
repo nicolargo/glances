@@ -7,12 +7,28 @@ Sensors
 
 .. image:: ../_static/sensors.png
 
-Glances can display the sensors information using ``psutil``,
-``hddtemp`` and ``batinfo``:
+Glances can display the sensors information using ``psutil`` and
+``batinfo``:
+
 - motherboard and CPU temperatures
 - fan speeds
 - hard disk temperature
 - battery capacity
+
+Hard disk temperatures are read from the kernel hwmon interface, like the
+other temperatures. On Linux, load the ``drivetemp`` kernel module
+(``sudo modprobe drivetemp``) to expose SATA drive temperatures; NVMe drives
+expose theirs natively. The ``smart`` plugin also reports drive temperatures
+from the SMART attributes.
+
+.. note::
+
+    The ``hddtemp`` daemon is no longer maintained upstream. Its support was
+    removed in Glances 5.0: the ``[hddtemp]`` configuration section and the
+    ``temperature_hdd_*`` keys of the ``[sensors]`` section are ignored (a
+    warning is logged at startup for the ``temperature_hdd_careful``,
+    ``_warning`` and ``_critical`` thresholds). Set thresholds for a drive
+    through its ``temperature_core_<label>_*`` keys instead.
 
 Limit values and sensors alias names can be defined in the configuration
 file under the ``[sensors]`` section.
@@ -33,11 +49,6 @@ default (use the ``refresh`` key of the ``[sensors]`` section to change it).
     temperature_core_careful=45
     temperature_core_warning=65
     temperature_core_critical=80
-    # Temperatures threshold in °C for hddtemp
-    # Default values if not defined: 45/52/60
-    #temperature_hdd_careful=45
-    #temperature_hdd_warning=52
-    #temperature_hdd_critical=60
     # Battery threshold in %
     # Default values if not defined: 70/80/90
     #battery_careful=70
@@ -56,7 +67,6 @@ default (use the ``refresh`` key of the ``[sensors]`` section to change it).
     #mean=true
     #temperature_core_mean=true
     #fan_speed_mean=true
-    #temperature_hdd_mean=true
     #battery_mean=true
     # Sensors alias
     #alias=core 0:CPU Core 0,core 1:CPU Core 1
@@ -74,8 +84,8 @@ Two levels of configuration are available under the ``[sensors]`` section:
 - ``mean=true`` — global toggle. Every sensor type with more than one line
   is displayed in mean.
 - ``<type>_mean=true|false`` — per-type override (``temperature_core_mean``,
-  ``fan_speed_mean``, ``temperature_hdd_mean``, ``battery_mean``). When set,
-  it always wins over the global ``mean`` value.
+  ``fan_speed_mean``, ``battery_mean``). When set, it always wins over the
+  global ``mean`` value.
 
 Both default to ``false``. The per-type key can opt a type *out* while the
 global toggle is on, or *in* while it is off. For example, to display every
