@@ -101,14 +101,14 @@ For the Web server mode (REST API and WebUI), run:
 
 (``-w`` is an alias of ``-s``) and enter the URL ``http://localhost:61208`` in your favorite web browser.
 
+.. image:: ./docs/_static/screenshot-web.png
+
 The server listens on ``127.0.0.1`` by default. To monitor the machine from another one,
 listen on all interfaces with ``-B 0.0.0.0`` (or ``bind_address`` in the ``[outputs]``
 section of the configuration file) and enter the URL ``http://<ip>:61208``.
 
 In this mode, a HTTP/Restful API is exposed under ``/api/5``, see document `RestfulApi`_ for more details.
 Use ``--disable-webui`` to serve the API without the WebUI.
-
-.. image:: ./docs/_static/screenshot-web.png
 
 The server is not protected by default. To protect it with a password, generate a
 password hash:
@@ -129,7 +129,7 @@ To also expose a `MCP (Model Context Protocol)`_ server (for AI assistants), add
 The MCP endpoint (SSE transport) is then available at ``http://<ip>:61208/mcp/sse``.
 See the `McpApi`_ documentation for client configuration and usage.
 
-To monitor a remote Glances server from your terminal (client mode), run:
+To monitor a remote Glances server from your terminal (TUI client mode), run:
 
 .. code-block:: console
 
@@ -150,6 +150,9 @@ or WebUI (at the URL ``http://<ip>:61208/browser``):
 .. code-block:: console
 
     $ glances -s --browser
+
+Advanced usage 👋
+=================
 
 It possible to display raw stats on stdout:
 
