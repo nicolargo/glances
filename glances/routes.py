@@ -21,6 +21,7 @@ Route inventory:
 | ``/api/5/token``              | POST   | Basic → ``JWTHandler``       |
 | ``/api/5/pluginslist``        | GET    | ``app.state.plugins`` keys   |
 | ``/api/5/all``                | GET    | per-plugin ``get_api_payload()`` |
+| ``/api/5/all/msgpack``        | GET    | per-plugin ``get_api_payload()``, MessagePack-encoded |
 | ``/api/5/all/limits``         | GET    | per-plugin ``get_limits()``  |
 | ``/api/5/all/info``           | GET    | per-plugin ``fields_description`` |
 | ``/api/5/alert``              | GET    | ``alerts.get_history()``     |
@@ -54,8 +55,9 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request, status
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from pydantic import TypeAdapter
 from starlette.concurrency import run_in_threadpool
 
 from glances import __apiversion__
@@ -64,10 +66,18 @@ from glances.config import GlancesConfig
 from glances.processes import glances_processes, sort_processes_stats_list
 from glances.security import verify_password
 
+try:
+    import msgpack
+except ImportError:
+    msgpack = None
+
 if TYPE_CHECKING:
     import argparse
 
 logger = logging.getLogger(__name__)
+
+# Converts /all/msgpack's payload the way FastAPI converts /all's.
+_ALL_STATS = TypeAdapter(dict[str, Any])
 
 # Static path segments that the dynamic ``/{plugin_name}`` handler must not
 # capture. FastAPI matches routes in declaration order, so listing static
@@ -264,17 +274,18 @@ def build_router() -> APIRouter:
 
     @router.get("/all")
     async def all_stats(request: Request) -> dict[str, Any]:
-        # Registry read, not a store read: `/all` must apply each plugin's
-        # export filter (issue #3211), which only the plugin can do.
-        # Empty payloads are SKIPPED, preserving the existing contract that a
-        # registered-but-never-updated plugin is absent from `/all` rather
-        # than present with an empty body.
-        out: dict[str, Any] = {}
-        for name, plugin in _plugins(request).items():
-            payload = plugin.get_api_payload()
-            if payload:
-                out[name] = payload
-        return out
+        return _get_all_stats(request)
+
+    if msgpack is not None:
+
+        @router.get("/all/msgpack", response_class=Response)
+        async def all_stats_msgpack(request: Request) -> Response:
+            out = _ALL_STATS.dump_python(_get_all_stats(request), mode="json")
+            return Response(
+                content=msgpack.packb(out),
+                media_type="application/vnd.msgpack",
+                headers={"Content-Disposition": 'attachment; filename="all.msgpack"'},
+            )
 
     @router.get("/all/limits")
     async def all_limits(request: Request) -> dict[str, Any]:
@@ -554,3 +565,17 @@ def _resolve_plugin(request: Request, plugin_name: str):
     if plugin is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Plugin {plugin_name!r} not found")
     return plugin
+
+
+def _get_all_stats(request: Request) -> dict[str, Any]:
+    # Registry read, not a store read: `/all` must apply each plugin's
+    # export filter (issue #3211), which only the plugin can do.
+    # Empty payloads are SKIPPED, preserving the existing contract that a
+    # registered-but-never-updated plugin is absent from `/all` rather
+    # than present with an empty body.
+    out: dict[str, Any] = {}
+    for name, plugin in _plugins(request).items():
+        payload = plugin.get_api_payload()
+        if payload:
+            out[name] = payload
+    return out
