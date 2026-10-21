@@ -102,6 +102,7 @@ sensors = ["batinfo; platform_system == 'Linux'"]
 smart = ["pySMART"]
 web = [
   "fastapi>=0.82.0",
+  "msgpack>=1.2.3; platform_system != 'Windows'",
   "python-jose[cryptography]>=3.4.0",
   "requests>=2.32.4",
   # Not used directly: a floor under what fastapi pulls in (CVE-2025-62727,

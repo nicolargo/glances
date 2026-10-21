@@ -66,6 +66,8 @@ mcp==2.3.0
     # via glances
 mcp-types==2.3.0
     # via mcp
+msgpack==1.2.3
+    # via glances
 opentelemetry-api==1.45.1
     # via
     #   fastapi
