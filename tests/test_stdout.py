@@ -11,6 +11,8 @@
 
 from __future__ import annotations
 
+import csv as csv_module
+import io
 import json
 
 from glances.outputs.stdout import CsvRenderer, Stdout, parse_selection, render_json, render_plain
@@ -133,6 +135,39 @@ def test_csv_whole_dict_plugin_gives_one_column_per_field():
     cpu = {"cpu": {"user": 1.2, "system": 0.8, "idle": 98.0}}
     assert csv.render(cpu, PKS) == "cpu.user,cpu.system,cpu.idle"
     assert csv.render(cpu, PKS) == "1.2,0.8,98.0"
+
+
+def test_csv_quotes_a_cell_holding_a_comma():
+    """Mount options (`rw,relatime`) or a `strftime_format` with a comma used
+    to shift every later cell by one column: such a cell is quoted, like the
+    CSV export does, and the other cells are printed as before."""
+    renderer = CsvRenderer([("now", "custom"), ("fs", None)])
+    stats = {
+        "now": {"iso": "2026-10-20T13:10:12-03:00", "custom": "Tue, 20 Oct 2026 13:10:12"},
+        "fs": [{"mnt_point": "/", "options": "rw,relatime", "percent": 48.8}],
+    }
+    pks = {"now": None, "fs": "mnt_point"}
+    header = renderer.render(stats, pks)
+    line = renderer.render(stats, pks)
+    assert header == "now.custom,fs./.mnt_point,fs./.options,fs./.percent"
+    assert line == '"Tue, 20 Oct 2026 13:10:12",/,"rw,relatime",48.8'
+    assert next(csv_module.reader([line])) == ["Tue, 20 Oct 2026 13:10:12", "/", "rw,relatime", "48.8"]
+
+
+def test_csv_quotes_a_double_quote_and_a_line_break():
+    """A double quote is doubled and a line break stays inside its quoted
+    cell; a header cell built from such an item key is quoted too."""
+    renderer = CsvRenderer([("fs", None)])
+    stats = {"fs": [{"mnt_point": '/media/"usb"', "options": "ro\nnoexec"}]}
+    pks = {"fs": "mnt_point"}
+    header = renderer.render(stats, pks)
+    line = renderer.render(stats, pks)
+    assert header == '"fs./media/""usb"".mnt_point","fs./media/""usb"".options"'
+    assert line == '"/media/""usb""","ro\nnoexec"'
+    assert list(csv_module.reader(io.StringIO(f"{header}\n{line}\n"))) == [
+        ['fs./media/"usb".mnt_point', 'fs./media/"usb".options'],
+        ['/media/"usb"', "ro\nnoexec"],
+    ]
 
 
 def test_output_once_writes_the_selected_format():
