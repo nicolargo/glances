@@ -121,7 +121,9 @@ mcp==2.3.0
 mcp-types==2.3.0
     # via mcp
 msgpack==1.2.3
-    # via influxdb
+    # via
+    #   glances
+    #   influxdb
 nats-py==2.16.0
     # via glances
 nvidia-ml-py==13.615.71
