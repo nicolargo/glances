@@ -14,7 +14,7 @@ attrs==26.1.0
     # via
     #   jsonschema
     #   referencing
-certifi==2026.7.22
+certifi==2026.10.19
     # via requests
 cffi==2.1.1 ; platform_python_implementation != 'PyPy'
     # via cryptography
@@ -33,15 +33,19 @@ ecdsa==0.19.2
     # via python-jose
 exceptiongroup==1.2.2 ; python_full_version < '3.11'
     # via anyio
-fastapi==0.143.0
+fastapi==0.156.8
     # via glances
 h11==0.16.0
     # via
     #   httpcore2
     #   uvicorn
-httpcore2==2.13.1 ; sys_platform != 'emscripten'
+httpcore2==2.14.0 ; python_full_version < '3.11' and sys_platform != 'emscripten'
     # via httpx2
-httpx2==2.13.1
+httpcore2==2.16.0 ; python_full_version >= '3.11' and sys_platform != 'emscripten'
+    # via httpx2
+httpx2==2.14.0 ; python_full_version < '3.11'
+    # via mcp
+httpx2==2.16.0 ; python_full_version >= '3.11'
     # via mcp
 httpx2-jsfetch==1.0 ; python_full_version >= '3.12' and sys_platform == 'emscripten'
     # via httpx2
@@ -78,12 +82,12 @@ pyasn1==0.6.4
     #   rsa
 pycparser==3.11 ; implementation_name != 'PyPy' and platform_python_implementation != 'PyPy'
     # via cffi
-pydantic==2.14.0
+pydantic==2.14.1
     # via
     #   fastapi
     #   mcp
     #   mcp-types
-pydantic-core==2.50.0
+pydantic-core==2.50.1
     # via pydantic
 pyjwt==2.15.1
     # via mcp
@@ -133,14 +137,21 @@ six==1.17.0
     #   python-dateutil
 sse-starlette==3.5.0
     # via mcp
-starlette==1.7.0
+starlette==1.7.0 ; python_full_version < '3.11'
     # via
     #   fastapi
+    #   glances
+    #   mcp
+    #   sse-starlette
+starlette==1.9.0 ; python_full_version >= '3.11'
+    # via
+    #   fastapi
+    #   glances
     #   mcp
     #   sse-starlette
 tomli==2.0.2 ; python_full_version < '3.11'
     # via podman
-truststore==0.10.4 ; sys_platform != 'emscripten'
+truststore==0.10.5 ; sys_platform != 'emscripten'
     # via
     #   httpcore2
     #   httpx2

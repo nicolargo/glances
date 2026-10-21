@@ -233,7 +233,7 @@ with items. An item is named by its primary key (``_key`` in the payload):
                 "regex": true,
                 "result": null,
                 "result_float": null,
-                "timer": 1.0723226070404053
+                "timer": 1.8916430473327637
             }
         ]
     }
@@ -251,7 +251,7 @@ with items. An item is named by its primary key (``_key`` in the payload):
             "regex": true,
             "result": null,
             "result_float": null,
-            "timer": 1.0723226070404053
+            "timer": 1.8916430473327637
         }
     ]
 
@@ -357,7 +357,7 @@ Get the plugin stats:
                 "regex": true,
                 "result": null,
                 "result_float": null,
-                "timer": 1.0723226070404053
+                "timer": 1.8916430473327637
             },
             {
                 "count": 0,
@@ -368,11 +368,11 @@ Get the plugin stats:
                 "regex": true,
                 "result": null,
                 "result_float": null,
-                "timer": 1.0721299648284912
+                "timer": 1.8914794921875
             },
             "... 4 more"
         ],
-        "time_since_update": 1.0603541840000617
+        "time_since_update": 1.8270414940016053
     }
 
 Fields (``/info`` serves them as JSON):
@@ -403,7 +403,7 @@ Get the plugin stats:
             "command"
         ],
         "max_name_size": 20,
-        "time_since_update": 1.0602893619998213
+        "time_since_update": 1.8290501199990103
     }
 
 Fields (``/info`` serves them as JSON):
@@ -442,9 +442,9 @@ Get the plugin stats:
     # curl http://localhost:61208/api/5/core
     {
         "_levels": {},
-        "log": 4,
-        "phys": 4,
-        "time_since_update": 1.0604739400000653
+        "log": 16,
+        "phys": 10,
+        "time_since_update": 1.8294892799985973
     }
 
 Fields (``/info`` serves them as JSON):
@@ -487,21 +487,21 @@ Get the plugin stats:
                 "prominent": false
             }
         },
-        "cpucore": 4,
-        "ctx_switches": 8123.644344459627,
+        "cpucore": 16,
+        "ctx_switches": 2556.4238572927256,
         "guest": 0.0,
-        "idle": 83.0,
-        "interrupts": 4742.013583919221,
-        "iowait": 0.0,
+        "idle": 96.8,
+        "interrupts": 2096.934123592537,
+        "iowait": 0.2,
         "irq": 0.0,
         "nice": 0.0,
-        "soft_interrupts": 983.2843276397111,
-        "steal": 0.7,
+        "soft_interrupts": 1374.6446729960458,
+        "steal": 0.0,
         "syscalls": 0.0,
-        "system": 3.8,
-        "time_since_update": 1.060730829000022,
-        "total": 17.0,
-        "user": 11.8
+        "system": 2.2,
+        "time_since_update": 1.8302911650007445,
+        "total": 3.2,
+        "user": 0.8
     }
 
 Fields (``/info`` serves them as JSON):
@@ -573,17 +573,17 @@ Get the last two points of its history (``nb=0`` for all of them):
     {
         "series": {
             "system": [
-                7.1,
-                3.8
+                2.0,
+                2.2
             ],
             "user": [
-                50.0,
-                11.8
+                3.4,
+                0.8
             ]
         },
         "timestamps": [
-            1791731451.2649796,
-            1791731452.3256605
+            1792579105.3311322,
+            1792579107.1614444
         ]
     }
 
@@ -600,40 +600,40 @@ Get the plugin stats:
         "_levels": {},
         "data": [
             {
-                "disk_name": "vda",
+                "disk_name": "nvme0n1",
                 "hidden": false,
                 "read_bytes": 0.0,
-                "read_bytes_cumul": 954610688,
+                "read_bytes_cumul": 8313113600,
                 "read_count": 0.0,
-                "read_count_cumul": 50198,
+                "read_count_cumul": 278942,
                 "read_latency": 0,
                 "read_time": 0.0,
-                "write_bytes": 11581.623160298725,
-                "write_bytes_cumul": 1369092096,
-                "write_count": 0.9425149056232687,
-                "write_count_cumul": 24715,
-                "write_latency": 1,
-                "write_time": 0.9425149056232687
+                "write_bytes": 322115.06392168923,
+                "write_bytes_cumul": 18433808384,
+                "write_count": 37.13620392977374,
+                "write_count_cumul": 731907,
+                "write_latency": 9,
+                "write_time": 337.50255924412016
             },
             {
-                "disk_name": "vdb",
+                "disk_name": "nvme0n1p1",
                 "hidden": false,
                 "read_bytes": 0.0,
-                "read_bytes_cumul": 8192,
+                "read_bytes_cumul": 12369920,
                 "read_count": 0.0,
-                "read_count_cumul": 7,
+                "read_count_cumul": 662,
                 "read_latency": 0,
                 "read_time": 0.0,
                 "write_bytes": 0.0,
-                "write_bytes_cumul": 0,
+                "write_bytes_cumul": 2048,
                 "write_count": 0.0,
-                "write_count_cumul": 0,
+                "write_count_cumul": 4,
                 "write_latency": 0,
                 "write_time": 0.0
             },
-            "... 5 more"
+            "... 4 more"
         ],
-        "time_since_update": 1.0609911780002221
+        "time_since_update": 1.8310972260005656
     }
 
 Fields (``/info`` serves them as JSON):
@@ -660,69 +660,61 @@ Get the last two points of its history (``nb=0`` for all of them):
     {
         "series": {
             "read_bytes": {
-                "vda": [
+                "dm-0": [
                     null,
                     0.0
                 ],
-                "vdb": [
+                "dm-1": [
                     null,
                     0.0
                 ],
-                "vdc": [
-                    null,
-                    3860.5410534329085
-                ],
-                "vdd": [
+                "nvme0n1": [
                     null,
                     0.0
                 ],
-                "vde": [
+                "nvme0n1p1": [
                     null,
                     0.0
                 ],
-                "vdf": [
+                "nvme0n1p2": [
                     null,
                     0.0
                 ],
-                "zram0": [
+                "nvme0n1p3": [
                     null,
                     0.0
                 ]
             },
             "write_bytes": {
-                "vda": [
+                "dm-0": [
                     null,
-                    11581.623160298725
+                    322115.06392168923
                 ],
-                "vdb": [
+                "dm-1": [
+                    null,
+                    322115.06392168923
+                ],
+                "nvme0n1": [
+                    null,
+                    322115.06392168923
+                ],
+                "nvme0n1p1": [
                     null,
                     0.0
                 ],
-                "vdc": [
+                "nvme0n1p2": [
                     null,
                     0.0
                 ],
-                "vdd": [
+                "nvme0n1p3": [
                     null,
-                    0.0
-                ],
-                "vde": [
-                    null,
-                    0.0
-                ],
-                "vdf": [
-                    null,
-                    0.0
-                ],
-                "zram0": [
-                    null,
-                    0.0
+                    322115.06392168923
                 ]
             }
         },
         "timestamps": [
-            1791731451.2654548,
-            1791731452.3265045
+            1792579105.3322139,
+            1792579107.163354
         ]
     }
 
@@ -738,7 +730,7 @@ Get the plugin stats:
         "_key": "path",
         "_levels": {},
         "data": [],
-        "time_since_update": 1.0611431809998066
+        "time_since_update": 1.8314225369995256
     }
 
 Fields (``/info`` serves them as JSON):
@@ -764,6 +756,12 @@ Get the plugin stats:
         "_levels": {
             "/": {
                 "percent": {
+                    "level": "careful",
+                    "prominent": false
+                }
+            },
+            "/zsfpool": {
+                "percent": {
                     "level": "ok",
                     "prominent": false
                 }
@@ -771,29 +769,28 @@ Get the plugin stats:
         },
         "data": [
             {
-                "device_name": "/dev/vda",
-                "free": 29979668480,
+                "device_name": "/dev/mapper/ubuntu--vg-ubuntu--lv",
+                "free": 447092854784,
                 "fs_type": "ext4",
                 "mnt_point": "/",
-                "options": "rw,relatime,discard,no_prefetch_block_bitmaps,resv_strict,resuid=65534,resgid=65534",
-                "percent": 27.1,
-                "size": 270553174016,
-                "used": 11154407424
+                "options": "rw,relatime",
+                "percent": 53.1,
+                "size": 1003736440832,
+                "used": 505581080576
             },
             {
-                "device_name": "/dev/vdb",
-                "free": 0,
-                "fs_type": "squashfs",
-                "mnt_point": "/opt/rclone",
-                "options": "ro,relatime,errors=continue",
-                "percent": 100.0,
-                "size": 10092544,
-                "used": 10092544
-            },
-            "... 4 more"
+                "device_name": "zsfpool",
+                "free": 41680896,
+                "fs_type": "zfs",
+                "mnt_point": "/zsfpool",
+                "options": "rw,relatime,xattr,noacl,casesensitive",
+                "percent": 0.3,
+                "size": 41811968,
+                "used": 131072
+            }
         ],
         "free_space": false,
-        "time_since_update": 1.0607528479999928
+        "time_since_update": 1.8317474360010237
     }
 
 Fields (``/info`` serves them as JSON):
@@ -829,34 +826,18 @@ Get the last two points of its history (``nb=0`` for all of them):
         "series": {
             "percent": {
                 "/": [
-                    27.1,
-                    27.1
+                    53.1,
+                    53.1
                 ],
-                "/mnt/skills/examples": [
-                    100.0,
-                    100.0
-                ],
-                "/mnt/skills/public": [
-                    100.0,
-                    100.0
-                ],
-                "/opt/claude-code": [
-                    91.1,
-                    91.1
-                ],
-                "/opt/env-runner": [
-                    66.1,
-                    66.1
-                ],
-                "/opt/rclone": [
-                    100.0,
-                    100.0
+                "/zsfpool": [
+                    0.3,
+                    0.3
                 ]
             }
         },
         "timestamps": [
-            1791731451.266975,
-            1791731452.3277092
+            1792579105.3337216,
+            1792579107.1654923
         ]
     }
 
@@ -870,9 +851,39 @@ Get the plugin stats:
     # curl http://localhost:61208/api/5/gpu
     {
         "_key": "gpu_id",
-        "_levels": {},
-        "data": [],
-        "time_since_update": 1.0608642150000378
+        "_levels": {
+            "intel0": {
+                "proc": {
+                    "level": "ok",
+                    "prominent": true
+                }
+            },
+            "intel1": {
+                "proc": {
+                    "level": "ok",
+                    "prominent": true
+                }
+            }
+        },
+        "data": [
+            {
+                "fan_speed": null,
+                "gpu_id": "intel0",
+                "mem": null,
+                "name": "UHD Graphics",
+                "proc": 0,
+                "temperature": null
+            },
+            {
+                "fan_speed": null,
+                "gpu_id": "intel1",
+                "mem": null,
+                "name": "Arc A370M",
+                "proc": 0,
+                "temperature": null
+            }
+        ],
+        "time_since_update": 1.8004949930000294
     }
 
 Fields (``/info`` serves them as JSON):
@@ -907,6 +918,30 @@ Get the thresholds in effect:
         }
     }
 
+Get the last two points of its history (``nb=0`` for all of them):
+
+.. code-block:: bash
+
+    # curl http://localhost:61208/api/5/gpu/history?nb=2
+    {
+        "series": {
+            "proc": {
+                "intel0": [
+                    0,
+                    0
+                ],
+                "intel1": [
+                    0,
+                    0
+                ]
+            }
+        },
+        "timestamps": [
+            1792579105.365753,
+            1792579107.1662624
+        ]
+    }
+
 GET ip
 ------
 
@@ -917,10 +952,10 @@ Get the plugin stats:
     # curl http://localhost:61208/api/5/ip
     {
         "_levels": {},
-        "address": "192.0.2.2",
-        "mask": "255.255.255.0",
-        "mask_cidr": 24,
-        "time_since_update": 1.0607930149999447
+        "address": "10.2.11.121",
+        "mask": "255.255.0.0",
+        "mask_cidr": 16,
+        "time_since_update": 1.800741052000376
     }
 
 Fields (``/info`` serves them as JSON):
@@ -951,11 +986,11 @@ Get the plugin stats:
                 "prominent": false
             }
         },
-        "cpucore": 4,
-        "min1": 0.904296875,
-        "min15": 0.56201171875,
-        "min5": 0.560546875,
-        "time_since_update": 1.060776580000038
+        "cpucore": 16,
+        "min1": 2.4580078125,
+        "min15": 0.875,
+        "min5": 1.36328125,
+        "time_since_update": 1.800854581000749
     }
 
 Fields (``/info`` serves them as JSON):
@@ -991,21 +1026,21 @@ Get the last two points of its history (``nb=0`` for all of them):
     {
         "series": {
             "min1": [
-                0.904296875,
-                0.904296875
+                2.4580078125,
+                2.4580078125
             ],
             "min15": [
-                0.56201171875,
-                0.56201171875
+                0.875,
+                0.875
             ],
             "min5": [
-                0.560546875,
-                0.560546875
+                1.36328125,
+                1.36328125
             ]
         },
         "timestamps": [
-            1791731451.2684546,
-            1791731452.3292391
+            1792579105.3668122,
+            1792579107.1676738
         ]
     }
 
@@ -1020,23 +1055,23 @@ Get the plugin stats:
     {
         "_levels": {
             "percent": {
-                "level": "ok",
+                "level": "careful",
                 "prominent": true
             }
         },
         "_show_available": false,
-        "active": 1073512448,
-        "available": 15996850176,
-        "buffers": 264708096,
-        "cached": 1597620224,
-        "free": 14421540864,
-        "inactive": 1084399616,
-        "percent": 5.2,
-        "shared": 14733312,
-        "slab": 143355904,
-        "time_since_update": 1.0606376710002223,
-        "total": 16874930176,
-        "used": 878080000
+        "active": 6036410368,
+        "available": 6832373760,
+        "buffers": 295452672,
+        "cached": 5506575632,
+        "free": 961429504,
+        "inactive": 7212679168,
+        "percent": 57.0,
+        "shared": 1005293568,
+        "slab": 897581056,
+        "time_since_update": 1.8010116340010427,
+        "total": 15880085504,
+        "used": 9047711744
     }
 
 Fields (``/info`` serves them as JSON):
@@ -1075,13 +1110,13 @@ Get the last two points of its history (``nb=0`` for all of them):
     {
         "series": {
             "percent": [
-                5.1,
-                5.2
+                57.2,
+                57.0
             ]
         },
         "timestamps": [
-            1791731451.2689886,
-            1791731452.329622
+            1792579105.3676755,
+            1792579107.1686907
         ]
     }
 
@@ -1100,13 +1135,13 @@ Get the plugin stats:
                 "prominent": true
             }
         },
-        "free": 0,
-        "percent": 0.0,
+        "free": 3511132160,
+        "percent": 18.3,
         "sin": 0.0,
         "sout": 0.0,
-        "time_since_update": 1.0606173819996911,
-        "total": 0,
-        "used": 0
+        "time_since_update": 1.8010460710011102,
+        "total": 4294963200,
+        "used": 783831040
     }
 
 Fields (``/info`` serves them as JSON):
@@ -1139,13 +1174,13 @@ Get the last two points of its history (``nb=0`` for all of them):
     {
         "series": {
             "percent": [
-                0.0,
-                0.0
+                18.3,
+                18.3
             ]
         },
         "timestamps": [
-            1791731451.2694294,
-            1791731452.33005
+            1792579105.3680878,
+            1792579107.1691542
         ]
     }
 
@@ -1160,7 +1195,43 @@ Get the plugin stats:
     {
         "_key": "interface_name",
         "_levels": {
-            "eth0": {
+            "mpqemubrzone1": {
+                "bytes_recv": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "bytes_sent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "errors_in": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "errors_out": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "tap-8d309783ee6": {
+                "bytes_recv": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "bytes_sent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "errors_in": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "errors_out": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "wlp0s20f3": {
                 "errors_in": {
                     "level": "ok",
                     "prominent": false
@@ -1173,21 +1244,36 @@ Get the plugin stats:
         },
         "data": [
             {
-                "bytes_recv": 18113.047322998682,
-                "bytes_recv_cumul": 192780798,
-                "bytes_sent": 83501.30850990894,
-                "bytes_sent_cumul": 117686349,
+                "bytes_recv": 166.55933518323204,
+                "bytes_recv_cumul": 1325396563,
+                "bytes_sent": 65.51333850540459,
+                "bytes_sent_cumul": 115888679,
                 "bytes_speed_rate_per_sec": 0.0,
                 "dropped_in": 0.0,
                 "dropped_out": 0.0,
                 "errors_in": 0.0,
                 "errors_out": 0.0,
                 "hidden": false,
-                "interface_name": "eth0",
+                "interface_name": "wlp0s20f3",
                 "is_up": true
-            }
+            },
+            {
+                "bytes_recv": 0.0,
+                "bytes_recv_cumul": 1830455,
+                "bytes_sent": 0.0,
+                "bytes_sent_cumul": 244950077,
+                "bytes_speed_rate_per_sec": 1250000000.0,
+                "dropped_in": 0.0,
+                "dropped_out": 0.0,
+                "errors_in": 0.0,
+                "errors_out": 0.0,
+                "hidden": false,
+                "interface_name": "mpqemubrzone1",
+                "is_up": true
+            },
+            "... 1 more"
         ],
-        "time_since_update": 1.0601750030000403
+        "time_since_update": 1.8011599270012084
     }
 
 Fields (``/info`` serves them as JSON):
@@ -1240,21 +1326,37 @@ Get the last two points of its history (``nb=0`` for all of them):
     {
         "series": {
             "bytes_recv": {
-                "eth0": [
+                "mpqemubrzone1": [
                     null,
-                    18113.047322998682
+                    0.0
+                ],
+                "tap-8d309783ee6": [
+                    null,
+                    0.0
+                ],
+                "wlp0s20f3": [
+                    null,
+                    166.55933518323204
                 ]
             },
             "bytes_sent": {
-                "eth0": [
+                "mpqemubrzone1": [
                     null,
-                    83501.30850990894
+                    0.0
+                ],
+                "tap-8d309783ee6": [
+                    null,
+                    0.0
+                ],
+                "wlp0s20f3": [
+                    null,
+                    65.51333850540459
                 ]
             }
         },
         "timestamps": [
-            1791731451.2715673,
-            1791731452.3317726
+            1792579105.37021,
+            1792579107.171218
         ]
     }
 
@@ -1268,9 +1370,9 @@ Get the plugin stats:
     # curl http://localhost:61208/api/5/now
     {
         "_levels": {},
-        "custom": "2026-10-11 15:10:52 UTC",
-        "iso": "2026-10-11T15:10:52+00:00",
-        "time_since_update": 1.0602826370000002
+        "custom": "2026-10-21 12:38:27 CEST",
+        "iso": "2026-10-21T12:38:27+02:00",
+        "time_since_update": 1.801039949999904
     }
 
 Fields (``/info`` serves them as JSON):
@@ -1309,6 +1411,66 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
+            "10": {
+                "system": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "user": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "11": {
+                "system": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "user": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "12": {
+                "system": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "user": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "13": {
+                "system": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "user": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "14": {
+                "system": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "user": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "15": {
+                "system": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "user": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
             "2": {
                 "system": {
                     "level": "ok",
@@ -1328,6 +1490,66 @@ Get the plugin stats:
                     "level": "ok",
                     "prominent": false
                 }
+            },
+            "4": {
+                "system": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "user": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "5": {
+                "system": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "user": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "6": {
+                "system": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "user": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "7": {
+                "system": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "user": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "8": {
+                "system": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "user": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "9": {
+                "system": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "user": {
+                    "level": "ok",
+                    "prominent": false
+                }
             }
         },
         "data": [
@@ -1335,31 +1557,31 @@ Get the plugin stats:
                 "cpu_number": 0,
                 "guest": 0.0,
                 "guest_nice": 0.0,
-                "idle": 71.0,
+                "idle": 89.3,
                 "iowait": 0.0,
                 "irq": 0.0,
                 "nice": 0.0,
-                "softirq": 1.9,
-                "steal": 0.9,
-                "system": 4.7,
-                "total": 29.0,
-                "user": 21.5
+                "softirq": 0.0,
+                "steal": 0.0,
+                "system": 10.2,
+                "total": 10.7,
+                "user": 0.6
             },
             {
                 "cpu_number": 1,
                 "guest": 0.0,
                 "guest_nice": 0.0,
-                "idle": 87.6,
+                "idle": 100.0,
                 "iowait": 0.0,
                 "irq": 0.0,
                 "nice": 0.0,
-                "softirq": 1.0,
-                "steal": 1.0,
-                "system": 2.9,
-                "total": 12.4,
-                "user": 7.6
+                "softirq": 0.0,
+                "steal": 0.0,
+                "system": 0.0,
+                "total": 0.0,
+                "user": 0.0
             },
-            "... 2 more"
+            "... 14 more"
         ],
         "max_cpu_display": 4,
         "stat_fields": [
@@ -1384,7 +1606,7 @@ Get the plugin stats:
                 "warning": 70.0
             }
         },
-        "time_since_update": 1.0602702020000834
+        "time_since_update": 1.8007131399990612
     }
 
 Fields (``/info`` serves them as JSON):
@@ -1435,43 +1657,139 @@ Get the last two points of its history (``nb=0`` for all of them):
             "system": {
                 "0": [
                     0.0,
-                    4.7
+                    10.2
                 ],
                 "1": [
                     0.0,
-                    2.9
+                    0.0
+                ],
+                "10": [
+                    0.0,
+                    0.0
+                ],
+                "11": [
+                    0.0,
+                    0.0
+                ],
+                "12": [
+                    0.0,
+                    1.1
+                ],
+                "13": [
+                    0.0,
+                    0.0
+                ],
+                "14": [
+                    7.1,
+                    0.0
+                ],
+                "15": [
+                    0.0,
+                    0.0
                 ],
                 "2": [
-                    0.0,
-                    3.8
+                    7.7,
+                    0.6
                 ],
                 "3": [
                     0.0,
-                    3.8
+                    0.0
+                ],
+                "4": [
+                    7.7,
+                    3.4
+                ],
+                "5": [
+                    0.0,
+                    0.0
+                ],
+                "6": [
+                    14.3,
+                    9.6
+                ],
+                "7": [
+                    0.0,
+                    8.5
+                ],
+                "8": [
+                    0.0,
+                    2.2
+                ],
+                "9": [
+                    0.0,
+                    1.1
                 ]
             },
             "user": {
                 "0": [
-                    100.0,
-                    21.5
+                    0.0,
+                    0.6
                 ],
                 "1": [
                     0.0,
-                    7.6
+                    0.0
+                ],
+                "10": [
+                    0.0,
+                    0.6
+                ],
+                "11": [
+                    0.0,
+                    0.0
+                ],
+                "12": [
+                    0.0,
+                    0.6
+                ],
+                "13": [
+                    0.0,
+                    0.6
+                ],
+                "14": [
+                    7.1,
+                    0.0
+                ],
+                "15": [
+                    0.0,
+                    0.6
                 ],
                 "2": [
-                    100.0,
-                    8.6
+                    7.7,
+                    0.6
                 ],
                 "3": [
-                    25.0,
-                    7.7
+                    0.0,
+                    0.0
+                ],
+                "4": [
+                    0.0,
+                    2.8
+                ],
+                "5": [
+                    0.0,
+                    0.0
+                ],
+                "6": [
+                    50.0,
+                    4.5
+                ],
+                "7": [
+                    0.0,
+                    0.0
+                ],
+                "8": [
+                    7.1,
+                    0.0
+                ],
+                "9": [
+                    0.0,
+                    0.6
                 ]
             }
         },
         "timestamps": [
-            1791731451.2724829,
-            1791731452.3328311
+            1792579105.37182,
+            1792579107.1724975
         ]
     }
 
@@ -1488,7 +1806,7 @@ Get the plugin stats:
         "_levels": {
             "port_0": {
                 "status": {
-                    "level": "careful",
+                    "level": "ok",
                     "prominent": false
                 }
             }
@@ -1496,16 +1814,16 @@ Get the plugin stats:
         "data": [
             {
                 "description": "DefaultGateway",
-                "host": "192.0.2.1",
+                "host": "10.2.0.1",
                 "indice": "port_0",
                 "port": 0,
                 "refresh": 30,
                 "rtt_warning": null,
-                "status": null,
+                "status": 0.00715,
                 "timeout": 3
             }
         ],
-        "time_since_update": 1.0598919829999431
+        "time_since_update": 1.7999873459993978
     }
 
 Fields (``/info`` serves them as JSON):
@@ -1532,13 +1850,13 @@ Get the plugin stats:
     {
         "_levels": {},
         "auto_sort": true,
-        "pid_max": 32768,
+        "pid_max": 4194304,
         "running": 0,
-        "sleeping": 35,
+        "sleeping": 430,
         "sort_key": "cpu_percent",
-        "thread": 111,
-        "time_since_update": 1.0447651949998544,
-        "total": 80
+        "thread": 2001,
+        "time_since_update": 1.7729202499995154,
+        "total": 586
     }
 
 Fields (``/info`` serves them as JSON):
@@ -1559,25 +1877,25 @@ Get the last two points of its history (``nb=0`` for all of them):
     {
         "series": {
             "running": [
-                1,
+                0,
                 0
             ],
             "sleeping": [
-                36,
-                35
+                430,
+                430
             ],
             "thread": [
-                124,
-                111
+                2002,
+                2001
             ],
             "total": [
-                82,
-                80
+                586,
+                586
             ]
         },
         "timestamps": [
-            1791731451.3006876,
-            1791731452.3454337
+            1792579105.4704669,
+            1792579107.2433796
         ]
     }
 
@@ -1620,7 +1938,521 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
-            "120": {
+            "100": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "101": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "10109": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "102": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "10208": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "103": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "10331": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "10334": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "10352": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "10361": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "10399": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "10406": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "10419": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "10495": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "105": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "106": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "107": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "10722": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "108": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "109": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "111": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "11136": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "112": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "1127": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "1128": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "113": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "1137": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "1138": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "114": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "115": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "116": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "117": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "118": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "121": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "122": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "1228": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "123": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "124": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "125": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "126": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "127": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "129": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -1648,12 +2480,262 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
+            "1300": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "1304": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "132": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "134": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "135": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "136": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "137": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "138": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "139": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
             "14": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
                 },
                 "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "141": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "142": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "143": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "144": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "145": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "146": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "147": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "148": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
                     "level": "ok",
                     "prominent": false
                 }
@@ -1672,7 +2754,7 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
-            "16": {
+            "151": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -1682,7 +2764,7 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
-            "1693": {
+            "153": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -1691,7 +2773,95 @@ Get the plugin stats:
                     "level": "ok",
                     "prominent": false
                 },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
                 "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "1537": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "1546": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "155": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "157": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "158": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "16": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
                     "level": "ok",
                     "prominent": false
                 }
@@ -1706,13 +2876,37 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
-            "17040": {
+            "17159": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
                 },
                 "memory_percent": {
                     "level": "ok",
+                    "prominent": false
+                }
+            },
+            "17421": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "176": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
                     "prominent": false
                 },
                 "status": {
@@ -1720,7 +2914,7 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
-            "17198": {
+            "17612": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -1728,13 +2922,49 @@ Get the plugin stats:
                 "memory_percent": {
                     "level": "ok",
                     "prominent": false
+                }
+            },
+            "17678": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
                 },
-                "status": {
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "17700": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "17843": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
                     "level": "ok",
                     "prominent": false
                 }
             },
             "18": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "1804": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -1754,7 +2984,7 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
-            "19363": {
+            "19191": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -1762,8 +2992,44 @@ Get the plugin stats:
                 "memory_percent": {
                     "level": "ok",
                     "prominent": false
+                }
+            },
+            "19192": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
                 },
-                "status": {
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "19205": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "19217": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "19236": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
                     "level": "ok",
                     "prominent": false
                 }
@@ -1788,6 +3054,26 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
+            "20449": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "20807": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
             "21": {
                 "cpu_percent": {
                     "level": "ok",
@@ -1798,7 +3084,7 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
-            "21728": {
+            "2168": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -1807,12 +3093,166 @@ Get the plugin stats:
                     "level": "ok",
                     "prominent": false
                 },
-                "status": {
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2169": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2170": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2171": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2172": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2173": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2174": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2175": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
                     "level": "ok",
                     "prominent": false
                 }
             },
-            "21777": {
+            "2176": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "2177": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "2178": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "2179": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "2180": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "2181": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "2182": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -1821,7 +3261,55 @@ Get the plugin stats:
                     "level": "ok",
                     "prominent": false
                 },
-                "status": {
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2183": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "2184": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2185": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2186": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
                     "level": "ok",
                     "prominent": false
                 }
@@ -1836,7 +3324,1295 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
+            "2215": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2217": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2218": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2219": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2220": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2221": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2222": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2223": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2226": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2227": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2229": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2256": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2257": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2258": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2259": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2260": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2261": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2262": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2263": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2264": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2265": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2266": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2267": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2268": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2269": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2270": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2271": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2272": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2273": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2274": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2275": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2276": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2277": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "2278": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2279": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "2280": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "2283": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2284": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2285": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2286": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2287": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2288": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2289": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2290": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2291": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2292": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2293": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2294": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2295": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2296": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2297": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2298": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2299": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "23": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "2300": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2301": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2302": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2303": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2304": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2305": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2306": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2307": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2308": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2309": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2310": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2311": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "2312": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "2324": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2325": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2330": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "2331": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "2332": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "2333": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "2334": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2335": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2336": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2337": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2338": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2339": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2340": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2341": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2342": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2343": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2344": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2345": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2346": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2347": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2348": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2349": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "2350": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "23508": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "2352": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
             "24": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "25": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "260": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "263": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "265": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -1854,33 +4630,53 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
-            "25": {
+            "266": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
                 },
                 "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
                     "level": "ok",
                     "prominent": false
                 }
             },
-            "26": {
+            "267": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
                 },
                 "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
                     "level": "ok",
                     "prominent": false
                 }
             },
-            "26236": {
+            "268": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
                 },
                 "memory_percent": {
                     "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
                     "prominent": false
                 },
                 "status": {
@@ -1896,6 +4692,14 @@ Get the plugin stats:
                 "memory_percent": {
                     "level": "ok",
                     "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
                 }
             },
             "28": {
@@ -1904,24 +4708,6 @@ Get the plugin stats:
                     "prominent": false
                 },
                 "memory_percent": {
-                    "level": "ok",
-                    "prominent": false
-                },
-                "status": {
-                    "level": "ok",
-                    "prominent": false
-                }
-            },
-            "28559": {
-                "cpu_percent": {
-                    "level": "ok",
-                    "prominent": false
-                },
-                "memory_percent": {
-                    "level": "ok",
-                    "prominent": false
-                },
-                "status": {
                     "level": "ok",
                     "prominent": false
                 }
@@ -1934,12 +4720,14 @@ Get the plugin stats:
                 "memory_percent": {
                     "level": "ok",
                     "prominent": false
-                },
-                "nice": {
-                    "level": "warning",
+                }
+            },
+            "2988": {
+                "cpu_percent": {
+                    "level": "ok",
                     "prominent": false
                 },
-                "status": {
+                "memory_percent": {
                     "level": "ok",
                     "prominent": false
                 }
@@ -1964,6 +4752,16 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
+            "3015": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
             "31": {
                 "cpu_percent": {
                     "level": "ok",
@@ -1974,7 +4772,277 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
-            "32": {
+            "315": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "316": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "3167": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "3168": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "3169": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "317": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "3174": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "3180": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "3194": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "3204": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "3210": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "3211": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "3215": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "322": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "3221": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "3225": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "3229": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "3245": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "3250": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "33": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "3312": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "3347": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "3355": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "3362": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -1992,17 +5060,109 @@ Get the plugin stats:
                 "memory_percent": {
                     "level": "ok",
                     "prominent": false
-                },
-                "nice": {
-                    "level": "warning",
+                }
+            },
+            "3438": {
+                "cpu_percent": {
+                    "level": "ok",
                     "prominent": false
                 },
-                "status": {
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "3441": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "3464": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "3478": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "3481": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "3484": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "3491": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "3496": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
                     "level": "ok",
                     "prominent": false
                 }
             },
             "35": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "3502": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "3525": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -2020,14 +5180,6 @@ Get the plugin stats:
                 "memory_percent": {
                     "level": "ok",
                     "prominent": false
-                },
-                "nice": {
-                    "level": "warning",
-                    "prominent": false
-                },
-                "status": {
-                    "level": "ok",
-                    "prominent": false
                 }
             },
             "37": {
@@ -2038,13 +5190,9 @@ Get the plugin stats:
                 "memory_percent": {
                     "level": "ok",
                     "prominent": false
-                },
-                "status": {
-                    "level": "ok",
-                    "prominent": false
                 }
             },
-            "38": {
+            "3854": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -2053,12 +5201,140 @@ Get the plugin stats:
                     "level": "ok",
                     "prominent": false
                 },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "39": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
                 "status": {
                     "level": "ok",
                     "prominent": false
                 }
             },
-            "39": {
+            "3925": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "3926": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "3928": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "3929": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "3932": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "3934": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "3936": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "3937": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "3938": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "3941": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "3945": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "3990": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -2100,6 +5376,240 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
+            "4029": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "4070": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "4071": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "4072": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "4073": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "4074": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "4075": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "4076": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "4077": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "4078": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "4079": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "4080": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "4081": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "4082": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "4083": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "4084": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "4085": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
             "41": {
                 "cpu_percent": {
                     "level": "ok",
@@ -2120,7 +5630,57 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
-            "44": {
+            "43": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "4364": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "4365": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "4402": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "4422": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "4471": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -2132,19 +5692,19 @@ Get the plugin stats:
                 "nice": {
                     "level": "warning",
                     "prominent": false
-                },
-                "status": {
-                    "level": "ok",
-                    "prominent": false
                 }
             },
-            "4530": {
+            "45": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
                 },
                 "memory_percent": {
                     "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
                     "prominent": false
                 },
                 "status": {
@@ -2170,13 +5730,9 @@ Get the plugin stats:
                 "memory_percent": {
                     "level": "ok",
                     "prominent": false
-                },
-                "nice": {
-                    "level": "warning",
-                    "prominent": false
                 }
             },
-            "48": {
+            "479": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -2188,9 +5744,79 @@ Get the plugin stats:
                 "nice": {
                     "level": "warning",
                     "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "48": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "480": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "481": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "482": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
                 }
             },
             "49": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "491": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -2226,7 +5852,7 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
-            "50": {
+            "5043": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -2235,8 +5861,8 @@ Get the plugin stats:
                     "level": "ok",
                     "prominent": false
                 },
-                "status": {
-                    "level": "ok",
+                "nice": {
+                    "level": "warning",
                     "prominent": false
                 }
             },
@@ -2247,6 +5873,46 @@ Get the plugin stats:
                 },
                 "memory_percent": {
                     "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "517": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "518": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
                     "prominent": false
                 },
                 "status": {
@@ -2261,6 +5927,92 @@ Get the plugin stats:
                 },
                 "memory_percent": {
                     "level": "ok",
+                    "prominent": false
+                }
+            },
+            "522": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "523": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "524": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "525": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "526": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
                     "prominent": false
                 },
                 "status": {
@@ -2278,6 +6030,34 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
+            "534": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "535": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
             "54": {
                 "cpu_percent": {
                     "level": "ok",
@@ -2286,49 +6066,9 @@ Get the plugin stats:
                 "memory_percent": {
                     "level": "ok",
                     "prominent": false
-                },
-                "nice": {
-                    "level": "warning",
-                    "prominent": false
-                },
-                "status": {
-                    "level": "ok",
-                    "prominent": false
-                }
-            },
-            "5452": {
-                "cpu_percent": {
-                    "level": "ok",
-                    "prominent": false
-                },
-                "memory_percent": {
-                    "level": "ok",
-                    "prominent": false
-                },
-                "status": {
-                    "level": "ok",
-                    "prominent": false
                 }
             },
             "55": {
-                "cpu_percent": {
-                    "level": "ok",
-                    "prominent": false
-                },
-                "memory_percent": {
-                    "level": "ok",
-                    "prominent": false
-                },
-                "nice": {
-                    "level": "warning",
-                    "prominent": false
-                },
-                "status": {
-                    "level": "ok",
-                    "prominent": false
-                }
-            },
-            "56": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -2364,12 +6104,72 @@ Get the plugin stats:
                 "memory_percent": {
                     "level": "ok",
                     "prominent": false
+                }
+            },
+            "581": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
                 },
                 "nice": {
                     "level": "warning",
                     "prominent": false
                 },
                 "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "58267": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "58698": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "58699": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "58700": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "58706": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
                     "level": "ok",
                     "prominent": false
                 }
@@ -2382,9 +6182,15 @@ Get the plugin stats:
                 "memory_percent": {
                     "level": "ok",
                     "prominent": false
+                }
+            },
+            "59389": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
                 },
-                "nice": {
-                    "level": "warning",
+                "memory_percent": {
+                    "level": "ok",
                     "prominent": false
                 },
                 "status": {
@@ -2418,14 +6224,6 @@ Get the plugin stats:
                 "memory_percent": {
                     "level": "ok",
                     "prominent": false
-                },
-                "nice": {
-                    "level": "warning",
-                    "prominent": false
-                },
-                "status": {
-                    "level": "ok",
-                    "prominent": false
                 }
             },
             "61": {
@@ -2438,7 +6236,7 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
-            "6150": {
+            "612": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -2446,25 +6244,9 @@ Get the plugin stats:
                 "memory_percent": {
                     "level": "ok",
                     "prominent": false
-                }
-            },
-            "6191": {
-                "cpu_percent": {
-                    "level": "ok",
-                    "prominent": false
                 },
-                "memory_percent": {
-                    "level": "ok",
-                    "prominent": false
-                }
-            },
-            "62": {
-                "cpu_percent": {
-                    "level": "ok",
-                    "prominent": false
-                },
-                "memory_percent": {
-                    "level": "ok",
+                "nice": {
+                    "level": "warning",
                     "prominent": false
                 }
             },
@@ -2474,6 +6256,14 @@ Get the plugin stats:
                     "prominent": false
                 },
                 "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
                     "level": "ok",
                     "prominent": false
                 }
@@ -2486,9 +6276,207 @@ Get the plugin stats:
                 "memory_percent": {
                     "level": "ok",
                     "prominent": false
+                }
+            },
+            "64317": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "64453": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "64530": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "64735": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
                 },
                 "nice": {
                     "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "649": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "65": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "650": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "651": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "654": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "655": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "65506": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "65651": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "658": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "66": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "66038": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
                     "prominent": false
                 },
                 "status": {
@@ -2504,17 +6492,9 @@ Get the plugin stats:
                 "memory_percent": {
                     "level": "ok",
                     "prominent": false
-                },
-                "nice": {
-                    "level": "warning",
-                    "prominent": false
-                },
-                "status": {
-                    "level": "ok",
-                    "prominent": false
                 }
             },
-            "68": {
+            "682": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -2528,6 +6508,26 @@ Get the plugin stats:
                     "prominent": false
                 },
                 "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "684": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "685": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
                     "level": "ok",
                     "prominent": false
                 }
@@ -2550,6 +6550,16 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
+            "6905": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
             "7": {
                 "cpu_percent": {
                     "level": "ok",
@@ -2568,6 +6578,584 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
+            "70": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "70545": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "70716": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "70968": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "71": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "71102": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "71104": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "71105": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "71120": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "71135": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "71223": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "71298": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "71356": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "71376": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "71541": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "71592": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "7166": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "7182": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "71864": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "71909": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "71929": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "72": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "7203": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "7204": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "7208": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "7209": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "7215": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "7216": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "7218": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
+            "7225": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "72259": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "72449": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "72475": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "72573": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "72701": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "72782": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "72912": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "72913": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "73": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "7353": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "7357": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "736": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "7364": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "737": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "7393": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "7410": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "75": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "75481": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "75705": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "75713": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "75821": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
             "76": {
                 "cpu_percent": {
                     "level": "ok",
@@ -2575,6 +7163,20 @@ Get the plugin stats:
                 },
                 "memory_percent": {
                     "level": "ok",
+                    "prominent": false
+                }
+            },
+            "766": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
                     "prominent": false
                 },
                 "status": {
@@ -2590,17 +7192,69 @@ Get the plugin stats:
                 "memory_percent": {
                     "level": "ok",
                     "prominent": false
-                },
-                "nice": {
-                    "level": "warning",
+                }
+            },
+            "7703": {
+                "cpu_percent": {
+                    "level": "ok",
                     "prominent": false
                 },
-                "status": {
+                "memory_percent": {
                     "level": "ok",
                     "prominent": false
                 }
             },
-            "79": {
+            "7704": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "7705": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "7720": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "7726": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "7729": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "774": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -2614,6 +7268,440 @@ Get the plugin stats:
                     "prominent": false
                 },
                 "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "7773": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "779": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "78": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "780": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "78021": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "781": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "782": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "783": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "784": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "785": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "786": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "7862": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "7869": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "787": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "7871": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "788": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "789": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "7893": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "79": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "790": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "7901": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "791": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "7910": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "792": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "793": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "7930": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "7931": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "7932": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "7933": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "7937": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "7939": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "794": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "7940": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "7943": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "7944": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "7948": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "7956": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "7960": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "7969": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "7974": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "7986": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "7989": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "7996": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
                     "level": "ok",
                     "prominent": false
                 }
@@ -2636,7 +7724,85 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
-            "80": {
+            "8001": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "80010": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "8008": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "8027": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "80352": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "8084": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "809": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "81": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -2654,7 +7820,165 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
+            "8130": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "8132": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "8134": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "8136": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "8141": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "81659": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "8167": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "8185": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                }
+            },
             "82": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "8202": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "8224": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "8225": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "8236": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "82563": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "8272": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "8279": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -2674,7 +7998,1117 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
+            "8335": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "8350": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "83560": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "83562": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "83565": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "8357": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "8363": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "8375": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "83982": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "84": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "84494": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "85": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "85980": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "86356": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "86357": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "8669": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
             "87": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "87023": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "87152": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "87458": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "87460": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "87462": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "87467": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "87471": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "87473": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "87475": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "87477": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "87478": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "87556": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "87850": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "8793": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "88": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "88007": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "8812": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "8814": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "8823": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "8839": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "8861": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "89": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "90": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "90422": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "91": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "9135": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "91729": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "9257": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "92584": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "92660": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "92661": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "92727": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "93": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "93187": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "935": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "93515": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "93516": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "93517": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "9365": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "94": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "94057": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "94466": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "94596": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "94763": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "94894": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "94989": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "95": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "95337": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "95409": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "95459": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "9587": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "96": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "96069": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "96100": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "96101": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "96102": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "96182": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "96301": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "96833": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "96836": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "96842": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "96986": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "97": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "97007": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "97013": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "97117": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "97167": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "97237": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "97238": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "97241": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "99": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "nice": {
+                    "level": "warning",
+                    "prominent": false
+                },
+                "status": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "993": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "994": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "995": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "996": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -2685,98 +9119,67 @@ Get the plugin stats:
                 }
             }
         },
-        "cpucore": 4,
+        "cpucore": 16,
         "data": [
             {
                 "cmdline": [
-                    "/opt/claude-code/bin/claude",
-                    "--output-format=stream-json",
-                    "--verbose",
-                    "--settings",
-                    "/root/.claude/launcher-settings.json",
-                    "--replay-user-messages",
-                    "--input-format=stream-json",
-                    "--debug-to-stderr",
-                    "--effort",
-                    "medium",
-                    "--tools",
-                    "preset:default,Task,Bash,Glob,Grep,Read,Edit,MultiEdit,Write,NotebookEdit,WebFetch,TodoWrite,WebSearch,BashOutput,KillBash,Skill,Tmux,Monitor,SendUserFile,REPL,ExitPlanMode,AskUserQuestion,ToolSearch",
-                    "--allowed-tools",
-                    "preset:default,Task,Bash,Glob,Grep,Read,Edit,MultiEdit,Write,NotebookEdit,WebFetch,TodoWrite,WebSearch,BashOutput,KillBash,Skill,Tmux,Monitor,SendUserFile,REPL,ToolSearch,mcp__claude-code-remote__list_sessions,mcp__claude-code-remote__get_session,mcp__claude-code-remote__list_events,mcp__claude-code-remote__get_event,mcp__claude-code-remote__list_triggers,mcp__claude-code-remote__get_trigger,mcp__claude-code-remote__send_later,mcp__claude-code-remote__list_trigger_runs,mcp__claude-code-remote__get_trigger_run_log,mcp__claude-code-remote__list_environments,mcp__claude-code-remote__list_repos,mcp__claude-code-remote__subscribe_pr_activity,mcp__claude-code-remote__unsubscribe_pr_activity,mcp__claude-code-remote__read_documentation,mcp__github__*,mcp__claude-code-remote__list_sessions,mcp__claude-code-remote__get_session,mcp__claude-code-remote__list_events,mcp__claude-code-remote__get_event,mcp__claude-code-remote__list_triggers,mcp__claude-code-remote__get_trigger,mcp__claude-code-remote__send_later,mcp__claude-code-remote__list_trigger_runs,mcp__claude-code-remote__get_trigger_run_log,mcp__claude-code-remote__list_environments,mcp__claude-code-remote__list_repos,mcp__claude-code-remote__subscribe_pr_activity,mcp__claude-code-remote__unsubscribe_pr_activity,mcp__claude-code-remote__read_documentation,mcp__Figma__download_assets,mcp__Figma__export_video,mcp__Figma__get_code_connect_map,mcp__Figma__get_code_connect_suggestions,mcp__Figma__get_context_for_code_connect,mcp__Figma__get_design_context,mcp__Figma__get_figjam,mcp__Figma__get_figma_skill,mcp__Figma__get_generative_plugin,mcp__Figma__get_libraries,mcp__Figma__get_metadata,mcp__Figma__get_motion_context,mcp__Figma__get_screenshot,mcp__Figma__get_shader,mcp__Figma__get_variable_defs,mcp__Figma__list_file_components_for_code_connect,mcp__Figma__list_file_shaders,mcp__Figma__list_generative_plugins,mcp__Figma__list_shaders,mcp__Figma__search_design_system,mcp__Figma__weave_find_model,mcp__Figma__weave_get_model_run_output,mcp__Figma__weave_get_tool_inputs,mcp__Figma__weave_get_tool_run_output,mcp__Figma__weave_list_tools,mcp__Figma__whoami,mcp__Claude_Docs__batch,mcp__Claude_Docs__create,mcp__Claude_Docs__export,mcp__Claude_Docs__guide,mcp__Claude_Docs__query,mcp__Claude_Docs__read,mcp__Claude_Docs__update",
-                    "--disallowed-tools",
-                    "mcp__Excalidraw__export_to_excalidraw,mcp__Excalidraw__read_checkpoint,mcp__Excalidraw__save_checkpoint",
-                    "--mcp-config",
-                    "/tmp/mcp-config-cse_012aYMPrCY8CaFpFDgvofNEE.json",
-                    "--prompt-suggestions",
-                    "true",
-                    "--model",
-                    "claude-opus-5-5",
-                    "--append-system-prompt-file",
-                    "/tmp/claude-append-system-prompt.txt",
-                    "--add-dir",
-                    "/home/user/glances",
-                    "--sdk-url",
-                    "https://api.anthropic.com/v1/code/sessions/cse_012aYMPrCY8CaFpFDgvofNEE",
-                    "--resume=https://api.anthropic.com/v1/code/sessions/cse_012aYMPrCY8CaFpFDgvofNEE",
-                    "--debug"
-                ],
-                "cpu_num": 3,
-                "cpu_percent": 13.3,
-                "cpu_times": {
-                    "children_system": 274.2,
-                    "children_user": 1401.15,
-                    "iowait": 0.0,
-                    "system": 26.0,
-                    "user": 135.84
-                },
-                "gids": {
-                    "effective": 0,
-                    "real": 0,
-                    "saved": 0
-                },
-                "io_counters": [
-                    1023254528,
-                    2140028928,
-                    1023250432,
-                    2139877376,
-                    1
-                ],
-                "key": "pid",
-                "memory_info": {
-                    "data": 5649448960,
-                    "dirty": 0,
-                    "lib": 0,
-                    "rss": 478720000,
-                    "shared": 132747264,
-                    "text": 62685184,
-                    "vms": 5739888640
-                },
-                "memory_percent": 2.83687099743292,
-                "name": "claude",
-                "nice": 0,
-                "num_threads": 13,
-                "pid": 120,
-                "status": "S",
-                "time_since_update": 1.0596644878387451,
-                "username": "root"
-            },
-            {
-                "cmdline": [
-                    "/tmp/claude-0/-home-user-glances/e9f514df-ce0c-51e4-ae2a-cfc1eafb2ab6/scratchpad/venv/bin/python",
+                    "/home/nicolargo/dev/glances/.venv/bin/python",
                     "-m",
                     "glances",
                     "-C",
                     "conf/glances.conf",
                     "--api-restful-doc"
                 ],
-                "cpu_num": 0,
-                "cpu_percent": 2.9,
+                "cpu_num": 6,
+                "cpu_percent": 28.2,
                 "cpu_times": {
                     "children_system": 0.01,
                     "children_user": 0.0,
                     "iowait": 0.0,
-                    "system": 0.05,
-                    "user": 0.57
+                    "system": 0.49,
+                    "user": 0.74
+                },
+                "gids": {
+                    "effective": 1000,
+                    "real": 1000,
+                    "saved": 1000
+                },
+                "io_counters": [
+                    610304,
+                    32768,
+                    610304,
+                    32768,
+                    1
+                ],
+                "key": "pid",
+                "memory_info": {
+                    "data": 132640768,
+                    "dirty": 0,
+                    "lib": 0,
+                    "rss": 108421120,
+                    "shared": 29454336,
+                    "text": 31211520,
+                    "vms": 547287040
+                },
+                "memory_percent": 0.6827489686544197,
+                "name": "python",
+                "nice": 0,
+                "num_threads": 5,
+                "pid": 97241,
+                "status": "S",
+                "time_since_update": 1.8000431060791016,
+                "username": "nicolargo"
+            },
+            {
+                "cmdline": [],
+                "cpu_num": 0,
+                "cpu_percent": 10.0,
+                "cpu_times": {
+                    "children_system": 0.0,
+                    "children_user": 0.0,
+                    "iowait": 0.0,
+                    "system": 22.56,
+                    "user": 0.0
                 },
                 "gids": {
                     "effective": 0,
@@ -2784,34 +9187,34 @@ Get the plugin stats:
                     "saved": 0
                 },
                 "io_counters": [
-                    28672,
-                    4096,
-                    28672,
-                    4096,
-                    1
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
                 ],
                 "key": "pid",
                 "memory_info": {
-                    "data": 85155840,
+                    "data": 0,
                     "dirty": 0,
                     "lib": 0,
-                    "rss": 70606848,
-                    "shared": 21991424,
-                    "text": 2752512,
-                    "vms": 389713920
+                    "rss": 0,
+                    "shared": 0,
+                    "text": 0,
+                    "vms": 0
                 },
-                "memory_percent": 0.4184126823850154,
-                "name": "python",
+                "memory_percent": 0.0,
+                "name": "irq/9-acpi",
                 "nice": 0,
-                "num_threads": 4,
-                "pid": 6191,
+                "num_threads": 1,
+                "pid": 129,
                 "status": "S",
-                "time_since_update": 1.0596644878387451,
+                "time_since_update": 1.8000431060791016,
                 "username": "root"
             },
-            "... 78 more"
+            "... 584 more"
         ],
-        "time_since_update": 1.0447039000000586
+        "time_since_update": 1.772741450000467
     }
 
 Fields (``/info`` serves them as JSON):
@@ -2920,7 +9323,187 @@ Get the plugin stats:
     {
         "_key": "name",
         "_levels": {
-            "6": {
+            "(sd-pam)": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "Isolated Web Co": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "ModemManager": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "NetworkManager": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "Privileged Cont": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "RDD Process": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "Socket Process": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "Utility Process": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "Web Content": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "WebExtensions": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "Xwayland": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "accounts-daemon": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "arc_evict": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "arc_flush": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "arc_prune": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "arc_reap": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "at-spi-bus-launcher": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "at-spi2-registryd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "avahi-daemon": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -2940,7 +9523,117 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
-            "claude": {
+            "bluetoothd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "boltd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "bwrap": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "card1-crtc0": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "card1-crtc1": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "card1-crtc2": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "card1-crtc3": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "chrome_crashpad_handler": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "code": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "colord": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "containerd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "copilot-runtime": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -2970,6 +9663,66 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
+            "cpuhp/10": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "cpuhp/11": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "cpuhp/12": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "cpuhp/13": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "cpuhp/14": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "cpuhp/15": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
             "cpuhp/2": {
                 "cpu_percent": {
                     "level": "ok",
@@ -2990,7 +9743,797 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
-            "environment-manager": {
+            "cpuhp/4": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "cpuhp/5": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "cpuhp/6": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "cpuhp/7": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "cpuhp/8": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "cpuhp/9": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "crashhelper": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "cron": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "cups-browsed": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "cups-proxyd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "cupsd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "dart:firmware-n": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "dbu_evict": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "dbuf_evict": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "dbus-daemon": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "dconf": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "dconf-service": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "dmcrypt_write/252:0": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "dnsmasq": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "dockerd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "dp_sync_taskq": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "dp_zil_clean_ta": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "dropbox": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "ecryptfs-kthread": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "evolution-addressbook-factory": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "evolution-alarm-notify": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "evolution-calendar-factory": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "evolution-source-registry": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "firefox": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "forkserver": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "fsidd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "fusermount3": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "fwupd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gcr-ssh-agent": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gdm-session-worker": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gdm-wayland-session": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gdm3": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gjs": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "glycin-image-rs": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "glycin-svg": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gnome-keyring-daemon": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gnome-session-ctl": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gnome-session-init-worker": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gnome-session-service": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gnome-shell": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gnome-shell-calendar-server": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gnome-text-editor": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "goa-daemon": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "goa-identity-service": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gsd-a11y-settings": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gsd-color": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gsd-datetime": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gsd-disk-utility-notify": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gsd-housekeeping": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gsd-keyboard": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gsd-media-keys": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gsd-power": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gsd-print-notifications": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gsd-printer": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gsd-rfkill": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gsd-screensaver-proxy": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gsd-sharing": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gsd-smartcard": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gsd-sound": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gsd-usb-protection": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gsd-wwan": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gsd-xsettings": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gvfs-afc-volume-monitor": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gvfs-goa-volume-monitor": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gvfs-gphoto2-volume-monitor": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gvfs-mtp-volume-monitor": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gvfs-udisks2-volume-monitor": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gvfsd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gvfsd-dnssd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gvfsd-fuse": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gvfsd-metadata": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gvfsd-network": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gvfsd-recent": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gvfsd-trash": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "gvfsd-wsdd": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -3010,7 +10553,7 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
-            "irq/24-ACPI:Ged": {
+            "ibus-daemon": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -3020,7 +10563,497 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
-            "irq/25-ACPI:Ged": {
+            "ibus-engine-simple": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "ibus-extension-gtk3": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "ibus-memconf": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "ibus-portal": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "ibus-x11": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "idle_inject/0": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "idle_inject/1": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "idle_inject/10": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "idle_inject/11": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "idle_inject/12": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "idle_inject/13": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "idle_inject/14": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "idle_inject/15": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "idle_inject/2": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "idle_inject/3": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "idle_inject/4": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "idle_inject/5": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "idle_inject/6": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "idle_inject/7": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "idle_inject/8": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "idle_inject/9": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "iio-sensor-proxy": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "irq/123-pciehp": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "irq/124-pciehp": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "irq/16-processor_thermal_device_pci": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "irq/178-VEN_04F3:00": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "irq/197-cs35l41 IRQ1 Controller": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "irq/198-iwlwifi:default_queue": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "irq/199-iwlwifi:queue_1": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "irq/200-iwlwifi:queue_2": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "irq/201-iwlwifi:queue_3": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "irq/202-iwlwifi:queue_4": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "irq/203-iwlwifi:queue_5": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "irq/204-iwlwifi:queue_6": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "irq/205-iwlwifi:queue_7": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "irq/206-iwlwifi:queue_8": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "irq/207-iwlwifi:queue_9": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "irq/208-iwlwifi:queue_10": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "irq/209-iwlwifi:queue_11": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "irq/210-iwlwifi:queue_12": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "irq/211-iwlwifi:queue_13": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "irq/212-iwlwifi:queue_14": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "irq/213-iwlwifi:exception": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "irq/214-mei_me": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "irq/217-mei_gsc": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "irq/218-mei_gsc": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "irq/233-AudioDSP": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "irq/9-acpi": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "jbd2/dm-1-8": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "jbd2/nvme0n1p2-8": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -3080,6 +11113,26 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
+            "kprobe-optimizer": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "krfcommd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
             "ksmd": {
                 "cpu_percent": {
                     "level": "ok",
@@ -3110,6 +11163,66 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
+            "ksoftirqd/10": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "ksoftirqd/11": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "ksoftirqd/12": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "ksoftirqd/13": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "ksoftirqd/14": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "ksoftirqd/15": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
             "ksoftirqd/2": {
                 "cpu_percent": {
                     "level": "ok",
@@ -3121,6 +11234,66 @@ Get the plugin stats:
                 }
             },
             "ksoftirqd/3": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "ksoftirqd/4": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "ksoftirqd/5": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "ksoftirqd/6": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "ksoftirqd/7": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "ksoftirqd/8": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "ksoftirqd/9": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -3150,6 +11323,16 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
+            "kvm-pit/17678": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
             "kworker/0:0": {
                 "cpu_percent": {
                     "level": "ok",
@@ -3160,7 +11343,17 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
-            "kworker/0:0H-events_highpri": {
+            "kworker/0:0H-kblockd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/0:1-events_freezable": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -3190,6 +11383,266 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
+            "kworker/10:0-events": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/10:0H-kblockd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/10:1-events": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/10:1H-i915_cleanup": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/10:2": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/11:0": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/11:0H-kblockd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/11:1-events": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/11:1H-kblockd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/11:2-mm_percpu_wq": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/12:0H-kblockd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/12:1-mm_percpu_wq": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/12:1H-i915_cleanup": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/12:2-events": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/13:0H-kblockd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/13:1-events": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/13:1H-i915_cleanup": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/13:2-events": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/14:0-mm_percpu_wq": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/14:0H-kblockd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/14:1-mm_percpu_wq": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/14:1H-kblockd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/15:0-kdmflush/252:0": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/15:0H-kblockd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/15:1H-i915_cleanup": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/15:2-cgroup_free": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
             "kworker/1:0-mm_percpu_wq": {
                 "cpu_percent": {
                     "level": "ok",
@@ -3200,7 +11653,7 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
-            "kworker/1:0H-events_highpri": {
+            "kworker/1:0H-kblockd": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -3210,7 +11663,7 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
-            "kworker/1:1-events_freezable": {
+            "kworker/1:1-mm_percpu_wq": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -3220,7 +11673,7 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
-            "kworker/1:1H-kblockd": {
+            "kworker/1:1H-i915_cleanup": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -3230,7 +11683,7 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
-            "kworker/2:0-slub_flushwq": {
+            "kworker/1:2-events": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -3240,7 +11693,7 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
-            "kworker/2:0H-events_highpri": {
+            "kworker/2:0H-kblockd": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -3270,7 +11723,7 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
-            "kworker/3:0H-events_highpri": {
+            "kworker/2:3-events": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -3280,7 +11733,17 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
-            "kworker/3:1-mm_percpu_wq": {
+            "kworker/3:0-mm_percpu_wq": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/3:0H-kblockd": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -3300,7 +11763,377 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
-            "kworker/3:2": {
+            "kworker/3:2-mm_percpu_wq": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/4:0-mm_percpu_wq": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/4:0H-kblockd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/4:1H-kblockd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/4:2-usb_hub_wq": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/5:0-events": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/5:0H-kblockd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/5:1-events": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/5:1H-kblockd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/5:2-mm_percpu_wq": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/5:3-mm_percpu_wq": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/6:0-mm_percpu_wq": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/6:0H-kblockd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/6:1H-kblockd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/6:2-i915-unordered": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/7:0H-kblockd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/7:1": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/7:1H-i915_cleanup": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/7:2-mm_percpu_wq": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/8:0-events": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/8:0H-kblockd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/8:1": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/8:1H-i915_cleanup": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/8:2-events": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/9:0-events": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/9:0H-kblockd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/9:1-mm_percpu_wq": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/9:1H-kblockd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/R-USBC000:00-con1": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/R-USBC000:00-con2": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/R-USBC000:00-con3": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/R-acpi_thermal_pm": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/R-ata_sff": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/R-blkcg_punt_bio": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/R-cfg80211": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/R-charger_manager": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/R-devfreq_wq": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/R-edac-poller": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -3320,6 +12153,16 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
+            "kworker/R-hfi-updates": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
             "kworker/R-inet_frag_wq": {
                 "cpu_percent": {
                     "level": "ok",
@@ -3330,7 +12173,67 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
+            "kworker/R-ipv6_addrconf": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
             "kworker/R-kblockd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/R-kcryptd-252:0-1": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/R-kcryptd_io-252:0-1": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/R-kdmflush/252:0": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/R-kdmflush/252:1": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/R-kintegrityd": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -3370,6 +12273,46 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
+            "kworker/R-md_bitmap": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/R-md_llbitmap_io": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/R-md_llbitmap_unplug": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/R-mld": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
             "kworker/R-mm_percpu_wq": {
                 "cpu_percent": {
                     "level": "ok",
@@ -3381,6 +12324,46 @@ Get the plugin stats:
                 }
             },
             "kworker/R-netns": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/R-nvme-auth-wq": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/R-nvme-delete-wq": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/R-nvme-reset-wq": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/R-nvme-wq": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -3410,6 +12393,16 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
+            "kworker/R-rpciod": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
             "kworker/R-slub_flushwq": {
                 "cpu_percent": {
                     "level": "ok",
@@ -3430,6 +12423,26 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
+            "kworker/R-tpm_dev_wq": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/R-ttm": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
             "kworker/R-writeback": {
                 "cpu_percent": {
                     "level": "ok",
@@ -3440,7 +12453,7 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
-            "kworker/R-xfs_mru_cache": {
+            "kworker/R-xprtiod": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -3450,7 +12463,7 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
-            "kworker/R-xfsalloc": {
+            "kworker/u64:0-kcryptd-252:0-1": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -3460,7 +12473,7 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
-            "kworker/u16:0": {
+            "kworker/u64:1-kcryptd-252:0-1": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -3470,7 +12483,7 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
-            "kworker/u16:1-iou_exit": {
+            "kworker/u64:10-kcryptd-252:0-1": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -3480,7 +12493,7 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
-            "kworker/u16:2-kvfree_rcu_reclaim": {
+            "kworker/u64:12-kcryptd-252:0-1": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -3490,7 +12503,7 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
-            "kworker/u16:3-iou_exit": {
+            "kworker/u64:14-kcryptd-252:0-1": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -3500,7 +12513,7 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
-            "kworker/u16:5-iou_exit": {
+            "kworker/u64:16-kcryptd-252:0-1": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -3510,7 +12523,7 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
-            "kworker/u16:7-iou_exit": {
+            "kworker/u64:18-kcryptd-252:0-1": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -3520,7 +12533,7 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
-            "kworker/u16:8-iou_exit": {
+            "kworker/u64:19-events_unbound": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -3530,7 +12543,177 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
-            "kworker/u17:0": {
+            "kworker/u64:2-kcryptd-252:0-1": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/u64:24-kcryptd-252:0-1": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/u64:3-kcryptd-252:0-1": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/u64:4-kcryptd-252:0-1": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/u64:5-kcryptd-252:0-1": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/u64:6-kcryptd-252:0-1": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/u64:7-events_unbound": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/u64:8-kcryptd-252:0-1": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/u64:9-kcryptd-252:0-1": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/u65:0-i915_flip": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/u65:1": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/u65:2-rb_allocator": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "kworker/u65:3-rb_allocator": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "l2arc_feed": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "libvirtd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "localsearch-3": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "lockd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "make": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -3560,6 +12743,66 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
+            "migration/10": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "migration/11": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "migration/12": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "migration/13": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "migration/14": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "migration/15": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
             "migration/2": {
                 "cpu_percent": {
                     "level": "ok",
@@ -3580,7 +12823,187 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
+            "migration/4": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "migration/5": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "migration/6": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "migration/7": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "migration/8": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "migration/9": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "mmp": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "mpris-proxy": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "multipassd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "mutter-x11-frames": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "nautilus": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "nfsd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "nfsdcld": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "ollama": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
             "oom_reaper": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "pet": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "pipewire": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "pipewire-pulse": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "polkitd": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -3600,7 +13023,7 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
-            "process_api": {
+            "psimon": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -3611,6 +13034,36 @@ Get the plugin stats:
                 }
             },
             "python": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "python3": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "qemu-system-x86_64": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "raidz_expand": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -3670,7 +13123,87 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
-            "rcu_tasks_trace_kthread": {
+            "rpc.idmapd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "rpc.mountd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "rpc.statd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "rpcbind": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "rsyslogd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "rtkit-daemon": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "ruff": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "run-cups-browse": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "run-cupsd": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -3690,7 +13223,787 @@ Get the plugin stats:
                     "prominent": false
                 }
             },
+            "sleep": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "smartd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "snap": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "snap-store": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "snapd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "snapd-desktop-integration": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "snmpd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "spi0": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "spl_delay_taskq": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "spl_dynamic_tas": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "spl_kmem_cache": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "spl_system_task": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "ssh-agent": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "switcheroo-control": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "systemd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "systemd-journald": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "systemd-logind": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "systemd-machined": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "systemd-oomd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "systemd-resolved": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "systemd-timesyncd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "systemd-udevd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "terminator": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "thermald": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "txg_quiesce": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "txg_sync": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "udisksd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "unattended-upgr": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "update-notifier": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "upowerd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "user-session-helper": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "uuidd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "uv": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "virtlockd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "virtlogd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
             "watchdogd": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "wireplumber": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "wpa_supplicant": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "xdg-desktop-portal": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "xdg-desktop-portal-gnome": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "xdg-desktop-portal-gtk": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "xdg-document-portal": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "xdg-permission-store": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "z_checkpoint_di": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "z_cl_int": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "z_cl_iss": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "z_flush_int": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "z_flush_iss": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "z_fr_int": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "z_fr_iss_0": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "z_fr_iss_1": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "z_fr_iss_2": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "z_fr_iss_3": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "z_indirect_cond": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "z_livelist_cond": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "z_livelist_dest": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "z_metaslab": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "z_null_int": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "z_null_iss": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "z_prefetch": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "z_rd_int_0": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "z_rd_int_1": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "z_rd_int_2": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "z_rd_iss": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "z_trim_int": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "z_trim_iss": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "z_unlinked_drai": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "z_upgrade": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "z_vdev_file": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "z_wr_int_0": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "z_wr_int_1": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "z_wr_int_2": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "z_wr_iss": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "z_zrele": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "z_zvol": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "zed": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "zvol_tq-0": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "zvol_tq-1": {
+                "cpu_percent": {
+                    "level": "ok",
+                    "prominent": false
+                },
+                "memory_percent": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "zvol_tq-2": {
                 "cpu_percent": {
                     "level": "ok",
                     "prominent": false
@@ -3701,85 +14014,85 @@ Get the plugin stats:
                 }
             }
         },
-        "cpucore": 4,
+        "cpucore": 16,
         "data": [
-            {
-                "cmdline": [
-                    "claude"
-                ],
-                "cpu_percent": 13.3,
-                "cpu_times": {
-                    "children_system": 274.2,
-                    "children_user": 1401.15,
-                    "iowait": 0.0,
-                    "system": 26.0,
-                    "user": 135.84
-                },
-                "io_counters": [
-                    1023254528,
-                    2140028928,
-                    1023250432,
-                    2139877376,
-                    1
-                ],
-                "memory_info": {
-                    "data": 5649448960,
-                    "dirty": 0,
-                    "lib": 0,
-                    "rss": 478720000,
-                    "shared": 132747264,
-                    "text": 62685184,
-                    "vms": 5739888640
-                },
-                "memory_percent": 2.83687099743292,
-                "name": "claude",
-                "nice": 0,
-                "nprocs": 1,
-                "num_threads": 13,
-                "status": "S",
-                "time_since_update": 1.0596644878387451,
-                "username": "root"
-            },
             {
                 "cmdline": [
                     "python"
                 ],
-                "cpu_percent": 2.9,
+                "cpu_percent": 28.2,
                 "cpu_times": {
                     "children_system": 0.01,
                     "children_user": 0.0,
                     "iowait": 0.0,
-                    "system": 0.05,
-                    "user": 0.57
+                    "system": 0.6900000000000001,
+                    "user": 3.01
                 },
                 "io_counters": [
-                    28672,
-                    4096,
-                    28672,
-                    4096,
+                    10428416,
+                    32768,
+                    10428416,
+                    32768,
                     1
                 ],
                 "memory_info": {
-                    "data": 85155840,
+                    "data": 303882240,
                     "dirty": 0,
                     "lib": 0,
-                    "rss": 70606848,
-                    "shared": 21991424,
-                    "text": 2752512,
-                    "vms": 389713920
+                    "rss": 285872128,
+                    "shared": 65437696,
+                    "text": 42295296,
+                    "vms": 980705280
                 },
-                "memory_percent": 0.4184126823850154,
+                "memory_percent": 1.80019262445402,
                 "name": "python",
                 "nice": 0,
-                "nprocs": 1,
-                "num_threads": 4,
+                "nprocs": 4,
+                "num_threads": 11,
                 "status": "S",
-                "time_since_update": 1.0596644878387451,
+                "time_since_update": 1.8000431060791016,
+                "username": "nicolargo"
+            },
+            {
+                "cmdline": [
+                    "irq/9-acpi"
+                ],
+                "cpu_percent": 10.0,
+                "cpu_times": {
+                    "children_system": 0.0,
+                    "children_user": 0.0,
+                    "iowait": 0.0,
+                    "system": 22.56,
+                    "user": 0.0
+                },
+                "io_counters": [
+                    0,
+                    0,
+                    0,
+                    0,
+                    0
+                ],
+                "memory_info": {
+                    "data": 0,
+                    "dirty": 0,
+                    "lib": 0,
+                    "rss": 0,
+                    "shared": 0,
+                    "text": 0,
+                    "vms": 0
+                },
+                "memory_percent": 0,
+                "name": "irq/9-acpi",
+                "nice": 0,
+                "nprocs": 1,
+                "num_threads": 1,
+                "status": "S",
+                "time_since_update": 1.8000431060791016,
                 "username": "root"
             },
-            "... 76 more"
+            "... 467 more"
         ],
-        "time_since_update": 1.0433678120002696
+        "time_since_update": 1.7726460530011536
     }
 
 Fields (``/info`` serves them as JSON):
@@ -3827,7 +14140,7 @@ Get the plugin stats:
     # curl http://localhost:61208/api/5/psutilversion
     {
         "_levels": {},
-        "time_since_update": 1.043279062000238,
+        "time_since_update": 1.7727638769993064,
         "version": "7.2.2"
     }
 
@@ -3849,12 +14162,16 @@ Get the plugin stats:
                 "level": "ok",
                 "prominent": false
             },
+            "gpu_proc": {
+                "level": "ok",
+                "prominent": false
+            },
             "load": {
                 "level": "ok",
                 "prominent": false
             },
             "mem": {
-                "level": "ok",
+                "level": "careful",
                 "prominent": false
             },
             "swap": {
@@ -3863,44 +14180,109 @@ Get the plugin stats:
             }
         },
         "bar_char": "\u25aa",
-        "cpu": 17.0,
-        "cpu_hz_current": 2799998000,
-        "cpu_log_core": 4,
-        "cpu_name": "Intel(R) Xeon(R) Processor @ 2.80GHz",
-        "cpu_phys_core": 4,
-        "load": 14.1,
+        "cpu": 3.2,
+        "cpu_hz": 4475000000,
+        "cpu_hz_current": 705178125,
+        "cpu_log_core": 16,
+        "cpu_name": "13th Gen Intel(R) Core(TM) i7-13620H",
+        "cpu_phys_core": 10,
+        "gpu_proc": 0.0,
+        "load": 5.5,
         "max_cpu_display": 4,
-        "mem": 5.2,
+        "mem": 57.0,
         "percpu": [
             {
                 "cpu_number": 0,
                 "level": "ok",
-                "total": 29.0
+                "total": 10.7
             },
             {
                 "cpu_number": 1,
                 "level": "ok",
-                "total": 12.4
+                "total": 0.0
             },
             {
                 "cpu_number": 2,
                 "level": "ok",
-                "total": 12.4
+                "total": 1.1
             },
             {
                 "cpu_number": 3,
                 "level": "ok",
-                "total": 11.5
+                "total": 0.0
+            },
+            {
+                "cpu_number": 4,
+                "level": "ok",
+                "total": 6.2
+            },
+            {
+                "cpu_number": 5,
+                "level": "ok",
+                "total": 0.0
+            },
+            {
+                "cpu_number": 6,
+                "level": "ok",
+                "total": 15.2
+            },
+            {
+                "cpu_number": 7,
+                "level": "ok",
+                "total": 9.6
+            },
+            {
+                "cpu_number": 8,
+                "level": "ok",
+                "total": 2.2
+            },
+            {
+                "cpu_number": 9,
+                "level": "ok",
+                "total": 2.8
+            },
+            {
+                "cpu_number": 10,
+                "level": "ok",
+                "total": 0.6
+            },
+            {
+                "cpu_number": 11,
+                "level": "ok",
+                "total": 0.0
+            },
+            {
+                "cpu_number": 12,
+                "level": "ok",
+                "total": 1.7
+            },
+            {
+                "cpu_number": 13,
+                "level": "ok",
+                "total": 0.6
+            },
+            {
+                "cpu_number": 14,
+                "level": "ok",
+                "total": 0.0
+            },
+            {
+                "cpu_number": 15,
+                "level": "ok",
+                "total": 0.6
             }
         ],
-        "percpu_other": null,
+        "percpu_other": {
+            "level": "ok",
+            "total": 0.7999999999999999
+        },
         "stats_list": [
             "cpu",
             "mem",
             "load"
         ],
-        "swap": 0.0,
-        "time_since_update": 1.0429153109998879
+        "swap": 18.3,
+        "time_since_update": 1.7725454339997668
     }
 
 Fields (``/info`` serves them as JSON):
@@ -3968,25 +14350,29 @@ Get the last two points of its history (``nb=0`` for all of them):
     {
         "series": {
             "cpu": [
-                57.1,
-                17.0
+                5.4,
+                3.2
             ],
-            "load": [
-                14.1,
-                14.1
-            ],
-            "mem": [
-                5.1,
-                5.2
-            ],
-            "swap": [
+            "gpu_proc": [
                 0.0,
                 0.0
+            ],
+            "load": [
+                5.5,
+                5.5
+            ],
+            "mem": [
+                57.2,
+                57.0
+            ],
+            "swap": [
+                18.3,
+                18.3
             ]
         },
         "timestamps": [
-            1791731451.3048246,
-            1791731452.3477137
+            1792579105.480136,
+            1792579107.2526715
         ]
     }
 
@@ -4000,15 +14386,113 @@ Get the plugin stats:
     # curl http://localhost:61208/api/5/sensors
     {
         "_key": "label",
-        "_levels": {},
-        "data": [],
-        "time_since_update": 1.042095437000171
+        "_levels": {
+            "Ambient (mean)": {
+                "value": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "CPU": {
+                "value": {
+                    "level": "careful",
+                    "prominent": false
+                }
+            },
+            "Composite": {
+                "value": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "Core (mean)": {
+                "value": {
+                    "level": "careful",
+                    "prominent": false
+                }
+            },
+            "HDD": {
+                "value": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "Package id 0": {
+                "value": {
+                    "level": "careful",
+                    "prominent": false
+                }
+            },
+            "SODIMM": {
+                "value": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "Sensor (mean)": {
+                "value": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "Unknown (mean)": {
+                "value": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "dell_smm (mean)": {
+                "value": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "i915 0": {
+                "value": {
+                    "level": "careful",
+                    "prominent": false
+                }
+            },
+            "iwlwifi_1_14 0": {
+                "value": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            },
+            "temp": {
+                "value": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            }
+        },
+        "data": [
+            {
+                "critical": null,
+                "label": "Ambient (mean)",
+                "type": "temperature_core",
+                "unit": "C",
+                "value": 36,
+                "warning": 0
+            },
+            {
+                "critical": null,
+                "label": "BAT BAT0",
+                "status": "Discharging",
+                "type": "battery",
+                "unit": "%",
+                "value": 21,
+                "warning": null
+            },
+            "... 16 more"
+        ],
+        "time_since_update": 1.5128840699999273
     }
 
 Fields (``/info`` serves them as JSON):
 
 * ``label``: Sensor label. (unit is *string*)
-* ``type``: Sensor type (temperature\_core, fan\_speed, temperature\_hdd, battery). (unit is *string*)
+* ``type``: Sensor type (temperature\_core, fan\_speed, battery). (unit is *string*)
 * ``unit``: Sensor unit. (unit is *string*)
 * ``value``: Sensor value. (unit is *number*)
 * ``warning``: Hardware warning threshold. (unit is *number*)
@@ -4025,13 +14509,13 @@ Get the plugin stats:
     # curl http://localhost:61208/api/5/system
     {
         "_levels": {},
-        "hostname": "vm",
-        "hr_name": "Ubuntu 24.04 64bit / Linux 6.18.44-fc-v114",
-        "linux_distro": "Ubuntu 24.04",
+        "hostname": "nicolargo-xps15",
+        "hr_name": "Ubuntu 26.04 64bit / Linux 7.0.0-38-generic",
+        "linux_distro": "Ubuntu 26.04",
         "os_name": "Linux",
-        "os_version": "6.18.44-fc-v114",
+        "os_version": "7.0.0-38-generic",
         "platform": "64bit",
-        "time_since_update": 1.040035183999862
+        "time_since_update": 1.5121886569995695
     }
 
 Fields (``/info`` serves them as JSON):
@@ -4053,8 +14537,8 @@ Get the plugin stats:
     # curl http://localhost:61208/api/5/uptime
     {
         "_levels": {},
-        "seconds": 3615,
-        "time_since_update": 1.0402749220002079
+        "seconds": 164715,
+        "time_since_update": 1.5124249109994707
     }
 
 Fields (``/info`` serves them as JSON):
@@ -4071,7 +14555,7 @@ Get the plugin stats:
     # curl http://localhost:61208/api/5/version
     {
         "_levels": {},
-        "time_since_update": 1.040287496000019,
+        "time_since_update": 1.5124454569995578,
         "version": "5.0.0b1"
     }
 
@@ -4089,9 +14573,22 @@ Get the plugin stats:
     # curl http://localhost:61208/api/5/wifi
     {
         "_key": "ssid",
-        "_levels": {},
-        "data": [],
-        "time_since_update": 1.0403887209999994
+        "_levels": {
+            "wlp0s20f3": {
+                "quality_level": {
+                    "level": "ok",
+                    "prominent": false
+                }
+            }
+        },
+        "data": [
+            {
+                "quality_level": -62.0,
+                "quality_link": 48.0,
+                "ssid": "wlp0s20f3"
+            }
+        ],
+        "time_since_update": 1.5124903790001554
     }
 
 Fields (``/info`` serves them as JSON):

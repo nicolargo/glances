@@ -28,7 +28,7 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
 ..
-.TH "GLANCES" "1" "Oct 11, 2026" "5.0.0b1" "Glances"
+.TH "GLANCES" "1" "Oct 21, 2026" "5.0.0b1" "Glances"
 .SH NAME
 glances \- An eye on your system
 .SH SYNOPSIS
@@ -776,7 +776,11 @@ The file is segmented by sections composed of key/value pairs.
 .sp
 For example “refresh=2” is a key/value pair. refresh is the key and 2 is the value.
 .sp
-Key is always a string.
+Key is always a string. Keys are matched with their exact case first, so keys
+built from item names that differ only by case (\fB/srv/Data_percent_critical\fP
+and \fB/srv/data_percent_critical\fP) each apply to their own item. Otherwise
+the case is ignored (\fBCRITICAL=90\fP works), unless several keys then match:
+none of them is used and a warning is logged.
 .sp
 Value is one of the followings types:
 .INDENT 0.0
