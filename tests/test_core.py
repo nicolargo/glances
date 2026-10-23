@@ -22,7 +22,14 @@ except ImportError:
     UTC = timezone.utc
 
 from glances.filter import GlancesFilter, GlancesFilterList
-from glances.globals import auto_unit, pretty_date, split_esc, string_value_to_float, subsample
+from glances.globals import (
+    auto_unit,
+    pretty_date,
+    split_esc,
+    string_value_to_float,
+    subsample,
+    time_series_subsample,
+)
 from glances.outputs.glances_bars import Bar
 
 
@@ -42,6 +49,21 @@ class TestGlances(unittest.TestCase):
         ]:
             l_subsample = subsample(l_test[0], l_test[1])
             self.assertLessEqual(len(l_subsample), l_test[1])
+        # 1200 values in 800 points (graph export defaults): no empty slice
+        self.assertEqual(len(subsample(list(range(1200)), 800)), 800)
+        # 1000 values in 800 points: the last values are kept (mean of 998 and 999)
+        self.assertEqual(subsample(list(range(1000)), 800)[-1], 998.5)
+
+    def test_017_time_series_subsample(self):
+        """Test time series subsampling function."""
+        print('INFO: [TEST_017] Time series subsampling')
+        for length, sampling in [(3, 4), (8, 4), (15, 10), (1000, 800), (1200, 800), (8000, 800)]:
+            data = [(t, float(t)) for t in range(length)]
+            l_subsample = time_series_subsample(data, sampling)
+            self.assertEqual(len(l_subsample), min(length, sampling))
+            # The first point starts the series, the last points end it
+            self.assertEqual(l_subsample[0][0], 0)
+            self.assertGreater(l_subsample[-1][1], length - 1 - length / sampling)
 
     def test_018_string_value_to_float(self):
         """Check string_value_to_float function"""

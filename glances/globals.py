@@ -181,8 +181,9 @@ def subsample(data, sampling):
     """
     if len(data) <= sampling:
         return data
-    sampling_length = int(round(len(data) / float(sampling)))
-    return [mean(data[s * sampling_length : (s + 1) * sampling_length]) for s in range(0, sampling)]
+    # Slice bounds spread over the whole list: no slice is empty, none is left out
+    bounds = [s * len(data) // sampling for s in range(sampling + 1)]
+    return [mean(data[bounds[s] : bounds[s + 1]]) for s in range(0, sampling)]
 
 
 def time_series_subsample(data, sampling):
@@ -196,9 +197,9 @@ def time_series_subsample(data, sampling):
         return data
     t = [t[0] for t in data]
     v = [t[1] for t in data]
-    sampling_length = int(round(len(data) / float(sampling)))
-    t_subsampled = [t[s * sampling_length : (s + 1) * sampling_length][0] for s in range(0, sampling)]
-    v_subsampled = [mean(v[s * sampling_length : (s + 1) * sampling_length]) for s in range(0, sampling)]
+    bounds = [s * len(data) // sampling for s in range(sampling + 1)]
+    t_subsampled = [t[bounds[s]] for s in range(0, sampling)]
+    v_subsampled = [mean(v[bounds[s] : bounds[s + 1]]) for s in range(0, sampling)]
     return list(zip(t_subsampled, v_subsampled))
 
 
