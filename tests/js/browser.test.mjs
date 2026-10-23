@@ -25,6 +25,15 @@ test("the name cell shows the alias, else the name", () => {
 	assert.equal(displayName({ name: "10.0.0.1", alias: null }), "10.0.0.1");
 });
 
+test("a discovered server shows its source and the address it was seen at (audit A7)", () => {
+	assert.equal(
+		displayName({ name: "192.168.1.66", alias: "prod-db", source: "zeroconf" }),
+		"prod-db (zeroconf 192.168.1.66)",
+	);
+	assert.equal(displayName({ name: "192.168.1.66", alias: null, source: "zeroconf" }), "? (zeroconf 192.168.1.66)");
+	assert.equal(displayName({ name: "192.168.1.66", alias: "prod-db", source: "static" }), "prod-db");
+});
+
 test("a server links to its own Web UI", () => {
 	assert.equal(serverHref({ name: "alpha", port: 61208 }), "http://alpha:61208/");
 	assert.equal(serverHref({ name: "192.168.1.10", port: 61237 }), "http://192.168.1.10:61237/");

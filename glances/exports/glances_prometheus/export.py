@@ -100,7 +100,7 @@ class Export(GlancesExportBase):
         data = {str(k): float(v) for k, v in zip(columns, points) if isinstance(v, Number)}
 
         for metric, value in data.items():
-            labels = self.labels
+            parsed_labels = self.parse_tags(self.labels)
             metric_name = self.prefix + self.METRIC_SEPARATOR + name + self.METRIC_SEPARATOR
             try:
                 # ValueError when the metric has no dot OR more than one: v4
@@ -112,14 +112,17 @@ class Export(GlancesExportBase):
                 metric_name += metric
             else:
                 metric_name += stat
-                labels += f",{self.keys_name.get(name)}:{obj}"
+                # The item's key is ONE label value, set as a dict entry. v4
+                # appended `,<key>:<value>` to the `k:v,k:v` string and parsed
+                # it again: `eth0,src:spoofed` overwrote a configured label and
+                # `a,b` made the labels malformed (security audit 2026-10-17, B-20).
+                parsed_labels[str(self.keys_name.get(name))] = obj
 
             # Prometheus is very sensitive to metric names.
             # See: https://prometheus.io/docs/practices/naming/
             for c in " .-/:[]":
                 metric_name = metric_name.replace(c, self.METRIC_SEPARATOR)
 
-            parsed_labels = self.parse_tags(labels)
             if metric_name not in self._metric_dict:
                 self._metric_dict[metric_name] = Gauge(metric_name, "", labelnames=list(parsed_labels.keys()))
             gauge = self._metric_dict[metric_name]
@@ -127,8 +130,6 @@ class Export(GlancesExportBase):
                 # Add the labels (see issue #1255)
                 gauge.labels(**parsed_labels).set(value)
             else:
-                # parse_tags() returns {} on malformed input -- reachable when a
-                # primary key value contains a comma, which breaks the
-                # `k:v,k:v` label syntax. The gauge then carries no label
+                # No configured label and no key: the gauge carries no label
                 # names, and calling labels() on it would raise.
                 gauge.set(value)

@@ -74,6 +74,13 @@ class Export(GlancesExportBase):
             logger.critical("Missing influxdb2 config")
             sys.exit(2)
 
+        # ssl_verify: a boolean, or the path to a CA bundle. Same semantics as
+        # `[client] ssl_verify` and `[ports] web_x_ssl_verify`; absent → True.
+        try:
+            self.ssl_verify: bool | str = self.config.get_bool_value("influxdb2", "ssl_verify")
+        except ValueError:
+            self.ssl_verify = self.config.get_value("influxdb2", "ssl_verify")
+
         # Flush interval, in seconds. 0 / unset / unparseable → export cadence.
         try:
             self.interval = int(self.interval)
@@ -94,14 +101,18 @@ class Export(GlancesExportBase):
         from influxdb_client import InfluxDBClient, WriteOptions
 
         url = f"{self.protocol}://{self.host}:{self.port}"
+        # A CA bundle path goes through `ssl_ca_cert`; `verify_ssl` stays a bool.
+        ssl_kwargs: dict[str, Any] = {"verify_ssl": self.ssl_verify}
+        if isinstance(self.ssl_verify, str):
+            ssl_kwargs = {"verify_ssl": True, "ssl_ca_cert": self.ssl_verify}
         try:
             # https://influxdb-client.readthedocs.io/en/stable/api.html#influxdbclient
             client = InfluxDBClient(
                 url=url,
                 enable_gzip=False,
-                verify_ssl=False,
                 org=self.org,
                 token=self.token,
+                **ssl_kwargs,
             )
         except Exception as e:
             logger.critical("Cannot connect to InfluxDB server '%s' (%s)", url, e)

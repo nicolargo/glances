@@ -16,6 +16,7 @@ so this module stays importable without it.
 
 from __future__ import annotations
 
+import re
 import sys
 from numbers import Number
 from typing import TYPE_CHECKING, Any
@@ -29,9 +30,15 @@ if TYPE_CHECKING:
     from glances.config import GlancesConfig
 
 
+# The plaintext protocol is one `<path> <value> <timestamp>\n` per metric: a
+# name drawn from monitored data (a mount point, a process name) must not
+# carry a space or a newline, or it writes a second metric (audit B-20).
+_UNSAFE_RE = re.compile(r"[^A-Za-z0-9_.-]")
+
+
 def normalize(name: str) -> str:
-    """A Graphite metric name has no space (v4)."""
-    return name.replace(" ", "_")
+    """A Graphite metric path: `[A-Za-z0-9_.-]` only, anything else as `_` (v4 did spaces)."""
+    return _UNSAFE_RE.sub("_", name)
 
 
 class Export(GlancesExportBase):

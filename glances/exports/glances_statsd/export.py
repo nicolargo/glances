@@ -15,6 +15,7 @@ character clean-up (#1068). `statsd` is imported when the exporter starts.
 
 from __future__ import annotations
 
+import re
 import sys
 from numbers import Number
 from typing import TYPE_CHECKING, Any
@@ -28,9 +29,14 @@ if TYPE_CHECKING:
     from glances.config import GlancesConfig
 
 
+# One `<name>:<value>|g` per line in a datagram: a name drawn from monitored
+# data must not carry a newline, a `:` or a `|` (audit B-20).
+_UNSAFE_RE = re.compile(r"[^A-Za-z0-9_.-]")
+
+
 def normalize(name: str) -> str:
-    """No `:` or `%`, spaces as `_`: StatsD's line format (v4, issue #1068)."""
-    return name.replace(":", "").replace("%", "").replace(" ", "_")
+    """`:` and `%` dropped as in v4 (issue #1068), then `[A-Za-z0-9_.-]` only, anything else as `_`."""
+    return _UNSAFE_RE.sub("_", name.replace(":", "").replace("%", ""))
 
 
 class Export(GlancesExportBase):

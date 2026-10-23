@@ -66,6 +66,23 @@ def test_restful_warns_on_a_refused_post(monkeypatch, caplog):
     assert "Cannot export stats to the RESTful endpoint http://sink:6789/in" in caplog.text
 
 
+def test_restful_never_logs_the_credentials_of_its_url(monkeypatch, caplog):
+    """Audit I-12: `host=bob:hunter2@sink` was logged whole at INFO and in
+    every warning. The POST itself still goes to the full URL."""
+    import logging
+
+    from glances.exports.glances_restful import export
+
+    caplog.set_level(logging.DEBUG)
+    posts = []
+    monkeypatch.setattr(export.requests, "post", lambda url, **kw: posts.append(url) or _Response(500))
+    config = make_config({"restful": dict(_RESTFUL["restful"], host="bob:hunter2@sink")})
+    export.Export(config).update(plugins(config))
+    assert posts == ["http://bob:hunter2@sink:6789/in"]
+    assert "hunter2" not in caplog.text and "bob" not in caplog.text
+    assert "RESTful endpoint http://********@sink:6789/in" in caplog.text
+
+
 @pytest.mark.parametrize("missing", ["host", "port", "protocol", "path"])
 def test_restful_keys_are_mandatory(missing):
     from glances.exports.glances_restful.export import Export

@@ -260,17 +260,44 @@ def test_prometheus_sanitises_characters_forbidden_in_metric_names(prometheus_cl
     assert gauge.last_labels == {"src": "glances", "mnt_point": "/media/data"}
 
 
-def test_prometheus_sets_an_unlabelled_gauge_when_the_labels_are_malformed(prometheus_client):
-    """A primary key value containing a comma breaks the `k:v,k:v` label
-    syntax, so parse_tags() returns {}. Calling labels() on a gauge with no
-    label names would raise, so the value is set directly instead."""
+def test_prometheus_a_key_holding_a_comma_is_one_label_value(prometheus_client):
+    """Audit B-20: `a,b` appended to the `k:v,k:v` label string made it
+    malformed, the gauge was created without label names, and the next item
+    of the plugin raised on labels(): the plugin lost its cycle."""
     from glances.exports.glances_prometheus.export import Export
 
     exporter = Export(make_config(PROM_SECTION), args=None)
     exporter.keys_name = {"containers": "name"}
-    exporter.export("containers", ["a,b.cpu_percent"], [7.0])
+    exporter.export("containers", ["a,b.cpu_percent", "c.cpu_percent"], [7.0, 8.0])
 
     gauge = prometheus_client.created["glances_containers_cpu_percent"]
+    assert gauge.labelnames == ["src", "name"]
+    assert gauge.last_labels == {"src": "glances", "name": "c"}
+    assert gauge.values == [7.0, 8.0]
+
+
+def test_prometheus_a_key_cannot_overwrite_a_configured_label(prometheus_client):
+    """Audit B-20: an interface named `eth0,src:spoofed` re-parsed as labels
+    replaced the configured `src`."""
+    from glances.exports.glances_prometheus.export import Export
+
+    exporter = Export(make_config(PROM_SECTION), args=None)
+    exporter.keys_name = {"network": "interface_name"}
+    exporter.export("network", ["eth0,src:spoofed.rx"], [1.0])
+
+    gauge = prometheus_client.created["glances_network_rx"]
+    assert gauge.last_labels == {"src": "glances", "interface_name": "eth0,src:spoofed"}
+
+
+def test_prometheus_sets_an_unlabelled_gauge_without_labels_nor_key(prometheus_client):
+    """No configured label and a scalar field: the gauge has no label names,
+    and calling labels() on it would raise, so the value is set directly."""
+    from glances.exports.glances_prometheus.export import Export
+
+    exporter = Export(make_config({"prometheus": dict(PROM_SECTION["prometheus"], labels="")}), args=None)
+    exporter.export("cpu", ["total"], [7.0])
+
+    gauge = prometheus_client.created["glances_cpu_total"]
     assert gauge.labelnames == []
     assert gauge.last_labels is None
     assert gauge.values == [7.0]

@@ -73,7 +73,10 @@ Glances generates a lot of columns, e.g., if you have many running
 Docker containers, so you should use the ``tsm1`` engine in the InfluxDB
 configuration file (no limit on columns number).
 
-Note: if you want to use SSL, please set 'protocol=https'.
+Note: if you want to use SSL, please set 'protocol=https'. The server
+certificate is verified by default; set ``ssl_verify=false`` to skip the
+check (not recommended) or ``ssl_verify=/path/to/ca-bundle.crt`` to trust
+a private CA.
 
 
 InfluxDB v2 (from InfluxDB v1.8.x/Flux and InfluxDB <v3.x)
@@ -114,7 +117,10 @@ and run Glances with:
 
     $ glances --export influxdb2
 
-Note: if you want to use SSL, please set 'protocol=https'.
+Note: if you want to use SSL, please set 'protocol=https'. The server
+certificate is verified by default; set ``ssl_verify=false`` to skip the
+check (not recommended) or ``ssl_verify=/path/to/ca-bundle.crt`` to trust
+a private CA.
 
 InfluxDB v3 (for InfluxDB 3.x)
 ------------------------------

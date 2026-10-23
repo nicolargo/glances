@@ -61,6 +61,14 @@ class Export(GlancesExportBase):
             logger.critical("Missing influxdb config")
             sys.exit(2)
 
+        # ssl_verify: a boolean, or the path to a CA bundle -- the client hands
+        # it to Requests' `verify`, which accepts both. Same semantics as
+        # `[client] ssl_verify` and `[ports] web_x_ssl_verify`; absent → True.
+        try:
+            self.ssl_verify: bool | str = self.config.get_bool_value("influxdb", "ssl_verify")
+        except ValueError:
+            self.ssl_verify = self.config.get_value("influxdb", "ssl_verify")
+
         # The hostname is always added as a tag.
         self.hostname: str = node().split(".")[0]
 
@@ -78,7 +86,7 @@ class Export(GlancesExportBase):
                 host=self.host,
                 port=self.port,
                 ssl=ssl,
-                verify_ssl=False,
+                verify_ssl=self.ssl_verify,
                 username=self.user,
                 password=self.password,
                 database=self.db,

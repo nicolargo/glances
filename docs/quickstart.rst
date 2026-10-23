@@ -196,6 +196,12 @@ up/down keys and open one with ENTER. It is also possible to sort the server usi
 ``UNSUPPORTED`` means that something answers on the port, but not the Glances
 v5 API (a Glances v4 server, for example).
 
+A server discovered on the network is listed as ``<name> (zeroconf <address>)``
+and opened at that address: anyone on the network can announce under any name,
+so check the address before typing a password (it is sent over clear HTTP).
+An announcement that uses the name or alias of a ``[serverlist]`` server is
+ignored.
+
 To start the WebUI Central Glances Browser, use the following option:
 
 .. code-block:: console

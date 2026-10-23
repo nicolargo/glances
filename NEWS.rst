@@ -131,6 +131,30 @@ Security (post-cutover audit of 2026-10-17):
 * ``[outputs] jwt_secret_key`` must be at least 32 characters (the shipped example
   value is refused); tokens need ``exp`` and ``iat`` and must name the configured
   user; ``jwt_expire_minutes`` is capped to a day
+* InfluxDB 1.x and 2.x exports verify the server's TLS certificate (it was
+  never checked); the new optional ``[influxdb]``/``[influxdb2] ssl_verify``
+  key accepts ``false`` or a CA bundle path
+* Zeroconf: an announcement pointing at a loopback, link-local, multicast,
+  unspecified, broadcast or reserved address is ignored, as is one using the
+  name or alias of a ``[serverlist]`` server; at most 256 discovered servers
+  are followed. The TUI and Web UI browsers list a discovered server as
+  ``<name> (zeroconf <address>)``, and the password prompt names the address
+  and warns before sending it over clear HTTP
+* ``-c`` and ``--browser``: a server's answer is read in a stream, cut at 32 MiB
+  (100 KiB of gzip inflated to 200 MiB in memory) and within one deadline (a
+  body dripped byte by byte never timed out); a body that is not JSON, too
+  deep, or a token that is not one, is reported instead of stopping the
+  client, and one server's malformed ``_levels`` no longer ends the browser's
+  polling round for the servers after it
+* Exporters: Graphite and StatsD metric paths are filtered to
+  ``[A-Za-z0-9_.-]`` (a newline in a monitored name wrote a second metric);
+  a Prometheus item key is one label value, never re-parsed (``eth0,src:x``
+  overwrote a label, ``a,b`` lost the plugin's cycle); a URL's credentials
+  and query string are removed from an exported configuration value before
+  it is split on ``,``; the RabbitMQ user and password are percent-encoded
+  in the AMQP URL; NATS and restful never log a URL's credentials; a CSV
+  text cell that reads as a spreadsheet formula (``=``, ``+``, ``-``, ``@``,
+  tab, CR) is prefixed with ``'``
 * A ``-C`` path that does not exist stops Glances instead of starting with the
   defaults (and without the password that file carried)
 * ``/openapi.json`` is served only when ``api_doc`` is on

@@ -44,6 +44,9 @@ _STATUS_ROLE = {
 _STATUS_ORDER = {UNKNOWN: 0, OFFLINE: 1, PROTECTED: 2, UNSUPPORTED: 3, ONLINE: 4}
 
 _NAME_WIDTH = 16
+# A discovered server's NAME cell carries ` (zeroconf <address>)` too: the
+# column widens for it, up to this, and the alias is what gets truncated.
+_MAX_NAME_WIDTH = 40
 _STATUS_WIDTH = 11
 _MIN_COLUMN = 6
 _MAX_COLUMN = 24
@@ -77,6 +80,23 @@ def _pad(text: str, width: int) -> str:
     return text[:width].ljust(width + _GAP)
 
 
+def display_name(server: ServerEntry, width: int | None = None) -> str:
+    """The NAME cell: the alias, else the name. A discovered server says so, with
+    the address it was seen at, since anyone can announce under any name
+    (security audit 2026-10-17, A7). `width` truncates the alias, never the address."""
+    if server.source != "zeroconf":
+        return server.alias or server.name
+    suffix = f" (zeroconf {server.name})"
+    alias = server.alias or "?"
+    if width is not None:
+        alias = alias[: max(1, width - len(suffix))]
+    return alias + suffix
+
+
+def _name_width(servers: list[ServerEntry]) -> int:
+    return max(_NAME_WIDTH, min(_MAX_NAME_WIDTH, max(len(display_name(s)) for s in servers)))
+
+
 def build_lines(
     servers: list[ServerEntry], columns: list[Column], cursor: int, message: str | None = None
 ) -> list[list[Cell]]:
@@ -101,10 +121,11 @@ def build_lines(
         return lines
 
     widths = [_column_width(c, servers) for c in columns]
-    plugins = [Cell(text=" " * (2 + _NAME_WIDTH + _GAP + _STATUS_WIDTH + _GAP))]
+    name_width = _name_width(servers)
+    plugins = [Cell(text=" " * (2 + name_width + _GAP + _STATUS_WIDTH + _GAP))]
     fields = [
         Cell(text="  "),
-        Cell(text=_pad("NAME", _NAME_WIDTH), bold=True),
+        Cell(text=_pad("NAME", name_width), bold=True),
         Cell(text=_pad("STATUS", _STATUS_WIDTH), bold=True),
     ]
     for column, width in zip(columns, widths):
@@ -116,7 +137,7 @@ def build_lines(
     for i, server in enumerate(servers):
         row = [
             Cell(text="> " if i == cursor else "  ", bold=True),
-            Cell(text=_pad(server.alias or server.name, _NAME_WIDTH)),
+            Cell(text=_pad(display_name(server, name_width), name_width)),
             Cell(text=_pad(server.status, _STATUS_WIDTH), color=_STATUS_ROLE.get(server.status, ColorRole.DEFAULT)),
         ]
         for column, width in zip(columns, widths):

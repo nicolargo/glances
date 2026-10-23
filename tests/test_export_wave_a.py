@@ -13,6 +13,8 @@ Each client library is faked: the tests assert on what reaches it.
 
 from __future__ import annotations
 
+import re
+
 import pytest
 
 from tests.export_fakes import HOSTILE_NAME, fake_module, make_config, missing_module, plugins
@@ -59,6 +61,20 @@ def test_graphite_sends_numbers_under_v4_names(monkeypatch):
     assert "fakescalar.label" not in sent and "fakescalar.missing" not in sent, "numbers only"
     assert sent["fakecollection.eth0.rx"] == 10
     assert all(" " not in name for name in sent), "no space in a Graphite name"
+
+
+def test_graphite_and_statsd_names_cannot_carry_a_second_metric():
+    """Audit B-20: a newline or a space in a monitored name (a mount point, a
+    process) ended the line, and the rest was read as another metric."""
+    from glances.exports.glances_graphite.export import normalize as graphite
+    from glances.exports.glances_statsd.export import normalize as statsd
+
+    injected = "eth0\nglances.cpu.total 99 0\n.rx"
+    assert graphite(injected) == "eth0_glances.cpu.total_99_0_.rx"
+    assert statsd("fs./home:1|g\nevil:1|g.percent") == "fs._home1_g_evil1_g.percent", "v4 drops `:`, then the whitelist"
+    for fn in (graphite, statsd):
+        assert re.fullmatch(r"[A-Za-z0-9_.-]+", fn(f"fakecollection.{HOSTILE_NAME}.rx"))
+        assert fn("fakecollection.eth0.rx") == "fakecollection.eth0.rx", "a sane name is untouched"
 
 
 # ----------------------------------------------------------------- statsd
