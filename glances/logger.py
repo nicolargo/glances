@@ -57,7 +57,8 @@ class PrivateRotatingFileHandler(logging.handlers.RotatingFileHandler):
     def _open(self):
         def opener(path, flags):
             fd = os.open(path, flags | getattr(os, 'O_NOFOLLOW', 0), 0o600)
-            if hasattr(os, 'fchmod') and os.fstat(fd).st_uid == os.geteuid():
+            # Windows has neither fchmod nor geteuid: the mode is left alone there.
+            if hasattr(os, 'fchmod') and hasattr(os, 'geteuid') and os.fstat(fd).st_uid == os.geteuid():
                 # A file left by an older Glances keeps the mode it was created with.
                 os.fchmod(fd, 0o600)
             return fd

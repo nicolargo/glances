@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import logging
+import sys
 import textwrap
 from pathlib import Path
 
@@ -298,24 +299,35 @@ def test_unrelated_threshold_key_still_warns(tmp_path, monkeypatch, store, caplo
 # ------------------------------------------ security audit 2026-10-17 (folders)
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="MAX_PATH on Windows")
 def test_folder_size_survives_a_thousand_nested_folders(tmp_path):
-    """1 100 nested folders raised RecursionError and disabled the plugin on every cycle."""
+    """1 100 nested folders raised RecursionError and disabled the plugin on every cycle.
+
+    The walk must not depend on the recursion limit: it is lowered under the
+    depth instead of nesting past it, which PATH_MAX (1024 on macOS) forbids."""
     import os
 
     from glances.globals import folder_size
 
+    depth = 300
     # One mkdir per level: Path.mkdir(parents=True) and os.makedirs recurse too.
     deep = str(tmp_path)
-    for _ in range(1100):
+    for _ in range(depth):
         deep = os.path.join(deep, "d")
         os.mkdir(deep)
     with open(os.path.join(deep, "f.bin"), "wb") as f:
         f.write(b"\x00" * 4096)
-    size, err = folder_size(str(tmp_path))
+    limit = sys.getrecursionlimit()
+    sys.setrecursionlimit(depth // 2)
+    try:
+        size, err = folder_size(str(tmp_path))
+    finally:
+        sys.setrecursionlimit(limit)
     assert size >= 4096
     assert err == 0
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="symbolic links need a privilege on Windows")
 def test_folder_size_does_not_follow_links_and_keeps_its_errno_contract(tmp_path):
     from glances.globals import folder_size
 
