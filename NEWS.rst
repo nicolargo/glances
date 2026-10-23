@@ -118,6 +118,28 @@ REST API:
   proxy on the same host which forwards its own Host header must be listed in
   ``[outputs] webui_allowed_hosts``
 
+Security (post-cutover audit of 2026-10-17):
+
+* ClickHouse export: the table name is quoted in the ``INSERT`` statement too (a
+  plugin name published by a remote server reached it raw under ``-c --export``),
+  and a remote server's plugin names must look like plugin names
+* ``X-Forwarded-For`` is ignored unless the new ``[outputs] forwarded_allow_ips``
+  lists the proxies: a local client could rotate it to escape the
+  failed-authentication limit. The ``Server`` header is no longer sent
+* The password checks run at most two at a time, and filling the rate-limit
+  table no longer frees a locked-out address
+* ``[outputs] jwt_secret_key`` must be at least 32 characters (the shipped example
+  value is refused); tokens need ``exp`` and ``iat`` and must name the configured
+  user; ``jwt_expire_minutes`` is capped to a day
+* A ``-C`` path that does not exist stops Glances instead of starting with the
+  defaults (and without the password that file carried)
+* ``/openapi.json`` is served only when ``api_doc`` is on
+* The hddtemp client has a 2 s timeout and a 64 KiB cap
+* An on-alert or AMP command whose pipeline cannot start no longer leaves a
+  process behind; the commands read nothing from the terminal
+* ``--hide-public-info`` also hides the public IP information text, which a
+  ``{ip}`` template repeats (GHSA-vg43-q6xr-hp92)
+
 Special notes for package maintainers:
 
 * Minimal Python version is still 3.10
@@ -246,7 +268,7 @@ Security patches:
 
 * Credentials leaked through the published plugin limits (REST, XML-RPC, MCP and exports) - GHSA-TODO
 * Unauthenticated credential disclosure via the ports plugin - GHSA-2jqf-3j6f-683p
-* Plugin config secrets disclosed unauthenticated via the limits endpoints (incomplete fix of GHSA-2jqf-3j6f-683p)
+* Plugin config secrets disclosed unauthenticated via the limits endpoints (incomplete fix of GHSA-2jqf-3j6f-683p) - GHSA-5344-6x9j-2w33
 * SQL Injection leading to Data Exfiltration via OOB (Out-of-Band) in Glances ClickHouse Export Module - GHSA-2hvx-g9v6-w29h
 * Argument Injection in On-Alert Action Commands via Unescaped Quote Characters in secure.py's Command Tokenizer - GHSA-56xw-p9qm-r437
 

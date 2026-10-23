@@ -503,3 +503,15 @@ def test_allow_internal_skips_connect_guard(tmp_path, monkeypatch):
         p = PluginModel(StatsStore(), _cfg_with(tmp_path, monkeypatch, body))
         result = p._fetch_public_ip_info()
     assert result == {"ip": "1.2.3.4"}
+
+
+def test_hide_public_info_also_hides_the_public_info_text():
+    """GHSA-vg43-q6xr-hp92: `public_info_human` is rendered from the same document as
+    the address; with a `{ip}` template it repeats what `--hide-public-info` masks."""
+    from glances.plugins.ip.render_curses import render
+
+    payload = {"address": "192.168.1.2", "public_address": "203.0.113.9", "public_info_human": "FR/Paris 203.0.113.9"}
+    shown = " ".join(c.text for r in render(payload) for c in r.cells)
+    assert "203.0.113.9" in shown and "Paris" in shown
+    hidden = " ".join(c.text for r in render(payload, view={"hide_public_info": True}) for c in r.cells)
+    assert "203.0.113.9" not in hidden and "Paris" not in hidden

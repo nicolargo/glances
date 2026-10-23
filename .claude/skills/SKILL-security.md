@@ -95,7 +95,7 @@ of truth; this skill mirrors it.
 - `New v5 mitigation` — additional v5-specific work required beyond what v4 shipped
 - `Covered by a different v5 mechanism` — the bug class cannot occur in v5 because v5 uses a different technique than the v4 fix; a regression test locking the property in is mandatory
 
-_Table below last synced 2026-08-01. Source of truth is architecture §8._
+_Table below last synced 2026-10-23. Source of truth is architecture §8; the sync is a release-checklist item._
 
 | CVE | Severity | Mitigation in v5 | v5 status |
 |---|---|---|---|
@@ -118,6 +118,12 @@ _Table below last synced 2026-08-01. Source of truth is architecture §8._
 | **GHSA-73wf-9vmv-5pv9** | high | Incomplete fix of CVE-2026-32608 (nested list/dict values). v5 `ShellAction` pre-quotes every value with `shlex.quote(str(value))`, so a stringified list is one token — v4's operator-stripping sanitizer is not used. | Covered by a different v5 mechanism |
 | **GHSA-qcpp-8x79-hhp3** | high | Incomplete fix of CVE-2026-32608 (operator reconstruction across adjacent `{{{a}}}{{{b}}}`). v5 `shlex.quote` closes/reopens a quote at every boundary → single literal word. | Covered by a different v5 mechanism |
 | **GHSA-59fj-m2j6-hcxh** | high | Incomplete fix of CVE-2026-53925: `--disable-config-exec` did not cover on-alert action commands. v5 `ShellAction.allow_shell()` reads `[global] disable_config_exec` (set by the `--disable-config-exec` CLI overlay) and, when hardened, runs the rendered command through `create_subprocess_exec(*shlex.split(cmd))` — no shell, operators stay literal. | Carry forward (CVE-2026-68519 port ✅) |
+| **GHSA-2jqf-3j6f-683p** | high | `ports` plugin served `web_N_url` credentials/proxies unauthenticated. v5 publishes `scheme://host/path` only (`web_list.py`). | Covered by a different v5 mechanism — `test_ports_no_credential_leak.py` |
+| **GHSA-5344-6x9j-2w33** | high | Plugin config secrets via the limits endpoints and exports (incomplete fix of GHSA-2jqf). v5 `get_limits()` is a closed key space; exported options go through `_is_secret_key` + URL redaction. | Covered — `test_export_base.py`, `test_routes.py` |
+| **GHSA-2hvx-g9v6-w29h** | moderate | ClickHouse SQL injection / OOB exfiltration. v5 quotes identifiers for CREATE/ALTER **and** `insert(table=)` (2026-10-23), binds values, validates remote plugin names. | Carry forward — `test_export_wave_c.py` |
+| **GHSA-56xw-p9qm-r437** | moderate | Argument injection via quotes in `secure_popen`'s tokenizer. v5 tokenizes first, renders per argument (`secure.py`). | Carry forward — `test_secure_popen.py` |
+| **GHSA-vg43-q6xr-hp92** | moderate | `--hide-public-info` did not hide `public_info_human`. v5 TUI and WebUI hide both (2026-10-23); the API serves the address by design. | Carry forward — `test_plugin_ip.py` |
+| **GHSA-48jj-p764-8x75** | moderate | SSRF bypass of CVE-2026-35587 (scheme-only check). v5 checks and pins the resolved address, re-checks redirects. Residual: FTP redirect (B-14). | Carry forward — `test_plugin_ip.py` |
 | **GHSA-fp27-88fp-2phg** | high | CORS credentials guard used exact-match (`== ["*"]`) instead of membership; a multi-origin allowlist containing `*` bypassed it. v5 `_wire_cors` already uses `any(o == "*" for o in origins)`. | Carry forward (Phase 1.5 ✅) |
 
 ### Watching — unpublished advisories
