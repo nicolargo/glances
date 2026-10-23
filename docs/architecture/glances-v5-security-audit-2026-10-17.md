@@ -609,3 +609,25 @@ constats identiques en v4 sont marqués `v4` pour report sur `support/glancesv4`
   treize jours après leur publication.
 - Un sous-dossier `tests/security/` qui regroupe ces tests et tourne en
   premier dans `ci.yml`.
+
+---
+
+## Suivi des corrections — vague 1 (2026-10-23)
+
+| # | Constats | État | Commit |
+|---|---|---|---|
+| 1 | A3 (R-1, R-2, R-7) | **Corrigé** : `insert(table=table)` cité ; `remote_plugins()` n'accepte que `[a-z][a-z0-9_]{0,63}` hors sections réservées et exporteurs. Tests `test_clickhouse_insert_gets_the_quoted_table_name`, `test_remote_plugins_refuse_names_that_are_not_plugin_names`. | `ba5ead4` |
+| 2 | A1 (B-6), W-9 | **Corrigé** : `proxy_headers=False`, `server_header=False` ; clé optionnelle `[outputs] forwarded_allow_ips`. | `77365b7` |
+| 3 | A1 (W-2, B-7) | **Corrigé** : `verify_password_in_thread()` sous `CapacityLimiter(2)` ; l'éviction épargne les seaux verrouillés. | `2576eb6` |
+| 4 | A2 (B-2, I-2) | **Corrigé** : clé d'exemple ou < 32 octets refusée (clé éphémère + WARNING), `require_exp`/`require_iat`, `sub == username`, plafond 1440 min ; nouvel exemple dans `conf/glances.conf`. | `2576eb6` |
+| 5 | A10 (B-8) | **Corrigé** : `-C` absent → `ConfigFileError`, exit 2. | `5afb2f1` |
+| 6 | W-1 | **Corrigé** : `openapi_url=None` avec `api_doc=false`. | `5afb2f1` |
+| 7 | A5 (M6) | **Corrigé** : `settimeout(2)`, plafond 64 Kio. La conf livrée garde `disable=False` (aucun changement de comportement : après un délai dépassé, le plugin ne réinterroge plus le démon). | `5afb2f1` |
+| 8 | X-1, X-6, X-11 | **Corrigé** : étages lancés tués si un spawn échoue, `stdin=DEVNULL`, `isspace()`. | `02e727d` |
+| 9 | A8 (S-1, S-12) | **Corrigé** : `SECURITY.md`, `ISSUE_TEMPLATE/config.yml`, §8 + miroir synchronisés au 2026-10-23, alias CVE, case de checklist. La synchronisation a révélé **six** avis absents, pas quatre : s'ajoutent GHSA-vg43-q6xr-hp92 (corrigé en v5 : TUI et WebUI masquent `public_info_human` avec l'adresse) et GHSA-48jj-p764-8x75 (couvert par le plugin `ip` v5, résidu B-14). **Reste :** le `GHSA-TODO` de `NEWS.rst:247` (4.5.7, « credentials leaked through the published plugin limits ») n'a pas d'avis publié correspondant distinct de GHSA-5344 ; à trancher par le mainteneur. | `6a3ea78` |
+| 10 | S-5, S-6, S-7 | **Corrigé** : Dependabot `pip` + `docker`, `renovate.json` supprimé ; Trivy bloquant `CRITICAL,HIGH` sur les PR, job `pip-audit` ; `attestations: true`, `provenance: mode=max`, `sbom: true`. | `d049c7a` |
+| 11 | A9 (S-2, S-3) | **Corrigé** : `apt-get upgrade` dans `base`, `HEALTHCHECK` dans les deux images, commentaires compose/conf/README. Non fait (décision produit) : `USER glances`, `FROM` par digest (vague 2). | `d049c7a` |
+| 12 | I-1, X-4, X-7, X-8, W-11, I-10 | **Corrigé** : §8 décrit le mécanisme réel ; exemples d'actions sous `/var/log/glances`, règles `{{{var}}}`, `--`, un seul `>` ; `docs/config.rst` complété. | `6a3ea78`, `d049c7a` |
+
+Suite de tests après la vague 1 : voir le message de la session (exécutée
+avant la poussée).
