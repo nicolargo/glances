@@ -50,7 +50,19 @@ jobs:
         with:
           python-version: '3.13'
 
+      # Ignored, assessed in docs/architecture/glances-v5-security-audit-2026-10-17.md
+      # (S-13), no fix released upstream:
+      # - PYSEC-2026-1325 (ecdsa, Minerva timing attack): ecdsa is only pulled
+      #   in by python-jose; Glances signs HS256 with a symmetric secret, never
+      #   ECDSA (glances/security.py pins the algorithm).
+      # - PYSEC-2026-4298 (python-jose, DER public key accepted as HMAC secret
+      #   when the algorithms are unrestricted): Glances passes
+      #   algorithms=["HS256"] and a secret it generated or read from its own
+      #   configuration.
+      # Both go away with the planned move to PyJWT (audit, wave 3).
       - name: Audit the pinned requirements
         run: |
           python -m pip install --quiet pip-audit
-          pip-audit --no-deps --disable-pip -r requirements.txt -r all-requirements.txt -r docker-requirements.txt
+          pip-audit --no-deps --disable-pip \
+            --ignore-vuln PYSEC-2026-1325 --ignore-vuln PYSEC-2026-4298 \
+            -r requirements.txt -r all-requirements.txt -r docker-requirements.txt
