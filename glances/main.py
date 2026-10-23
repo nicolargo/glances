@@ -1461,7 +1461,7 @@ def run_browser(args: argparse.Namespace, config: GlancesConfig) -> int:
             message = None
             password = poller.password_for(server)
             if password is None and server.status == PROTECTED:
-                password = getpass.getpass(f"Password for {username}@{server.alias or server.name}: ") or None
+                password = _ask_browser_password(server, username)
             error = open_client(args, config, server.target, username, password)
             if error is not None:
                 message = f"{server.alias or server.name}: {error}"
@@ -1474,6 +1474,21 @@ def run_browser(args: argparse.Namespace, config: GlancesConfig) -> int:
         if discovery is not None:
             discovery.close()
     return 0
+
+
+def _ask_browser_password(server: Any, username: str) -> str | None:
+    """The prompt names where the password goes, not only the alias: a Zeroconf
+    announcement can claim any name (audit A7). Plain HTTP is said before the
+    prompt, on the terminal: client.py's WARNING is in the log only."""
+    from urllib.parse import urlsplit
+
+    from glances.client import parse_target
+
+    parts = urlsplit(parse_target(server.target)[0])
+    if parts.scheme == "http":
+        print(f"Warning: the password is sent over clear HTTP to {parts.netloc}", file=sys.stderr)
+    prompt = f"Password for {username}@{server.alias or server.name} ({parts.netloc}, {parts.scheme}): "
+    return getpass.getpass(prompt) or None
 
 
 def start_discovery(poller: Any, args: argparse.Namespace) -> Any:

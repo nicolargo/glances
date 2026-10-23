@@ -774,6 +774,29 @@ def test_importing_main_does_not_pull_the_web_stack():
 # ----------------------------------------------------------- main
 
 
+def test_the_browser_password_prompt_names_the_address_and_warns_of_clear_http(monkeypatch, capsys):
+    """Audit A7: `Password for glances@prod-db:` reads the same for the
+    configured server and for a Zeroconf announcement claiming its name."""
+    from glances.main import _ask_browser_password
+    from glances.servers_list import ServerEntry
+
+    prompts = []
+    monkeypatch.setattr("getpass.getpass", lambda prompt="": prompts.append(prompt) or "pw")
+
+    discovered = ServerEntry(name="192.168.1.66", port=61208, alias="prod-db", source="zeroconf")
+    assert _ask_browser_password(discovered, "glances") == "pw"
+    assert prompts[-1] == "Password for glances@prod-db (192.168.1.66:61208, http): "
+    assert capsys.readouterr().err == "Warning: the password is sent over clear HTTP to 192.168.1.66:61208\n"
+
+    static_https = ServerEntry(name="https://glances.example.com", port=61208)
+    _ask_browser_password(static_https, "glances")
+    assert prompts[-1] == "Password for glances@https://glances.example.com (glances.example.com:61208, https): "
+    assert capsys.readouterr().err == ""
+
+    monkeypatch.setattr("getpass.getpass", lambda prompt="": "")
+    assert _ask_browser_password(static_https, "glances") is None, "an empty answer is no password"
+
+
 def test_main_dispatches_to_set_password(monkeypatch):
     monkeypatch.setattr("getpass.getpass", lambda prompt="": "")  # empty → exit 1
     rc = main(["--set-password"])

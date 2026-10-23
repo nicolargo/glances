@@ -53,6 +53,66 @@ def test_an_announced_name_is_shown_printable_and_short():
     assert "\x1b" not in alias and len(alias) == 64
 
 
+@pytest.mark.parametrize(
+    "address",
+    ["127.0.0.1", "169.254.169.254", "224.0.0.1", "0.0.0.0", "255.255.255.255", "240.0.0.1", "not-an-ip"],
+)
+def test_an_announcement_pointing_off_the_lan_is_ignored(address, caplog):
+    """Audit B-19: the browser polls what is announced, and `-s --browser`
+    serves the answer on /api/5/serverslist -- a blind SSRF and port probe."""
+    servers: list[ServerEntry] = []
+    with caplog.at_level(logging.DEBUG, logger="glances.zeroconf"):
+        zc.Discovery(servers).add("alpha:61208._glances._tcp.local.", address, 61208, _API5_TXT)
+    assert servers == []
+    assert "not a LAN address" in caplog.text
+
+
+def test_an_announcement_using_a_static_servers_name_is_refused(caplog):
+    """Audit A7: `prod-db` announced from 192.168.1.66 would be listed, opened
+    and given the typed password as the configured `prod-db`."""
+    servers = [ServerEntry(name="prod-db", port=61208), ServerEntry(name="10.0.0.9", port=61208, alias="NAS")]
+    discovery = zc.Discovery(servers)
+    with caplog.at_level(logging.WARNING, logger="glances.zeroconf"):
+        discovery.add("prod-db:61208._glances._tcp.local.", "192.168.1.66", 61208, _API5_TXT)
+        discovery.add("nas:61208._glances._tcp.local.", "192.168.1.67", 61208, _API5_TXT)
+        discovery.add("other:61208._glances._tcp.local.", "192.168.1.68", 61208, _API5_TXT)
+    assert [s.name for s in servers] == ["prod-db", "10.0.0.9", "192.168.1.68"]
+    assert caplog.text.count("refused: a [serverlist] server has that name") == 2
+
+
+def test_discovery_follows_at_most_256_servers(caplog):
+    servers: list[ServerEntry] = []
+    discovery = zc.Discovery(servers)
+    with caplog.at_level(logging.WARNING, logger="glances.zeroconf"):
+        for n in range(300):
+            discovery.add(f"srv{n}:61208._glances._tcp.local.", f"10.{n // 256}.{n % 256}.1", 61208, _API5_TXT)
+    assert len(servers) == zc.MAX_DISCOVERED == 256
+    assert caplog.text.count("more than 256 servers announced") == 1, "one warning, not one per announcement"
+    # A known one may still move; a departure frees a slot.
+    discovery.add("srv0:61208._glances._tcp.local.", "10.9.9.9", 61208, _API5_TXT)
+    assert "10.9.9.9" in [s.name for s in servers]
+    discovery.remove("srv1:61208._glances._tcp.local.")
+    discovery.add("late:61208._glances._tcp.local.", "10.8.8.8", 61208, _API5_TXT)
+    assert len(servers) == 256 and "10.8.8.8" in [s.name for s in servers]
+
+
+def test_the_tui_shows_a_discovered_server_with_its_address():
+    """Audit A7: `prod-db` alone reads as the configured server; the address
+    it was seen at is what the user can check."""
+    from glances.outputs.browser_curses import build_lines, display_name
+
+    servers: list[ServerEntry] = []
+    discovery = zc.Discovery(servers)
+    discovery.add("prod-db:61208._glances._tcp.local.", "192.168.1.66", 61208, _API5_TXT)
+    discovery.add("x" * 64 + ":61208._glances._tcp.local.", "192.168.1.67", 61208, _API5_TXT)
+    assert display_name(servers[0]) == "prod-db (zeroconf 192.168.1.66)"
+    rows = ["".join(c.text for c in line) for line in build_lines(servers, [sl.Column("cpu", "total")], cursor=0)]
+    assert "prod-db (zeroconf 192.168.1.66)" in rows[4]
+    assert "(zeroconf 192.168.1.67)" in rows[5], "a long alias is truncated, the address stays visible"
+    assert rows[4].index("UNKNOWN") == rows[5].index("UNKNOWN"), "the columns still line up"
+    assert rows[3].index("STATUS") == rows[4].index("UNKNOWN")
+
+
 # ------------------------------------------------ CVE-2026-32634
 
 

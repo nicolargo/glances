@@ -134,6 +134,12 @@ Security (post-cutover audit of 2026-10-17):
 * InfluxDB 1.x and 2.x exports verify the server's TLS certificate (it was
   never checked); the new optional ``[influxdb]``/``[influxdb2] ssl_verify``
   key accepts ``false`` or a CA bundle path
+* Zeroconf: an announcement pointing at a loopback, link-local, multicast,
+  unspecified, broadcast or reserved address is ignored, as is one using the
+  name or alias of a ``[serverlist]`` server; at most 256 discovered servers
+  are followed. The TUI and Web UI browsers list a discovered server as
+  ``<name> (zeroconf <address>)``, and the password prompt names the address
+  and warns before sending it over clear HTTP
 * A ``-C`` path that does not exist stops Glances instead of starting with the
   defaults (and without the password that file carried)
 * ``/openapi.json`` is served only when ``api_doc`` is on
