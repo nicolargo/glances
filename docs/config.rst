@@ -170,6 +170,11 @@ per /64):
   client about 90.
 - ``rate_limit_burst`` (default ``0``, meaning one minute's worth): requests
   allowed at once.
+- ``forwarded_allow_ips`` (default empty): behind a reverse proxy, the
+  comma-separated addresses of the proxies whose ``X-Forwarded-For`` header
+  gives the real client address. When empty, the header is ignored and every
+  request counts for the address it came from, so a local client cannot
+  rotate the header to escape the limits.
 
 ``/status`` and ``/healthz`` are never limited.
 

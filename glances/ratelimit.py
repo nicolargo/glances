@@ -30,9 +30,10 @@ between TrustedHost and CORS, so outside authentication:
 `/status` and `/healthz` are never limited. `/api/5/token` is: it is where a
 password is guessed.
 
-The client address is the one uvicorn reports, which already honours
-`X-Forwarded-For` from a proxy on 127.0.0.1 (`--forwarded-allow-ips`); the
-header itself is never read here. An IPv6 client is counted per /64, the
+The client address is the one uvicorn reports: the peer's, unless
+`[outputs] forwarded_allow_ips` names the proxies whose `X-Forwarded-For`
+is trusted (`main.server_proxy_options`); the header itself is never read
+here. An IPv6 client is counted per /64, the
 block one host is usually given, so rotating addresses inside it does not
 reset its limit.
 """
