@@ -73,7 +73,7 @@ def test_the_browser_bundle_renders_the_list():
     assert page["browserText"].startswith("3 Glances servers available")
     rows = page["browserRows"]
     assert [[c["text"] for c in row["cells"]] for row in rows] == [
-        ["nas", "ONLINE", "91.3", "40"],
+        ["nas (zeroconf 10.0.0.1)", "ONLINE", "91.3", "40"],
         ["beta", "OFFLINE", "?", "?"],
         ["evil", "PROTECTED", "?", "?"],
     ]
