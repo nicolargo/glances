@@ -57,8 +57,8 @@ GPU_MEM_TOTAL: str = 'mem_info_vram_total'
 GPU_MEM_USED: str = 'mem_info_vram_used'
 GTT_MEM_TOTAL: str = 'mem_info_gtt_total'
 GTT_MEM_USED: str = 'mem_info_gtt_used'
-HWMON_NORTHBRIDGE_VOLTAGE_PATTERN: str = 'hwmon/hwmon[0-9]/in1_input'
-HWMON_TEMPERATURE_PATTERN = 'hwmon/hwmon[0-9]/temp[0-9]_input'
+HWMON_NORTHBRIDGE_VOLTAGE_PATTERN: str = 'hwmon/hwmon[0-9]*/in1_input'
+HWMON_TEMPERATURE_PATTERN = 'hwmon/hwmon[0-9]*/temp[0-9]_input'
 
 
 class AmdGPU:
