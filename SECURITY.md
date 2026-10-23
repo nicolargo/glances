@@ -2,29 +2,32 @@
 
 ## Supported Versions
 
-| Version | Support security updates |
-| ------- | ------------------------ |
-| 4.x     | :white_check_mark:       |
-| < 4.0   | :x:                      |
+| Version | Supported                                   |
+| ------- | ------------------------------------------- |
+| 5.x     | :white_check_mark: features and security    |
+| 4.5.x   | :white_check_mark: security fixes only (`support/glancesv4`) |
+| < 4.5   | :x:                                         |
 
 ## Reporting a Vulnerability
 
-If there are any vulnerabilities in {{cookiecutter.project_name}}, don't hesitate to report them.
+Please **do not open a public issue** for a security problem.
 
-    1. Describe the vulnerability.
+Report it privately through GitHub:
+<https://github.com/nicolargo/glances/security/advisories/new>
+(it reaches the maintainer only). Describe the issue, the affected version
+or commit, the configuration needed, the steps to reproduce and the impact;
+a proof of concept or a patch is welcome.
 
-      * Type of issue (e.g. buffer overflow, SQL injection, cross-site scripting, etc.)
-      * Full paths of source file(s) related to the manifestation of the issue
-      * The location of the affected source code (tag/branch/commit or direct URL)
-      * Any special configuration required to reproduce the issue
-      * Step-by-step instructions to reproduce the issue
-      * Proof-of-concept or exploit code (if possible)
-      * Impact of the issue, including how an attacker might exploit the issue
+You get an acknowledgement within 7 days. The fix is released as a Glances
+version and a GitHub Security Advisory (with a CVE when it applies), and you
+are credited in the advisory and in `NEWS.rst` unless you prefer not to be.
+Please keep the report private until then; once a fix is published, or the
+report is declined, you are free to disclose it.
 
-    2. If you have a fix, that is most welcome -- please attach or summarize it in your message!
+## Hardening a deployment
 
-    3. We will evaluate the vulnerability and, if necessary, release a fix or mitigating steps to address it. We will contact you to let you know the outcome, and will credit you in the report.
-
-    4. Please do not disclose the vulnerability publicly until a fix is released!
-
-Once we have either a) published a fix, or b) declined to address the vulnerability for whatever reason, you are free to publicly disclose it.
+The REST API and the WebUI are served without authentication by default,
+for a personal use on a private network. For anything else, read the
+security section of the configuration documentation:
+<https://glances.readthedocs.io/en/latest/config.html> (`[outputs]
+password`, `webui_allowed_hosts`, `ssl_keyfile`, rate limiting).

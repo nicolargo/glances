@@ -9,7 +9,7 @@
 """Secures functions for Glances"""
 
 import re
-from subprocess import PIPE, Popen, TimeoutExpired
+from subprocess import DEVNULL, PIPE, Popen, TimeoutExpired
 
 from glances.globals import nativestr
 
@@ -68,7 +68,7 @@ def __split_args(cmd, render=None):
     are already fixed. Rendering after the split, and never before, is what
     keeps a templated value confined to a single argument.
     """
-    tmp_split = [_ for _ in list(filter(None, re.split(r'(\s+)|(".*?"+?)|(\'.*?\'+?)', cmd))) if _ != ' ']
+    tmp_split = [_ for _ in list(filter(None, re.split(r'(\s+)|(".*?"+?)|(\'.*?\'+?)', cmd))) if not _.isspace()]
     args = [_[1:-1] if (_[0] == _[-1] == '"') or (_[0] == _[-1] == '\'') else _ for _ in tmp_split]
     return args if render is None else [render(_) for _ in args]
 
@@ -92,7 +92,7 @@ def __communicate(p_list, timeout):
 
 def __run_argv(cmd, timeout=None, render=None):
     """Execute cmd as a single process, without interpreting any operator."""
-    p = Popen(__split_args(cmd, render), shell=False, stdin=None, stdout=PIPE, stderr=PIPE)
+    p = Popen(__split_args(cmd, render), shell=False, stdin=DEVNULL, stdout=PIPE, stderr=PIPE)
     p_ret = __communicate([p], timeout)
     if p_ret is None:
         return f'Glances error: command timeout after {timeout}s ({cmd})'
@@ -124,15 +124,26 @@ def __secure_popen(cmd, timeout=None, render=None):
     # Split by space character, but do no split spaces within quotes (remove surrounding quotes, though)
     sub_cmd_split_list = [__split_args(sub_cmd, render) for sub_cmd in cmd.split('|')]
 
-    sub_cmd_stdin = None
+    # The first stage reads nothing: a configured command must not compete
+    # with the TUI for the terminal (security audit 2026-10-17, X-11).
+    sub_cmd_stdin = DEVNULL
     p_list = []
-    for sub_cmd_split in sub_cmd_split_list:
-        p = Popen(sub_cmd_split, shell=False, stdin=sub_cmd_stdin, stdout=PIPE, stderr=PIPE)
-        if p_list:
-            # Allow the previous process to receive a SIGPIPE if p exits.
-            p_list[-1].stdout.close()
-        p_list.append(p)
-        sub_cmd_stdin = p.stdout
+    try:
+        for sub_cmd_split in sub_cmd_split_list:
+            p = Popen(sub_cmd_split, shell=False, stdin=sub_cmd_stdin, stdout=PIPE, stderr=PIPE)
+            if p_list:
+                # Allow the previous process to receive a SIGPIPE if p exits.
+                p_list[-1].stdout.close()
+            p_list.append(p)
+            sub_cmd_stdin = p.stdout
+    except BaseException:
+        # A stage that cannot start (missing binary, permission) must not
+        # leave the stages already started running, blocked on a pipe nobody
+        # reads: one orphan per alert cycle (security audit 2026-10-17, X-1).
+        for p in p_list:
+            p.kill()
+            p.wait()
+        raise
 
     p_ret = __communicate(p_list, timeout)
     if p_ret is None:

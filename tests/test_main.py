@@ -47,6 +47,7 @@ from glances.main import (
     main,
     modules_list,
     serve,
+    server_proxy_options,
     server_ssl_options,
     setup_logging,
     validate_args,
@@ -713,6 +714,25 @@ def test_serve_hands_the_ssl_options_to_uvicorn(config):
         asyncio.run(serve(args, app, scheduler, host, port, tui, ssl))
     assert MockConfig.call_args.kwargs["ssl_keyfile"] == "k.pem"
     assert MockConfig.call_args.kwargs["ssl_certfile"] == "c.pem"
+
+
+def test_proxy_headers_are_ignored_unless_the_proxies_are_named(config):
+    """Audit 2026-10-17, A1: uvicorn trusted X-Forwarded-For from loopback by default."""
+    assert server_proxy_options(config) == {"proxy_headers": False, "server_header": False}
+    options = server_proxy_options(_outputs(config, forwarded_allow_ips="10.0.0.1, 10.0.0.2"))
+    assert options == {"proxy_headers": True, "server_header": False, "forwarded_allow_ips": "10.0.0.1, 10.0.0.2"}
+
+
+def test_serve_hands_the_proxy_options_to_uvicorn(config):
+    args = build_parser().parse_args(["-s"])
+    app, scheduler, host, port, tui = assemble(args, config)
+    scheduler.run_forever = AsyncMock(return_value=None)  # type: ignore[method-assign]
+    scheduler.stop = AsyncMock(return_value=None)  # type: ignore[method-assign]
+    with patch("uvicorn.Config") as MockConfig, patch("uvicorn.Server") as MockServer:
+        MockServer.return_value.serve = AsyncMock(return_value=None)
+        asyncio.run(serve(args, app, scheduler, host, port, tui))
+    assert MockConfig.call_args.kwargs["proxy_headers"] is False
+    assert MockConfig.call_args.kwargs["server_header"] is False
 
 
 def test_serve_tui_mode_does_not_instantiate_uvicorn(config):

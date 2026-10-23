@@ -25,7 +25,7 @@ import os
 import pytest
 from fastapi.testclient import TestClient
 
-from glances import ratelimit, webserver
+from glances import ratelimit, security
 from glances.config import GlancesConfig
 from glances.security import hash_password
 from glances.stats_store import StatsStore
@@ -62,13 +62,13 @@ def clock(monkeypatch):
 def pbkdf2_calls(monkeypatch):
     """Count the password checks the auth middleware runs."""
     calls = []
-    real = webserver.verify_password
+    real = security.verify_password
 
     def counting(password, password_hash):
         calls.append(password)
         return real(password, password_hash)
 
-    monkeypatch.setattr(webserver, "verify_password", counting)
+    monkeypatch.setattr(security, "verify_password", counting)
     return calls
 
 
@@ -294,6 +294,17 @@ def test_the_table_stays_bounded(clock, monkeypatch):
     for i in range(10):
         buckets.take(f"192.0.2.{i}")
     assert len(buckets) <= 3
+
+
+def test_filling_the_table_does_not_free_a_locked_out_address(clock, monkeypatch):
+    """Audit 2026-10-17, A1 / B-7: evicting the least recently seen entry handed it a full bucket."""
+    monkeypatch.setattr(ratelimit, "_MAX_CLIENTS", 3)
+    buckets = ratelimit.Buckets(per_minute=60, capacity=2)
+    assert buckets.take("locked") == buckets.take("locked") == 0.0 and buckets.take("locked") > 0, "locked out"
+    for i in range(10):
+        buckets.take(f"192.0.2.{i}")
+    assert len(buckets) <= 3
+    assert buckets.wait("locked") > 0, "still locked out"
 
 
 # ---------------------------------------------------------------- logging

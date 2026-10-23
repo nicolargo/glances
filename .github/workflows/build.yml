@@ -56,7 +56,7 @@ jobs:
         uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # release/v1
         with:
           skip-existing: true
-          attestations: false
+          attestations: true
           print-hash: true
 
   pypi_test:
@@ -83,4 +83,4 @@ jobs:
         with:
           repository-url: https://test.pypi.org/legacy/
           skip-existing: true
-          attestations: false
+          attestations: true

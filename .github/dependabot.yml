@@ -16,3 +16,15 @@ updates:
       npm:
         patterns:
           - "*"
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      pip:
+        patterns:
+          - "*"
+  - package-ecosystem: "docker"
+    directory: "/docker-files"
+    schedule:
+      interval: "weekly"

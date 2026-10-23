@@ -58,6 +58,9 @@ export default {
 		// browser would not reproduce this; the 2026-09-12 spec reverses that.
 		publicInfo() {
 			if (this.degrade.hide_ip_location) return "";
+			// Rendered from the same document as the address: with a `{ip}`
+			// template it repeats it (GHSA-vg43-q6xr-hp92).
+			if (this.serverArgs.hide_public_info) return "";
 			return this.payload?.public_info_human || "";
 		},
 	},

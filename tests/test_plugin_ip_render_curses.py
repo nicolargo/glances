@@ -73,17 +73,23 @@ def test_hide_ip_location_drops_only_the_geolocation():
 
 
 def test_hide_ip_location_is_independent_of_hide_public_info():
-    """The two flags are orthogonal: `--hide-public-info` masks the public
-    address octets, `hide_ip_location` drops the geolocation string."""
+    """`hide_ip_location` (header degradation) drops the geolocation string
+    alone; `--hide-public-info` masks the public address octets AND drops the
+    geolocation string, which is rendered from the same document and repeats
+    the address with a `{ip}` template (GHSA-vg43-q6xr-hp92)."""
     payload = {
         "address": "192.168.1.10",
         "mask_cidr": 24,
         "public_address": "1.2.3.4",
         "public_info_human": "Wonderland",
     }
+    located = _flat(render(payload, None, view={"hide_ip_location": True}))
+    assert "1.2.3.4" in located
+    assert "Wonderland" not in located
+
     masked = _flat(render(payload, None, view={"hide_public_info": True}))
     assert "1.2.*.*" in masked
-    assert "Wonderland" in masked  # geolocation untouched by the CLI flag
+    assert "Wonderland" not in masked
 
     both = _flat(render(payload, None, view={"hide_public_info": True, "hide_ip_location": True}))
     assert "1.2.*.*" in both

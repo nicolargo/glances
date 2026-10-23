@@ -1678,6 +1678,23 @@ def server_ssl_options(config: GlancesConfig) -> dict[str, str]:
     return options
 
 
+def server_proxy_options(config: GlancesConfig) -> dict[str, Any]:
+    """`[outputs] forwarded_allow_ips`, as `uvicorn.Config` takes it.
+
+    uvicorn trusts `X-Forwarded-For` from 127.0.0.1 by default, so any local
+    client could rotate the header and escape the failed-authentication limit,
+    or lock a third party out (security audit 2026-10-17, A1). Proxy headers
+    are therefore ignored unless the operator names the proxies. The `Server`
+    banner is never sent.
+    """
+    options: dict[str, Any] = {"proxy_headers": False, "server_header": False}
+    allowed = str(config.get("outputs", "forwarded_allow_ips", "") or "").strip()
+    if allowed:
+        options["proxy_headers"] = True
+        options["forwarded_allow_ips"] = allowed
+    return options
+
+
 # --------------------------------------------------------------- serve
 
 
@@ -1733,6 +1750,7 @@ async def serve(
                 port=port,
                 log_level="warning",
                 access_log=False,
+                **server_proxy_options(app.state.config),
                 **(ssl or {}),
             )
             server = uvicorn.Server(uvi_config)

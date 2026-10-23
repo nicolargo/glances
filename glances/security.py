@@ -32,11 +32,15 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import logging
 import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
 
+import anyio
 from jose import JWTError, jwt
+
+logger = logging.getLogger(__name__)
 
 # ----------------------------------------------------- password hashing
 
@@ -86,11 +90,29 @@ def verify_password(plaintext: str, stored: str) -> bool:
     return hmac.compare_digest(candidate, expected)
 
 
+# PBKDF2 is ~50-250 ms of CPU per check. Two at a time, process-wide: a flood
+# of unseen Basic headers (one per address, past the failed-login limiter)
+# can no longer fill the thread pool and the host's cores (security audit
+# 2026-10-17, A1 / W-2). Good credentials are checked once, then remembered
+# (`KnownCredentials`), so this never queues the users already logged in.
+_VERIFY_LIMITER = anyio.CapacityLimiter(2)
+
+
+async def verify_password_in_thread(plaintext: str, stored: str) -> bool:
+    """`verify_password` off the event loop, at most two checks at a time."""
+    return await anyio.to_thread.run_sync(verify_password, plaintext, stored, limiter=_VERIFY_LIMITER)
+
+
 # ----------------------------------------------------- JWT bearer tokens
 
 _JWT_ALG = "HS256"
 _JWT_ISSUER = "glances"
 _DEFAULT_EXPIRE_MINUTES = 60
+# A configured key shorter than this, or the example shipped in glances.conf,
+# is refused: anyone could mint a token (security audit 2026-10-17, A2).
+_MIN_SECRET_BYTES = 32
+_EXAMPLE_SECRET = "your-secure-secret-key-here"
+_MAX_EXPIRE_MINUTES = 24 * 60
 
 
 class JWTHandler:
@@ -106,10 +128,28 @@ class JWTHandler:
     jwt_secret_key`` in long-running deployments.
     """
 
-    def __init__(self, secret_key: str | None = None, expire_minutes: int = _DEFAULT_EXPIRE_MINUTES) -> None:
+    def __init__(
+        self,
+        secret_key: str | None = None,
+        expire_minutes: int = _DEFAULT_EXPIRE_MINUTES,
+        username: str | None = None,
+    ) -> None:
+        if secret_key and (secret_key == _EXAMPLE_SECRET or len(secret_key.encode()) < _MIN_SECRET_BYTES):
+            logger.warning(
+                "[outputs] jwt_secret_key is the example value or shorter than %d bytes: ignored, "
+                "using an ephemeral key (tokens become invalid on every restart)",
+                _MIN_SECRET_BYTES,
+            )
+            secret_key = None
         self._secret_was_generated = not secret_key
         self._secret_key = secret_key or secrets.token_urlsafe(32)
+        expire_minutes = int(expire_minutes)
+        if expire_minutes > _MAX_EXPIRE_MINUTES:
+            logger.warning("[outputs] jwt_expire_minutes=%d capped to %d", expire_minutes, _MAX_EXPIRE_MINUTES)
+            expire_minutes = _MAX_EXPIRE_MINUTES
         self._expire_minutes = expire_minutes
+        # When set, a token is only valid for this user (the one who can mint them).
+        self._username = username
 
     @property
     def expire_minutes(self) -> int:
@@ -139,11 +179,14 @@ class JWTHandler:
                 self._secret_key,
                 algorithms=[_JWT_ALG],
                 issuer=_JWT_ISSUER,
+                options={"require_exp": True, "require_iat": True},
             )
         except JWTError:
             return None
         sub = payload.get("sub")
         if not isinstance(sub, str):
+            return None
+        if self._username is not None and not hmac.compare_digest(sub.encode(), self._username.encode()):
             return None
         return sub
 

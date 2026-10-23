@@ -725,7 +725,9 @@ def test_token_401_with_wrong_password(config_factory, store):
 
 
 def test_token_round_trip(config_factory, store):
-    config = config_factory(password=hash_password("hunter2"), jwt_secret_key="stable")
+    config = config_factory(
+        password=hash_password("hunter2"), jwt_secret_key="stable-secret-of-at-least-thirty-two-bytes"
+    )
     app = _make_app_with_plugins(config, store)
     with TestClient(app) as client:
         r = client.post("/api/5/token", headers=_basic_header("glances", "hunter2"))
@@ -1237,10 +1239,10 @@ def test_args_matches_the_real_argument_set(config_factory, store):
 def test_token_hashes_off_the_event_loop(config_factory, store, monkeypatch):
     """Same contract as the auth middleware: PBKDF2 must not run on the loop
     the scheduler shares with the API."""
-    import glances.routes as routes
+    from glances import security
 
     calls: list[bool] = []
-    real = routes.verify_password
+    real = security.verify_password
 
     def spy(plaintext, stored):
         try:
@@ -1250,7 +1252,7 @@ def test_token_hashes_off_the_event_loop(config_factory, store, monkeypatch):
             calls.append(False)
         return real(plaintext, stored)
 
-    monkeypatch.setattr(routes, "verify_password", spy)
+    monkeypatch.setattr(security, "verify_password", spy)
     config = config_factory(password=hash_password("hunter2"))
     app = _make_app_with_plugins(config, store)
     with TestClient(app) as client:

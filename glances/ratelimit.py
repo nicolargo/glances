@@ -30,9 +30,10 @@ between TrustedHost and CORS, so outside authentication:
 `/status` and `/healthz` are never limited. `/api/5/token` is: it is where a
 password is guessed.
 
-The client address is the one uvicorn reports, which already honours
-`X-Forwarded-For` from a proxy on 127.0.0.1 (`--forwarded-allow-ips`); the
-header itself is never read here. An IPv6 client is counted per /64, the
+The client address is the one uvicorn reports: the peer's, unless
+`[outputs] forwarded_allow_ips` names the proxies whose `X-Forwarded-For`
+is trusted (`main.server_proxy_options`); the header itself is never read
+here. An IPv6 client is counted per /64, the
 block one host is usually given, so rotating addresses inside it does not
 reset its limit.
 """
@@ -113,7 +114,12 @@ class Buckets:
     def _store(self, key: str, tokens: float, now: float) -> None:
         self._table[key] = (tokens, now)
         if len(self._table) > _MAX_CLIENTS:
-            del self._table[next(iter(self._table))]
+            # Forget the least recently seen client that is NOT locked out:
+            # filling the table must not hand a locked address a full bucket
+            # back (security audit 2026-10-17, A1 / B-7). When every entry is
+            # locked, the oldest goes anyway: the table stays bounded.
+            victim = next((k for k, (t, _) in self._table.items() if t >= 1.0), next(iter(self._table)))
+            del self._table[victim]
 
 
 class RateLimitMiddleware:

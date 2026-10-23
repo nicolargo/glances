@@ -62,8 +62,10 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]] | Non
             cells.append(Cell(text=str(shown)))
             # Geolocation is the widest, least essential segment of the
             # banner: it is the first thing the header cascade drops.
+            # Rendered from the same document as the address: with a
+            # `{ip}` template it repeats it (GHSA-vg43-q6xr-hp92).
             info = payload.get("public_info_human")
-            if info and not view.get("hide_ip_location"):
+            if info and not view.get("hide_ip_location") and not hide_public:
                 cells.append(Cell(text=str(info)))
     except (UnicodeEncodeError, KeyError):
         pass

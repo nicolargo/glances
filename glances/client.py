@@ -37,6 +37,7 @@ from __future__ import annotations
 import asyncio
 import ipaddress
 import logging
+import re
 import time
 from typing import Any
 from urllib.parse import urlsplit
@@ -256,11 +257,33 @@ class RemotePlugin(GlancesPluginBase):
         return [item for item in export if _Processlist._matches_export(self, item)]  # type: ignore[arg-type]
 
 
+# A plugin name as the server publishes it: the exporters use it as a table,
+# measurement, topic or metric name, and `export_base._limits_for` as the name
+# of a section of THIS machine's glances.conf. Every local plugin name matches
+# (security audit 2026-10-17, R-1/R-2/R-7).
+_PLUGIN_NAME_RE = re.compile(r"[a-z][a-z0-9_]{0,63}")
+# Sections of glances.conf that are not plugins: a server must not make the
+# client export them.
+_RESERVED_SECTIONS = frozenset({"global", "alerts", "outputs", "client", "serverlist", "passwords", "export"})
+
+
+def _exporter_sections() -> frozenset[str]:
+    import pkgutil
+
+    from glances import exports
+
+    return frozenset(m.name.removeprefix("glances_") for m in pkgutil.iter_modules(exports.__path__))
+
+
 def remote_plugins(schema: dict[str, Any], store: Any, config: Any, not_exportable: set[str]) -> list[RemotePlugin]:
     """One `RemotePlugin` per plugin of the server's schema (`/api/5/all/info`), for the exporters."""
     plugins = []
+    reserved = _RESERVED_SECTIONS | _exporter_sections()
     for name, fields in schema.items():
         if name in not_exportable or not isinstance(fields, dict):
+            continue
+        if not _PLUGIN_NAME_RE.fullmatch(name) or name in reserved or name.startswith("amp_"):
+            logger.warning("Server plugin %r ignored: not a plugin name", name)
             continue
         is_collection = any(isinstance(f, dict) and f.get("primary_key") for f in fields.values())
         cls = type(

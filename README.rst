@@ -400,7 +400,9 @@ Run last version of Glances container in *console mode*:
 
 By default, the /etc/glances/glances.conf file is used (based on docker-compose/glances.conf).
 This file sets ``bind_address=0.0.0.0`` in the ``[outputs]`` section, so that the Web server mode
-is reachable from outside the container.
+is reachable from outside the container. On a shared network, also set ``[outputs] password``
+and ``webui_allowed_hosts`` (see the configuration documentation). Mounting the Docker socket
+``:ro`` protects the file, not the Docker API: the container can still drive the daemon.
 
 Additionally, if you want to use your own glances.conf file, you can
 create your own Dockerfile:

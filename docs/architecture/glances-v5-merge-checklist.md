@@ -99,4 +99,7 @@ exécuter le jour de la bascule.
 - [ ] CI verte sur la tête de `develop-v5`, `make pre-commit` propre.
 - [x] Créer `support/glancesv4` depuis `develop`.
 - [ ] Fusionner `develop-v5 → develop`, arrêter le weekly merge.
+- [ ] §8 du document d'architecture et `.claude/skills/SKILL-security.md`
+  synchronisés avec les avis publiés (chaque GHSA/CVE de `NEWS.rst` a sa ligne
+  et son verdict v5) — à refaire à chaque release (audit 2026-10-17, A8).
 - [ ] Publier `5.0.0b1` depuis `develop`.

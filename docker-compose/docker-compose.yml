@@ -12,6 +12,11 @@ services:
       start_period: 40s
 
     pid: "host"
+    # Host networking exposes the REST API / WebUI on every interface of the
+    # host, unauthenticated by default: on a shared network set [outputs]
+    # password and webui_allowed_hosts in ./glances.conf, or replace
+    # network_mode by `ports: ["61208:61208"]` (the network plugin then sees
+    # the container's interfaces only).
     network_mode: "host"
 
     read_only: true
@@ -27,6 +32,8 @@ services:
 
     volumes:
       - "/:/rootfs:ro"
+      # `:ro` protects the socket file, not the Docker API behind it: whoever
+      # controls this container controls the Docker daemon.
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       # Uncomment for qemu/libvirt/kvm support with modular libvirt daemons
       # - "/var/run/libvirt/virtqemud-sock:/var/run/libvirt/libvirt-sock:ro"

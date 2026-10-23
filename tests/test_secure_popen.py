@@ -128,3 +128,32 @@ class TestSecurePopenRender:
             secure_popen('echo {{v}}')
 
         assert argv_list == [['echo', '{{v}}']]
+
+
+# ---------------------------------------------------------------------------
+# Tests – security audit 2026-10-17 (X-1, X-6, X-11)
+# ---------------------------------------------------------------------------
+
+
+def _sleepers(marker):
+    import psutil
+
+    return [p for p in psutil.process_iter(["cmdline"]) if (p.info["cmdline"] or [])[:2] == ["sleep", marker]]
+
+
+def test_a_stage_that_cannot_start_kills_the_stages_already_started():
+    """X-1: `cat big | grp ERROR` (typo) left `cat` running, as root, once per alert cycle."""
+    marker = "31337"
+    with pytest.raises(FileNotFoundError):
+        secure_popen(f"sleep {marker} | no_such_command_zzz")
+    assert _sleepers(marker) == []
+
+
+def test_children_read_nothing_from_the_terminal():
+    """X-11: a configured `cat` competed with the TUI for stdin."""
+    assert secure_popen("cat", timeout=5) == ""
+
+
+def test_runs_of_whitespace_are_separators_not_arguments():
+    """X-6: two spaces or a tab became an argument of their own."""
+    assert secure_popen("echo -n A\t\tB  C") == "A B C"

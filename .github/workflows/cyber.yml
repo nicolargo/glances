@@ -6,7 +6,6 @@ on:
 jobs:
   trivy:
     name: Trivy scan
-    continue-on-error: true
     timeout-minutes: 15
 
     runs-on: ubuntu-latest
@@ -26,9 +25,44 @@ jobs:
           ignore-unfixed: true
           format: 'sarif'
           output: 'trivy-results.sarif'
-          severity: 'CRITICAL'
+          severity: 'CRITICAL,HIGH'
 
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # v3
         with:
           sarif_file: 'trivy-results.sarif'
+
+  pip-audit:
+    name: pip-audit of the pinned dependencies
+    timeout-minutes: 10
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+        with:
+          python-version: '3.13'
+
+      # Ignored, assessed in docs/architecture/glances-v5-security-audit-2026-10-17.md
+      # (S-13), no fix released upstream:
+      # - PYSEC-2026-1325 (ecdsa, Minerva timing attack): ecdsa is only pulled
+      #   in by python-jose; Glances signs HS256 with a symmetric secret, never
+      #   ECDSA (glances/security.py pins the algorithm).
+      # - PYSEC-2026-4298 (python-jose, DER public key accepted as HMAC secret
+      #   when the algorithms are unrestricted): Glances passes
+      #   algorithms=["HS256"] and a secret it generated or read from its own
+      #   configuration.
+      # Both go away with the planned move to PyJWT (audit, wave 3).
+      - name: Audit the pinned requirements
+        run: |
+          python -m pip install --quiet pip-audit
+          pip-audit --no-deps --disable-pip \
+            --ignore-vuln PYSEC-2026-1325 --ignore-vuln PYSEC-2026-4298 \
+            -r requirements.txt -r all-requirements.txt -r docker-requirements.txt

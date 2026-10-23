@@ -27,13 +27,17 @@ Glances loads **exactly one** configuration file:
 Files are not merged: a user file hides the system-wide one entirely. Running
 without any configuration file is valid, the built-in defaults are used.
 
-A file that exists but cannot be read or parsed stops Glances: it is never
-skipped silently (it could hold the ``[outputs] password``).
+A file that exists but cannot be read or parsed stops Glances, and so does a
+``-C`` path that does not exist: it is never skipped silently (it could hold
+the ``[outputs] password``).
 
 Any option can then be overridden with an environment variable named
 ``GLANCES_<SECTION>__<KEY>`` (note the double underscore), for example
 ``GLANCES_OUTPUTS__BIND_ADDRESS=0.0.0.0``. This is handy in containers.
-Options given on the command line override both.
+Options given on the command line override both. Every option can be set
+this way, the security ones included (``password``, ``auth_fail_per_minute``,
+the ``*_action`` commands): the environment of the Glances process is
+trusted as much as its configuration file.
 
 ``glances --issue`` shows which configuration file was loaded.
 
@@ -158,9 +162,11 @@ PBKDF2 hash (``<salt>$<hex digest>``), never the clear password: Glances
 never writes to ``glances.conf`` itself. Hashes made by Glances 4 are not
 compatible and must be generated again. The user name is ``glances`` unless
 ``username`` is set. Clients authenticate with HTTP Basic, or with a JWT
-Bearer token obtained from ``/api/5/token``; ``jwt_secret_key`` (a random
-key per run when unset, so tokens do not survive a restart) and
-``jwt_expire_minutes`` (default ``60``) configure the tokens.
+Bearer token obtained from ``/api/5/token``; ``jwt_secret_key`` (at least
+32 characters, for example ``python3 -c "import secrets;
+print(secrets.token_urlsafe(32))"``; a random key per run when unset or too
+short, so tokens do not survive a restart) and ``jwt_expire_minutes``
+(default ``60``, at most ``1440``) configure the tokens.
 
 **Rate limiting.** Requests are counted per client address (an IPv6 client
 per /64):
@@ -174,6 +180,11 @@ per /64):
   client about 90.
 - ``rate_limit_burst`` (default ``0``, meaning one minute's worth): requests
   allowed at once.
+- ``forwarded_allow_ips`` (default empty): behind a reverse proxy, the
+  comma-separated addresses of the proxies whose ``X-Forwarded-For`` header
+  gives the real client address. When empty, the header is ignored and every
+  request counts for the address it came from, so a local client cannot
+  rotate the header to escape the limits.
 
 ``/status`` and ``/healthz`` are never limited.
 
@@ -201,7 +212,11 @@ contains ``*``, which the CORS specification forbids.
 no password is set, it only exposes the options the WebUI needs
 (``[global] refresh`` and ``[outputs] theme``, ``max_processes_display``,
 ``api_doc``). With a password, authenticated clients get the whole
-configuration, secrets (passwords, tokens, keys...) redacted.
+configuration, with the options whose *name* designates a secret (passwords,
+tokens, keys...) and the credentials embedded in URL values redacted. A
+secret written inside another value (an action command line, an AMP
+command) is served as is to an authenticated client: there is a single
+role, the operator.
 
 Each plugin, export module, and application monitoring process (AMP) can
 have a section. Below is an example for the CPU plugin:
