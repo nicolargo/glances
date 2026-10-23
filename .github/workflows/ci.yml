@@ -50,7 +50,6 @@ jobs:
         DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
       needs: [quality, test]
     cyber:
-      if: github.ref == 'refs/heads/develop'
       permissions:
         contents: read
         security-events: write

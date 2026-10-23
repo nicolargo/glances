@@ -6,7 +6,6 @@ on:
 jobs:
   trivy:
     name: Trivy scan
-    continue-on-error: true
     timeout-minutes: 15
 
     runs-on: ubuntu-latest
@@ -26,9 +25,32 @@ jobs:
           ignore-unfixed: true
           format: 'sarif'
           output: 'trivy-results.sarif'
-          severity: 'CRITICAL'
+          severity: 'CRITICAL,HIGH'
 
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # v3
         with:
           sarif_file: 'trivy-results.sarif'
+
+  pip-audit:
+    name: pip-audit of the pinned dependencies
+    timeout-minutes: 10
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+        with:
+          python-version: '3.13'
+
+      - name: Audit the pinned requirements
+        run: |
+          python -m pip install --quiet pip-audit
+          pip-audit --no-deps --disable-pip -r requirements.txt -r all-requirements.txt -r docker-requirements.txt

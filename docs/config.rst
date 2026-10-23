@@ -34,7 +34,10 @@ the ``[outputs] password``).
 Any option can then be overridden with an environment variable named
 ``GLANCES_<SECTION>__<KEY>`` (note the double underscore), for example
 ``GLANCES_OUTPUTS__BIND_ADDRESS=0.0.0.0``. This is handy in containers.
-Options given on the command line override both.
+Options given on the command line override both. Every option can be set
+this way, the security ones included (``password``, ``auth_fail_per_minute``,
+the ``*_action`` commands): the environment of the Glances process is
+trusted as much as its configuration file.
 
 ``glances --issue`` shows which configuration file was loaded.
 
@@ -205,7 +208,11 @@ contains ``*``, which the CORS specification forbids.
 no password is set, it only exposes the options the WebUI needs
 (``[global] refresh`` and ``[outputs] theme``, ``max_processes_display``,
 ``api_doc``). With a password, authenticated clients get the whole
-configuration, secrets (passwords, tokens, keys...) redacted.
+configuration, with the options whose *name* designates a secret (passwords,
+tokens, keys...) and the credentials embedded in URL values redacted. A
+secret written inside another value (an action command line, an AMP
+command) is served as is to an authenticated client: there is a single
+role, the operator.
 
 Each plugin, export module, and application monitoring process (AMP) can
 have a section. Below is an example for the CPU plugin:

@@ -89,7 +89,7 @@ critical is reached, create a shell script ``/etc/glances/actions.d/fs-critical.
 
     #!/bin/bash
     # Usage: fs-critical.sh <time> <device_name> <percent>
-    echo "$1 $2 $3" > /tmp/fs.alert
+    echo "$1 $2 $3" > /var/log/glances/fs.alert
     python /etc/glances/actions.d/fs-critical.py
 
 Then reference it in the configuration file:
@@ -107,7 +107,7 @@ Within ``/etc/glances/actions.d/fs-critical.py``:
     import subprocess
     from requests import get
 
-    fs_alert = open('/tmp/fs.alert', 'r').readline().strip().split(' ')
+    fs_alert = open('/var/log/glances/fs.alert', 'r').readline().strip().split(' ')
     device = fs_alert[0]
     percent = fs_alert[1]
     system = subprocess.check_output(['uname', '-rn']).decode('utf-8').strip()
@@ -142,6 +142,19 @@ seconds, in the ``[alerts]`` section:
 
     [alerts]
     action_timeout=60
+
+A few rules keep a command safe when the values come from monitored data
+(process names, container names, mount points):
+
+- ``{{name}}`` HTML-escapes the value (``a&b`` becomes ``a&amp;b``); write
+  ``{{{name}}}`` (triple braces) for a name or a path.
+- A value always lands in exactly one argument of the command, whatever it
+  contains, but a value starting with ``-`` is still read as an option by the
+  command: write ``ls -- {{{name}}}``.
+- Only one ``>`` redirection per command, and no ``>>``. Write the file in a
+  folder owned by the user running Glances (``/var/log/glances`` in the
+  examples), never in a shared folder such as ``/tmp`` where a symbolic link
+  planted by another user would be followed.
 
 With ``--disable-config-exec``, the shell operators (``&&``, ``|``,
 ``>``) of an action command are no longer interpreted, as for the AMP

@@ -19,8 +19,9 @@ ARG DEBIAN_FRONTEND=noninteractive
 RUN <<EOR
 set -e
 
-# Upgrade the system
+# Upgrade the system: this stage is the one the release images are built on
 apt-get update
+apt-get upgrade -y
 
 # Install the minimal set of packages
 apt-get install -y --no-install-recommends \
@@ -105,6 +106,10 @@ ENV PATH="/venv/bin:$PATH"
 
 # EXPOSE PORT (REST API / WebUI)
 EXPOSE 61208
+
+# Liveness probe for `docker run` users (docker-compose defines its own)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:61208/healthz || exit 1
 
 # Add glances user
 # NOTE: If used, the Glances Docker plugin do not work...
