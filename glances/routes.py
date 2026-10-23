@@ -27,7 +27,7 @@ Route inventory:
 | ``/api/5/alert``              | GET    | ``alerts.get_history()``     |
 | ``/api/5/alert/incidents``    | GET    | ``{is_initializing, incidents}`` envelope (``derive_incidents()``) |
 | ``/api/5/config``             | GET    | ``as_dict_secure()`` with a password, else ``as_dict_public()`` |
-| ``/api/5/args``               | GET    | ``app.state.args``, redacted |
+| ``/api/5/args``               | GET    | ``PUBLIC_ARGS`` without a password, else ``app.state.args``, redacted |
 | ``/api/5/<plugin>``           | GET    | ``plugin.get_api_payload()`` (``_levels`` included) |
 | ``/api/5/<plugin>/info``      | GET    | ``plugin.fields_description``|
 | ``/api/5/<plugin>/limits``    | GET    | ``plugin.get_limits()``      |
@@ -50,20 +50,18 @@ Architecture references:
 
 from __future__ import annotations
 
-import hmac
 import logging
 from typing import TYPE_CHECKING, Any
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request, status
+from fastapi import APIRouter, HTTPException, Path, Query, Request, status
 from fastapi.responses import JSONResponse, Response
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from pydantic import TypeAdapter
 
 from glances import __apiversion__
 from glances.alerts_incidents import derive_incidents, incident_duration
 from glances.config import GlancesConfig
 from glances.processes import glances_processes, sort_processes_stats_list
-from glances.security import verify_password_in_thread
+from glances.security import check_basic, decode_basic
 
 try:
     import msgpack
@@ -90,10 +88,37 @@ _RESERVED_NAMES: frozenset[str] = frozenset({"token", "pluginslist", "all", "ale
 # do not. v4 redacts its equivalent (`conf_file`) the same way.
 _SENSITIVE_ARGS: frozenset[str] = frozenset({"config_path"})
 
-# ``HTTPBasic(auto_error=False)`` lets us emit our own 401 with the correct
-# ``WWW-Authenticate`` header. ``auto_error=True`` short-circuits before the
-# username comparison and produces a generic 403 — we want consistent 401s.
-_basic_security = HTTPBasic(auto_error=False)
+# The arguments the WebUI reads (`serverArgs` in glances/outputs/static/js:
+# the hotkey flags, the startup SHOW/HIDE flags, the display switches). Without
+# a password `/api/5/args` serves these and nothing else: the namespace also
+# carries absolute paths (`export_csv_file`, `export_graph_path`) and the
+# process filter the operator typed (security audit 2026-10-17, B-12). Same
+# spirit as `GlancesConfig.PUBLIC_OPTIONS`.
+PUBLIC_ARGS: frozenset[str] = frozenset(
+    {
+        "auto_sort",
+        "byte",
+        "disable_left_sidebar",
+        "disable_process",
+        "disable_quicklook",
+        "disable_top",
+        "diskio_iops",
+        "diskio_latency",
+        "enable_light",
+        "fahrenheit",
+        "fs_free_space",
+        "full_quicklook",
+        "hide_public_info",
+        "load_irix",
+        "meangpu",
+        "network_cumul",
+        "network_sum",
+        "percpu",
+        "process_short_name",
+        "programs",
+        "sort_processes_key",
+    }
+)
 
 
 def _register_history_route(router: APIRouter) -> None:
@@ -226,10 +251,7 @@ def build_router() -> APIRouter:
     router = APIRouter(prefix=f"/api/{__apiversion__}", tags=["v5"])
 
     @router.post("/token", tags=["auth"])
-    async def issue_token(
-        request: Request,
-        credentials: HTTPBasicCredentials | None = Depends(_basic_security),
-    ):
+    async def issue_token(request: Request):
         config = request.app.state.config
         jwt_handler = request.app.state.jwt_handler
         password_hash = config.get("outputs", "password", "")
@@ -240,6 +262,9 @@ def build_router() -> APIRouter:
         if not password_hash or jwt_handler is None:
             raise HTTPException(status_code=404, detail="JWT auth not configured")
 
+        # The same decoder and check as the auth middleware: UTF-8, and no
+        # short-circuit between the user name and the password.
+        credentials = decode_basic(request.headers.get("Authorization", ""))
         if credentials is None:
             raise HTTPException(
                 status_code=401,
@@ -247,19 +272,16 @@ def build_router() -> APIRouter:
                 headers={"WWW-Authenticate": 'Basic realm="Glances"'},
             )
 
+        user, password = credentials
         expected_user = config.get("outputs", "username", "glances")
-        # PBKDF2 off the event loop — see the auth middleware in webserver.
-        # Bytes: compare_digest raises TypeError on a non-ASCII str (-> 500).
-        if not hmac.compare_digest(
-            credentials.username.encode(), expected_user.encode()
-        ) or not await verify_password_in_thread(credentials.password, password_hash):
+        if not await check_basic(user, password, expected_user, password_hash):
             raise HTTPException(
                 status_code=401,
                 detail="Invalid credentials",
                 headers={"WWW-Authenticate": 'Basic realm="Glances"'},
             )
 
-        token = jwt_handler.create_access_token(credentials.username)
+        token = jwt_handler.create_access_token(user)
         return {
             "access_token": token,
             "token_type": "bearer",
@@ -321,8 +343,14 @@ def build_router() -> APIRouter:
 
     @router.get("/args")
     async def args_dump(request: Request) -> dict[str, Any]:
-        """Return the CLI argument namespace, redacted (issue #1527 / CVE-2026-68520)."""
-        return _redact_args(getattr(request.app.state, "args", None))
+        """Return the CLI argument namespace, redacted (issue #1527 / CVE-2026-68520).
+
+        Only the keys the WebUI reads without a password, like `/config`.
+        """
+        redacted = _redact_args(getattr(request.app.state, "args", None))
+        if request.app.state.jwt_handler is None:
+            return {key: value for key, value in redacted.items() if key in PUBLIC_ARGS}
+        return redacted
 
     _register_extended_process_routes(router)
     _register_sort_route(router)
@@ -532,8 +560,9 @@ def _redact_args(args: argparse.Namespace | None) -> dict[str, Any]:
     was already at ruff's complexity ceiling, so every route added inside it
     pushes it over.
 
-    Redaction is UNCONDITIONAL, matching `/api/5/config` above: v5 applies
-    no auth branch there either.
+    Redaction is UNCONDITIONAL: the route serves this whole dict behind a
+    password and only its `PUBLIC_ARGS` keys without one, as `/api/5/config`
+    serves `as_dict_secure()` or `as_dict_public()`.
 
     `config_path` is redacted (see `_SENSITIVE_ARGS`) even though `/config`
     already serves the merged configuration's *contents* to unauthenticated

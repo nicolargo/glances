@@ -162,6 +162,24 @@ Security (post-cutover audit of 2026-10-17):
   process behind; the commands read nothing from the terminal
 * ``--hide-public-info`` also hides the public IP information text, which a
   ``{ip}`` template repeats (GHSA-vg43-q6xr-hp92)
+* A wrong user name takes as long to refuse as a wrong password (the password
+  check always runs); ``/api/5/token`` decodes Basic credentials as UTF-8, like
+  the WebUI, so a non-ASCII password works with ``glances -c`` too; a malformed
+  ``[outputs] password`` value logs a CRITICAL and refuses every login instead
+  of answering 500
+* Every response carries ``X-Content-Type-Options: nosniff``,
+  ``X-Frame-Options: DENY`` and ``Referrer-Policy: same-origin``; a POST (sort,
+  pin) coming from another web site (``Sec-Fetch-Site: cross-site``, or an
+  ``Origin`` which is neither the server nor one of ``cors_origins``) is refused
+  with 403
+* ``glances --set-password`` prints ``pbkdf2_sha256$600000$<salt>$<hex>``
+  (PBKDF2-SHA256, 600 000 iterations, a 32-byte key): the server no longer does
+  four times the work of an attacker testing a candidate. The ``<salt>$<hex>``
+  hashes of 5.0.0b1 are still accepted
+* Without a password, ``/api/5/args`` only returns the flags the WebUI reads
+  (``--fahrenheit``, ``--percpu``, ``--hide-public-info``...); the whole
+  (redacted) argument list, export file paths and process filter included,
+  needs a password
 
 Special notes for package maintainers:
 
