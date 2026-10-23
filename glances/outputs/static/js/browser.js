@@ -20,7 +20,10 @@ export function statusClass(status) {
 	return level ? levelClass({ level }) : "";
 }
 
+// A discovered server says so, with the address it was seen at: anyone on
+// the LAN can announce under any name (security audit 2026-10-17, A7).
 export function displayName(server) {
+	if (server.source === "zeroconf") return `${server.alias || "?"} (zeroconf ${server.name})`;
 	return server.alias || server.name;
 }
 

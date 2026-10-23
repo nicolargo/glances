@@ -37,9 +37,8 @@ import re
 import threading
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, ClassVar
-from urllib.parse import urlsplit, urlunsplit
 
-from glances.config import GlancesConfig
+from glances.config import _URL_CREDENTIALS_RE, GlancesConfig
 from glances.globals import json_dumps
 from glances.logger import logger
 
@@ -377,12 +376,14 @@ class GlancesExportBase(ABC):
             try:
                 limits[name] = self.config.get_float_value(plugin.plugin_name, option)
             except ValueError:
-                raw = self.config.get_value(plugin.plugin_name, option)
+                # Secrets go BEFORE the split: `https://bob:pa,ss@h/` split first
+                # exported `ss@h/` (security audit 2026-10-17, R-4).
+                raw = _without_url_secrets(str(self.config.get_value(plugin.plugin_name, option)))
                 # Strip each item, like v4 `load_limits` (PR #3700): `status_ok=R, S, D`
                 # is how a comma-separated value is normally written, and a bare split
                 # exported ' S' and ' D' to the backend. Only the edges are trimmed, so
                 # a value like `alias=sda1:System Disk` keeps its internal spaces.
-                limits[name] = [_without_url_secrets(item.strip()) for item in str(raw).split(",")]
+                limits[name] = [item.strip() for item in raw.split(",")]
 
         self._limits_cache[plugin.plugin_name] = limits
         return limits
@@ -469,15 +470,19 @@ class GlancesExportBase(ABC):
             logger.debug("Finalise v5 export interface %s", self.export_name)
 
 
+# `?query#fragment` after a URL authority, up to the next whitespace: applied
+# to a whole config value, so a token holding a comma goes with it.
+_URL_QUERY_RE = re.compile(r"(?<=://)([^\s?#]*)[?#]\S*")
+
+
 def _without_url_secrets(value: str) -> str:
-    """A URL without its credentials (``user:password@``) nor its query string and fragment.
+    """A config value without the credentials (``user:password@``), query string and fragment of its URL.
 
     Anything that is not a URL is returned as is. The query goes because it
     may carry a token (``?access_token=``), as the ports plugin's published
-    URLs already do without it.
+    URLs already do without it. Works on the WHOLE value, before any split
+    on ``,``: a password or a token may hold a comma.
     """
     if "://" not in value:
         return value
-    parts = urlsplit(value)
-    netloc = parts.netloc.rpartition("@")[2]
-    return urlunsplit((parts.scheme, netloc, parts.path, "", ""))
+    return _URL_QUERY_RE.sub(r"\1", _URL_CREDENTIALS_RE.sub("", value))

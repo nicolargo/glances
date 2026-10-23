@@ -36,6 +36,7 @@ from __future__ import annotations
 
 import asyncio
 import ipaddress
+import json
 import logging
 import re
 import time
@@ -43,6 +44,7 @@ from typing import Any
 from urllib.parse import urlsplit
 
 import requests
+import urllib3
 
 from glances import __apiversion__
 from glances.plugins.plugin.base import GlancesPluginBase
@@ -52,6 +54,14 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_PORT = 61208
 DEFAULT_TIMEOUT = 3.0
+# A body is read in chunks of this, and cut at MAX_BODY_BYTES: `/api/5/all` is
+# a few hundred KiB, and 100 KiB of gzip inflated to 200 MiB in memory before
+# (security audit 2026-10-17, B-17). A small chunk also bounds what urllib3
+# inflates per read. The whole body must land within `timeout` times
+# _DEADLINE_FACTOR: `timeout` bounds each read, not a body dripped byte by byte.
+MAX_BODY_BYTES = 32 * 1024 * 1024
+_READ_CHUNK = 16 * 1024
+_DEADLINE_FACTOR = 5
 
 
 class RemoteError(Exception):
@@ -124,21 +134,56 @@ class RemoteConnection:
     def _authenticate(self) -> None:
         """Trade the password for a token, once. A server without auth answers 404: go on without."""
         self._auth_checked = True
+        url = f"{self.base_url}/api/5/token"
         try:
             response = self._session.post(
-                f"{self.base_url}/api/5/token", auth=(self._username, self._password or ""), timeout=self._timeout
+                url, auth=(self._username, self._password or ""), timeout=self._timeout, stream=True
             )
         except requests.RequestException as e:
             self._auth_checked = False
             raise RemoteError(f"{self.base_url}: {e}") from e
+        if response.ok:
+            answer = self._read_json(response, url)
+            token = answer.get("access_token") if isinstance(answer, dict) else None
+            if not isinstance(token, str) or not token:
+                raise NotAGlancesServer(f"{url} did not answer a token")
+            self._token = token
+            return
+        response.close()
         if response.status_code == 404:
             self._token = None
         elif response.status_code == 401:
             raise AuthError(f"{self.base_url} refused the username or password")
-        elif response.ok:
-            self._token = response.json().get("access_token")
         else:
-            raise RemoteError(f"{self.base_url}/api/5/token answered HTTP {response.status_code}")
+            raise RemoteError(f"{url} answered HTTP {response.status_code}")
+
+    def _read_json(self, response: Any, url: str) -> Any:
+        """The body as JSON: at most MAX_BODY_BYTES, within one deadline, whatever it holds.
+
+        Every failure to read or decode is a `RemoteError`: the transport's
+        own, and `NotAGlancesServer` for what the server sent (not JSON, JSON
+        too deep for the decoder, too large).
+        """
+        deadline = time.monotonic() + self._timeout * _DEADLINE_FACTOR
+        chunks: list[bytes] = []
+        size = 0
+        try:
+            while chunk := response.raw.read(_READ_CHUNK, decode_content=True):
+                size += len(chunk)
+                if size > MAX_BODY_BYTES:
+                    raise NotAGlancesServer(f"{url} answered more than {MAX_BODY_BYTES >> 20} MiB")
+                if time.monotonic() > deadline:
+                    raise RemoteError(f"{url} did not finish answering in {self._timeout * _DEADLINE_FACTOR:g}s")
+                chunks.append(chunk)
+            return json.loads(b"".join(chunks))
+        except RemoteError:
+            raise
+        except (requests.RequestException, urllib3.exceptions.HTTPError) as e:
+            raise RemoteError(f"{url}: {e}") from e
+        except Exception as e:  # noqa: BLE001 -- ValueError, RecursionError, AttributeError, TypeError, ...
+            raise NotAGlancesServer(f"{url} did not answer as a Glances server ({e.__class__.__name__})") from e
+        finally:
+            response.close()
 
     def get_json(self, path: str) -> Any:
         """`GET base_url + path` as JSON. Takes a token first if a password is set."""
@@ -155,9 +200,12 @@ class RemoteConnection:
         for attempt in (1, 2):
             headers = {"Authorization": f"Bearer {self._token}"} if self._token else {}
             try:
-                response = send(f"{self.base_url}{path}", headers=headers, timeout=self._timeout)
+                response = send(f"{self.base_url}{path}", headers=headers, timeout=self._timeout, stream=True)
             except requests.RequestException as e:
                 raise RemoteError(f"{self.base_url}: {e}") from e
+            if response.ok:
+                return self._read_json(response, f"{self.base_url}{path}")
+            response.close()
             if response.status_code == 401:
                 if self._password and attempt == 1:
                     self._authenticate()  # the token may have expired: one new one, then give up
@@ -165,12 +213,7 @@ class RemoteConnection:
                 raise AuthError(f"{self.base_url} requires a password: use --password, or [passwords] in glances.conf")
             if response.status_code == 404:
                 raise NotFound(f"{self.base_url}{path} answered HTTP 404")
-            if not response.ok:
-                raise RemoteError(f"{self.base_url}{path} answered HTTP {response.status_code}")
-            try:
-                return response.json()
-            except ValueError as e:
-                raise NotAGlancesServer(f"{self.base_url}{path} did not answer JSON") from e
+            raise RemoteError(f"{self.base_url}{path} answered HTTP {response.status_code}")
         raise AuthError(f"{self.base_url} refused the new token")  # pragma: no cover -- loop always returns or raises
 
 
@@ -377,6 +420,9 @@ class RemoteSource:
         except RemoteError as e:
             # The store keeps the last values: the TUI goes on showing them.
             self._failed(str(e))
+            return
+        except Exception as e:  # noqa: BLE001 -- a payload shaped to break the mirror must not stop the client
+            self._failed(f"{self.connection.base_url}: unexpected answer ({e.__class__.__name__}: {e})")
             return
         if not self.connected and self._last_error:
             logger.info("Reconnected to %s", self.connection.base_url)

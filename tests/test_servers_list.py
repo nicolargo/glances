@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 
+import io
 import json
 import logging
 from typing import Any
@@ -32,14 +33,22 @@ class _Config:
         return self._sections.get(section, {}).get(key)
 
 
+class _Raw:
+    def __init__(self, data: bytes) -> None:
+        self._buffer = io.BytesIO(data)
+
+    def read(self, amt: int | None = None, decode_content: bool | None = None) -> bytes:
+        return self._buffer.read(amt)
+
+
 class _Response:
     def __init__(self, status: int, body: Any = None) -> None:
         self.status_code = status
         self.ok = 200 <= status < 300
-        self._body = body
+        self.raw = _Raw(json.dumps(body).encode())
 
-    def json(self) -> Any:
-        return self._body
+    def close(self) -> None:
+        pass
 
 
 class _Server:
@@ -64,7 +73,7 @@ class _Network:
         class _Session:
             verify = True
 
-            def post(self, url, auth=None, headers=None, timeout=None):
+            def post(self, url, auth=None, headers=None, timeout=None, stream=False):
                 network.sent.append((url, auth))
                 server = network.servers[base_url]
                 if server.password is None:
@@ -73,7 +82,7 @@ class _Network:
                     _Response(200, {"access_token": "tok"}) if auth and auth[1] == server.password else _Response(401)
                 )
 
-            def get(self, url, headers=None, timeout=None):
+            def get(self, url, headers=None, timeout=None, stream=False):
                 network.sent.append((url, headers))
                 server = network.servers[base_url]
                 if server.down:
@@ -180,6 +189,23 @@ def test_an_online_server_gets_its_columns_and_their_levels(network):
 )
 def test_the_status_of_a_server(network, server, status):
     assert _poll(network, server).status == status
+
+
+@pytest.mark.parametrize("levels", [[1], "x", {"total": "x"}])
+def test_one_servers_hostile_levels_do_not_end_the_round(network, levels, caplog):
+    """Audit B-18: `_levels: [1]` raised out of `poll_server`, the round died
+    there, and the healthy server after it stayed UNKNOWN."""
+    network.servers["http://hostile:61208"] = _Server(
+        {"/status": {"version": "5"}, "/api/5/cpu": {"total": 12.5, "_levels": levels}}
+    )
+    network.servers["http://sane:61208"] = _Server(dict(_API5_SERVER))
+    servers = [ServerEntry(name="hostile", port=61208), ServerEntry(name="sane", port=61208)]
+    poller = sl.ServersPoller(servers, _Config(), [Column("cpu", "total")])
+    with caplog.at_level(logging.WARNING, logger="glances.servers_list"):
+        poller.poll_round()
+    assert [s.status for s in servers] == [sl.UNKNOWN, sl.ONLINE]
+    assert servers[1].columns["cpu:total"]["value"] == 12.5
+    assert "hostile:61208 answered something unexpected" in caplog.text
 
 
 def test_a_configured_password_opens_a_protected_server(network):

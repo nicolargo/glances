@@ -57,7 +57,7 @@ def test_hash_password_explicit_salt_is_deterministic():
     a = hash_password("hunter2", salt="deadbeef")
     b = hash_password("hunter2", salt="deadbeef")
     assert a == b
-    assert a.startswith("deadbeef$")
+    assert a.startswith("pbkdf2_sha256$600000$deadbeef$")
 
 
 def test_verify_password_rejects_malformed_stored():
@@ -72,13 +72,41 @@ def test_verify_password_empty_plaintext_does_not_crash():
     assert verify_password("", stored) is False
 
 
-def test_hash_password_format_is_salt_dollar_hex():
+def test_hash_password_format_names_the_algorithm_and_the_iterations():
+    """B-3: `pbkdf2_sha256$<iterations>$<salt>$<hex>`, a 32-byte key (SHA-256's
+    size: a longer one made the server do several PBKDF2 passes per check)."""
     stored = hash_password("any", salt="abc123")
-    salt, _, digest = stored.partition("$")
-    assert salt == "abc123"
-    # 128 bytes = 256 hex chars.
-    assert len(digest) == 256
+    algorithm, iterations, salt, digest = stored.split("$")
+    assert (algorithm, iterations, salt) == ("pbkdf2_sha256", "600000", "abc123")
+    assert len(digest) == 64
     int(digest, 16)  # raises if not hex
+    assert verify_password("any", stored) and not verify_password("other", stored)
+
+
+def test_verify_password_still_reads_the_hash_format_of_5_0_0b1():
+    """`<salt>$<hex>`, 100 000 iterations, dklen=128: what an operator pasted
+    into glances.conf before the format changed."""
+    import hashlib
+
+    legacy = "abc123$" + hashlib.pbkdf2_hmac("sha256", b"hunter2", b"abc123", 100_000, dklen=128).hex()
+    assert verify_password("hunter2", legacy) is True
+    assert verify_password("hunter3", legacy) is False
+    assert security.is_password_hash(legacy)
+
+
+def test_verify_password_refuses_a_new_format_value_that_is_off():
+    good = hash_password("hunter2", salt="abc123")
+    digest = good.rsplit("$", 1)[1]
+    for bad in (
+        f"pbkdf2_sha512$600000$abc123${digest}",
+        f"pbkdf2_sha256$0$abc123${digest}",
+        f"pbkdf2_sha256$many$abc123${digest}",
+        f"pbkdf2_sha256$600000$${digest}",
+        "pbkdf2_sha256$600000$abc123$",
+        f"pbkdf2_sha256$600000$abc123${digest}$extra",
+    ):
+        assert security.is_password_hash(bad) is False, bad
+        assert verify_password("hunter2", bad) is False, bad
 
 
 # -------------------------------------------------------- JWT
@@ -244,3 +272,46 @@ async def test_password_checks_run_at_most_two_at_a_time(monkeypatch):
     results = await asyncio.gather(*[security.verify_password_in_thread("p", "h") for _ in range(6)])
     assert results == [False] * 6
     assert peak[0] == 2
+
+
+def test_verify_password_refuses_a_stored_value_that_is_not_hex():
+    """I-4: a non-ASCII (or non-hex) stored value raised in compare_digest, a 500 on every login."""
+    assert verify_password("x", "abcd$café") is False
+    assert verify_password("x", "abcd$nothex") is False
+    assert security.is_password_hash("abcd$café") is False
+    assert security.is_password_hash(hash_password("x"))
+
+
+def test_decode_basic_is_utf8_and_refuses_garbage():
+    import base64
+
+    assert security.decode_basic("Basic " + base64.b64encode("glances:pässwörd".encode()).decode()) == (
+        "glances",
+        "pässwörd",
+    )
+    assert security.decode_basic("Basic " + base64.b64encode(b"a:b:c").decode()) == ("a", "b:c")
+    assert security.decode_basic("Basic !!!notb64!!!") is None
+    assert security.decode_basic("Basic " + base64.b64encode(b"nocolon").decode()) is None
+    assert security.decode_basic("Basic " + base64.b64encode(b"\xff:x").decode()) is None, "not UTF-8"
+    assert security.decode_basic("Bearer abc") is None
+    assert security.decode_basic("") is None
+
+
+async def test_check_basic_runs_pbkdf2_whatever_the_user_name(monkeypatch):
+    """B-1: a wrong user name used to answer in a millisecond, a wrong password
+    in a quarter of a second — the user name was an oracle. Structural check:
+    both branches reach `verify_password` exactly once."""
+    calls = []
+    real = security.verify_password
+
+    def counting(plaintext, stored):
+        calls.append(plaintext)
+        return real(plaintext, stored)
+
+    monkeypatch.setattr(security, "verify_password", counting)
+    stored = hash_password("hunter2")
+    assert await security.check_basic("nobody", "hunter2", "glances", stored) is False
+    assert await security.check_basic("glances", "guess", "glances", stored) is False
+    assert await security.check_basic("glances", "hunter2", "glances", stored) is True
+    assert calls == ["hunter2", "guess", "hunter2"]
+    assert await security.check_basic("glancés", "hunter2", "glances", stored) is False, "non-ASCII user: no TypeError"

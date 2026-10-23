@@ -16,11 +16,16 @@ section. Design: docs/superpowers/specs/2026-09-27-glances-v5-phase3-design.md.
 from __future__ import annotations
 
 import asyncio
+import io
+import json
 import logging
+import time
+import zlib
 from typing import Any
 
 import pytest
 import requests
+import urllib3
 
 from glances import client
 from glances.client import (
@@ -58,16 +63,29 @@ def test_parse_target_rejects_other_schemes():
 # ------------------------------------------------------ a fake server
 
 
+class _Raw:
+    """`response.raw`: what the client reads, chunk by chunk."""
+
+    def __init__(self, data: bytes) -> None:
+        self._buffer = io.BytesIO(data)
+
+    def read(self, amt: int | None = None, decode_content: bool | None = None) -> bytes:
+        return self._buffer.read(amt)
+
+
 class _Response:
+    """`body`: a JSON value, raw bytes as sent, or `ValueError` for a body that is not JSON."""
+
     def __init__(self, status: int, body: Any = None) -> None:
         self.status_code = status
         self.ok = 200 <= status < 300
-        self._body = body
+        if body is ValueError:
+            body = b"<html>not JSON</html>"
+        self.raw = _Raw(body if isinstance(body, bytes) else json.dumps(body).encode())
+        self.closed = False
 
-    def json(self) -> Any:
-        if self._body is ValueError:
-            raise ValueError("not JSON")
-        return self._body
+    def close(self) -> None:
+        self.closed = True
 
 
 class _FakeSession:
@@ -91,8 +109,9 @@ class _FakeSession:
         self.down = False
         self.expired = False
         self.refuse_sort = False
+        self.token_body: Any = {"access_token": "tok", "token_type": "bearer"}
 
-    def post(self, url, auth=None, headers=None, timeout=None):
+    def post(self, url, auth=None, headers=None, timeout=None, stream=False):
         self.requests.append(("POST", url, auth))
         if "/processes/sort/" in url:
             # The shared sort route; `refuse_sort` plays an older v5 server.
@@ -107,17 +126,20 @@ class _FakeSession:
             return _Response(404)
         if auth and auth[1] == self.password:
             self.expired = False
-            return _Response(200, {"access_token": "tok", "token_type": "bearer"})
+            return _Response(200, self.token_body)
         return _Response(401)
 
-    def get(self, url, headers=None, timeout=None):
+    def get(self, url, headers=None, timeout=None, stream=False):
         self.requests.append(("GET", url, headers))
         if self.down:
             raise requests.ConnectionError("connection refused")
         if self.password is not None and (headers or {}).get("Authorization") != "Bearer tok" or self.expired:
             return _Response(401)
         path = url.split("61208", 1)[1]
-        return _Response(200, self.routes[path]) if path in self.routes else _Response(404)
+        if path not in self.routes:
+            return _Response(404)
+        body = self.routes[path]
+        return body if isinstance(body, _Response) else _Response(200, body)
 
 
 def _connection(session: _FakeSession, password: str | None = None) -> RemoteConnection:
@@ -184,6 +206,96 @@ def test_a_network_failure_is_a_remote_error():
     session.down = True
     with pytest.raises(RemoteError, match="refused"):
         _connection(session).get_json("/status")
+
+
+# ------------------------------------------- a hostile server (audit B-17)
+
+
+def test_a_body_that_is_not_json_is_not_a_glances_server():
+    session = _FakeSession()
+    session.routes["/status"] = ValueError
+    with pytest.raises(NotAGlancesServer, match="did not answer as a Glances server"):
+        _connection(session).get_json("/status")
+
+
+def test_json_too_deep_for_the_decoder_is_not_a_glances_server(monkeypatch):
+    """A decoder failure that is not a ValueError (json's RecursionError on
+    `[[[[...` with the 3.13 decoder) escaped `response.json()`. The depth the
+    decoder tolerates depends on the Python version (3.14 decodes 100 000
+    levels), so the failure is simulated."""
+    session = _FakeSession()
+    session.routes["/status"] = b"[" * 1_000 + b"]" * 1_000
+
+    def too_deep(_data):
+        raise RecursionError("maximum recursion depth exceeded")
+
+    monkeypatch.setattr(client.json, "loads", too_deep)
+    with pytest.raises(NotAGlancesServer, match="RecursionError"):
+        _connection(session).get_json("/status")
+
+
+@pytest.mark.parametrize("token_body", [["tok"], {"access_token": 5}, {"access_token": ""}, "tok", None])
+def test_a_token_answer_that_is_not_a_token_is_not_a_glances_server(token_body):
+    """`response.json().get(...)` on a list was an AttributeError out of the client."""
+    session = _FakeSession(password="pw")
+    session.token_body = token_body
+    with pytest.raises(NotAGlancesServer, match="did not answer a token"):
+        _connection(session, password="pw").get_json("/status")
+
+
+def test_a_body_is_cut_at_32_mib_before_it_is_inflated():
+    """100 KiB of gzip became 200 MiB in memory (proven by the audit): the body
+    is read through urllib3's decoder in chunks and dropped past the cap."""
+    compressor = zlib.compressobj(9, zlib.DEFLATED, 31)  # 31: gzip container
+    block = bytes(1 << 20)
+    gz = b"".join(compressor.compress(block) for _ in range(200)) + compressor.flush()
+    assert len(gz) < 300 * 1024, "a real bomb: 200 MiB in less than 300 KiB"
+    raw = urllib3.response.HTTPResponse(
+        body=io.BytesIO(gz), headers={"content-encoding": "gzip"}, preload_content=False
+    )
+    response = _Response(200)
+    response.raw = raw
+    session = _FakeSession()
+    session.routes["/status"] = response
+    with pytest.raises(NotAGlancesServer, match="more than 32 MiB"):
+        _connection(session).get_json("/status")
+    assert raw.tell() < len(gz) // 2, "stopped reading long before the end of the stream"
+    assert response.closed
+
+
+def test_a_body_dripped_byte_by_byte_hits_the_deadline():
+    """`timeout` bounds each read: a byte every few ms never tripped it."""
+
+    class _Drip:
+        def read(self, amt=None, decode_content=None):
+            time.sleep(0.002)
+            return b"1"
+
+    response = _Response(200)
+    response.raw = _Drip()
+    session = _FakeSession()
+    session.routes["/status"] = response
+    conn = RemoteConnection("http://srv:61208", timeout=0.01)
+    conn._session = session
+    started = time.monotonic()
+    with pytest.raises(RemoteError, match="did not finish answering"):
+        conn.get_json("/status")
+    assert time.monotonic() - started < 2
+    assert response.closed
+
+
+def test_a_poll_survives_a_payload_shaped_to_break_it(caplog):
+    """`top: 5` in an incident: `list(5)` is a TypeError, outside RemoteError,
+    and it stopped the client's polling loop for good."""
+    session = _FakeSession()
+    session.routes["/api/5/alert"] = []
+    session.routes["/api/5/alert/incidents"] = {"incidents": [{"ongoing": True, "top": 5}]}
+    source = _source(session)
+    with caplog.at_level(logging.WARNING, logger="glances.client"):
+        asyncio.run(source.poll_once())
+        asyncio.run(source.poll_once())
+    assert source.status()[0] == "disconnected"
+    assert caplog.text.count("unexpected answer (TypeError") == 1
 
 
 def test_plain_http_with_credentials_to_a_remote_host_warns(caplog):
@@ -777,10 +889,10 @@ class _TestClientSession:
             body = ValueError
         return _Response(response.status_code, body)
 
-    def get(self, url: str, headers: dict | None = None, timeout: float | None = None) -> _Response:
+    def get(self, url: str, headers: dict | None = None, timeout: float | None = None, stream: bool = False):
         return self._wrap(self._http.get(url, headers=headers))
 
-    def post(self, url: str, auth: Any = None, headers: dict | None = None, timeout: float | None = None) -> _Response:
+    def post(self, url: str, auth: Any = None, headers: dict | None = None, timeout=None, stream: bool = False):
         return self._wrap(self._http.post(url, auth=auth, headers=headers))
 
 

@@ -13,14 +13,23 @@ Two primitives, both kept algorithmically equivalent to v4 (CVE-2026-32596
 "Carry forward"):
 
 - ``hash_password(plain)`` / ``verify_password(plain, stored)`` — PBKDF2-SHA256,
-  100 000 iterations, ``dklen=128``, hex-encoded ``salt$hash`` storage. Salt is
-  a UUID4 hex (matching v4 ``glances/password.py``).
+  stored as ``pbkdf2_sha256$<iterations>$<salt>$<hex>`` (600 000 iterations,
+  ``dklen=32``). The format of 5.0.0b1, ``<salt>$<hex>`` (100 000 iterations,
+  ``dklen=128``), is still read: with ``dklen`` four times SHA-256's output
+  the server did four times the work of an attacker checking one candidate
+  (security audit 2026-10-17, B-3). Salt is a UUID4 hex (matching v4
+  ``glances/password.py``).
 - ``JWTHandler`` — HS256 JWT minting and verification, with ``sub`` / ``exp``
   / ``iat`` / ``iss`` claims. Same algorithm and claim shape as v4
   ``glances/jwt_utils.py``.
 - ``KnownCredentials`` — the ``Authorization`` values already proven good,
   which the rate limiter lets through and the auth middleware does not
   re-check with PBKDF2.
+- ``decode_basic(header)`` / ``check_basic(...)`` — the one Basic decoder
+  (UTF-8) and the one credential check, shared by the auth middleware and
+  ``/api/5/token``. The check always runs PBKDF2, so the answer takes as
+  long for a wrong user name as for a wrong password (security audit
+  2026-10-17, B-1 / W-3).
 
 The v4 modules are intentionally not imported — v5 keeps a clean boundary.
 Stored password hashes are *not* byte-compatible across v4 ↔ v5 because v4
@@ -30,6 +39,8 @@ migrating users must regenerate the stored hash via the v5 CLI (Phase 1.7).
 
 from __future__ import annotations
 
+import base64
+import binascii
 import hashlib
 import hmac
 import logging
@@ -44,13 +55,17 @@ logger = logging.getLogger(__name__)
 
 # ----------------------------------------------------- password hashing
 
-_PBKDF2_ITERATIONS = 100_000
 _PBKDF2_HASH = "sha256"
-_PBKDF2_DKLEN = 128
+_PBKDF2_PREFIX = "pbkdf2_sha256"
+_PBKDF2_ITERATIONS = 600_000
+_PBKDF2_DKLEN = 32
+# The format of 5.0.0b1, `<salt>$<hex>`: still read, no longer written.
+_LEGACY_ITERATIONS = 100_000
+_LEGACY_DKLEN = 128
 
 
 def hash_password(plaintext: str, *, salt: str | None = None) -> str:
-    """Return ``salt$hex(pbkdf2)`` for ``plaintext``.
+    """Return ``pbkdf2_sha256$<iterations>$<salt>$<hex>`` for ``plaintext``.
 
     The salt is a UUID4 hex string when not supplied. Use this function once
     to produce the value placed into ``[outputs] password=`` in
@@ -65,28 +80,53 @@ def hash_password(plaintext: str, *, salt: str | None = None) -> str:
         _PBKDF2_ITERATIONS,
         dklen=_PBKDF2_DKLEN,
     ).hex()
-    return f"{salt}${digest}"
+    return f"{_PBKDF2_PREFIX}${_PBKDF2_ITERATIONS}${salt}${digest}"
+
+
+def _parse_stored(stored: str) -> tuple[str, int, int, bytes] | None:
+    """``(salt, iterations, dklen, digest)`` of a stored hash, ``None`` when malformed.
+
+    Both formats: ``pbkdf2_sha256$<iterations>$<salt>$<hex>`` and the
+    ``<salt>$<hex>`` of 5.0.0b1.
+    """
+    fields = stored.split("$") if stored else []
+    if len(fields) == 2:
+        salt, expected = fields
+        iterations, dklen = _LEGACY_ITERATIONS, _LEGACY_DKLEN
+    elif len(fields) == 4 and fields[0] == _PBKDF2_PREFIX and fields[1].isdecimal() and int(fields[1]) > 0:
+        _, iterations, salt, expected = fields
+        iterations, dklen = int(iterations), _PBKDF2_DKLEN
+    else:
+        return None
+    if not salt or not expected:
+        return None
+    try:
+        return salt, iterations, dklen, bytes.fromhex(expected)
+    except ValueError:  # not hex (a non-ASCII value included): never compared
+        return None
+
+
+def is_password_hash(stored: str) -> bool:
+    """Whether ``stored`` is a hash `verify_password` can check at all."""
+    return _parse_stored(stored) is not None
 
 
 def verify_password(plaintext: str, stored: str) -> bool:
-    """Constant-time comparison of ``plaintext`` against a ``salt$hex`` hash.
+    """Constant-time comparison of ``plaintext`` against a stored hash (both formats).
 
     Returns ``False`` on any structural problem (missing separator, invalid
-    salt) rather than raising — callers should not branch on the failure
-    mode, only on the boolean result.
+    salt, a digest that is not hex) rather than raising — callers should not
+    branch on the failure mode, only on the boolean result (security audit
+    2026-10-17, I-4: a non-ASCII stored value used to raise in
+    ``compare_digest``, a 500 on every login).
     """
-    if not stored or "$" not in stored:
+    parsed = _parse_stored(stored)
+    if parsed is None:
         return False
-    salt, expected = stored.split("$", 1)
-    if not salt or not expected:
-        return False
+    salt, iterations, dklen, expected = parsed
     candidate = hashlib.pbkdf2_hmac(
-        _PBKDF2_HASH,
-        plaintext.encode("utf-8"),
-        salt.encode("utf-8"),
-        _PBKDF2_ITERATIONS,
-        dklen=_PBKDF2_DKLEN,
-    ).hex()
+        _PBKDF2_HASH, plaintext.encode("utf-8"), salt.encode("utf-8"), iterations, dklen=dklen
+    )
     return hmac.compare_digest(candidate, expected)
 
 
@@ -101,6 +141,42 @@ _VERIFY_LIMITER = anyio.CapacityLimiter(2)
 async def verify_password_in_thread(plaintext: str, stored: str) -> bool:
     """`verify_password` off the event loop, at most two checks at a time."""
     return await anyio.to_thread.run_sync(verify_password, plaintext, stored, limiter=_VERIFY_LIMITER)
+
+
+# ----------------------------------------------------- HTTP Basic
+
+
+def decode_basic(header_value: str) -> tuple[str, str] | None:
+    """``(user, password)`` of a ``Basic <base64>`` Authorization value, else ``None``.
+
+    Decoded as UTF-8: FastAPI's ``HTTPBasic`` decodes ASCII only, so a
+    non-ASCII password that the WebUI accepted was refused by
+    ``/api/5/token``, hence by ``glances -c`` (security audit 2026-10-17, W-3).
+    """
+    if not header_value.startswith("Basic "):
+        return None
+    try:
+        raw = base64.b64decode(header_value[len("Basic ") :].strip(), validate=True).decode("utf-8", errors="strict")
+    except (binascii.Error, ValueError, UnicodeDecodeError):
+        return None
+    if ":" not in raw:
+        return None
+    user, _, password = raw.partition(":")
+    return user, password
+
+
+async def check_basic(user: str, password: str, username: str, password_hash: str) -> bool:
+    """Whether ``user`` / ``password`` are the configured credentials.
+
+    PBKDF2 runs whatever the user name is, and the two results are combined
+    without a short-circuit: a wrong user name used to answer in a
+    millisecond and a wrong password in a quarter of a second, which told an
+    attacker which half was right (security audit 2026-10-17, B-1).
+    """
+    # Bytes: compare_digest raises TypeError on a non-ASCII str.
+    ok_user = hmac.compare_digest(user.encode(), username.encode())
+    ok_password = await verify_password_in_thread(password, password_hash)
+    return ok_user & ok_password
 
 
 # ----------------------------------------------------- JWT bearer tokens

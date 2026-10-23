@@ -47,6 +47,10 @@ API_VERSION = __apiversion__.encode()
 # An announced name is shown in the TUI and served by /api/5/serverslist:
 # printable characters only, and not a screenful.
 _ALIAS_MAX = 64
+# Discovered entries are polled, and `/api/5/serverslist` serves what they
+# answer: a LAN that announces thousands of them is not followed beyond this
+# (static entries have `servers_list.MAX_SERVERS`).
+MAX_DISCOVERED = 256
 
 
 def available() -> bool:
@@ -123,6 +127,24 @@ def _alias(service_name: str) -> str:
     return "".join(ch for ch in name if ch.isprintable())[:_ALIAS_MAX] or "?"
 
 
+def _is_routable(address: str) -> bool:
+    """A unicast address the browser may poll: an announcement is not trusted to
+    point it at loopback, link-local (169.254.169.254), multicast, 0.0.0.0,
+    broadcast or a reserved range (security audit 2026-10-17, B-19)."""
+    try:
+        ip = ipaddress.ip_address(address)
+    except ValueError:
+        return False
+    return not (
+        ip.is_loopback
+        or ip.is_link_local
+        or ip.is_multicast
+        or ip.is_unspecified
+        or ip.is_reserved
+        or ip == ipaddress.IPv4Address("255.255.255.255")
+    )
+
+
 class Discovery:
     """`--browser`: adds the v5 servers announced on the LAN to `servers`, and removes them when they leave.
 
@@ -136,6 +158,7 @@ class Discovery:
         self._browser: Any = None
         # Zeroconf service name -> the entry it added.
         self._found: dict[str, ServerEntry] = {}
+        self._cap_warned = False
 
     def start(self) -> bool:
         if not available():
@@ -167,9 +190,24 @@ class Discovery:
             return
         if not address or not port:
             return
+        if not _is_routable(address):
+            logger.debug("Zeroconf: %s announces %s, which is not a LAN address, left out", name, address)
+            return
+        alias = _alias(name)
+        # A discovered server showing under a configured server's name would
+        # be opened, and given a typed password, as that server (audit A7).
+        known = {n.casefold() for s in self.servers if s.source == "static" for n in (s.name, s.alias) if n}
+        if alias.casefold() in known:
+            logger.warning("Zeroconf: %s at %s refused: a [serverlist] server has that name", alias, address)
+            return
+        if name not in self._found and len(self._found) >= MAX_DISCOVERED:
+            if not self._cap_warned:
+                logger.warning("Zeroconf: more than %d servers announced, the others are ignored", MAX_DISCOVERED)
+                self._cap_warned = True
+            return
         # Connect to where the announcement came from, never to the name it
         # claims (CVE-2026-32634): the name is shown, not trusted.
-        entry = ServerEntry(name=address, port=int(port), alias=_alias(name), source="zeroconf")
+        entry = ServerEntry(name=address, port=int(port), alias=alias, source="zeroconf")
         previous = self._found.get(name)
         if previous is not None and previous.target == entry.target:
             return

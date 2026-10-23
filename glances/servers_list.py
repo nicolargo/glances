@@ -229,6 +229,10 @@ class ServersPoller:
             logger.debug("Browser: %s is offline (%s)", server.target, e)
             server.status = OFFLINE
             return
+        except Exception as e:  # noqa: BLE001 -- one server's payload (`_levels: [1]`) must not end the round
+            logger.warning("Browser: %s answered something unexpected (%s: %s)", server.target, e.__class__.__name__, e)
+            server.status = UNKNOWN
+            return
         server.columns = cells
         server.status = ONLINE
 

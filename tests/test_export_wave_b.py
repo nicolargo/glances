@@ -311,6 +311,34 @@ def test_rabbitmq_publishes_the_v4_text_line_to_the_queue(monkeypatch, caplog):
     assert connection.calls[-1][0] == "close"
 
 
+def test_rabbitmq_percent_encodes_the_user_and_password_in_the_url(monkeypatch, caplog):
+    """Audit R-6: `p@ss/w?rd#%` in the AMQP URL was read as URL syntax, and
+    its fragments showed in the logged connection error."""
+    _fake_rabbitmq(monkeypatch)
+    _exporter("rabbitmq", {"user": "us@r", "password": "p@ss/w?rd#%"})
+    parameters = _Recorder.instances[0]
+    assert parameters.args == ("amqp://us%40r:p%40ss%2Fw%3Frd%23%25@rmq:5672/",)
+
+
+@pytest.mark.parametrize(
+    ("server", "logged"),
+    [
+        ("nats://u:pw@a:4222", "nats://a:4222"),
+        ("nats://u:p@ss@a:4222", "nats://a:4222"),
+        ("u:pw@a:4222", "a:4222"),
+        ("u:p@ss@a", "a"),
+        ("tls://a:4222/path", "tls://a:4222/path"),
+        ("a:4222", "a:4222"),
+    ],
+)
+def test_nats_redacts_credentials_with_or_without_a_scheme(server, logged):
+    """Audit I-12: `nats://u:p@ss@host` logged as `nats://ss@host`, and a
+    scheme-less `u:pw@host` was logged whole."""
+    from glances.exports.glances_nats.export import redact
+
+    assert redact(server) == logged
+
+
 # ----------------------------------------------------------------- zeromq
 
 

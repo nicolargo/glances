@@ -754,7 +754,7 @@ The middleware checks **Bearer first** (so `Authorization: Bearer …` is never 
 
 ### 4.4 Hash format & migration
 
-v5 passwords are stored as `salt$pbkdf2_hex` with PBKDF2-SHA256, 100 000 iterations, `dklen=128`. The plaintext is never stored.
+v5 passwords are stored as `pbkdf2_sha256$<iterations>$<salt>$<hex>` with PBKDF2-SHA256, 600 000 iterations, `dklen=32` (what `glances --set-password` prints since 5.0.0rc1). The plaintext is never stored. The format of 5.0.0b1, `<salt>$<hex>` (100 000 iterations, `dklen=128`), is still read but no longer written: with `dklen` four times SHA-256's output, PBKDF2 ran four times per check, so the server did four times the work of an attacker testing one candidate, and each failed login cost 240 ms of CPU (security audit 2026-10-17, B-3). A value in neither format is logged as CRITICAL at startup and refuses every login.
 
 This is **not byte-compatible** with the v4 stored hash, which applies an extra `pbkdf2(plain, salt='')` pre-hash before the salted PBKDF2. v4 → v5 migration requires regenerating the hash via the Phase 1.7 CLI (`glances-v5 --set-password`). The algorithmic strength is preserved.
 

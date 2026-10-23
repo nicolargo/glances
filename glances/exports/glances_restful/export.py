@@ -26,6 +26,7 @@ import requests
 
 from glances.exports.export_base import GlancesExportBase
 from glances.logger import logger
+from glances.secure import secure_option
 
 if TYPE_CHECKING:
     import argparse
@@ -50,8 +51,10 @@ class Export(GlancesExportBase):
             logger.critical("Missing restful config")
             sys.exit(2)
         self.url = f"{self.protocol}://{self.host}:{self.port}{self.path}"
+        # `host` may carry `user:password@`: the log gets the URL without it (audit I-12).
+        self._logged_url = secure_option("url", self.url)
         self._buffer: dict[str, dict[str, Any]] = {}
-        logger.info("Stats will be exported to the RESTful endpoint %s", self.url)
+        logger.info("Stats will be exported to the RESTful endpoint %s", self._logged_url)
 
     def export(self, name: str, columns: list[str], points: list[Any]) -> None:
         # One plugin of the cycle: kept for the single POST `update()` sends.
@@ -66,6 +69,6 @@ class Export(GlancesExportBase):
             response = requests.post(self.url, json=self._buffer, allow_redirects=True, timeout=TIMEOUT)
             response.raise_for_status()
         except requests.RequestException as e:
-            logger.warning("Cannot export stats to the RESTful endpoint %s (%s)", self.url, e)
+            logger.warning("Cannot export stats to the RESTful endpoint %s (%s)", self._logged_url, e)
         else:
-            logger.debug("Export %d plugins to the RESTful endpoint %s", len(self._buffer), self.url)
+            logger.debug("Export %d plugins to the RESTful endpoint %s", len(self._buffer), self._logged_url)

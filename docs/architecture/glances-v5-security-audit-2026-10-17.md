@@ -631,3 +631,32 @@ constats identiques en v4 sont marqués `v4` pour report sur `support/glancesv4`
 
 Suite de tests après la vague 1 : voir le message de la session (exécutée
 avant la poussée).
+
+## Suivi des corrections — vague 2 (2026-10-23, branche `security-audit-wave-2`)
+
+Décision du mainteneur : pas de report sur `support/glancesv4` pour l'instant (à
+revoir si une 4.5.9 est planifiée) ; la mesure de performance sur machine
+représentative (item 28) reste à faire par le mainteneur.
+
+| # | Constats | État |
+|---|---|---|
+| 13 | B-1, W-3, I-4 | **Corrigé** : `security.decode_basic()` (UTF-8) et `check_basic()` (le PBKDF2 tourne toujours, pas de court-circuit) partagés par le middleware et `/api/5/token` ; `HTTPBasic` retiré ; hash stocké invalide → CRITICAL au démarrage et 401, plus jamais 500. |
+| 14 | B-5 | **Corrigé** : middleware ASGI `nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: same-origin` sur toute réponse ; 403 sur POST/PUT/PATCH/DELETE cross-site (`Sec-Fetch-Site`, `Origin` étranger hors `cors_origins`). |
+| 15 | B-3 | **Corrigé** : `pbkdf2_sha256$600000$<salt>$<hex>`, `dklen=32` ; l'ancien format reste lu. Mesure : 175 ms par vérification (contre 116 ms, mais le rapport travail serveur/attaquant passe de 4 à 1 ; abaisser `_PBKDF2_ITERATIONS` si le coût gêne, le compte voyage dans le hash). |
+| 16 | A4 (M5, X-4) | **Corrigé** : cible de redirection rendue segment par segment, `/`, `..`, NUL refusés dans une valeur rendue ; `O_NOFOLLOW`, mode 0600 ; `>>` accepté. |
+| 17 | A6 (M9) | **Corrigé** : TLS vérifié par défaut, clé optionnelle `ssl_verify` (`false` ou chemin de CA) pour InfluxDB 1.x et 2.x. |
+| 18 | A7 (M11, B-19, I-13) | **Corrigé** : adresses non routables refusées, plafond 256, alias en conflit avec `[serverlist]` refusé ; TUI et WebUI affichent `<alias> (zeroconf <adresse>)` ; invite avec adresse et port, avertissement de clair avant la saisie. |
+| 19 | B-17, B-18, R-3 | **Corrigé** : lecture en flux plafonnée à 32 Mio, délai total 5 × `timeout`, toute exception de lecture → `NotAGlancesServer`/`RemoteError` ; `poll_once` et `poll_server` isolent le serveur fautif. |
+| 20 | B-9, X-2, I-10, S-10 | **Corrigé** : `globals.trusted_by_root()` appliqué au fichier de configuration utilisateur, au dossier de journal (`O_NOFOLLOW`, `fchmod` conditionnel) et à `LOG_CFG`. |
+| 21 | B-14 | **Corrigé** : `OpenerDirector` sans FTP/File/Data, schéma vérifié sur redirection. |
+| 22 | B-15, R-5, I-8, B-16 | **Corrigé** : caractères de contrôle remplacés dans `--stdout`, `--stdout-csv`, `--fetch` ; `SandboxedEnvironment` ; `_REDACT_FIELDS` complété et avertissements redactés ; CSV exporteur : cellules formule préfixées `'`. |
+| 23 | folders, podman | **Corrigé** : `folder_size` itératif (inodes visités) ; socket Podman par défaut selon l'uid. |
+| 24 | B-20, R-4, R-6, I-12 | **Corrigé** : Graphite/StatsD filtrés `[A-Za-z0-9_.-]` ; labels Prometheus construits en dict ; redaction avant découpage ; RabbitMQ percent-encodé ; NATS/restful ne journalisent plus d'identifiants. |
+| 25 | B-12 | **Corrigé** : `/api/5/args` sans mot de passe = `PUBLIC_ARGS` (21 drapeaux lus par la WebUI, test de dérive sur les sources JS). |
+| 26 | S-4, S-8, S-9, S-3 | **Corrigé** : requirements avec hachages exportés d'un `uv.lock` committé (installation vérifiée avec `--require-hashes`) ; `webui.yml` vérifie le bundle au lieu de le pousser (`contents: read`) ; `FROM` épinglés par digest ; Snap `5.0.0b1+build00`, plugs `power-control`, `log-observe`, `proc-sys` retirés (`uio` et `raw-volume` conservés par prudence ; `source-branch: develop` conservé tant que le tag `v5.0.0b1` n'existe pas). |
+| 27 | X-3, I-7, S-15 | **Corrigé** : insertions `sys.path`, `system_exec`, `_reserve_auth_try`, `uninstall.sh` supprimés ; test d'invariance de `sys.path`. |
+| 28 | — | **Reporté** (décision mainteneur) : reports v4 ; mesure de performance. |
+
+Restes signalés par l'intégration : `docs/aoa/containers.rst` et `docs/docker.rst`
+citent encore `/run/user/1000/podman/podman.sock` en exemple ; le `GHSA-TODO` de
+`NEWS.rst` (4.5.7) attend l'identifiant du mainteneur.

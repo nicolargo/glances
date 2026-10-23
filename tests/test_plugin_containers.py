@@ -497,3 +497,26 @@ async def test_grab_publishes_started_at_and_no_uptime(store_with, config_with):
     item = p.get_stats()["data"][0]
     assert item["started_at"] == _STARTED_AT
     assert "uptime" not in item
+
+
+# ------------------------------------------ security audit 2026-10-17 (podman)
+
+
+def test_default_podman_sock_follows_the_user(store_with, config_with, monkeypatch):
+    """Root used to trust the socket of uid 1000, whoever runs Glances."""
+    p = _mk(store_with, config_with)
+    monkeypatch.setattr(model_mod.os, "geteuid", lambda: 0, raising=False)
+    assert p._podman_sock() == "unix:///run/podman/podman.sock"
+    monkeypatch.setattr(model_mod.os, "geteuid", lambda: 1234, raising=False)
+    monkeypatch.setenv("XDG_RUNTIME_DIR", "/run/user/1234")
+    assert p._podman_sock() == "unix:///run/user/1234/podman/podman.sock"
+    monkeypatch.delenv("XDG_RUNTIME_DIR")
+    assert p._podman_sock() == "unix:///run/user/1234/podman/podman.sock"
+
+
+def test_configured_podman_sock_still_wins(store_with, config_with, monkeypatch):
+    # Build the config BEFORE faking root: `os.geteuid` is global, and a root
+    # Glances ignores a configuration file it does not own (the CI runner's).
+    p = _mk(store_with, config_with, {"podman_sock": "unix:///srv/podman.sock"})
+    monkeypatch.setattr(model_mod.os, "geteuid", lambda: 0, raising=False)
+    assert p._podman_sock() == "unix:///srv/podman.sock"

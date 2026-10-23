@@ -131,6 +131,30 @@ Security (post-cutover audit of 2026-10-17):
 * ``[outputs] jwt_secret_key`` must be at least 32 characters (the shipped example
   value is refused); tokens need ``exp`` and ``iat`` and must name the configured
   user; ``jwt_expire_minutes`` is capped to a day
+* InfluxDB 1.x and 2.x exports verify the server's TLS certificate (it was
+  never checked); the new optional ``[influxdb]``/``[influxdb2] ssl_verify``
+  key accepts ``false`` or a CA bundle path
+* Zeroconf: an announcement pointing at a loopback, link-local, multicast,
+  unspecified, broadcast or reserved address is ignored, as is one using the
+  name or alias of a ``[serverlist]`` server; at most 256 discovered servers
+  are followed. The TUI and Web UI browsers list a discovered server as
+  ``<name> (zeroconf <address>)``, and the password prompt names the address
+  and warns before sending it over clear HTTP
+* ``-c`` and ``--browser``: a server's answer is read in a stream, cut at 32 MiB
+  (100 KiB of gzip inflated to 200 MiB in memory) and within one deadline (a
+  body dripped byte by byte never timed out); a body that is not JSON, too
+  deep, or a token that is not one, is reported instead of stopping the
+  client, and one server's malformed ``_levels`` no longer ends the browser's
+  polling round for the servers after it
+* Exporters: Graphite and StatsD metric paths are filtered to
+  ``[A-Za-z0-9_.-]`` (a newline in a monitored name wrote a second metric);
+  a Prometheus item key is one label value, never re-parsed (``eth0,src:x``
+  overwrote a label, ``a,b`` lost the plugin's cycle); a URL's credentials
+  and query string are removed from an exported configuration value before
+  it is split on ``,``; the RabbitMQ user and password are percent-encoded
+  in the AMQP URL; NATS and restful never log a URL's credentials; a CSV
+  text cell that reads as a spreadsheet formula (``=``, ``+``, ``-``, ``@``,
+  tab, CR) is prefixed with ``'``
 * A ``-C`` path that does not exist stops Glances instead of starting with the
   defaults (and without the password that file carried)
 * ``/openapi.json`` is served only when ``api_doc`` is on
@@ -138,6 +162,46 @@ Security (post-cutover audit of 2026-10-17):
   process behind; the commands read nothing from the terminal
 * ``--hide-public-info`` also hides the public IP information text, which a
   ``{ip}`` template repeats (GHSA-vg43-q6xr-hp92)
+* A wrong user name takes as long to refuse as a wrong password (the password
+  check always runs); ``/api/5/token`` decodes Basic credentials as UTF-8, like
+  the WebUI, so a non-ASCII password works with ``glances -c`` too; a malformed
+  ``[outputs] password`` value logs a CRITICAL and refuses every login instead
+  of answering 500
+* Every response carries ``X-Content-Type-Options: nosniff``,
+  ``X-Frame-Options: DENY`` and ``Referrer-Policy: same-origin``; a POST (sort,
+  pin) coming from another web site (``Sec-Fetch-Site: cross-site``, or an
+  ``Origin`` which is neither the server nor one of ``cors_origins``) is refused
+  with 403
+* ``glances --set-password`` prints ``pbkdf2_sha256$600000$<salt>$<hex>``
+  (PBKDF2-SHA256, 600 000 iterations, a 32-byte key): the server no longer does
+  four times the work of an attacker testing a candidate. The ``<salt>$<hex>``
+  hashes of 5.0.0b1 are still accepted
+* Without a password, ``/api/5/args`` only returns the flags the WebUI reads
+  (``--fahrenheit``, ``--percpu``, ``--hide-public-info``...); the whole
+  (redacted) argument list, export file paths and process filter included,
+  needs a password
+* An on-alert command's redirection target is written without following a
+  symbolic link, a ``{{mustache}}`` value in it may only pick a file name (no
+  ``/``, ``..`` or NUL), and ``>>`` (append) is accepted
+* Running as root, a user configuration file, a log folder or a ``LOG_CFG``
+  file not owned by root or writable by others is ignored (``sudo -E`` keeps
+  the invoking user's ``HOME``); the log file is never opened through a link
+* ``ip`` plugin: the public API client speaks http(s) only, a redirect to
+  another scheme (``ftp://``, ``file:``) is refused instead of reaching the
+  private network through urllib's default handlers
+* ``--stdout``, ``--stdout-csv`` and ``--fetch`` replace the terminal control
+  characters of a stat value by ``?`` as the TUI does; ``--fetch-template`` is
+  rendered in a Jinja2 sandbox; ``--issue`` also redacts the container names
+  and commands, the ports URLs, VM names, SSIDs, mount points, AMP results and
+  the credentials of URLs quoted in the logged warnings
+* ``folders``: the size walk is iterative (a thousand nested folders, which
+  any user able to ``mkdir`` under a watched folder can plant, disabled the
+  plugin); the default Podman socket is ``/run/podman/podman.sock`` as root
+  and ``$XDG_RUNTIME_DIR/podman/podman.sock`` otherwise, no longer uid 1000's
+* Importing Glances no longer pushes the package's ``amps/``, ``plugins/`` and
+  ``exports/`` folders onto ``sys.path`` (``import cpu`` resolved inside
+  Glances); the unused ``system_exec`` helper and the ``uninstall.sh`` script
+  (it needed the removed ``setup.py``; use ``pip uninstall glances``) are gone
 
 Special notes for package maintainers:
 

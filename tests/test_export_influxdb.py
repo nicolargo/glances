@@ -110,6 +110,36 @@ def test_influxdb_uses_ssl_when_protocol_is_https(influxdb_module):
     assert influxdb_module.created[0].kwargs["ssl"] is True
 
 
+def test_influxdb_verifies_the_server_certificate_by_default(influxdb_module):
+    """Audit A6 (M9): `verify_ssl=False` was hard-coded."""
+    from glances.exports.glances_influxdb.export import Export
+
+    sections = {"influxdb": dict(SECTION["influxdb"], protocol="https")}
+    Export(make_config(sections), args=None)
+
+    assert influxdb_module.created[0].kwargs["verify_ssl"] is True
+
+
+def test_influxdb_ssl_verify_false_disables_the_check(influxdb_module):
+    from glances.exports.glances_influxdb.export import Export
+
+    sections = {"influxdb": dict(SECTION["influxdb"], protocol="https", ssl_verify="false")}
+    Export(make_config(sections), args=None)
+
+    assert influxdb_module.created[0].kwargs["verify_ssl"] is False
+
+
+def test_influxdb_ssl_verify_path_is_passed_as_the_ca_bundle(influxdb_module):
+    """The 1.x client hands `verify_ssl` to Requests' `verify`, which reads a
+    string as the path of a CA bundle."""
+    from glances.exports.glances_influxdb.export import Export
+
+    sections = {"influxdb": dict(SECTION["influxdb"], protocol="https", ssl_verify="/etc/ssl/private-ca.pem")}
+    Export(make_config(sections), args=None)
+
+    assert influxdb_module.created[0].kwargs["verify_ssl"] == "/etc/ssl/private-ca.pem"
+
+
 def test_influxdb_defaults_to_plain_http_when_the_protocol_is_absent(influxdb_module):
     from glances.exports.glances_influxdb.export import Export
 

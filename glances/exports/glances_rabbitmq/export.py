@@ -22,6 +22,7 @@ import socket
 import sys
 from numbers import Number
 from typing import TYPE_CHECKING, Any
+from urllib.parse import quote
 
 from glances.exports.export_base import GlancesExportBase
 from glances.logger import logger
@@ -61,8 +62,10 @@ class Export(GlancesExportBase):
             logger.critical("Export rabbitmq needs the pika library (%s)", e)
             sys.exit(2)
         try:
-            # The URL carries the password: it is never logged.
-            parameters = pika.URLParameters(f"{self.protocol}://{self.user}:{self.password}@{self.host}:{self.port}/")
+            # The URL carries the password: it is never logged. Percent-encoded,
+            # as CouchDB does: a `@ / # ? %` in it was read as URL syntax (audit R-6).
+            user, password = quote(self.user, safe=""), quote(self.password, safe="")
+            parameters = pika.URLParameters(f"{self.protocol}://{user}:{password}@{self.host}:{self.port}/")
             self.connection = pika.BlockingConnection(parameters)
             channel = self.connection.channel()
         except Exception as e:

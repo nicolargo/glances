@@ -252,6 +252,41 @@ async def test_influxdb2_logs_a_warning_when_the_write_fails(influxdb_client_mod
     assert "bucket missing" in caplog.text
 
 
+def test_influxdb2_verifies_the_server_certificate_by_default(influxdb_client_module):
+    """Audit A6 (M9): `verify_ssl=False` was hard-coded."""
+    from glances.exports.glances_influxdb2.export import Export
+
+    sections = dict(SECTION)
+    sections["influxdb2"] = dict(SECTION["influxdb2"], protocol="https")
+    Export(make_config(sections), args=None)
+
+    kwargs = influxdb_client_module.created[0].kwargs
+    assert kwargs["verify_ssl"] is True
+    assert "ssl_ca_cert" not in kwargs
+
+
+def test_influxdb2_ssl_verify_false_disables_the_check(influxdb_client_module):
+    from glances.exports.glances_influxdb2.export import Export
+
+    sections = dict(SECTION)
+    sections["influxdb2"] = dict(SECTION["influxdb2"], protocol="https", ssl_verify="false")
+    Export(make_config(sections), args=None)
+
+    assert influxdb_client_module.created[0].kwargs["verify_ssl"] is False
+
+
+def test_influxdb2_ssl_verify_path_is_passed_as_the_ca_bundle(influxdb_client_module):
+    from glances.exports.glances_influxdb2.export import Export
+
+    sections = dict(SECTION)
+    sections["influxdb2"] = dict(SECTION["influxdb2"], protocol="https", ssl_verify="/etc/ssl/private-ca.pem")
+    Export(make_config(sections), args=None)
+
+    kwargs = influxdb_client_module.created[0].kwargs
+    assert kwargs["verify_ssl"] is True
+    assert kwargs["ssl_ca_cert"] == "/etc/ssl/private-ca.pem"
+
+
 def test_influxdb2_accepts_the_shipped_configuration_file(influxdb_client_module):
     """The mandatory list must match what conf/glances.conf actually declares.
 

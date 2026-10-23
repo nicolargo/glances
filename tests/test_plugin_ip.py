@@ -474,6 +474,33 @@ def test_redirect_same_origin_keeps_credentials(tmp_path, monkeypatch):
     assert [s["auth"] for s in srv.seen] == ["Basic YWxpY2U6c2VjcmV0"] * 2
 
 
+def test_redirect_to_a_non_http_scheme_is_refused(tmp_path, monkeypatch):
+    """B-14: `302 Location: ftp://10.0.0.5/` reached the private network through
+    urllib's default FTP handler, which the guarded HTTP handlers do not cover."""
+    with socket.socket() as ftp:
+        ftp.bind(("127.0.0.1", 0))
+        ftp.listen(1)
+        ftp.settimeout(0.5)
+        with _server(redirect_to=f"ftp://127.0.0.1:{ftp.getsockname()[1]}/") as public:
+            monkeypatch.setattr("glances.plugins.ip.model._public_api_allowed", lambda url, allow: True)
+            monkeypatch.setattr("glances.plugins.ip.model._address_allowed", lambda ip: True)
+            p = _fetch_plugin(tmp_path, monkeypatch, f"http://127.0.0.1:{public.server_address[1]}/")
+            result = p._fetch_public_ip_info()
+        with pytest.raises(TimeoutError):
+            ftp.accept()
+    assert public.seen, "the allowed server must have been queried"
+    assert result == {}
+
+
+@pytest.mark.parametrize("allow_internal", ["false", "true"])
+def test_opener_speaks_http_only(tmp_path, monkeypatch, allow_internal):
+    body = "[ip]\npublic_disabled=False\npublic_api=http://example.com/json\npublic_field=ip\n"
+    body += f"public_api_allow_internal={allow_internal}\n"
+    p = PluginModel(StatsStore(), _cfg_with(tmp_path, monkeypatch, body))
+    names = {type(h).__name__ for h in p._opener.handlers}
+    assert not names & {"FTPHandler", "FileHandler", "DataHandler"}, names
+
+
 def test_proxy_connection_is_exempt_from_address_policy(tmp_path, monkeypatch):
     """An operator-configured proxy usually sits on a private address; the
     connection to it is trusted (the URL pre-check still gates the target)."""

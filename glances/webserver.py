@@ -21,6 +21,8 @@ Architecture references:
 
 Middleware composition (from outer to inner):
 
+    _SecurityHeadersMiddleware ← response headers, cross-site POST refused
+        ↓
     TrustedHostMiddleware   ← DNS rebinding (CVE-2026-32632)
         ↓
     CORSMiddleware          ← Cross-origin policy (CVE-2026-32610 / 34839)
@@ -37,17 +39,16 @@ below registers them inner-first.
 
 from __future__ import annotations
 
-import base64
-import binascii
 import contextlib
-import hmac
 import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
+from urllib.parse import urlsplit
 
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.datastructures import Headers, MutableHeaders
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.gzip import GZipMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
@@ -58,7 +59,7 @@ from glances.config import GlancesConfig
 from glances.plugins.plugin.base import GlancesPluginBase
 from glances.ratelimit import RateLimitMiddleware
 from glances.routes import build_router
-from glances.security import JWTHandler, KnownCredentials, verify_password_in_thread
+from glances.security import JWTHandler, KnownCredentials, check_basic, decode_basic, is_password_hash
 from glances.stats_store import StatsStore
 
 if TYPE_CHECKING:
@@ -178,6 +179,8 @@ def build_app(
     _wire_cors(app, config)
     _wire_rate_limit(app, config)
     _wire_trusted_hosts(app, config, args)
+    # Outermost: every response gets the headers, a refused request included.
+    app.add_middleware(_SecurityHeadersMiddleware, cors_origins=_csv_to_list(config.get("outputs", "cors_origins", [])))
 
     _register_health_endpoints(app)
     app.include_router(build_router())
@@ -387,6 +390,66 @@ class _ActivityMiddleware:
         await self.app(scope, receive, send)
 
 
+# Sent with every response. `frame-ancestors` cannot go in the WebUI's <meta>
+# CSP (index.html), so clickjacking protection is this header.
+_SECURITY_HEADERS: tuple[tuple[str, str], ...] = (
+    ("X-Content-Type-Options", "nosniff"),
+    ("X-Frame-Options", "DENY"),
+    ("Referrer-Policy", "same-origin"),
+)
+_WRITE_METHODS: frozenset[str] = frozenset({"POST", "PUT", "PATCH", "DELETE"})
+
+
+class _SecurityHeadersMiddleware:
+    """Response headers on every route, and no writes from another site.
+
+    Pure ASGI. The three POST routes (sort, pin) could be triggered from any
+    web page, also with a password once the browser replays the cached Basic
+    header (security audit 2026-10-17, B-5). A POST/PUT/PATCH/DELETE whose
+    `Sec-Fetch-Site` is `cross-site`, or whose `Origin` is present and is not
+    the request's own host, gets 403 — unless that origin is in
+    `[outputs] cors_origins`, which the CORS middleware then validates. A
+    request without `Origin` (a `glances -c` client, curl) is same-origin;
+    `Origin: null` is foreign. Only host:port is compared: behind a
+    TLS-terminating proxy the scheme the browser saw is unknowable.
+
+    The headers go on the `http.response.start` message only, so a streamed
+    body (MCP's SSE) is untouched.
+    """
+
+    def __init__(self, app, *, cors_origins: list[str]) -> None:  # noqa: ANN001
+        self.app = app
+        self._cors_origins = frozenset(cors_origins)
+
+    async def __call__(self, scope, receive, send) -> None:  # noqa: ANN001
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        async def send_with_headers(message) -> None:  # noqa: ANN001
+            if message["type"] == "http.response.start":
+                headers = MutableHeaders(scope=message)
+                for name, value in _SECURITY_HEADERS:
+                    headers[name] = value
+            await send(message)
+
+        if scope["method"] in _WRITE_METHODS and self._is_cross_site(Headers(scope=scope)):
+            response = JSONResponse(status_code=403, content={"detail": "Cross-site request refused"})
+            await response(scope, receive, send_with_headers)
+            return
+        await self.app(scope, receive, send_with_headers)
+
+    def _is_cross_site(self, headers: Headers) -> bool:
+        origin = headers.get("origin")
+        if origin is not None and ("*" in self._cors_origins or origin in self._cors_origins):
+            return False
+        if headers.get("sec-fetch-site") == "cross-site":
+            return True
+        if origin is None:
+            return False
+        return urlsplit(origin).netloc.lower() != headers.get("host", "").lower()
+
+
 def _wire_trusted_hosts(app: FastAPI, config: GlancesConfig, args: argparse.Namespace | None = None) -> None:
     """Filter requests by ``Host`` header against an allowlist.
 
@@ -471,6 +534,13 @@ def _wire_auth(app: FastAPI, config: GlancesConfig) -> None:
     password_hash = config.get("outputs", "password", "")
     if not password_hash:
         return  # No auth configured — startup warning is emitted by build_app().
+    if not is_password_hash(password_hash):
+        # Fail closed: `verify_password` answers False to every credential
+        # on such a value (security audit 2026-10-17, I-4).
+        logger.critical(
+            "[outputs] password is not a hash made by `glances --set-password` "
+            "(pbkdf2_sha256$<iterations>$<salt>$<hex digest>): every login will be refused"
+        )
 
     username = config.get("outputs", "username", _DEFAULT_USERNAME)
     jwt_secret = config.get("outputs", "jwt_secret_key", "") or None
@@ -505,31 +575,15 @@ def _wire_auth(app: FastAPI, config: GlancesConfig) -> None:
             # Proven good before: no second PBKDF2 for the same header.
             if known.is_known(auth):
                 return await call_next(request)
-            credentials = _decode_basic(auth[len("Basic ") :].strip())
-            if credentials is not None:
-                user, password = credentials
-                # PBKDF2 is ~50 ms of CPU: keep it off the event loop the
-                # scheduler shares, and out of the default executor its
-                # plugins use (anyio's threadpool, as v4's sync endpoints).
-                # Bytes: compare_digest raises TypeError on a non-ASCII str (-> 500).
-                if hmac.compare_digest(user.encode(), username.encode()) and await verify_password_in_thread(
-                    password, password_hash
-                ):
-                    known.remember(auth)
-                    return await call_next(request)
+            credentials = decode_basic(auth)
+            # PBKDF2 is ~50 ms of CPU: `check_basic` keeps it off the event
+            # loop the scheduler shares, and out of the default executor its
+            # plugins use (anyio's threadpool, as v4's sync endpoints).
+            if credentials is not None and await check_basic(*credentials, username, password_hash):
+                known.remember(auth)
+                return await call_next(request)
 
         return _unauth_response(scheme="Basic")
-
-
-def _decode_basic(encoded: str) -> tuple[str, str] | None:
-    try:
-        raw = base64.b64decode(encoded, validate=True).decode("utf-8", errors="strict")
-    except (binascii.Error, ValueError, UnicodeDecodeError):
-        return None
-    if ":" not in raw:
-        return None
-    user, _, password = raw.partition(":")
-    return user, password
 
 
 def _unauth_response(*, scheme: str) -> JSONResponse:

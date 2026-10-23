@@ -35,7 +35,9 @@ import time
 from typing import Any, TextIO
 
 import jinja2
+import jinja2.sandbox
 
+from glances.globals import CONTROL_CHARS_TO_QUESTION_MARK
 from glances.outputs.curses_formatters import format_value
 
 # The TUI's level colours as ANSI SGR codes (glances_curses._init_colors):
@@ -44,6 +46,11 @@ from glances.outputs.curses_formatters import format_value
 _LEVEL_SGR = {"ok": "32", "careful": "34", "warning": "35", "critical": "31"}
 _BOLD = "1"
 _ANSI = re.compile(r"\x1b\[[0-9;]*m")
+# The same, capturing, to keep the colour escapes `ui` painted when the
+# rendered text is cleaned of control characters. The template's own line
+# breaks are kept too.
+_SGR = re.compile(r"(\x1b\[[0-9;]*m)")
+_CONTROL_CHARS = {code: "?" for code in CONTROL_CHARS_TO_QUESTION_MARK if code != ord("\n")}
 
 # How long to collect before rendering: a rate (network, disk I/O) or a CPU
 # percentage needs two samples some time apart. v4 rendered straight after
@@ -194,8 +201,16 @@ class FetchUI:
 
 
 def render(template_text: str, gl: Any, ui: FetchUI) -> str:
-    env = jinja2.Environment(undefined=jinja2.StrictUndefined, autoescape=False, keep_trailing_newline=True)  # noqa: S701 -- terminal text, not HTML
-    return env.from_string(template_text).render(gl=gl, ui=ui)
+    """Render the template in a sandbox (a shared template must not reach
+    `os` through `__globals__`, security audit 2026-10-17, I-8), then replace
+    the control characters a stat value (a process name, a mount point) may
+    carry by '?', the colour escapes painted by `ui` excepted (B-15)."""
+    env = jinja2.sandbox.SandboxedEnvironment(
+        undefined=jinja2.StrictUndefined, autoescape=False, keep_trailing_newline=True
+    )  # noqa: S701 -- terminal text, not HTML
+    text = env.from_string(template_text).render(gl=gl, ui=ui)
+    parts = _SGR.split(text)
+    return "".join(part if i % 2 else part.translate(_CONTROL_CHARS) for i, part in enumerate(parts))
 
 
 def run(

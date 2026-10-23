@@ -350,6 +350,28 @@ def test_limits_for_never_exports_a_credential():
     assert limits["fakescalar_user_careful"] == 60.0, "a `user` CPU threshold is not a credential"
 
 
+def test_limits_for_redacts_a_url_before_splitting_it_on_commas():
+    """Audit R-4: the value was split on `,` first, so `https://bob:pa,ss@h/`
+    exported `ss@h/`, and a query token holding a comma leaked its tail."""
+    config = make_config(
+        {
+            "fakescalar": {
+                "web_1_url": "https://bob:pa,ss@intranet.example/",
+                "web_2_url": "https://intranet.example/health?access_token=TOK,EN#frag",
+                "status_ok": "R, S, D",
+            }
+        }
+    )
+    plugin = FakeScalarPlugin(StatsStore(), config)
+    limits = FakeExport(config, args=None)._limits_for(plugin)
+
+    assert limits["fakescalar_web_1_url"] == ["https://intranet.example/"]
+    assert limits["fakescalar_web_2_url"] == ["https://intranet.example/health"]
+    for secret in ("bob", "pa", "ss@", "TOK", "EN"):
+        assert secret not in str(limits), secret
+    assert limits["fakescalar_status_ok"] == ["R", "S", "D"], "a plain list is still split and stripped"
+
+
 def test_limits_for_is_cached_per_plugin():
     config = make_config({"fakescalar": {"careful": "50"}})
     store = StatsStore()

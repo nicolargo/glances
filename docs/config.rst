@@ -29,7 +29,10 @@ without any configuration file is valid, the built-in defaults are used.
 
 A file that exists but cannot be read or parsed stops Glances, and so does a
 ``-C`` path that does not exist: it is never skipped silently (it could hold
-the ``[outputs] password``).
+the ``[outputs] password``). When Glances runs as root, a user configuration
+file that is not owned by root, or that is writable by its group or others,
+is ignored with a warning (``sudo -E`` keeps the invoking user's ``HOME``) and
+the system-wide file is used instead.
 
 Any option can then be overridden with an environment variable named
 ``GLANCES_<SECTION>__<KEY>`` (note the double underscore), for example
@@ -108,7 +111,7 @@ than a second one concerning the user interface:
     #port=61208
     # PBKDF2 hash of the REST API / WebUI password, printed by
     # "glances --set-password" (never the clear password)
-    #password=<salt>$<pbkdf2 hex digest>
+    #password=pbkdf2_sha256$600000$<salt>$<hex digest>
     # User name expected with the password (default: glances)
     #username=glances
     # Serve the interactive API documentation: Swagger UI at /docs and ReDoc at
@@ -158,9 +161,10 @@ API and the WebUI, generate a hash with:
     $ glances --set-password
 
 and paste the printed value into ``[outputs] password``. The key holds a
-PBKDF2 hash (``<salt>$<hex digest>``), never the clear password: Glances
-never writes to ``glances.conf`` itself. Hashes made by Glances 4 are not
-compatible and must be generated again. The user name is ``glances`` unless
+PBKDF2 hash (``pbkdf2_sha256$<iterations>$<salt>$<hex digest>``), never the
+clear password: Glances never writes to ``glances.conf`` itself. Hashes made
+by Glances 4 are not compatible and must be generated again; the
+``<salt>$<hex digest>`` values of Glances 5.0.0b1 are still accepted. The user name is ``glances`` unless
 ``username`` is set. Clients authenticate with HTTP Basic, or with a JWT
 Bearer token obtained from ``/api/5/token``; ``jwt_secret_key`` (at least
 32 characters, for example ``python3 -c "import secrets;

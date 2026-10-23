@@ -14,6 +14,8 @@ import logging.config
 import logging.handlers
 import os
 
+from glances.globals import trusted_by_root
+
 
 def _log_folder():
     """The folder of the log file, private to the user, or None when none can be made.
@@ -22,7 +24,9 @@ def _log_folder():
     link where the log is opened, and the log is readable by all (security
     audit 2026-10-04, M8). `$XDG_CACHE_HOME/glances` first (issue #1575), then
     `~/.local/share/glances`, `~` resolved from the password database when
-    `$HOME` is not set.
+    `$HOME` is not set. As root, a candidate owned by another user (`sudo -E`
+    keeps `$HOME` and `$XDG_CACHE_HOME`) is skipped (security audit
+    2026-10-17, X-2).
     """
     candidates = []
     xdg_cache_home = os.environ.get('XDG_CACHE_HOME')
@@ -36,7 +40,7 @@ def _log_folder():
             os.makedirs(folder, mode=0o700, exist_ok=True)
         except OSError:
             continue
-        if os.access(folder, os.W_OK):
+        if os.access(folder, os.W_OK) and trusted_by_root(folder):
             return folder
     return None
 
@@ -44,14 +48,17 @@ def _log_folder():
 class PrivateRotatingFileHandler(logging.handlers.RotatingFileHandler):
     """A rotating log file readable by its owner only.
 
-    A link in the log folder is followed: the folder is private, so only its
-    owner can have put it there, to send the log elsewhere on purpose.
+    A link at the log file is not followed, and the mode of a file the
+    process does not own is left alone: as root, a link planted in the log
+    folder sent the log elsewhere and made its target 0600 (security audit
+    2026-10-17, X-2).
     """
 
     def _open(self):
         def opener(path, flags):
-            fd = os.open(path, flags, 0o600)
-            if hasattr(os, 'fchmod'):
+            fd = os.open(path, flags | getattr(os, 'O_NOFOLLOW', 0), 0o600)
+            # Windows has neither fchmod nor geteuid: the mode is left alone there.
+            if hasattr(os, 'fchmod') and hasattr(os, 'geteuid') and os.fstat(fd).st_uid == os.geteuid():
                 # A file left by an older Glances keeps the mode it was created with.
                 os.fchmod(fd, 0o600)
             return fd
@@ -115,13 +122,26 @@ def glances_logger(env_key='LOG_CFG'):
 
     # Check if a specific configuration is available
     user_file = os.getenv(env_key, None)
+    untrusted_file = None
     if user_file and os.path.exists(user_file):
-        # A user file as been defined. Use it...
-        with open(user_file) as f:
-            config = json.load(f)
+        if trusted_by_root(user_file):
+            # A user file as been defined. Use it...
+            with open(user_file) as f:
+                config = json.load(f)
+        else:
+            # As root, a logging configuration names the handler classes to
+            # load: it must not come from a file another user can write
+            # (security audit 2026-10-17, I-10, S-10).
+            untrusted_file = user_file
 
     # Load the configuration
     logging.config.dictConfig(config)
+    if untrusted_file:
+        _logger.warning(
+            "%s file %s ignored: running as root, it must be owned by root and not writable by others",
+            env_key,
+            untrusted_file,
+        )
 
     return _logger
 

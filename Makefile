@@ -68,21 +68,23 @@ venv-dev: ## Create the virtualenv with dev dependencies
 # ===================================================================
 # Requirements
 #
-# Note: the --no-hashes option should be used because pip (in CI) has
-# issues with hashes.
+# The files carry hashes: pip then refuses an artefact that does not match
+# the lock (security audit 2026-10-17, S-4). Regenerate the four files in one
+# run (`make requirements`) so the minimal and full images ship the same
+# versions; uv.lock is committed for that reason.
 # ===================================================================
 
 requirements-min: ## Generate the requirements.txt files (minimal dependencies)
-	$(UV_RUN) export --no-emit-workspace --no-hashes --no-group dev --output-file requirements.txt
+	$(UV_RUN) export --no-emit-workspace --no-group dev --output-file requirements.txt
 
 requirements-all: ## Generate the all-requirements.txt files (all dependencies)
-	$(UV_RUN) export --no-emit-workspace --no-hashes --all-extras --no-group dev --output-file all-requirements.txt
+	$(UV_RUN) export --no-emit-workspace --all-extras --no-group dev --output-file all-requirements.txt
 
 requirements-docker: ## Generate the docker-requirements.txt files (Docker specific dependencies)
-	$(UV_RUN) export --no-emit-workspace --no-hashes --no-group dev --extra containers --extra web --extra mcp --output-file docker-requirements.txt
+	$(UV_RUN) export --no-emit-workspace --no-group dev --extra containers --extra web --extra mcp --output-file docker-requirements.txt
 
 requirements-dev: ## Generate the dev-requirements.txt files (dev dependencies)
-	$(UV_RUN) export --no-hashes --only-dev --output-file dev-requirements.txt
+	$(UV_RUN) export --only-dev --output-file dev-requirements.txt
 
 requirements: requirements-min requirements-all requirements-dev requirements-docker  ## Generate all the requirements files
 

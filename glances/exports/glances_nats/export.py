@@ -50,8 +50,14 @@ _EXIT_TIMEOUT = 5.0
 
 
 def redact(server: str) -> str:
-    """Drop `user:password@` from a server URL before it is logged."""
-    return re.sub(r"//[^@/]*@", "//", server)
+    """Drop `user:password@` from a server before it is logged.
+
+    With or without a scheme, and whole even when the password holds an `@`
+    (`nats://u:p@ss@host` used to log as `nats://ss@host`, audit I-12): the
+    same authority match as `glances.config._URL_CREDENTIALS_RE`.
+    """
+    scheme, sep, rest = server.rpartition("://")
+    return scheme + sep + re.sub(r"^[^/?#\s]+@", "", rest)
 
 
 class Export(GlancesExportBase):

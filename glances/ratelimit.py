@@ -140,9 +140,6 @@ class RateLimitMiddleware:
         self._general = Buckets(per_minute, burst if burst > 0 else per_minute) if per_minute > 0 else None
         self._auth = Buckets(auth_fail_per_minute, auth_fail_per_minute) if auth_fail_per_minute > 0 else None
 
-    def _reserve_auth_try(self, key: str) -> bool:
-        return self._auth is None or self._auth.take(key) == 0.0
-
     async def __call__(self, scope: dict[str, Any], receive: Any, send: Any) -> None:
         if scope["type"] != "http" or scope["path"] in EXEMPT_PATHS:
             await self.app(scope, receive, send)

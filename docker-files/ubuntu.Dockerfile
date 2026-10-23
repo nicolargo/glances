@@ -13,7 +13,9 @@ ARG PYTHON_VERSION=3.14
 
 ##############################################################################
 # Base layer to be used for building dependencies and the release images
-FROM ubuntu:${IMAGE_VERSION} AS base
+# Pinned by digest (the multi-arch manifest list of the tag); Dependabot
+# bumps it (security audit 2026-10-17, S-3).
+FROM ubuntu:${IMAGE_VERSION}@sha256:c098726dd9b9733f3e885f8de0ef375206a311b0a317eadc40d347b1115fb944 AS base
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN <<EOR

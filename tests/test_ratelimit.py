@@ -241,7 +241,7 @@ async def test_known_credentials_reserve_no_try(clock):
         "client": ("192.0.2.1", 1),
         "headers": [(b"authorization", b"Basic eDp5")],
     }
-    assert limiter._reserve_auth_try(ratelimit._client_key(scope)), "the only try is now taken"
+    assert limiter._auth.take(ratelimit._client_key(scope)) == 0.0, "the only try is now taken"
 
     async def receive():
         return {"type": "http.request"}
@@ -281,8 +281,8 @@ async def test_concurrent_guesses_cannot_overspend(clock):
         return {"type": "http.request"}
 
     # Reserve two tries without letting either finish, then a third arrives.
-    assert limiter._reserve_auth_try(ratelimit._client_key(scope))
-    assert limiter._reserve_auth_try(ratelimit._client_key(scope))
+    assert limiter._auth.take(ratelimit._client_key(scope)) == 0.0
+    assert limiter._auth.take(ratelimit._client_key(scope)) == 0.0
     await limiter(scope, receive, send)
     assert sent[0]["status"] == 429
     assert seen == []
