@@ -8,6 +8,7 @@
 
 """Secures functions for Glances"""
 
+import os
 import re
 from subprocess import DEVNULL, PIPE, Popen, TimeoutExpired
 
@@ -20,7 +21,15 @@ def secure_popen(cmd, allow_operators=True, timeout=None, render=None):
     By default the following shell-like operators are interpreted:
     - '&&' to chain commands
     - '|'  to pipe a command output into the next one
-    - '>'  to redirect the output to a file
+    - '>'  to redirect the output to a file (truncated)
+    - '>>' to append the output to a file
+
+    One redirection per command, in the last position. When `render` is
+    given, the target is rendered one path segment at a time and the command
+    is refused when a rendered segment introduces a '/', a '..' component or
+    a NUL that the template did not contain, so a templated value can never
+    steer the file written. The target is opened without following a
+    symbolic link (security audit 2026-10-17, A4).
 
     :param cmd: the command line to run (str)
     :param allow_operators: when False, the operators above are NOT
@@ -101,20 +110,39 @@ def __run_argv(cmd, timeout=None, render=None):
     return nativestr(p_ret[1])
 
 
+def __render_redirect_target(target, render):
+    """Render a templated redirection target one path segment at a time.
+
+    Return None when a rendered segment introduces a '/', a '..' component or
+    a NUL that the template did not contain: the trusted template picks the
+    folder, a rendered value may only pick a file name inside it.
+    """
+    segments = []
+    for segment in target.split('/'):
+        rendered = render(segment)
+        if rendered != segment and ('/' in rendered or '\x00' in rendered or rendered == '..'):
+            return None
+        segments.append(rendered)
+    return '/'.join(segments)
+
+
 def __secure_popen(cmd, timeout=None, render=None):
     """A more or less secure way to execute system command
 
-    Manage redirection (>) and pipes (|)
+    Manage redirection (> or >>) and pipes (|)
     """
-    # Split by redirection '>'
-    cmd_split_redirect = cmd.split('>')
-    if len(cmd_split_redirect) > 2:
+    # Split by redirection '>>' (append) or '>' (truncate)
+    redirect_append = '>>' in cmd
+    cmd_split_redirect = cmd.split('>>' if redirect_append else '>')
+    if len(cmd_split_redirect) > 2 or (redirect_append and any('>' in _ for _ in cmd_split_redirect)):
         return f'Glances error: Only one file redirection allowed ({cmd})'
     if len(cmd_split_redirect) == 2:
         stdout_redirect = cmd_split_redirect[1].strip()
         if render is not None:
             # The redirection target may itself be templated
-            stdout_redirect = render(stdout_redirect)
+            stdout_redirect = __render_redirect_target(stdout_redirect, render)
+            if stdout_redirect is None:
+                return f'Glances error: Rendered value not allowed in the redirection target ({cmd})'
         cmd = cmd_split_redirect[0]
     else:
         stdout_redirect = None
@@ -164,8 +192,10 @@ def __secure_popen(cmd, timeout=None, render=None):
         # No error
         ret = nativestr(p_ret[0])
         if stdout_redirect is not None:
-            # Write result to redirection file
-            with open(stdout_redirect, "w") as stdout_redirect_file:
+            # Write result to redirection file, never through a symbolic link
+            flags = os.O_WRONLY | os.O_CREAT | getattr(os, 'O_NOFOLLOW', 0)
+            flags |= os.O_APPEND if redirect_append else os.O_TRUNC
+            with os.fdopen(os.open(stdout_redirect, flags, 0o600), "w") as stdout_redirect_file:
                 stdout_redirect_file.write(ret)
     else:
         # Error

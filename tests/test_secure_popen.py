@@ -157,3 +157,64 @@ def test_children_read_nothing_from_the_terminal():
 def test_runs_of_whitespace_are_separators_not_arguments():
     """X-6: two spaces or a tab became an argument of their own."""
     assert secure_popen("echo -n A\t\tB  C") == "A B C"
+
+
+# ---------------------------------------------------------------------------
+# Tests – redirection target (security audit 2026-10-17, A4 / M5 / X-4)
+# ---------------------------------------------------------------------------
+
+
+def _render_name(value):
+    return lambda arg: arg.replace('{{name}}', value)
+
+
+def test_rendered_value_cannot_leave_the_target_folder(tmp_path):
+    """M5: `name="../victim/owned"` wrote `victim/owned.log` outside `logs/`."""
+    (tmp_path / 'logs').mkdir()
+    ret = secure_popen(f'echo -n owned > {tmp_path}/logs/{{{{name}}}}.log', render=_render_name('../victim/owned'))
+    assert ret.startswith('Glances error:')
+    assert not (tmp_path / 'victim').exists()
+    assert list((tmp_path / 'logs').iterdir()) == []
+
+
+def test_rendered_value_cannot_contain_a_nul(tmp_path):
+    ret = secure_popen(f'echo -n x > {tmp_path}/{{{{name}}}}.log', render=_render_name('a\x00b'))
+    assert ret.startswith('Glances error:')
+
+
+def test_rendered_value_still_picks_a_file_name(tmp_path):
+    secure_popen(f'echo -n ALERT > {tmp_path}/gl_{{{{name}}}}.alert', render=_render_name('disk 1'))
+    assert (tmp_path / 'gl_disk 1.alert').read_text() == 'ALERT'
+
+
+def test_a_planted_symlink_is_not_followed(tmp_path):
+    """M5: `logs/alert.log -> victim/secret.txt` was followed and the victim overwritten."""
+    victim = tmp_path / 'secret.txt'
+    victim.write_text('SECRET')
+    link = tmp_path / 'alert.log'
+    link.symlink_to(victim)
+    with pytest.raises(OSError):
+        secure_popen(f'echo -n owned > {link}')
+    assert victim.read_text() == 'SECRET'
+
+
+def test_append_redirection(tmp_path):
+    """X-4: the shipped examples used `>>`, which secure_popen refused."""
+    target = tmp_path / 'out.log'
+    secure_popen(f'echo -n A >> {target}')
+    secure_popen(f'echo -n B >> {target}')
+    assert target.read_text() == 'AB'
+    secure_popen(f'echo -n C > {target}')
+    assert target.read_text() == 'C'
+
+
+def test_only_one_redirection_per_command(tmp_path):
+    assert secure_popen(f'echo -n A > {tmp_path}/a >> {tmp_path}/b').startswith('Glances error:')
+    assert secure_popen(f'echo -n A >>> {tmp_path}/a').startswith('Glances error:')
+    assert not (tmp_path / 'a').exists()
+
+
+def test_new_redirection_file_is_private(tmp_path):
+    target = tmp_path / 'out.log'
+    secure_popen(f'echo -n A > {target}')
+    assert target.stat().st_mode & 0o777 == 0o600

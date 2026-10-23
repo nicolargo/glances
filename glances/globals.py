@@ -24,7 +24,6 @@ import platform
 import queue
 import re
 import socket
-import subprocess
 import sys
 import weakref
 from collections import OrderedDict
@@ -77,16 +76,6 @@ SUNOS = sys.platform.startswith('sunos')
 WINDOWS = sys.platform.startswith('win')
 WSL = "linux" in platform.system().lower() and "microsoft" in platform.uname()[3].lower()
 
-# Set the AMPs, plugins and export modules path
-work_path = os.path.realpath(os.path.dirname(__file__))
-amps_path = os.path.realpath(os.path.join(work_path, 'amps'))
-plugins_path = os.path.realpath(os.path.join(work_path, 'plugins'))
-exports_path = os.path.realpath(os.path.join(work_path, 'exports'))
-sys_path = sys.path[:]
-sys.path.insert(1, exports_path)
-sys.path.insert(1, plugins_path)
-sys.path.insert(1, amps_path)
-
 # Types
 text_type = str
 binary_type = bytes
@@ -107,6 +96,12 @@ if LINUX or BSD or SUNOS or MACOS:
 else:
     ctx_mp_fork = multiprocessing.get_context()
 
+# C0 control characters, DEL and C1, each replaced by '?': a process name, a
+# mount point or a command written raw to a terminal by the text outputs
+# (--stdout, --stdout-csv, --fetch) could retitle it or clear the screen
+# (security audit 2026-10-17, B-15). The TUI keeps its own table.
+CONTROL_CHARS_TO_QUESTION_MARK = dict.fromkeys([*range(0x20), 0x7F, *range(0x80, 0xA0)], "?")
+
 ###################
 # GLOBALS FUNCTIONS
 ###################
@@ -115,6 +110,27 @@ else:
 def printandflush(string):
     """Print and flush (used by stdout* outputs modules)"""
     print(string, flush=True)
+
+
+def trusted_by_root(path):
+    """Return True when the current process may trust the file or folder `path`.
+
+    Always True when not running as root (or when the platform has no
+    `geteuid`): a user's files are their own. As root, True only when `path`
+    is owned by root (or the effective user) and writable neither by its
+    group nor by others: under `sudo -E` (or a sudo that keeps `HOME` and the
+    `XDG_*` variables) the user paths still point to the invoking user's
+    folders, where a planted configuration or log folder would otherwise be
+    read, executed or written to as root (security audit 2026-10-17, B-9, X-2).
+    """
+    geteuid = getattr(os, 'geteuid', None)
+    if geteuid is None or geteuid() != 0:
+        return True
+    try:
+        st = os.stat(path)
+    except OSError:
+        return False
+    return st.st_uid in (0, geteuid()) and st.st_mode & 0o022 == 0
 
 
 def to_ascii(s):
@@ -155,21 +171,6 @@ def nativestr(s, errors='replace'):
     if isinstance(s, (int, float)):
         return s.__str__()
     return s.decode('utf-8', errors=errors)
-
-
-def system_exec(command, timeout=5):
-    """Execute a system command and return the result as a str.
-
-    A hard timeout (default 5 s) prevents blocking commands from hanging
-    the process indefinitely.
-    """
-    try:
-        res = subprocess.run(command.split(' '), stdout=subprocess.PIPE, timeout=timeout).stdout.decode('utf-8')
-    except subprocess.TimeoutExpired:
-        res = f'ERROR: command `{command}` timed out after {timeout}s'
-    except Exception as e:
-        res = f'ERROR: {e}'
-    return res.rstrip()
 
 
 def subsample(data, sampling):
@@ -535,24 +536,41 @@ def folder_size(path, errno=0):
     errno is set to the error number.
 
     path: <string>
-    errno: <int> Should always be 0 when calling the function"""
+    errno: <int> Should always be 0 when calling the function
+
+    The walk is iterative: a recursive one hit the interpreter's recursion
+    limit at about a thousand nested folders, which any user able to `mkdir`
+    under a watched folder could plant, and the plugin was then disabled on
+    every cycle (security audit 2026-10-17). Links are not followed and each
+    folder is visited once, so a loop ends too."""
     ret_size = 0
     ret_err = errno
-    try:
-        for f in os.scandir(path):
-            if f.is_dir(follow_symlinks=False) and (f.name != '.' or f.name != '..'):
-                ret = folder_size(os.path.join(path, f.name), ret_err)
-                ret_size += ret[0]
-                ret_err = ret[1]
-            else:
-                try:
+    visited = set()
+    stack = [path]
+    root = True
+    while stack:
+        folder = stack.pop()
+        try:
+            with os.scandir(folder) as entries:
+                entries = list(entries)
+        except OSError as e:
+            if root:
+                return 0, e.errno
+            ret_err = e.errno
+            continue
+        root = False
+        for f in entries:
+            try:
+                if f.is_dir(follow_symlinks=False):
+                    st = f.stat(follow_symlinks=False)
+                    if (st.st_dev, st.st_ino) not in visited:
+                        visited.add((st.st_dev, st.st_ino))
+                        stack.append(f.path)
+                else:
                     ret_size += f.stat().st_size
-                except OSError as e:
-                    ret_err = e.errno
-    except (OSError, PermissionError) as e:
-        return 0, e.errno
-    else:
-        return ret_size, ret_err
+            except OSError as e:
+                ret_err = e.errno
+    return ret_size, ret_err
 
 
 def _get_ttl_hash(ttl):

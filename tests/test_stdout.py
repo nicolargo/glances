@@ -238,3 +238,27 @@ def test_a_failing_plugin_is_reported_in_the_json_errors():
             {"error": True, "plugin": "load", "message": "boom"},
         ]
     }
+
+
+# ---------------------------------------------- security audit 2026-10-17, B-15
+
+_INJECTED = "bash\x1b]0;PWNED\x07\x1b[2J\x7f\x9b"
+
+
+def _processes():
+    return [_Plugin("processlist", [{"pid": 1, "name": _INJECTED, "cpu_percent": 1.0}], "pid")]
+
+
+def test_plain_neutralises_terminal_control_characters():
+    """A process name wrote `\\x1b]0;PWNED\\x07\\x1b[2J` raw to the terminal."""
+    written = []
+    Stdout(plugins=_processes(), refresh_interval=1, stdout="processlist.name", write=written.append).output_once()
+    assert written == ["processlist.1.name: bash?]0;PWNED??[2J??"]
+
+
+def test_csv_neutralises_terminal_control_characters():
+    written = []
+    printer = Stdout(plugins=_processes(), refresh_interval=1, stdout_csv="processlist", write=written.append)
+    printer.output_once()
+    printer.output_once()
+    assert written[1] == "1,bash?]0;PWNED??[2J??,1.0"

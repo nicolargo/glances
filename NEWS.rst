@@ -180,6 +180,28 @@ Security (post-cutover audit of 2026-10-17):
   (``--fahrenheit``, ``--percpu``, ``--hide-public-info``...); the whole
   (redacted) argument list, export file paths and process filter included,
   needs a password
+* An on-alert command's redirection target is written without following a
+  symbolic link, a ``{{mustache}}`` value in it may only pick a file name (no
+  ``/``, ``..`` or NUL), and ``>>`` (append) is accepted
+* Running as root, a user configuration file, a log folder or a ``LOG_CFG``
+  file not owned by root or writable by others is ignored (``sudo -E`` keeps
+  the invoking user's ``HOME``); the log file is never opened through a link
+* ``ip`` plugin: the public API client speaks http(s) only, a redirect to
+  another scheme (``ftp://``, ``file:``) is refused instead of reaching the
+  private network through urllib's default handlers
+* ``--stdout``, ``--stdout-csv`` and ``--fetch`` replace the terminal control
+  characters of a stat value by ``?`` as the TUI does; ``--fetch-template`` is
+  rendered in a Jinja2 sandbox; ``--issue`` also redacts the container names
+  and commands, the ports URLs, VM names, SSIDs, mount points, AMP results and
+  the credentials of URLs quoted in the logged warnings
+* ``folders``: the size walk is iterative (a thousand nested folders, which
+  any user able to ``mkdir`` under a watched folder can plant, disabled the
+  plugin); the default Podman socket is ``/run/podman/podman.sock`` as root
+  and ``$XDG_RUNTIME_DIR/podman/podman.sock`` otherwise, no longer uid 1000's
+* Importing Glances no longer pushes the package's ``amps/``, ``plugins/`` and
+  ``exports/`` folders onto ``sys.path`` (``import cpu`` resolved inside
+  Glances); the unused ``system_exec`` helper and the ``uninstall.sh`` script
+  (it needed the removed ``setup.py``; use ``pip uninstall glances``) are gone
 
 Special notes for package maintainers:
 

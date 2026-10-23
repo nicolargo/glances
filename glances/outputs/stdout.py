@@ -38,6 +38,8 @@ import threading
 from collections.abc import Callable
 from typing import Any
 
+from glances.globals import CONTROL_CHARS_TO_QUESTION_MARK
+
 logger = logging.getLogger(__name__)
 
 _NA = "N/A"
@@ -236,16 +238,22 @@ class Stdout(threading.Thread):
                 errors[name] = str(exc)
         return out, errors
 
+    def _emit(self, line: str) -> None:
+        # A value drawn from the stats (a process name, a mount point) may
+        # carry terminal control sequences: neutralised as the TUI does
+        # (security audit 2026-10-17, B-15).
+        self._write(line.translate(CONTROL_CHARS_TO_QUESTION_MARK))
+
     def output_once(self) -> None:
         """Print one refresh worth of output."""
         exports, errors = self._exports()
         if self._plain is not None:
             for line in render_plain(self._plain, exports, self._primary_keys):
-                self._write(line)
+                self._emit(line)
         elif self._json is not None:
-            self._write(render_json(self._json, exports, errors))
+            self._emit(render_json(self._json, exports, errors))
         elif self._csv is not None:
-            self._write(self._csv.render(exports, self._primary_keys))
+            self._emit(self._csv.render(exports, self._primary_keys))
 
     def run(self) -> None:
         printed = 0

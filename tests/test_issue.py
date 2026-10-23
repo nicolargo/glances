@@ -200,3 +200,40 @@ def test_run_issue_builds_what_glances_builds(config, monkeypatch):
     assert "mem" in seen["plugins"] and "cpu" not in seen["plugins"]
     assert "cpu" in seen["disabled"]
     assert seen["version"] == __version__
+
+
+# ------------------------------------------ security audit 2026-10-17, B-16
+
+
+def test_secrets_carried_by_other_plugins_are_redacted():
+    container = {"name": "db", "command": "mysqld --password=S3CRET", "engine_url": "tcp://h:2376", "cpu": 1}
+    assert redact("containers", [container]) == [
+        {"name": REDACTED, "command": REDACTED, "engine_url": REDACTED, "cpu": 1}
+    ]
+    assert redact("ports", [{"url": "https://u:p@h/", "description": "intranet", "status": 1}]) == [
+        {"url": REDACTED, "description": REDACTED, "status": 1}
+    ]
+    assert redact("amps", [{"name": "db", "result": "token=abc"}])[0]["result"] == REDACTED
+    assert redact("wifi", [{"ssid": "home"}]) == [{"ssid": REDACTED}]
+    assert redact("vms", [{"name": "vm1"}]) == [{"name": REDACTED}]
+    assert redact("fs", [{"mnt_point": "/home/alice", "percent": 1}]) == [{"mnt_point": REDACTED, "percent": 1}]
+
+
+def test_a_container_command_never_reaches_the_report():
+    payload = [{"name": "db", "command": "mysqld --password=S3CRET"}]
+    text = _report([PluginResult("containers", "ok", 0.001, payload=payload)])
+    assert "--password=" not in text
+    assert "S3CRET" not in text
+
+
+def test_warnings_quoting_an_url_lose_its_credentials():
+    text = _report(
+        [PluginResult("ip", "ok", 0.001)],
+        [
+            "IP plugin - public_api https://api.example.com/json?token=S3CRET&x=1 resolves to a forbidden address",
+            "export: cannot reach https://bob:hunter2@db.example.com:8086/write",
+        ],
+    )
+    assert "S3CRET" not in text and "hunter2" not in text
+    assert "https://api.example.com/json?***" in text
+    assert "https://********@db.example.com:8086/write" in text

@@ -69,3 +69,20 @@ def test_every_discovered_plugin_comes_from_the_installed_package():
 def test_there_is_no_plugin_directory_option(option):
     with pytest.raises(SystemExit):
         build_parser().parse_args(option)
+
+
+def test_importing_glances_leaves_sys_path_alone():
+    """Security audit 2026-10-17, X-3: `glances.globals` pushed the package's
+    `amps/`, `plugins/` and `exports/` folders onto sys.path, so `import cpu`
+    or `import default` resolved inside Glances and shadowed third-party
+    modules of the same name. `-I` so the test sees only what the import adds."""
+    import json
+    import subprocess
+
+    # The package under test, not whichever checkout the venv's editable install points at.
+    root = str(INSTALLED.parent.parent)
+    code = f"import sys, json; sys.path.insert(0, {root!r}); import glances, glances.globals, glances.main; "
+    code += "print(json.dumps(sys.path))"
+    out = subprocess.run([sys.executable, "-I", "-c", code], check=True, capture_output=True, text=True).stdout
+    tails = ("glances/plugins", "glances/amps", "glances/exports")
+    assert not [p for p in json.loads(out) if p.replace(os.sep, "/").rstrip("/").endswith(tails)]

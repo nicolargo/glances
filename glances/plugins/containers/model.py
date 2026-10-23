@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 from typing import Any, ClassVar
 
 from glances.plugins.containers.engines import ContainerEngineMonitor
@@ -32,7 +33,18 @@ from glances.processes import sort_stats as sort_stats_processes
 
 logger = logging.getLogger(__name__)
 
-_DEFAULT_PODMAN_SOCK = "unix:///run/user/1000/podman/podman.sock"
+
+def _default_podman_sock() -> str:
+    """The system socket as root, the user's own one otherwise.
+
+    The former default was uid 1000's socket whoever runs Glances: root then
+    trusted the JSON of an unprivileged user (security audit 2026-10-17).
+    """
+    uid = os.geteuid() if hasattr(os, "geteuid") else 0
+    if uid == 0:
+        return "unix:///run/podman/podman.sock"
+    runtime_dir = os.environ.get("XDG_RUNTIME_DIR") or f"/run/user/{uid}"
+    return f"unix://{runtime_dir}/podman/podman.sock"
 
 
 class PluginModel(GlancesPluginBase[list]):
@@ -164,7 +176,7 @@ class PluginModel(GlancesPluginBase[list]):
         sock = self.config.get(self.plugin_name, "podman_sock", "")
         if isinstance(sock, (list, tuple)):
             sock = sock[0] if sock else ""
-        return str(sock) if sock else _DEFAULT_PODMAN_SOCK
+        return str(sock) if sock else _default_podman_sock()
 
     def _poll_interval(self) -> float:
         try:
