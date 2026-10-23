@@ -33,7 +33,17 @@ import time
 from typing import Any, ClassVar
 from urllib.error import URLError
 from urllib.parse import urlparse
-from urllib.request import HTTPHandler, HTTPRedirectHandler, HTTPSHandler, Request, build_opener
+from urllib.request import (
+    HTTPDefaultErrorHandler,
+    HTTPErrorProcessor,
+    HTTPHandler,
+    HTTPRedirectHandler,
+    HTTPSHandler,
+    OpenerDirector,
+    ProxyHandler,
+    Request,
+    UnknownHandler,
+)
 
 from glances.config import GlancesConfig
 from glances.globals import get_ip_address, json_loads
@@ -169,18 +179,40 @@ def _origin(url: str) -> tuple[str, str | None, int | None]:
 
 
 class _StripAuthRedirectHandler(HTTPRedirectHandler):
-    """Drop `Authorization` when a redirect leaves the configured origin.
+    """Drop `Authorization` when a redirect leaves the configured origin, and
+    refuse a redirect to anything but http(s).
 
     urllib copies every non-content header onto the redirected request, so
     `public_username` / `public_password` would otherwise reach any host
-    the API redirects to.
+    the API redirects to. A `Location: ftp://...` (or `file:`, `data:`)
+    would leave the guarded HTTP handlers and reach the private network
+    (security audit 2026-10-17, B-14).
     """
 
     def redirect_request(self, req, fp, code, msg, headers, newurl):
         new_req = super().redirect_request(req, fp, code, msg, headers, newurl)
-        if new_req is not None and _origin(new_req.full_url) != _origin(req.full_url):
+        if new_req is None or urlparse(new_req.full_url).scheme not in ("http", "https"):
+            return None
+        if _origin(new_req.full_url) != _origin(req.full_url):
             new_req.remove_header("Authorization")
         return new_req
+
+
+def _build_opener(http_handler, https_handler):
+    """An opener that speaks http(s) only: `build_opener()` would also add the
+    FTP, file and data handlers, reachable through a redirect (B-14)."""
+    opener = OpenerDirector()
+    for handler in (
+        ProxyHandler,
+        UnknownHandler,
+        http_handler,
+        https_handler,
+        HTTPDefaultErrorHandler,
+        _StripAuthRedirectHandler,
+        HTTPErrorProcessor,
+    ):
+        opener.add_handler(handler())
+    return opener
 
 
 class PluginModel(GlancesPluginBase[dict]):
@@ -236,9 +268,9 @@ class PluginModel(GlancesPluginBase[dict]):
         # Built once: ProxyHandler reads the proxy environment at construction.
         # `allow_internal` opts out of the address policy, connect-time included.
         if self.allow_internal:
-            self._opener = build_opener(_StripAuthRedirectHandler)
+            self._opener = _build_opener(HTTPHandler, HTTPSHandler)
         else:
-            self._opener = build_opener(_GuardedHTTPHandler, _GuardedHTTPSHandler, _StripAuthRedirectHandler)
+            self._opener = _build_opener(_GuardedHTTPHandler, _GuardedHTTPSHandler)
 
         # In-model cadence state (replaces the v4 ThreadPublicIpAddress).
         self._last_public_fetch_ts: float | None = None

@@ -144,6 +144,9 @@ Security (post-cutover audit of 2026-10-17):
 * Running as root, a user configuration file, a log folder or a ``LOG_CFG``
   file not owned by root or writable by others is ignored (``sudo -E`` keeps
   the invoking user's ``HOME``); the log file is never opened through a link
+* ``ip`` plugin: the public API client speaks http(s) only, a redirect to
+  another scheme (``ftp://``, ``file:``) is refused instead of reaching the
+  private network through urllib's default handlers
 
 Special notes for package maintainers:
 
