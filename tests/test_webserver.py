@@ -37,7 +37,7 @@ import logging
 import pytest
 from fastapi.testclient import TestClient
 
-from glances import __version__
+from glances import __version__, security
 from glances.config import GlancesConfig
 from glances.security import hash_password
 from glances.stats_store import StatsStore
@@ -186,7 +186,7 @@ def test_basic_auth_rejects_garbage_basic_header(config_factory, store):
 def test_bearer_auth_accepts_valid_jwt(config_factory, store):
     config = config_factory(
         password=hash_password("hunter2"),
-        jwt_secret_key="stable-secret",
+        jwt_secret_key="stable-secret-of-at-least-thirty-two-bytes",
     )
     app = build_app(config=config, store=store)
     app.add_api_route("/secret", _ok_handler, methods=["GET"])
@@ -199,7 +199,7 @@ def test_bearer_auth_accepts_valid_jwt(config_factory, store):
 def test_bearer_auth_rejects_invalid_jwt(config_factory, store):
     config = config_factory(
         password=hash_password("hunter2"),
-        jwt_secret_key="stable-secret",
+        jwt_secret_key="stable-secret-of-at-least-thirty-two-bytes",
     )
     app = build_app(config=config, store=store)
     app.add_api_route("/secret", _ok_handler, methods=["GET"])
@@ -880,10 +880,9 @@ def test_basic_auth_hashes_off_the_event_loop(config_factory, store, monkeypatch
     """PBKDF2 (100k iterations, ~50 ms) on the event loop stalls the API and
     the scheduler, which share that loop — one wrong-password flood freezes
     stats collection. v4 ran the check in a threadpool."""
-    import glances.webserver as webserver
 
     calls: list[bool] = []
-    monkeypatch.setattr(webserver, "verify_password", _off_loop_spy(calls, webserver.verify_password))
+    monkeypatch.setattr(security, "verify_password", _off_loop_spy(calls, security.verify_password))
     config = config_factory(password=hash_password("hunter2"))
     app = build_app(config=config, store=store)
     app.add_api_route("/secret", _ok_handler, methods=["GET"])

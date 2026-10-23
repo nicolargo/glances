@@ -114,7 +114,12 @@ class Buckets:
     def _store(self, key: str, tokens: float, now: float) -> None:
         self._table[key] = (tokens, now)
         if len(self._table) > _MAX_CLIENTS:
-            del self._table[next(iter(self._table))]
+            # Forget the least recently seen client that is NOT locked out:
+            # filling the table must not hand a locked address a full bucket
+            # back (security audit 2026-10-17, A1 / B-7). When every entry is
+            # locked, the oldest goes anyway: the table stays bounded.
+            victim = next((k for k, (t, _) in self._table.items() if t >= 1.0), next(iter(self._table)))
+            del self._table[victim]
 
 
 class RateLimitMiddleware:

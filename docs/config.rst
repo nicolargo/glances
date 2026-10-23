@@ -154,9 +154,11 @@ PBKDF2 hash (``<salt>$<hex digest>``), never the clear password: Glances
 never writes to ``glances.conf`` itself. Hashes made by Glances 4 are not
 compatible and must be generated again. The user name is ``glances`` unless
 ``username`` is set. Clients authenticate with HTTP Basic, or with a JWT
-Bearer token obtained from ``/api/5/token``; ``jwt_secret_key`` (a random
-key per run when unset, so tokens do not survive a restart) and
-``jwt_expire_minutes`` (default ``60``) configure the tokens.
+Bearer token obtained from ``/api/5/token``; ``jwt_secret_key`` (at least
+32 characters, for example ``python3 -c "import secrets;
+print(secrets.token_urlsafe(32))"``; a random key per run when unset or too
+short, so tokens do not survive a restart) and ``jwt_expire_minutes``
+(default ``60``, at most ``1440``) configure the tokens.
 
 **Rate limiting.** Requests are counted per client address (an IPv6 client
 per /64):

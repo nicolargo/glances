@@ -48,7 +48,6 @@ from typing import TYPE_CHECKING, Any
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from starlette.concurrency import run_in_threadpool
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.gzip import GZipMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
@@ -59,7 +58,7 @@ from glances.config import GlancesConfig
 from glances.plugins.plugin.base import GlancesPluginBase
 from glances.ratelimit import RateLimitMiddleware
 from glances.routes import build_router
-from glances.security import JWTHandler, KnownCredentials, verify_password
+from glances.security import JWTHandler, KnownCredentials, verify_password_in_thread
 from glances.stats_store import StatsStore
 
 if TYPE_CHECKING:
@@ -473,12 +472,12 @@ def _wire_auth(app: FastAPI, config: GlancesConfig) -> None:
     username = config.get("outputs", "username", _DEFAULT_USERNAME)
     jwt_secret = config.get("outputs", "jwt_secret_key", "") or None
     jwt_expire = config.get("outputs", "jwt_expire_minutes", _DEFAULT_JWT_EXPIRE_MINUTES)
-    jwt_handler = JWTHandler(secret_key=jwt_secret, expire_minutes=jwt_expire)
+    jwt_handler = JWTHandler(secret_key=jwt_secret, expire_minutes=jwt_expire, username=username)
     app.state.jwt_handler = jwt_handler
     known = KnownCredentials(jwt_handler)
     app.state.known_credentials = known
 
-    if jwt_handler.secret_was_generated:
+    if not jwt_secret:
         logger.info(
             "[outputs] jwt_secret_key not set — generated an ephemeral key. "
             "Tokens become invalid on every restart. Set jwt_secret_key for stable tokens."
@@ -510,8 +509,8 @@ def _wire_auth(app: FastAPI, config: GlancesConfig) -> None:
                 # scheduler shares, and out of the default executor its
                 # plugins use (anyio's threadpool, as v4's sync endpoints).
                 # Bytes: compare_digest raises TypeError on a non-ASCII str (-> 500).
-                if hmac.compare_digest(user.encode(), username.encode()) and await run_in_threadpool(
-                    verify_password, password, password_hash
+                if hmac.compare_digest(user.encode(), username.encode()) and await verify_password_in_thread(
+                    password, password_hash
                 ):
                     known.remember(auth)
                     return await call_next(request)
