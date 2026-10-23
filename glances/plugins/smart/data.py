@@ -13,6 +13,8 @@ its renderer use it. `import_error_tag` is module state: `get_smart_data()`
 sets it when the device list cannot be read, and readers look it up here.
 """
 
+import logging
+
 from glances.logger import logger
 
 # Import plugin specific dependency
@@ -24,6 +26,34 @@ except ImportError as e:
     logger.warning(f"Missing Python Lib ({e}), HDD Smart plugin is disabled")
 else:
     import_error_tag = False
+
+
+_skipped_devices = set()
+
+
+class _SkippedDeviceFilter(logging.Filter):
+    """Filter root logging.exception() calls: pySMART has no named logger and
+    repeats device tracebacks on every refresh (#3806).
+    """
+
+    def filter(self, record):
+        prefix = 'Error parsing device '
+        message = record.msg
+        if 'pySMART' not in record.pathname or not isinstance(message, str) or not message.startswith(prefix):
+            return True
+        device = message.removeprefix(prefix)
+        error = record.exc_info[1] if record.exc_info else None
+        key = (device, str(error))
+        if key in _skipped_devices:
+            return False
+        _skipped_devices.add(key)
+        record.levelno = logging.WARNING
+        record.levelname = 'WARNING'
+        record.msg = 'Smart plugin - Skipping %s: %s'
+        record.args = (device, str(error) if error is not None else 'unknown error')
+        record.exc_info = None
+        record.exc_text = None
+        return True
 
 
 def convert_attribute_to_dict(attr):
@@ -143,13 +173,20 @@ def get_smart_data(hide_attributes):
     - Numeric keys: SMART attribute dictionaries with flags, raw values, etc.
     """
     stats = []
+    root_logger = logging.getLogger()
+    skipped_device_filter = _SkippedDeviceFilter()
+    root_logger.addFilter(skipped_device_filter)
     try:
-        devlist = DeviceList()
-    except (TypeError, FileNotFoundError) as e:
+        # catch_errors: pySMART skips a device it cannot parse (#3806: smartctl
+        # reports a USB bridge type such as `-d usbsunplus`) and keeps the others.
+        devlist = DeviceList(catch_errors=True)
+    except (TypeError, FileNotFoundError, ValueError) as e:
         logger.debug(f'Smart plugin error - Can not grab device list ({e})')
         global import_error_tag
         import_error_tag = True
         return stats
+    finally:
+        root_logger.removeFilter(skipped_device_filter)
 
     for dev in devlist.devices:
         device_stats = {'DeviceName': f'{dev.name} {dev.model}'}
