@@ -68,7 +68,7 @@ jobs:
     timeout-minutes: 5
     environment:
       name: testpypi
-      url: https://pypi.org/p/glances
+      url: https://test.pypi.org/p/glances
     permissions:
       attestations: write
       id-token: write

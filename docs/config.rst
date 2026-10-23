@@ -50,7 +50,11 @@ The file is segmented by sections composed of key/value pairs.
 
 For example "refresh=2" is a key/value pair. refresh is the key and 2 is the value.
 
-Key is always a string.
+Key is always a string. Keys are matched with their exact case first, so keys
+built from item names that differ only by case (``/srv/Data_percent_critical``
+and ``/srv/data_percent_critical``) each apply to their own item. Otherwise
+the case is ignored (``CRITICAL=90`` works), unless several keys then match:
+none of them is used and a warning is logged.
 
 Value is one of the followings types:
 

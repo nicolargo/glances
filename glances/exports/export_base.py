@@ -368,9 +368,12 @@ class GlancesExportBase(ABC):
         }
 
         for option, _ in self.config.items(plugin.plugin_name):
-            if self._ACTION_KEY_MARKER in option or GlancesConfig._is_secret_key(option):
+            # Option names keep their case: test and export them lower-cased,
+            # as v4 did, so `Critical_ACTION` stays out and `CRITICAL` is still
+            # exported as `<plugin>_critical`.
+            if self._ACTION_KEY_MARKER in option.lower() or GlancesConfig._is_secret_key(option):
                 continue
-            name = f"{plugin.plugin_name}_{option}"
+            name = f"{plugin.plugin_name}_{option.lower()}"
             try:
                 limits[name] = self.config.get_float_value(plugin.plugin_name, option)
             except ValueError:

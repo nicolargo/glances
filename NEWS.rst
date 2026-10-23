@@ -134,7 +134,6 @@ Security (post-cutover audit of 2026-10-17):
 * A ``-C`` path that does not exist stops Glances instead of starting with the
   defaults (and without the password that file carried)
 * ``/openapi.json`` is served only when ``api_doc`` is on
-* The hddtemp client has a 2 s timeout and a 64 KiB cap
 * An on-alert or AMP command whose pipeline cannot start no longer leaves a
   process behind; the commands read nothing from the terminal
 * ``--hide-public-info`` also hides the public IP information text, which a

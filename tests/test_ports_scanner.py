@@ -98,8 +98,8 @@ class TestTcpScanSocket:
         """A port scan must not reconfigure sockets it does not own.
 
         socket.setdefaulttimeout() applies to every socket created afterwards
-        in the process -- exporters, the hddtemp grabber, anything that does
-        not set a timeout of its own -- and nothing here ever restored it.
+        in the process -- exporters, anything that does not set a timeout of
+        its own -- and nothing here ever restored it.
         """
         monkeypatch.setattr(ThreadScanner, '_resolv_name', lambda self, host: host)
         # Pin the starting point. The default is process-wide, so an earlier

@@ -24,13 +24,10 @@ boltons==21.0.0
     #   semgrep
 boolean-py==5.0
     # via license-expression
-bracex==3.0.1
+bracex==3.1
     # via wcmatch
-certifi==2026.7.22
-    # via
-    #   requests
-cffi==2.1.1 ; (implementation_name != 'pypy' and os_name == 'nt') or platform_python_implementation != 'PyPy'
-    # via cryptography
+certifi==2026.10.19
+    # via requests
 cfgv==3.5.0
     # via pre-commit
 charset-normalizer==3.5.2
@@ -59,7 +56,7 @@ cycler==0.12.1
     # via matplotlib
 defusedxml==0.7.1
     # via semgrep
-distlib==0.4.3
+distlib==0.4.4
     # via virtualenv
 docutils==0.21.2 ; python_full_version < '3.11'
     # via
@@ -77,34 +74,27 @@ exceptiongroup==1.2.2
     #   semgrep
 face==26.0.1
     # via glom
-filelock==4.1.0
+filelock==4.1.0 ; python_full_version < '3.11'
+    # via
+    #   python-discovery
+    #   virtualenv
+filelock==4.2.4 ; python_full_version >= '3.11'
     # via
     #   python-discovery
     #   virtualenv
 fonttools==4.65.0 ; python_full_version < '3.11'
     # via matplotlib
-fonttools==4.66.1 ; python_full_version >= '3.11'
+fonttools==4.67.0 ; python_full_version >= '3.11'
     # via matplotlib
 glom==22.1.0
     # via semgrep
 gprof2dot==2025.4.14
 greenlet==3.5.6
     # via playwright
-h11==0.16.0
-    # via
-    #   httpcore
-    #   uvicorn
-httpcore==1.0.9
-    # via httpx
-httpx==0.28.1
-    # via mcp
-httpx-sse==0.4.3
-    # via mcp
-identify==2.6.19
+identify==2.6.20
     # via pre-commit
 idna==3.20
-    # via
-    #   requests
+    # via requests
 imagesize==2.0.1
     # via sphinx
 iniconfig==2.3.1
@@ -155,42 +145,6 @@ numpy==2.5.4 ; python_full_version >= '3.12'
     # via
     #   contourpy
     #   matplotlib
-opentelemetry-api==1.37.0
-    # via
-    #   opentelemetry-exporter-otlp-proto-http
-    #   opentelemetry-instrumentation
-    #   opentelemetry-instrumentation-requests
-    #   opentelemetry-instrumentation-threading
-    #   opentelemetry-sdk
-    #   opentelemetry-semantic-conventions
-    #   semgrep
-opentelemetry-exporter-otlp-proto-common==1.37.0
-    # via opentelemetry-exporter-otlp-proto-http
-opentelemetry-exporter-otlp-proto-http==1.37.0
-    # via semgrep
-opentelemetry-instrumentation==0.58b0
-    # via
-    #   opentelemetry-instrumentation-requests
-    #   opentelemetry-instrumentation-threading
-opentelemetry-instrumentation-requests==0.58b0
-    # via semgrep
-opentelemetry-instrumentation-threading==0.58b0
-    # via semgrep
-opentelemetry-proto==1.37.0
-    # via
-    #   opentelemetry-exporter-otlp-proto-common
-    #   opentelemetry-exporter-otlp-proto-http
-opentelemetry-sdk==1.37.0
-    # via
-    #   opentelemetry-exporter-otlp-proto-http
-    #   semgrep
-opentelemetry-semantic-conventions==0.58b0
-    # via
-    #   opentelemetry-instrumentation
-    #   opentelemetry-instrumentation-requests
-    #   opentelemetry-sdk
-opentelemetry-util-http==0.58b0
-    # via opentelemetry-instrumentation-requests
 packaging==26.3
     # via
     #   matplotlib
@@ -198,33 +152,35 @@ packaging==26.3
     #   requirements-parser
     #   semgrep
     #   sphinx
+    #   virtualenv
 peewee==3.19.0
     # via semgrep
-pillow==12.3.0
+pillow==12.3.0 ; python_full_version < '3.11'
+    # via matplotlib
+pillow==13.0.0 ; python_full_version >= '3.11'
     # via matplotlib
 platformdirs==4.12.4 ; python_full_version < '3.11'
     # via
     #   textual
     #   virtualenv
-platformdirs==4.13.0 ; python_full_version >= '3.11'
+platformdirs==4.13.5 ; python_full_version >= '3.11'
     # via
     #   textual
     #   virtualenv
-playwright==1.63.0
-pluggy==1.6.0
+playwright==1.64.0
+pluggy==1.7.0
     # via pytest
-pre-commit==4.6.2
+pre-commit==4.6.2 ; python_full_version < '3.11'
+pre-commit==4.7.0 ; python_full_version >= '3.11'
 psutil==7.2.2
     # via memory-profiler
-pycparser==3.11 ; implementation_name != 'PyPy' and implementation_name != 'pypy' and os_name == 'nt'
-    # via cffi
-pydantic==2.14.0
+pydantic==2.14.1
     # via rstcheck-core
-pydantic-core==2.50.0
+pydantic-core==2.50.1
     # via pydantic
-pydantic-settings==2.15.0
-    # via mcp
-pyee==13.0.1
+pyee==13.0.1 ; python_full_version < '3.12'
+    # via playwright
+pyee==14.0.0 ; python_full_version >= '3.12'
     # via playwright
 pygments==2.21.0
     # via
@@ -243,10 +199,8 @@ python-dateutil==2.9.0.post0
     # via matplotlib
 python-debian==1.1.1
     # via reuse
-python-discovery==1.6.2
+python-discovery==1.6.4
     # via virtualenv
-python-dotenv==1.2.3
-    # via pydantic-settings
 python-magic==0.4.27
     # via reuse
 pyyaml==6.0.3
@@ -282,11 +236,11 @@ rstcheck-core==1.3.2
     # via rstcheck
 ruamel-yaml==0.17.40
     # via semgrep
-ruff==0.16.9
-semantic-version==2.10.0
-    # via semgrep
-semgrep==1.178.0
-setuptools==84.0.0
+ruamel-yaml-clib==0.2.15 ; python_full_version < '3.13' and platform_python_implementation == 'CPython'
+    # via ruamel-yaml
+ruff==0.17.1
+semgrep==1.79.0
+setuptools==84.2.1
 shellingham==1.5.4
     # via typer
 six==1.17.0
@@ -301,7 +255,11 @@ sphinx==9.0.4 ; python_full_version == '3.11.*'
     # via
     #   sphinx-rtd-theme
     #   sphinxcontrib-jquery
-sphinx==9.1.0 ; python_full_version >= '3.12'
+sphinx==9.1.1 ; python_full_version == '3.12.*'
+    # via
+    #   sphinx-rtd-theme
+    #   sphinxcontrib-jquery
+sphinx==9.2.0 ; python_full_version >= '3.13'
     # via
     #   sphinx-rtd-theme
     #   sphinxcontrib-jquery
@@ -314,7 +272,7 @@ sphinxcontrib-htmlhelp==2.1.0
     # via sphinx
 sphinxcontrib-jquery==4.1
     # via sphinx-rtd-theme
-sphinxcontrib-jsmath==1.0.1
+sphinxcontrib-jsmath==2.0.0
     # via sphinx
 sphinxcontrib-qthelp==2.0.0
     # via sphinx
@@ -327,16 +285,15 @@ tomli==2.0.2
     #   pytest
     #   semgrep
     #   sphinx
-tomlkit==0.15.1
+tomlkit==0.15.2
     # via reuse
-typer==0.27.2
+typer==0.27.3
     # via rstcheck
 typing-extensions==4.16.0
     # via
     #   pydantic
     #   pydantic-core
     #   pyee
-    #   pyjwt
     #   pyright
     #   pytest-asyncio
     #   referencing
@@ -350,13 +307,7 @@ urllib3==2.8.0
     # via
     #   requests
     #   semgrep
-virtualenv==21.14.6
+virtualenv==21.14.12
     # via pre-commit
 wcmatch==8.5.2
     # via semgrep
-wrapt==1.17.3
-    # via
-    #   opentelemetry-instrumentation
-    #   opentelemetry-instrumentation-threading
-zipp==4.1.0
-    # via importlib-metadata

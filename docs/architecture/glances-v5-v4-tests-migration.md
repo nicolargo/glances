@@ -604,7 +604,7 @@ When the v4 plugin classes are deleted, split these files and keep only the SHAR
 ---
 
 ### tests/test_plugin_sensors.py
-v5 model `glances/plugins/sensors/model_v5.py` imports `GlancesGrabSensors` and `sensors_definition` from `glances.plugins.sensors`, and `GlancesGrabHDDTemp` and `GlancesGrabBat` from `sensor/*`. The v4 `SensorsPlugin` and `HddtempPlugin` classes are not used.
+v5 model `glances/plugins/sensors/model_v5.py` imports `GlancesGrabSensors` and `sensors_definition` from `glances.plugins.sensors`, and `GlancesGrabBat` from `sensor/*`. The v4 `SensorsPlugin` class is not used. hddtemp support was removed (#3486): `HddtempPlugin`, `GlancesGrabHDDTemp` and their tests are gone from both sides.
 
 | v4 test | verdict | evidence / what to port |
 |---|---|---|
@@ -653,11 +653,8 @@ v5 model `glances/plugins/sensors/model_v5.py` imports `GlancesGrabSensors` and 
 | TestSensorsPluginZeroValue::test_battery_at_zero_is_not_less_alarming_than_a_small_charge | PORT | same model: the level for 0 equals the level for 1/3/9 |
 | TestSensorsPluginZeroValue::test_stopped_fan_is_evaluated_rather_than_skipped | PORT | same model: a fan_speed row `value=0` with fan thresholds gets a `_levels` entry |
 | TestSensorsPluginZeroValue::test_absent_sensor_is_still_skipped | PORT | same model: `value=[]` and `value=None` give no `_levels` entry (only the renderer is tested today: test_empty_battery_skipped) |
-| TestSensorsPluginZeroValue::test_placeholder_reading_does_not_raise | PORT | same model: `b'ERR'`, `b'SLP'` and `"ERR"` give no entry and do not raise |
+| TestSensorsPluginZeroValue::test_placeholder_reading_does_not_raise | COVERED | test_plugin_sensors_v5.py::test_absent_or_placeholder_value_gets_no_level |
 | TestSensorsPluginZeroValue::test_nonzero_readings_are_unaffected | COVERED | test_plugin_sensors_v5.py::test_careful_tier_from_config |
-| TestHddtempPlugin::test_refused_connect_is_not_retried | COVERED | test_plugin_sensors_v5.py::test_hddtemp_not_polled_again_after_failed_connect |
-| TestHddtempPlugin::test_disabled_plugin_does_not_connect | COVERED | test_plugin_sensors_v5.py::test_hddtemp_disable_is_honoured |
-| TestHddtempPlugin::test_host_and_port_come_from_the_hddtemp_section | COVERED | test_plugin_sensors_v5.py::test_hddtemp_reads_its_own_section |
 
 ### tests/test_plugin_gpu.py
 `gpu/model_v5.py` builds the v4 card backends (`cards/{nvidia,amd,intel,arm}`). `tegra` is used by `cards/nvidia.py`.

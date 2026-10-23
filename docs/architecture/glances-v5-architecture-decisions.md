@@ -1764,6 +1764,21 @@ v5 plugin API for third parties, if users ask for one, gets its own design
 (loading, the `GlancesPluginBase` contract, who may write the directory).
 A removed v4 feature, for the 5.0.0 release notes.
 
+**Dropped — hddtemp support (maintainer decision, 2026-10-19, #3486, PR
+#3530).** The hddtemp daemon is abandoned upstream. v4 polls it over TCP on
+127.0.0.1:7634 at every refresh, enabled by default, with no timeout and no
+size cap (security audit M6). v5 removes the client
+(`glances/plugins/sensors/sensor/glances_hddtemp.py`), the `[hddtemp]`
+section and the `temperature_hdd` sensor type, with its WebUI and TUI
+`ERR`/`SLP`/`UNK`/`NOS` placeholders. Drive temperatures come from the
+kernel hwmon interface through psutil, like the other temperatures
+(`drivetemp` module for SATA, native for NVMe), typed `temperature_core`,
+and from the `smart` plugin. Users who still run the daemon lose those rows;
+`[hddtemp]` and `temperature_hdd_mean` are silently ignored, and a
+`temperature_hdd_{careful,warning,critical}` key logs the unrecognised
+threshold key WARNING at startup. A breaking change against v4 behaviour,
+for the 5.0.0 release notes.
+
 **Dropped — `/api/5/config/<section>` and `/api/5/config/<section>/<key>`
 (maintainer decision, 2026-10-05).** v4 serves one section or one option
 of the configuration. In v5, `/api/5/config` serves only the WebUI keys

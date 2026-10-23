@@ -171,6 +171,49 @@ def test_all_excludes_unwritten_plugins(config_factory, store):
     assert "fakecollection" not in body  # never updated → not in store
 
 
+# ------------------------------------------------------- /all/msgpack
+
+
+def test_all_msgpack_unpacked_returns_same_as_all(config_factory, store):
+    msgpack = pytest.importorskip("msgpack")
+    config = config_factory()
+    plugins = [FakeScalarPlugin(store, config), FakeCollectionPlugin(store, config)]
+    for plugin in plugins:
+        _populate(store, plugin)
+    app = _make_app_with_plugins(config, store, plugins=plugins)
+    with TestClient(app) as client:
+        all_resp = client.get("/api/5/all")
+        msgpack_resp = client.get("/api/5/all/msgpack")
+
+    assert all_resp.status_code == 200
+    assert msgpack_resp.status_code == 200
+    assert msgpack_resp.headers["content-type"] == "application/vnd.msgpack"
+    assert msgpack_resp.headers["Content-Disposition"] == 'attachment; filename="all.msgpack"'
+
+    unpacked = msgpack.unpackb(msgpack_resp.content, raw=False)
+    assert unpacked == all_resp.json()
+
+
+def test_all_msgpack_endpoint_disabled_when_msgpack_not_installed(config_factory, store, monkeypatch):
+    import glances.routes as routes
+
+    monkeypatch.setattr(routes, "msgpack", None)
+    config = config_factory()
+    plugins = [FakeScalarPlugin(store, config), FakeCollectionPlugin(store, config)]
+    for plugin in plugins:
+        _populate(store, plugin)
+    app = _make_app_with_plugins(config, store, plugins=plugins)
+    with TestClient(app) as client:
+        all_resp = client.get("/api/5/all")
+        msgpack_resp = client.get("/api/5/all/msgpack")
+
+    paths = app.openapi()["paths"]
+    assert "/api/5/all" in paths
+    assert "/api/5/all/msgpack" not in paths
+    assert all_resp.status_code == 200
+    assert msgpack_resp.status_code == 404
+
+
 # ------------------------------------------------------- /<plugin>
 
 

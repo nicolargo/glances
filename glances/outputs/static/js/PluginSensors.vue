@@ -35,8 +35,7 @@ import { cellClassFor } from "./columns.js";
 import CollectionBlock from "./CollectionBlock.vue";
 import { PLUGIN_PROPS } from "./plugin_props.js";
 
-// sensors/render_curses.py:48-49.
-const SENTINELS = new Set(["ERR", "SLP", "UNK", "NOS"]);
+// sensors/render_curses.py:47.
 const NO_FAHRENHEIT_TYPES = new Set(["battery", "fan_speed"]);
 
 const TITLE = "SENSORS";
@@ -53,10 +52,9 @@ function batteryTrend(item) {
 
 // _value_text(). "" means the TUI skips the row. That also covers the
 // renderer's separate empty-battery guard (value [], None or ""): none of
-// those is a number or a sentinel, so both rules skip the same rows.
+// those is a number, so both rules skip the same rows.
 function valueText(item, fahrenheit) {
 	const value = item.value;
-	if (typeof value === "string" && SENTINELS.has(value)) return value;
 	if (!Number.isFinite(value)) return "";
 	const type = String(item.type ?? "");
 	if (fahrenheit && !NO_FAHRENHEIT_TYPES.has(type)) return `${formatFixed0(toFahrenheit(value))}F`;

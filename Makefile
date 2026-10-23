@@ -256,10 +256,10 @@ webui: ## Build the Web UI
 	cd $(DIR) && npm ci && npm run build
 
 webui-audit: ## Audit the Web UI
-	cd $(DIR) && npm audit
+	cd $(DIR) && npm audit --omit=dev
 
 webui-audit-fix: ## Fix audit the Web UI
-	cd $(DIR) && npm ci && { npm audit fix || true; } && npm run build
+	cd $(DIR) && npm ci && { npm audit fix --omit=dev || true; } && npm run build
 
 webui-update: ## Update JS dependencies
 	cd $(DIR) && npm update --save && npm ci && npm run build

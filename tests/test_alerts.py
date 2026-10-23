@@ -875,6 +875,50 @@ async def test_action_key_precedence_pk_then_field_then_bare(tmp_path, monkeypat
     assert payloads["wlan0"] == "wlan-specific"
 
 
+async def test_action_key_of_a_mixed_case_item(tmp_path, monkeypatch, store):
+    """The per-item action of an item whose name has upper-case letters
+    (`Ethernet`, a `~/Videos` folder) must be found."""
+    config = _config_with(
+        tmp_path,
+        monkeypatch,
+        "[alerts]\nmin_duration_seconds=0\n[fakecollection]\nEthernet_rx_critical_action=ethernet-specific\n",
+    )
+    action = _RecordingAction()
+    alerts = GlancesAlerts(config, actions={"action": action})
+    plugin = _FakeCollectionPlugin(store, config, payload=[{"name": "Ethernet", "rx": 100}])
+    await _run_with_levels(plugin, alerts, {"Ethernet": {"rx": {"level": "critical", "prominent": True}}})
+    assert [c["action_value"] for c in action.calls if not c["repeat"]] == ["ethernet-specific"]
+
+
+async def test_action_keys_of_items_differing_only_by_case(tmp_path, monkeypatch, store):
+    """`/srv/Data` and `/srv/data` are two items: each fires its own action."""
+    config = _config_with(
+        tmp_path,
+        monkeypatch,
+        "[alerts]\nmin_duration_seconds=0\n"
+        "[fakecollection]\n"
+        "/srv/Data_rx_critical_action=data-upper\n"
+        "/srv/data_rx_critical_action=data-lower\n",
+    )
+    action = _RecordingAction()
+    alerts = GlancesAlerts(config, actions={"action": action})
+    plugin = _FakeCollectionPlugin(
+        store,
+        config,
+        payload=[{"name": "/srv/Data", "rx": 100}, {"name": "/srv/data", "rx": 200}],
+    )
+    await _run_with_levels(
+        plugin,
+        alerts,
+        {
+            "/srv/Data": {"rx": {"level": "critical", "prominent": True}},
+            "/srv/data": {"rx": {"level": "critical", "prominent": True}},
+        },
+    )
+    payloads = {c["context"]["name"]: c["action_value"] for c in action.calls if not c["repeat"]}
+    assert payloads == {"/srv/Data": "data-upper", "/srv/data": "data-lower"}
+
+
 async def test_action_template_context_includes_builtins(tmp_path, monkeypatch, store):
     config = _config_with(
         tmp_path,

@@ -70,7 +70,7 @@ def fake_grabbers(monkeypatch):
     from glances.plugins.sensors import model
 
     _FakeGrabber.built = []
-    for name in ("GlancesGrabSensors", "GlancesGrabHDDTemp", "GlancesGrabBat"):
+    for name in ("GlancesGrabSensors", "GlancesGrabBat"):
         monkeypatch.setattr(model, name, _FakeGrabber)
     return _FakeGrabber
 
@@ -88,14 +88,14 @@ def test_grabbers_are_not_built_at_init(store, config, fake_grabbers):
 def test_grabbers_are_built_on_first_collect(store, config, fake_grabbers):
     p = PluginModel(store, config)
     p._collect()
-    assert len(fake_grabbers.built) == 4  # cpu temp, fan, hddtemp, battery
+    assert len(fake_grabbers.built) == 3  # cpu temp, fan, battery
 
 
 def test_grabbers_are_built_only_once(store, config, fake_grabbers):
     p = PluginModel(store, config)
     p._collect()
     p._collect()
-    assert len(fake_grabbers.built) == 4
+    assert len(fake_grabbers.built) == 3
 
 
 @pytest.mark.asyncio
@@ -108,7 +108,6 @@ async def test_grab_stats_merges_all_types(store, config, monkeypatch):
         lambda: [{"label": "Core 0", "unit": "C", "value": 42, "warning": 80, "critical": 90}],
     )
     monkeypatch.setattr(p._grab_fan, "update", lambda: [{"label": "fan1", "unit": "R", "value": 1200}])
-    monkeypatch.setattr(p._grab_hdd, "get", lambda: [{"label": "sda", "unit": "C", "value": 35}])
 
     def _bat():
         return [{"label": "Battery", "unit": "%", "value": 80, "status": "Charging"}]
@@ -121,7 +120,6 @@ async def test_grab_stats_merges_all_types(store, config, monkeypatch):
     assert by_label["Core 0"]["warning"] == 80
     assert by_label["fan1"]["type"] == "fan_speed"
     assert by_label["fan1"]["warning"] is None  # defaulted
-    assert by_label["sda"]["type"] == "temperature_hdd"
     assert by_label["Battery"]["type"] == "battery"
     assert by_label["Battery"]["status"] == "Charging"
 
@@ -136,7 +134,6 @@ async def test_grab_stats_survives_one_grabber_failure(store, config, monkeypatc
 
     monkeypatch.setattr(p._grab_temp_core, "update", _boom)
     monkeypatch.setattr(p._grab_fan, "update", lambda: [{"label": "fan1", "unit": "R", "value": 1200}])
-    monkeypatch.setattr(p._grab_hdd, "get", lambda: [])
     monkeypatch.setattr(p, "_grab_battery", lambda: [])
 
     rows = await p._grab_stats()
@@ -160,44 +157,6 @@ def _cfg_with(tmp_path, monkeypatch, body: str) -> GlancesConfig:
     (cfg_dir / "glances.conf").write_text(body)
     monkeypatch.setenv("XDG_CONFIG_HOME", str(xdg))
     return GlancesConfig()
-
-
-def test_hddtemp_reads_its_own_section(tmp_path, monkeypatch, store):
-    """host/port come from [hddtemp], the section glances.conf documents."""
-    config = _cfg_with(tmp_path, monkeypatch, "[hddtemp]\nhost=10.0.0.1\nport=7777\n")
-    p = PluginModel(store, config)
-    p._build_grabbers()
-    assert p._grab_hdd.host == "10.0.0.1"
-    assert p._grab_hdd.port == 7777
-
-
-def _count_hdd_fetches(p, monkeypatch) -> list:
-    p._build_grabbers()
-    calls = []
-    monkeypatch.setattr(p._grab_hdd, "fetch", lambda: calls.append(1) or "")
-    return calls
-
-
-def test_hddtemp_disable_is_honoured(tmp_path, monkeypatch, store):
-    config = _cfg_with(tmp_path, monkeypatch, "[hddtemp]\ndisable=True\n")
-    p = PluginModel(store, config)
-    calls = _count_hdd_fetches(p, monkeypatch)
-    p._collect()
-    assert calls == []
-
-
-def test_hddtemp_not_polled_again_after_failed_connect(tmp_path, monkeypatch, store):
-    """A refused connect disables hddtemp: the daemon is not reconnected on
-    every refresh (about 2 s each on Windows)."""
-    config = _cfg_with(tmp_path, monkeypatch, "[hddtemp]\nhost=127.0.0.1\nport=1\n")
-    p = PluginModel(store, config)
-    p._build_grabbers()
-    p._collect()  # nothing listens on port 1: fetch() fails and disables hddtemp
-    assert p._hdd_args.disable_hddtemp is True
-    calls = []
-    monkeypatch.setattr(p._grab_hdd, "fetch", lambda: calls.append(1) or "")
-    p._collect()
-    assert calls == []
 
 
 def test_alias_relabels(tmp_path, monkeypatch, store):
@@ -281,23 +240,23 @@ def test_fold_singleton_unchanged(tmp_path, monkeypatch, store):
 
 
 def test_fold_excludes_non_numeric(tmp_path, monkeypatch, store):
-    """A shared-prefix group with one ERR member: the numeric members fold,
-    the non-numeric one is excluded from the mean and passes through."""
-    config = _cfg_with(tmp_path, monkeypatch, "[sensors]\ntemperature_hdd_mean=true\n")
+    """A shared-prefix group with one non-numeric member: the numeric members
+    fold, the non-numeric one is excluded from the mean and passes through."""
+    config = _cfg_with(tmp_path, monkeypatch, "[sensors]\ntemperature_core_mean=true\n")
     p = PluginModel(store, config)
     rows = [
-        {"label": "disk 0", "unit": "C", "value": 40, "warning": None, "critical": None, "type": "temperature_hdd"},
-        {"label": "disk 1", "unit": "C", "value": 44, "warning": None, "critical": None, "type": "temperature_hdd"},
-        {"label": "disk 2", "unit": "C", "value": "ERR", "warning": None, "critical": None, "type": "temperature_hdd"},
+        {"label": "Core 0", "unit": "C", "value": 40, "warning": None, "critical": None, "type": "temperature_core"},
+        {"label": "Core 1", "unit": "C", "value": 44, "warning": None, "critical": None, "type": "temperature_core"},
+        {"label": "Core 2", "unit": "C", "value": "n/a", "warning": None, "critical": None, "type": "temperature_core"},
     ]
     out = _expand(p, rows)
     by_label = {r["label"]: r for r in out}
-    # disk 0/1 (numeric) fold to one mean row; disk 2 (ERR) is excluded from
+    # Core 0/1 (numeric) fold to one mean row; Core 2 (n/a) is excluded from
     # the mean and passes through unchanged.
-    assert "disk (mean)" in by_label
-    assert by_label["disk (mean)"]["value"] == 42  # int((40+44)/2 + 0.5)
-    assert by_label["disk 2"]["value"] == "ERR"
-    assert len(out) == 2  # one mean row + the ERR passthrough
+    assert "Core (mean)" in by_label
+    assert by_label["Core (mean)"]["value"] == 42  # int((40+44)/2 + 0.5)
+    assert by_label["Core 2"]["value"] == "n/a"
+    assert len(out) == 2  # one mean row + the n/a passthrough
 
 
 def test_generic_alias_field_not_added(tmp_path, monkeypatch, store):
@@ -399,6 +358,17 @@ def test_per_type_true_overrides_global_false(tmp_path, monkeypatch, store):
     by_label = {r["label"]: r for r in out}
     assert "Core (mean)" in by_label  # per-type true wins over global false
     assert {"fan 0", "fan 1"} <= set(by_label)  # fan inherits global false -> not folded
+
+
+def test_per_type_mean_key_with_mixed_case(tmp_path, monkeypatch, store):
+    """The per-type key is found whatever its case: `Temperature_Core_mean=false`
+    still opts the type out of the global mean."""
+    config = _cfg_with(tmp_path, monkeypatch, "[sensors]\nmean=true\nTemperature_Core_mean=false\n")
+    p = PluginModel(store, config)
+    out = _expand(p, _rows_core(40, 42, 44) + _rows_fan(1000, 1200))
+    by_label = {r["label"]: r for r in out}
+    assert {"Core 0", "Core 1", "Core 2"} <= set(by_label)
+    assert "fan (mean)" in by_label
 
 
 def _levels(p, rows):
@@ -519,7 +489,7 @@ def test_stopped_fan_is_evaluated(tmp_path, monkeypatch, store):
     assert lv["fan 0"]["value"]["level"] == "ok"
 
 
-@pytest.mark.parametrize("value", [[], None, b"ERR", b"SLP", "ERR"])
+@pytest.mark.parametrize("value", [[], None, "n/a"])
 def test_absent_or_placeholder_value_gets_no_level(store, config, value):
     p = PluginModel(store, config)
     assert _levels(p, [_temp_row("Core 0", value, warning=80, critical=90)]) == {}
@@ -662,27 +632,3 @@ def test_unknown_sensors_threshold_key_still_warns(tmp_path, monkeypatch, store,
     warnings = _threshold_warnings(caplog)
     assert len(warnings) == 1
     assert "nonsense_careful" in warnings[0]
-
-
-def test_hddtemp_gives_up_on_a_silent_daemon():
-    """Security audit 2026-10-17, A5: no timeout, no size cap, so a local user
-    on the unprivileged port 7634 froze the whole sensors collection."""
-    import socket
-    import time
-    from types import SimpleNamespace
-
-    from glances.plugins.sensors.sensor.glances_hddtemp import GlancesGrabHDDTemp
-
-    listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    listener.bind(("127.0.0.1", 0))
-    listener.listen(1)
-    args = SimpleNamespace(disable_hddtemp=False)
-    grabber = GlancesGrabHDDTemp(host="127.0.0.1", port=listener.getsockname()[1], args=args)
-    grabber.TIMEOUT = 0.2
-    started = time.monotonic()
-    try:
-        assert grabber.fetch() == ""
-    finally:
-        listener.close()
-    assert time.monotonic() - started < 2
-    assert args.disable_hddtemp is True, "not polled again"

@@ -999,17 +999,15 @@ def test_wifi_renders_the_tui_rows_sorted_by_ssid():
 @pytest.mark.parametrize(
     ("scenario", "values"),
     [
-        pytest.param("sensors", ["42C", "1200R", "44C", "80%↓", "100%✓", "55%↑", "ERR", "36C"], id="celsius"),
-        pytest.param(
-            "sensors-fahrenheit", ["108F", "1200R", "110F", "80%↓", "100%✓", "55%↑", "ERR", "97F"], id="fahrenheit"
-        ),
+        pytest.param("sensors", ["42C", "1200R", "44C", "80%↓", "100%✓", "55%↑", "36C"], id="celsius"),
+        pytest.param("sensors-fahrenheit", ["108F", "1200R", "110F", "80%↓", "100%✓", "55%↑", "97F"], id="fahrenheit"),
     ],
 )
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
 def test_sensors_renders_the_tui_values_in_payload_order(scenario, values):
-    """sensors/render_curses.py:77-128: payload order; `--fahrenheit`
+    """sensors/render_curses.py:75-123: payload order; `--fahrenheit`
     converts temperatures but never a battery or a fan; battery trend arrows;
-    a sentinel verbatim; an empty battery and a non-numeric value skipped.
+    an empty battery and a non-numeric value skipped.
     The TUI's header row is one cell, so the value column's <th> is empty.
     """
     payload = _run_render_probe(scenario)
@@ -1021,7 +1019,6 @@ def test_sensors_renders_the_tui_values_in_payload_order(scenario, values):
         "BAT BAT0",
         "BAT BAT2",
         "BAT BAT3",
-        "sda",
         "Composite temperature of the NVMe controller",
     ]
     assert _table_rows(payload, "sensors", 2) == [list(pair) for pair in zip(labels, values)]

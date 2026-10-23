@@ -291,8 +291,8 @@ class GlancesPluginBase(Generic[T], ABC):
         # are read from the plugin's config section (`[<plugin_name>]`). The
         # filter applies to collection plugins only; on scalar plugins these
         # lists stay empty.
-        self._show_patterns: list[re.Pattern[str]] = self._compile_filter("show")
-        self._hide_patterns: list[re.Pattern[str]] = self._compile_filter("hide")
+        self._show_patterns: list[re.Pattern[str]] = self._compile_filter("show", flags=re.IGNORECASE)
+        self._hide_patterns: list[re.Pattern[str]] = self._compile_filter("hide", flags=re.IGNORECASE)
 
         # Generic `alias` (design §5.5, v4 `plugin/model.py:1075-1081`):
         # `[<plugin_name>] alias=<key>:<Name>,...`, lower-keyed, matched
@@ -426,7 +426,7 @@ class GlancesPluginBase(Generic[T], ABC):
             )
         return pks[0]
 
-    def _compile_filter(self, key: str, section: str | None = None) -> list[re.Pattern[str]]:
+    def _compile_filter(self, key: str, section: str | None = None, flags: int = 0) -> list[re.Pattern[str]]:
         """Read `[<section>] <key>=pat1,pat2` and compile each entry as a regex.
 
         Used by collection plugins to filter items by their primary-key value
@@ -441,7 +441,7 @@ class GlancesPluginBase(Generic[T], ABC):
         compiled: list[re.Pattern[str]] = []
         for pattern in raw or []:
             try:
-                compiled.append(re.compile(pattern))
+                compiled.append(re.compile(pattern, flags))
             except re.error as e:
                 logger.warning("Plugin %s: invalid %s regex %r (%s) — ignored", self.plugin_name, key, pattern, e)
         return compiled
@@ -525,9 +525,10 @@ class GlancesPluginBase(Generic[T], ABC):
     def _filter_collection(self, items: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Drop items whose primary-key value does not pass show/hide filters.
 
-        Pattern matching uses `re.search` (substring-friendly). When `show`
-        is set, only matching items pass. `hide` is then applied to drop
-        matches. Both are optional and independent.
+        Pattern matching uses `re.search` (substring-friendly), ignoring case
+        like v4 (`plugin/model.py:1062,1077`). When `show` is set, only
+        matching items pass. `hide` is then applied to drop matches. Both are
+        optional and independent.
 
         A configured alias (design §5.5) is matched too — v4 parity,
         `plugin/model.py:1044,1059`. `_alias_map` is looked up directly
@@ -927,6 +928,9 @@ class GlancesPluginBase(Generic[T], ABC):
         except AttributeError:
             return out  # config object without introspection API → skip optim
         for key in section_keys:
+            # Option names keep their case (`/srv/Data_percent_CRITICAL`),
+            # and the per-item lookup matches them case-insensitively too.
+            key = key.lower()
             for field_name, schema in self._watched_fields:
                 tkey = self._threshold_key(field_name, schema)
                 # Pattern: `<pk>_<tkey>_<level>` — `<pk>` must be non-empty

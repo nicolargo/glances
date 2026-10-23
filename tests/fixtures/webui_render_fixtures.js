@@ -419,10 +419,9 @@ const WIFI_FIXTURE = {
 	_levels: { wlan0: { quality_level: { level: "warning", prominent: false } } },
 };
 
-// sensors (render_curses.py:77-128), in PAYLOAD order: the server sorts
+// sensors (render_curses.py:75-123), in PAYLOAD order: the server sorts
 // with natural keys, the renderer does not, so "fan1" before "Core 0" must
-// survive. An empty battery and a non-numeric value are skipped; "ERR" is an
-// hddtemp sentinel shown verbatim. 42.5 C is a tie ("42C"), and so is its
+// survive. An empty battery and a non-numeric value are skipped. 42.5 C is a tie ("42C"), and so is its
 // Fahrenheit value, exactly 108.5 ("108F"). `Core 0` is prominent critical.
 const SENSORS_FIXTURE = {
 	_key: "label",
@@ -435,7 +434,6 @@ const SENSORS_FIXTURE = {
 		{ label: "BAT BAT2", type: "battery", unit: "%", value: 100, warning: null, critical: null, status: "Full" },
 		{ label: "BAT BAT3", type: "battery", unit: "%", value: 55, warning: null, critical: null, status: "Charging" },
 		{ label: "odd", type: "temperature_core", unit: "C", value: "n/a", warning: null, critical: null },
-		{ label: "sda", type: "temperature_hdd", unit: "C", value: "ERR", warning: null, critical: null },
 		{ label: "Composite temperature of the NVMe controller", type: "temperature_core", unit: "C", value: 36, warning: null, critical: null },
 	],
 	_levels: { "Core 0": { value: { level: "critical", prominent: true } } },
