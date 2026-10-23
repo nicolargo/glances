@@ -22,6 +22,11 @@ import sys
 
 import pytest
 
+# File ownership, modes and symbolic links as the checks under test read them:
+# POSIX only (Windows has neither geteuid nor fchmod, and `trusted_by_root`
+# trusts everything there).
+pytestmark = pytest.mark.skipif(os.name != "posix", reason="POSIX ownership and modes")
+
 # `glances.logger` the module, not the logger it exports
 logger_module = importlib.import_module("glances.logger")
 
@@ -124,7 +129,7 @@ def test_a_link_planted_at_the_log_file_is_not_followed(tmp_path):
 
 
 @posix_only
-@pytest.mark.skipif(os.geteuid() != 0, reason="needs root to chown")
+@pytest.mark.skipif(os.name != "posix" or os.geteuid() != 0, reason="needs root to chown")
 def test_the_mode_of_a_log_owned_by_another_user_is_left_alone(tmp_path):
     log = tmp_path / "glances.log"
     log.write_text("")
