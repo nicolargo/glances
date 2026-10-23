@@ -4,7 +4,7 @@ name: glances
 # Do not forget to set the source-branch option to master for release (see end of file)
 # build00 => glances source-branch should be set to develop
 # buildXX => glances source-branch should be set to master
-version: '5.0.0+build00'
+version: '5.0.0b1+build00'
 
 summary: Glances an Eye on your system. A top/htop alternative.
 description: |
@@ -32,14 +32,12 @@ apps:
     plugs:  # https://snapcraft.io/docs/supported-interfaces
       - hardware-observe
       - home
-      - log-observe
       - mount-observe
       - network
       - network-bind
       - network-observe
       - network-setup-observe
       - physical-memory-observe
-      - power-control
       - process-control
       - raw-volume
       - removable-media
@@ -50,7 +48,6 @@ apps:
       - docker
       - home-glances-config
       - etc-glances-config
-      - proc-sys
       - opengl
     environment:
       LANG: C.UTF-8
@@ -67,8 +64,6 @@ plugs:
     interface: system-files
     read:
       - /etc/glances/glances.conf
-  proc-sys:
-    interface: system-observe
 
 parts:
   glances:

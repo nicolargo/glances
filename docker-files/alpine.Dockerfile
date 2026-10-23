@@ -14,7 +14,9 @@ ARG PYTHON_VERSION=3.14
 
 ##############################################################################
 # Base layer to be used for building dependencies and the release images
-FROM alpine:${IMAGE_VERSION} AS base
+# Pinned by digest (the multi-arch manifest list of the tag); Dependabot
+# bumps it (security audit 2026-10-17, S-3).
+FROM alpine:${IMAGE_VERSION}@sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a AS base
 
 RUN <<EOR
 set -e

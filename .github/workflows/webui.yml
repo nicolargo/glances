@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: write
+      contents: read
 
     strategy:
       matrix:
@@ -32,27 +32,12 @@ jobs:
       run: |
         npm ci
         npm run build
-    - name: Commit and push WebUI
-      env:
-        CI_COMMIT_MESSAGE: Continuous Integration Build Artifacts
-        CI_COMMIT_AUTHOR: Continuous Integration
+    - name: Check that the committed bundle matches the sources
+      # The bundle is committed with the sources (make webui); CI only
+      # verifies it, it never pushes to the branch (security audit
+      # 2026-10-17, S-8).
       run: |
-        git config --global user.name "${{ env.CI_COMMIT_AUTHOR }}"
-        git config --global user.email "glances@nicolargo.com"
-        git add glances/outputs/static
-        if git diff --cached --quiet; then
-          echo "No WebUI changes to commit, skipping push."
-          exit 0
+        if ! git diff --exit-code --stat -- glances/outputs/static/public; then
+          echo "::error::glances/outputs/static/public is out of date: run 'make webui' and commit the bundle"
+          exit 1
         fi
-        git commit -m "${{ env.CI_COMMIT_MESSAGE }}"
-        for attempt in 1 2 3; do
-          if git pull --rebase origin "${GITHUB_REF_NAME}" && git push; then
-            echo "Push succeeded on attempt ${attempt}."
-            exit 0
-          fi
-          echo "Push attempt ${attempt} failed, retrying in $((attempt * 5))s..."
-          git rebase --abort 2>/dev/null || true
-          sleep $((attempt * 5))
-        done
-        echo "Push failed after 3 attempts."
-        exit 1
