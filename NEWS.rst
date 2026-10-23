@@ -143,6 +143,11 @@ Security (post-cutover audit of 2026-10-17):
   the WebUI, so a non-ASCII password works with ``glances -c`` too; a malformed
   ``[outputs] password`` value logs a CRITICAL and refuses every login instead
   of answering 500
+* Every response carries ``X-Content-Type-Options: nosniff``,
+  ``X-Frame-Options: DENY`` and ``Referrer-Policy: same-origin``; a POST (sort,
+  pin) coming from another web site (``Sec-Fetch-Site: cross-site``, or an
+  ``Origin`` which is neither the server nor one of ``cors_origins``) is refused
+  with 403
 
 Special notes for package maintainers:
 

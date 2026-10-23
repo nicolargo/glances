@@ -928,3 +928,61 @@ def test_basic_auth_checks_the_password_even_for_a_wrong_user_name(config_factor
         assert client.get("/secret", headers=_basic_header("glances", "hunter2")).status_code == 401
         assert client.get("/secret", headers=_basic_header("alice", "wrong")).status_code == 401
     assert calls == ["hunter2", "wrong"]
+
+
+# ------------------------------------------------ security headers (B-5)
+
+
+def _sort_engine(monkeypatch):
+    """The process engine's sort state, isolated per test (as test_routes does)."""
+    from glances.processes import glances_processes
+
+    monkeypatch.setattr(glances_processes, "_sort_key", "cpu_percent", raising=False)
+    monkeypatch.setattr(glances_processes, "auto_sort", True, raising=False)
+    return glances_processes
+
+
+@pytest.mark.parametrize("path", ["/", "/api/5/pluginslist", "/status", "/static/glances.js", "/nowhere"])
+def test_every_response_carries_the_security_headers(path, config_factory, store):
+    """Audit 2026-10-17, B-5: index.html says clickjacking protection belongs
+    to the server's middleware, which sent no header at all."""
+    app = build_app(config=config_factory(), store=store, args=_args())
+    with TestClient(app) as client:
+        r = client.get(path)
+    assert r.headers["X-Content-Type-Options"] == "nosniff"
+    assert r.headers["X-Frame-Options"] == "DENY"
+    assert r.headers["Referrer-Policy"] == "same-origin"
+
+
+def test_a_cross_site_post_is_refused(config_factory, store, monkeypatch):
+    """Proven in the audit: `Origin: https://evil.example` on the sort route → 200."""
+    engine = _sort_engine(monkeypatch)
+    app = build_app(config=config_factory(), store=store)
+    with TestClient(app) as client:
+        foreign = client.post("/api/5/processes/sort/name", headers={"Origin": "https://evil.example"})
+        assert foreign.status_code == 403
+        assert foreign.json() == {"detail": "Cross-site request refused"}
+        assert foreign.headers["X-Frame-Options"] == "DENY"
+        assert client.post("/api/5/processes/sort/name", headers={"Origin": "null"}).status_code == 403
+        assert client.post("/api/5/processes/sort/name", headers={"Sec-Fetch-Site": "cross-site"}).status_code == 403
+        assert engine._sort_key == "cpu_percent", "the engine was never reached"
+        # The WebUI's own fetch (same origin), or no Origin at all (`glances -c`,
+        # curl): as before.
+        same = {"Origin": "http://localhost", "Sec-Fetch-Site": "same-origin"}
+        assert client.post("/api/5/processes/sort/name", headers=same).status_code == 200
+        assert client.post("/api/5/processes/sort/username").status_code == 200
+        # A GET from another site is not a write.
+        assert client.get("/api/5/pluginslist", headers={"Origin": "https://evil.example"}).status_code == 200
+
+
+def test_a_post_from_a_cors_origin_goes_through(config_factory, store, monkeypatch):
+    """An origin in `[outputs] cors_origins` is the operator's choice: the CORS
+    middleware validates it, the cross-site check stays out of the way."""
+    _sort_engine(monkeypatch)
+    app = build_app(config=config_factory(cors_origins="https://trusted.example"), store=store)
+    with TestClient(app) as client:
+        trusted = {"Origin": "https://trusted.example", "Sec-Fetch-Site": "cross-site"}
+        ok = client.post("/api/5/processes/sort/name", headers=trusted)
+        assert ok.status_code == 200
+        assert ok.headers["access-control-allow-origin"] == "https://trusted.example"
+        assert client.post("/api/5/processes/sort/name", headers={"Origin": "https://evil.example"}).status_code == 403
