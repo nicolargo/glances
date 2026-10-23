@@ -515,6 +515,8 @@ def test_default_podman_sock_follows_the_user(store_with, config_with, monkeypat
 
 
 def test_configured_podman_sock_still_wins(store_with, config_with, monkeypatch):
-    monkeypatch.setattr(model_mod.os, "geteuid", lambda: 0, raising=False)
+    # Build the config BEFORE faking root: `os.geteuid` is global, and a root
+    # Glances ignores a configuration file it does not own (the CI runner's).
     p = _mk(store_with, config_with, {"podman_sock": "unix:///srv/podman.sock"})
+    monkeypatch.setattr(model_mod.os, "geteuid", lambda: 0, raising=False)
     assert p._podman_sock() == "unix:///srv/podman.sock"
