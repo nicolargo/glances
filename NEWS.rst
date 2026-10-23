@@ -131,6 +131,9 @@ Security (post-cutover audit of 2026-10-17):
 * ``[outputs] jwt_secret_key`` must be at least 32 characters (the shipped example
   value is refused); tokens need ``exp`` and ``iat`` and must name the configured
   user; ``jwt_expire_minutes`` is capped to a day
+* InfluxDB 1.x and 2.x exports verify the server's TLS certificate (it was
+  never checked); the new optional ``[influxdb]``/``[influxdb2] ssl_verify``
+  key accepts ``false`` or a CA bundle path
 * A ``-C`` path that does not exist stops Glances instead of starting with the
   defaults (and without the password that file carried)
 * ``/openapi.json`` is served only when ``api_doc`` is on
