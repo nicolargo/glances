@@ -120,15 +120,15 @@ def _patch_zfs(monkeypatch, pools_list=None, pools_status=None, datasets=None, s
 
 def test_plugin_identity(store, config):
     plugin = PluginModel(store, config)
-    assert (plugin.plugin_name, plugin.IS_COLLECTION, plugin._primary_key) == ('zfs', True, 'name')
+    assert (plugin.plugin_name, plugin.IS_COLLECTION, plugin._primary_key) == ('zfs', True, 'name')  # nosec B101
 
 
 def test_disabled_by_default(store, config):
-    assert PluginModel.is_disabled(config) is True
+    assert PluginModel.is_disabled(config) is True  # nosec B101
 
 
 def test_default_refresh_is_5_minutes(store, config):
-    assert PluginModel.DEFAULT_REFRESH_TIME == 300.0
+    assert PluginModel.DEFAULT_REFRESH_TIME == 300.0  # nosec B101
 
 
 def test_fields_description():
@@ -142,7 +142,7 @@ def test_fields_description():
         }
         for name, spec in PluginModel.fields_description.items()
     }
-    assert actual == {
+    assert actual == {  # nosec B101
         'name': {'primary_key': True, 'unit': 'string', 'internal': False, 'watched': False, 'history': False},
         'guid': {'primary_key': False, 'unit': 'string', 'internal': True, 'watched': False, 'history': False},
         'state': {'primary_key': False, 'unit': 'string', 'internal': False, 'watched': False, 'history': False},
@@ -192,7 +192,7 @@ def test_config_knobs_are_read(store, tmp_path, monkeypatch):
     (cfg_dir / 'glances.conf').write_text('[zfs]\ndisable=False\nshow_datasets=True\nmax_depth=2\nmax_datasets=50\n')
     monkeypatch.setenv('XDG_CONFIG_HOME', str(xdg))
     plugin = PluginModel(store, GlancesConfig())
-    assert (plugin.show_datasets, plugin.max_depth, plugin.max_datasets) == (True, 2, 50)
+    assert (plugin.show_datasets, plugin.max_depth, plugin.max_datasets) == (True, 2, 50)  # nosec B101
 
 
 @pytest.mark.asyncio
@@ -204,7 +204,7 @@ async def test_grab_stats_builds_pools_and_datasets(store, config, monkeypatch):
         datasets={'tank/home': _dataset()},
     )
     plugin = PluginModel(store, config)
-    assert await plugin._grab_stats() == [
+    assert await plugin._grab_stats() == [  # nosec B101
         _expected_pool(datasets=[_expected_dataset()]),
     ]
 
@@ -218,21 +218,21 @@ async def test_grab_stats_keeps_status_text(store, config, monkeypatch):
         pools_status={TANK_GUID: _pool_status(status=raw_status)},
     )
     plugin = PluginModel(store, config)
-    assert await plugin._grab_stats() == [_expected_pool(status=raw_status)]
+    assert await plugin._grab_stats() == [_expected_pool(status=raw_status)]  # nosec B101
 
 
 @pytest.mark.asyncio
 async def test_grab_stats_empty_when_json_unsupported(store, config, monkeypatch):
     _patch_zfs(monkeypatch, supported=False)
     plugin = PluginModel(store, config)
-    assert await plugin._grab_stats() == []
+    assert await plugin._grab_stats() == []  # nosec B101
 
 
 @pytest.mark.asyncio
 async def test_grab_stats_empty_when_no_pools(store, config, monkeypatch):
     _patch_zfs(monkeypatch)
     plugin = PluginModel(store, config)
-    assert await plugin._grab_stats() == []
+    assert await plugin._grab_stats() == []  # nosec B101
 
 
 @pytest.mark.asyncio
@@ -255,7 +255,7 @@ async def test_datasets_are_limited_by_depth_and_count(store, tmp_path, monkeypa
         datasets=datasets,
     )
     plugin = PluginModel(store, GlancesConfig())
-    assert await plugin._grab_stats() == [
+    assert await plugin._grab_stats() == [  # nosec B101
         _expected_pool(datasets=[_expected_dataset('tank/a'), _expected_dataset('tank/b')]),
     ]
 
@@ -290,7 +290,7 @@ def test_state_levels(store, config):
     plugin = PluginModel(store, config)
     plugin._stats = [_row(state='ONLINE') | {'name': 'ok'}, _row(state='DEGRADED') | {'name': 'deg'}]
     plugin._derived_parameters()
-    assert plugin._levels == {
+    assert plugin._levels == {  # nosec B101
         'ok': _expected_levels(state='ok'),
         'deg': _expected_levels(state='warning'),
     }
@@ -300,18 +300,18 @@ def test_faulted_state_is_critical(store, config):
     plugin = PluginModel(store, config)
     plugin._stats = [_row(state='FAULTED')]
     plugin._derived_parameters()
-    assert plugin._levels == {'tank': _expected_levels(state='critical')}
+    assert plugin._levels == {'tank': _expected_levels(state='critical')}  # nosec B101
 
 
 def test_capacity_uses_watched_threshold(store, config):
     plugin = PluginModel(store, config)
     plugin._stats = [_row(capacity=95)]
     plugin._derived_parameters()
-    assert plugin._levels == {'tank': _expected_levels(capacity='critical')}
+    assert plugin._levels == {'tank': _expected_levels(capacity='critical')}  # nosec B101
 
 
 def test_device_errors_are_watched(store, config):
     plugin = PluginModel(store, config)
     plugin._stats = [_row(read_errors=1)]
     plugin._derived_parameters()
-    assert plugin._levels == {'tank': _expected_levels(read_errors='warning')}
+    assert plugin._levels == {'tank': _expected_levels(read_errors='warning')}  # nosec B101

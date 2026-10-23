@@ -190,6 +190,7 @@ class PluginModel(GlancesPluginBase[list]):
     }
 
     def __init__(self, store, config) -> None:
+        """Initialize the ZFS plugin from the shared stats store and configuration."""
         super().__init__(store, config)
         self.show_datasets = bool(self.config.get(self.plugin_name, 'show_datasets', False))
         self.max_depth = int(self.config.get(self.plugin_name, 'max_depth', 32))

@@ -107,25 +107,25 @@ def _status_row(text):
 
 
 def test_registered_in_left_slot():
-    assert ('zfs' in LEFT_SLOT, slot_for('zfs')) == (True, 'left')
+    assert ('zfs' in LEFT_SLOT, slot_for('zfs')) == (True, 'left')  # nosec B101
 
 
 def test_empty_collection_renders_nothing():
-    assert (render(_payload([]), _SCHEMA), render({}, _SCHEMA), render(None, _SCHEMA)) == ([], [], [])
+    assert (render(_payload([]), _SCHEMA), render({}, _SCHEMA), render(None, _SCHEMA)) == ([], [], [])  # nosec B101
 
 
 def test_header_and_pool_row():
-    assert _snapshot(render(_payload([_pool()]), _SCHEMA)) == [_header(), _pool_row()]
+    assert _snapshot(render(_payload([_pool()]), _SCHEMA)) == [_header(), _pool_row()]  # nosec B101
 
 
 def test_width_budget():
     rows = render(_payload([_pool(name='a-very-long-pool-name')]), _SCHEMA)
-    assert all(len(' '.join(cell.text for cell in row.cells)) <= _LEFT_SIDEBAR_MAX_WIDTH for row in rows)
+    assert all(len(' '.join(cell.text for cell in row.cells)) <= _LEFT_SIDEBAR_MAX_WIDTH for row in rows)  # nosec B101
 
 
 def test_state_level_colours_the_state_cell():
     levels = {'tank': {'state': {'level': 'critical', 'prominent': False}}}
-    assert _snapshot(render(_payload([_pool(state='FAULTED')], levels), _SCHEMA)) == [
+    assert _snapshot(render(_payload([_pool(state='FAULTED')], levels), _SCHEMA)) == [  # nosec B101
         _header(),
         _pool_row(state=' FAULTED', state_color='critical'),
     ]
@@ -136,8 +136,8 @@ def test_status_line_is_first_sentence():
         'One or more devices could\n\tnot be opened.  Sufficient replicas exist for\n'
         '\tthe pool to continue functioning in a degraded state.\n'
     )
-    assert _status_text(raw_status) == 'One or more devices could not be opened.'
-    assert _snapshot(render(_payload([_pool(status=raw_status)]), _SCHEMA)) == [
+    assert _status_text(raw_status) == 'One or more devices could not be opened.'  # nosec B101
+    assert _snapshot(render(_payload([_pool(status=raw_status)]), _SCHEMA)) == [  # nosec B101
         _header(),
         _pool_row(),
         _status_row('  └─ One or more devices could ...'),
@@ -145,7 +145,8 @@ def test_status_line_is_first_sentence():
 
 
 def test_status_line_is_warning_coloured():
-    assert _snapshot(render(_payload([_pool(status='One or more devices could not be opened.\n')]), _SCHEMA)) == [
+    rows = render(_payload([_pool(status='One or more devices could not be opened.\n')]), _SCHEMA)
+    assert _snapshot(rows) == [  # nosec B101
         _header(),
         _pool_row(),
         _status_row('  └─ One or more devices could ...'),
@@ -154,7 +155,7 @@ def test_status_line_is_warning_coloured():
 
 def test_status_line_fits_left_sidebar():
     expected = '  └─ ' + 'A' * 26 + '...'
-    assert _snapshot(render(_payload([_pool(status='A' * 300 + '.')]), _SCHEMA)) == [
+    assert _snapshot(render(_payload([_pool(status='A' * 300 + '.')]), _SCHEMA)) == [  # nosec B101
         _header(),
         _pool_row(),
         _status_row(expected),
@@ -162,17 +163,17 @@ def test_status_line_fits_left_sidebar():
 
 
 def test_status_text_caps_at_256_chars():
-    assert _status_text('A' * 300 + '.', limit=256) == 'A' * 253 + '...'
+    assert _status_text('A' * 300 + '.', limit=256) == 'A' * 253 + '...'  # nosec B101
 
 
 def test_datasets_hidden_by_default():
     dataset = {'name': 'tank/home', 'used': 10, 'available': 90}
-    assert _snapshot(render(_payload([_pool(datasets=[dataset])]), _SCHEMA)) == [_header(), _pool_row()]
+    assert _snapshot(render(_payload([_pool(datasets=[dataset])]), _SCHEMA)) == [_header(), _pool_row()]  # nosec B101
 
 
 def test_datasets_shown_when_enabled():
     dataset = {'name': 'tank/home', 'used': 10, 'available': 90}
-    assert _snapshot(render(_payload([_pool(datasets=[dataset])], show_datasets=True), _SCHEMA)) == [
+    assert _snapshot(render(_payload([_pool(datasets=[dataset])], show_datasets=True), _SCHEMA)) == [  # nosec B101
         _header(),
         _pool_row(),
         _row(_cell('  └─ tank/home    '), _cell('    10B'), _cell('    90B')),

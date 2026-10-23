@@ -13,7 +13,7 @@
 import json
 import os
 import re
-import subprocess
+import subprocess  # nosec B404
 from functools import lru_cache
 
 from glances.logger import logger
@@ -48,7 +48,10 @@ def zfs_stats(zfs_stats_files=['/proc/spl/kstat/zfs/arcstats']):
 def _run_zfs_command(args, timeout=ZFS_COMMAND_TIMEOUT):
     """Run a zfs/zpool command and return its stdout, or None on failure."""
     try:
-        result = subprocess.run(args, capture_output=True, text=True, timeout=timeout)
+        # args is always a fixed list built from constants, never shell=True.
+        result = subprocess.run(  # nosec B603
+            args, capture_output=True, text=True, timeout=timeout
+        )
     except Exception as e:
         logger.debug(f"Cannot run ZFS command {' '.join(args)}: {e}")
         return None
