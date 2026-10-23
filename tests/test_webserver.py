@@ -902,3 +902,29 @@ def test_basic_auth_rejects_a_non_ascii_username_with_401(config_factory, store)
     with TestClient(app, raise_server_exceptions=False) as client:
         r = client.get("/secret", headers=_basic_header("glancés", "hunter2"))
     assert r.status_code == 401
+
+
+def test_a_malformed_stored_hash_refuses_every_login(config_factory, store, caplog):
+    """I-4: a stored value that is not hex (`abcd$café`) ended in a 500 on
+    every Basic request. Now a CRITICAL at startup and a plain 401."""
+    with caplog.at_level(logging.CRITICAL, logger="glances.webserver"):
+        app = build_app(config=config_factory(password="abcd$café"), store=store)
+    assert "[outputs] password is not a hash" in caplog.text
+    app.add_api_route("/secret", _ok_handler, methods=["GET"])
+    with TestClient(app, raise_server_exceptions=False) as client:
+        assert client.get("/secret", headers=_basic_header("glances", "hunter2")).status_code == 401
+        assert client.post("/api/5/token", headers=_basic_header("glances", "hunter2")).status_code == 401
+
+
+def test_basic_auth_checks_the_password_even_for_a_wrong_user_name(config_factory, store, monkeypatch):
+    """B-1: the middleware short-circuited on the user name, so a wrong one
+    answered ~250 ms faster than a wrong password."""
+    calls: list[str] = []
+    real = security.verify_password
+    monkeypatch.setattr(security, "verify_password", lambda p, h: calls.append(p) or real(p, h))
+    app = build_app(config=config_factory(password=hash_password("hunter2"), username="alice"), store=store)
+    app.add_api_route("/secret", _ok_handler, methods=["GET"])
+    with TestClient(app) as client:
+        assert client.get("/secret", headers=_basic_header("glances", "hunter2")).status_code == 401
+        assert client.get("/secret", headers=_basic_header("alice", "wrong")).status_code == 401
+    assert calls == ["hunter2", "wrong"]

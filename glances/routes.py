@@ -50,20 +50,18 @@ Architecture references:
 
 from __future__ import annotations
 
-import hmac
 import logging
 from typing import TYPE_CHECKING, Any
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request, status
+from fastapi import APIRouter, HTTPException, Path, Query, Request, status
 from fastapi.responses import JSONResponse, Response
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from pydantic import TypeAdapter
 
 from glances import __apiversion__
 from glances.alerts_incidents import derive_incidents, incident_duration
 from glances.config import GlancesConfig
 from glances.processes import glances_processes, sort_processes_stats_list
-from glances.security import verify_password_in_thread
+from glances.security import check_basic, decode_basic
 
 try:
     import msgpack
@@ -89,11 +87,6 @@ _RESERVED_NAMES: frozenset[str] = frozenset({"token", "pluginslist", "all", "ale
 # and the directory layout, which the config CONTENTS served by /api/5/config
 # do not. v4 redacts its equivalent (`conf_file`) the same way.
 _SENSITIVE_ARGS: frozenset[str] = frozenset({"config_path"})
-
-# ``HTTPBasic(auto_error=False)`` lets us emit our own 401 with the correct
-# ``WWW-Authenticate`` header. ``auto_error=True`` short-circuits before the
-# username comparison and produces a generic 403 — we want consistent 401s.
-_basic_security = HTTPBasic(auto_error=False)
 
 
 def _register_history_route(router: APIRouter) -> None:
@@ -226,10 +219,7 @@ def build_router() -> APIRouter:
     router = APIRouter(prefix=f"/api/{__apiversion__}", tags=["v5"])
 
     @router.post("/token", tags=["auth"])
-    async def issue_token(
-        request: Request,
-        credentials: HTTPBasicCredentials | None = Depends(_basic_security),
-    ):
+    async def issue_token(request: Request):
         config = request.app.state.config
         jwt_handler = request.app.state.jwt_handler
         password_hash = config.get("outputs", "password", "")
@@ -240,6 +230,9 @@ def build_router() -> APIRouter:
         if not password_hash or jwt_handler is None:
             raise HTTPException(status_code=404, detail="JWT auth not configured")
 
+        # The same decoder and check as the auth middleware: UTF-8, and no
+        # short-circuit between the user name and the password.
+        credentials = decode_basic(request.headers.get("Authorization", ""))
         if credentials is None:
             raise HTTPException(
                 status_code=401,
@@ -247,19 +240,16 @@ def build_router() -> APIRouter:
                 headers={"WWW-Authenticate": 'Basic realm="Glances"'},
             )
 
+        user, password = credentials
         expected_user = config.get("outputs", "username", "glances")
-        # PBKDF2 off the event loop — see the auth middleware in webserver.
-        # Bytes: compare_digest raises TypeError on a non-ASCII str (-> 500).
-        if not hmac.compare_digest(
-            credentials.username.encode(), expected_user.encode()
-        ) or not await verify_password_in_thread(credentials.password, password_hash):
+        if not await check_basic(user, password, expected_user, password_hash):
             raise HTTPException(
                 status_code=401,
                 detail="Invalid credentials",
                 headers={"WWW-Authenticate": 'Basic realm="Glances"'},
             )
 
-        token = jwt_handler.create_access_token(credentials.username)
+        token = jwt_handler.create_access_token(user)
         return {
             "access_token": token,
             "token_type": "bearer",

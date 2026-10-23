@@ -138,6 +138,11 @@ Security (post-cutover audit of 2026-10-17):
   process behind; the commands read nothing from the terminal
 * ``--hide-public-info`` also hides the public IP information text, which a
   ``{ip}`` template repeats (GHSA-vg43-q6xr-hp92)
+* A wrong user name takes as long to refuse as a wrong password (the password
+  check always runs); ``/api/5/token`` decodes Basic credentials as UTF-8, like
+  the WebUI, so a non-ASCII password works with ``glances -c`` too; a malformed
+  ``[outputs] password`` value logs a CRITICAL and refuses every login instead
+  of answering 500
 
 Special notes for package maintainers:
 

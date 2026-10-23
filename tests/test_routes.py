@@ -745,7 +745,7 @@ def test_token_endpoint_exempt_from_global_auth(config_factory, store):
     """``/api/5/token`` must NOT 401 because of the global auth middleware.
 
     Without an exemption, the middleware would short-circuit the request
-    before the route's own ``Depends(HTTPBasic)`` can read credentials.
+    before the route's own ``decode_basic`` can read credentials.
     """
     config = config_factory(password=hash_password("hunter2"))
     app = _make_app_with_plugins(config, store)
@@ -1714,3 +1714,17 @@ def test_field_routes_require_auth_when_password_is_set(config_factory, store):
             assert client.get(path).status_code == 401
         ok = client.get("/api/5/fakecollection/rx/value/100", headers=_basic_header("glances", "hunter2"))
     assert ok.status_code == 200
+
+
+def test_token_accepts_a_non_ascii_password(config_factory, store):
+    """W-3: FastAPI's HTTPBasic decoded ASCII only, so a password the WebUI
+    accepted was refused here, hence by `glances -c`."""
+    config = config_factory(password=hash_password("pässwörd"))
+    app = _make_app_with_plugins(config, store)
+    with TestClient(app) as client:
+        assert client.post("/api/5/token", headers=_basic_header("glances", "pässwörd")).status_code == 200
+        assert client.post("/api/5/token", headers=_basic_header("glances", "password")).status_code == 401
+        # The same route, the same 401 and challenge whoever is wrong.
+        r = client.post("/api/5/token", headers=_basic_header("nobody", "pässwörd"))
+    assert r.status_code == 401
+    assert r.headers["WWW-Authenticate"] == 'Basic realm="Glances"'

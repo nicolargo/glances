@@ -37,10 +37,7 @@ below registers them inner-first.
 
 from __future__ import annotations
 
-import base64
-import binascii
 import contextlib
-import hmac
 import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -58,7 +55,7 @@ from glances.config import GlancesConfig
 from glances.plugins.plugin.base import GlancesPluginBase
 from glances.ratelimit import RateLimitMiddleware
 from glances.routes import build_router
-from glances.security import JWTHandler, KnownCredentials, verify_password_in_thread
+from glances.security import JWTHandler, KnownCredentials, check_basic, decode_basic, is_password_hash
 from glances.stats_store import StatsStore
 
 if TYPE_CHECKING:
@@ -471,6 +468,13 @@ def _wire_auth(app: FastAPI, config: GlancesConfig) -> None:
     password_hash = config.get("outputs", "password", "")
     if not password_hash:
         return  # No auth configured — startup warning is emitted by build_app().
+    if not is_password_hash(password_hash):
+        # Fail closed: `verify_password` answers False to every credential
+        # on such a value (security audit 2026-10-17, I-4).
+        logger.critical(
+            "[outputs] password is not a hash made by `glances --set-password` (<salt>$<hex digest>): "
+            "every login will be refused"
+        )
 
     username = config.get("outputs", "username", _DEFAULT_USERNAME)
     jwt_secret = config.get("outputs", "jwt_secret_key", "") or None
@@ -505,31 +509,15 @@ def _wire_auth(app: FastAPI, config: GlancesConfig) -> None:
             # Proven good before: no second PBKDF2 for the same header.
             if known.is_known(auth):
                 return await call_next(request)
-            credentials = _decode_basic(auth[len("Basic ") :].strip())
-            if credentials is not None:
-                user, password = credentials
-                # PBKDF2 is ~50 ms of CPU: keep it off the event loop the
-                # scheduler shares, and out of the default executor its
-                # plugins use (anyio's threadpool, as v4's sync endpoints).
-                # Bytes: compare_digest raises TypeError on a non-ASCII str (-> 500).
-                if hmac.compare_digest(user.encode(), username.encode()) and await verify_password_in_thread(
-                    password, password_hash
-                ):
-                    known.remember(auth)
-                    return await call_next(request)
+            credentials = decode_basic(auth)
+            # PBKDF2 is ~50 ms of CPU: `check_basic` keeps it off the event
+            # loop the scheduler shares, and out of the default executor its
+            # plugins use (anyio's threadpool, as v4's sync endpoints).
+            if credentials is not None and await check_basic(*credentials, username, password_hash):
+                known.remember(auth)
+                return await call_next(request)
 
         return _unauth_response(scheme="Basic")
-
-
-def _decode_basic(encoded: str) -> tuple[str, str] | None:
-    try:
-        raw = base64.b64decode(encoded, validate=True).decode("utf-8", errors="strict")
-    except (binascii.Error, ValueError, UnicodeDecodeError):
-        return None
-    if ":" not in raw:
-        return None
-    user, _, password = raw.partition(":")
-    return user, password
 
 
 def _unauth_response(*, scheme: str) -> JSONResponse:

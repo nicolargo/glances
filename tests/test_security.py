@@ -244,3 +244,46 @@ async def test_password_checks_run_at_most_two_at_a_time(monkeypatch):
     results = await asyncio.gather(*[security.verify_password_in_thread("p", "h") for _ in range(6)])
     assert results == [False] * 6
     assert peak[0] == 2
+
+
+def test_verify_password_refuses_a_stored_value_that_is_not_hex():
+    """I-4: a non-ASCII (or non-hex) stored value raised in compare_digest, a 500 on every login."""
+    assert verify_password("x", "abcd$café") is False
+    assert verify_password("x", "abcd$nothex") is False
+    assert security.is_password_hash("abcd$café") is False
+    assert security.is_password_hash(hash_password("x"))
+
+
+def test_decode_basic_is_utf8_and_refuses_garbage():
+    import base64
+
+    assert security.decode_basic("Basic " + base64.b64encode("glances:pässwörd".encode()).decode()) == (
+        "glances",
+        "pässwörd",
+    )
+    assert security.decode_basic("Basic " + base64.b64encode(b"a:b:c").decode()) == ("a", "b:c")
+    assert security.decode_basic("Basic !!!notb64!!!") is None
+    assert security.decode_basic("Basic " + base64.b64encode(b"nocolon").decode()) is None
+    assert security.decode_basic("Basic " + base64.b64encode(b"\xff:x").decode()) is None, "not UTF-8"
+    assert security.decode_basic("Bearer abc") is None
+    assert security.decode_basic("") is None
+
+
+async def test_check_basic_runs_pbkdf2_whatever_the_user_name(monkeypatch):
+    """B-1: a wrong user name used to answer in a millisecond, a wrong password
+    in a quarter of a second — the user name was an oracle. Structural check:
+    both branches reach `verify_password` exactly once."""
+    calls = []
+    real = security.verify_password
+
+    def counting(plaintext, stored):
+        calls.append(plaintext)
+        return real(plaintext, stored)
+
+    monkeypatch.setattr(security, "verify_password", counting)
+    stored = hash_password("hunter2")
+    assert await security.check_basic("nobody", "hunter2", "glances", stored) is False
+    assert await security.check_basic("glances", "guess", "glances", stored) is False
+    assert await security.check_basic("glances", "hunter2", "glances", stored) is True
+    assert calls == ["hunter2", "guess", "hunter2"]
+    assert await security.check_basic("glancés", "hunter2", "glances", stored) is False, "non-ASCII user: no TypeError"

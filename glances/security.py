@@ -21,6 +21,11 @@ Two primitives, both kept algorithmically equivalent to v4 (CVE-2026-32596
 - ``KnownCredentials`` — the ``Authorization`` values already proven good,
   which the rate limiter lets through and the auth middleware does not
   re-check with PBKDF2.
+- ``decode_basic(header)`` / ``check_basic(...)`` — the one Basic decoder
+  (UTF-8) and the one credential check, shared by the auth middleware and
+  ``/api/5/token``. The check always runs PBKDF2, so the answer takes as
+  long for a wrong user name as for a wrong password (security audit
+  2026-10-17, B-1 / W-3).
 
 The v4 modules are intentionally not imported — v5 keeps a clean boundary.
 Stored password hashes are *not* byte-compatible across v4 ↔ v5 because v4
@@ -30,6 +35,8 @@ migrating users must regenerate the stored hash via the v5 CLI (Phase 1.7).
 
 from __future__ import annotations
 
+import base64
+import binascii
 import hashlib
 import hmac
 import logging
@@ -68,25 +75,44 @@ def hash_password(plaintext: str, *, salt: str | None = None) -> str:
     return f"{salt}${digest}"
 
 
+def _parse_stored(stored: str) -> tuple[str, bytes] | None:
+    """``(salt, digest)`` of a stored ``salt$hex`` hash, ``None`` when malformed."""
+    if not stored or "$" not in stored:
+        return None
+    salt, expected = stored.split("$", 1)
+    if not salt or not expected:
+        return None
+    try:
+        return salt, bytes.fromhex(expected)
+    except ValueError:  # not hex (a non-ASCII value included): never compared
+        return None
+
+
+def is_password_hash(stored: str) -> bool:
+    """Whether ``stored`` is a hash `verify_password` can check at all."""
+    return _parse_stored(stored) is not None
+
+
 def verify_password(plaintext: str, stored: str) -> bool:
     """Constant-time comparison of ``plaintext`` against a ``salt$hex`` hash.
 
     Returns ``False`` on any structural problem (missing separator, invalid
-    salt) rather than raising — callers should not branch on the failure
-    mode, only on the boolean result.
+    salt, a digest that is not hex) rather than raising — callers should not
+    branch on the failure mode, only on the boolean result (security audit
+    2026-10-17, I-4: a non-ASCII stored value used to raise in
+    ``compare_digest``, a 500 on every login).
     """
-    if not stored or "$" not in stored:
+    parsed = _parse_stored(stored)
+    if parsed is None:
         return False
-    salt, expected = stored.split("$", 1)
-    if not salt or not expected:
-        return False
+    salt, expected = parsed
     candidate = hashlib.pbkdf2_hmac(
         _PBKDF2_HASH,
         plaintext.encode("utf-8"),
         salt.encode("utf-8"),
         _PBKDF2_ITERATIONS,
         dklen=_PBKDF2_DKLEN,
-    ).hex()
+    )
     return hmac.compare_digest(candidate, expected)
 
 
@@ -101,6 +127,42 @@ _VERIFY_LIMITER = anyio.CapacityLimiter(2)
 async def verify_password_in_thread(plaintext: str, stored: str) -> bool:
     """`verify_password` off the event loop, at most two checks at a time."""
     return await anyio.to_thread.run_sync(verify_password, plaintext, stored, limiter=_VERIFY_LIMITER)
+
+
+# ----------------------------------------------------- HTTP Basic
+
+
+def decode_basic(header_value: str) -> tuple[str, str] | None:
+    """``(user, password)`` of a ``Basic <base64>`` Authorization value, else ``None``.
+
+    Decoded as UTF-8: FastAPI's ``HTTPBasic`` decodes ASCII only, so a
+    non-ASCII password that the WebUI accepted was refused by
+    ``/api/5/token``, hence by ``glances -c`` (security audit 2026-10-17, W-3).
+    """
+    if not header_value.startswith("Basic "):
+        return None
+    try:
+        raw = base64.b64decode(header_value[len("Basic ") :].strip(), validate=True).decode("utf-8", errors="strict")
+    except (binascii.Error, ValueError, UnicodeDecodeError):
+        return None
+    if ":" not in raw:
+        return None
+    user, _, password = raw.partition(":")
+    return user, password
+
+
+async def check_basic(user: str, password: str, username: str, password_hash: str) -> bool:
+    """Whether ``user`` / ``password`` are the configured credentials.
+
+    PBKDF2 runs whatever the user name is, and the two results are combined
+    without a short-circuit: a wrong user name used to answer in a
+    millisecond and a wrong password in a quarter of a second, which told an
+    attacker which half was right (security audit 2026-10-17, B-1).
+    """
+    # Bytes: compare_digest raises TypeError on a non-ASCII str.
+    ok_user = hmac.compare_digest(user.encode(), username.encode())
+    ok_password = await verify_password_in_thread(password, password_hash)
+    return ok_user & ok_password
 
 
 # ----------------------------------------------------- JWT bearer tokens
