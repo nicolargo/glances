@@ -186,7 +186,9 @@ class Export(GlancesExportBase):
                         "ClickHouse table %s: changing column %s from %s to %s", name, column, existing[column], ch_type
                     )
                     self.client.command(f"ALTER TABLE {table} MODIFY COLUMN {quote(column)} {ch_type}")
-            self.client.insert(table=name, data=rows, column_names=columns)
+            # The quoted name, as for CREATE/ALTER above: the driver interpolates
+            # `table` into `INSERT INTO ...` as given (security audit 2026-10-17, R-1).
+            self.client.insert(table=table, data=rows, column_names=columns)
         except Exception as e:
             logger.warning("Cannot export %s stats to ClickHouse (%s)", name, self._redact(e))
         else:
