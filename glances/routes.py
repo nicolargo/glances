@@ -27,7 +27,7 @@ Route inventory:
 | ``/api/5/alert``              | GET    | ``alerts.get_history()``     |
 | ``/api/5/alert/incidents``    | GET    | ``{is_initializing, incidents}`` envelope (``derive_incidents()``) |
 | ``/api/5/config``             | GET    | ``as_dict_secure()`` with a password, else ``as_dict_public()`` |
-| ``/api/5/args``               | GET    | ``app.state.args``, redacted |
+| ``/api/5/args``               | GET    | ``PUBLIC_ARGS`` without a password, else ``app.state.args``, redacted |
 | ``/api/5/<plugin>``           | GET    | ``plugin.get_api_payload()`` (``_levels`` included) |
 | ``/api/5/<plugin>/info``      | GET    | ``plugin.fields_description``|
 | ``/api/5/<plugin>/limits``    | GET    | ``plugin.get_limits()``      |
@@ -87,6 +87,38 @@ _RESERVED_NAMES: frozenset[str] = frozenset({"token", "pluginslist", "all", "ale
 # and the directory layout, which the config CONTENTS served by /api/5/config
 # do not. v4 redacts its equivalent (`conf_file`) the same way.
 _SENSITIVE_ARGS: frozenset[str] = frozenset({"config_path"})
+
+# The arguments the WebUI reads (`serverArgs` in glances/outputs/static/js:
+# the hotkey flags, the startup SHOW/HIDE flags, the display switches). Without
+# a password `/api/5/args` serves these and nothing else: the namespace also
+# carries absolute paths (`export_csv_file`, `export_graph_path`) and the
+# process filter the operator typed (security audit 2026-10-17, B-12). Same
+# spirit as `GlancesConfig.PUBLIC_OPTIONS`.
+PUBLIC_ARGS: frozenset[str] = frozenset(
+    {
+        "auto_sort",
+        "byte",
+        "disable_left_sidebar",
+        "disable_process",
+        "disable_quicklook",
+        "disable_top",
+        "diskio_iops",
+        "diskio_latency",
+        "enable_light",
+        "fahrenheit",
+        "fs_free_space",
+        "full_quicklook",
+        "hide_public_info",
+        "load_irix",
+        "meangpu",
+        "network_cumul",
+        "network_sum",
+        "percpu",
+        "process_short_name",
+        "programs",
+        "sort_processes_key",
+    }
+)
 
 
 def _register_history_route(router: APIRouter) -> None:
@@ -311,8 +343,14 @@ def build_router() -> APIRouter:
 
     @router.get("/args")
     async def args_dump(request: Request) -> dict[str, Any]:
-        """Return the CLI argument namespace, redacted (issue #1527 / CVE-2026-68520)."""
-        return _redact_args(getattr(request.app.state, "args", None))
+        """Return the CLI argument namespace, redacted (issue #1527 / CVE-2026-68520).
+
+        Only the keys the WebUI reads without a password, like `/config`.
+        """
+        redacted = _redact_args(getattr(request.app.state, "args", None))
+        if request.app.state.jwt_handler is None:
+            return {key: value for key, value in redacted.items() if key in PUBLIC_ARGS}
+        return redacted
 
     _register_extended_process_routes(router)
     _register_sort_route(router)
@@ -522,8 +560,9 @@ def _redact_args(args: argparse.Namespace | None) -> dict[str, Any]:
     was already at ruff's complexity ceiling, so every route added inside it
     pushes it over.
 
-    Redaction is UNCONDITIONAL, matching `/api/5/config` above: v5 applies
-    no auth branch there either.
+    Redaction is UNCONDITIONAL: the route serves this whole dict behind a
+    password and only its `PUBLIC_ARGS` keys without one, as `/api/5/config`
+    serves `as_dict_secure()` or `as_dict_public()`.
 
     `config_path` is redacted (see `_SENSITIVE_ARGS`) even though `/config`
     already serves the merged configuration's *contents* to unauthenticated

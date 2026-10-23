@@ -152,6 +152,10 @@ Security (post-cutover audit of 2026-10-17):
   (PBKDF2-SHA256, 600 000 iterations, a 32-byte key): the server no longer does
   four times the work of an attacker testing a candidate. The ``<salt>$<hex>``
   hashes of 5.0.0b1 are still accepted
+* Without a password, ``/api/5/args`` only returns the flags the WebUI reads
+  (``--fahrenheit``, ``--percpu``, ``--hide-public-info``...); the whole
+  (redacted) argument list, export file paths and process filter included,
+  needs a password
 
 Special notes for package maintainers:
 

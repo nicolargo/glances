@@ -1018,13 +1018,18 @@ def _make_app_with_args(config, store, args):
     return build_app(config=config, store=store, alerts=None, args=args)
 
 
+# The whole (redacted) namespace needs a password: without one the route
+# serves `PUBLIC_ARGS` only (B-12, below).
+_AUTH = _basic_header("glances", "hunter2")
+
+
 def test_args_returns_the_argument_namespace(config_factory, store):
-    config = config_factory()
+    config = config_factory(password=hash_password("hunter2"))
     args = argparse.Namespace(port=61208, bind="127.0.0.1", server=True)
     app = _make_app_with_args(config, store, args)
 
     with TestClient(app) as client:
-        response = client.get("/api/5/args")
+        response = client.get("/api/5/args", headers=_AUTH)
 
     assert response.status_code == 200
     assert response.json() == {"port": 61208, "bind": "127.0.0.1", "server": True}
@@ -1033,12 +1038,12 @@ def test_args_returns_the_argument_namespace(config_factory, store):
 def test_args_redacts_credentials_embedded_in_a_value(config_factory, store):
     """CVE-2026-68520 is a VALUE-level bypass: a credential inside a URL
     survives any key-name check. Asserted on the value, not on a key name."""
-    config = config_factory()
+    config = config_factory(password=hash_password("hunter2"))
     args = argparse.Namespace(export_url="http://alice:s3cr3t@influx.example:8086")
     app = _make_app_with_args(config, store, args)
 
     with TestClient(app) as client:
-        payload = client.get("/api/5/args").json()
+        payload = client.get("/api/5/args", headers=_AUTH).json()
 
     assert "s3cr3t" not in payload["export_url"]
     assert "alice" not in payload["export_url"]
@@ -1046,12 +1051,12 @@ def test_args_redacts_credentials_embedded_in_a_value(config_factory, store):
 
 
 def test_args_redacts_a_secret_key_name(config_factory, store):
-    config = config_factory()
+    config = config_factory(password=hash_password("hunter2"))
     args = argparse.Namespace(some_token="abcdef", port=61208)
     app = _make_app_with_args(config, store, args)
 
     with TestClient(app) as client:
-        payload = client.get("/api/5/args").json()
+        payload = client.get("/api/5/args", headers=_AUTH).json()
 
     assert payload["some_token"] == "***"
     assert payload["port"] == 61208
@@ -1074,12 +1079,12 @@ def test_args_redacts_the_config_file_path(config_factory, store):
     """The config file PATH discloses the local username and directory layout,
     which the config CONTENTS served by /api/5/config do not. v4 redacts its
     equivalent (`conf_file`); `_secure_value()` alone does not catch it."""
-    config = config_factory()
+    config = config_factory(password=hash_password("hunter2"))
     args = argparse.Namespace(config_path="/home/alice/.config/glances/glances.conf")
     app = _make_app_with_args(config, store, args)
 
     with TestClient(app) as client:
-        payload = client.get("/api/5/args").json()
+        payload = client.get("/api/5/args", headers=_AUTH).json()
 
     assert payload["config_path"] == "***"
     assert "alice" not in payload["config_path"]
@@ -1087,12 +1092,62 @@ def test_args_redacts_the_config_file_path(config_factory, store):
 
 def test_args_redacts_the_username(config_factory, store):
     """v4 `test_api_secure`: `-u` names the account a password opens."""
-    app = _make_app_with_args(config_factory(), store, argparse.Namespace(username="alice"))
+    config = config_factory(password=hash_password("hunter2"))
+    app = _make_app_with_args(config, store, argparse.Namespace(username="alice"))
 
     with TestClient(app) as client:
-        payload = client.get("/api/5/args").json()
+        payload = client.get("/api/5/args", headers=_AUTH).json()
 
     assert payload["username"] == "***"
+
+
+def test_args_without_a_password_serves_only_the_keys_the_webui_reads(config_factory, store):
+    """Audit 2026-10-17, B-12: 69 keys were served unauthenticated, absolute
+    paths (`export_csv_file`, `export_graph_path`) and the process filter the
+    operator typed among them. The WebUI reads a handful of display flags."""
+    from glances.main import build_parser
+    from glances.routes import PUBLIC_ARGS
+
+    args = argparse.Namespace(
+        fahrenheit=True,
+        hide_public_info=False,
+        percpu=True,
+        export_csv_file="/home/alice/out.csv",
+        config_path="/home/alice/glances.conf",
+        process_filter=".*ssh.*",
+        port=61208,
+    )
+    with TestClient(_make_app_with_args(config_factory(), store, args)) as client:
+        assert client.get("/api/5/args").json() == {"fahrenheit": True, "hide_public_info": False, "percpu": True}
+
+    real = build_parser().parse_args(["-s", "--fahrenheit"])
+    with TestClient(_make_app_with_args(config_factory(), store, real)) as client:
+        payload = client.get("/api/5/args").json()
+    assert set(payload) <= PUBLIC_ARGS
+    assert payload["fahrenheit"] is True and payload["percpu"] is False
+    assert "export_csv_file" not in payload and "config_path" not in payload and "process_filter" not in payload
+
+
+def test_public_args_cover_every_key_the_webui_reads():
+    """Drift guard: a `serverArgs.<key>` read, a hotkey `flag` or a startup
+    SHOW/HIDE flag added to the WebUI must be served without a password."""
+    import re
+    from pathlib import Path
+
+    import glances
+    from glances.routes import PUBLIC_ARGS
+
+    js_dir = Path(glances.__file__).parent / "outputs" / "static" / "js"
+    read: set[str] = set()
+    for source in [*js_dir.glob("*.vue"), *js_dir.glob("*.js")]:
+        text = source.read_text(encoding="utf-8")
+        read |= set(re.findall(r"serverArgs\??\.([A-Za-z_]+)", text))
+        read |= set(re.findall(r"flag: \"([a-z_]+)\"", text))
+        startup = re.search(r"STARTUP_HIDE_KEYS = \{(.*?)\};", text, re.S)
+        if startup:
+            read |= set(re.findall(r"(\w+): \[", startup.group(1)))
+    assert read, "guard: the sources must be found"
+    assert read <= PUBLIC_ARGS, read - PUBLIC_ARGS
 
 
 def test_args_matches_the_real_argument_set(config_factory, store):
@@ -1109,12 +1164,12 @@ def test_args_matches_the_real_argument_set(config_factory, store):
     import glances.main as glances_main
     from glances.main import build_parser
 
-    config = config_factory()
+    config = config_factory(password=hash_password("hunter2"))
     args = build_parser().parse_args(["-s"])
     app = _make_app_with_args(config, store, args)
 
     with TestClient(app) as client:
-        payload = client.get("/api/5/args").json()
+        payload = client.get("/api/5/args", headers=_AUTH).json()
 
     expected = {
         "api_doc",
