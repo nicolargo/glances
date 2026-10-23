@@ -140,6 +140,12 @@ Security (post-cutover audit of 2026-10-17):
   are followed. The TUI and Web UI browsers list a discovered server as
   ``<name> (zeroconf <address>)``, and the password prompt names the address
   and warns before sending it over clear HTTP
+* ``-c`` and ``--browser``: a server's answer is read in a stream, cut at 32 MiB
+  (100 KiB of gzip inflated to 200 MiB in memory) and within one deadline (a
+  body dripped byte by byte never timed out); a body that is not JSON, too
+  deep, or a token that is not one, is reported instead of stopping the
+  client, and one server's malformed ``_levels`` no longer ends the browser's
+  polling round for the servers after it
 * A ``-C`` path that does not exist stops Glances instead of starting with the
   defaults (and without the password that file carried)
 * ``/openapi.json`` is served only when ``api_doc`` is on
