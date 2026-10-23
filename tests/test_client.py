@@ -218,10 +218,18 @@ def test_a_body_that_is_not_json_is_not_a_glances_server():
         _connection(session).get_json("/status")
 
 
-def test_json_too_deep_for_the_decoder_is_not_a_glances_server():
-    """`[[[[...` 100 000 deep: json's RecursionError escaped `response.json()`."""
+def test_json_too_deep_for_the_decoder_is_not_a_glances_server(monkeypatch):
+    """A decoder failure that is not a ValueError (json's RecursionError on
+    `[[[[...` with the 3.13 decoder) escaped `response.json()`. The depth the
+    decoder tolerates depends on the Python version (3.14 decodes 100 000
+    levels), so the failure is simulated."""
     session = _FakeSession()
-    session.routes["/status"] = b"[" * 100_000 + b"]" * 100_000
+    session.routes["/status"] = b"[" * 1_000 + b"]" * 1_000
+
+    def too_deep(_data):
+        raise RecursionError("maximum recursion depth exceeded")
+
+    monkeypatch.setattr(client.json, "loads", too_deep)
     with pytest.raises(NotAGlancesServer, match="RecursionError"):
         _connection(session).get_json("/status")
 
