@@ -197,3 +197,32 @@ def test_a_template_needs_fetch():
 
     with pytest.raises(SystemExit):
         validate_args(build_parser().parse_args(["--fetch-template", "t.jinja"]))
+
+
+# ------------------------------------- security audit 2026-10-17 (B-15, I-8)
+
+
+def test_control_characters_in_a_value_are_neutralised_but_colours_kept():
+    """A process name wrote `\\x1b]0;PWNED\\x07` raw; the SGR codes `ui` paints stay."""
+    gl = SimpleNamespace(name="bash\x1b]0;PWNED\x07\x1b[2J\x7f\x9b")
+    assert render("{{ gl.name }}\n{{ ui.title('T') }}", gl, FetchUI(gl, color=True)) == (
+        "bash?]0;PWNED??[2J??\n\x1b[1mT\x1b[0m"
+    )
+
+
+def test_a_template_cannot_escape_the_sandbox(gl):
+    import jinja2
+
+    with pytest.raises(jinja2.exceptions.SecurityError):
+        render("{{ ''.__class__.__mro__ }}", gl, FetchUI(gl, color=False))
+    with pytest.raises(jinja2.exceptions.SecurityError):
+        render("{{ ui.__init__.__globals__['os'].getuid() }}", gl, FetchUI(gl, color=False))
+
+
+def test_a_sandbox_refusal_is_reported_like_any_template_error(tmp_path):
+    template = tmp_path / "evil.jinja"
+    template.write_text("{{ ''.__class__.__mro__ }}")
+    out, err = io.StringIO(), io.StringIO()
+    assert fetch.run(None, str(template), out=out, err=err, wait=0) == 2
+    assert "SecurityError" in err.getvalue()
+    assert out.getvalue() == ""

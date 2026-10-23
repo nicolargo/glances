@@ -107,6 +107,12 @@ if LINUX or BSD or SUNOS or MACOS:
 else:
     ctx_mp_fork = multiprocessing.get_context()
 
+# C0 control characters, DEL and C1, each replaced by '?': a process name, a
+# mount point or a command written raw to a terminal by the text outputs
+# (--stdout, --stdout-csv, --fetch) could retitle it or clear the screen
+# (security audit 2026-10-17, B-15). The TUI keeps its own table.
+CONTROL_CHARS_TO_QUESTION_MARK = dict.fromkeys([*range(0x20), 0x7F, *range(0x80, 0xA0)], "?")
+
 ###################
 # GLOBALS FUNCTIONS
 ###################

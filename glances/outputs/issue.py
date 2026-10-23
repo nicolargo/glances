@@ -38,23 +38,36 @@ from typing import Any, TextIO
 
 import psutil
 
+from glances.secure import secure_option
+
 logger = logging.getLogger(__name__)
 
 REDACTED = "***"
 
 # Per plugin, the fields that identify a host, a network or a person
-# (the list approved on 2026-09-26). Command lines are handled on their own:
-# the program name stays, its arguments go.
+# (the list approved on 2026-09-26, completed after the security audit of
+# 2026-10-17, B-16: a container command carries its `--password=`, an AMP
+# result whatever the command printed). Command lines are handled on their
+# own: the program name stays, its arguments go.
 _REDACT_FIELDS: dict[str, frozenset[str]] = {
     "system": frozenset({"hostname"}),
     "ip": frozenset({"address", "gateway", "public_address", "public_info_human"}),
     "cloud": frozenset({"id", "name"}),
-    "ports": frozenset({"host"}),
+    "ports": frozenset({"host", "url", "description"}),
     "processlist": frozenset({"username"}),
     "programlist": frozenset({"username"}),
     "folders": frozenset({"path"}),
+    "containers": frozenset({"name", "command", "engine_url"}),
+    "vms": frozenset({"name"}),
+    "wifi": frozenset({"ssid"}),
+    "fs": frozenset({"mnt_point"}),
+    "amps": frozenset({"result"}),
 }
 _CMDLINE_PLUGINS = frozenset({"processlist", "programlist"})
+
+# The query and fragment of an URL quoted in a logged warning (`public_api`
+# with a `?token=` query, B-16); its `user:password@` part is left to secure_option.
+_URL_QUERY_RE = re.compile(r"(://[^\s?#]*)[?#]\S*")
 
 # pyproject extras that only matter when configured, or that aggregate others.
 _SKIPPED_EXTRAS = frozenset({"all", "export", "dev"})
@@ -103,6 +116,11 @@ def redact(plugin_name: str, payload: Any) -> Any:
     if isinstance(payload, list):
         return [one(item) for item in payload]
     return one(payload)
+
+
+def redact_warning(text: str) -> str:
+    """A warning line with the credentials of any URL it quotes replaced."""
+    return _URL_QUERY_RE.sub(rf"\1?{REDACTED}", secure_option("url", text))
 
 
 def excerpt(payload: Any) -> Any:
@@ -296,7 +314,7 @@ def render(env: Environment, results: list[PluginResult], warnings: list[str]) -
         lines.append(f"| {', '.join(disabled)} | disabled | | |")
     if warnings:
         lines += ["", f"**Warnings logged during the run ({len(warnings)})**", ""]
-        lines += [f"- {_cell(w)}" for w in warnings]
+        lines += [f"- {_cell(redact_warning(w))}" for w in warnings]
     payloads = {r.name: excerpt(redact(r.name, r.payload)) for r in sorted(measured, key=lambda r: r.name) if r.payload}
     lines += [
         "",

@@ -147,6 +147,11 @@ Security (post-cutover audit of 2026-10-17):
 * ``ip`` plugin: the public API client speaks http(s) only, a redirect to
   another scheme (``ftp://``, ``file:``) is refused instead of reaching the
   private network through urllib's default handlers
+* ``--stdout``, ``--stdout-csv`` and ``--fetch`` replace the terminal control
+  characters of a stat value by ``?`` as the TUI does; ``--fetch-template`` is
+  rendered in a Jinja2 sandbox; ``--issue`` also redacts the container names
+  and commands, the ports URLs, VM names, SSIDs, mount points, AMP results and
+  the credentials of URLs quoted in the logged warnings
 
 Special notes for package maintainers:
 
