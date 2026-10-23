@@ -40,7 +40,7 @@ from glances.logger import logger
 DRM_ROOT_FOLDER: str = '/sys/class/drm'
 PROC_ROOT_FOLDER: str = '/proc'
 DEVICE_FOLDER_PATTERN: str = 'card[0-9]'
-HWMON_TEMPERATURE_PATTERN: str = 'hwmon/hwmon[0-9]/temp[0-9]_input'
+HWMON_TEMPERATURE_PATTERN: str = 'hwmon/hwmon[0-9]*/temp[0-9]_input'
 
 SUPPORTED_DRIVERS: set[str] = {'msm', 'panfrost', 'panthor', 'v3d', 'lima', 'etnaviv'}
 
