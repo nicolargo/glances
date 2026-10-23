@@ -878,7 +878,7 @@ def _off_loop_spy(calls: list[bool], real):
 
 
 def test_basic_auth_hashes_off_the_event_loop(config_factory, store, monkeypatch):
-    """PBKDF2 (100k iterations, ~50 ms) on the event loop stalls the API and
+    """PBKDF2 (600k iterations, ~100 ms) on the event loop stalls the API and
     the scheduler, which share that loop — one wrong-password flood freezes
     stats collection. v4 ran the check in a threadpool."""
 

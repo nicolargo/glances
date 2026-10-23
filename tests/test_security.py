@@ -57,7 +57,7 @@ def test_hash_password_explicit_salt_is_deterministic():
     a = hash_password("hunter2", salt="deadbeef")
     b = hash_password("hunter2", salt="deadbeef")
     assert a == b
-    assert a.startswith("deadbeef$")
+    assert a.startswith("pbkdf2_sha256$600000$deadbeef$")
 
 
 def test_verify_password_rejects_malformed_stored():
@@ -72,13 +72,41 @@ def test_verify_password_empty_plaintext_does_not_crash():
     assert verify_password("", stored) is False
 
 
-def test_hash_password_format_is_salt_dollar_hex():
+def test_hash_password_format_names_the_algorithm_and_the_iterations():
+    """B-3: `pbkdf2_sha256$<iterations>$<salt>$<hex>`, a 32-byte key (SHA-256's
+    size: a longer one made the server do several PBKDF2 passes per check)."""
     stored = hash_password("any", salt="abc123")
-    salt, _, digest = stored.partition("$")
-    assert salt == "abc123"
-    # 128 bytes = 256 hex chars.
-    assert len(digest) == 256
+    algorithm, iterations, salt, digest = stored.split("$")
+    assert (algorithm, iterations, salt) == ("pbkdf2_sha256", "600000", "abc123")
+    assert len(digest) == 64
     int(digest, 16)  # raises if not hex
+    assert verify_password("any", stored) and not verify_password("other", stored)
+
+
+def test_verify_password_still_reads_the_hash_format_of_5_0_0b1():
+    """`<salt>$<hex>`, 100 000 iterations, dklen=128: what an operator pasted
+    into glances.conf before the format changed."""
+    import hashlib
+
+    legacy = "abc123$" + hashlib.pbkdf2_hmac("sha256", b"hunter2", b"abc123", 100_000, dklen=128).hex()
+    assert verify_password("hunter2", legacy) is True
+    assert verify_password("hunter3", legacy) is False
+    assert security.is_password_hash(legacy)
+
+
+def test_verify_password_refuses_a_new_format_value_that_is_off():
+    good = hash_password("hunter2", salt="abc123")
+    digest = good.rsplit("$", 1)[1]
+    for bad in (
+        f"pbkdf2_sha512$600000$abc123${digest}",
+        f"pbkdf2_sha256$0$abc123${digest}",
+        f"pbkdf2_sha256$many$abc123${digest}",
+        f"pbkdf2_sha256$600000$${digest}",
+        "pbkdf2_sha256$600000$abc123$",
+        f"pbkdf2_sha256$600000$abc123${digest}$extra",
+    ):
+        assert security.is_password_hash(bad) is False, bad
+        assert verify_password("hunter2", bad) is False, bad
 
 
 # -------------------------------------------------------- JWT

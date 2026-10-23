@@ -538,8 +538,8 @@ def _wire_auth(app: FastAPI, config: GlancesConfig) -> None:
         # Fail closed: `verify_password` answers False to every credential
         # on such a value (security audit 2026-10-17, I-4).
         logger.critical(
-            "[outputs] password is not a hash made by `glances --set-password` (<salt>$<hex digest>): "
-            "every login will be refused"
+            "[outputs] password is not a hash made by `glances --set-password` "
+            "(pbkdf2_sha256$<iterations>$<salt>$<hex digest>): every login will be refused"
         )
 
     username = config.get("outputs", "username", _DEFAULT_USERNAME)

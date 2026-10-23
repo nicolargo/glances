@@ -13,8 +13,12 @@ Two primitives, both kept algorithmically equivalent to v4 (CVE-2026-32596
 "Carry forward"):
 
 - ``hash_password(plain)`` / ``verify_password(plain, stored)`` — PBKDF2-SHA256,
-  100 000 iterations, ``dklen=128``, hex-encoded ``salt$hash`` storage. Salt is
-  a UUID4 hex (matching v4 ``glances/password.py``).
+  stored as ``pbkdf2_sha256$<iterations>$<salt>$<hex>`` (600 000 iterations,
+  ``dklen=32``). The format of 5.0.0b1, ``<salt>$<hex>`` (100 000 iterations,
+  ``dklen=128``), is still read: with ``dklen`` four times SHA-256's output
+  the server did four times the work of an attacker checking one candidate
+  (security audit 2026-10-17, B-3). Salt is a UUID4 hex (matching v4
+  ``glances/password.py``).
 - ``JWTHandler`` — HS256 JWT minting and verification, with ``sub`` / ``exp``
   / ``iat`` / ``iss`` claims. Same algorithm and claim shape as v4
   ``glances/jwt_utils.py``.
@@ -51,13 +55,17 @@ logger = logging.getLogger(__name__)
 
 # ----------------------------------------------------- password hashing
 
-_PBKDF2_ITERATIONS = 100_000
 _PBKDF2_HASH = "sha256"
-_PBKDF2_DKLEN = 128
+_PBKDF2_PREFIX = "pbkdf2_sha256"
+_PBKDF2_ITERATIONS = 600_000
+_PBKDF2_DKLEN = 32
+# The format of 5.0.0b1, `<salt>$<hex>`: still read, no longer written.
+_LEGACY_ITERATIONS = 100_000
+_LEGACY_DKLEN = 128
 
 
 def hash_password(plaintext: str, *, salt: str | None = None) -> str:
-    """Return ``salt$hex(pbkdf2)`` for ``plaintext``.
+    """Return ``pbkdf2_sha256$<iterations>$<salt>$<hex>`` for ``plaintext``.
 
     The salt is a UUID4 hex string when not supplied. Use this function once
     to produce the value placed into ``[outputs] password=`` in
@@ -72,18 +80,28 @@ def hash_password(plaintext: str, *, salt: str | None = None) -> str:
         _PBKDF2_ITERATIONS,
         dklen=_PBKDF2_DKLEN,
     ).hex()
-    return f"{salt}${digest}"
+    return f"{_PBKDF2_PREFIX}${_PBKDF2_ITERATIONS}${salt}${digest}"
 
 
-def _parse_stored(stored: str) -> tuple[str, bytes] | None:
-    """``(salt, digest)`` of a stored ``salt$hex`` hash, ``None`` when malformed."""
-    if not stored or "$" not in stored:
+def _parse_stored(stored: str) -> tuple[str, int, int, bytes] | None:
+    """``(salt, iterations, dklen, digest)`` of a stored hash, ``None`` when malformed.
+
+    Both formats: ``pbkdf2_sha256$<iterations>$<salt>$<hex>`` and the
+    ``<salt>$<hex>`` of 5.0.0b1.
+    """
+    fields = stored.split("$") if stored else []
+    if len(fields) == 2:
+        salt, expected = fields
+        iterations, dklen = _LEGACY_ITERATIONS, _LEGACY_DKLEN
+    elif len(fields) == 4 and fields[0] == _PBKDF2_PREFIX and fields[1].isdecimal() and int(fields[1]) > 0:
+        _, iterations, salt, expected = fields
+        iterations, dklen = int(iterations), _PBKDF2_DKLEN
+    else:
         return None
-    salt, expected = stored.split("$", 1)
     if not salt or not expected:
         return None
     try:
-        return salt, bytes.fromhex(expected)
+        return salt, iterations, dklen, bytes.fromhex(expected)
     except ValueError:  # not hex (a non-ASCII value included): never compared
         return None
 
@@ -94,7 +112,7 @@ def is_password_hash(stored: str) -> bool:
 
 
 def verify_password(plaintext: str, stored: str) -> bool:
-    """Constant-time comparison of ``plaintext`` against a ``salt$hex`` hash.
+    """Constant-time comparison of ``plaintext`` against a stored hash (both formats).
 
     Returns ``False`` on any structural problem (missing separator, invalid
     salt, a digest that is not hex) rather than raising — callers should not
@@ -105,13 +123,9 @@ def verify_password(plaintext: str, stored: str) -> bool:
     parsed = _parse_stored(stored)
     if parsed is None:
         return False
-    salt, expected = parsed
+    salt, iterations, dklen, expected = parsed
     candidate = hashlib.pbkdf2_hmac(
-        _PBKDF2_HASH,
-        plaintext.encode("utf-8"),
-        salt.encode("utf-8"),
-        _PBKDF2_ITERATIONS,
-        dklen=_PBKDF2_DKLEN,
+        _PBKDF2_HASH, plaintext.encode("utf-8"), salt.encode("utf-8"), iterations, dklen=dklen
     )
     return hmac.compare_digest(candidate, expected)
 
