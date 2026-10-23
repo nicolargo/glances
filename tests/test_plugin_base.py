@@ -820,6 +820,26 @@ async def test_collection_show_then_hide_combined(tmp_path, monkeypatch, store):
     assert names == ["eth0"]  # wlan0 excluded by show; eth1 excluded by hide
 
 
+@pytest.mark.parametrize(
+    "body",
+    ["[fakecollection]\nhide=ethernet.*\n", "[fakecollection]\nshow=WI-FI\n"],
+)
+async def test_collection_show_hide_ignore_case(tmp_path, monkeypatch, store, body):
+    """v4 parity: show/hide patterns match regardless of case (`plugin/model.py:1062,1077`)."""
+    config = _write_config(tmp_path, monkeypatch, body)
+    plugin = FakeCollectionPlugin(
+        store,
+        config,
+        payload=[
+            {"name": "Ethernet 2", "rx": 100},
+            {"name": "Wi-Fi", "rx": 50},
+        ],
+    )
+    await plugin.update()
+    names = [item["name"] for item in store.get("fakecollection")["data"]]
+    assert names == ["Wi-Fi"]
+
+
 async def test_collection_invalid_regex_is_logged_and_ignored(tmp_path, monkeypatch, store, caplog):
     """An invalid regex pattern is logged and skipped, not raised."""
     config = _write_config(tmp_path, monkeypatch, "[fakecollection]\nhide=[\n")
