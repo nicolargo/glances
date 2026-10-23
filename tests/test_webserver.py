@@ -461,6 +461,7 @@ def test_docs_disabled_by_config(config_factory, store):
     with TestClient(app) as client:
         assert client.get("/docs").status_code == 404
         assert client.get("/redoc").status_code == 404
+        assert client.get("/openapi.json").status_code == 404, "the schema goes with the doc pages (W-1)"
 
 
 # ------------------------------------------------------------- attach_mcp (G3-MCP Task 2)

@@ -150,6 +150,9 @@ def build_app(
         version=__apiversion__,
         docs_url="/docs" if api_doc_enabled else None,
         redoc_url="/redoc" if api_doc_enabled else None,
+        # The schema lists every route and parameter: it goes with the doc pages
+        # (security audit 2026-10-17, W-1).
+        openapi_url="/openapi.json" if api_doc_enabled else None,
         lifespan=lifespan,
     )
     app.state.config = config

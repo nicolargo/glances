@@ -662,3 +662,27 @@ def test_unknown_sensors_threshold_key_still_warns(tmp_path, monkeypatch, store,
     warnings = _threshold_warnings(caplog)
     assert len(warnings) == 1
     assert "nonsense_careful" in warnings[0]
+
+
+def test_hddtemp_gives_up_on_a_silent_daemon():
+    """Security audit 2026-10-17, A5: no timeout, no size cap, so a local user
+    on the unprivileged port 7634 froze the whole sensors collection."""
+    import socket
+    import time
+    from types import SimpleNamespace
+
+    from glances.plugins.sensors.sensor.glances_hddtemp import GlancesGrabHDDTemp
+
+    listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    listener.bind(("127.0.0.1", 0))
+    listener.listen(1)
+    args = SimpleNamespace(disable_hddtemp=False)
+    grabber = GlancesGrabHDDTemp(host="127.0.0.1", port=listener.getsockname()[1], args=args)
+    grabber.TIMEOUT = 0.2
+    started = time.monotonic()
+    try:
+        assert grabber.fetch() == ""
+    finally:
+        listener.close()
+    assert time.monotonic() - started < 2
+    assert args.disable_hddtemp is True, "not polled again"

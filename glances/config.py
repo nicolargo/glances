@@ -197,7 +197,9 @@ class GlancesConfig:
 
         Honours ``-C`` first (any path, no search); otherwise walks the
         v4 search path (user → system) and returns the first existing
-        entry. A non-existing ``-C`` path logs a WARNING; missing search
+        entry. A non-existing ``-C`` path is fatal: the file the operator
+        named may hold the ``[outputs] password``, and a typo must not start
+        the server open (security audit 2026-10-17, A10). Missing search
         entries are silent (operating without a config file is valid —
         the DEFAULTS layer suffices).
         """
@@ -205,11 +207,7 @@ class GlancesConfig:
             path = Path(self._cli_config_path)
             if path.is_file():
                 return path
-            logger.warning(
-                "Config file %s (from -C / --config) does not exist — using DEFAULTS only.",
-                path,
-            )
-            return None
+            raise ConfigFileError(f"Config file {path} (from -C / --config) does not exist")
 
         for path in self._search_paths():
             if path.is_file():

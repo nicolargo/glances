@@ -177,15 +177,13 @@ def test_cli_path_does_not_merge_with_other_files(env: Path) -> None:
     assert config.get("memswap", "careful", "absent") == "absent"
 
 
-def test_missing_cli_path_falls_back_to_defaults_only(env: Path, caplog: pytest.LogCaptureFixture) -> None:
-    """A non-existent ``-C`` path logs a WARNING and uses DEFAULTS only —
-    does NOT silently fall back to the search path."""
-    write(xdg_path(env), "[global]\nrefresh_time = 7\n")  # exists but must be ignored
-    with caplog.at_level("WARNING"):
-        config = GlancesConfig(cli_config_path=str(env / "nonexistent.conf"))
-    # Default value, not the XDG one.
-    assert config.get("global", "refresh_time", 999) == 2
-    assert any("does not exist" in r.message for r in caplog.records)
+def test_missing_cli_path_is_fatal(env: Path) -> None:
+    """A non-existent ``-C`` path stops Glances (security audit 2026-10-17, A10):
+    it used to log a WARNING and start with DEFAULTS only, so a typo in a unit
+    file served the API without the password that file carried."""
+    write(xdg_path(env), "[global]\nrefresh_time = 7\n")  # exists but must not be read either
+    with pytest.raises(ConfigFileError, match="does not exist"):
+        GlancesConfig(cli_config_path=str(env / "nonexistent.conf"))
 
 
 def test_missing_files_silently_skipped(env: Path) -> None:

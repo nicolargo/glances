@@ -27,8 +27,9 @@ Glances loads **exactly one** configuration file:
 Files are not merged: a user file hides the system-wide one entirely. Running
 without any configuration file is valid, the built-in defaults are used.
 
-A file that exists but cannot be read or parsed stops Glances: it is never
-skipped silently (it could hold the ``[outputs] password``).
+A file that exists but cannot be read or parsed stops Glances, and so does a
+``-C`` path that does not exist: it is never skipped silently (it could hold
+the ``[outputs] password``).
 
 Any option can then be overridden with an environment variable named
 ``GLANCES_<SECTION>__<KEY>`` (note the double underscore), for example

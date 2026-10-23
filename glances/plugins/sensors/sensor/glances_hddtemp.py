@@ -18,6 +18,10 @@ from glances.logger import logger
 class GlancesGrabHDDTemp:
     """Get hddtemp stats using a socket connection."""
 
+    # Seconds to connect and to wait for each read; bytes kept at most.
+    TIMEOUT = 2.0
+    MAX_BYTES = 64 * 1024
+
     def __init__(self, host='127.0.0.1', port=7634, args=None):
         """Init hddtemp stats."""
         self.args = args
@@ -79,12 +83,17 @@ class GlancesGrabHDDTemp:
 
     def fetch(self):
         """Fetch the data from hddtemp daemon."""
-        # Taking care of sudden deaths/stops of hddtemp daemon
+        # Taking care of sudden deaths/stops of hddtemp daemon.
+        # A time limit and a size cap: the port is unprivileged, so when no
+        # daemon runs, a local user can take it and would otherwise freeze the
+        # whole sensors collection or grow this process (security audit
+        # 2026-10-17, A5).
+        sck = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sck.settimeout(self.TIMEOUT)
         try:
-            sck = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sck.connect((self.host, self.port))
             data = b''
-            while True:
+            while len(data) < self.MAX_BYTES:
                 received = sck.recv(4096)
                 if not received:
                     break
