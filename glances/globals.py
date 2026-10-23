@@ -117,6 +117,27 @@ def printandflush(string):
     print(string, flush=True)
 
 
+def trusted_by_root(path):
+    """Return True when the current process may trust the file or folder `path`.
+
+    Always True when not running as root (or when the platform has no
+    `geteuid`): a user's files are their own. As root, True only when `path`
+    is owned by root (or the effective user) and writable neither by its
+    group nor by others: under `sudo -E` (or a sudo that keeps `HOME` and the
+    `XDG_*` variables) the user paths still point to the invoking user's
+    folders, where a planted configuration or log folder would otherwise be
+    read, executed or written to as root (security audit 2026-10-17, B-9, X-2).
+    """
+    geteuid = getattr(os, 'geteuid', None)
+    if geteuid is None or geteuid() != 0:
+        return True
+    try:
+        st = os.stat(path)
+    except OSError:
+        return False
+    return st.st_uid in (0, geteuid()) and st.st_mode & 0o022 == 0
+
+
 def to_ascii(s):
     """Convert the bytes string to a ASCII string
     Useful to remove accent (diacritics)"""

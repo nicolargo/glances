@@ -141,6 +141,9 @@ Security (post-cutover audit of 2026-10-17):
 * An on-alert command's redirection target is written without following a
   symbolic link, a ``{{mustache}}`` value in it may only pick a file name (no
   ``/``, ``..`` or NUL), and ``>>`` (append) is accepted
+* Running as root, a user configuration file, a log folder or a ``LOG_CFG``
+  file not owned by root or writable by others is ignored (``sudo -E`` keeps
+  the invoking user's ``HOME``); the log file is never opened through a link
 
 Special notes for package maintainers:
 

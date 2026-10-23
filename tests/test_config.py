@@ -904,3 +904,70 @@ def test_shipped_conf_documents_the_api_doc_gate():
     outputs_section = text.split("[outputs]", 1)[1].split("\n[", 1)[0]
     assert "#api_doc=" in outputs_section, "api_doc must be documented, commented out"
     assert "\napi_doc=" not in outputs_section, "api_doc must NOT be active by default"
+
+
+# ============================================================================
+# Files trusted by root (security audit 2026-10-17, B-9)
+# ============================================================================
+
+
+def test_untrusted_user_config_is_skipped_as_root(env: Path, monkeypatch: pytest.MonkeyPatch, caplog) -> None:
+    """Under `sudo -E`, the XDG file is the invoking user's: its `*_action`
+    commands would run as root. It is skipped, the system file is used."""
+    import glances.config as config_module
+
+    write(etc_path(env), "[global]\nrefresh_time = 5\n")
+    write(xdg_path(env), "[global]\nrefresh_time = 7\n")
+    monkeypatch.setattr(config_module, "trusted_by_root", lambda path: path != xdg_path(env))
+    with caplog.at_level("WARNING"):
+        cfg = GlancesConfig()
+    assert cfg.get("global", "refresh_time", 999) == 5
+    assert cfg.loaded_sources == [etc_path(env)]
+    assert str(xdg_path(env)) in caplog.text
+
+
+def test_cli_and_system_config_skip_the_ownership_rule(env: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import glances.config as config_module
+
+    monkeypatch.setattr(config_module, "trusted_by_root", lambda path: False)
+    write(etc_path(env), "[global]\nrefresh_time = 5\n")
+    assert GlancesConfig().get("global", "refresh_time", 999) == 5
+    custom = env / "custom.conf"
+    write(custom, "[global]\nrefresh_time = 3\n")
+    assert GlancesConfig(cli_config_path=str(custom)).get("global", "refresh_time", 999) == 3
+
+
+class TestTrustedByRoot:
+    """`glances.globals.trusted_by_root`: the owner and mode rule itself."""
+
+    def test_not_root_trusts_everything(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        from glances.globals import trusted_by_root
+
+        monkeypatch.setattr(os, "geteuid", lambda: 1000, raising=False)
+        path = tmp_path / "f"
+        path.write_text("")
+        path.chmod(0o666)
+        assert trusted_by_root(path) is True
+
+    @pytest.mark.skipif(os.name != "posix" or os.geteuid() != 0, reason="needs root to chown")
+    def test_root_refuses_a_file_owned_by_another_user(self, tmp_path: Path) -> None:
+        from glances.globals import trusted_by_root
+
+        path = tmp_path / "f"
+        path.write_text("")
+        path.chmod(0o600)
+        assert trusted_by_root(path) is True
+        os.chown(path, 65534, 65534)
+        assert trusted_by_root(path) is False
+
+    @pytest.mark.skipif(os.name != "posix" or os.geteuid() != 0, reason="needs root")
+    def test_root_refuses_a_file_writable_by_others(self, tmp_path: Path) -> None:
+        from glances.globals import trusted_by_root
+
+        path = tmp_path / "f"
+        path.write_text("")
+        path.chmod(0o666)
+        assert trusted_by_root(path) is False
+        path.chmod(0o644)
+        assert trusted_by_root(path) is True
+        assert trusted_by_root(tmp_path / "missing") is False

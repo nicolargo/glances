@@ -29,7 +29,10 @@ without any configuration file is valid, the built-in defaults are used.
 
 A file that exists but cannot be read or parsed stops Glances, and so does a
 ``-C`` path that does not exist: it is never skipped silently (it could hold
-the ``[outputs] password``).
+the ``[outputs] password``). When Glances runs as root, a user configuration
+file that is not owned by root, or that is writable by its group or others,
+is ignored with a warning (``sudo -E`` keeps the invoking user's ``HOME``) and
+the system-wide file is used instead.
 
 Any option can then be overridden with an environment variable named
 ``GLANCES_<SECTION>__<KEY>`` (note the double underscore), for example

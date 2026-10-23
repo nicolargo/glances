@@ -60,6 +60,8 @@ import re
 from pathlib import Path
 from typing import Any, TypeVar
 
+from glances.globals import trusted_by_root
+
 logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
@@ -219,7 +221,10 @@ class GlancesConfig:
         named may hold the ``[outputs] password``, and a typo must not start
         the server open (security audit 2026-10-17, A10). Missing search
         entries are silent (operating without a config file is valid —
-        the DEFAULTS layer suffices).
+        the DEFAULTS layer suffices). As root, a user file not owned by
+        root or writable by others is skipped with a warning: under
+        ``sudo -E`` it is the invoking user's file, and its ``*_action``
+        commands would run as root (security audit 2026-10-17, B-9).
         """
         if self._cli_config_path:
             path = Path(self._cli_config_path)
@@ -228,8 +233,15 @@ class GlancesConfig:
             raise ConfigFileError(f"Config file {path} (from -C / --config) does not exist")
 
         for path in self._search_paths():
-            if path.is_file():
-                return path
+            if not path.is_file():
+                continue
+            if path != self.SYSTEM_CONFIG_PATH and not trusted_by_root(path):
+                logger.warning(
+                    "Config file %s ignored: running as root, it must be owned by root and not writable by others",
+                    path,
+                )
+                continue
+            return path
         return None
 
     def _search_paths(self) -> list[Path]:
