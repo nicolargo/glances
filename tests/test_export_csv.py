@@ -60,6 +60,31 @@ class FakeCollectionPlugin(GlancesPluginBase[list]):
         return [{"name": "eth0", "rx": 10}]
 
 
+class FakeFormulaPlugin(GlancesPluginBase[dict]):
+    """Text fields drawn from monitored data, as a process name or a mount point are."""
+
+    plugin_name = "fakeformula"
+    IS_COLLECTION = False
+    fields_description = {
+        "cmdline": {"description": "c", "unit": "string"},
+        "mnt_point": {"description": "m", "unit": "string"},
+        "tab": {"description": "t", "unit": "string"},
+        "delta": {"description": "d", "unit": "number"},
+        "neg_text": {"description": "n", "unit": "string"},
+        "plain": {"description": "p", "unit": "string"},
+    }
+
+    async def _grab_stats(self) -> dict:
+        return {
+            "cmdline": '=HYPERLINK("http://evil.example")',
+            "mnt_point": "+cmd|' /C calc'!A0",
+            "tab": "\t@SUM(1)",
+            "delta": -5,
+            "neg_text": "-1+1",
+            "plain": "sda1",
+        }
+
+
 def make_config(sections: dict) -> GlancesConfig:
     config = GlancesConfig()
     config._merged = {s: dict(opts) for s, opts in sections.items()}
@@ -92,6 +117,34 @@ async def test_csv_writes_header_then_one_row_per_cycle(tmp_path):
     assert rows[0] == ["timestamp", "fakescalar.percent", "fakescalar.total"]
     assert len(rows) == 3  # header + 2 rows (the very first cycle was the warm-up deferral)
     assert rows[1][1:] == ["50.0", "1024"]
+
+
+@pytest.mark.asyncio
+async def test_csv_neutralises_spreadsheet_formulas_in_text_cells_only(tmp_path):
+    """Audit R-5: a monitored name starting with `= + - @ \\t \\r` is a formula
+    to a spreadsheet. Numbers are written as numbers: `-5` stays `-5`."""
+    from glances.exports.glances_csv.export import Export
+
+    store = StatsStore()
+    config = make_config({})
+    plugin = FakeFormulaPlugin(store, config)
+    await plugin.update()
+
+    path = tmp_path / "glances.csv"
+    exporter = Export(config, make_args(path))
+    exporter.update([plugin])  # warm-up deferral
+    exporter.update([plugin])
+    exporter.exit()
+
+    header, row = list(csv_module.reader(path.open()))
+    cells = dict(zip(header, row))
+    assert cells["fakeformula.cmdline"] == "'=HYPERLINK(\"http://evil.example\")"
+    assert cells["fakeformula.mnt_point"] == "'+cmd|' /C calc'!A0"
+    assert cells["fakeformula.tab"] == "'\t@SUM(1)"
+    assert cells["fakeformula.delta"] == "-5"
+    assert cells["fakeformula.neg_text"] == "'-1+1"
+    assert cells["fakeformula.plain"] == "sda1"
+    assert not any(cell.startswith("'") for cell in header)
 
 
 @pytest.mark.asyncio

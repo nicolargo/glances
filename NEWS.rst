@@ -146,6 +146,15 @@ Security (post-cutover audit of 2026-10-17):
   deep, or a token that is not one, is reported instead of stopping the
   client, and one server's malformed ``_levels`` no longer ends the browser's
   polling round for the servers after it
+* Exporters: Graphite and StatsD metric paths are filtered to
+  ``[A-Za-z0-9_.-]`` (a newline in a monitored name wrote a second metric);
+  a Prometheus item key is one label value, never re-parsed (``eth0,src:x``
+  overwrote a label, ``a,b`` lost the plugin's cycle); a URL's credentials
+  and query string are removed from an exported configuration value before
+  it is split on ``,``; the RabbitMQ user and password are percent-encoded
+  in the AMQP URL; NATS and restful never log a URL's credentials; a CSV
+  text cell that reads as a spreadsheet formula (``=``, ``+``, ``-``, ``@``,
+  tab, CR) is prefixed with ``'``
 * A ``-C`` path that does not exist stops Glances instead of starting with the
   defaults (and without the password that file carried)
 * ``/openapi.json`` is served only when ``api_doc`` is on

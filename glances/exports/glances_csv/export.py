@@ -43,6 +43,17 @@ if TYPE_CHECKING:
     from glances.config import GlancesConfig
     from glances.plugins.plugin.base import GlancesPluginBase
 
+# A text cell starting with one of these is a formula to a spreadsheet
+# (`=HYPERLINK(...)`, `+cmd|' /C calc'!A0`): a process name or a mount point
+# could carry one (security audit 2026-10-17, R-5). Numbers are written as
+# numbers, so a negative value is never touched.
+_FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r")
+
+
+def _safe_row(row: list[Any]) -> list[Any]:
+    """`row` with every text cell that reads as a formula prefixed by `'`."""
+    return ["'" + cell if isinstance(cell, str) and cell.startswith(_FORMULA_PREFIXES) else cell for cell in row]
+
 
 class Export(GlancesExportBase):
     """Write one CSV row per export cycle."""
@@ -164,7 +175,7 @@ class Export(GlancesExportBase):
                     )
                     self._previous_contributing = contributing
                     return
-                self.writer.writerow(csv_header)
+                self.writer.writerow(_safe_row(csv_header))
                 self.committed_header = list(csv_header)
             else:
                 # Appending to an existing file (issue #1525): treat its
@@ -195,7 +206,7 @@ class Export(GlancesExportBase):
             # matches `committed_header`) rather than corrupting the file.
             return
 
-        self.writer.writerow(csv_data)
+        self.writer.writerow(_safe_row(csv_data))
         self.csv_file.flush()
 
     def _rotate(self, new_header: list[str]) -> bool:
@@ -250,7 +261,7 @@ class Export(GlancesExportBase):
         self.csv_filename = new_path
         self.committed_header = list(new_header)
 
-        self.writer.writerow(new_header)
+        self.writer.writerow(_safe_row(new_header))
         logger.info("Stats exported to CSV file: %s", self.csv_filename)
         return True
 
