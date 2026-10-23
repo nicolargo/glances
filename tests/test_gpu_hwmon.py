@@ -23,7 +23,7 @@ def test_temperature_hwmon_index(tmp_path, index, backend):
     (hwmon / 'temp1_input').write_text('40000')
     (hwmon / 'temp2_input').write_text('60000')
 
-    assert backend.get_temperature(str(device if backend is amd else card)) == 50
+    assert backend.get_temperature(str(device if backend is amd else card)) == 50  # nosec B101
 
 
 @pytest.mark.parametrize('index', [0, 9, 10, 123])
@@ -42,11 +42,11 @@ def test_amd_memory_hwmon_index(tmp_path, index, integrated):
 
     stats = amd.AmdGPU(drm_root_folder=str(tmp_path)).get_device_stats()
 
-    assert len(stats) == 1
-    assert stats[0]['mem'] == (50 if integrated else 20)
-    assert stats[0]['proc'] == 10
+    assert len(stats) == 1  # nosec B101
+    assert stats[0]['mem'] == (50 if integrated else 20)  # nosec B101
+    assert stats[0]['proc'] == 10  # nosec B101
 
 
 @pytest.mark.parametrize('backend', [amd, arm], ids=['amd', 'arm'])
 def test_temperature_without_hwmon(tmp_path, backend):
-    assert backend.get_temperature(str(tmp_path)) is None
+    assert backend.get_temperature(str(tmp_path)) is None  # nosec B101
