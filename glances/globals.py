@@ -562,24 +562,41 @@ def folder_size(path, errno=0):
     errno is set to the error number.
 
     path: <string>
-    errno: <int> Should always be 0 when calling the function"""
+    errno: <int> Should always be 0 when calling the function
+
+    The walk is iterative: a recursive one hit the interpreter's recursion
+    limit at about a thousand nested folders, which any user able to `mkdir`
+    under a watched folder could plant, and the plugin was then disabled on
+    every cycle (security audit 2026-10-17). Links are not followed and each
+    folder is visited once, so a loop ends too."""
     ret_size = 0
     ret_err = errno
-    try:
-        for f in os.scandir(path):
-            if f.is_dir(follow_symlinks=False) and (f.name != '.' or f.name != '..'):
-                ret = folder_size(os.path.join(path, f.name), ret_err)
-                ret_size += ret[0]
-                ret_err = ret[1]
-            else:
-                try:
+    visited = set()
+    stack = [path]
+    root = True
+    while stack:
+        folder = stack.pop()
+        try:
+            with os.scandir(folder) as entries:
+                entries = list(entries)
+        except OSError as e:
+            if root:
+                return 0, e.errno
+            ret_err = e.errno
+            continue
+        root = False
+        for f in entries:
+            try:
+                if f.is_dir(follow_symlinks=False):
+                    st = f.stat(follow_symlinks=False)
+                    if (st.st_dev, st.st_ino) not in visited:
+                        visited.add((st.st_dev, st.st_ino))
+                        stack.append(f.path)
+                else:
                     ret_size += f.stat().st_size
-                except OSError as e:
-                    ret_err = e.errno
-    except (OSError, PermissionError) as e:
-        return 0, e.errno
-    else:
-        return ret_size, ret_err
+            except OSError as e:
+                ret_err = e.errno
+    return ret_size, ret_err
 
 
 def _get_ttl_hash(ttl):

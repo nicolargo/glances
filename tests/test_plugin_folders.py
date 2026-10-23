@@ -293,3 +293,37 @@ def test_unrelated_threshold_key_still_warns(tmp_path, monkeypatch, store, caplo
     warnings = [r.getMessage() for r in caplog.records if "unrecognised threshold key" in r.getMessage()]
     assert len(warnings) == 1
     assert "nonsense_careful" in warnings[0]
+
+
+# ------------------------------------------ security audit 2026-10-17 (folders)
+
+
+def test_folder_size_survives_a_thousand_nested_folders(tmp_path):
+    """1 100 nested folders raised RecursionError and disabled the plugin on every cycle."""
+    import os
+
+    from glances.globals import folder_size
+
+    # One mkdir per level: Path.mkdir(parents=True) and os.makedirs recurse too.
+    deep = str(tmp_path)
+    for _ in range(1100):
+        deep = os.path.join(deep, "d")
+        os.mkdir(deep)
+    with open(os.path.join(deep, "f.bin"), "wb") as f:
+        f.write(b"\x00" * 4096)
+    size, err = folder_size(str(tmp_path))
+    assert size >= 4096
+    assert err == 0
+
+
+def test_folder_size_does_not_follow_links_and_keeps_its_errno_contract(tmp_path):
+    from glances.globals import folder_size
+
+    (tmp_path / "f.bin").write_bytes(b"\x00" * 10)
+    (tmp_path / "loop").symlink_to(tmp_path)
+    size, err = folder_size(str(tmp_path))
+    assert size >= 10
+    assert err == 0
+    size, err = folder_size(str(tmp_path / "missing"))
+    assert size == 0
+    assert err != 0

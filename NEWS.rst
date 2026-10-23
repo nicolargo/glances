@@ -152,6 +152,10 @@ Security (post-cutover audit of 2026-10-17):
   rendered in a Jinja2 sandbox; ``--issue`` also redacts the container names
   and commands, the ports URLs, VM names, SSIDs, mount points, AMP results and
   the credentials of URLs quoted in the logged warnings
+* ``folders``: the size walk is iterative (a thousand nested folders, which
+  any user able to ``mkdir`` under a watched folder can plant, disabled the
+  plugin); the default Podman socket is ``/run/podman/podman.sock`` as root
+  and ``$XDG_RUNTIME_DIR/podman/podman.sock`` otherwise, no longer uid 1000's
 
 Special notes for package maintainers:
 
