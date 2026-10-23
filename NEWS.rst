@@ -156,6 +156,10 @@ Security (post-cutover audit of 2026-10-17):
   any user able to ``mkdir`` under a watched folder can plant, disabled the
   plugin); the default Podman socket is ``/run/podman/podman.sock`` as root
   and ``$XDG_RUNTIME_DIR/podman/podman.sock`` otherwise, no longer uid 1000's
+* Importing Glances no longer pushes the package's ``amps/``, ``plugins/`` and
+  ``exports/`` folders onto ``sys.path`` (``import cpu`` resolved inside
+  Glances); the unused ``system_exec`` helper and the ``uninstall.sh`` script
+  (it needed the removed ``setup.py``; use ``pip uninstall glances``) are gone
 
 Special notes for package maintainers:
 

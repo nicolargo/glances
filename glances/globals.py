@@ -24,7 +24,6 @@ import platform
 import queue
 import re
 import socket
-import subprocess
 import sys
 import weakref
 from collections import OrderedDict
@@ -76,16 +75,6 @@ MACOS = sys.platform.startswith('darwin')
 SUNOS = sys.platform.startswith('sunos')
 WINDOWS = sys.platform.startswith('win')
 WSL = "linux" in platform.system().lower() and "microsoft" in platform.uname()[3].lower()
-
-# Set the AMPs, plugins and export modules path
-work_path = os.path.realpath(os.path.dirname(__file__))
-amps_path = os.path.realpath(os.path.join(work_path, 'amps'))
-plugins_path = os.path.realpath(os.path.join(work_path, 'plugins'))
-exports_path = os.path.realpath(os.path.join(work_path, 'exports'))
-sys_path = sys.path[:]
-sys.path.insert(1, exports_path)
-sys.path.insert(1, plugins_path)
-sys.path.insert(1, amps_path)
 
 # Types
 text_type = str
@@ -182,21 +171,6 @@ def nativestr(s, errors='replace'):
     if isinstance(s, (int, float)):
         return s.__str__()
     return s.decode('utf-8', errors=errors)
-
-
-def system_exec(command, timeout=5):
-    """Execute a system command and return the result as a str.
-
-    A hard timeout (default 5 s) prevents blocking commands from hanging
-    the process indefinitely.
-    """
-    try:
-        res = subprocess.run(command.split(' '), stdout=subprocess.PIPE, timeout=timeout).stdout.decode('utf-8')
-    except subprocess.TimeoutExpired:
-        res = f'ERROR: command `{command}` timed out after {timeout}s'
-    except Exception as e:
-        res = f'ERROR: {e}'
-    return res.rstrip()
 
 
 def subsample(data, sampling):
