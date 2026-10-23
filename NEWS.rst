@@ -138,6 +138,9 @@ Security (post-cutover audit of 2026-10-17):
   process behind; the commands read nothing from the terminal
 * ``--hide-public-info`` also hides the public IP information text, which a
   ``{ip}`` template repeats (GHSA-vg43-q6xr-hp92)
+* An on-alert command's redirection target is written without following a
+  symbolic link, a ``{{mustache}}`` value in it may only pick a file name (no
+  ``/``, ``..`` or NUL), and ``>>`` (append) is accepted
 
 Special notes for package maintainers:
 

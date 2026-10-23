@@ -151,10 +151,12 @@ A few rules keep a command safe when the values come from monitored data
 - A value always lands in exactly one argument of the command, whatever it
   contains, but a value starting with ``-`` is still read as an option by the
   command: write ``ls -- {{{name}}}``.
-- Only one ``>`` redirection per command, and no ``>>``. Write the file in a
-  folder owned by the user running Glances (``/var/log/glances`` in the
-  examples), never in a shared folder such as ``/tmp`` where a symbolic link
-  planted by another user would be followed.
+- One redirection per command, either ``>`` (truncate) or ``>>`` (append).
+  Write the file in a folder owned by the user running Glances
+  (``/var/log/glances`` in the examples), never in a shared folder such as
+  ``/tmp``. The target is never written through a symbolic link, and a
+  rendered value in the target may only pick a file name: the command is
+  refused when it introduces a ``/``, a ``..`` component or a NUL.
 
 With ``--disable-config-exec``, the shell operators (``&&``, ``|``,
 ``>``) of an action command are no longer interpreted, as for the AMP
