@@ -67,7 +67,6 @@ bower_components/
 # Virtual env
 .venv-uv/
 .venv/
-uv.lock
 .python-version
 
 # Test
