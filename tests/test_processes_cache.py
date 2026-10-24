@@ -1,6 +1,7 @@
 """Tests for the GlancesProcesses internal cache eviction."""
 
 import os
+import time
 
 import psutil
 import pytest
@@ -82,3 +83,31 @@ def test_build_process_list_skips_only_the_process_raising_system_error(processe
     pids = {p['pid'] for p in processes.build_process_list(attrs)}
     assert os.getpid() in pids
     assert failing_pid not in pids
+
+
+def _cpu_time(fn):
+    start = time.process_time()
+    fn()
+    return time.process_time() - start
+
+
+def test_process_iter_uses_no_more_cpu_than_psutil_process_iter(processes):
+    attrs = list(dict.fromkeys(processes.get_sorted_attrs() + ['pid'] + processes.get_cached_attrs()))
+
+    def native():
+        return list(psutil.process_iter(attrs=attrs, ad_value=None))
+
+    def helper():
+        return list(GlancesProcesses.process_iter(attrs))
+
+    # Interleave the samples so both iterators see the same system load, and keep
+    # the best sample of each to filter out the scheduler noise
+    native_times, helper_times = [], []
+    for _ in range(5):
+        native_times.append(_cpu_time(native))
+        helper_times.append(_cpu_time(helper))
+    native_time, helper_time = min(native_times), min(helper_times)
+    # The helper runs the same loop as psutil, so the CPU time should be on par.
+    # The margin and the 10 ms slack (timer resolution is about 16 ms on Windows)
+    # keep the test stable on loaded CI runners while still catching a regression.
+    assert helper_time <= native_time * 1.5 + 0.01, (helper_time, native_time)
