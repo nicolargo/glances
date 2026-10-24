@@ -1,5 +1,8 @@
 """Tests for the GlancesProcesses internal cache eviction."""
 
+import os
+
+import psutil
 import pytest
 
 from glances.processes import GlancesProcesses
@@ -49,3 +52,33 @@ def test_io_old_stays_bounded_across_cycles_of_short_lived_pids(processes):
         processes.get_io_counters(proc)
         processes.remove_non_running_procs([proc])
     assert set(processes.io_old) == {199}
+
+
+def _raise_system_error_for(monkeypatch, pid):
+    # psutil 7.2.2 on macOS raises SystemError instead of NoSuchProcess when a
+    # process is reaped while its cmdline is read (see psutil issue #3024)
+    real_as_dict = psutil.Process.as_dict
+
+    def as_dict(self, *args, **kwargs):
+        if self.pid == pid:
+            raise SystemError('<built-in function proc_cmdline> returned a result with an exception set')
+        return real_as_dict(self, *args, **kwargs)
+
+    monkeypatch.setattr(psutil.Process, 'as_dict', as_dict)
+
+
+def test_maybe_add_cached_stats_skips_a_process_raising_system_error(processes, monkeypatch):
+    pid = os.getpid()
+    _raise_system_error_for(monkeypatch, pid)
+    proc = processes.maybe_add_cached_stats(True, processes.get_cached_attrs(), {'pid': pid})
+    assert proc == {'pid': pid}
+    assert pid not in processes.processlist_cache
+
+
+def test_build_process_list_skips_only_the_process_raising_system_error(processes, monkeypatch):
+    failing_pid = os.getppid()
+    _raise_system_error_for(monkeypatch, failing_pid)
+    attrs = processes.get_sorted_attrs() + ['pid'] + processes.get_cached_attrs()
+    pids = {p['pid'] for p in processes.build_process_list(attrs)}
+    assert os.getpid() in pids
+    assert failing_pid not in pids
