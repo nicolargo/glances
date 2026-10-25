@@ -257,7 +257,14 @@ class GlancesExportBase(ABC):
 
         for measurement in keys_list:
             if measurement is not None:
-                fields = {k[len(measurement) + 1 :]: data_dict[k] for k in data_dict if k.startswith(f"{measurement}.")}
+                # `eth0.100.rx` starts with `eth0.` too: leave the columns of a
+                # longer item key (a VLAN next to its parent) to that item.
+                longer = tuple(f"{k}." for k in keys_list if k.startswith(f"{measurement}."))
+                fields = {
+                    k[len(measurement) + 1 :]: data_dict[k]
+                    for k in data_dict
+                    if k.startswith(f"{measurement}.") and not k.startswith(longer)
+                }
             else:
                 fields = data_dict
             # A field with no value is not a measurement. v4 never met this
