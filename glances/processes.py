@@ -529,6 +529,17 @@ class GlancesProcesses:
             and not self.args.disable_cursor
         )
 
+    @staticmethod
+    def process_iter(attrs):
+        # Same as psutil.process_iter(attrs=attrs, ad_value=None) but skip a process raising
+        # SystemError instead of aborting the whole list (see psutil issue #3024 and issue #3811)
+        for p in psutil.process_iter():
+            try:
+                p.info = p.as_dict(attrs=attrs, ad_value=None)
+            except (psutil.NoSuchProcess, SystemError):
+                continue
+            yield p
+
     def build_process_list(self, sorted_attrs):
         # Build the processes stats list (it is why we need psutil>=5.3.0) (see issue #2755)
         processlist = list(
@@ -539,7 +550,7 @@ class GlancesProcesses:
                     and not (MACOS and p.info['name'] == 'kernel_task')
                     and not (self.no_kernel_threads and LINUX and p.info['gids'].real == 0)
                 ),
-                psutil.process_iter(attrs=sorted_attrs, ad_value=None),
+                self.process_iter(sorted_attrs),
             )
         )
 
@@ -628,7 +639,8 @@ class GlancesProcesses:
                     self.processlist_cache[proc['pid']] = psutil.Process(pid=proc['pid']).as_dict(
                         attrs=cached_attrs, ad_value=None
                     )
-                except psutil.NoSuchProcess:
+                except (psutil.NoSuchProcess, SystemError):
+                    # SystemError: see psutil issue #3024
                     pass
             # Add cached value to current stat
             try:
