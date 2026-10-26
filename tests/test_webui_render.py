@@ -1200,7 +1200,8 @@ def test_gpu_several_cards_render_one_row_each_without_temperature():
     payload = _run_render_probe("gpu-three-cards")
     text = payload["pluginText"].get("gpu", "")
 
-    assert "3 GeForce RTX 3080" in text, f"title counts the cards: {text!r}"
+    # "3 GeForce RTX 3080" is 18 chars: capped at 17 on a word boundary.
+    assert text.startswith("3 GeForce RTXGeForce"), f"title counts the cards: {text!r}"
     for expected in ("30%", "45%", "12%"):
         assert expected in text, f"expected every card's proc: {text!r}"
     assert "55C" not in text, f"multi mode shows no temperature: {text!r}"
