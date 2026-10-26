@@ -47,6 +47,7 @@ import { cellClassFor } from "./columns.js";
 import { PLUGIN_PROPS } from "./plugin_props.js";
 
 const HEADER_FALLBACK = "GPU";
+const HEADER_MAX = 17;
 
 function mean(cards, key) {
 	const values = cards.map((c) => c && c[key]).filter((v) => typeof v === "number");
@@ -70,16 +71,20 @@ export default {
 		},
 		// Mirrors _build_header(): one card -> its name; several cards all
 		// reporting the same name -> "{N} {name}"; otherwise "{N} GPUs". The
-		// TUI's 17-character slice is NOT reproduced -- it is a terminal-width
-		// constraint, and the browser truncates with the layout (design spec
-		// §8.4).
+		// TUI's 17-character cap is reproduced, cut on a word boundary so
+		// the header never overflows the stat columns.
 		title() {
 			const cards = this.cards;
 			if (!cards.length) return HEADER_FALLBACK;
 			const first = cards[0].name || HEADER_FALLBACK;
-			if (cards.length === 1) return first;
-			const same = cards.every((c) => (c.name || HEADER_FALLBACK) === first);
-			return same ? `${cards.length} ${first}` : `${cards.length} GPUs`;
+			let header = first;
+			if (cards.length > 1) {
+				const same = cards.every((c) => (c.name || HEADER_FALLBACK) === first);
+				header = same ? `${cards.length} ${first}` : `${cards.length} GPUs`;
+			}
+			if (header.length <= HEADER_MAX) return header;
+			const head = header.slice(0, HEADER_MAX + 1);
+			return head.includes(" ") ? head.slice(0, head.lastIndexOf(" ")) : header.slice(0, HEADER_MAX);
 		},
 		isSummary() {
 			return this.cards.length === 1 || !!this.serverArgs.meangpu;

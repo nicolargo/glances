@@ -50,7 +50,11 @@ def _build_header(cards: list[dict[str, Any]]) -> str:
         header = f"{n} {first}" if same else f"{n} GPUs"
     else:
         header = first
-    return header[:_HEADER_MAX]
+    if len(header) <= _HEADER_MAX:
+        return header
+    # Never cut a word in half: drop the partial trailing word.
+    cut = header[: _HEADER_MAX + 1].rsplit(" ", 1)[0]
+    return cut if " " in header[: _HEADER_MAX + 1] else header[:_HEADER_MAX]
 
 
 def _level_role(levels: dict[str, Any], gpu_id: Any, field: str) -> ColorRole:
