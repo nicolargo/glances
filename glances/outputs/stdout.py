@@ -152,29 +152,36 @@ class CsvRenderer:
         return _csv_line(cells)
 
     def _header(self, plugin: str, attribute: str | None, stat: Any, pk: str | None) -> list[str]:
+        if isinstance(stat, list):
+            # A collection holds one value of the attribute per item, so an
+            # attribute selector narrows the columns rather than collapsing
+            # them: `fs.used` is the `used` column of every mount point.
+            items = [i for i in stat if isinstance(i, dict)]
+            fields = {_item_key(i, pk): [attribute] if attribute is not None else list(i) for i in items}
+            self._keys[plugin] = [_item_key(i, pk) for i in items]
+            self._fields[plugin] = fields
+            return [f"{plugin}.{ident}.{field}" for ident in self._keys[plugin] for field in fields[ident]]
         if attribute is not None:
             return [f"{plugin}.{attribute}"]
         if isinstance(stat, dict):
             return [f"{plugin}.{k}" for k in stat]
-        if isinstance(stat, list):
-            items = [i for i in stat if isinstance(i, dict)]
-            self._keys[plugin] = [_item_key(i, pk) for i in items]
-            self._fields[plugin] = {_item_key(i, pk): list(i) for i in items}
-            return [f"{plugin}.{_item_key(i, pk)}.{field}" for i in items for field in i]
         return [plugin]
 
     def _data(self, plugin: str, attribute: str | None, stat: Any, pk: str | None) -> list[str]:
-        if attribute is not None:
-            return [str(stat.get(attribute, _NA)) if isinstance(stat, dict) else _NA]
-        if isinstance(stat, dict):
-            return [str(v) for v in stat.values()]
         if isinstance(stat, list):
+            # The columns locked at header time drive the row, so an attribute
+            # selector needs no special case here: `_fields` already holds the
+            # one field it asked for.
             current = {_item_key(i, pk): i for i in stat if isinstance(i, dict)}
             return [
                 str(current.get(ident, {}).get(field, _NA))
                 for ident in self._keys.get(plugin, [])
                 for field in self._fields.get(plugin, {}).get(ident, [])
             ]
+        if attribute is not None:
+            return [str(stat.get(attribute, _NA)) if isinstance(stat, dict) else _NA]
+        if isinstance(stat, dict):
+            return [str(v) for v in stat.values()]
         return [str(stat)]
 
 
