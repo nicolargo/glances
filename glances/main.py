@@ -53,12 +53,13 @@ from typing import TYPE_CHECKING, Any
 
 import glances.exports as _exports_pkg
 import glances.plugins as _plugins_pkg
-from glances import __version__
+from glances import __apiversion__, __version__, psutil_version
 from glances.actions import discover_actions
 from glances.alerts import GlancesAlerts
 from glances.config import ConfigFileError, GlancesConfig
 from glances.exports.export_base import GlancesExportBase
 from glances.history import HistoryStore, resolve_history_size
+from glances.logger import LOG_FILENAME
 from glances.plugins.plugin.base import GlancesPluginBase
 from glances.processes import glances_processes, sort_processes_stats_list
 from glances.scheduler import AsyncScheduler
@@ -137,6 +138,22 @@ def open_web_ui(host: str, port: int, scheme: str = "http") -> None:
         webbrowser.open(f"{scheme}://{target}:{port}/", new=2, autoraise=True)
     except webbrowser.Error as exc:
         logger.warning("--open-web-browser: could not open a browser (%s)", exc)
+
+
+class _VersionAction(argparse.Action):
+    """`-V`: print the version block as is (argparse's own `version` action re-wraps it)."""
+
+    def __init__(self, option_strings, dest=argparse.SUPPRESS, default=argparse.SUPPRESS, help=None):
+        super().__init__(option_strings, dest=dest, default=default, nargs=0, help=help)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        print(
+            f"Glances version:\t\t{__version__}\n"
+            f"Glances API version:\t{__apiversion__}\n"
+            f"PsUtil version:\t\t{psutil_version}\n"
+            f"Log file:\t\t{LOG_FILENAME}"
+        )
+        parser.exit()
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -682,8 +699,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "-V",
         "--version",
-        action="version",
-        version=f"Glances {__version__}",
+        action=_VersionAction,
+        help="show program's version number and exit",
     )
     return parser
 
