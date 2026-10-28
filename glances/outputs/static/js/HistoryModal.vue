@@ -55,7 +55,7 @@
 
 <script>
 import { closeHistory, fetchSeries, historyState } from "./history.js";
-import { formatBytes, formatPercent, formatRate } from "./format.js";
+import { formatBytes, formatNetworkRate, formatPercent, formatRate } from "./format.js";
 
 // The SVG's own coordinate space, stretched to the panel by
 // preserveAspectRatio="none"; strokes stay unscaled via vector-effect (CSS).
@@ -169,6 +169,8 @@ export default {
 		close: closeHistory,
 		fmt(value) {
 			if (typeof value !== "number") return "-";
+			// Network rates follow the table: bits/s, or bytes/s under --byte.
+			if (this.target.plugin === "network") return `${formatNetworkRate(value, !!this.target.byte)}/s`;
 			return (FORMATTERS[this.unit] || ((v) => String(Math.round(v * 100) / 100)))(value);
 		},
 		clock(t) {
