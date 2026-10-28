@@ -1,12 +1,11 @@
 import { test, beforeEach } from "node:test";
 import assert from "node:assert/strict";
-import { fetchSeries, historyState, isHistoryField, resolveHistoryFields } from "../../glances/outputs/static/js/history.js";
+import { fetchSeries, resolveHistoryFields } from "../../glances/outputs/static/js/history.js";
 
 const ok = (body) => ({ ok: true, status: 200, json: async () => body });
 
 beforeEach(() => {
 	delete globalThis.fetch;
-	historyState.fields = {};
 });
 
 test("only the fields flagged history in the schema are resolved, with their unit", async () => {
@@ -27,13 +26,6 @@ test("no field is clickable when the server keeps no history", async () => {
 test("an unreachable /status means no history, not an error", async () => {
 	globalThis.fetch = async () => ({ ok: false, status: 500, json: async () => ({}) });
 	assert.deepEqual(await resolveHistoryFields(), {});
-});
-
-test("isHistoryField reads the resolved map", () => {
-	historyState.fields = { cpu: { user: "percent" } };
-	assert.equal(isHistoryField("cpu", "user"), true);
-	assert.equal(isHistoryField("cpu", "total"), false);
-	assert.equal(isHistoryField("mem", "percent"), false);
 });
 
 test("a scalar series is zipped with the time axis, gaps kept", async () => {

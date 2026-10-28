@@ -54,7 +54,8 @@
 </template>
 
 <script>
-import { closeHistory, fetchSeries, historyState } from "./history.js";
+import { fetchSeries } from "./history.js";
+import { closeHistory, historyState } from "./history_state.js";
 import { formatBytes, formatNetworkRate, formatPercent, formatRate } from "./format.js";
 
 // The SVG's own coordinate space, stretched to the panel by

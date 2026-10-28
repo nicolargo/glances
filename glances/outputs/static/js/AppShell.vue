@@ -165,7 +165,8 @@ import { fetchAll, resolveConfig, resolveArgs, resolvePluginNames, resolveVersio
 import { REFRESH_STEPS, stepRefresh, initialRefresh, saveRefresh } from "./refresh.js";
 import { resolveAllLabels } from "./labels.js";
 import HistoryModal from "./HistoryModal.vue";
-import { historyState, resolveHistoryFields } from "./history.js";
+import { resolveHistoryFields } from "./history.js";
+import { historyState } from "./history_state.js";
 import { visiblePlugins, groupBySlot } from "./layout.js";
 import { PLUGINS } from "./plugins/index.js";
 import { resolveDegrade, sameFlags, TOP_CASCADE, HEADER_CASCADE } from "./degrade.js";

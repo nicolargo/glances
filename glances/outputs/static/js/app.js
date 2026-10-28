@@ -9,7 +9,7 @@
 import { createApp } from "vue";
 import "../css/glances.css";
 import AppShell from "./AppShell.vue";
-import { vHistory } from "./history.js";
+import { vHistory } from "./history_state.js";
 
 // Global, so a plugin writes `v-history` on a cell without registering it.
 createApp(AppShell).directive("history", vHistory).mount("#app");
