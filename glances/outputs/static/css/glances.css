@@ -468,3 +468,118 @@ body {
 .gl-plugin {
   flex: 0 0 auto;
 }
+
+/* Popups of the WebUI: the alerts' full list (PluginAlert.vue) and the curve
+ * of a historised field (HistoryModal.vue) share this one shape. Global rather
+ * than scoped, for that reason. */
+/* The title's counts are a link: text, not chrome, like the footer steppers. */
+.gl-alert-link {
+	font: inherit;
+	color: inherit;
+	background: none;
+	border: 0;
+	padding: 0;
+	cursor: pointer;
+	text-decoration: underline;
+}
+
+/* Full-history overlay, same shape as AppShell's `.gl-help`. */
+.gl-alert-all {
+	position: fixed;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: color-mix(in srgb, var(--gl-bg) 98%, transparent);
+	z-index: 10;
+	padding: var(--gl-gap);
+}
+.gl-alert-all-panel {
+	background: var(--gl-surface);
+	border: 1px solid var(--gl-border);
+	padding: var(--gl-gap);
+	width: min(100%, calc(150 * var(--gl-col)));
+	max-height: 90vh;
+	overflow: auto;
+	min-width: 0;
+	box-sizing: border-box;
+}
+.gl-alert-all-title {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: var(--gl-gap);
+	font-weight: var(--gl-weight-bold);
+	margin-bottom: var(--gl-gap);
+}
+
+/* A value that opens its history curve (history.js `v-history`): text, not
+ * chrome, like the alerts' link -- only the underline on hover/focus says so. */
+.gl-history-link {
+	cursor: pointer;
+}
+.gl-history-link:hover,
+.gl-history-link:focus-visible {
+	text-decoration: underline;
+}
+
+.gl-history-stats {
+	margin: 0 0 var(--gl-gap);
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0 calc(2 * var(--gl-col));
+}
+.gl-history-plot {
+	position: relative;
+	display: flex;
+	gap: var(--gl-gap);
+}
+.gl-history-yaxis {
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	text-align: right;
+	color: var(--gl-muted);
+	min-width: calc(9 * var(--gl-col));
+}
+.gl-history-canvas {
+	position: relative;
+	flex: 1;
+	min-width: 0;
+}
+.gl-history-chart {
+	display: block;
+	width: 100%;
+	height: 16rem;
+	cursor: crosshair;
+}
+.gl-history-line {
+	fill: none;
+	stroke: var(--gl-level-careful);
+	stroke-width: 1.5;
+	vector-effect: non-scaling-stroke;
+}
+.gl-history-grid,
+.gl-history-cursor {
+	stroke: var(--gl-border);
+	stroke-width: 1;
+	vector-effect: non-scaling-stroke;
+}
+.gl-history-dot {
+	position: absolute;
+	width: 0.5rem;
+	height: 0.5rem;
+	margin: -0.25rem 0 0 -0.25rem;
+	border-radius: 50%;
+	background: var(--gl-level-careful);
+	pointer-events: none;
+}
+.gl-history-axis {
+	margin: var(--gl-gap) 0 0;
+	display: flex;
+	justify-content: space-between;
+	color: var(--gl-muted);
+}
+.gl-history-hover {
+	color: var(--gl-fg);
+}

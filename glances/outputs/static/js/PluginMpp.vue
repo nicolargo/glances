@@ -8,7 +8,7 @@
 				<tr v-for="item in rows" :key="item.engine_id">
 					<td>{{ item.name }} {{ item.type }}</td>
 					<td class="gl-num">
-						<span :class="cellClassFor(payload, item, 'load')">{{ loadText(item) }}</span>
+						<span v-history="{ plugin: 'mpp', field: 'load', item: item.engine_id }" :class="cellClassFor(payload, item, 'load')">{{ loadText(item) }}</span>
 					</td>
 					<!-- v4 omits the session cell entirely at zero -- not an empty
 					string, a MISSING cell (mpp/render_curses.py:52-55). -->

@@ -67,7 +67,7 @@
 					</td>
 					<td v-if="shows('uptime')" class="gl-num"><span>{{ fmt(formatPrettyDate(item.started_at)) }}</span></td>
 					<td v-if="shows('cpu')" class="gl-num">
-						<span :class="cellClassFor(payload, item, 'cpu_percent')">{{
+						<span v-history="{ plugin: 'containers', field: 'cpu_percent', item: item.name }" :class="cellClassFor(payload, item, 'cpu_percent')">{{
 							formatPercent(item.cpu_percent)
 						}}</span>
 					</td>

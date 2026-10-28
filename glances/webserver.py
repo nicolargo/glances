@@ -601,12 +601,16 @@ def _register_health_endpoints(app: FastAPI) -> None:
     but listed in ``UNAUTH_PATHS`` so the auth middleware bypasses them.
     """
 
-    async def status_handler():
+    async def status_handler(request: Request):
         # `version` is the API version, as v4's /api/4/status reports it;
         # `glances_version` is the release the server runs, which the WebUI
         # footer shows. Kept on the probe rather than on a route of its own:
         # v4 already serves the release from its own /status.
-        return {"status": "ok", "version": __apiversion__, "glances_version": __version__}
+        # `history` tells the WebUI whether any plugin records a history
+        # (`[global] history_size=0` / `--disable-history` leave no store):
+        # it only makes the historised fields clickable when it is true.
+        history = any(getattr(plugin, "history", None) is not None for plugin in request.app.state.plugins.values())
+        return {"status": "ok", "version": __apiversion__, "glances_version": __version__, "history": history}
 
     app.add_api_route("/status", status_handler, methods=["GET"], tags=["health"])
     app.add_api_route("/healthz", status_handler, methods=["GET"], tags=["health"])

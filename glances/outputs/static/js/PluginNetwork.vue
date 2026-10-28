@@ -33,7 +33,7 @@
 					<!-- Coloured by the RATE field's level in both modes, as v4 reads
 					the same `bytes_recv` decoration for its cumulative cells. -->
 					<td v-for="(field, index) in combined ? [] : valueFields" :key="field" class="gl-num">
-						<span :class="cellClassFor(payload, item, RATE_FIELDS[index])">{{
+						<span v-history="{ plugin: 'network', field, item: item.interface_name, byte: !!serverArgs.byte }" :class="cellClassFor(payload, item, RATE_FIELDS[index])">{{
 							formatNetworkRate(item[field], !!serverArgs.byte)
 						}}</span>
 					</td>

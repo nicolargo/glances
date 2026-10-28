@@ -17,7 +17,7 @@
 		<div v-else class="gl-stat-grid">
 			<dl>
 				<dt class="gl-header">MEM</dt>
-				<dd :class="levelClass(scalarLevel(payload, 'percent'))">{{ formatPercent(payload.percent) }}</dd>
+				<dd v-history="{ plugin: 'mem', field: 'percent' }" :class="levelClass(scalarLevel(payload, 'percent'))">{{ formatPercent(payload.percent) }}</dd>
 				<template v-for="(stat, i) in col1" :key="i">
 					<dt class="gl-header">{{ labelFor(labels, stat.field) }}</dt>
 					<dd :class="levelClass(scalarLevel(payload, stat.field))">{{ stat.value }}</dd>

@@ -33,6 +33,7 @@ import contextlib
 import importlib
 import importlib.util
 import logging
+from types import SimpleNamespace
 
 import pytest
 from fastapi.testclient import TestClient
@@ -102,7 +103,19 @@ def test_status_endpoint(config_factory, store):
     assert r.status_code == 200
     # `version` is the API version; `glances_version` is the release, which the
     # WebUI footer reads from here (v4 serves it from its own /status too).
-    assert r.json() == {"status": "ok", "version": "5", "glances_version": __version__}
+    # No plugin is registered here, hence no history store to announce.
+    assert r.json() == {"status": "ok", "version": "5", "glances_version": __version__, "history": False}
+
+
+def test_status_endpoint_announces_the_history_store(config_factory, store):
+    app = build_app(config=config_factory(), store=store)
+    recording = SimpleNamespace(history=object())
+    app.state.plugins = {"cpu": recording}
+    with TestClient(app) as client:
+        assert client.get("/status").json()["history"] is True
+    recording.history = None
+    with TestClient(app) as client:
+        assert client.get("/status").json()["history"] is False
 
 
 def test_healthz_alias_returns_same_payload(config_factory, store):

@@ -94,6 +94,10 @@
 			</div>
 		</div>
 
+		<!-- The curve of a historised field, opened by clicking its value
+		(history.js, `v-history`). -->
+		<HistoryModal :refresh="refresh || 2" />
+
 		<!-- `h`, mirroring the TUI's overlay. Rows come from hotkeys.js, the same
 		table the dispatcher reads, so a bound key cannot go undocumented. -->
 		<div
@@ -160,6 +164,9 @@ import { computed, markRaw } from "vue";
 import { fetchAll, resolveConfig, resolveArgs, resolvePluginNames, resolveVersion, getJson, requestSort } from "./api.js";
 import { REFRESH_STEPS, stepRefresh, initialRefresh, saveRefresh } from "./refresh.js";
 import { resolveAllLabels } from "./labels.js";
+import HistoryModal from "./HistoryModal.vue";
+import { resolveHistoryFields } from "./history.js";
+import { historyState } from "./history_state.js";
 import { visiblePlugins, groupBySlot } from "./layout.js";
 import { PLUGINS } from "./plugins/index.js";
 import { resolveDegrade, sameFlags, TOP_CASCADE, HEADER_CASCADE } from "./degrade.js";
@@ -234,6 +241,7 @@ const RECONNECT_LADDER = [2, 5, 10, 15, 30, 60];
 
 export default {
 	name: "AppShell",
+	components: { HistoryModal },
 	// `percpu` is the only component that needs the instantiated-plugin list
 	// (it decides whether to render standalone or drop its title/total column
 	// once quicklook is instantiated). A prop on the shared `<component>`
@@ -527,12 +535,16 @@ export default {
 		// whatever the number of plugins. The plugin list specifically is read
 		// once per page load: a plugin enabled at runtime (#3548) only appears
 		// after a reload -- see resolvePluginNames() in api.js.
-		const [labels, serverArgs, pluginNames, version] = await Promise.all([
+		const [labels, serverArgs, pluginNames, version, historyFields] = await Promise.all([
 			resolveAllLabels(),
 			resolveArgs(),
 			resolvePluginNames(),
 			resolveVersion(),
+			resolveHistoryFields(),
 		]);
+		// Before the first tick(): a cell is only rendered once its payload
+		// arrives, so it is born already knowing whether it is clickable.
+		historyState.fields = markRaw(historyFields);
 		// markRaw for the same reason as the poll payloads -- see the note above
 		// the component. The schema map is the larger of the two: one entry per
 		// field of every plugin, read once per cell per render.

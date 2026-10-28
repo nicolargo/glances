@@ -18,7 +18,7 @@
 					<!-- v4 parity: the used/free cell takes the `percent` tier, whatever
 					free_space selects; Total is never coloured. -->
 					<td class="gl-num">
-						<span :class="cellClassFor(payload, item, 'percent')">{{ formatBytes(item[valueField]) }}</span>
+						<span v-history="{ plugin: 'fs', field: 'percent', item: item.mnt_point }" :class="cellClassFor(payload, item, 'percent')">{{ formatBytes(item[valueField]) }}</span>
 					</td>
 					<td class="gl-num">
 						<span>{{ formatBytes(item.size) }}</span>
