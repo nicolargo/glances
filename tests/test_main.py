@@ -171,7 +171,7 @@ def test_build_parser_version_exits(capsys):
         parser.parse_args(["--version"])
     assert excinfo.value.code == 0
     captured = capsys.readouterr()
-    assert "Glances 5." in captured.out
+    assert "Glances version:" in captured.out
 
 
 # ----------------------------------------------------------- logging
