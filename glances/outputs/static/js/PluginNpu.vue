@@ -20,12 +20,12 @@
 				current/max frequency range -- two plain cells, neither carrying a
 				label, so both <dt>s stay empty rather than inventing one. -->
 				<dt class="gl-header"></dt>
-				<dd :class="pctClass">{{ pctText }}</dd>
+				<dd v-history="{ plugin: 'npu', field: pctField, item: npu.npu_id }" :class="pctClass">{{ pctText }}</dd>
 				<dt class="gl-header"></dt>
 				<dd>{{ freqRangeText }}</dd>
 
 				<dt class="gl-header">mem</dt>
-				<dd :class="memClass">{{ memText }}</dd>
+				<dd v-history="{ plugin: 'npu', field: 'mem', item: npu.npu_id }" :class="memClass">{{ memText }}</dd>
 
 				<dt class="gl-header">temperature</dt>
 				<dd :class="tempClass">{{ tempText }}</dd>

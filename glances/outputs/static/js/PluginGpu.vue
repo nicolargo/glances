@@ -9,7 +9,10 @@
 			<dl>
 				<template v-for="row in summaryRows" :key="row.field">
 					<dt class="gl-header">{{ row.label }}</dt>
-					<dd :class="levelClass(itemLevel(payload, firstId, row.field))">
+					<dd
+						v-history="cards.length === 1 ? { plugin: 'gpu', field: row.field, item: firstId } : null"
+						:class="levelClass(itemLevel(payload, firstId, row.field))"
+					>
 						{{ row.value }}
 					</dd>
 				</template>
@@ -29,7 +32,7 @@
 					background would otherwise fill the whole cell, 9ch floor and
 					padding included, instead of the value's text. -->
 					<td v-for="column in valueColumns" :key="column.field" class="gl-num">
-						<span :class="cellClassFor(payload, card, column.field)">{{
+						<span v-history="{ plugin: 'gpu', field: column.field, item: card.gpu_id }" :class="cellClassFor(payload, card, column.field)">{{
 							column.format(card[column.field])
 						}}</span>
 					</td>

@@ -17,7 +17,7 @@
 			<!-- `gl-col-rate`: sin/sout are formatRate() values, up to 9 characters. -->
 			<dl class="gl-col-rate">
 				<dt class="gl-header">SWAP</dt>
-				<dd :class="levelClass(scalarLevel(payload, 'percent'))">{{ formatPercent(payload.percent) }}</dd>
+				<dd v-history="{ plugin: 'memswap', field: 'percent' }" :class="levelClass(scalarLevel(payload, 'percent'))">{{ formatPercent(payload.percent) }}</dd>
 				<template v-for="(stat, i) in rows" :key="i">
 					<dt class="gl-header">{{ labelFor(labels, stat.field) }}</dt>
 					<dd :class="levelClass(scalarLevel(payload, stat.field))">{{ stat.value }}</dd>

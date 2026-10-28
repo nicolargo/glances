@@ -24,7 +24,7 @@
 					</td>
 					<!-- `U` keeps the RATE field's level, as network does (v4 parity). -->
 					<td v-for="(field, index) in combined ? [] : rateFields" :key="field" class="gl-num">
-						<span :class="cellClassFor(payload, item, levelFields[index])">{{ formatCell(item[field]) }}</span>
+						<span v-history="{ plugin: 'diskio', field, item: item.disk_name }" :class="cellClassFor(payload, item, levelFields[index])">{{ formatCell(item[field]) }}</span>
 					</td>
 				</tr>
 			</tbody>

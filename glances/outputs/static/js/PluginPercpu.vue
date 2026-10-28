@@ -22,7 +22,11 @@
 						<span :class="cellClass(row, 'total')">{{ formatPercent(row.stats.total) }}</span>
 					</td>
 					<td v-for="field in statFields" :key="field" class="gl-num">
-						<span :class="cellClass(row, field)">{{ formatPercent(row.stats[field]) }}</span>
+						<span
+							v-history="row.levelKey === null ? null : { plugin: 'percpu', field, item: row.levelKey }"
+							:class="cellClass(row, field)"
+							>{{ formatPercent(row.stats[field]) }}</span
+						>
 					</td>
 				</tr>
 			</tbody>

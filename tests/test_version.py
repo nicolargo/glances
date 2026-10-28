@@ -47,6 +47,7 @@ def test_status_and_the_router_read_the_version_pair(config):
         "status": "ok",
         "version": version.__apiversion__,
         "glances_version": version.__version__,
+        "history": False,
     }
     paths = client.get("/openapi.json").json()["paths"]
     assert f"/api/{version.__apiversion__}/pluginslist" in paths

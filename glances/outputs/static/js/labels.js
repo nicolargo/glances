@@ -21,10 +21,23 @@ function labelsFromSchema(schema) {
 	return labels;
 }
 
+// Concurrent callers (the labels and the history fields, resolved together at
+// mount) share ONE request; it is not cached past the response, so a later
+// call still re-fetches.
+let inflight = null;
+export function fetchSchemas() {
+	if (!inflight) {
+		inflight = getJson("api/5/all/info").finally(() => {
+			inflight = null;
+		});
+	}
+	return inflight;
+}
+
 export async function resolveAllLabels() {
 	let schemas;
 	try {
-		schemas = await getJson("api/5/all/info");
+		schemas = await fetchSchemas();
 	} catch {
 		// A missing label must never blank a value: fall back to field names.
 		// A transient failure here pins field-name labels for the tab's life --

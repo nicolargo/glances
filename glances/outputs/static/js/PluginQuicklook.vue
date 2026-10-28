@@ -40,7 +40,7 @@
 				>
 					<div class="gl-bar-fill" :class="bar.cls" :style="{ width: bar.pct + '%' }"></div>
 				</div>
-				<span class="gl-bar-value gl-num" :class="bar.cls">{{ bar.text }}</span>
+				<span v-history="{ plugin: 'quicklook', field: bar.field }" class="gl-bar-value gl-num" :class="bar.cls">{{ bar.text }}</span>
 			</div>
 		</template>
 	</article>
@@ -185,7 +185,7 @@ export default {
 				const value = this.payload[key];
 				if (value === null || value === undefined) continue;
 				const label = BAR_LABEL[key] || key.toUpperCase();
-				bars.push(this.buildBar(label, value, scalarLevel(this.payload, key)));
+				bars.push({ ...this.buildBar(label, value, scalarLevel(this.payload, key)), field: key });
 			}
 			return bars;
 		},

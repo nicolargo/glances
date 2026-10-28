@@ -20,7 +20,7 @@
 				<dd>{{ coreLabel }}</dd>
 				<template v-for="(stat, i) in rows" :key="i">
 					<dt class="gl-header">{{ labelFor(labels, stat.field) }}</dt>
-					<dd :class="levelClass(scalarLevel(payload, stat.field))">{{ stat.value }}</dd>
+					<dd v-history="{ plugin: 'load', field: stat.field }" :class="levelClass(scalarLevel(payload, stat.field))">{{ stat.value }}</dd>
 				</template>
 			</dl>
 		</div>

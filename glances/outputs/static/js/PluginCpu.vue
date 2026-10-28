@@ -22,7 +22,7 @@
 				</template>
 				<template v-for="(stat, j) in column" :key="j">
 					<dt class="gl-header">{{ stat.field ? labelFor(labels, stat.field) : "" }}</dt>
-					<dd :class="levelClass(scalarLevel(payload, stat.field))">{{ stat.value }}</dd>
+					<dd v-history="{ plugin: 'cpu', field: stat.field }" :class="levelClass(scalarLevel(payload, stat.field))">{{ stat.value }}</dd>
 				</template>
 			</dl>
 		</div>

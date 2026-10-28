@@ -427,45 +427,4 @@ export default {
 .gl-alert-collapse {
 	margin: 0;
 }
-
-/* The title's counts are a link: text, not chrome, like the footer steppers. */
-.gl-alert-link {
-	font: inherit;
-	color: inherit;
-	background: none;
-	border: 0;
-	padding: 0;
-	cursor: pointer;
-	text-decoration: underline;
-}
-
-/* Full-history overlay, same shape as AppShell's `.gl-help`. */
-.gl-alert-all {
-	position: fixed;
-	inset: 0;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	background: color-mix(in srgb, var(--gl-bg) 98%, transparent);
-	z-index: 10;
-	padding: var(--gl-gap);
-}
-.gl-alert-all-panel {
-	background: var(--gl-surface);
-	border: 1px solid var(--gl-border);
-	padding: var(--gl-gap);
-	width: min(100%, calc(150 * var(--gl-col)));
-	max-height: 90vh;
-	overflow: auto;
-	min-width: 0;
-	box-sizing: border-box;
-}
-.gl-alert-all-title {
-	display: flex;
-	align-items: baseline;
-	justify-content: space-between;
-	gap: var(--gl-gap);
-	font-weight: var(--gl-weight-bold);
-	margin-bottom: var(--gl-gap);
-}
 </style>
