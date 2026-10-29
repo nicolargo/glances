@@ -256,9 +256,9 @@ async def test_no_store_records_nothing_and_raises_nothing(config):
 # v4's `items_history_list`, mapped to v5 names (design §4). Pinned: a flag
 # added or dropped later is a deliberate edit of this table.
 _HISTORISED = {
-    "cpu": ["system", "user"],
+    "cpu": ["iowait", "system", "total", "user"],
     "percpu": ["system", "user"],
-    "load": ["min1", "min15", "min5"],
+    "load": ["min1", "min15"],
     "mem": ["percent"],
     "memswap": ["percent"],
     "processcount": ["running", "sleeping", "thread", "total"],
