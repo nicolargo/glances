@@ -17,9 +17,9 @@
 		"terser-webpack-plugin": "^5.6.1",
 		"typescript-eslint": "^8.72.0",
 		"vue-loader": "^17.4.2",
-		"webpack": "^5.112.0",
+		"webpack": "^5.112.2",
 		"webpack-cli": "^7.2.3",
-		"webpack-dev-server": "^5.2.7"
+		"webpack-dev-server": "^6.1.0"
 	},
 	"overrides": {
 		"eslint": {
