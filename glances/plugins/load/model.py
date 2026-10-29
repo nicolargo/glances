@@ -68,7 +68,6 @@ class PluginModel(GlancesPluginBase[dict]):
                 "Average number of processes waiting in the run-queue plus those currently executing, over 5 minutes."
             ),
             "unit": "float",
-            "history": True,
             "watched": True,
             "watch_direction": "high",
             "prominent": False,

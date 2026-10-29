@@ -67,6 +67,7 @@ class PluginModel(GlancesPluginBase[dict]):
         "total": {
             "description": "Sum of all CPU percentages (except idle).",
             "unit": "percent",
+            "history": True,
             "watched": True,
             "watch_direction": "high",
             "prominent": True,
@@ -100,6 +101,7 @@ class PluginModel(GlancesPluginBase[dict]):
         "iowait": {
             "description": ("(Linux) Percent time spent by the CPU waiting for I/O operations to complete."),
             "unit": "percent",
+            "history": True,
             "watched": True,
             "watch_direction": "high",
             "prominent": False,
