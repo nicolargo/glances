@@ -684,16 +684,39 @@ class GlancesProcesses:
         # Build the process list
         processlist = self.build_process_list(sorted_attrs)
 
+        # Update the processcount (on the raw status strings: the metadata
+        # pass below truncates 'status' to its first letter for display)
+        self.update_processcount(processlist)
+
+        # Loop over the processes to materialize the fields a sort key can
+        # point at, BEFORE sorting. `io_counters` is still a psutil namedtuple
+        # here — indexes 2/3 are read/write *counts*, not the previous-cycle
+        # byte totals the sort lambda subtracts — and `cpu_times` a pcputimes
+        # namedtuple with no .get(), which made the sort raise and silently
+        # fall back to cpu_percent order (issue #3830). The cached attrs
+        # (username, cmdline) only exist on each proc after this pass as well.
+        for proc in processlist:
+            # Meta data
+            ###########
+            proc = self.get_pid_time_and_status(time_since_update, proc)
+
+            # Process IO
+            proc = self.get_io_counters(proc)
+
+            # Manage cached information
+            proc = self.maybe_add_cached_stats(is_cached, cached_attrs, proc)
+
+            # cpu_times reaches the sort (and consumers) as a dict, the shape
+            # update_list produces with namedtuple_to_dict
+            cpu_times = proc.get('cpu_times')
+            if hasattr(cpu_times, '_asdict'):
+                proc['cpu_times'] = cpu_times._asdict()
+
         # Sort the processes list by the current sort_key
         # This is needed so that cursor_position matches the displayed order (see issue #3400)
         processlist = sort_stats(processlist, sorted_by=self.sort_key, reverse=self.sort_reverse)
 
-        # Update the processcount
-        self.update_processcount(processlist)
-
-        # Loop over processes and :
-        # - add extended stats for selected process
-        # - add metadata
+        # Loop over processes and add extended stats for the selected process
         # Whether the pinned process was still running this cycle. Without it,
         # a process that exits leaves `extended_process` holding its last
         # values forever -- nothing below ever runs again for a pid that is no
@@ -719,17 +742,7 @@ class GlancesProcesses:
                 self.extended_process = namedtuple_to_dict(proc)
                 extended_seen = True
 
-            # Meta data
-            ###########
-            proc = self.get_pid_time_and_status(time_since_update, proc)
-
-            # Process IO
-            proc = self.get_io_counters(proc)
-
-            # Manage cached information
-            proc = self.maybe_add_cached_stats(is_cached, cached_attrs, proc)
-
-            # The command line is only merged above, after the extended grab:
+            # The command line was merged during the metadata pass above:
             # give it to the pinned process so its title can show it.
             if self.extended_process is not None and proc['pid'] == self.extended_process['pid']:
                 self.extended_process['cmdline'] = proc.get('cmdline')
