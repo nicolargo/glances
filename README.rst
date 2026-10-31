@@ -197,7 +197,23 @@ The same servers list, served in a Web page at ``http://<ip>:61208/browser``:
 
 .. image:: ./docs/_static/screenshot-webui-browser.png
 
-6. Fetch mode
+6. MCP server
+-------------
+
+Start the Web server with the `MCP (Model Context Protocol)`_ server enabled:
+
+.. code-block:: console
+
+    $ glances -s --enable-mcp
+
+The MCP endpoint (SSE transport) is then available at ``http://<ip>:61208/mcp/sse``.
+Plug it into your AI assistant (here `opencode`_) and ask it for the state of the machine:
+
+.. image:: ./docs/_static/screenshot-mcp-opencode.png
+
+See the `McpApi`_ documentation for client configuration and usage.
+
+7. Fetch mode
 -------------
 
 Get (and share) a quick look of a machine, then exit:
@@ -266,15 +282,6 @@ Serve the REST API without the WebUI, and browse its interactive documentation
 .. code-block:: console
 
     $ glances -s --disable-webui --api-doc
-
-Expose a `MCP (Model Context Protocol)`_ server for AI assistants:
-
-.. code-block:: console
-
-    $ glances -s --enable-mcp
-
-The MCP endpoint (SSE transport) is then available at ``http://<ip>:61208/mcp/sse``.
-See the `McpApi`_ documentation for client configuration and usage.
 
 Choose what is collected and displayed:
 
@@ -601,64 +608,6 @@ It is also possible to use a simple Docker compose file to:
     wget https://raw.githubusercontent.com/nicolargo/glances/refs/heads/develop/docker-compose/glances.conf
     docker compose -f ./docker-compose-tui.yml run glances
 
-macOS and Linux: Homebrew or MacPorts
--------------------------------------
-
-.. code-block:: console
-
-    $ brew install glances          # Homebrew (macOS and Linux)
-    $ sudo port install glances     # MacPorts (macOS)
-
-See the Glances `Brew`_ formula.
-
-FreeBSD
--------
-
-Install the package matching your Python version (for example ``py311-glances``
-for Python 3.11, check it with ``python --version``):
-
-.. code-block:: console
-
-    # pkg install py311-glances
-
-or from the Ports:
-
-.. code-block:: console
-
-    # cd /usr/ports/sysutils/py-glances/
-    # make install clean
-
-Windows
--------
-
-Install `Python`_ 3.10 or higher for Windows and follow the PyPI procedure above.
-
-Android
--------
-
-You need a rooted device and the `Termux`_ application (available on the
-Google Play Store). Start Termux on your device and enter:
-
-.. code-block:: console
-
-    $ apt update && apt upgrade
-    $ apt install clang python
-    $ pip install 'glances[web]'
-    $ glances
-
-You can also run Glances in server mode (``-s``) in order to remotely
-monitor your Android device.
-
-Source
-------
-
-To install Glances from source (a release tarball, or the develop branch):
-
-.. code-block:: console
-
-    $ pip install https://github.com/nicolargo/glances/archive/vX.Y.Z.tar.gz
-    $ pip install 'glances[web] @ git+https://github.com/nicolargo/glances.git@develop'
-
 Shell tab completion 🔍
 =======================
 
@@ -725,10 +674,14 @@ of ``pyproject.toml`` for the exact versions):
      - ``bernhard``, ``clickhouse-connect``, ``elasticsearch``, ``graphitesender``,
        ``ibmcloudant``, ``influxdb``, ``influxdb-client``, ``influxdb3-python``,
        ``kafka-python``, ``nats-py``, ``paho-mqtt``, ``pika``, ``potsdb``,
-       ``prometheus_client``, ``psycopg[binary]``, ``pymongo``, ``pyzmq``, ``statsd``
+       ``prometheus_client``, ``psycopg[binary]``, ``pymongo``, ``pyzmq``, ``statsd``,
+       ``pycouchdb``
 
-Not included in any extra: ``duckdb`` (DuckDB export module) and ``pycouchdb``
-(CouchDB export module), install them manually if needed.
+Note: the ``export`` extra installs the libraries of **all** the export modules. If you
+only use one or a few exports, prefer to install only the library of the wanted export
+(for example ``pip install glances influxdb-client`` for InfluxDB 2).
+
+``duckdb`` (DuckDB export module) is not included in any extra, install it manually if needed.
 
 How to contribute ? 🤝
 ======================
@@ -756,9 +709,6 @@ Authors and Contributors 🔥
 
 Glances has been created by Nicolas Hennion (@nicolargo) <nicolas@nicolargo.com>
 
-.. image:: https://img.shields.io/twitter/url/https/twitter.com/cloudposse.svg?style=social&label=Follow%20%40nicolargo
-    :target: https://twitter.com/nicolargo
-
 and developed by a wonderfull contributors_ community.
 
 License 📜
@@ -777,10 +727,7 @@ Glances is distributed under the LGPL version 3 license. See ``COPYING`` for mor
    </div>
 
 .. _psutil: https://github.com/giampaolo/psutil
-.. _Brew: https://formulae.brew.sh/formula/glances
 .. _pipx: https://pipx.pypa.io/
-.. _Python: https://www.python.org/getit/
-.. _Termux: https://play.google.com/store/apps/details?id=com.termux
 .. _readthedocs: https://glances.readthedocs.io/en/develop/
 .. _forum: https://www.reddit.com/r/glances/
 .. _wiki: https://github.com/nicolargo/glances/wiki/How-to-contribute-to-Glances-%3F
@@ -802,3 +749,4 @@ Glances is distributed under the LGPL version 3 license. See ``COPYING`` for mor
 .. _Discussions: https://github.com/nicolargo/glances/discussions
 .. _contributors: https://github.com/nicolargo/glances/graphs/contributors
 .. _launcher: https://github.com/yottajunaid/glances-launcher
+.. _opencode: https://opencode.ai

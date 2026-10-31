@@ -74,9 +74,9 @@ containers = [
   "six",
 ]
 export = [
-  #"duckdb",  # Make the Github pipeline failed when building Alpine Docker
   "bernhard",
   "clickhouse-connect",
+  # "duckdb",  # Not added: no prebuilt package for Alpine Linux, so the Docker image build fails
   "elasticsearch",
   "graphitesender",
   "ibmcloudant",
@@ -90,6 +90,7 @@ export = [
   "potsdb",
   "prometheus_client",
   "psycopg[binary]",
+  "pycouchdb",
   "pymongo",
   "pyzmq",
   "statsd",

@@ -283,7 +283,9 @@ chardet==7.7.0 \
     --hash=sha256:eb625c3ab2386ca7f3be9ac2b9b822f4c5b792595c8bb8100b3b6ea68120e92c \
     --hash=sha256:f8783b6e24a044ed9b53aa130ffafac4286aaf4a953f7843a3c1a261d7c77971 \
     --hash=sha256:feb66c96264e3e6a9ff0c7318ce0028800b6c18ad07c8000d2404a108d1ef767
-    # via pysmart
+    # via
+    #   pycouchdb
+    #   pysmart
 charset-normalizer==3.5.2 \
     --hash=sha256:01077390b03f7988f11d700a2194e69b119741a86b1a638b1db88891e3eced8e \
     --hash=sha256:01b0c0d2262a9e28e8484a278c7e1b5d650e3ac8cf2683d2967e25899f208bdf \
@@ -1263,6 +1265,10 @@ pyasn1==0.6.5 \
     # via
     #   python-jose
     #   rsa
+pycouchdb==1.17.1 \
+    --hash=sha256:178ee5fe4a2a05320a7801a2b2a611cfd985aabcff443d43f95216c7502a5ac7 \
+    --hash=sha256:a012b3cbbd244ebbcfb8b072ebb04b492082fa32b54617a35450671876227b72
+    # via glances
 pycparser==3.11 ; (python_full_version < '3.11' and implementation_name != 'PyPy' and platform_python_implementation != 'PyPy') or (python_full_version < '3.11' and implementation_name == 'pypy' and platform_python_implementation == 'PyPy') \
     --hash=sha256:51d5a8ba2be0bbe440b99d2112604c95bbbc3c2748a64260186c541e1729cd80 \
     --hash=sha256:d875f09c3507d00e1aba0eecc6dcadc1352f30fff09dc6bff2f1c2935e97c2bc
@@ -1734,6 +1740,7 @@ requests==2.34.2 \
     #   ibmcloudant
     #   influxdb
     #   podman
+    #   pycouchdb
     #   pylxd
     #   requests-toolbelt
 requests-toolbelt==1.0.0 \
