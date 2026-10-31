@@ -189,9 +189,10 @@ class PluginModel(GlancesPluginBase[list]):
     # publishing it whole would duplicate a dozen fields already in `data[]`
     # for the same pid.
     #
-    # `cmdline` titles the block, with its arguments, on both surfaces. The
-    # engine merges it into the process after the extended grab, so it copies
-    # it into `extended_process` separately (`GlancesProcesses.update`).
+    # `cmdline` titles the block, with its arguments, on both surfaces. It
+    # reaches `extended_process` with the rest of the process dict — the
+    # engine merges the cached attrs before the extended grab, in the
+    # pre-sort metadata pass (`GlancesProcesses.update`).
     _EXTENDED_KEYS: ClassVar[tuple[str, ...]] = (
         "pid",
         "name",

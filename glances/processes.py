@@ -742,11 +742,6 @@ class GlancesProcesses:
                 self.extended_process = namedtuple_to_dict(proc)
                 extended_seen = True
 
-            # The command line was merged during the metadata pass above:
-            # give it to the pinned process so its title can show it.
-            if self.extended_process is not None and proc['pid'] == self.extended_process['pid']:
-                self.extended_process['cmdline'] = proc.get('cmdline')
-
         # The pinned process is gone. Forget it, rather than leave the TUI and
         # the WebUI showing its last numbers under a `extended_stats: True`
         # that is no longer true. The PIN goes with the accumulator: a pin on

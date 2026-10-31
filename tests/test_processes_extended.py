@@ -236,8 +236,9 @@ def test_a_new_pin_starts_from_fresh_min_max_mean(monkeypatch):
 
 
 def test_the_pinned_process_carries_its_command_line(monkeypatch):
-    """`cmdline` is merged into the process after the extended grab; the
-    pinned process must still carry it, as it titles the block."""
+    """`cmdline` is merged into the process before the extended grab, in the
+    pre-sort metadata pass; the pinned process must still carry it, as it
+    titles the block."""
     import os
 
     pid = os.getpid()
