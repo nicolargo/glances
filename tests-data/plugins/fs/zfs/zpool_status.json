@@ -1,0 +1,40 @@
+{
+  "output_version": {
+    "command": "zpool status",
+    "vers_major": 0,
+    "vers_minor": 1
+  },
+  "pools": {
+    "3920273586464696295": {
+      "name": "tank",
+      "state": "ONLINE",
+      "guid": "3920273586464696295",
+      "txg": 16597,
+      "spa_version": 5000,
+      "status": "OK",
+      "error_count": 0,
+      "vdevs": {
+        "tank": {
+          "name": "tank",
+          "alloc_space": 68812800000,
+          "total_space": 16492674416640,
+          "def_space": 12161144045568,
+          "read_errors": 0,
+          "write_errors": 0,
+          "checksum_errors": 0,
+          "vdevs": {
+            "12841765308123764671": {
+              "name": "ca1eb824-c371-491d-ac13-37637e35c683",
+              "vdev_type": "disk",
+              "guid": "12841765308123764671",
+              "state": "HEALTHY",
+              "read_errors": 0,
+              "write_errors": 0,
+              "checksum_errors": 0
+            }
+          }
+        }
+      }
+    }
+  }
+}
