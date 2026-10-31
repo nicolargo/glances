@@ -86,9 +86,11 @@ def test_build_process_list_skips_only_the_process_raising_system_error(processe
 
 
 def _cpu_time(fn):
-    start = time.process_time()
+    # perf_counter: process_time() only ticks every ~15.6 ms on Windows, which is
+    # as coarse as the quantity being measured here
+    start = time.perf_counter()
     fn()
-    return time.process_time() - start
+    return time.perf_counter() - start
 
 
 def test_process_iter_uses_no_more_cpu_than_psutil_process_iter(processes):
@@ -103,11 +105,11 @@ def test_process_iter_uses_no_more_cpu_than_psutil_process_iter(processes):
     # Interleave the samples so both iterators see the same system load, and keep
     # the best sample of each to filter out the scheduler noise
     native_times, helper_times = [], []
-    for _ in range(5):
+    for _ in range(7):
         native_times.append(_cpu_time(native))
         helper_times.append(_cpu_time(helper))
     native_time, helper_time = min(native_times), min(helper_times)
     # The helper runs the same loop as psutil, so the CPU time should be on par.
-    # The margin and the 10 ms slack (timer resolution is about 16 ms on Windows)
-    # keep the test stable on loaded CI runners while still catching a regression.
+    # The margin and the 10 ms slack keep the test stable on loaded CI runners
+    # while still catching a regression.
     assert helper_time <= native_time * 1.5 + 0.01, (helper_time, native_time)
