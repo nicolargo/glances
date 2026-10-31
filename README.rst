@@ -37,7 +37,7 @@ An Eye on your System
     :target: https://github.com/nicolargo/glances/issues?q=is%3Aissue+is%3Aopen+label%3A%22needs+contributor%22
     :alt: Contributors
 
-.. |codacity|: image:: https://app.codacy.com/project/badge/Grade/40708882575f4cb3943565889de2ed6e
+.. |codacity| image:: https://app.codacy.com/project/badge/Grade/40708882575f4cb3943565889de2ed6e
     :target: https://app.codacy.com/gh/nicolargo/glances/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade
     :alt: Codacity
 
