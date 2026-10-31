@@ -140,6 +140,16 @@ def open_web_ui(host: str, port: int, scheme: str = "http") -> None:
         logger.warning("--open-web-browser: could not open a browser (%s)", exc)
 
 
+def log_browser_url(app: Any, host: str, port: int, scheme: str = "http") -> None:
+    """`-s --browser`: say where the server list is served.
+
+    Only when `/browser` is mounted: `--disable-webui` or missing WebUI
+    assets leave it out (`glances/webserver.py:_wire_webui`).
+    """
+    if any(getattr(route, "path", None) == "/browser" for route in app.routes):
+        logger.info("Glances browser available at %s://%s:%d/browser", scheme, host, port)
+
+
 class _VersionAction(argparse.Action):
     """`-V`: print the version block as is (argparse's own `version` action re-wraps it)."""
 
@@ -1859,11 +1869,13 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.server:
         scheme = "https" if ssl else "http"
-        logger.info("Starting Glances v5 REST API on %s://%s:%d", scheme, host, port)
+        logger.info("Starting Glances %s server on %s://%s:%d", __version__, scheme, host, port)
+        if getattr(args, "browser", False):
+            log_browser_url(app, host, port, scheme)
         if getattr(args, "open_web_browser", False):
             open_web_ui(host, port, scheme)
     else:
-        logger.info("Starting Glances v5 in TUI mode (no REST API bound).")
+        logger.info("Starting Glances %s in TUI mode (no REST API bound).", __version__)
     try:
         asyncio.run(serve(args, app, scheduler, host, port, tui, ssl))
     except KeyboardInterrupt:

@@ -1409,6 +1409,20 @@ def test_open_web_browser_needs_a_served_web_ui(argv):
         validate_args(build_parser().parse_args(argv))
 
 
+@pytest.mark.parametrize("mounted", [True, False])
+def test_browser_url_logged_only_when_the_page_is_served(mounted, caplog):
+    from fastapi import FastAPI
+
+    from glances.main import log_browser_url
+
+    app = FastAPI()
+    if mounted:
+        app.get("/browser")(lambda: None)
+    with caplog.at_level(logging.INFO, logger="glances.main"):
+        log_browser_url(app, "127.0.0.1", 61208)
+    assert ("http://127.0.0.1:61208/browser" in caplog.text) is mounted
+
+
 # ----------------------------------------------------------- --memory-leak
 
 

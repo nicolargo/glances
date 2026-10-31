@@ -348,25 +348,23 @@ run-docker-ubuntu-dev: ## Start Glances Ubuntu Docker dev in console mode
 generate-ssl: ## Generate local and sel signed SSL certificates for dev (need mkcert)
 	mkcert glances.local localhost 120.0.0.1 0.0.0.0
 
-run-webserver: ## Start Glances in Web server mode
-	$(UV_RUN) run python -m glances -C $(CONF) -w
+run-server: ## Start Glances in server mode
+	$(UV_RUN) run python -m glances -C $(CONF) -s
 
-run-webserver-mcp: ## Start Glances in Web server mode with MCP
-	$(UV_RUN) run python -m glances -C $(CONF) -w --enable-mcp
+run-mcp: ## Start Glances in server mode with MCP
+	$(UV_RUN) run python -m glances -C $(CONF) -s --enable-mcp
 
-run-webserver-local-conf: ## Start Glances in Web server mode with the system conf file
-	$(UV_RUN) run python -m glances -w
+run-server-local-conf: ## Start Glances in server mode with the system conf file
+	$(UV_RUN) run python -m glances -s
 
-run-webserver-mcp-local-conf: ## Start Glances in Web server mode with MCP and the system conf file
-	$(UV_RUN) run python -m glances -w --enable-mcp
+run-server-mcp-local-conf: ## Start Glances in server mode with MCP and the system conf file
+	$(UV_RUN) run python -m glances -s --enable-mcp
 
-run-webserver-local-conf-hide-public: ## Start Glances in Web server mode with the system conf file and hide public info
-	$(UV_RUN) run python -m glances -w --hide-public-info
+run-server-local-conf-hide-public: ## Start Glances in Web server mode with the system conf file and hide public info
+	$(UV_RUN) run python -m glances -s --hide-public-info
 
-run-webui: run-webserver  ## Start Glances in Web server mode
-
-run-restapiserver: ## Start Glances in REST API server mode
-	$(UV_RUN) run python -m glances -C $(CONF) -w --disable-webui
+run--server-no-webui: ## Start Glances in REST API server mode
+	$(UV_RUN) run python -m glances -C $(CONF) -s --disable-webui
 
 run-client: ## Start Glances in client mode
 	$(UV_RUN) run python -m glances -C $(CONF) -c localhost
@@ -375,7 +373,7 @@ run-browser: ## Start Glances in browser mode
 	$(UV_RUN) run python -m glances -C $(CONF) --browser
 
 run-web-browser: ## Start Web Central Browser
-	$(UV_RUN) run python -m glances -C $(CONF) -w --browser
+	$(UV_RUN) run python -m glances -C $(CONF) -s --browser
 
 run-issue: ## Start Glances in issue mode
 	$(UV_RUN) run python -m glances -C $(CONF) --issue
