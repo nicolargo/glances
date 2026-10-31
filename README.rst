@@ -2,8 +2,6 @@
 
    <div align="center">
 
-.. image:: ./docs/_static/glances-responsive-webdesign.png
-
 .. raw:: html
 
    <h1>Glances</h1>
@@ -61,18 +59,47 @@ An Eye on your System
 
    </div>
 
+.. important::
+
+    **The current stable release is Glances 4.5.8**: see the `v4.5.8 <https://github.com/nicolargo/glances/tree/v4.5.8>`__ tag for its
+    source code and documentation. ``pip install glances`` installs it.
+
+    **This branch (develop) contains Glances 5.0.0, currently in beta.**
+    The rest of this page describes Glances 5.
+
+.. warning::
+
+    **Try Glances 5 (beta)** — for testing only:
+
+    - it is a **beta**: expect bugs, and **do not use it in production**;
+    - the **API is broken compared to Glances 4**: the REST API moves from ``/api/4``
+      to ``/api/5``, the Python API is new, and a Glances 5 client only talks to a
+      Glances 5 server (no XML-RPC anymore);
+    - configuration files from Glances 4 are read, but some options changed.
+
+    Install the beta from TestPyPI in a dedicated virtual environment
+    (dependencies still come from PyPI):
+
+    .. code-block:: console
+
+        python3 -m venv ~/.venv-glances5
+        source ~/.venv-glances5/bin/activate
+        pip install --pre --index-url https://test.pypi.org/simple/ \
+            --extra-index-url https://pypi.org/simple/ 'glances[web]>=5.0.0b1'
+        glances --version
+
+    Or run the ``nicolargo/glances:dev`` Docker image (built from this branch).
+    Please report what you find in the GitHub `issues <https://github.com/nicolargo/glances/issues>`__.
+
 Summary 🌟
 ==========
 
-**Glances** is an open-source system cross-platform monitoring tool.
-It allows real-time monitoring of various aspects of your system such as
-CPU, memory, disk, network usage etc. It also allows monitoring of running processes,
-logged in users, temperatures, voltages, fan speeds etc.
-It also supports container monitoring, it supports different container management
-systems such as Docker, LXC. The information is presented in an easy to read dashboard
-and can also be used for remote monitoring of systems via a web interface or command
-line interface. It is easy to install and use and can be customized to show only
-the information that you are interested in.
+**Glances** is an open-source, cross-platform system monitoring tool.
+It shows in real time CPU, memory, load, disks, file systems, network, sensors
+(temperatures, voltages, fans, battery), GPUs, NPUs and processes.
+It also monitors containers (Docker, Podman, LXD) and virtual machines
+(Multipass, libvirt). Everything is presented in an easy-to-read dashboard,
+in the terminal or in a Web browser, and you choose what to display.
 
 In client/server mode, remote monitoring could be done via terminal,
 Web interface or RESTful API.
@@ -80,16 +107,22 @@ Stats can also be exported to files or external time/value databases, CSV or dir
 output to STDOUT.
 
 AI assistants (Claude, Cursor, …) can query Glances directly through the built-in
-MCP server (available in Glances 4.5.1 and higher).
+MCP server.
 
 Glances is written in Python and uses libraries to grab information from
 your system. It is based on an open architecture where developers can
-add new plugins or exports modules.
+add new plugins or exports modules. It can also be used as a Python library
+in your own scripts and notebooks.
 
 Usage 👋
 ========
 
-For the standalone (TUI) mode, just run:
+Glances can be used in the following modes.
+
+1. TUI (standalone mode)
+------------------------
+
+Monitor the local machine in your terminal:
 
 .. code-block:: console
 
@@ -97,68 +130,91 @@ For the standalone (TUI) mode, just run:
 
 .. image:: ./docs/_static/glances-summary.png
 
-For the Web server mode (REST API and WebUI), run:
+Press ``h`` in the interface to display the hotkeys.
+
+2. WebUI (Web server mode)
+--------------------------
+
+Start the Web server (REST API and WebUI):
 
 .. code-block:: console
 
     $ glances -s
 
-(``-w`` is an alias of ``-s``) and enter the URL ``http://localhost:61208`` in your favorite web browser.
+(``-w`` is an alias of ``-s``) and enter the URL ``http://localhost:61208`` in your
+favorite web browser.
 
 .. image:: ./docs/_static/screenshot-web.png
 
-The server listens on ``127.0.0.1`` by default. To monitor the machine from another one,
+The server listens on ``127.0.0.1`` by default. To reach it from another machine,
 listen on all interfaces with ``-B 0.0.0.0`` (or ``bind_address`` in the ``[outputs]``
 section of the configuration file) and enter the URL ``http://<ip>:61208``.
 
-In this mode, a HTTP/Restful API is exposed under ``/api/5``, see document `RestfulApi`_ for more details.
-Use ``--disable-webui`` to serve the API without the WebUI.
+The same server exposes a HTTP/RESTful API under ``/api/5``, see the `RestfulApi`_
+documentation. It is **not protected by default**, see `Advanced usage 🔧`_ to set a
+password.
 
-The server is not protected by default. To protect it with a password, generate a
-password hash:
+3. TUI client / server mode
+---------------------------
 
-.. code-block:: console
-
-    $ glances --set-password
-
-and paste the printed value into the ``password`` key of the ``[outputs]`` section of
-your ``glances.conf`` file.
-
-To also expose a `MCP (Model Context Protocol)`_ server (for AI assistants), add ``--enable-mcp``:
+Start a server on the machine to monitor:
 
 .. code-block:: console
 
-    $ glances -s --enable-mcp
+    server$ glances -s -B 0.0.0.0
 
-The MCP endpoint (SSE transport) is then available at ``http://<ip>:61208/mcp/sse``.
-See the `McpApi`_ documentation for client configuration and usage.
-
-To monitor a remote Glances server from your terminal (TUI client mode), run:
+and display it in the terminal of another machine:
 
 .. code-block:: console
 
-    $ glances -c <ip>
+    client$ glances -c <server_ip>
 
-The client reads the stats from the server REST API (use ``--password`` to be prompted
-for the server password).
+.. image:: ./docs/_static/screenshot-client.png
 
-You can also detect and display all Glances servers available on your
-network (or defined in the configuration file) in TUI:
+The client reads the stats from the server REST API (use ``--password`` to be
+prompted for the server password). A Glances 5 client only talks to a Glances 5 server.
+
+4. TUI browser
+--------------
+
+List all Glances servers available on your network (Zeroconf) or defined in the
+``[serverlist]`` section of the configuration file, then open one of them:
 
 .. code-block:: console
 
     $ glances --browser
 
-or WebUI (at the URL ``http://<ip>:61208/browser``):
+.. image:: ./docs/_static/browser.png
+
+5. WebUI browser
+----------------
+
+The same servers list, served in a Web page at ``http://<ip>:61208/browser``:
 
 .. code-block:: console
 
     $ glances -s --browser
 
-Advanced usage 👋
+.. image:: ./docs/_static/screenshot-webui-browser.png
+
+6. Fetch mode
+-------------
+
+Get (and share) a quick look of a machine, then exit:
+
+.. code-block:: console
+
+    $ glances --fetch
+
+.. image:: ./docs/_static/screenshot-fetch.png
+
+The output can be customized with a Jinja template (``--fetch-template``),
+see the `Fetch`_ documentation.
+
+Advanced usage 🔧
 =================
 
-It possible to display raw stats on stdout:
+Display raw stats on stdout:
 
 .. code-block:: console
 
@@ -189,194 +245,276 @@ or in a JSON format thanks to the stdout-json option (one JSON object per refres
     {"cpu": {"user": 24.7, "system": 3.8, "idle": 71.4, "nice": 0.0, "iowait": 0.0, "irq": 0.0, "steal": 0.0, "guest": 0.0, "total": 29.0, "ctx_switches": 0, "interrupts": 0, "soft_interrupts": 0, "syscalls": 0, "cpucore": 4}, "mem": {"total": 7837949952, "available": 2919079936, "percent": 62.8, "used": 4918870016, "free": 2919079936, "active": 2841214976, "inactive": 3340550144, "buffers": 546799616, "cached": 3068141568, "shared": 788156416, "slab": 158588928}}
     ...
 
-Stats can also be exported without any interface, thanks to the quiet mode:
+Export stats without any interface, thanks to the quiet mode:
 
 .. code-block:: console
 
     $ glances -q --export csv --export-csv-file /tmp/glances.csv
 
-Last but not least, you can use the fetch mode to get a quick look of a machine:
+Protect the Web server with a password: generate a password hash
 
 .. code-block:: console
 
-    $ glances --fetch
+    $ glances --set-password
 
-Results look like this:
+and paste the printed value into the ``password`` key of the ``[outputs]`` section of
+your ``glances.conf`` file.
 
-.. image:: ./docs/_static/screenshot-fetch.png
+Serve the REST API without the WebUI, and browse its interactive documentation
+(Swagger at ``/docs``, ReDoc at ``/redoc``):
+
+.. code-block:: console
+
+    $ glances -s --disable-webui --api-doc
+
+Expose a `MCP (Model Context Protocol)`_ server for AI assistants:
+
+.. code-block:: console
+
+    $ glances -s --enable-mcp
+
+The MCP endpoint (SSE transport) is then available at ``http://<ip>:61208/mcp/sse``.
+See the `McpApi`_ documentation for client configuration and usage.
+
+Choose what is collected and displayed:
+
+.. code-block:: console
+
+    $ glances --modules-list                     # list plugins and exporters
+    $ glances --disable-plugin sensors,wifi      # do not collect these plugins
+    $ glances -t 5                               # refresh every 5 seconds
+    $ glances -f 'python.*'                      # filter the process list
+
+Use another configuration file with ``-C <path>``, or override any key with an
+environment variable ``GLANCES_<SECTION>__<KEY>=<value>`` (handy in containers),
+see the `Configuration`_ documentation.
+
+Report a bug: ``glances --issue`` tests every plugin and prints a Markdown report
+to paste into the GitHub issue.
+
+If you do not want to remember all those options, @yottajunaid has created a simple
+launcher_ for Linux.
 
 Use Glances as a Python library 📚
 ==================================
 
-You can access the Glances API by importing the `glances.api` module and creating an
-instance of the `GlancesAPI` class. This instance provides access to all Glances plugins
-and their fields. For example, to access the CPU plugin and its total field, you can
-use the following code:
+Every Glances plugin is available from Python, as a read-only mapping:
 
 .. code-block:: python
 
     >>> from glances import api
     >>> gl = api.GlancesAPI()
-    >>> gl.cpu
-    {'cpucore': 16,
-     'ctx_switches': 1214157811,
-     'guest': 0.0,
-     'idle': 91.4,
-     'interrupts': 991768733,
-     'iowait': 0.3,
-     'irq': 0.0,
-     'nice': 0.0,
-     'soft_interrupts': 423297898,
-     'steal': 0.0,
-     'syscalls': 0,
-     'system': 5.4,
-     'time_since_update': 2.0016403198242188,
-     'total': 7.3,
-     'user': 3.0}
-    >>> gl.cpu.get("total")
-    7.3
-    >>> gl.mem.get("used")
-    12498582144
-    >>> gl.auto_unit(gl.mem.get("used"))
-    11.6G
+    >>> gl.cpu["total"]
+    6.8
+    >>> gl.auto_unit(gl.mem["used"])
+    '9.45G'
+    >>> gl.network.keys()
+    ['wlp0s20f3', 'mpqemubrzone1', 'tap-8d309783ee6']
+    >>> gl.network["wlp0s20f3"]["bytes_recv"]
+    101.7532271038767
+    >>> [p["name"] for p in gl.top_process(limit=3)]
+    ['Isolated Web Co', 'terminator', 'claude']
+    >>> gl.plugins()
+    ['amps', 'containers', 'core', 'cpu', 'diskio', 'folders', 'fs', 'gpu', 'ip', ...]
 
-If the stats return a list of items (like network interfaces or processes), you can
-access them by their name:
+By default the stats are collected **on demand**, when they are read. In a notebook
+or a long-running tool, let Glances collect them **in the background**, so the
+history and the alerts fill up between two reads:
 
 .. code-block:: python
 
-    >>> gl.network.keys()
-    ['wlp0s20f3', 'veth33b370c', 'veth19c7711']
-    >>> gl.network.get("wlp0s20f3")
-    {'bytes_recv': 599.0,
-     'bytes_recv_cumul': 7420522678,
-     'bytes_sent': 433.0,
-     'bytes_sent_cumul': 1821763031,
-     'bytes_speed_rate_per_sec': 0.0,
-     'dropped_in': 0.0,
-     'dropped_out': 0.0,
-     'errors_in': 0.0,
-     'errors_out': 0.0,
-     'hidden': False,
-     'interface_name': 'wlp0s20f3',
-     'is_up': True}
+    >>> import time
+    >>> with api.GlancesAPI(background=True, plugins=["cpu", "mem"]) as gl:
+    ...     time.sleep(60)
+    ...     gl.cpu.history(nb=30)
+    ...     gl.alerts()
 
-For a complete example of how to use Glances as a library, have a look to the `PythonApi`_.
+Each plugin view also gives its fields description (``.fields``), its thresholds
+(``.limits``) and its alert levels (``.levels``). The API reads ``glances.conf``
+as Glances does, but never runs the configured actions nor the exporters.
 
-If you do not want to remember all thoses options, @yottajunaid has created a simple launcher_ for Linux.
+The Glances 5 Python API replaces the Glances 4 one. See the `PythonApi`_
+documentation for the complete reference.
 
 Documentation 📜
 ================
 
-For complete documentation have a look at the readthedocs_ website.
+The complete documentation is on readthedocs_:
 
-If you have any question (after RTFM! and the `FAQ`_), please post it on the official Reddit `forum`_ or in GitHub `Discussions`_.
+.. list-table::
+   :header-rows: 1
+   :widths: 30 70
+
+   * - Topic
+     - Content
+   * - 🚀 `Quickstart`_
+     - First steps, modes and hotkeys
+   * - ⌨️ `Command reference`_
+     - All the command line options
+   * - ⚙️ `Configuration`_
+     - The ``glances.conf`` file
+   * - 📊 `Plugins`_
+     - What every plugin shows, and how to tune it
+   * - 🌐 `Exports`_
+     - Gateways to other services
+   * - 🔌 `RestfulApi`_ / `PythonApi`_ / `McpApi`_
+     - The APIs
+   * - 🐳 `Docker`_
+     - Run Glances in a container
+   * - ❓ `FAQ`_
+     - Frequently asked questions
+
+If you have any question (after RTFM! and the `FAQ`_), please post it on the official
+Reddit `forum`_ or in GitHub `Discussions`_.
 
 Gateway to other services 🌐
 ============================
 
-Glances can export stats to:
+Glances can export its stats to:
 
-- files: ``CSV`` and ``JSON``
-- databases:  ``InfluxDB``, ``ElasticSearch``, ``PostgreSQL/TimeScale``, ``Cassandra``, ``ClickHouse``, ``CouchDB``, ``OpenTSDB``, ``Prometheus``, ``StatsD``, ``Riemann`` and ``Graphite``
-- brokers: ``RabbitMQ/ActiveMQ``, ``NATS``, ``ZeroMQ`` and ``Kafka``
-- others: ``RESTful`` endpoint
+.. list-table::
+   :widths: 25 75
+
+   * - 📁 **Files**
+     - |csv| |json| |graph|
+   * - 📈 **Time series**
+     - |influxdb| |prometheus| |timescaledb| |graphite| |opentsdb| |statsd| |riemann|
+   * - 🗄️ **Databases**
+     - |elasticsearch| |clickhouse| |duckdb| |mongodb| |cassandra| |couchdb|
+   * - 📨 **Message brokers**
+     - |kafka| |rabbitmq| |mqtt| |nats| |zeromq|
+   * - 🔗 **HTTP**
+     - |restful|
+
+.. |csv| image:: https://img.shields.io/badge/CSV-217346?logo=files&logoColor=white
+    :target: https://glances.readthedocs.io/en/develop/gw/csv.html
+    :alt: CSV
+.. |json| image:: https://img.shields.io/badge/JSON-000000?logo=json&logoColor=white
+    :target: https://glances.readthedocs.io/en/develop/gw/json.html
+    :alt: JSON
+.. |graph| image:: https://img.shields.io/badge/Graph%20(SVG)-FFB13B?logo=svg&logoColor=white
+    :target: https://glances.readthedocs.io/en/develop/gw/graph.html
+    :alt: Graph
+.. |influxdb| image:: https://img.shields.io/badge/InfluxDB%201%2F2%2F3-22ADF6?logo=influxdb&logoColor=white
+    :target: https://glances.readthedocs.io/en/develop/gw/influxdb.html
+    :alt: InfluxDB
+.. |prometheus| image:: https://img.shields.io/badge/Prometheus-E6522C?logo=prometheus&logoColor=white
+    :target: https://glances.readthedocs.io/en/develop/gw/prometheus.html
+    :alt: Prometheus
+.. |timescaledb| image:: https://img.shields.io/badge/PostgreSQL%2FTimescaleDB-4169E1?logo=postgresql&logoColor=white
+    :target: https://glances.readthedocs.io/en/develop/gw/timescaledb.html
+    :alt: PostgreSQL/TimescaleDB
+.. |graphite| image:: https://img.shields.io/badge/Graphite-5A5A5A
+    :target: https://glances.readthedocs.io/en/develop/gw/graphite.html
+    :alt: Graphite
+.. |opentsdb| image:: https://img.shields.io/badge/OpenTSDB-4B8BBE
+    :target: https://glances.readthedocs.io/en/develop/gw/opentsdb.html
+    :alt: OpenTSDB
+.. |statsd| image:: https://img.shields.io/badge/StatsD-6E4A7E
+    :target: https://glances.readthedocs.io/en/develop/gw/statsd.html
+    :alt: StatsD
+.. |riemann| image:: https://img.shields.io/badge/Riemann-C0392B
+    :target: https://glances.readthedocs.io/en/develop/gw/riemann.html
+    :alt: Riemann
+.. |elasticsearch| image:: https://img.shields.io/badge/Elasticsearch-005571?logo=elasticsearch&logoColor=white
+    :target: https://glances.readthedocs.io/en/develop/gw/elastic.html
+    :alt: Elasticsearch
+.. |clickhouse| image:: https://img.shields.io/badge/ClickHouse-FFCC01?logo=clickhouse&logoColor=black
+    :target: https://glances.readthedocs.io/en/develop/gw/clickhouse.html
+    :alt: ClickHouse
+.. |duckdb| image:: https://img.shields.io/badge/DuckDB-FFF000?logo=duckdb&logoColor=black
+    :target: https://glances.readthedocs.io/en/develop/gw/duckdb.html
+    :alt: DuckDB
+.. |mongodb| image:: https://img.shields.io/badge/MongoDB-47A248?logo=mongodb&logoColor=white
+    :target: https://glances.readthedocs.io/en/develop/gw/mongodb.html
+    :alt: MongoDB
+.. |cassandra| image:: https://img.shields.io/badge/Cassandra-1287B1?logo=apachecassandra&logoColor=white
+    :target: https://glances.readthedocs.io/en/develop/gw/cassandra.html
+    :alt: Cassandra
+.. |couchdb| image:: https://img.shields.io/badge/CouchDB-E42528?logo=apachecouchdb&logoColor=white
+    :target: https://glances.readthedocs.io/en/develop/gw/couchdb.html
+    :alt: CouchDB
+.. |kafka| image:: https://img.shields.io/badge/Kafka-231F20?logo=apachekafka&logoColor=white
+    :target: https://glances.readthedocs.io/en/develop/gw/kafka.html
+    :alt: Kafka
+.. |rabbitmq| image:: https://img.shields.io/badge/RabbitMQ%2FActiveMQ-FF6600?logo=rabbitmq&logoColor=white
+    :target: https://glances.readthedocs.io/en/develop/gw/rabbitmq.html
+    :alt: RabbitMQ/ActiveMQ
+.. |mqtt| image:: https://img.shields.io/badge/MQTT-660066?logo=mqtt&logoColor=white
+    :target: https://glances.readthedocs.io/en/develop/gw/mqtt.html
+    :alt: MQTT
+.. |nats| image:: https://img.shields.io/badge/NATS-27AAE1?logo=natsdotio&logoColor=white
+    :target: https://glances.readthedocs.io/en/develop/gw/nats.html
+    :alt: NATS
+.. |zeromq| image:: https://img.shields.io/badge/ZeroMQ-DF0000?logo=zeromq&logoColor=white
+    :target: https://glances.readthedocs.io/en/develop/gw/zeromq.html
+    :alt: ZeroMQ
+.. |restful| image:: https://img.shields.io/badge/RESTful%20endpoint-009688?logo=fastapi&logoColor=white
+    :target: https://glances.readthedocs.io/en/develop/gw/restful.html
+    :alt: RESTful
 
 Installation 🚀
 ===============
 
-There are several methods to test/install Glances on your system. Choose your weapon!
+The methods below install the **latest stable release** (Glances 4.5.8 today).
+To test Glances 5, see the beta box at the top of this page.
 
-PyPI: Pip, the standard way
----------------------------
+PyPI: pip, pipx or uv
+---------------------
 
-Glances is on ``PyPI``. By using PyPI, you will be using the latest stable version.
-
-To install Glances, simply use the ``pip`` command line in an virtual environment.
+Glances is on ``PyPI``. Install it in a virtual environment with ``pip``:
 
 .. code-block:: console
 
-    cd ~
     python3 -m venv ~/.venv
     source ~/.venv/bin/activate
-    pip install glances
-
-*Note*: Python headers are required to install `psutil`_, a Glances
-dependency. For example, on Debian/Ubuntu **the simplest** is
-``apt install python3-psutil`` or alternatively need to install first
-the *python-dev* package and gcc (*python-devel* on Fedora/CentOS/RHEL).
-For Windows, just install psutil from the binary installation file.
-
-By default, Glances is installed **without** the Web interface dependencies.
-
-To install it, use the following command:
-
-.. code-block:: console
-
-    pip install 'glances[web]'
-
-For a full installation (with all features, see features list bellow):
-
-.. code-block:: console
-
     pip install 'glances[all]'
 
-Features list:
-
-- all: install dependencies for all features
-- action: install dependencies for action feature
-- browser: install dependencies for Glances centram browser
-- cloud: install dependencies for cloud plugin
-- containers: install dependencies for container plugin
-- export: install dependencies for all exports modules
-- gpu: install dependencies for GPU plugin
-- graph: install dependencies for graph export
-- mcp: install dependencies for the MCP server (AI assistant integration)
-- raid: install dependencies for RAID plugin
-- sensors: install dependencies for sensors plugin
-- smart: install dependencies for smart plugin
-- web: install dependencies for Webserver (WebUI) and Web API
-- wifi: install dependencies for Wifi plugin
-
-To upgrade Glances to the latest version:
+or, as an isolated application, with `pipx`_ or `Uv`_:
 
 .. code-block:: console
 
-    pip install --upgrade glances
+    pipx install 'glances[all]'    # installed in ~/.local/bin
+    uvx glances                     # install and run in one line
 
-UVx, the magic way
-------------------
+To upgrade: ``pip install --upgrade glances`` (or ``pipx upgrade glances``).
 
-Install and run directly Glances with the one line:
+``pip install glances`` (without extra) installs a minimal Glances, without the Web
+interface. Pick only the features you need between the brackets, for example
+``pip install 'glances[web,containers]'``:
 
-.. code-block:: console
+.. list-table::
+   :header-rows: 1
+   :widths: 20 80
 
-    uvx glances
+   * - Extra
+     - Feature
+   * - ``all``
+     - All the features below
+   * - ``web``
+     - Web server mode (WebUI and REST API)
+   * - ``mcp``
+     - MCP server (AI assistant integration)
+   * - ``browser``
+     - Servers autodiscovery for the browser modes
+   * - ``containers``
+     - Docker, Podman and LXD containers
+   * - ``gpu``
+     - NVIDIA GPU
+   * - ``sensors``
+     - Battery (Linux)
+   * - ``raid`` / ``smart`` / ``wifi``
+     - RAID, S.M.A.R.T. and Wifi plugins (Linux)
+   * - ``cloud``
+     - Cloud instance metadata
+   * - ``action``
+     - Mustache templating in the alert actions
+   * - ``export`` / ``graph``
+     - Export modules / SVG graph export
 
-Note: `Uv`_ should be installed on your system.
-
-PyPI: PipX, the alternative way
--------------------------------
-
-Install PipX on your system. For example on Ubuntu/Debian:
-
-.. code-block:: console
-
-    sudo apt install pipx
-
-Then install Glances (with all features):
-
-.. code-block:: console
-
-    pipx install 'glances[all]'
-
-The glances script will be installed in the ~/.local/bin folder.
-
-To upgrade Glances to the latest version:
-
-.. code-block:: console
-
-    pipx upgrade glances
+*Note*: `psutil`_, the main Glances dependency, is built from source when no wheel
+is available for your platform. Python headers and a C compiler are then required
+(``python3-dev`` and ``gcc`` on Debian/Ubuntu, ``python3-devel`` on Fedora/RHEL).
 
 Docker: the cloudy way
 ----------------------
@@ -463,124 +601,63 @@ It is also possible to use a simple Docker compose file to:
     wget https://raw.githubusercontent.com/nicolargo/glances/refs/heads/develop/docker-compose/glances.conf
     docker compose -f ./docker-compose-tui.yml run glances
 
-Brew: The missing package manager
----------------------------------
-
-For Linux and macOS, it is also possible to install Glances with `Brew`_:
+macOS and Linux: Homebrew or MacPorts
+-------------------------------------
 
 .. code-block:: console
 
-    brew install glances
+    $ brew install glances          # Homebrew (macOS and Linux)
+    $ sudo port install glances     # MacPorts (macOS)
 
-GNU/Linux package
------------------
-
-`Glances` is available on many Linux distributions, so you should be
-able to install it using your favorite package manager. Nevetheless,
-**i do not recommend it**. Be aware that when you use this method the operating
-system `package`_ for `Glances` may not be the latest version and only basics
-plugins are enabled.
-
-Note: The Debian package (and all other Debian-based distributions) do
-not include anymore the JS statics files used by the Web interface
-(see `issue 2021 <https://github.com/nicolargo/glances/issues/2021>`_). If you want to add it to your Glances installation,
-follow the instructions `here: <https://github.com/nicolargo/glances/issues/2021#issuecomment-1197831157>`_. In Glances version 4,
-the path to the statics file is configurable (see `issue 2621 <https://github.com/nicolargo/glances/issues/2612>`_). Glances version 5
-serves the WebUI files shipped in its Python package.
+See the Glances `Brew`_ formula.
 
 FreeBSD
 -------
 
-On FreeBSD, package name depends on the Python version.
-
-Check for Python version:
-
-.. code-block:: console
-
-     # python --version
-
-Install the Glances package:
+Install the package matching your Python version (for example ``py311-glances``
+for Python 3.11, check it with ``python --version``):
 
 .. code-block:: console
 
-    # pkg install pyXY-glances
+    # pkg install py311-glances
 
-Where X and Y are the Major and Minor Values of your Python System.
-
-.. code-block:: console
-
-    # Example for Python 3.11.3: pkg install py311-glances
-
-**NOTE:** Check Glances Binary Package Version for your System Architecture.
-You must have the Correct Python Version Installed which corresponds to the Glances Binary Package.
-
-To install Glances from Ports:
+or from the Ports:
 
 .. code-block:: console
 
     # cd /usr/ports/sysutils/py-glances/
     # make install clean
 
-macOS
------
-
-macOS users can install Glances using ``Homebrew`` or ``MacPorts``.
-
-Homebrew
-````````
-
-.. code-block:: console
-
-    $ brew install glances
-
-MacPorts
-````````
-
-.. code-block:: console
-
-    $ sudo port install glances
-
 Windows
 -------
 
-Install `Python`_ for Windows (Python 3.4+ ship with pip) and
-follow the Glances Pip install procedure.
+Install `Python`_ 3.10 or higher for Windows and follow the PyPI procedure above.
 
 Android
 -------
 
 You need a rooted device and the `Termux`_ application (available on the
-Google Play Store).
-
-Start Termux on your device and enter:
+Google Play Store). Start Termux on your device and enter:
 
 .. code-block:: console
 
-    $ apt update
-    $ apt upgrade
+    $ apt update && apt upgrade
     $ apt install clang python
-    $ pip install fastapi uvicorn jinja2
-    $ pip install glances
-
-And start Glances:
-
-.. code-block:: console
-
+    $ pip install 'glances[web]'
     $ glances
 
-You can also run Glances in server mode (-s or -w) in order to remotely
+You can also run Glances in server mode (``-s``) in order to remotely
 monitor your Android device.
 
 Source
 ------
 
-To install Glances from source:
+To install Glances from source (a release tarball, or the develop branch):
 
 .. code-block:: console
 
-    $ pip install https://github.com/nicolargo/glances/archive/vX.Y.tar.gz
-
-*Note*: Python headers are required to install psutil.
+    $ pip install https://github.com/nicolargo/glances/archive/vX.Y.Z.tar.gz
+    $ pip install 'glances[web] @ git+https://github.com/nicolargo/glances.git@develop'
 
 Shell tab completion 🔍
 =======================
@@ -595,59 +672,63 @@ For example, on a Linux operating system with bash shell:
     $ glances --print-completion bash > ${XDG_DATA_HOME:="$HOME/.local/share"}/bash-completion/glances
     $ source ${XDG_DATA_HOME:="$HOME/.local/share"}/bash-completion/glances
 
-Following shells are supported: bash, zsh and tcsh.
+Following shells are supported: bash, zsh, tcsh, fish and powershell.
 
 Requirements 🧩
 ===============
 
-Glances is developed in Python. A minimal Python version 3.10 or higher
-should be installed on your system.
+Glances 5 requires **Python 3.10 or higher** (tested up to Python 3.14) and runs on
+Linux, macOS, FreeBSD and Windows.
 
-*Note for Python 2 users*
+Core dependencies (always installed):
 
-Glances version 4 or higher do not support Python 2 (and Python 3 < 3.10).
-Please uses Glances version 3.4.x if you need Python 2 support.
+- ``psutil`` (system stats, better with the latest version)
+- ``requests`` (client mode, Ports and Cloud plugins, RESTful export module)
+- ``jinja2`` (fetch mode and templating)
+- ``shtab`` (shell autocompletion) [All but Windows]
+- ``windows-curses`` (curses implementation) [Windows only]
 
-Dependencies:
+Optional dependencies, by extra (see the ``[project.optional-dependencies]`` section
+of ``pyproject.toml`` for the exact versions):
 
-- ``psutil`` (better with latest version)
-- ``requests`` (for the client mode, the Ports and Cloud plugins and the RESTful export module)
-- ``windows-curses`` (Windows Curses implementation) [Windows-only]
-- ``shtab`` (Shell autocompletion) [All but Windows]
-- ``jinja2`` (for fetch mode and templating)
+.. list-table::
+   :header-rows: 1
+   :widths: 20 80
 
-Extra dependencies:
+   * - Extra
+     - Dependencies
+   * - ``web``
+     - ``fastapi``, ``uvicorn``, ``starlette``, ``python-jose``, ``msgpack``
+   * - ``mcp``
+     - ``mcp``
+   * - ``browser``
+     - ``zeroconf``
+   * - ``containers``
+     - ``docker``, ``podman``, ``pylxd`` (and ``packaging``, ``python-dateutil``, ``six``)
+   * - ``gpu``
+     - ``nvidia-ml-py``
+   * - ``sensors``
+     - ``batinfo`` [Linux only]
+   * - ``raid``
+     - ``pymdstat`` [Linux only]
+   * - ``smart``
+     - ``pySMART`` [Linux only]
+   * - ``wifi``
+     - ``wifi`` [Linux only]
+   * - ``cloud``
+     - ``requests``
+   * - ``action``
+     - ``chevron``
+   * - ``graph``
+     - ``pygal``
+   * - ``export``
+     - ``bernhard``, ``clickhouse-connect``, ``elasticsearch``, ``graphitesender``,
+       ``ibmcloudant``, ``influxdb``, ``influxdb-client``, ``influxdb3-python``,
+       ``kafka-python``, ``nats-py``, ``paho-mqtt``, ``pika``, ``potsdb``,
+       ``prometheus_client``, ``psycopg[binary]``, ``pymongo``, ``pyzmq``, ``statsd``
 
-- ``batinfo`` (for battery monitoring)
-- ``bernhard`` (for the Riemann export module)
-- ``cassandra-driver`` (for the Cassandra export module)
-- ``clickhouse-connect`` (for the ClickHouse export module)
-- ``chevron`` (for the action script feature)
-- ``docker`` (for the Containers Docker monitoring support)
-- ``elasticsearch`` (for the Elastic Search export module)
-- ``FastAPI`` and ``Uvicorn`` (for Web server mode)
-- ``mcp`` (for the MCP server — AI assistant integration)
-- ``graphitesender`` (For the Graphite export module)
-- ``influxdb`` (for the InfluxDB version 1 export module)
-- ``influxdb-client``  (for the InfluxDB version 2 export module)
-- ``kafka-python`` (for the Kafka export module)
-- ``nats-py`` (for the NATS export module)
-- ``nvidia-ml-py`` (for the GPU plugin)
-- ``pycouchdb`` (for the CouchDB export module)
-- ``pika`` (for the RabbitMQ/ActiveMQ export module)
-- ``podman`` (for the Containers Podman monitoring support)
-- ``potsdb`` (for the OpenTSDB export module)
-- ``prometheus_client`` (for the Prometheus export module)
-- ``pylxd`` (for the LXC Containers monitoring support)
-- ``psycopg[binary]`` (for the PostgreSQL/TimeScale export module)
-- ``pygal`` (for the graph export module)
-- ``pymdstat`` (for RAID support) [Linux-only]
-- ``pymongo`` (for the MongoDB export module)
-- ``pySMART.smartx`` (for HDD Smart support) [Linux-only]
-- ``pyzmq`` (for the ZeroMQ export module)
-- ``statsd`` (for the StatsD export module)
-- ``wifi`` (for the wifi plugin) [Linux-only]
-- ``zeroconf`` (for the autodiscover mode)
+Not included in any extra: ``duckdb`` (DuckDB export module) and ``pycouchdb``
+(CouchDB export module), install them manually if needed.
 
 How to contribute ? 🤝
 ======================
@@ -685,24 +766,34 @@ License 📜
 
 Glances is distributed under the LGPL version 3 license. See ``COPYING`` for more details.
 
-More stars ! 🌟
-===============
+.. raw:: html
 
-Please give us a star on `GitHub`_ if you like this project.
+   <div align="center">
+
+.. image:: ./docs/_static/glances-responsive-webdesign.png
+
+.. raw:: html
+
+   </div>
 
 .. _psutil: https://github.com/giampaolo/psutil
 .. _Brew: https://formulae.brew.sh/formula/glances
+.. _pipx: https://pipx.pypa.io/
 .. _Python: https://www.python.org/getit/
 .. _Termux: https://play.google.com/store/apps/details?id=com.termux
-.. _readthedocs: https://glances.readthedocs.io/
+.. _readthedocs: https://glances.readthedocs.io/en/develop/
 .. _forum: https://www.reddit.com/r/glances/
 .. _wiki: https://github.com/nicolargo/glances/wiki/How-to-contribute-to-Glances-%3F
-.. _package: https://repology.org/project/glances/versions
 .. _sponsors: https://github.com/sponsors/nicolargo
 .. _wishlist: https://www.amazon.fr/hz/wishlist/ls/BWAAQKWFR3FI?ref_=wl_share
 .. _Uv: https://docs.astral.sh/uv/getting-started/installation/
-.. _Docker: https://github.com/nicolargo/glances/blob/master/docs/docker.rst
-.. _GitHub: https://github.com/nicolargo/glances
+.. _Docker: https://github.com/nicolargo/glances/blob/develop/docs/docker.rst
+.. _Quickstart: https://glances.readthedocs.io/en/develop/quickstart.html
+.. _`Command reference`: https://glances.readthedocs.io/en/develop/cmds.html
+.. _Configuration: https://glances.readthedocs.io/en/develop/config.html
+.. _Plugins: https://glances.readthedocs.io/en/develop/aoa/index.html
+.. _Exports: https://glances.readthedocs.io/en/develop/gw/index.html
+.. _Fetch: https://glances.readthedocs.io/en/develop/fetch.html
 .. _PythonApi: https://glances.readthedocs.io/en/develop/api/python.html
 .. _RestfulApi: https://glances.readthedocs.io/en/develop/api/restful.html
 .. _McpApi: https://glances.readthedocs.io/en/develop/api/mcp.html
