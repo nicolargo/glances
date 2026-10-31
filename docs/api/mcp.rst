@@ -70,7 +70,17 @@ URI                                          Description
 ``glances://plugins``                        JSON list of all active plugin names
 ``glances://stats``                          JSON object of all plugins' current statistics
 ``glances://limits``                         JSON object of alert thresholds for all plugins
+``glances://info``                           JSON object of every plugin's field schema
+                                             (unit, description, rate or counter)
+``glances://alerts/incidents``               Alert incidents, ongoing first:
+                                             ``{is_initializing, incidents}``, the same
+                                             payload as ``/api/5/alert/incidents``
 ============================================ ================================================
+
+``glances://stats/alert`` is the raw, bounded transition log (as
+``/api/5/alert``): read ``glances://alerts/incidents`` to know which alerts are
+active. While ``is_initializing`` is true, an empty ``incidents`` list means
+Glances is still warming up, not that the system is healthy.
 
 Resource templates (parameterised)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -81,10 +91,32 @@ URI template                                   Description
 ``glances://stats/{plugin}``                   Current statistics for one plugin
 ``glances://stats/{plugin}/history``           Historical time-series for one plugin
 ``glances://limits/{plugin}``                  Alert thresholds for one plugin
+``glances://info/{plugin}``                    Field schema for one plugin
 ============================================== =====================================================
 
 Replace ``{plugin}`` with any name returned by ``glances://plugins``
 (e.g. ``cpu``, ``mem``, ``network``, ``processlist``, …).
+
+Tools
+-----
+
+MCP tools are read-only queries the model can call on its own. They take the
+filters the REST API takes as query parameters, so a client can fetch only what
+it needs instead of a whole plugin payload. They change nothing on the host.
+
+=============================== ===================================== ===============================================
+Tool                            Parameters                            REST equivalent
+=============================== ===================================== ===============================================
+``get_plugin_history``          ``plugin``, ``nb`` (0 = all),         ``/api/5/{plugin}/history?nb=&field=&item=``
+                                ``field``, ``item``
+``get_plugin_field``            ``plugin``, ``field``, ``item``       ``/api/5/{plugin}/{field}`` and
+                                                                      ``/api/5/{plugin}/{field}/{item}``
+``get_plugin_top``              ``plugin``, ``n``                     ``/api/5/{plugin}/top/{n}``
+``get_plugin_items_by_value``   ``plugin``, ``field``, ``value``      ``/api/5/{plugin}/{field}/value/{value}``
+=============================== ===================================== ===============================================
+
+The query tools return ``null`` while a plugin has not published its first
+statistics. An unknown plugin, field or item is reported as a tool error.
 
 Prompts
 -------
@@ -98,7 +130,7 @@ into a system prompt ready to be sent to an LLM.
 | ``system_health_summary``   | Overall health report: CPU, memory, swap,           | *(none)*          |
 |                             | load, filesystems, network                          |                   |
 +-----------------------------+-----------------------------------------------------+-------------------+
-| ``alert_analysis``          | Analysis of active alerts with remediation steps    | ``level``         |
+| ``alert_analysis``          | Analysis of alert incidents with remediation steps  | ``level``         |
 |                             |                                                     | (``warning`` /    |
 |                             |                                                     | ``critical`` /    |
 |                             |                                                     | ``all``)          |

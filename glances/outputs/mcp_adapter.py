@@ -43,7 +43,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from glances.alerts_incidents import incidents_payload
+from glances.plugins.plugin.query import PluginQueryError
+
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from glances.alerts import GlancesAlerts
     from glances.plugins.plugin.base import GlancesPluginBase
 
@@ -60,9 +65,8 @@ KNOWN_MISSING_PLUGINS: tuple[str, ...] = ()
 class McpPluginView:
     """v4-``GlancesPlugin``-like facade for one plugin's stats.
 
-    Three concrete entry points are consumed by ``GlancesMcpServer``:
-    ``get_raw()``, ``get_raw_history(item=None, nb=0)`` and
-    ``get_limits()``.
+    Entry points consumed by ``GlancesMcpServer``: ``get_raw()``,
+    ``get_raw_history()``, ``get_info()``, ``get_limits()`` and ``query()``.
     """
 
     def __init__(
@@ -93,19 +97,36 @@ class McpPluginView:
             return {}
         return self._plugin.get_api_payload()
 
-    def get_raw_history(self, item: str | None = None, nb: int = 0) -> dict[str, Any]:
+    def get_raw_history(self, item: str | None = None, nb: int = 0, field: str | None = None) -> dict[str, Any]:
         """Return the plugin's history, in the REST route's columnar shape.
 
-        ``item`` narrows a collection to one raw primary-key value. An unknown
-        item, a synthetic plugin and a disabled history all give the empty
-        payload rather than an error, as v4 gives an empty mapping.
+        ``item`` narrows a collection to one raw primary-key value, ``field``
+        to one historised field. An unknown ``field`` or ``item`` raises
+        ``KeyError``, as REST answers 404 -- an empty payload would hide a
+        typo. A synthetic plugin and a disabled history give the empty
+        payload, as v4 gives an empty mapping.
         """
         if self._plugin is None:
             return {"timestamps": [], "series": {}}
-        try:
-            return self._plugin.get_history(nb=nb, item=item)
-        except KeyError:
-            return {"timestamps": [], "series": {}}
+        return self._plugin.get_history(nb=nb, field=field, item=item)
+
+    def query(self, query: Callable[..., Any], *args: Any) -> Any:
+        """Run a ``glances.plugins.plugin.query`` query on this plugin.
+
+        Synthetic plugins (``alert``) have no items to query.
+        """
+        if self._plugin is None:
+            raise PluginQueryError(f"Plugin {self._plugin_name!r} has no items")
+        return query(self._plugin, *args)
+
+    def get_info(self) -> dict[str, Any]:
+        """Return the plugin's field schema, as ``/api/5/<plugin>/info`` does.
+
+        Synthetic plugins (``alert``) have no schema.
+        """
+        if self._plugin is None:
+            return {}
+        return self._plugin.fields_description
 
     def get_limits(self) -> dict[str, Any]:
         """Return the plugin's **effective** thresholds.
@@ -155,8 +176,17 @@ class McpStatsAdapter:
         return list(self._by_name.keys()) + list(self.SYNTHETIC_PLUGIN_NAMES)
 
     def getAllAsDict(self) -> dict[str, Any]:  # noqa: N802
-        """Return a snapshot of every plugin's filtered payload (issue #3211)."""
-        return {name: plugin.get_api_payload() for name, plugin in self._by_name.items()}
+        """Return a snapshot of every plugin's filtered payload (issue #3211).
+
+        Empty payloads are skipped, as ``/api/5/all`` does: a plugin that has
+        not published yet is absent rather than present with an empty body.
+        """
+        payloads = {name: plugin.get_api_payload() for name, plugin in self._by_name.items()}
+        return {name: payload for name, payload in payloads.items() if payload}
+
+    def getAllInfoAsDict(self) -> dict[str, dict[str, Any]]:  # noqa: N802
+        """Every real plugin's field schema, published or not (``/api/5/all/info``)."""
+        return {name: plugin.fields_description for name, plugin in self._by_name.items()}
 
     def getAllLimitsAsDict(self) -> dict[str, dict[str, Any]]:  # noqa: N802
         """Aggregate thresholds across every real plugin.
@@ -187,6 +217,18 @@ class McpStatsAdapter:
         if plugin is None:
             return None
         return McpPluginView(plugin_name=name, plugin=plugin)
+
+    def get_alert_incidents(self) -> dict[str, Any] | None:
+        """Return the ``/api/5/alert/incidents`` envelope, or ``None`` without
+        an alerts pipeline (REST answers 404 there).
+
+        Unlike the synthetic ``alert`` view (the raw transition log), this is
+        the engine's own account of what is ACTIVE: the log is a bounded ring
+        buffer that drops a long-running alert's opening event.
+        """
+        if self._alerts is None:
+            return None
+        return incidents_payload(self._alerts)
 
     # ------------------------------------------------------------------ internals
 

@@ -25,7 +25,7 @@ Route inventory:
 | ``/api/5/all/limits``         | GET    | per-plugin ``get_limits()``  |
 | ``/api/5/all/info``           | GET    | per-plugin ``fields_description`` |
 | ``/api/5/alert``              | GET    | ``alerts.get_history()``     |
-| ``/api/5/alert/incidents``    | GET    | ``{is_initializing, incidents}`` envelope (``derive_incidents()``) |
+| ``/api/5/alert/incidents``    | GET    | ``{is_initializing, incidents}`` envelope (``incidents_payload()``) |
 | ``/api/5/config``             | GET    | ``as_dict_secure()`` with a password, else ``as_dict_public()`` |
 | ``/api/5/args``               | GET    | ``PUBLIC_ARGS`` without a password, else ``app.state.args``, redacted |
 | ``/api/5/<plugin>``           | GET    | ``plugin.get_api_payload()`` (``_levels`` included) |
@@ -58,8 +58,10 @@ from fastapi.responses import JSONResponse, Response
 from pydantic import TypeAdapter
 
 from glances import __apiversion__
-from glances.alerts_incidents import derive_incidents, incident_duration
+from glances.alerts_incidents import incidents_payload
 from glances.config import GlancesConfig
+from glances.plugins.plugin import query as plugin_query
+from glances.plugins.plugin.query import PluginQueryError
 from glances.processes import glances_processes, sort_processes_stats_list
 from glances.security import check_basic, decode_basic
 
@@ -428,44 +430,16 @@ async def _alert_incidents(request: Request) -> dict[str, Any]:
     replacement: that route stays the raw transition-log export
     contract.
 
-    Each incident also carries a ``duration``: the same formatted,
-    ``>``-prefixed-when-``partial`` string the curses renderer shows
-    (`incident_duration()`, also from `glances.alerts_incidents`).
-    Computed here rather than left to the caller so the browser cannot
-    grow a second implementation of the ``partial`` → ``>`` rule — a
-    client that dropped that prefix would print a lower bound as an
-    exact duration. ``duration`` is always present in the response;
-    its value is ``null`` for the handful of malformed/unknown cases
-    `incident_duration()` itself returns ``None`` for (see its
-    docstring), which a consumer must treat as "unknown", not as a
-    missing key.
-
-    `derive_incidents()` is pure and builds every incident dict fresh
-    (never a reference into `alerts._history` or `alerts._state`), so
-    mutating the returned dicts in place to add `duration` does not
-    touch anything the engine still owns.
-
-    Returns an envelope, not a bare array: ``is_initializing`` is
-    ``GlancesAlerts.is_initializing()``, the same flag
-    `render_alert_block` uses to tell "warm-up" from "no alert
-    detected" (curses_renderer.py:738-745) — warm-up is not an
-    all-clear, so a client must be able to tell the two apart instead
-    of reading an empty ``incidents`` list as a healthy system from the
-    very first paint (fix round 2, IMPORTANT 2). No consumer of this
-    route predates this change, so the shape is still free to pick.
+    The ``{is_initializing, incidents}`` envelope and each incident's
+    ``duration`` are built by `incidents_payload()`, shared with the MCP
+    ``glances://alerts/incidents`` resource; its docstring carries the
+    contract (``duration`` may be ``null``, ``is_initializing`` tells
+    warm-up from an all-clear).
     """
     alerts = request.app.state.alerts
     if alerts is None:
         raise HTTPException(status_code=404, detail="Alerts subsystem disabled")
-    incidents = derive_incidents(
-        alerts.get_history(),
-        ongoing=alerts.get_ongoing(),
-        ongoing_since=alerts.get_ongoing_since(),
-        ongoing_top=alerts.get_ongoing_top(),
-    )
-    for incident in incidents:
-        incident["duration"] = incident_duration(incident)
-    return {"is_initializing": alerts.is_initializing(), "incidents": incidents}
+    return incidents_payload(alerts)
 
 
 async def _config_dump(request: Request) -> dict[str, Any]:
@@ -494,63 +468,37 @@ async def _servers_list(request: Request) -> list[dict[str, Any]]:
     return [server.as_dict() for server in poller.servers]
 
 
-def _collection_plugin(request: Request, plugin_name: str):
-    plugin = _resolve_plugin(request, plugin_name)
-    if not plugin.IS_COLLECTION:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Plugin {plugin_name!r} has no items")
-    return plugin
+def _query(plugin, query, *args):
+    """Run a `glances.plugins.plugin.query` query as a route answer.
 
-
-def _check_field(plugin, rows: list[dict[str, Any]], field: str) -> None:
-    # The rows are the API projection: a non-exportable field is in none of
-    # them. An empty collection can only be checked against the schema, which
-    # /info serves anyway.
-    if not (any(field in row for row in rows) if rows else field in plugin.fields_description):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Field {field!r} not found")
+    `None` (not published yet) is the bare JSON ``null`` the other plugin
+    routes answer at cycle 0; a `PluginQueryError` is a 404.
+    """
+    try:
+        result = query(plugin, *args)
+    except PluginQueryError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    return JSONResponse(content=None) if result is None else result
 
 
 async def _plugin_top(request: Request, plugin_name: str, n: int = Path(ge=1)):
     """The first n items of a collection plugin, as a bare list (v4 `/top/<n>`)."""
-    payload = _collection_plugin(request, plugin_name).get_api_payload()
-    if not payload:
-        return JSONResponse(content=None)
-    return payload["data"][:n]
+    return _query(_resolve_plugin(request, plugin_name), plugin_query.top, n)
 
 
 async def _plugin_field(request: Request, plugin_name: str, field: str):
     """One field: `{field: value}`, a list of values for a collection (v4 `/<plugin>/<item>`)."""
-    plugin = _resolve_plugin(request, plugin_name)
-    payload = plugin.get_api_payload()
-    if not payload:
-        return JSONResponse(content=None)
-    if not plugin.IS_COLLECTION:
-        if field not in payload:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Field {field!r} not found")
-        return {field: payload[field]}
-    _check_field(plugin, payload["data"], field)
-    return {field: [row.get(field) for row in payload["data"]]}
+    return _query(_resolve_plugin(request, plugin_name), plugin_query.field_values, field)
 
 
 async def _plugin_item_field(request: Request, plugin_name: str, field: str, pk_value: str):
     """One field of the item whose primary key is pk_value (v4 `/<plugin>/<item>/<key>`)."""
-    payload = _collection_plugin(request, plugin_name).get_api_payload()
-    if not payload:
-        return JSONResponse(content=None)
-    # Compared as text: the path carries a string, the key may be a pid.
-    row = next((row for row in payload["data"] if str(row.get(payload["_key"])) == pk_value), None)
-    if row is None or field not in row:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"No {field!r} for item {pk_value!r}")
-    return {field: row[field]}
+    return _query(_resolve_plugin(request, plugin_name), plugin_query.item_field, field, pk_value)
 
 
 async def _plugin_value(request: Request, plugin_name: str, field: str, value: str):
     """The items whose field equals value: `{value: [items]}` (v4 `/<plugin>/<item>/value/<value>`)."""
-    plugin = _collection_plugin(request, plugin_name)
-    payload = plugin.get_api_payload()
-    if not payload:
-        return JSONResponse(content=None)
-    _check_field(plugin, payload["data"], field)
-    return {value: [row for row in payload["data"] if str(row.get(field)) == value]}
+    return _query(_resolve_plugin(request, plugin_name), plugin_query.items_by_value, field, value)
 
 
 def _redact_args(args: argparse.Namespace | None) -> dict[str, Any]:

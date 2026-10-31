@@ -227,13 +227,16 @@ def test_plugin_view_history_is_the_rest_payload(adapter, plugins):
     assert adapter.get_plugin("network").get_raw_history() == expected == net.get_history()
 
 
-def test_plugin_view_history_unknown_item_is_empty(adapter, plugins):
+def test_plugin_view_history_unknown_item_is_an_error(adapter, plugins):
+    """An unknown item is a KeyError, as REST answers 404: an empty payload
+    hid a typo in the item name. Only the history tool passes an item."""
     net = plugins[1]
     net.history = HistoryStore(10)
     net.history.record(
         "network", [{"interface_name": "eth0", "bytes_recv": 5.0}], ["bytes_recv"], "interface_name", now=1.0
     )
-    assert adapter.get_plugin("network").get_raw_history(item="nope") == {"timestamps": [], "series": {}}
+    with pytest.raises(KeyError):
+        adapter.get_plugin("network").get_raw_history(item="nope")
 
 
 def test_synthetic_alert_plugin_history_is_empty(adapter):
@@ -452,5 +455,257 @@ def test_alert_analysis_prompt_takes_the_level_over_alerts(config, monkeypatch):
 
     text = result.messages[0].content.text
     assert "severity filter: 'critical'" in text
-    [event] = json.loads(text[text.index("[") :])
-    assert (event["plugin"], event["field"], event["level"]) == ("cpu", "total", "critical")
+    payload = json.loads(text[text.index("{") :])
+    [incident] = payload["incidents"]
+    assert (incident["plugin"], incident["field"], incident["level"]) == ("cpu", "total", "critical")
+    assert incident["ongoing"] is True
+
+
+def _root_message(exc: BaseException) -> str:
+    """The handler's own message: the MCP SDK wraps it in a generic error."""
+    while exc.__cause__ is not None:
+        exc = exc.__cause__
+    return str(exc)
+
+
+def _hot_cpu_server(config_factory, monkeypatch, *, history_size=None):
+    """A v5 MCP server whose engine holds one ongoing critical cpu.total alert."""
+    from glances.outputs.glances_mcp import GlancesMcpServer
+
+    monkeypatch.setenv("GLANCES_ALERTS__WARMUP_CYCLES", "0")
+    monkeypatch.setenv("GLANCES_ALERTS__MIN_DURATION_SECONDS", "0")
+    config = config_factory()
+    cpu = _HotCpu(StatsStore(), config)
+    alerts = GlancesAlerts(config)
+
+    async def one_cycle():
+        await cpu.update()
+        await alerts.ingest_plugin(cpu)
+
+    asyncio.run(one_cycle())
+    return GlancesMcpServer(stats=McpStatsAdapter(plugins=[cpu], alerts=alerts), args=None, config=config), alerts
+
+
+def test_alert_analysis_reports_an_alert_the_history_has_evicted(monkeypatch):
+    """F1: the prompt used to feed the bounded transition log as "active alerts".
+    Once the opening event aged out of the ring buffer, an ongoing alert
+    vanished from the prompt and the LLM was told the system was healthy."""
+    pytest.importorskip("mcp")
+    server, alerts = _hot_cpu_server(GlancesConfig, monkeypatch)
+    alerts._history.clear()  # the opening transition has been evicted
+    assert alerts.get_ongoing(), "guard: the engine must still hold the alert"
+
+    result = asyncio.run(server._mcp.get_prompt("alert_analysis", {}))
+
+    text = result.messages[0].content.text
+    payload = json.loads(text[text.index("{") :])
+    assert [(i["plugin"], i["level"], i["ongoing"]) for i in payload["incidents"]] == [("cpu", "critical", True)]
+
+
+def test_alert_analysis_level_filter_is_applied(monkeypatch):
+    """F1: `level` used to be interpolated in the text and never applied."""
+    pytest.importorskip("mcp")
+    server, _ = _hot_cpu_server(GlancesConfig, monkeypatch)
+
+    result = asyncio.run(server._mcp.get_prompt("alert_analysis", {"level": "warning"}))
+
+    text = result.messages[0].content.text
+    assert json.loads(text[text.index("{") :])["incidents"] == []
+
+
+def test_alert_analysis_rejects_an_unknown_level(monkeypatch):
+    pytest.importorskip("mcp")
+    server, _ = _hot_cpu_server(GlancesConfig, monkeypatch)
+
+    with pytest.raises(Exception) as exc_info:
+        asyncio.run(server._mcp.get_prompt("alert_analysis", {"level": "bogus"}))
+    assert "level" in _root_message(exc_info.value)
+
+
+def test_alert_incidents_resource_matches_the_rest_route(monkeypatch):
+    """`glances://alerts/incidents` serves the `/api/5/alert/incidents` envelope."""
+    pytest.importorskip("mcp")
+    from glances.alerts_incidents import incidents_payload
+
+    server, alerts = _hot_cpu_server(GlancesConfig, monkeypatch)
+
+    [content] = asyncio.run(server._mcp.read_resource("glances://alerts/incidents"))
+
+    assert json.loads(content.content) == json.loads(json.dumps(incidents_payload(alerts)))
+
+
+def test_alert_incidents_without_an_alerts_pipeline_is_an_error(config):
+    """No alerts pipeline: an explicit error, as REST answers 404. An empty
+    envelope would read as an all-clear."""
+    pytest.importorskip("mcp")
+    from glances.outputs.glances_mcp import GlancesMcpServer
+
+    assert McpStatsAdapter(plugins=[]).get_alert_incidents() is None
+    server = GlancesMcpServer(stats=McpStatsAdapter(plugins=[]), args=None, config=config)
+    with pytest.raises(Exception) as exc_info:
+        asyncio.run(server._mcp.read_resource("glances://alerts/incidents"))
+    assert "disabled" in _root_message(exc_info.value)
+    with pytest.raises(Exception) as exc_info:
+        asyncio.run(server._mcp.get_prompt("alert_analysis", {}))
+    assert "disabled" in _root_message(exc_info.value)
+
+
+# ------------------------------------------------- F2: field schema (/info)
+
+
+def test_plugin_view_info_is_the_rest_schema(adapter, plugins):
+    """Same source as /api/5/<plugin>/info: the plugin's fields_description."""
+    assert adapter.get_plugin("network").get_info() == plugins[1].fields_description
+
+
+def test_synthetic_alert_view_has_no_schema(adapter):
+    assert adapter.get_plugin("alert").get_info() == {}
+
+
+def test_all_info_covers_every_real_plugin(adapter, plugins):
+    """Same as /api/5/all/info: every registered plugin, published or not."""
+    assert adapter.getAllInfoAsDict() == {p.plugin_name: p.fields_description for p in plugins}
+
+
+def test_mcp_serves_the_info_resources(mcp_server, plugins):
+    [content] = asyncio.run(mcp_server._mcp.read_resource("glances://info/cpu"))
+    assert json.loads(content.content) == json.loads(json.dumps(plugins[0].fields_description))
+
+    [content] = asyncio.run(mcp_server._mcp.read_resource("glances://info"))
+    assert set(json.loads(content.content)) == {"cpu", "network"}
+
+
+def test_mcp_info_unknown_plugin_is_an_error(mcp_server):
+    with pytest.raises(Exception) as exc_info:
+        asyncio.run(mcp_server._mcp.read_resource("glances://info/nope"))
+    assert "not found" in _root_message(exc_info.value)
+
+
+# ------------------------------------------------- F4: /all contract
+
+
+def test_get_all_as_dict_skips_unpublished_plugins(config, store_with_data):
+    """Same contract as /api/5/all: a registered plugin with no payload yet
+    (scheduler cycle 0) is absent, not present with an empty body."""
+    unpublished = _ConfigurableStub(store_with_data, config)  # nothing in the store
+    adapter = McpStatsAdapter(plugins=[_CpuStub(store_with_data, config), unpublished])
+
+    assert set(adapter.getAllAsDict()) == {"cpu"}
+
+
+# ------------------------------------------------- F3 / F5: tools
+
+
+def _call_tool(server, name, arguments):
+    """Call an MCP tool; return (is_error, text)."""
+    result = asyncio.run(server._mcp.call_tool(name, arguments))
+    # SDK >= 2 returns a CallToolResult, 1.x a (content, structured) tuple.
+    if isinstance(result, tuple):
+        return False, result[0][0].text
+    return bool(result.is_error), result.content[0].text
+
+
+def _call_tool_json(server, name, arguments):
+    is_error, text = _call_tool(server, name, arguments)
+    assert not is_error, text
+    return json.loads(text)
+
+
+def _tool_error(server, name, arguments) -> str:
+    """The error a tool raises, as the MCP client sees it."""
+    try:
+        is_error, text = _call_tool(server, name, arguments)
+    except Exception as exc:  # SDK 1.x raises ToolError
+        return str(exc)
+    assert is_error, text
+    return text
+
+
+def test_mcp_lists_the_tools(mcp_server):
+    names = {t.name for t in asyncio.run(mcp_server._mcp.list_tools())}
+    assert names == {"get_plugin_history", "get_plugin_field", "get_plugin_top", "get_plugin_items_by_value"}
+
+
+@pytest.fixture
+def net_history(plugins):
+    net = plugins[1]
+    net.history = HistoryStore(10)
+    for ts, value in ((1.0, 5.0), (2.0, 6.0)):
+        net.history.record(
+            "network", [{"interface_name": "eth0", "bytes_recv": value}], ["bytes_recv"], "interface_name", now=ts
+        )
+    return net
+
+
+def test_history_tool_applies_nb_field_and_item(mcp_server, net_history):
+    """F3: the resource serves everything; the tool takes the REST filters."""
+    payload = _call_tool_json(mcp_server, "get_plugin_history", {"plugin": "network", "nb": 1, "item": "eth0"})
+    assert (
+        payload
+        == net_history.get_history(nb=1, item="eth0")
+        == {
+            "timestamps": [2.0],
+            "series": {"bytes_recv": {"eth0": [6.0]}},
+        }
+    )
+    payload = _call_tool_json(mcp_server, "get_plugin_history", {"plugin": "network", "field": "bytes_recv"})
+    assert payload["timestamps"] == [1.0, 2.0]
+
+
+@pytest.mark.parametrize(
+    ("arguments", "message"),
+    [
+        ({"plugin": "nope"}, "not found"),
+        ({"plugin": "network", "field": "secret"}, "secret"),
+        ({"plugin": "network", "item": "wlan9"}, "wlan9"),
+        ({"plugin": "network", "nb": -1}, "nb"),
+    ],
+)
+def test_history_tool_errors_are_explicit(mcp_server, net_history, arguments, message):
+    assert message in _tool_error(mcp_server, "get_plugin_history", arguments)
+
+
+def test_field_tool_matches_the_rest_routes(mcp_server):
+    """F5: `/<plugin>/<field>` and `/<plugin>/<field>/<pk>`."""
+    assert _call_tool_json(mcp_server, "get_plugin_field", {"plugin": "cpu", "field": "total"}) == {"total": 12.5}
+    assert _call_tool_json(mcp_server, "get_plugin_field", {"plugin": "network", "field": "bytes_recv"}) == {
+        "bytes_recv": [100.0]
+    }
+    assert _call_tool_json(
+        mcp_server, "get_plugin_field", {"plugin": "network", "field": "bytes_recv", "item": "eth0"}
+    ) == {"bytes_recv": 100.0}
+
+
+def test_top_and_value_tools_match_the_rest_routes(mcp_server):
+    """F5: `/<plugin>/top/<n>` and `/<plugin>/<field>/value/<v>`."""
+    row = {"interface_name": "eth0", "bytes_recv": 100.0}
+    assert _call_tool_json(mcp_server, "get_plugin_top", {"plugin": "network", "n": 1}) == [row]
+    assert _call_tool_json(
+        mcp_server, "get_plugin_items_by_value", {"plugin": "network", "field": "interface_name", "value": "eth0"}
+    ) == {"eth0": [row]}
+
+
+@pytest.mark.parametrize(
+    ("name", "arguments", "message"),
+    [
+        ("get_plugin_field", {"plugin": "cpu", "field": "nope"}, "not found"),
+        ("get_plugin_field", {"plugin": "network", "field": "secret"}, "not found"),
+        ("get_plugin_field", {"plugin": "network", "field": "bytes_recv", "item": "wlan9"}, "wlan9"),
+        ("get_plugin_top", {"plugin": "cpu", "n": 1}, "has no items"),
+        ("get_plugin_top", {"plugin": "network", "n": 0}, "n must be"),
+        ("get_plugin_top", {"plugin": "alert", "n": 1}, "has no items"),
+        ("get_plugin_items_by_value", {"plugin": "nope", "field": "a", "value": "b"}, "not found"),
+    ],
+)
+def test_query_tool_errors_are_explicit(mcp_server, name, arguments, message):
+    assert message in _tool_error(mcp_server, name, arguments)
+
+
+def test_query_tools_return_null_before_the_first_cycle(config):
+    """Cycle 0: `null`, as the REST field routes answer."""
+    pytest.importorskip("mcp")
+    from glances.outputs.glances_mcp import GlancesMcpServer
+
+    proc = _ProcStub(StatsStore(), config)  # never updated
+    server = GlancesMcpServer(stats=McpStatsAdapter(plugins=[proc]), args=None, config=config)
+    assert _call_tool_json(server, "get_plugin_top", {"plugin": "processlist", "n": 1}) is None

@@ -233,3 +233,30 @@ def derive_incidents(
     incidents.sort(key=lambda i: i["begin"] or "", reverse=True)
     incidents.sort(key=lambda i: 0 if i["ongoing"] else 1)
     return incidents
+
+
+def incidents_payload(alerts: Any) -> dict[str, Any]:
+    """The ``{is_initializing, incidents}`` envelope of one alert engine.
+
+    What ``/api/5/alert/incidents`` and the MCP ``glances://alerts/incidents``
+    resource both serve, built once here so the two cannot drift. ``alerts``
+    is a ``GlancesAlerts``; only its read accessors are called.
+
+    Each incident carries a ``duration`` (`incident_duration()`): the
+    ``>``-prefixed-when-``partial`` string the curses block shows, computed
+    server-side so no client grows a second, prefix-dropping implementation.
+    ``None`` means unknown, not missing. ``derive_incidents()`` builds every
+    dict fresh, so adding the key mutates nothing the engine owns.
+
+    ``is_initializing`` tells warm-up from an all-clear: an empty
+    ``incidents`` list during warm-up is not a healthy system.
+    """
+    incidents = derive_incidents(
+        alerts.get_history(),
+        ongoing=alerts.get_ongoing(),
+        ongoing_since=alerts.get_ongoing_since(),
+        ongoing_top=alerts.get_ongoing_top(),
+    )
+    for incident in incidents:
+        incident["duration"] = incident_duration(incident)
+    return {"is_initializing": alerts.is_initializing(), "incidents": incidents}

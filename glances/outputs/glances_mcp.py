@@ -13,6 +13,8 @@ import logging
 
 from glances.globals import json_dumps
 from glances.logger import logger
+from glances.plugins.plugin import query as plugin_query
+from glances.plugins.plugin.query import PluginQueryError
 
 try:
     from mcp.server.transport_security import TransportSecuritySettings
@@ -20,11 +22,13 @@ try:
     try:
         # MCP Python SDK >= 2: FastMCP was renamed to MCPServer
         from mcp.server.mcpserver import MCPServer
+        from mcp.server.mcpserver.exceptions import ResourceError, ToolError
 
         MCP_V2 = True
     except ImportError:
         # MCP Python SDK 1.x
         from mcp.server.fastmcp import FastMCP as MCPServer
+        from mcp.server.fastmcp.exceptions import ResourceError, ToolError
 
         MCP_V2 = False
 
@@ -35,6 +39,12 @@ except ImportError:
     MCP_V2 = False
     MCPServer = None
     TransportSecuritySettings = None
+    ResourceError = ToolError = None
+
+
+# `level` values the alert_analysis prompt accepts: the engine's alert levels
+# (warning and above, `careful` never alerts) plus `all`.
+ALERT_LEVELS: tuple[str, ...] = ("all", "warning", "critical")
 
 
 class GlancesMcpServer:
@@ -47,10 +57,13 @@ class GlancesMcpServer:
         glances://stats/{plugin}/history    - Historical time-series for one plugin
         glances://limits                    - Alert thresholds for all plugins
         glances://limits/{plugin}           - Alert thresholds for one plugin
+        glances://info                      - Field schema for all plugins
+        glances://info/{plugin}             - Field schema for one plugin
+        glances://alerts/incidents          - Ongoing and resolved alert incidents
 
     Prompts (analysis templates):
         system_health_summary   - Overall CPU / memory / disk / network health report
-        alert_analysis          - Analysis of active alerts with optional severity filter
+        alert_analysis          - Analysis of alert incidents with optional severity filter
         top_processes_report    - Report on the most CPU-intensive processes
         storage_health          - Disk usage and I/O statistics analysis
 
@@ -65,6 +78,11 @@ class GlancesMcpServer:
     """
 
     MCP_DEFAULT_PATH = "/mcp"
+
+    # Anticipated failures (unknown plugin, field or item) raise ToolError from
+    # a tool and ResourceError from a resource: MCP SDK >= 2 forwards only those
+    # messages to the client, and replaces any other exception's text with a
+    # generic "Error executing tool <name>" the model cannot correct itself from.
 
     def __init__(self, stats, args, config):
         """Initialize the MCP server.
@@ -101,8 +119,9 @@ class GlancesMcpServer:
         )
 
         self._setup_resources()
+        self._setup_tools()
         self._setup_prompts()
-        logger.debug("GlancesMcpServer: resources and prompts registered")
+        logger.debug("GlancesMcpServer: resources, tools and prompts registered")
 
     # ------------------------------------------------------------------
     # Public helpers
@@ -298,6 +317,134 @@ class GlancesMcpServer:
                 raise ValueError(f"Plugin '{plugin}' not found")
             return server._serialize(plugin_obj.get_limits())
 
+        # ---- field schema ------------------------------------------------
+
+        @mcp.resource(
+            "glances://info",
+            name="all_info",
+            description=(
+                "Field schema of every monitoring plugin: unit, description, whether a field is a "
+                "rate or a cumulative counter. Read it to interpret the values in glances://stats."
+            ),
+            mime_type="application/json",
+        )
+        def all_info() -> str:
+            return server._serialize(server._get_stats().getAllInfoAsDict())
+
+        @mcp.resource(
+            "glances://info/{plugin}",
+            name="plugin_info",
+            description="Field schema (unit, description, rate or counter) of a specific monitoring plugin.",
+            mime_type="application/json",
+        )
+        def plugin_info(plugin: str) -> str:
+            plugin_obj = server._get_stats().get_plugin(plugin)
+            if plugin_obj is None:
+                raise ResourceError(f"Plugin '{plugin}' not found")
+            return server._serialize(plugin_obj.get_info())
+
+        # ---- alert incidents ---------------------------------------------
+
+        @mcp.resource(
+            "glances://alerts/incidents",
+            name="alert_incidents",
+            description=(
+                "Alerts collapsed into incidents, ongoing first: the authoritative view of what is "
+                "active right now (glances://stats/alert is the raw, bounded transition log). "
+                "Returns {is_initializing, incidents}; an empty list while is_initializing is "
+                "true is a warm-up, not an all-clear."
+            ),
+            mime_type="application/json",
+        )
+        def alert_incidents() -> str:
+            return server._serialize(server._get_alert_incidents())
+
+    def _get_alert_incidents(self) -> dict:
+        """The incidents envelope, raising when the alerts pipeline is off."""
+        payload = self._get_stats().get_alert_incidents()
+        if payload is None:
+            raise ResourceError("Alerts subsystem disabled")
+        return payload
+
+    # ------------------------------------------------------------------
+    # Tools
+    # ------------------------------------------------------------------
+
+    def _get_plugin_view(self, plugin: str):
+        """The plugin view, raising the canonical 'not found' error."""
+        plugin_obj = self._get_stats().get_plugin(plugin)
+        if plugin_obj is None:
+            raise ToolError(f"Plugin '{plugin}' not found")
+        return plugin_obj
+
+    def _run_query(self, plugin: str, query, *args) -> str:
+        """Serialize a plugin query; `null` before the plugin's first cycle."""
+        try:
+            return self._serialize(self._get_plugin_view(plugin).query(query, *args))
+        except (PluginQueryError, ValueError) as exc:
+            raise ToolError(str(exc)) from exc
+
+    def _setup_tools(self):
+        """Declare the read-only MCP tools.
+
+        Tools, not resource templates: they take the optional filters the REST
+        routes take as query parameters, which URI templates cannot carry
+        portably across MCP clients. Every tool reads the same filtered payload
+        as the resources (issue #3211) and changes nothing on the host.
+        """
+        mcp = self._mcp
+        server = self  # captured by closures below
+
+        @mcp.tool(
+            name="get_plugin_history",
+            description=(
+                "Historical time-series of a monitoring plugin, as {timestamps, series}. "
+                "Narrow it to save context: 'nb' keeps the last nb points (0 = all), 'field' one "
+                "historised field, 'item' one item of a collection plugin (e.g. an interface name)."
+            ),
+        )
+        def get_plugin_history(plugin: str, nb: int = 0, field: str | None = None, item: str | None = None) -> str:
+            if nb < 0:
+                raise ToolError(f"nb must be >= 0, got {nb}")
+            view = server._get_plugin_view(plugin)
+            try:
+                return server._serialize(view.get_raw_history(item=item, nb=nb, field=field))
+            except KeyError as exc:
+                raise ToolError(str(exc.args[0])) from exc
+
+        @mcp.tool(
+            name="get_plugin_field",
+            description=(
+                "One field of a monitoring plugin: {field: value}, or the list of its values for a "
+                "collection plugin. With 'item' (a primary-key value such as a pid or an interface "
+                "name), the field of that one item. null while the plugin has not published yet."
+            ),
+        )
+        def get_plugin_field(plugin: str, field: str, item: str | None = None) -> str:
+            if item is None:
+                return server._run_query(plugin, plugin_query.field_values, field)
+            return server._run_query(plugin, plugin_query.item_field, field, item)
+
+        @mcp.tool(
+            name="get_plugin_top",
+            description=(
+                "The first n items of a collection plugin, in the plugin's own order (processlist: "
+                "the server's current process sort). null while the plugin has not published yet."
+            ),
+        )
+        def get_plugin_top(plugin: str, n: int) -> str:
+            return server._run_query(plugin, plugin_query.top, n)
+
+        @mcp.tool(
+            name="get_plugin_items_by_value",
+            description=(
+                "The items of a collection plugin whose field equals value (compared as text): "
+                "{value: [items]}. null while the plugin has not published yet."
+            ),
+        )
+        def get_plugin_items_by_value(plugin: str, field: str, value: str) -> str:
+            return server._run_query(plugin, plugin_query.items_by_value, field, value)
+
     # ------------------------------------------------------------------
     # Prompts
     # ------------------------------------------------------------------
@@ -337,20 +484,25 @@ class GlancesMcpServer:
         @mcp.prompt(
             name="alert_analysis",
             description=(
-                "Analyze active Glances system alerts and warnings. "
+                "Analyze Glances alert incidents (ongoing and recently resolved). "
                 "Accepts an optional 'level' parameter: 'warning', 'critical', or 'all' (default)."
             ),
         )
         def alert_analysis(level: str = "all") -> str:
-            stats = server._get_stats()
-            alert_plugin = stats.get_plugin("alert")
-            data = alert_plugin.get_raw() if alert_plugin is not None else []
+            if level not in ALERT_LEVELS:
+                raise ValueError(f"Unknown level {level!r}, expected one of: {', '.join(ALERT_LEVELS)}")
+            data = server._get_alert_incidents()
+            if level != "all":
+                data = {**data, "incidents": [i for i in data["incidents"] if i.get("level") == level]}
             return (
                 "You are a system administrator assistant. "
-                f"Analyze the following Glances system alerts (severity filter: '{level}').\n"
-                "For each alert, explain the likely cause, the risk level, "
+                f"Analyze the following Glances alert incidents (severity filter: '{level}').\n"
+                "Incidents with \"ongoing\": true are active now; the others are resolved. "
+                "If \"is_initializing\" is true, Glances is still warming up: an empty list "
+                "then does not mean the system is healthy.\n"
+                "For each incident, explain the likely cause, the risk level, "
                 "and the recommended corrective action.\n\n"
-                f"Active alerts (JSON):\n{json.dumps(data, default=str, indent=2)}"
+                f"Alert incidents (JSON):\n{json.dumps(data, default=str, indent=2)}"
             )
 
         # ---- top processes report ----------------------------------------
