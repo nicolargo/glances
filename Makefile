@@ -65,6 +65,10 @@ venv-dev: ## Create the virtualenv with dev dependencies
 	$(UV_RUN) sync --dev --all-extras
 	$(UV_RUN) run pre-commit install --hook-type pre-commit
 
+venv-dev-upgrade: ## Upgrade the virtualenv with dev dependencies
+	$(UV_RUN) sync --upgrade --dev --all-extras
+	$(UV_RUN) run python -m playwright install chromium
+
 # ===================================================================
 # Requirements
 #
@@ -261,7 +265,7 @@ webui-audit: ## Audit the Web UI
 	cd $(DIR) && npm audit --omit=dev
 
 webui-audit-fix: ## Fix audit the Web UI
-	cd $(DIR) && npm ci && { npm audit fix --omit=dev || true; } && npm run build
+	cd $(DIR) && npm ci && { npm audit fix --omit=dev || true; } && npm ci && npm run build
 
 webui-update: ## Update JS dependencies
 	cd $(DIR) && npm update --save && npm ci && npm run build

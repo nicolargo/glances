@@ -192,7 +192,7 @@ class _VersionAction(argparse.Action):
 
     def __call__(self, parser, namespace, values, option_string=None):
         print(
-            f"Glances version:\t\t{__version__}\n"
+            f"Glances version:\t{__version__}\n"
             f"Glances API version:\t{__apiversion__}\n"
             f"PsUtil version:\t\t{psutil_version}\n"
             f"Log file:\t\t{LOG_FILENAME}"

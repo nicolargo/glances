@@ -39,7 +39,7 @@ def test_dash_v_prints_the_release(capsys):
     with pytest.raises(SystemExit):
         build_parser().parse_args(["--version"])
     out = capsys.readouterr().out
-    assert f"Glances version:\t\t{version.__version__}" in out
+    assert f"Glances version:\t{version.__version__}" in out
     assert f"Glances API version:\t{version.__apiversion__}" in out
     assert "PsUtil version:" in out
     assert "Log file:" in out
