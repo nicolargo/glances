@@ -153,6 +153,13 @@ class CsvRenderer:
 
     def _header(self, plugin: str, attribute: str | None, stat: Any, pk: str | None) -> list[str]:
         if attribute is not None:
+            if isinstance(stat, dict):
+                return [f"{plugin}.{attribute}"]
+            if isinstance(stat, list):
+                items = [i for i in stat if isinstance(i, dict)]
+                self._keys[plugin] = [_item_key(i, pk) for i in items]
+                self._fields[plugin] = {_item_key(i, pk): list(i) for i in items}
+                return [f"{plugin}.{_item_key(i, pk)}.{attribute}" for i in items]
             return [f"{plugin}.{attribute}"]
         if isinstance(stat, dict):
             return [f"{plugin}.{k}" for k in stat]
@@ -165,6 +172,14 @@ class CsvRenderer:
 
     def _data(self, plugin: str, attribute: str | None, stat: Any, pk: str | None) -> list[str]:
         if attribute is not None:
+            if isinstance(stat, dict):
+                return [str(stat.get(attribute, _NA))]
+            if isinstance(stat, list):
+                current = {_item_key(i, pk): i for i in stat if isinstance(i, dict)}
+                return [
+                    str(current.get(ident, {}).get(attribute, _NA))
+                    for ident in self._keys.get(plugin, [])
+                ]
             return [str(stat.get(attribute, _NA)) if isinstance(stat, dict) else _NA]
         if isinstance(stat, dict):
             return [str(v) for v in stat.values()]
