@@ -123,6 +123,13 @@ def modules_list() -> str:
     return f"Plugins list: {', '.join(plugins)}\nExporters list: {', '.join(exporters)}"
 
 
+def _dialable_host(host: str) -> str:
+    """The bind address as a client would type it in a URL: a wildcard bind
+    is not somewhere a client can go, so it becomes localhost; IPv6 is bracketed."""
+    target = "localhost" if host in ("0.0.0.0", "::", "") else host
+    return f"[{target}]" if ":" in target else target
+
+
 def open_web_ui(host: str, port: int, scheme: str = "http") -> None:
     """`--open-web-browser` (v4 issue #946): open the Web UI in a new tab.
 
@@ -131,9 +138,7 @@ def open_web_ui(host: str, port: int, scheme: str = "http") -> None:
     """
     import webbrowser
 
-    target = "localhost" if host in ("0.0.0.0", "::", "") else host
-    if ":" in target:
-        target = f"[{target}]"
+    target = _dialable_host(host)
     try:
         webbrowser.open(f"{scheme}://{target}:{port}/", new=2, autoraise=True)
     except webbrowser.Error as exc:
@@ -148,6 +153,35 @@ def log_browser_url(app: Any, host: str, port: int, scheme: str = "http") -> Non
     """
     if any(getattr(route, "path", None) == "/browser" for route in app.routes):
         logger.info("Glances browser available at %s://%s:%d/browser", scheme, host, port)
+
+
+def log_mcp_url(app: Any, host: str, port: int, scheme: str = "http") -> None:
+    """`-s --enable-mcp`: say where MCP clients connect, and how.
+
+    Only when `attach_mcp` mounted the endpoint (`app.state.mcp_path`):
+    Streamable HTTP at the path itself, SSE at `<path>/sse` for older
+    clients. A wildcard bind is shown as localhost, which is also what
+    `[outputs] mcp_allowed_hosts` accepts by default; any other host it would
+    refuse gets a WARNING, since the URL would not work as shown.
+    """
+    mcp_path = getattr(app.state, "mcp_path", None)
+    if mcp_path is None:
+        return
+    target = _dialable_host(host)
+    url = f"{scheme}://{target}:{port}{mcp_path}"
+    logger.info("MCP server available at %s (Streamable HTTP) and %s/sse (SSE)", url, url)
+    example = f"opencode mcp add glances --url {url}"
+    if getattr(app.state, "jwt_handler", None) is not None:
+        example += " --header 'Authorization=Basic <base64 of user:password>'"
+    logger.info("MCP client example (OpenCode): %s", example)
+    allowed = app.state.mcp_server.mcp_allowed_hosts
+    if allowed != ["*"] and target.strip("[]") not in allowed:
+        logger.warning(
+            "MCP: %s is not in [outputs] mcp_allowed_hosts (%s): clients using this URL will be refused. "
+            "Add it to mcp_allowed_hosts in glances.conf.",
+            target,
+            ",".join(allowed),
+        )
 
 
 class _VersionAction(argparse.Action):
@@ -1872,6 +1906,7 @@ def main(argv: list[str] | None = None) -> int:
         logger.info("Starting Glances %s server on %s://%s:%d", __version__, scheme, host, port)
         if getattr(args, "browser", False):
             log_browser_url(app, host, port, scheme)
+        log_mcp_url(app, host, port, scheme)
         if getattr(args, "open_web_browser", False):
             open_web_ui(host, port, scheme)
     else:

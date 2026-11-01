@@ -1423,6 +1423,71 @@ def test_browser_url_logged_only_when_the_page_is_served(mounted, caplog):
     assert ("http://127.0.0.1:61208/browser" in caplog.text) is mounted
 
 
+def _mcp_app(mcp_path="/mcp", allowed_hosts=("localhost", "127.0.0.1"), auth=False):
+    from types import SimpleNamespace
+
+    from fastapi import FastAPI
+
+    app = FastAPI()
+    if mcp_path is not None:
+        app.state.mcp_path = mcp_path
+        app.state.mcp_server = SimpleNamespace(mcp_allowed_hosts=list(allowed_hosts))
+    if auth:
+        app.state.jwt_handler = object()
+    return app
+
+
+def _log_mcp(app, host, port=61208, scheme="http", caplog=None):
+    from glances.main import log_mcp_url
+
+    with caplog.at_level(logging.DEBUG, logger="glances.main"):
+        log_mcp_url(app, host, port, scheme)
+    return caplog.text
+
+
+def test_mcp_url_not_logged_when_mcp_is_off(caplog):
+    assert "MCP" not in _log_mcp(_mcp_app(mcp_path=None), "127.0.0.1", caplog=caplog)
+
+
+@pytest.mark.parametrize("host", ["0.0.0.0", "::", ""])
+def test_mcp_url_shows_a_wildcard_bind_as_localhost(host, caplog):
+    text = _log_mcp(_mcp_app(), host, caplog=caplog)
+    assert "MCP server available at http://localhost:61208/mcp (Streamable HTTP)" in text
+    assert "http://localhost:61208/mcp/sse (SSE)" in text
+    assert "opencode mcp add glances --url http://localhost:61208/mcp\n" in text
+    assert "mcp_allowed_hosts" not in text
+
+
+def test_mcp_url_follows_the_custom_path_and_scheme(caplog):
+    text = _log_mcp(_mcp_app(mcp_path="/ai/mcp"), "127.0.0.1", port=443, scheme="https", caplog=caplog)
+    assert "https://127.0.0.1:443/ai/mcp (Streamable HTTP)" in text
+    assert "https://127.0.0.1:443/ai/mcp/sse (SSE)" in text
+
+
+def test_mcp_example_carries_the_auth_header_only_when_auth_is_on(caplog):
+    assert "Authorization" not in _log_mcp(_mcp_app(), "127.0.0.1", caplog=caplog)
+    caplog.clear()
+    assert "--header 'Authorization=Basic <base64 of user:password>'" in _log_mcp(
+        _mcp_app(auth=True), "127.0.0.1", caplog=caplog
+    )
+
+
+def test_mcp_url_warns_when_its_host_would_be_refused(caplog):
+    # The DNS-rebinding guard only accepts loopback names by default: an URL on
+    # the bound LAN address would be answered "Invalid Host header".
+    text = _log_mcp(_mcp_app(), "192.168.1.44", caplog=caplog)
+    assert "http://192.168.1.44:61208/mcp " in text
+    assert "WARNING" in text and "mcp_allowed_hosts" in text
+    caplog.clear()
+    assert "mcp_allowed_hosts" not in _log_mcp(_mcp_app(allowed_hosts=["*"]), "192.168.1.44", caplog=caplog)
+    caplog.clear()
+    assert "mcp_allowed_hosts" not in _log_mcp(_mcp_app(allowed_hosts=["192.168.1.44"]), "192.168.1.44", caplog=caplog)
+
+
+def test_mcp_url_brackets_an_ipv6_host(caplog):
+    assert "http://[::1]:61208/mcp " in _log_mcp(_mcp_app(allowed_hosts=["*"]), "::1", caplog=caplog)
+
+
 # ----------------------------------------------------------- --memory-leak
 
 

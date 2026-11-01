@@ -144,7 +144,7 @@ Start the Web server (REST API and WebUI):
 (``-w`` is an alias of ``-s``) and enter the URL ``http://localhost:61208`` in your
 favorite web browser.
 
-.. image:: ./docs/_static/screenshot-web.png
+.. image:: ./docs/_static/glances-webui-with-alert.png
 
 The server listens on ``127.0.0.1`` by default. To reach it from another machine,
 listen on all interfaces with ``-B 0.0.0.0`` (or ``bind_address`` in the ``[outputs]``
@@ -169,7 +169,7 @@ and display it in the terminal of another machine:
 
     client$ glances -c <server_ip>
 
-.. image:: ./docs/_static/screenshot-client.png
+.. image:: ./docs/_static/glances-client-server.png
 
 The client reads the stats from the server REST API (use ``--password`` to be
 prompted for the server password). A Glances 5 client only talks to a Glances 5 server.
@@ -206,8 +206,13 @@ Start the Web server with the `MCP (Model Context Protocol)`_ server enabled:
 
     $ glances -s --enable-mcp
 
-The MCP endpoint (SSE transport) is then available at ``http://<ip>:61208/mcp/sse``.
+The MCP endpoint is then available at ``http://<ip>:61208/mcp`` (Streamable HTTP)
+and ``http://<ip>:61208/mcp/sse`` (SSE, for older clients); the startup log gives both.
 Plug it into your AI assistant (here `opencode`_) and ask it for the state of the machine:
+
+.. code-block:: console
+
+    $ opencode mcp add glances --url http://localhost:61208/mcp
 
 .. image:: ./docs/_static/screenshot-mcp-opencode.png
 

@@ -590,6 +590,62 @@ def test_a_custom_mcp_path_keeps_the_dns_rebinding_guard(config_factory, store):
     assert local.status_code != 421
 
 
+# Streamable HTTP transport, served next to SSE: clients that only speak it
+# (OpenCode 2.x POSTs to the URL and never falls back to SSE) get a 405 otherwise.
+_MCP_INIT = {
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "initialize",
+    "params": {"protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": "t", "version": "0"}},
+}
+_MCP_HEADERS = {"accept": "application/json, text/event-stream", "content-type": "application/json"}
+
+
+def _mcp_streamable_app(config_factory, store, **conf):
+    from glances.webserver import attach_mcp
+
+    config = config_factory(enable_mcp="true", **conf)
+    app = build_app(config=config, store=store, args=argparse.Namespace(bind="0.0.0.0", disable_webui=True))
+    assert attach_mcp(app, config=config, store=store, plugins=[]) is True
+    return app
+
+
+@pytest.mark.parametrize("mcp_path", ["/mcp", "/glances/mcp"])
+def test_mcp_streamable_http_answers_initialize(mcp_path, config_factory, store):
+    pytest.importorskip("mcp")
+    app = _mcp_streamable_app(config_factory, store, mcp_path=mcp_path)
+    # `with`: the session manager only runs inside the app lifespan.
+    with TestClient(app, base_url="http://localhost:61208") as client:
+        resp = client.post(mcp_path, json=_MCP_INIT, headers=_MCP_HEADERS)
+    assert resp.status_code == 200
+    assert resp.headers.get("mcp-session-id")
+    assert '"serverInfo"' in resp.text
+
+
+def test_mcp_streamable_http_keeps_sse_served(config_factory, store):
+    """Adding the transport moves nothing: SSE's message endpoint still answers
+    (404 = unknown session, i.e. routed to the SSE transport, not to a 405)."""
+    pytest.importorskip("mcp")
+    app = _mcp_streamable_app(config_factory, store)
+    with TestClient(app, base_url="http://localhost:61208") as client:
+        resp = client.post("/mcp/messages/?session_id=" + "0" * 32, json={}, headers=_MCP_HEADERS)
+    assert resp.status_code == 404
+
+
+def test_mcp_streamable_http_stays_behind_auth(config_factory, store):
+    pytest.importorskip("mcp")
+    app = _mcp_streamable_app(config_factory, store, password=hash_password("hunter2"))
+    with TestClient(app, base_url="http://localhost:61208") as client:
+        assert client.post("/mcp", json=_MCP_INIT, headers=_MCP_HEADERS).status_code == 401
+
+
+def test_mcp_streamable_http_keeps_the_dns_rebinding_guard(config_factory, store):
+    pytest.importorskip("mcp")
+    app = _mcp_streamable_app(config_factory, store)
+    with TestClient(app, base_url="http://evil.example", raise_server_exceptions=False) as client:
+        assert client.post("/mcp", json=_MCP_INIT, headers=_MCP_HEADERS).status_code == 421
+
+
 def test_mcp_sse_endpoint_streams_events(config_factory, store):
     """v4 `test_mcp::test_001`: the SSE stream never ends, so the ASGI app is
     driven by hand and cancelled once the response has started."""

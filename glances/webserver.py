@@ -241,6 +241,18 @@ def resolve_mcp_path(config: GlancesConfig) -> str:
     return path
 
 
+def _chain_lifespan(app: FastAPI, context_factory) -> None:
+    """Run `context_factory()` inside the app's existing lifespan."""
+    previous = app.router.lifespan_context
+
+    @contextlib.asynccontextmanager
+    async def lifespan(a):
+        async with previous(a) as state, context_factory():
+            yield state
+
+    app.router.lifespan_context = lifespan
+
+
 def attach_mcp(
     app: FastAPI,
     *,
@@ -249,10 +261,10 @@ def attach_mcp(
     plugins: list[GlancesPluginBase],
     alerts: GlancesAlerts | None = None,
 ) -> bool:
-    """Mount the MCP SSE endpoint when the config gate is on.
+    """Serve MCP when the config gate is on: Streamable HTTP at the path, SSE under it.
 
-    At ``/mcp`` unless ``[outputs] mcp_path`` (or ``--mcp-path``) says
-    otherwise -- see ``resolve_mcp_path``.
+    At ``/mcp`` (and ``/mcp/sse``) unless ``[outputs] mcp_path`` (or
+    ``--mcp-path``) says otherwise -- see ``resolve_mcp_path``.
 
     Gate: ``[outputs] enable_mcp`` (Boolean, default ``False``). The
     CLI flag ``--enable-mcp`` flips it via the config overlay in
@@ -303,8 +315,16 @@ def attach_mcp(
     # The MCP app needs no path of its own: Starlette hands it the mount
     # prefix as `root_path`, from which the SSE transport builds its URLs.
     app.mount(mcp_path, mcp_server.get_asgi_app(mount_path=mcp_path))
+    # Streamable HTTP at the mount path itself (`/mcp`), next to SSE under it
+    # (`/mcp/sse`): the two never overlap. Same auth middleware, same
+    # DNS-rebinding settings.
+    app.router.routes.extend(mcp_server.get_streamable_http_app(path=mcp_path).routes)
+    _chain_lifespan(app, mcp_server.run_session_manager)
     app.state.mcp_server = mcp_server
-    logger.info("MCP endpoint mounted at %s", mcp_path)
+    # Read by `main.log_mcp_url`, which logs the full client URL once the
+    # bind address and port are known.
+    app.state.mcp_path = mcp_path
+    logger.debug("MCP endpoint mounted at %s", mcp_path)
 
     # Surface the v4↔v5 gap so operators know which MCP resources will
     # return "Plugin not found" (cf. McpStatsAdapter docstring). The

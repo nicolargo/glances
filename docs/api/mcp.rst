@@ -10,9 +10,9 @@ real-time metrics and generate structured analyses directly from their chat
 interface.
 
 The MCP server is mounted alongside the standard RESTful API when the web
-server is started with the ``--enable-mcp`` flag.  It uses **Server-Sent
-Events** (SSE) as its transport layer, which means any MCP-compatible client
-that supports SSE can connect to it.
+server is started with the ``--enable-mcp`` flag.  It serves two transports:
+**Streamable HTTP** (the current MCP transport) and **Server-Sent Events**
+(SSE, for older clients), so any MCP-compatible client can connect to it.
 
 Requirements
 ------------
@@ -32,13 +32,25 @@ Add ``--enable-mcp`` to any Glances web-server command:
 
     glances -w --enable-mcp
 
-The MCP server is then reachable at ``http://localhost:61208/mcp``.
-
-The SSE endpoint used by MCP clients is:
+The startup log gives both endpoints, and a client command to connect:
 
 .. code-block:: text
 
-    http://localhost:61208/mcp/sse
+    MCP server available at http://localhost:61208/mcp (Streamable HTTP) and http://localhost:61208/mcp/sse (SSE)
+    MCP client example (OpenCode): opencode mcp add glances --url http://localhost:61208/mcp
+
+============================================ =====================================
+Endpoint                                     Transport
+============================================ =====================================
+``http://localhost:61208/mcp``               Streamable HTTP
+``http://localhost:61208/mcp/sse``           SSE
+============================================ =====================================
+
+When the server is bound to all interfaces (``0.0.0.0``), the log shows
+``localhost``: by default the MCP endpoint only accepts loopback ``Host``
+headers. To reach it under another name or address, add that name to
+``[outputs] mcp_allowed_hosts`` in ``glances.conf``; Glances warns at startup
+when the bind address is not in that list.
 
 To change the mount path (default: ``/mcp``):
 
@@ -144,6 +156,21 @@ into a system prompt ready to be sent to an LLM.
 
 Connect an MCP client
 ---------------------
+
+OpenCode
+~~~~~~~~
+
+OpenCode speaks Streamable HTTP only: give it the ``/mcp`` URL, not ``/mcp/sse``.
+
+.. code-block:: bash
+
+    opencode mcp add glances --url http://localhost:61208/mcp
+
+For a password-protected server, add the credentials as a header:
+
+.. code-block:: bash
+
+    opencode mcp add glances --url http://localhost:61208/mcp --header 'Authorization=Basic <base64(user:password)>'
 
 Claude Desktop
 ~~~~~~~~~~~~~~

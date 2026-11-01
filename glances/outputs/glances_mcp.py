@@ -160,6 +160,25 @@ class GlancesMcpServer:
         # MCP SDK 1.x: transport_security is already configured on self._mcp at construction time.
         return self._mcp.sse_app()
 
+    def get_streamable_http_app(self, path: str = MCP_DEFAULT_PATH):
+        """Return the Streamable HTTP ASGI application: one route, at `path`.
+
+        Unlike SSE, its route carries the full path, so the caller adds the
+        route to its own router rather than mounting the app. Its sessions
+        need `run_session_manager()` to be entered in the caller's lifespan:
+        Starlette does not run the lifespan of an app it did not start.
+        """
+        if MCP_V2:
+            return self._mcp.streamable_http_app(streamable_http_path=path, transport_security=self._transport_security)
+        # MCP SDK 1.x: no arguments, the path is read from the settings.
+        self._mcp.settings.streamable_http_path = path
+        return self._mcp.streamable_http_app()
+
+    def run_session_manager(self):
+        """Async context manager running the Streamable HTTP sessions
+        (to be entered once, after `get_streamable_http_app`)."""
+        return self._mcp.session_manager.run()
+
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
