@@ -58,15 +58,35 @@ To change the mount path (default: ``/mcp``):
 
     glances -w --enable-mcp --mcp-path /monitoring/mcp
 
+A path that would shadow a route the server already serves (``/``, ``/api``,
+``/docs``, ``/static``…) is refused: Glances logs a warning and mounts MCP at
+``/mcp`` instead.
+
+Both flags have a configuration-file equivalent in the ``[outputs]`` section
+of ``glances.conf``. The command-line flags take precedence:
+
+.. code-block:: ini
+
+    [outputs]
+    # Same as --enable-mcp (still requires -w / -s)
+    enable_mcp=true
+    # Same as --mcp-path
+    mcp_path=/mcp
+    # Host headers the MCP endpoint accepts (default: localhost,127.0.0.1)
+    #mcp_allowed_hosts=localhost,127.0.0.1,myserver.example.com
+
 Authentication
 --------------
 
 The MCP endpoint inherits the authentication policy of the web server.
-When Glances is started with ``--password``, every MCP request must carry
-valid credentials — either **HTTP Basic Auth** or a **JWT Bearer token**
-(see :ref:`api_restful` for how to obtain a JWT token).
+When ``[outputs] password`` is set in ``glances.conf`` (to a hash made with
+``glances --set-password``), every MCP request must carry valid credentials —
+either **HTTP Basic Auth** or a **JWT Bearer token** (see :ref:`api_restful`
+for how to obtain a JWT token).
 
-When no password is configured the MCP endpoint is open.
+When no password is configured the MCP endpoint is open. The ``--password``
+command-line option does not protect the server: it only prompts for a remote
+server's password in client mode.
 
 Resources
 ---------
@@ -172,16 +192,28 @@ For a password-protected server, add the credentials as a header:
 
     opencode mcp add glances --url http://localhost:61208/mcp --header 'Authorization=Basic <base64(user:password)>'
 
+Claude Code
+~~~~~~~~~~~
+
+Claude Code speaks Streamable HTTP: give it the ``/mcp`` URL.
+
+.. code-block:: bash
+
+    claude mcp add --transport http glances http://localhost:61208/mcp
+
+For a password-protected server, add the credentials as a header:
+
+.. code-block:: bash
+
+    claude mcp add --transport http glances http://localhost:61208/mcp --header 'Authorization: Basic <base64(user:password)>'
+
 Claude Desktop
 ~~~~~~~~~~~~~~
 
-Configure Glances MCP from Claude command line:
-
-.. code-block:: json
-
-    claude mcp add --transport sse glances http://localhost:61208/mcp/sse
-
-Or add the following entry to your ``claude_desktop_config.json``
+``claude_desktop_config.json`` only declares servers Claude Desktop starts
+itself as a local command. Reach the Glances endpoint through the
+`mcp-remote <https://www.npmjs.com/package/mcp-remote>`_ bridge (requires
+Node.js) by adding this entry to the file
 (``~/Library/Application Support/Claude/claude_desktop_config.json`` on macOS,
 ``%APPDATA%\Claude\claude_desktop_config.json`` on Windows):
 
@@ -190,21 +222,31 @@ Or add the following entry to your ``claude_desktop_config.json``
     {
       "mcpServers": {
         "glances": {
-          "url": "http://localhost:61208/mcp/sse"
+          "command": "npx",
+          "args": ["mcp-remote", "http://localhost:61208/mcp"]
         }
       }
     }
 
-For a password-protected server, use the ``headers`` field:
+``mcp-remote`` refuses plain ``http://`` URLs to hosts other than ``localhost``
+and ``127.0.0.1``: add ``"--allow-http"`` to ``args`` for such a server on a
+trusted network, or put Glances behind HTTPS.
+
+For a password-protected server, pass the header through an environment
+variable:
 
 .. code-block:: json
 
     {
       "mcpServers": {
         "glances": {
-          "url": "http://localhost:61208/mcp/sse",
-          "headers": {
-            "Authorization": "Basic <base64(user:password)>"
+          "command": "npx",
+          "args": [
+            "mcp-remote", "http://localhost:61208/mcp",
+            "--header", "Authorization:${GLANCES_AUTH}"
+          ],
+          "env": {
+            "GLANCES_AUTH": "Basic <base64(user:password)>"
           }
         }
       }
