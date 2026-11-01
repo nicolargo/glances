@@ -519,7 +519,18 @@ def test_alert_analysis_rejects_an_unknown_level(monkeypatch):
 
     with pytest.raises(Exception) as exc_info:
         asyncio.run(server._mcp.get_prompt("alert_analysis", {"level": "bogus"}))
-    assert "level" in _root_message(exc_info.value)
+    # Top-level message, not the cause chain: it is what the client receives.
+    assert "Unknown level 'bogus'" in str(exc_info.value)
+
+
+def test_alert_analysis_without_alerts_pipeline_says_so(config):
+    pytest.importorskip("mcp")
+    from glances.outputs.glances_mcp import GlancesMcpServer
+
+    server = GlancesMcpServer(stats=McpStatsAdapter(plugins=[], alerts=None), args=None, config=config)
+    with pytest.raises(Exception) as exc_info:
+        asyncio.run(server._mcp.get_prompt("alert_analysis", {}))
+    assert "Alerts subsystem disabled" in str(exc_info.value)
 
 
 def test_alert_incidents_resource_matches_the_rest_route(monkeypatch):
@@ -579,6 +590,32 @@ def test_mcp_info_unknown_plugin_is_an_error(mcp_server):
     with pytest.raises(Exception) as exc_info:
         asyncio.run(mcp_server._mcp.read_resource("glances://info/nope"))
     assert "not found" in _root_message(exc_info.value)
+
+
+@pytest.mark.parametrize(
+    "uri",
+    ["glances://stats/nope", "glances://stats/nope/history", "glances://limits/nope", "glances://info/nope"],
+)
+def test_mcp_resource_unknown_plugin_message_reaches_the_client(mcp_server, uri):
+    """The top-level message is what the client receives: SDK >= 2 forwards a
+    ResourceError's own text and replaces any other exception's with a
+    generic 'Error creating resource from template'."""
+    with pytest.raises(Exception) as exc_info:
+        asyncio.run(mcp_server._mcp.read_resource(uri))
+    assert "Plugin 'nope' not found" in str(exc_info.value)
+
+
+def test_mcp_self_description_matches_what_it_serves(mcp_server):
+    """What the client's LLM reads: the history shape it really gets, and the tools."""
+    templates = asyncio.run(mcp_server._mcp.list_resource_templates())
+    # SDK >= 2 names it uri_template, 1.x uriTemplate.
+    [history] = [
+        t
+        for t in templates
+        if getattr(t, "uri_template", getattr(t, "uriTemplate", None)) == "glances://stats/{plugin}/history"
+    ]
+    assert "{timestamps, series}" in history.description
+    assert "tools" in mcp_server._mcp.instructions
 
 
 # ------------------------------------------------- F4: /all contract

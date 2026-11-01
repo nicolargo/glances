@@ -23,6 +23,7 @@ try:
         # MCP Python SDK >= 2: FastMCP was renamed to MCPServer
         from mcp.server.mcpserver import MCPServer
         from mcp.server.mcpserver.exceptions import ResourceError, ToolError
+        from mcp.shared.exceptions import MCPError
 
         MCP_V2 = True
     except ImportError:
@@ -31,6 +32,7 @@ try:
         from mcp.server.fastmcp.exceptions import ResourceError, ToolError
 
         MCP_V2 = False
+    from mcp.types import INTERNAL_ERROR, INVALID_PARAMS
 
     MCP_AVAILABLE = True
     logging.getLogger("mcp").setLevel(logging.WARNING)
@@ -47,6 +49,16 @@ except ImportError:
 ALERT_LEVELS: tuple[str, ...] = ("all", "warning", "critical")
 
 
+def _prompt_error(code: int, message: str) -> Exception:
+    """An anticipated prompt failure whose message reaches the client.
+
+    From a prompt, MCP SDK >= 2 forwards only an MCPError's message and
+    replaces any other with "Error rendering prompt <name>"; 1.x appends
+    any exception's message to that text.
+    """
+    return MCPError(code, message) if MCP_V2 else ValueError(message)
+
+
 class GlancesMcpServer:
     """MCP server exposing Glances system monitoring data as resources and prompts.
 
@@ -60,6 +72,12 @@ class GlancesMcpServer:
         glances://info                      - Field schema for all plugins
         glances://info/{plugin}             - Field schema for one plugin
         glances://alerts/incidents          - Ongoing and resolved alert incidents
+
+    Tools (read-only filtered queries):
+        get_plugin_history          - History narrowed by nb, field and item
+        get_plugin_field            - One field, optionally of one item
+        get_plugin_top              - The first n items of a collection plugin
+        get_plugin_items_by_value   - The items whose field equals a value
 
     Prompts (analysis templates):
         system_health_summary   - Overall CPU / memory / disk / network health report
@@ -113,6 +131,8 @@ class GlancesMcpServer:
                 "Glances is a cross-platform system monitoring tool. "
                 "Use resources to access real-time system metrics "
                 "(CPU, memory, disk, network, processes, containers, sensors, …). "
+                "Use tools to fetch only part of a plugin's data (one field, one item, the top n "
+                "items, a filtered history) instead of a whole resource. "
                 "Use prompts to generate structured analyses of the current system state."
             ),
             **({} if MCP_V2 else {"transport_security": self._transport_security}),
@@ -285,7 +305,7 @@ class GlancesMcpServer:
             plugin_obj = stats.get_plugin(plugin)
             if plugin_obj is None:
                 available = stats.getPluginsList()
-                raise ValueError(f"Plugin '{plugin}' not found. Available plugins: {available}")
+                raise ResourceError(f"Plugin '{plugin}' not found. Available plugins: {available}")
             return server._serialize(plugin_obj.get_raw())
 
         # ---- per-plugin history (resource template) ----------------------
@@ -294,8 +314,10 @@ class GlancesMcpServer:
             "glances://stats/{plugin}/history",
             name="plugin_history",
             description=(
-                "Historical time-series data for a specific monitoring plugin. "
-                "Returns a dict of field→list pairs, most-recent value last."
+                "Historical time-series data for a specific monitoring plugin, all points. "
+                "Returns {timestamps, series}: series maps each historised field to its values "
+                "(to {item: values} for a collection plugin), aligned on timestamps, most-recent last. "
+                "Use the get_plugin_history tool to narrow it by nb, field or item."
             ),
             mime_type="application/json",
         )
@@ -303,7 +325,7 @@ class GlancesMcpServer:
             stats = server._get_stats()
             plugin_obj = stats.get_plugin(plugin)
             if plugin_obj is None:
-                raise ValueError(f"Plugin '{plugin}' not found")
+                raise ResourceError(f"Plugin '{plugin}' not found")
             # nb=0 → return all available history points
             return server._serialize(plugin_obj.get_raw_history(item=None, nb=0))
 
@@ -333,7 +355,7 @@ class GlancesMcpServer:
             stats = server._get_stats()
             plugin_obj = stats.get_plugin(plugin)
             if plugin_obj is None:
-                raise ValueError(f"Plugin '{plugin}' not found")
+                raise ResourceError(f"Plugin '{plugin}' not found")
             return server._serialize(plugin_obj.get_limits())
 
         # ---- field schema ------------------------------------------------
@@ -509,8 +531,13 @@ class GlancesMcpServer:
         )
         def alert_analysis(level: str = "all") -> str:
             if level not in ALERT_LEVELS:
-                raise ValueError(f"Unknown level {level!r}, expected one of: {', '.join(ALERT_LEVELS)}")
-            data = server._get_alert_incidents()
+                raise _prompt_error(
+                    INVALID_PARAMS, f"Unknown level {level!r}, expected one of: {', '.join(ALERT_LEVELS)}"
+                )
+            try:
+                data = server._get_alert_incidents()
+            except ResourceError as exc:
+                raise _prompt_error(INTERNAL_ERROR, str(exc)) from exc
             if level != "all":
                 data = {**data, "incidents": [i for i in data["incidents"] if i.get("level") == level]}
             return (
