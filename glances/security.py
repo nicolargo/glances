@@ -47,9 +47,8 @@ import logging
 import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
-
-import anyio
-from jose import JWTError, jwt
+from functools import lru_cache
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -135,12 +134,18 @@ def verify_password(plaintext: str, stored: str) -> bool:
 # can no longer fill the thread pool and the host's cores (security audit
 # 2026-10-17, A1 / W-2). Good credentials are checked once, then remembered
 # (`KnownCredentials`), so this never queues the users already logged in.
-_VERIFY_LIMITER = anyio.CapacityLimiter(2)
+@lru_cache(maxsize=1)
+def _verify_limiter() -> Any:
+    import anyio
+
+    return anyio.CapacityLimiter(2)
 
 
 async def verify_password_in_thread(plaintext: str, stored: str) -> bool:
     """`verify_password` off the event loop, at most two checks at a time."""
-    return await anyio.to_thread.run_sync(verify_password, plaintext, stored, limiter=_VERIFY_LIMITER)
+    import anyio
+
+    return await anyio.to_thread.run_sync(verify_password, plaintext, stored, limiter=_verify_limiter())
 
 
 # ----------------------------------------------------- HTTP Basic
@@ -236,6 +241,8 @@ class JWTHandler:
         return self._secret_was_generated
 
     def create_access_token(self, username: str) -> str:
+        from jose import jwt
+
         now = datetime.now(timezone.utc)
         payload = {
             "sub": username,
@@ -247,6 +254,8 @@ class JWTHandler:
 
     def verify_token(self, token: str) -> str | None:
         """Return the ``sub`` claim if ``token`` is valid, else ``None``."""
+        from jose import JWTError, jwt
+
         if not token:
             return None
         try:

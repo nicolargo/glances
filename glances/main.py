@@ -63,7 +63,6 @@ from glances.logger import LOG_FILENAME
 from glances.plugins.plugin.base import GlancesPluginBase
 from glances.processes import glances_processes, sort_processes_stats_list
 from glances.scheduler import AsyncScheduler
-from glances.security import hash_password, verify_password
 from glances.stats_store import StatsStore
 
 # Shell completion (`--print-completion`), v4 parity (`main.py:17-22`). Optional:
@@ -1113,6 +1112,9 @@ def cli_set_password() -> int:
     user pastes the printed value into ``[outputs] password`` of their
     ``glances.conf`` — we never touch the file.
     """
+    # local import: security.py needs [web] extra and also --set-password uses it
+    from glances.security import hash_password, verify_password
+
     try:
         password = getpass.getpass("Password: ")
         confirm = getpass.getpass("Confirm:  ")

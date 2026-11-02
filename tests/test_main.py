@@ -771,6 +771,27 @@ def test_importing_main_does_not_pull_the_web_stack():
     assert result.stdout.strip() == "[]"
 
 
+def test_set_password_works_without_web_dependencies():
+    """Hash generation uses only the standard library, not the web extra."""
+    code = """
+import builtins
+import getpass
+
+original_import = builtins.__import__
+def import_without_web_extra(name, *args, **kwargs):
+    if name == "anyio" or name.startswith("anyio.") or name == "jose" or name.startswith("jose."):
+        raise ModuleNotFoundError(name)
+    return original_import(name, *args, **kwargs)
+
+builtins.__import__ = import_without_web_extra
+import glances.main
+answers = iter(("hunter2", "hunter2"))
+getpass.getpass = lambda prompt="": next(answers)
+assert glances.main.cli_set_password() == 0
+"""
+    subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, check=True)
+
+
 # ----------------------------------------------------------- main
 
 
