@@ -60,6 +60,7 @@ from glances.config import ConfigFileError, GlancesConfig
 from glances.exports.export_base import GlancesExportBase
 from glances.history import HistoryStore, resolve_history_size
 from glances.logger import LOG_FILENAME
+from glances.plugins.llm_reporter.model import PluginModel as LLMReporterPlugin
 from glances.plugins.plugin.base import GlancesPluginBase
 from glances.processes import glances_processes, sort_processes_stats_list
 from glances.scheduler import AsyncScheduler
@@ -934,6 +935,12 @@ def discover_plugin_classes() -> list[tuple[str, type[GlancesPluginBase]]]:
     return classes
 
 
+def _wire_llm_reporter(plugins: list[GlancesPluginBase], alerts_source):
+    for plugin in plugins:
+        if isinstance(plugin, LLMReporterPlugin):
+            plugin.set_alert_source(alerts_source)
+
+
 def discover_plugins(store: StatsStore, config: GlancesConfig) -> list[GlancesPluginBase]:
     """Instantiate every discovered v5 plugin that is not disabled.
 
@@ -1258,6 +1265,9 @@ def assemble(
     apply_plugin_flags(args, config)
     apply_process_flags(args)
     plugins = discover_plugins(store, config)
+    # The LLM reporter plugin needs the alerts to enrich the prompts for generating reports.
+    _wire_llm_reporter(plugins, alerts.get_ongoing)
+
     if not plugins:
         # Empty registry is a valid state — see project memory note about
         # issue #3548 (runtime plugin toggling). Log + continue.
