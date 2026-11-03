@@ -130,6 +130,24 @@ def test_csv_pads_a_partial_item_and_keeps_existing_columns_in_place():
     assert row == ["eth0", "7", "8", "lo", "3", "N/A"]
 
 
+def test_csv_attribute_on_a_collection_gives_one_column_per_item():
+    """`network.bytes_recv` asks for one field of every item, as it already
+    does for `--stdout`, so it yields one column per item and not a single
+    collapsed one."""
+    csv = CsvRenderer([("network", "bytes_recv")])
+    assert csv.render(EXPORTS, PKS) == "network.eth0.bytes_recv,network.lo.bytes_recv"
+    assert csv.render(EXPORTS, PKS) == "100,1"
+
+
+def test_csv_attribute_on_a_collection_locks_its_columns():
+    """The columns are locked at header time here too: an item that goes away
+    prints N/A and one that turns up later has no column."""
+    csv = CsvRenderer([("network", "bytes_recv")])
+    assert csv.render(EXPORTS, PKS) == "network.eth0.bytes_recv,network.lo.bytes_recv"
+    later = {"network": [{"interface_name": "eth0", "bytes_recv": 7}, {"interface_name": "new0", "bytes_recv": 9}]}
+    assert csv.render(later, PKS) == "7,N/A"
+
+
 def test_csv_whole_dict_plugin_gives_one_column_per_field():
     csv = CsvRenderer([("cpu", None)])
     cpu = {"cpu": {"user": 1.2, "system": 0.8, "idle": 98.0}}
