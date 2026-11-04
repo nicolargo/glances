@@ -535,19 +535,23 @@ def _format_alert_time(ts: str, now: datetime | None = None) -> str:
 _ALERT_W_GLYPH = 1
 _ALERT_W_TIME = 8
 _ALERT_W_DURATION = 8
+_ALERT_W_STATE = 8
 _ALERT_W_LEVEL = 8
 _ALERT_MIN_TARGET = 12
 # Block width at or above which the LEVEL / DURATION columns still fit
 # without starving TARGET below its floor.
 _ALERT_W_WITH_LEVEL = 31 + _ALERT_MIN_TARGET  # 43
 _ALERT_W_WITH_DURATION = 22 + _ALERT_MIN_TARGET  # 34
+# STATE (ongoing / resolved) is redundant with the glyph, so it drops right
+# after TOP, before LEVEL and DURATION.
+_ALERT_W_WITH_STATE = _ALERT_W_WITH_LEVEL + _ALERT_W_STATE + 2  # 53
 # Floor of the TOP column, not a fixed width: TOP is the elastic column once
 # shown (TARGET takes its natural width instead), so this only bounds how far
 # TARGET is allowed to squeeze it.
 _ALERT_MIN_TOP = 22
 # TOP is the FIRST column to drop, so every threshold above is unchanged and
 # no terminal that renders the block correctly today changes behaviour.
-_ALERT_W_WITH_TOP = _ALERT_W_WITH_LEVEL + 1 + _ALERT_MIN_TOP  # 66
+_ALERT_W_WITH_TOP = _ALERT_W_WITH_STATE + 1 + _ALERT_MIN_TOP  # 76
 _ALERT_GLYPHS = {
     True: {True: "●", False: "*"},  # ongoing
     False: {True: "○", False: "-"},  # resolved
@@ -781,6 +785,7 @@ def render_alert_block(
     # TARGET's own content instead of at a fixed offset far to the right.
     show_level = width is None or width >= _ALERT_W_WITH_LEVEL
     show_duration = width is None or width >= _ALERT_W_WITH_DURATION
+    show_state = width is None or width >= _ALERT_W_WITH_STATE
     # TOP is BOTH width-gated and data-conditional: a host whose only alerts
     # are fs or sensors ones never pays for an empty header, and a
     # history with no `top` key renders exactly as it did before the column
@@ -792,15 +797,17 @@ def render_alert_block(
         target_width = max(natural_target, _ALERT_MIN_TARGET)
         top_width = max((len(top_of(incident)) for incident in visible), default=0)
     elif show_top:
-        # The 32 fixed columns are GLYPH(1) + TIME(9) + DURATION(9) + LEVEL(8)
-        # + 5 painter separators (design update: TOP repositioned). TARGET
+        # The 42 fixed columns are GLYPH(1) + TIME(9) + DURATION(9) + STATE(8)
+        # + LEVEL(8) + 6 painter separators (design update: TOP repositioned). TARGET
         # keeps its natural width — floored, and capped so TOP never drops
         # below its own floor — and TOP absorbs whatever pair-width is left.
-        pair = width - 32
+        pair = width - 42
         target_width = max(_ALERT_MIN_TARGET, min(natural_target, pair - _ALERT_MIN_TOP))
         top_width = pair - target_width
     else:
-        if show_level:
+        if show_state:
+            target_width = width - (_ALERT_W_WITH_STATE - _ALERT_MIN_TARGET)
+        elif show_level:
             target_width = width - (_ALERT_W_WITH_LEVEL - _ALERT_MIN_TARGET)
         elif show_duration:
             target_width = width - (_ALERT_W_WITH_DURATION - _ALERT_MIN_TARGET)
@@ -826,6 +833,8 @@ def render_alert_block(
         header_cells.append(
             Cell(text=_fit_text("DURATION", _ALERT_W_DURATION, right=True) + " ", color=ColorRole.HEADER, bold=True)
         )
+    if show_state:
+        header_cells.append(Cell(text=_fit_text("STATE", _ALERT_W_STATE) + " ", color=ColorRole.HEADER, bold=True))
     header_cells.append(Cell(text=_fit_text("TARGET", target_width), color=ColorRole.HEADER, bold=True))
     if show_top:
         header_cells.append(Cell(text=_fit_text("TOP PROCESSES", top_width), color=ColorRole.HEADER, bold=True))
@@ -856,6 +865,8 @@ def render_alert_block(
         ]
         if show_duration:
             cells.append(Cell(text=_fit_text(duration, _ALERT_W_DURATION, right=True) + " "))
+        if show_state:
+            cells.append(Cell(text=_fit_text("ongoing" if is_ongoing else "resolved", _ALERT_W_STATE) + " "))
         cells.append(Cell(text=_fit_text(target_of(incident), target_width, ellipsis="…" if unicode_ok else ".")))
         if show_top:
             cells.append(Cell(text=_fit_text(top_of(incident), top_width, ellipsis="…" if unicode_ok else ".")))

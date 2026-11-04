@@ -39,6 +39,7 @@
 				<col :style="colStyle('GLYPH')" />
 				<col :style="colStyle('TIME')" />
 				<col v-if="shows('DURATION')" :style="colStyle('DURATION')" />
+				<col v-if="shows('STATE')" :style="colStyle('STATE')" />
 				<!-- TARGET gets an explicit width rather than being left width-less
 				like TOP below: under table-layout:fixed, two width-less columns
 				split the remainder 50/50 (CSS 2.1 17.5.2.1) -- not by floor, not
@@ -61,6 +62,7 @@
 					<th class="gl-header"></th>
 					<th class="gl-header">TIME</th>
 					<th v-if="shows('DURATION')" class="gl-header">DURATION</th>
+					<th v-if="shows('STATE')" class="gl-header">STATE</th>
 					<th class="gl-header">TARGET</th>
 					<th v-if="shows('TOP')" class="gl-header">TOP PROCESSES</th>
 					<th v-if="shows('LEVEL')" class="gl-header">LEVEL</th>
@@ -75,6 +77,7 @@
 					<td><span :class="glyphClass(incident)">{{ glyphOf(incident) }}</span></td>
 					<td>{{ timeOf(incident) }}</td>
 					<td v-if="shows('DURATION')">{{ incident.duration || "-" }}</td>
+					<td v-if="shows('STATE')">{{ stateOf(incident) }}</td>
 					<td>{{ targetOf(incident) }}</td>
 					<td v-if="shows('TOP')">{{ topOf(incident) }}</td>
 					<td v-if="shows('LEVEL')"><span :class="levelClassOf(incident)">{{ levelTextOf(incident) }}</span></td>
@@ -97,6 +100,7 @@
 								<th class="gl-header"></th>
 								<th class="gl-header">TIME</th>
 								<th class="gl-header">DURATION</th>
+								<th class="gl-header">STATE</th>
 								<th class="gl-header">TARGET</th>
 								<th class="gl-header">TOP PROCESSES</th>
 								<th class="gl-header">LEVEL</th>
@@ -107,6 +111,7 @@
 								<td><span :class="glyphClass(incident)">{{ glyphOf(incident) }}</span></td>
 								<td>{{ timeOf(incident) }}</td>
 								<td>{{ incident.duration || "-" }}</td>
+								<td>{{ stateOf(incident) }}</td>
 								<td>{{ targetOf(incident) }}</td>
 								<td>{{ topOf(incident) }}</td>
 								<td><span :class="levelClassOf(incident)">{{ levelTextOf(incident) }}</span></td>
@@ -221,11 +226,12 @@ export default {
 		titleText() {
 			return `ALERTS  ${this.titleCounts}`;
 		},
-		// The TUI's own drop order: TOP first, then LEVEL, then DURATION
+		// The TUI's own drop order: TOP first, then STATE, LEVEL, then DURATION
 		// (curses_renderer.py:538-540). TARGET is never dropped -- it says
 		// WHAT the alert is about, and the terminal sacrifices TOP to keep it.
 		dropCascadeSteps: () => [
 			{ key: "drop_TOP", value: true },
+			{ key: "drop_STATE", value: true },
 			{ key: "drop_LEVEL", value: true },
 			{ key: "drop_DURATION", value: true },
 		],
@@ -238,7 +244,7 @@ export default {
 		// The <col> elements actually rendered: GLYPH, TIME and TARGET always,
 		// plus whichever of DURATION/TOP/LEVEL survive the cascade.
 		columnCount() {
-			return 3 + ["DURATION", "TOP", "LEVEL"].filter((key) => this.shows(key)).length;
+			return 3 + ["DURATION", "STATE", "TOP", "LEVEL"].filter((key) => this.shows(key)).length;
 		},
 		// TARGET's width in characters: its NATURAL width -- the longest target
 		// text on screen -- floored at the terminal's own `_ALERT_MIN_TARGET`,
@@ -273,6 +279,7 @@ export default {
 		fixedColsStyle() {
 			let total = ALERT_COL_WIDTHS.GLYPH + ALERT_COL_WIDTHS.TIME + this.targetWidth;
 			if (this.shows("DURATION")) total += ALERT_COL_WIDTHS.DURATION;
+			if (this.shows("STATE")) total += ALERT_COL_WIDTHS.STATE;
 			if (this.shows("LEVEL")) total += ALERT_COL_WIDTHS.LEVEL;
 			if (this.shows("TOP")) total += ALERT_MIN_TOP;
 			// One separator between cells, never after the last.
@@ -317,6 +324,9 @@ export default {
 		},
 		shows(column) {
 			return !this.hiddenColumns.has(column);
+		},
+		stateOf(incident) {
+			return incident.ongoing ? "ongoing" : "resolved";
 		},
 		glyphOf(incident) {
 			return incident.ongoing ? "●" : "○";

@@ -135,7 +135,7 @@ export const MIN_COMMAND_WIDTH = 8;
 // The property names below must stay written as string literals: the
 // drift check that compares this object against the Python side uses a
 // regex that only matches names given in that quoted form.
-export const ALERT_COL_WIDTHS = { "GLYPH": 1, "TIME": 8, "DURATION": 8, "LEVEL": 8 };
+export const ALERT_COL_WIDTHS = { "GLYPH": 1, "TIME": 8, "DURATION": 8, "STATE": 8, "LEVEL": 8 };
 export const ALERT_MIN_TARGET = 12; // :529
 export const ALERT_MIN_TOP = 22; // :537
 
@@ -155,7 +155,8 @@ export const ALERT_MIN_TOP = 22; // :537
 // terms at all. Do not "correct" either side to make the numbers match -- the
 // cascade still fires at the same RELATIVE points (the deltas between these
 // three thresholds hold exactly on the browser side too).
-export const ALERT_W_WITH_TOP = 66;
+export const ALERT_W_WITH_TOP = 76;
+export const ALERT_W_WITH_STATE = 53;
 export const ALERT_W_WITH_LEVEL = 43;
 export const ALERT_W_WITH_DURATION = 34;
 
