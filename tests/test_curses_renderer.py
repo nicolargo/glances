@@ -2801,7 +2801,15 @@ def test_alert_grid_top_width_boundary_at_76_matches_pair_arithmetic():
     TARGET floor (12) + TOP floor (22) — the worked example from the spec."""
     rows = render_alert_block(_TOP_HISTORY, limit=10, now=_GRID_NOW, ongoing=_TOP_ONGOING, width=76)
     header = rows[1]
-    assert [c.text.strip() for c in header.cells] == ["", "TIME", "DURATION", "STATE", "TARGET", "TOP PROCESSES", "LEVEL"]
+    assert [c.text.strip() for c in header.cells] == [
+        "",
+        "TIME",
+        "DURATION",
+        "STATE",
+        "TARGET",
+        "TOP PROCESSES",
+        "LEVEL",
+    ]
     target_cell, top_cell = rows[2].cells[4], rows[2].cells[5]
     assert len(target_cell.text) == _ALERT_MIN_TARGET == 12
     assert len(top_cell.text) == _ALERT_MIN_TOP == 22
