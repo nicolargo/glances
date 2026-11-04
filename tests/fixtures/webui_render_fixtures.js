@@ -1694,18 +1694,21 @@ const BLOCK_WIDTH_FIXTURES = {
 	// and only CPU% / MEM% / R/s / W/s / Command survive -- Command being the
 	// protected tail is exactly what this scenario is for.
 	"processlist-narrow": { processlist: { available: 200, content: 2000 } },
-	// PluginAlert.vue's own width cascade: TOP, then LEVEL, then DURATION
-	// (curses_renderer.py:538-540) -- TARGET is never dropped. Three
-	// fixtures, one per notch count, sharing `content: 1000` and differing
-	// only in `available` so each stops the cascade at a distinct step.
+	// PluginAlert.vue's own width cascade: TOP, then STATE, then LEVEL, then
+	// DURATION (curses_renderer.py `_ALERT_W_WITH_*`) -- TARGET is never
+	// dropped. Four fixtures, one per notch count, sharing `content: 1000` and
+	// differing only in `available` so each stops the cascade at a distinct step.
 	// 1000 - 150 = 850 <= 900: exactly one notch, so `drop_TOP` alone lands.
 	"alert-narrow-one-notch": { alert: { available: 900, content: 1000 } },
 	// 1000 - 150 = 850 > 750, 1000 - 2*150 = 700 <= 750: two notches, so
-	// `drop_TOP` + `drop_LEVEL` land and DURATION survives.
+	// `drop_TOP` + `drop_STATE` land and LEVEL survives.
 	"alert-narrow-two-notches": { alert: { available: 750, content: 1000 } },
-	// 1000 - 2*150 = 700 > 600, 1000 - 3*150 = 550 <= 600: all three notches
-	// land -- TOP, LEVEL and DURATION all drop, TARGET is all that is left.
-	"alert-narrowest": { alert: { available: 600, content: 1000 } },
+	// 1000 - 2*150 = 700 > 600, 1000 - 3*150 = 550 <= 600: three notches --
+	// TOP, STATE and LEVEL drop, DURATION survives.
+	"alert-narrow-three-notches": { alert: { available: 600, content: 1000 } },
+	// 1000 - 3*150 = 550 > 450, 1000 - 4*150 = 400 <= 450: all four notches
+	// land -- TARGET is all that is left.
+	"alert-narrowest": { alert: { available: 450, content: 1000 } },
 };
 
 // Vertical geometry per scenario. Same contract as WIDTH_FIXTURES: these are

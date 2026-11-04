@@ -80,11 +80,13 @@ def test_the_alert_grid_geometry_matches():
         "GLYPH": renderer._ALERT_W_GLYPH,
         "TIME": renderer._ALERT_W_TIME,
         "DURATION": renderer._ALERT_W_DURATION,
+        "STATE": renderer._ALERT_W_STATE,
         "LEVEL": renderer._ALERT_W_LEVEL,
     }
     assert _int_const("ALERT_MIN_TARGET") == renderer._ALERT_MIN_TARGET
     assert _int_const("ALERT_MIN_TOP") == renderer._ALERT_MIN_TOP
     assert _int_const("ALERT_W_WITH_TOP") == renderer._ALERT_W_WITH_TOP
+    assert _int_const("ALERT_W_WITH_STATE") == renderer._ALERT_W_WITH_STATE
     assert _int_const("ALERT_W_WITH_LEVEL") == renderer._ALERT_W_WITH_LEVEL
     assert _int_const("ALERT_W_WITH_DURATION") == renderer._ALERT_W_WITH_DURATION
 

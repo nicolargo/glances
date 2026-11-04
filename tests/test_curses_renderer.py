@@ -702,7 +702,7 @@ def test_render_alert_block_full_grid_columns_are_aligned():
 
 def test_render_alert_block_ongoing_rows_come_first():
     """§5.3 — a resolved incident must never push an ongoing one out of view."""
-    rows = render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=61)
+    rows = render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=71)
     data = [_line(r) for r in rows[2:]]
     assert "Cpu total" in data[0]
     assert "Containers nginx mem usage" in data[1]
@@ -967,12 +967,12 @@ def test_render_alert_block_truncates_target_with_an_ellipsis():
         )
     ]
     ongoing = {("containers", "a-very-long-container-name", "memory_usage_percent"): "warning"}
-    rows = render_alert_block(history, limit=10, now=_GRID_NOW, ongoing=ongoing, width=61)
-    # cells: glyph, TIME, DURATION, TARGET, LEVEL
-    target_cell = rows[2].cells[3]
+    rows = render_alert_block(history, limit=10, now=_GRID_NOW, ongoing=ongoing, width=71)
+    # cells: glyph, TIME, DURATION, STATE, TARGET, LEVEL
+    target_cell = rows[2].cells[4]
     assert len(target_cell.text) == 30
     assert target_cell.text.endswith("…")
-    assert len(_line(rows[2])) == 61
+    assert len(_line(rows[2])) == 71
 
 
 def test_render_alert_block_ascii_truncation_uses_a_dot():
@@ -987,8 +987,8 @@ def test_render_alert_block_ascii_truncation_uses_a_dot():
         )
     ]
     ongoing = {("containers", "a-very-long-container-name", "memory_usage_percent"): "warning"}
-    rows = render_alert_block(history, limit=10, now=_GRID_NOW, ongoing=ongoing, width=61, unicode_ok=False)
-    target_cell = rows[2].cells[3]
+    rows = render_alert_block(history, limit=10, now=_GRID_NOW, ongoing=ongoing, width=71, unicode_ok=False)
+    target_cell = rows[2].cells[4]
     assert target_cell.text.endswith(".")
     assert _line(rows[2]).isascii()
 
@@ -2687,12 +2687,23 @@ def test_alert_grid_top_column_sits_between_target_and_level():
 
 
 def test_alert_grid_top_column_drops_first_when_narrow():
-    """66 is the threshold; 65 keeps today's exact column set."""
-    wide = _line(render_alert_block(_TOP_HISTORY, limit=10, now=_GRID_NOW, ongoing=_TOP_ONGOING, width=66)[1])
-    narrow = _line(render_alert_block(_TOP_HISTORY, limit=10, now=_GRID_NOW, ongoing=_TOP_ONGOING, width=65)[1])
+    """76 is the threshold; 75 keeps every other column."""
+    wide = _line(render_alert_block(_TOP_HISTORY, limit=10, now=_GRID_NOW, ongoing=_TOP_ONGOING, width=76)[1])
+    narrow = _line(render_alert_block(_TOP_HISTORY, limit=10, now=_GRID_NOW, ongoing=_TOP_ONGOING, width=75)[1])
     assert "TOP PROCESSES" in wide
     assert "TOP PROCESSES" not in narrow
-    assert "LEVEL" in narrow and "DURATION" in narrow
+    assert "STATE" in narrow and "LEVEL" in narrow and "DURATION" in narrow
+
+
+def test_alert_grid_state_column_drops_before_level_and_duration():
+    """STATE is redundant with the glyph: 53 is its threshold, 52 drops it."""
+    with_state = render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=53)
+    without = render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=52)
+    assert "STATE" in _line(with_state[1])
+    assert "STATE" not in _line(without[1])
+    assert "LEVEL" in _line(without[1]) and "DURATION" in _line(without[1])
+    states = [row.cells[3].text.strip() for row in with_state[2:]]
+    assert states and set(states) == {"ongoing", "resolved"}
 
 
 def test_alert_grid_without_any_top_is_byte_identical_to_before():
@@ -2731,8 +2742,8 @@ def test_alert_grid_truncates_a_long_top_with_the_ascii_ellipsis():
     top_cell = rows[2].cells[-2]
     # TOP is now the elastic column (it absorbs the slack TARGET used to take,
     # design update: TOP repositioned) — at width=80 with a 9-char target that
-    # is 36, not a fixed 22 — and the joined top-3 text still overflows it.
-    assert len(top_cell.text) == 36
+    # is 26, not a fixed 22 — and the joined top-3 text still overflows it.
+    assert len(top_cell.text) == 26
     assert top_cell.text.rstrip().endswith(".")
     assert top_cell.text.isascii()
 
@@ -2785,17 +2796,17 @@ def test_alert_grid_top_starts_right_after_target_at_wide_width():
     assert 0 < top_start - target_end <= 6
 
 
-def test_alert_grid_top_width_boundary_at_66_matches_pair_arithmetic():
-    """width=66 is the exact TOP threshold; pair = 66 - 32 = 34, split as
+def test_alert_grid_top_width_boundary_at_76_matches_pair_arithmetic():
+    """width=76 is the exact TOP threshold; pair = 76 - 42 = 34, split as
     TARGET floor (12) + TOP floor (22) — the worked example from the spec."""
-    rows = render_alert_block(_TOP_HISTORY, limit=10, now=_GRID_NOW, ongoing=_TOP_ONGOING, width=66)
+    rows = render_alert_block(_TOP_HISTORY, limit=10, now=_GRID_NOW, ongoing=_TOP_ONGOING, width=76)
     header = rows[1]
-    assert [c.text.strip() for c in header.cells] == ["", "TIME", "DURATION", "TARGET", "TOP PROCESSES", "LEVEL"]
-    target_cell, top_cell = rows[2].cells[3], rows[2].cells[4]
+    assert [c.text.strip() for c in header.cells] == ["", "TIME", "DURATION", "STATE", "TARGET", "TOP PROCESSES", "LEVEL"]
+    target_cell, top_cell = rows[2].cells[4], rows[2].cells[5]
     assert len(target_cell.text) == _ALERT_MIN_TARGET == 12
     assert len(top_cell.text) == _ALERT_MIN_TOP == 22
-    assert len(target_cell.text) + len(top_cell.text) == 66 - 32
-    assert len(line := _line(rows[2])) == 66 and line  # exact width, no overflow
+    assert len(target_cell.text) + len(top_cell.text) == 76 - 42
+    assert len(line := _line(rows[2])) == 76 and line  # exact width, no overflow
 
 
 def test_alert_grid_differing_target_lengths_still_align():
@@ -2835,12 +2846,12 @@ def test_alert_grid_long_target_truncates_without_starving_top_below_its_floor()
         )
     ]
     ongoing = {("containers", "a-very-long-container-name", "memory_usage_percent"): "warning"}
-    rows = render_alert_block(history, limit=10, now=_GRID_NOW, ongoing=ongoing, width=66)
-    target_cell, top_cell = rows[2].cells[3], rows[2].cells[4]
+    rows = render_alert_block(history, limit=10, now=_GRID_NOW, ongoing=ongoing, width=76)
+    target_cell, top_cell = rows[2].cells[4], rows[2].cells[5]
     assert len(target_cell.text) == _ALERT_MIN_TARGET
     assert target_cell.text.endswith("…")
     assert len(top_cell.text) == _ALERT_MIN_TOP
-    assert len(_line(rows[2])) == 66
+    assert len(_line(rows[2])) == 76
 
 
 def test_percpu_keeps_its_labels_when_the_width_cascade_hides_quicklook():

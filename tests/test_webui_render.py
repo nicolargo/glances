@@ -3076,15 +3076,15 @@ def _alert_title(payload):
 
 
 def _alert_rows(payload):
-    """The rendered alert grid's <td> cells, grouped by row (6 columns:
-    glyph, TIME, DURATION, TARGET, TOP PROCESSES, LEVEL)."""
+    """The rendered alert grid's <td> cells, grouped by row (7 columns:
+    glyph, TIME, DURATION, STATE, TARGET, TOP PROCESSES, LEVEL)."""
     cells = payload["pluginTableCells"].get("alert", [])
-    return [cells[i : i + 6] for i in range(0, len(cells), 6)]
+    return [cells[i : i + 7] for i in range(0, len(cells), 7)]
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
 def test_the_alert_grid_renders_the_tui_columns():
-    """curses_renderer.py:1004-1062 -- glyph, TIME, DURATION, TARGET, TOP
+    """curses_renderer.py:1004-1062 -- glyph, TIME, DURATION, STATE, TARGET, TOP
     PROCESSES, LEVEL, in that order. This scenario carries no block-width
     fixture, so the block is "unmeasurable" (degrade.js's `fits()` reads a
     zero clientWidth as "cannot measure" and never degrades on it) and every
@@ -3092,7 +3092,7 @@ def test_the_alert_grid_renders_the_tui_columns():
     its siblings below for the width cascade itself."""
     payload = _run_render_probe("alert")
     header = payload["pluginHeaderCells"]["alert"]
-    assert header[1:] == ["TIME", "DURATION", "TARGET", "TOP PROCESSES", "LEVEL"]
+    assert header[1:] == ["TIME", "DURATION", "STATE", "TARGET", "TOP PROCESSES", "LEVEL"]
     # The glyph column's header is BLANK, like the terminal's
     # (curses_renderer.py:818): the title is a full-width line of its own
     # above the grid, not the first <th>. ALERT_INCIDENTS_FIXTURE has 3
@@ -3124,7 +3124,7 @@ def test_only_an_ongoing_incident_colours_its_level():
     rows = _alert_rows(payload)
     assert len(rows) == 5, f"expected the five fixture incidents, got {rows!r}"
 
-    ongoing_level = rows[0][5]
+    ongoing_level = rows[0][6]
     assert "gl-level-critical" in (ongoing_level["value"] or ""), f"got {ongoing_level!r}"
     assert "gl-prominent" in (ongoing_level["value"] or ""), (
         f"the prominent badge belongs on LEVEL in the browser: {ongoing_level!r}"
@@ -3136,7 +3136,7 @@ def test_only_an_ongoing_incident_colours_its_level():
     # hand-rolled <table> on its own code path, so it needs its own check.
     assert _tier_classes(ongoing_level["cell"]) == set(), f"got {ongoing_level!r}"
 
-    resolved_level = rows[2][5]
+    resolved_level = rows[2][6]
     assert "gl-level" not in (resolved_level["value"] or ""), (
         f"a resolved incident's LEVEL must go neutral: {resolved_level!r}"
     )
@@ -3163,10 +3163,18 @@ def test_a_resolved_incident_keeps_its_prominent_badge_without_colour():
     """
     payload = _run_render_probe("alert")
     rows = _alert_rows(payload)
-    resolved_prominent = rows[3][5]
+    resolved_prominent = rows[3][6]
     classes = (resolved_prominent["value"] or "").split()
     assert "gl-alert-resolved-prominent" in classes, f"got {resolved_prominent!r}"
     assert "gl-level-critical" not in classes, f"resolved drops the tier hue: {resolved_prominent!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_alert_state_column_reads_ongoing_or_resolved():
+    """ALERT_INCIDENTS_FIXTURE has 3 ongoing (rows 0, 1, 4) and 2 resolved
+    (rows 2, 3); STATE is the 4th <td>, between DURATION and TARGET."""
+    rows = _alert_rows(_run_render_probe("alert"))
+    assert [row[3]["text"] for row in rows] == ["ongoing", "ongoing", "resolved", "resolved", "ongoing"]
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
@@ -3287,13 +3295,13 @@ def test_the_alert_target_column_takes_its_natural_width():
     """
     payload = _run_render_probe("alert")
     rows = _alert_rows(payload)
-    natural = max(len(row[3]["text"]) for row in rows)
+    natural = max(len(row[4]["text"]) for row in rows)
     assert natural > 12, f"the fixture no longer exercises a target past the floor: {natural}"
-    # GLYPH, TIME, DURATION, TARGET, TOP (width-less), LEVEL -- TARGET is the
-    # fourth <col>, and every <col> box carries COL_SEPARATOR on top of its
+    # GLYPH, TIME, DURATION, STATE, TARGET, TOP (width-less), LEVEL -- TARGET is the
+    # fifth <col>, and every <col> box carries COL_SEPARATOR on top of its
     # content width.
     widths = payload["pluginColWidths"]["alert"]
-    assert widths[3] == f"calc({natural + 2} * var(--gl-col))", f"got {widths!r} for a {natural}-character target"
+    assert widths[4] == f"calc({natural + 2} * var(--gl-col))", f"got {widths!r} for a {natural}-character target"
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
@@ -3308,8 +3316,10 @@ def test_the_alert_grid_drops_top_processes_first():
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
-def test_the_alert_grid_drops_level_then_duration():
+def test_the_alert_grid_drops_state_then_level_then_duration():
     headers = _run_render_probe("alert-narrow-two-notches")["pluginHeaderCells"].get("alert") or []
+    assert "STATE" not in headers and "LEVEL" in headers, f"got {headers!r}"
+    headers = _run_render_probe("alert-narrow-three-notches")["pluginHeaderCells"].get("alert") or []
     assert "LEVEL" not in headers and "DURATION" in headers, f"got {headers!r}"
     headers = _run_render_probe("alert-narrowest")["pluginHeaderCells"].get("alert") or []
     assert "DURATION" not in headers and "TARGET" in headers, f"got {headers!r}"
