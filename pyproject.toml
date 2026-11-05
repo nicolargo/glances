@@ -62,7 +62,7 @@ dev = [
 [project.optional-dependencies]
 action = ["chevron"]
 # all but not dev
-all = ["glances[action,browser,cloud,containers,export,gpu,graph,mcp,raid,sensors,smart,web,wifi]"]
+all = ["glances[action,browser,cloud,containers,export,gpu,graph,llm-anthropic,llm-litellm,llm-ollama,llm-openai,mcp,raid,sensors,smart,web,wifi]"]
 browser = ["zeroconf"]
 cloud = ["requests>=2.32.4"]
 containers = [
@@ -97,6 +97,11 @@ export = [
 ]
 gpu = ["nvidia-ml-py"]
 graph = ["pygal"]
+# Optional LLM reporting providers
+llm-anthropic = ["anthropic"]
+llm-litellm = ["litellm"]
+llm-ollama = ["openai"]  # Uses Ollama's OpenAI-compatible API
+llm-openai = ["openai"]
 mcp = ["mcp>=1.23.0,<3"]
 raid = ["pymdstat"]
 sensors = ["batinfo; platform_system == 'Linux'"]
