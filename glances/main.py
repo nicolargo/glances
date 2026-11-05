@@ -1168,6 +1168,14 @@ def attach_history(plugins: list[GlancesPluginBase], config: GlancesConfig, args
         plugin.history = history
 
 
+def attach_alerts(plugins: list[GlancesPluginBase], alerts: GlancesAlerts) -> None:
+    """Hand the alerts engine to every plugin with a ``set_alerts()`` method (``llm_reporter``)."""
+    for plugin in plugins:
+        set_alerts = getattr(plugin, "set_alerts", None)
+        if set_alerts is not None:
+            set_alerts(alerts)
+
+
 def tui_view_options(args: argparse.Namespace) -> dict[str, Any]:
     """The TUI's display options from the command line, shared by the local and the client TUI."""
     from glances.outputs.glances_curses import STARTUP_HIDE_KEYS
@@ -1269,6 +1277,7 @@ def assemble(
         logger.debug("Discovered %d v5 plugins: %s", len(plugins), ", ".join(p.plugin_name for p in plugins))
 
     attach_history(plugins, config, args)
+    attach_alerts(plugins, alerts)
 
     scheduler = AsyncScheduler(store, config, alerts=alerts)
     for plugin in plugins:
