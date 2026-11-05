@@ -639,3 +639,17 @@ def test_normalize_for_influxdb_does_not_mutate_the_caller_s_values():
     exporter.normalize_for_influxdb("cpu", ["total", "idle"], points)
 
     assert points == [15.7, None]
+
+
+def test_normalize_for_influxdb_keeps_a_numeric_username_a_string():
+    """A bare numeric UID username such as '1000' must stay the string
+    '1000', not be cast to a float. Otherwise it clashes with string
+    usernames like 'root' on a stricter backend such as InfluxDB 3 (#3802)."""
+    exporter = make_influx_exporter()
+
+    ret = exporter.normalize_for_influxdb(
+        "processlist", ["username", "cpu_percent"], ["1000", 3.5]
+    )
+
+    assert ret[0]["fields"]["username"] == "1000"
+    assert isinstance(ret[0]["fields"]["username"], str)
