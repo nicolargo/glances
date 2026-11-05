@@ -564,6 +564,17 @@ def test_normalize_for_influxdb_builds_one_measurement_for_a_scalar_plugin():
     ]
 
 
+def test_normalize_for_influxdb_keeps_a_numeric_username_a_string():
+    # A process owned by a user without a name reports a bare uid such as "1000".
+    # Writing it as a float after earlier string values makes InfluxDB 3 reject
+    # the line with "invalid column type for column 'username'".
+    exporter = make_influx_exporter()
+
+    ret = exporter.normalize_for_influxdb("processlist", ["pid", "username"], [42, "1000"])
+
+    assert ret[0]["fields"] == {"pid": 42.0, "username": "1000"}
+
+
 def test_normalize_for_influxdb_splits_a_collection_on_the_key_column():
     """issue1871 -- a `<x>.key` column marks `<x>` as a measurement identity."""
     exporter = make_influx_exporter()

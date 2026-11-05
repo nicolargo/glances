@@ -247,6 +247,10 @@ class GlancesExportBase(ABC):
         FIELD_TO_TAG = ["name", "cmdline", "type"]
         # The AMP 'result' field is a string or a number depending on the AMP (#3419).
         FIELD_TO_STRING = ["result"]
+        # A process 'username' is a bare uid such as "1000" when the user has no
+        # name. It must stay text, or InfluxDB 3 rejects the float after earlier
+        # string values for the column.
+        FIELD_KEEP_STRING = ["username"]
 
         data_dict = dict(zip(columns, points))
 
@@ -273,6 +277,9 @@ class GlancesExportBase(ABC):
             if not fields:
                 continue
             for k in fields:
+                if k in FIELD_KEEP_STRING:
+                    fields[k] = str(fields[k])
+                    continue
                 try:
                     fields[k] = float(fields[k])
                 except (TypeError, ValueError):
