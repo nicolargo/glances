@@ -82,13 +82,13 @@ class Export(GlancesExport):
 
             def on_connect(client, userdata, flags, reason_code, properties):
                 """Action to perform when connecting."""
-                self.client.publish(
+                client.publish(
                     topic='/'.join([self.topic, self.devicename, "availability"]), payload="online", retain=True
                 )
 
             def on_disconnect(client, userdata, flags, reason_code, properties):
                 """Action to perform when the connection is over."""
-                self.client.publish(
+                client.publish(
                     topic='/'.join([self.topic, self.devicename, "availability"]), payload="offline", retain=True
                 )
 
