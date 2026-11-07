@@ -76,6 +76,6 @@ parts:
     source: https://github.com/nicolargo/glances.git
     # For releases, set to master
     # For beta/dev, set to develop
-    source-branch: master
+    source-branch: support/glancesv4
     python-requirements:
       - docker-requirements.txt
