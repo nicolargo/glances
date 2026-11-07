@@ -3,7 +3,10 @@
 Wi-Fi
 =====
 
-*Availability: Linux (with an /proc/net/wireless file) only*
+*Availability: Linux only*
+
+The signal strength is read over nl80211 (the same data as ``iw dev <interface> link``).
+When nl80211 is not available, Glances falls back to the ``/proc/net/wireless`` file.
 
 .. image:: ../_static/wifi.png
 

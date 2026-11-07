@@ -8,7 +8,8 @@
 
 """Wifi plugin.
 
-Stats are retrieved from the /proc/net/wireless file (Linux only):
+Stats are retrieved over nl80211 (Linux only), the same data as `iw dev <interface> link`.
+When nl80211 is not available, the /proc/net/wireless file is used instead:
 
 # cat /proc/net/wireless
 Inter-| sta-|   Quality        |   Discarded packets               | Missed | WE
@@ -21,14 +22,19 @@ import operator
 from glances.globals import file_exists, nativestr
 from glances.logger import logger
 from glances.plugins.plugin.model import GlancesPluginModel
+from glances.plugins.wifi import nl80211
 
-# Use stats available in the /proc/net/wireless file
-# Note: it only give signal information about the current hotspot
+# Fallback when nl80211 is unavailable: the /proc/net/wireless file. It goes through
+# the legacy wireless extensions, which the kernel warns about (and which return
+# nothing for Wi-Fi 7 hardware), hence nl80211 first.
+# Note: both only give signal information about the current hotspot
 WIRELESS_FILE = '/proc/net/wireless'
 wireless_file_exists = file_exists(WIRELESS_FILE)
 
-if not wireless_file_exists:
-    logger.debug(f"Wifi plugin is disabled (can not read {WIRELESS_FILE} file)")
+# nl80211 has no link quality value: derive it like the cfg80211 wireless extensions
+# did, so the field is unchanged: the signal clamped to [-110, -40] dBm, shifted to 0..70
+QUALITY_MIN_DBM = -110
+QUALITY_MAX_DBM = -40
 
 # Fields description
 # description: human readable description
@@ -92,11 +98,7 @@ class WifiPlugin(GlancesPluginModel):
         # Init new stats
         stats = self.get_init_value()
 
-        # Exist if we can not grab the stats
-        if not wireless_file_exists:
-            return stats
-
-        if self.input_method == 'local' and wireless_file_exists:
+        if self.input_method == 'local':
             try:
                 stats = self._get_wireless_stats()
             except (PermissionError, FileNotFoundError) as e:
@@ -113,7 +115,31 @@ class WifiPlugin(GlancesPluginModel):
 
     def _get_wireless_stats(self):
         ret = self.get_init_value()
-        # As a backup solution, use the /proc/net/wireless file
+        try:
+            signals = nl80211.station_signals()
+        except nl80211.Nl80211Unavailable as e:
+            # No netlink or no cfg80211: use the /proc/net/wireless file instead
+            logger.debug(f"Wifi plugin: nl80211 unavailable ({e}), falling back to {WIRELESS_FILE}")
+            return self._get_proc_wireless_stats()
+        except OSError as e:
+            # Transient nl80211 error: do not fall back (reading the file logs a kernel warning)
+            logger.debug(f"Wifi plugin: nl80211 error ({e})")
+            return ret
+        for name, signal in signals.items():
+            ret.append(
+                {
+                    'key': self.get_key(),
+                    'ssid': name,
+                    'quality_link': float(min(max(signal, QUALITY_MIN_DBM), QUALITY_MAX_DBM) - QUALITY_MIN_DBM),
+                    'quality_level': float(signal),
+                }
+            )
+        return ret
+
+    def _get_proc_wireless_stats(self):
+        ret = self.get_init_value()
+        if not wireless_file_exists:
+            return ret
         with open(WIRELESS_FILE) as f:
             # The first two lines are header
             f.readline()
@@ -183,7 +209,7 @@ class WifiPlugin(GlancesPluginModel):
         ret = []
 
         # Only process if stats exist and display plugin enable...
-        if not self.stats or not wireless_file_exists or self.is_disabled():
+        if not self.stats or self.is_disabled():
             return ret
 
         # Max size for the interface name
