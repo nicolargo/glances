@@ -246,7 +246,10 @@ class GlancesExportBase(ABC):
         # Converted to tags to avoid InfluxDB type mismatches and to allow filtering.
         FIELD_TO_TAG = ["name", "cmdline", "type"]
         # The AMP 'result' field is a string or a number depending on the AMP (#3419).
-        FIELD_TO_STRING = ["result"]
+        # 'username' is always a string, but a bare numeric UID (e.g. '1000') would
+        # otherwise be cast to a float below and clash with string usernames like
+        # 'root' on a stricter backend such as InfluxDB 3 (#3802).
+        FIELD_TO_STRING = ["result", "username"]
 
         data_dict = dict(zip(columns, points))
 
@@ -273,6 +276,12 @@ class GlancesExportBase(ABC):
             if not fields:
                 continue
             for k in fields:
+                if k in FIELD_TO_STRING:
+                    # Keep these as strings, and skip the float cast below: it
+                    # would turn a numeric-looking value such as the UID
+                    # username '1000' into '1000.0'.
+                    fields[k] = str(fields[k])
+                    continue
                 try:
                     fields[k] = float(fields[k])
                 except (TypeError, ValueError):
@@ -280,8 +289,6 @@ class GlancesExportBase(ABC):
                         fields[k] = str(fields[k])
                     except (TypeError, ValueError):
                         pass
-                if k in FIELD_TO_STRING:
-                    fields[k] = str(fields[k])
             tags = self.parse_tags(self.tags)
             tags["hostname"] = self.hostname
             if "hostname" in fields:
