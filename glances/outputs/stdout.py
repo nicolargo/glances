@@ -137,6 +137,7 @@ class CsvRenderer:
         self._header_done = False
         self._keys: dict[str, list[str]] = {}
         self._fields: dict[str, dict[str, list[str]]] = {}
+        self._dict_keys: dict[str, list[str]] = {}
 
     def render(self, exports: dict[str, Any], primary_keys: dict[str, str | None]) -> str:
         cells: list[str] = []
@@ -162,6 +163,7 @@ class CsvRenderer:
                 return [f"{plugin}.{_item_key(i, pk)}.{attribute}" for i in items]
             return [f"{plugin}.{attribute}"]
         if isinstance(stat, dict):
+            self._dict_keys[plugin] = list(stat)
             return [f"{plugin}.{k}" for k in stat]
         if isinstance(stat, list):
             items = [i for i in stat if isinstance(i, dict)]
@@ -182,7 +184,7 @@ class CsvRenderer:
                 ]
             return [str(stat.get(attribute, _NA)) if isinstance(stat, dict) else _NA]
         if isinstance(stat, dict):
-            return [str(v) for v in stat.values()]
+            return [str(stat.get(k, _NA)) for k in self._dict_keys.get(plugin, [])]
         if isinstance(stat, list):
             current = {_item_key(i, pk): i for i in stat if isinstance(i, dict)}
             return [
