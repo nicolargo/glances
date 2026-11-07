@@ -61,7 +61,7 @@ An Eye on your System
 
 .. important::
 
-    **The current stable release is Glances 4.5.8**: see the `v4.5.8 <https://github.com/nicolargo/glances/tree/v4.5.8>`__ tag for its
+    **The current stable release is Glances 4.5.9**: see the `v4.5.9 <https://github.com/nicolargo/glances/tree/v4.5.9>`__ tag for its
     source code and documentation. ``pip install glances`` installs it.
 
     **This branch (develop) contains Glances 5.0.0, currently in beta.**
