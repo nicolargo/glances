@@ -283,7 +283,7 @@ class GlancesRestfulApi:
                 logger.info(f"JWT authentication enabled (token expiration: {jwt_expire} minutes)")
             else:
                 self._jwt_handler = None
-                logger.info("JWT authentication not available (python-jose not installed)")
+                logger.info("JWT authentication not available (PyJWT not installed)")
         else:
             self._password = None
             self._jwt_handler = None
@@ -825,7 +825,7 @@ class GlancesRestfulApi:
         if self._jwt_handler is None or not self._jwt_handler.is_available:
             raise HTTPException(
                 status.HTTP_501_NOT_IMPLEMENTED,
-                "JWT authentication is not available. Install python-jose or check configuration.",
+                "JWT authentication is not available. Install PyJWT or check configuration.",
             )
 
         # Check if password authentication is enabled

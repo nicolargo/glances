@@ -3,6 +3,29 @@
 ==============================================================================
 
 =============
+Version 4.5.9
+=============
+
+Cyber:
+
+* Replace python-jose (with CVE) by PyJWT
+* Update all dependencies
+
+This version will be the last one for Glances 4.x.
+
+You can test Glances 5.0.0 beta with:
+
+.. code-block:: console
+
+    python3 -m venv ~/.venv-glances5
+    source ~/.venv-glances5/bin/activate
+    pip install --pre --index-url https://test.pypi.org/simple/ \
+        --extra-index-url https://pypi.org/simple/ 'glances[web]>=5.0.0b1'
+    glances --version
+
+Or run the ``nicolargo/glances:dev`` Docker image (built from this branch).
+
+=============
 Version 4.5.8
 =============
 

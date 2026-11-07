@@ -15,12 +15,13 @@ from glances.logger import logger
 
 # JWT library import with fallback
 try:
-    from jose import JWTError, jwt
+    import jwt
+    from jwt import PyJWTError
 
     JWT_AVAILABLE = True
 except ImportError:
     JWT_AVAILABLE = False
-    JWTError = Exception  # Placeholder
+    PyJWTError = Exception  # Placeholder
 
 
 class JWTHandler:
@@ -37,7 +38,7 @@ class JWTHandler:
             expire_minutes: Token expiration time in minutes (default: 60)
         """
         if not JWT_AVAILABLE:
-            logger.warning("python-jose library not available. JWT authentication disabled.")
+            logger.warning("PyJWT library not available. JWT authentication disabled.")
             self._secret_key = None
         else:
             # Use provided key or generate a secure random key
@@ -99,6 +100,6 @@ class JWTHandler:
             if username is None:
                 return None
             return username
-        except JWTError as e:
+        except PyJWTError as e:
             logger.debug(f"JWT verification failed: {e}")
             return None

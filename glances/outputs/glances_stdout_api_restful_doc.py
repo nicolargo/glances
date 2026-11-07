@@ -99,7 +99,7 @@ To reuse an existing login/password pair, start Glances with the ``-u <user>`` o
 JWT Token Authentication
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-JWT authentication requires the ``python-jose`` library to be installed.
+JWT authentication requires the ``PyJWT`` library to be installed.
 
 **Step 1: Get a JWT Token**
 
