@@ -137,6 +137,22 @@ def test_csv_whole_dict_plugin_gives_one_column_per_field():
     assert csv.render(cpu, PKS) == "1.2,0.8,98.0"
 
 
+def test_csv_dict_plugin_locks_columns_when_keys_change():
+    """A scalar/dict plugin whose exported keys change after the header line
+    (e.g. `ip` once its public address resolves) must stay aligned to the
+    header, like the list path: a key that appears later is dropped and a key
+    that vanishes prints N/A, instead of the data row growing past the header."""
+    csv = CsvRenderer([("ip", None)])
+    first = {"ip": {"address": "192.168.1.5", "mask": "255.255.255.0"}}
+    assert csv.render(first, {"ip": None}) == "ip.address,ip.mask"
+    grown = {
+        "ip": {"address": "192.168.1.5", "mask": "255.255.255.0", "public_address": "8.8.8.8"}
+    }
+    assert csv.render(grown, {"ip": None}) == "192.168.1.5,255.255.255.0"
+    shrunk = {"ip": {"address": "192.168.1.5"}}
+    assert csv.render(shrunk, {"ip": None}) == "192.168.1.5,N/A"
+
+
 def test_csv_quotes_a_cell_holding_a_comma():
     """Mount options (`rw,relatime`) or a `strftime_format` with a comma used
     to shift every later cell by one column: such a cell is quoted, like the
