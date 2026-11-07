@@ -47,3 +47,26 @@ def test_configured_port_and_callback_api_version_are_used():
     assert exporter.port == 1883
     assert exporter.callback_api_version == paho.CallbackAPIVersion.VERSION1
     client_cls.return_value.connect.assert_called_once_with(host='localhost', port=1883)
+
+
+@pytest.mark.parametrize('callback, payload', [('on_connect', 'online'), ('on_disconnect', 'offline')])
+def test_callback_firing_before_init_returns_uses_callback_client(callback, payload):
+    """Regression test for https://github.com/nicolargo/glances/issues/3843.
+
+    loop_start() spawns the paho network thread inside init(), so a callback
+    can fire before self.client is bound. The callback must publish on the
+    client paho hands it, not on self.client.
+    """
+    with mock.patch('glances.exports.glances_mqtt.paho.Client') as client_cls:
+        client_instance = client_cls.return_value
+
+        def fire_callback(*args, **kwargs):
+            getattr(client_instance, callback)(client_instance, None, {}, 0, None)
+
+        client_instance.loop_start.side_effect = fire_callback
+        exporter = Export(config=FakeConfig({'host': 'localhost', 'password': 'secret', 'tls': 'false'}))
+
+    assert exporter.client is client_instance
+    client_instance.publish.assert_called_once_with(
+        topic='/'.join(['glances', exporter.devicename, 'availability']), payload=payload, retain=True
+    )
