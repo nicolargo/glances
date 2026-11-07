@@ -159,7 +159,7 @@ jobs:
           usesh: true
           cache-after-prepare: true
           prepare: |
-            pkg install -y python3 gcc devel/py-pip devel/py-pytest devel/py-pytest-asyncio sysutils/py-psutil www/py-fastapi www/py-uvicorn www/py-httpx www/py-requests devel/py-Jinja2 security/py-pyjwt
+            pkg install -y python3 gcc devel/py-pip devel/py-pytest devel/py-pytest-asyncio sysutils/py-psutil www/py-fastapi www/py-uvicorn www/py-httpx www/py-requests devel/py-Jinja2 www/py-pyjwt
           run: |
             set -e
             python3 --version
