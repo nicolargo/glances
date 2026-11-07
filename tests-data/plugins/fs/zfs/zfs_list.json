@@ -1,0 +1,79 @@
+{
+  "output_version": {
+    "command": "zfs list",
+    "vers_major": 0,
+    "vers_minor": 1
+  },
+  "datasets": {
+    "tank": {
+      "name": "tank",
+      "type": "FILESYSTEM",
+      "pool": "tank",
+      "properties": {
+        "used": {
+          "value": 296960,
+          "source": {
+            "type": "NONE",
+            "data": "-"
+          }
+        },
+        "available": {
+          "value": 32749125632,
+          "source": {
+            "type": "NONE",
+            "data": "-"
+          }
+        },
+        "referenced": {
+          "value": 24576,
+          "source": {
+            "type": "NONE",
+            "data": "-"
+          }
+        },
+        "mountpoint": {
+          "value": "/tank",
+          "source": {
+            "type": "DEFAULT",
+            "data": "-"
+          }
+        }
+      }
+    },
+    "tank/home": {
+      "name": "tank/home",
+      "type": "FILESYSTEM",
+      "pool": "tank",
+      "properties": {
+        "used": {
+          "value": 49152,
+          "source": {
+            "type": "NONE",
+            "data": "-"
+          }
+        },
+        "available": {
+          "value": 32749125632,
+          "source": {
+            "type": "NONE",
+            "data": "-"
+          }
+        },
+        "referenced": {
+          "value": 24576,
+          "source": {
+            "type": "NONE",
+            "data": "-"
+          }
+        },
+        "mountpoint": {
+          "value": "/tank/home",
+          "source": {
+            "type": "LOCAL",
+            "data": "-"
+          }
+        }
+      }
+    }
+  }
+}

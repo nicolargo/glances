@@ -37,6 +37,7 @@ Legend:
    ports
    diskio
    fs
+   zfs
    irq
    folders
    cloud

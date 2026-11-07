@@ -1,0 +1,20 @@
+{
+  "output_version": {"command": "zpool list", "vers_major": 0, "vers_minor": 1},
+  "pools": {
+    "3920273586464696295": {
+      "name": "tank",
+      "type": "POOL",
+      "state": "ONLINE",
+      "guid": "3920273586464696295",
+      "properties": {
+        "size": {"value": 16492674416640, "source": {"type": "NONE", "data": "-"}},
+        "allocated": {"value": 68812800000, "source": {"type": "NONE", "data": "-"}},
+        "free": {"value": 16423861616640, "source": {"type": "NONE", "data": "-"}},
+        "fragmentation": {"value": 12, "source": {"type": "NONE", "data": "-"}},
+        "capacity": {"value": 1, "source": {"type": "NONE", "data": "-"}},
+        "dedupratio": {"value": "1.00x", "source": {"type": "NONE", "data": "-"}},
+        "health": {"value": "ONLINE", "source": {"type": "NONE", "data": "-"}}
+      }
+    }
+  }
+}
