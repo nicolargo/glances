@@ -40,6 +40,7 @@ from glances.plugins.llm_reporter.model import PluginModel
 from glances.plugins.llm_reporter.prompt import (
     CurrentState,
     ReportContext,
+    Trends,
     compute_delta,
     construct_prompt,
     format_series,
@@ -236,7 +237,7 @@ def test_python_api_builds_what_the_prompt_reads(config_with, fake_openai):
     config_with(_llm_section())  # writes the conf GlancesAPI discovers
     with GlancesAPI(plugins=["llm_reporter"]) as gl:
         built = set(gl._plugins)
-    assert {"llm_reporter", "cpu", "mem", "memswap", "load", "processlist", "processcount"} <= built
+    assert {"llm_reporter", "cpu", "mem", "memswap", "load", "processlist", "processcount", "gpu"} <= built
 
 
 def test_disabled_without_config(config_with):
@@ -667,9 +668,46 @@ def test_trends_sampled_over_the_report_window():
     assert trends.cpu == "150% → 225% → 300%  (+150%)"
     assert trends.window_seconds == 300
     assert trends.memory == "n/a"  # no mem history recorded
+    assert trends.gpus == {}  # no GPU
+
+
+def test_trends_one_line_per_gpu():
+    history = HistoryStore(1200)
+    for i, ts in enumerate(range(0, 302, 2)):
+        # nvidia1 reports no memory.
+        rows = [{"gpu_id": "nvidia0", "proc": float(i), "mem": 40.0}, {"gpu_id": "nvidia1", "proc": 5.0}]
+        history.record("gpu", rows, ["proc", "mem"], primary_key="gpu_id", now=float(ts))
+    trends = read_trends(history, window=300, samples=3, now=300.0)
+    assert trends.gpus == {
+        "nvidia0": "proc 0% → 75% → 150%  (+150%), mem 40% → 40% → 40%  (+0%)",
+        "nvidia1": "proc 5% → 5% → 5%  (+0%), mem n/a",
+    }
+    assert trends.window_seconds == 300
+    assert trends.cpu == "n/a"  # no cpu history recorded
 
 
 # ------------------------------------------------------------- prompt
+
+
+def test_prompt_trends_section_has_one_line_per_gpu():
+    trends = Trends(
+        window_seconds=300,
+        cpu="10% → 90%  (+80%)",
+        memory="n/a",
+        swap="n/a",
+        load_avg="n/a",
+        gpus={"nvidia0": "proc 10% → 95%  (+85%), mem n/a", "nvidia1": "proc n/a, mem 20% → 30%  (+10%)"},
+    )
+    prompt = construct_prompt(ReportContext(_current(), trends=trends, active_alerts=None, top_processes=None))
+    assert (
+        "=== TRENDS (last 300s) ===\n"
+        "CPU    : 10% → 90%  (+80%)\n"
+        "Memory : n/a\n"
+        "Swap   : n/a\n"
+        "Load   : n/a\n"
+        "GPU nvidia0 : proc 10% → 95%  (+85%), mem n/a\n"
+        "GPU nvidia1 : proc n/a, mem 20% → 30%  (+10%)\n\n"
+    ) in prompt
 
 
 def test_prompt_omits_unavailable_sections():

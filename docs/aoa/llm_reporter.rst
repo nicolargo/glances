@@ -8,8 +8,9 @@ LLM reporter
 Glances can ask a Large Language Model for a short health report of the
 system. Every ``refresh`` seconds (5 minutes by default), the plugin sends
 the model the current CPU, memory, swap and load, their trend over the last
-interval, the active alerts and the five most CPU-hungry processes, and
-publishes the answer: a 4 to 6 sentence report with an overall status (OK,
+interval (with the processor and memory trend of each GPU), the active
+alerts and the five most CPU-hungry processes, and publishes the answer: a
+4 to 6 sentence report with an overall status (OK,
 Degraded or Critical), a root cause and a recommended action. The first
 report comes a few global refresh cycles after start (about 8 seconds by
 default), once the trends, the process list and the alerts are available.

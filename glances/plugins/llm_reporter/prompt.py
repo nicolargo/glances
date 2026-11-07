@@ -39,6 +39,8 @@ _TREND_SERIES: dict[str, tuple[str, str, str]] = {
     "swap": ("memswap", "percent", "{:.0f}%"),
     "load_avg": ("load", "min1", "{:.2f}"),
 }
+# Historised percent fields of the gpu plugin, a collection: one trend line per GPU.
+_GPU_TREND_FIELDS = ("proc", "mem")
 _STATUS_RE = re.compile(r"\b(ok|degraded|critical)\b", re.IGNORECASE)
 
 _INSTRUCTIONS = """\
@@ -73,6 +75,8 @@ class Trends:
     memory: str
     swap: str
     load_avg: str
+    # gpu_id -> "proc ..., mem ...", empty without a GPU.
+    gpus: dict[str, str]
 
 
 @dataclass(frozen=True)
@@ -128,10 +132,17 @@ def format_series(values: list[float], value_format: str) -> str:
     return f"{series}  ({delta})"
 
 
-def _recent_points(history: HistoryStore, plugin_name: str, field: str, since: float) -> list[tuple[float, float]]:
-    """``(timestamp, value)`` of one scalar series from ``since`` on, gaps (None) dropped."""
+def _recent_points(
+    history: HistoryStore, plugin_name: str, field: str, since: float, item: str | None = None
+) -> list[tuple[float, float]]:
+    """``(timestamp, value)`` of one series from ``since`` on, gaps (None) dropped.
+
+    ``item`` selects one item of a collection plugin (a GPU's ``gpu_id``).
+    """
     hist = history.get(plugin_name)
     values = hist["series"].get(field)
+    if item is not None:
+        values = values.get(item) if isinstance(values, dict) else None
     if not isinstance(values, list):
         return []
     return [(ts, v) for ts, v in zip(hist["timestamps"], values) if ts >= since and v is not None]
@@ -156,9 +167,21 @@ def read_trends(history: HistoryStore | None, window: float, samples: int, now: 
             continue
         spans.append(points[-1][0] - points[0][0])
         lines[name] = format_series([v for _, v in points], value_format)
+    gpus: dict[str, str] = {}
+    gpu_series = history.get("gpu")["series"]
+    for gpu_id in sorted({gpu_id for field in _GPU_TREND_FIELDS for gpu_id in gpu_series.get(field, {})}):
+        parts = []
+        for field in _GPU_TREND_FIELDS:
+            points = sample_evenly(_recent_points(history, "gpu", field, since, item=gpu_id), samples)
+            if len(points) < 2:
+                parts.append(f"{field} n/a")
+                continue
+            spans.append(points[-1][0] - points[0][0])
+            parts.append(f"{field} {format_series([v for _, v in points], '{:.0f}%')}")
+        gpus[gpu_id] = ", ".join(parts)
     if not spans:
         return None
-    return Trends(window_seconds=round(max(spans)), **lines)
+    return Trends(window_seconds=round(max(spans)), **lines, gpus=gpus)
 
 
 def read_active_alerts(alerts: GlancesAlerts | None) -> list[str] | None:
@@ -224,7 +247,7 @@ def construct_prompt(ctx: ReportContext) -> str:
             f"CPU    : {t.cpu}\n"
             f"Memory : {t.memory}\n"
             f"Swap   : {t.swap}\n"
-            f"Load   : {t.load_avg}"
+            f"Load   : {t.load_avg}" + "".join(f"\nGPU {gpu_id} : {line}" for gpu_id, line in t.gpus.items())
         )
     if ctx.active_alerts is not None:
         sections.append("=== ACTIVE ALERTS ===\n" + ("\n".join(f"- {a}" for a in ctx.active_alerts) or "None"))

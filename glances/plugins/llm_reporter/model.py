@@ -67,7 +67,7 @@ class PluginModel(GlancesPluginBase[dict]):
     plugin_name: ClassVar[str] = "llm_reporter"
     IS_COLLECTION: ClassVar[bool] = False
     # The plugins the prompt reads (built along with it by the Python API).
-    DEPENDS_ON: ClassVar[tuple[str, ...]] = ("cpu", "mem", "memswap", "load", "processlist")
+    DEPENDS_ON: ClassVar[tuple[str, ...]] = ("cpu", "mem", "memswap", "load", "processlist", "gpu")
     # The report reads the alerts; it raises none.
     EMITS_ALERTS: ClassVar[bool] = False
     # Free text, served by the REST API and MCP.
