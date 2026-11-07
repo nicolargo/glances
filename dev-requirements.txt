@@ -24,11 +24,9 @@ boltons==21.0.0
     #   semgrep
 boolean-py==5.0
     # via license-expression
-bracex==3.1 ; python_full_version < '3.11'
+bracex==3.0.1
     # via wcmatch
-bracex==3.2.1 ; python_full_version >= '3.11'
-    # via wcmatch
-certifi==2026.10.23
+certifi==2026.7.22
     # via
     #   requests
     #   selenium
@@ -38,7 +36,7 @@ cfgv==3.5.0
     # via pre-commit
 charset-normalizer==3.5.2
     # via requests
-click==8.5.1
+click==8.5.0
     # via
     #   click-option-group
     #   reuse
@@ -62,7 +60,7 @@ cycler==0.12.1
     # via matplotlib
 defusedxml==0.7.1
     # via semgrep
-distlib==0.4.4
+distlib==0.4.3
     # via virtualenv
 docutils==0.21.2 ; python_full_version < '3.11'
     # via
@@ -82,17 +80,13 @@ exceptiongroup==1.2.2
     #   trio-websocket
 face==26.0.1
     # via glom
-filelock==4.1.0 ; python_full_version < '3.11'
-    # via
-    #   python-discovery
-    #   virtualenv
-filelock==4.2.9 ; python_full_version >= '3.11'
+filelock==4.1.0
     # via
     #   python-discovery
     #   virtualenv
 fonttools==4.65.0 ; python_full_version < '3.11'
     # via matplotlib
-fonttools==4.68.0 ; python_full_version >= '3.11'
+fonttools==4.66.1 ; python_full_version >= '3.11'
     # via matplotlib
 glom==22.1.0
     # via semgrep
@@ -139,7 +133,7 @@ mdurl==0.1.2
     # via markdown-it-py
 memory-profiler==0.61.0
 memray==1.20.0 ; sys_platform != 'win32'
-nodeenv==1.12.0
+nodeenv==1.11.0
     # via
     #   pre-commit
     #   pyright
@@ -170,31 +164,26 @@ packaging==26.3
     #   webdriver-manager
 peewee==3.19.0
     # via semgrep
-pillow==12.3.0 ; python_full_version < '3.11'
-    # via matplotlib
-pillow==13.0.0 ; python_full_version >= '3.11'
+pillow==12.3.0
     # via matplotlib
 platformdirs==4.12.4 ; python_full_version < '3.11'
     # via
     #   textual
     #   virtualenv
-platformdirs==4.14.5 ; python_full_version >= '3.11'
+platformdirs==4.13.0 ; python_full_version >= '3.11'
     # via
     #   textual
     #   virtualenv
-pluggy==1.7.0
+pluggy==1.6.0
     # via pytest
-pre-commit==4.6.2 ; python_full_version < '3.11'
-pre-commit==4.7.0 ; python_full_version >= '3.11'
+pre-commit==4.6.2
 psutil==7.2.2
     # via memory-profiler
-pycparser==3.11 ; python_full_version < '3.11' and implementation_name != 'PyPy' and implementation_name != 'pypy' and os_name == 'nt'
+pycparser==3.11 ; implementation_name != 'PyPy' and implementation_name != 'pypy' and os_name == 'nt'
     # via cffi
-pycparser==3.12 ; python_full_version >= '3.11' and implementation_name != 'PyPy' and implementation_name != 'pypy' and os_name == 'nt'
-    # via cffi
-pydantic==2.14.3
+pydantic==2.14.0
     # via rstcheck-core
-pydantic-core==2.50.4
+pydantic-core==2.50.0
     # via pydantic
 pygments==2.21.0
     # via
@@ -208,14 +197,12 @@ pyparsing==3.3.3
 pyright==1.1.414
 pysocks==1.7.1
     # via urllib3
-pytest==9.2.0
-    # via matplotlib
-python-dateutil==3.0.0 ; python_full_version >= '3.11'
-python-dateutil==2.9.0.post0 ; python_full_version < '3.11'
+pytest==9.1.1
+python-dateutil==2.9.0.post0
     # via matplotlib
 python-debian==1.1.1
     # via reuse
-python-discovery==1.9.5
+python-discovery==1.6.2
     # via virtualenv
 python-dotenv==1.2.4
     # via webdriver-manager
@@ -233,7 +220,7 @@ requests==2.34.2
     #   sphinx
     #   webdriver-manager
 requirements-parser==0.13.1
-reuse==6.3.0
+reuse==6.2.0
 rich==15.0.0
     # via
     #   memray
@@ -257,10 +244,10 @@ ruamel-yaml==0.17.40
     # via semgrep
 ruamel-yaml-clib==0.2.15 ; python_full_version < '3.13' and platform_python_implementation == 'CPython'
     # via ruamel-yaml
-ruff==0.17.4
-selenium==4.52.0
+ruff==0.17.0
+selenium==4.51.0
 semgrep==1.79.0
-setuptools==84.2.1
+setuptools==84.0.0
 shellingham==1.5.4
     # via typer
 six==1.17.0
@@ -279,11 +266,7 @@ sphinx==9.0.4 ; python_full_version == '3.11.*'
     # via
     #   sphinx-rtd-theme
     #   sphinxcontrib-jquery
-sphinx==9.1.1 ; python_full_version == '3.12.*'
-    # via
-    #   sphinx-rtd-theme
-    #   sphinxcontrib-jquery
-sphinx==9.2.0 ; python_full_version >= '3.13'
+sphinx==9.1.0 ; python_full_version >= '3.12'
     # via
     #   sphinx-rtd-theme
     #   sphinxcontrib-jquery
@@ -296,7 +279,7 @@ sphinxcontrib-htmlhelp==2.1.0
     # via sphinx
 sphinxcontrib-jquery==4.1
     # via sphinx-rtd-theme
-sphinxcontrib-jsmath==2.0.0
+sphinxcontrib-jsmath==1.0.1
     # via sphinx
 sphinxcontrib-qthelp==2.0.0
     # via sphinx
@@ -309,15 +292,15 @@ tomli==2.0.2
     #   pytest
     #   semgrep
     #   sphinx
-tomlkit==0.15.2
+tomlkit==0.15.1
     # via reuse
-trio==0.35.0
+trio==0.34.0
     # via
     #   selenium
     #   trio-websocket
 trio-websocket==0.12.2
     # via selenium
-typer==0.28.0
+typer==0.27.3
     # via rstcheck
 typing-extensions==4.16.0
     # via
@@ -330,16 +313,14 @@ typing-extensions==4.16.0
     #   textual
     #   typing-inspection
     #   virtualenv
-typing-inspection==0.4.5
+typing-inspection==0.4.4
     # via pydantic
-tzdata==2026.6 ; python_full_version >= '3.11'
-    # via python-dateutil
 urllib3==2.8.0
     # via
     #   requests
     #   selenium
     #   semgrep
-virtualenv==21.15.6
+virtualenv==21.14.6
     # via pre-commit
 wcmatch==8.5.2
     # via semgrep

@@ -3,24 +3,6 @@
 ==============================================================================
 
 =============
-Version 4.5.9
-=============
-
-Update dependancies for Python and WebUI.
-
-This version will be the last one for Glances 4.x.
-
-You can test the new Glances 5.0.0 beta release:
-
-.. code-block:: console
-
-    python3 -m venv ~/.venv-glances5
-    source ~/.venv-glances5/bin/activate
-    pip install --pre --index-url https://test.pypi.org/simple/ \
-        --extra-index-url https://pypi.org/simple/ 'glances[web]>=5.0.0b1'
-    glances --version
-
-=============
 Version 4.5.8
 =============
 

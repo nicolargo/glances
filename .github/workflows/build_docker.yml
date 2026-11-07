@@ -4,7 +4,7 @@ name: build_docker
 
 env:
   DEFAULT_DOCKER_IMAGE: nicolargo/glances
-  PUSH_BRANCH: ${{ 'refs/heads/support/glancesv4' == github.ref || startsWith(github.ref, 'refs/tags/v') }}
+  PUSH_BRANCH: ${{ 'refs/heads/develop' == github.ref || startsWith(github.ref, 'refs/tags/v') }}
   # Alpine image platform: https://hub.docker.com/_/alpine
   # linux/arm/v6,linux/arm/v7 do not work (timeout during the build)
   DOCKER_PLATFORMS: linux/amd64,linux/arm64/v8
@@ -60,7 +60,7 @@ jobs:
     if: needs.create_docker_images_list.outputs.tags != '[]'
     strategy:
       fail-fast: false
-      max-parallel: 2
+      max-parallel: 2       
       matrix:
         os: ['alpine', 'ubuntu']
         tag: ${{ fromJson(needs.create_docker_images_list.outputs.tags) }}

@@ -10,7 +10,7 @@ packaging==26.3
     # via glances
 psutil==7.2.2
     # via glances
-shtab==1.13.0 ; sys_platform != 'win32'
+shtab==1.12.1 ; sys_platform != 'win32'
     # via glances
 windows-curses==2.4.2 ; sys_platform == 'win32'
     # via glances
