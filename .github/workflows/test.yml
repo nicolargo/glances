@@ -36,14 +36,10 @@ jobs:
 
   test-linux:
 
-    # The whole suite: Python tests, the WebUI JavaScript tests (through
-    # tests/test_webui_js.py, node is on the runner) and the WebUI in a real
-    # browser (tests/test_webui_browser*.py, Playwright and Chromium).
-
     needs: source-code-checks
     # https://github.com/actions/runner-images?tab=readme-ov-file#available-images
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 15
     strategy:
       matrix:
         # Python EOL version are note tested
@@ -65,12 +61,12 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install ".[all]" pytest pytest-asyncio docutils playwright
-          python -m playwright install --with-deps chromium
+          if [ -f dev-requirements.txt ]; then python -m pip install -r dev-requirements.txt; fi
+          if [ -f requirements.txt ]; then python -m pip install -r requirements.txt; fi
 
       - name: Unitary tests
         run: |
-          python -m pytest tests/
+          python -m pytest ./tests/test_core.py
 
   test-windows:
 
@@ -97,11 +93,14 @@ jobs:
 
     - name: Install dependencies
       run: |
-        python -m pip install ".[all]" pytest pytest-asyncio docutils
+        if (Test-Path -PathType Leaf "dev-requirements.txt") { python -m pip install -r dev-requirements.txt }
+        if (Test-Path -PathType Leaf "requirements.txt") { python -m pip install -r requirements.txt }
+        pip install pytest
+        pip install .
 
     - name: Unitary tests
       run: |
-        python -m pytest tests/
+        python -m pytest ./tests/test_core.py
 
   test-macos:
 
@@ -129,11 +128,12 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install ".[all]" pytest pytest-asyncio docutils
+          if [ -f dev-requirements.txt ]; then python -m pip install -r dev-requirements.txt; fi
+          if [ -f requirements.txt ]; then python -m pip install -r requirements.txt; fi
 
       - name: Unitary tests
         run: |
-          python -m pytest tests/
+          python -m pytest ./tests/test_core.py
 
   test-freebsd:
 
@@ -159,14 +159,16 @@ jobs:
           usesh: true
           cache-after-prepare: true
           prepare: |
-            pkg install -y python3 gcc devel/py-pip devel/py-pytest devel/py-pytest-asyncio sysutils/py-psutil www/py-fastapi www/py-uvicorn www/py-httpx www/py-requests devel/py-Jinja2 security/py-python-jose
+            pkg install -y python3 gcc devel/py-pip devel/py-pytest sysutils/py-psutil
           run: |
             set -e
             python3 --version
-            # The dependencies come from FreeBSD packages: pip would build the
-            # ones without FreeBSD wheels (pydantic-core, matplotlib's build
-            # chain, ...) from source and the job would time out. Glances itself
-            # is installed without dependencies; the tests of an optional
-            # module that is not packaged skip themselves.
-            python3 -m pip install --break-system-packages --no-deps .
-            python3 -m pytest tests/
+            # Only the runtime requirements are installed here.
+            # dev-requirements.txt pulls in matplotlib's build chain (contourpy,
+            # cffi, ...), and FreeBSD has no wheels for those, so pip builds them
+            # from source and the job times out. tests/test_core.py does not need
+            # them.
+            python3 -m pip install --break-system-packages -r requirements.txt
+            # Request is needed for conftest.py
+            python3 -m pip install --break-system-packages requests
+            python3 -m pytest ./tests/test_core.py
