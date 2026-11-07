@@ -18,7 +18,7 @@
 			<dl v-for="(column, i) in columns" :key="i">
 				<template v-if="i === 0">
 					<dt class="gl-header">CPU</dt>
-					<dd :class="levelClass(scalarLevel(payload, 'total'))">{{ formatPercent(payload.total) }}</dd>
+					<dd v-history="{ plugin: 'cpu', field: 'total' }" :class="levelClass(scalarLevel(payload, 'total'))">{{ formatPercent(payload.total) }}</dd>
 				</template>
 				<template v-for="(stat, j) in column" :key="j">
 					<dt class="gl-header">{{ stat.field ? labelFor(labels, stat.field) : "" }}</dt>
