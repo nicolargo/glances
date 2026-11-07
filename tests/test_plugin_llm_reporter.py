@@ -152,7 +152,16 @@ class _Clock:
 
 
 def _llm_section(**options: str) -> dict[str, dict[str, str]]:
-    return {"llm_reporter": {"disable": "False", "provider": "openai", "model": "gpt-4o-mini", **options}}
+    # api_key="" unsets the key.
+    return {
+        "llm_reporter": {
+            "disable": "False",
+            "provider": "openai",
+            "model": "gpt-4o-mini",
+            "api_key": "sk-test",
+            **options,
+        }
+    }
 
 
 @pytest.fixture
@@ -253,13 +262,46 @@ def test_config_rejects_invalid_values(config_with, options, message):
         LLMConfig.from_glances_config(config_with(_llm_section(**options)))
 
 
-def test_config_unset_key_and_url_are_none_not_empty(config_with):
-    # None lets the SDKs use their environment variables and default endpoint.
+def test_config_unset_url_is_none_not_empty(config_with):
+    # None lets the SDKs use their default endpoint.
     cfg = LLMConfig.from_glances_config(config_with(_llm_section()))
     assert cfg.provider is LLMProvider.OPENAI
-    assert cfg.api_key is None
+    assert cfg.api_key == "sk-test"
     assert cfg.base_url is None
     assert cfg.max_tokens == 500
+
+
+@pytest.mark.parametrize(
+    "provider, model",
+    [
+        ("openai", "gpt-4o-mini"),
+        ("anthropic", "claude-haiku-4-5"),
+        ("litellm", "anthropic/claude-haiku-4-5"),
+        ("litellm", "mistral/mistral-large-latest"),
+    ],
+)
+def test_config_cloud_provider_requires_an_api_key(config_with, monkeypatch, provider, model):
+    # The provider's own variable is never a fallback: other tools read it too.
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-global")
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-global")
+    with pytest.raises(ValueError, match="api_key is not set") as excinfo:
+        LLMConfig.from_glances_config(config_with(_llm_section(provider=provider, model=model, api_key="")))
+    assert "GLANCES_LLM_REPORTER__API_KEY" in str(excinfo.value)
+
+
+@pytest.mark.parametrize(
+    "provider, model, api_key",
+    [("ollama", "llama3.2", "ollama"), ("litellm", "ollama/llama3.2", None), ("litellm", "ollama_chat/llama3.2", None)],
+)
+def test_config_local_ollama_needs_no_api_key(config_with, provider, model, api_key):
+    cfg = LLMConfig.from_glances_config(config_with(_llm_section(provider=provider, model=model, api_key="")))
+    assert cfg.api_key == api_key
+
+
+def test_config_api_key_from_the_glances_env_variable(config_with, monkeypatch):
+    monkeypatch.setenv("GLANCES_LLM_REPORTER__API_KEY", "sk-from-glances-env")
+    cfg = LLMConfig.from_glances_config(config_with(_llm_section(api_key="")))
+    assert cfg.api_key == "sk-from-glances-env"
 
 
 def test_config_provider_is_case_insensitive(config_with):
@@ -267,7 +309,7 @@ def test_config_provider_is_case_insensitive(config_with):
 
 
 def test_config_ollama_defaults(config_with):
-    cfg = LLMConfig.from_glances_config(config_with(_llm_section(provider="ollama", model="llama3.2")))
+    cfg = LLMConfig.from_glances_config(config_with(_llm_section(provider="ollama", model="llama3.2", api_key="")))
     assert cfg.base_url == "http://localhost:11434/v1"
     assert cfg.api_key == "ollama"
 
@@ -286,7 +328,7 @@ def test_openai_factory(config_with, fake_openai):
 
 def test_ollama_factory(config_with, fake_openai):
     call = _build_reporter(
-        LLMConfig.from_glances_config(config_with(_llm_section(provider="ollama", model="llama3.2")))
+        LLMConfig.from_glances_config(config_with(_llm_section(provider="ollama", model="llama3.2", api_key="")))
     )
     call("prompt")
     assert fake_openai["client"]["base_url"] == "http://localhost:11434/v1"
@@ -300,7 +342,7 @@ def test_anthropic_factory(config_with, monkeypatch):
     monkeypatch.setitem(sys.modules, "anthropic", _fake_anthropic(calls))
     cfg = LLMConfig.from_glances_config(config_with(_llm_section(provider="anthropic", model="claude-haiku-4-5")))
     assert _build_reporter(cfg)("prompt") == "1. Overall health status: OK"  # text blocks only
-    assert calls["client"] == {"api_key": None, "base_url": None, "timeout": 30, "max_retries": 3}
+    assert calls["client"] == {"api_key": "sk-test", "base_url": None, "timeout": 30, "max_retries": 3}
     assert calls["create"]["max_tokens"] == 500
     assert calls["create"]["model"] == "claude-haiku-4-5"
 
@@ -317,12 +359,12 @@ def test_litellm_factory(config_with, monkeypatch):
     assert sent["max_completion_tokens"] == 500
     assert sent["timeout"] == 30
     assert sent["num_retries"] == 3
-    assert sent["api_key"] is None
+    assert sent["api_key"] == "sk-test"
     assert sent["base_url"] is None
 
 
-def test_real_openai_sdk_falls_back_to_env_key(config_with, monkeypatch):
-    # With no key or URL configured, the real SDK uses OPENAI_API_KEY and its default endpoint.
+def test_real_openai_sdk_ignores_the_env_key(config_with, monkeypatch):
+    # The real SDK gets the configured key, not OPENAI_API_KEY, and its default endpoint.
     openai = pytest.importorskip("openai")
     created: dict = {}
     real_init = openai.OpenAI.__init__
@@ -335,7 +377,7 @@ def test_real_openai_sdk_falls_back_to_env_key(config_with, monkeypatch):
     monkeypatch.setenv("OPENAI_API_KEY", "sk-from-env")
     monkeypatch.delenv("OPENAI_BASE_URL", raising=False)
     _build_reporter(LLMConfig.from_glances_config(config_with(_llm_section())))
-    assert created["client"].api_key == "sk-from-env"
+    assert created["client"].api_key == "sk-test"
     assert str(created["client"].base_url).startswith("https://api.openai.com/")
 
 
@@ -364,6 +406,16 @@ def test_misconfigured_plugin_logs_once_and_publishes_empty_fields(config_with, 
         "model": None,
         "generated_at": None,
     }
+
+
+def test_missing_api_key_builds_no_client(config_with, fake_openai, monkeypatch, caplog):
+    # A global OPENAI_API_KEY must not be used: no client, so no call is made and nothing is billed.
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-global")
+    with caplog.at_level(logging.ERROR):
+        p = PluginModel(StatsStore(), config_with(_llm_section(api_key="")))
+    assert "api_key is not set" in caplog.text
+    assert p._llm is None
+    assert "client" not in fake_openai
 
 
 def test_indented_line_after_model_is_neither_logged_nor_published(config_with, fake_openai, caplog):

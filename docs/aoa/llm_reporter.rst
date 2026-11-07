@@ -39,13 +39,29 @@ Configuration (``[llm_reporter]`` section):
     cache_ttl=3600
     trend_samples=3
 
+.. warning::
+
+    Glances does not read the providers' API key environment variables
+    (``ANTHROPIC_API_KEY``, ``OPENAI_API_KEY``, etc.). Setting these
+    variables globally can cause other applications to use your API key
+    unintentionally, resulting in unexpected charges.
+
+    For example, Claude Code may use ``ANTHROPIC_API_KEY`` instead of your
+    Claude subscription and bill you per use. Claude Pro and Max
+    subscriptions do not include API usage.
+
+    To avoid this, set the key for Glances only: ``api_key`` in the
+    ``[llm_reporter]`` section, or the ``GLANCES_LLM_REPORTER__API_KEY``
+    environment variable.
+
 - ``refresh`` — seconds between two reports (default 300).
 - ``provider`` — ``litellm``, ``anthropic``, ``openai`` or ``ollama``.
 - ``model`` — the model, as the provider names it.
-- ``api_key`` — leave it unset to use the provider's own environment variable
-  (``ANTHROPIC_API_KEY``, ``OPENAI_API_KEY``, ``MISTRAL_API_KEY``...), or set
-  the ``GLANCES_LLM_REPORTER__API_KEY`` environment variable. Not needed for
-  Ollama. The key is never served by ``/api/5/config``.
+- ``api_key`` — the API key of the provider, required except for Ollama. You
+  can also set it with the ``GLANCES_LLM_REPORTER__API_KEY`` environment
+  variable, which keeps it out of the configuration file. For a local server
+  that needs no key, set any value. The key is never served by
+  ``/api/5/config``.
 - ``base_url`` — endpoint override, for Ollama or any OpenAI-compatible
   server (Ollama default: ``http://localhost:11434/v1``).
 - ``max_tokens`` — hard cap on the output tokens of each report (default 500).

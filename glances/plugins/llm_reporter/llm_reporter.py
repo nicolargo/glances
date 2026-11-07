@@ -36,6 +36,8 @@ _DEFAULT_CACHE_TTL = 3600.0
 # Ollama is reached through its OpenAI-compatible API, which expects a key and ignores it.
 _OLLAMA_DEFAULT_BASE_URL = "http://localhost:11434/v1"
 _OLLAMA_PLACEHOLDER_API_KEY = "ollama"
+# LiteLLM's Ollama providers run locally and need no key.
+_LITELLM_KEYLESS_PREFIXES = ("ollama/", "ollama_chat/")
 # The cache compares CPU, memory and swap in 5% buckets.
 _STATE_BUCKET_PERCENT = 5
 
@@ -69,8 +71,10 @@ class LLMConfig:
     def from_glances_config(cls, config: GlancesConfig) -> LLMConfig:
         """Read ``[llm_reporter]``; raise ``ValueError`` on a missing or invalid key.
 
-        Unset ``api_key`` / ``base_url`` are None, so the SDKs use their
-        environment variables (``OPENAI_API_KEY``...) and default endpoint.
+        An unset ``base_url`` is None, so the SDKs use their default endpoint.
+        ``api_key`` is required except for Ollama: the provider's own environment
+        variable (``ANTHROPIC_API_KEY``...) is never used, as other tools read
+        it too and would bill the API account it belongs to.
         """
         provider_str = config.get("llm_reporter", "provider", "").strip().lower()
         if not provider_str:
@@ -98,6 +102,14 @@ class LLMConfig:
         if provider is LLMProvider.OLLAMA:
             api_key = api_key or _OLLAMA_PLACEHOLDER_API_KEY
             base_url = base_url or _OLLAMA_DEFAULT_BASE_URL
+        elif api_key is None and not (provider is LLMProvider.LITELLM and model.startswith(_LITELLM_KEYLESS_PREFIXES)):
+            raise ValueError(
+                "[llm_reporter] api_key is not set: set it in the [llm_reporter] section or with the "
+                "GLANCES_LLM_REPORTER__API_KEY environment variable. Glances does not read the providers' "
+                "API key environment variables (ANTHROPIC_API_KEY, OPENAI_API_KEY, etc.): set globally, "
+                "they can be used unintentionally by other applications, such as Claude Code, resulting "
+                "in unexpected charges. For a local server that needs no key, set api_key to any value."
+            )
         return cls(provider, model, api_key, max_tokens, base_url)
 
 
