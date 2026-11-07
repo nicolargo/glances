@@ -29,8 +29,8 @@ from __future__ import annotations
 import asyncio
 import time
 
+import jwt
 import pytest
-from jose import JWTError, jwt
 
 from glances import security
 from glances.security import JWTHandler, KnownCredentials, hash_password, verify_password
@@ -232,7 +232,7 @@ def test_jwt_refuses_the_example_key_and_short_keys(caplog):
         assert handler.secret_was_generated
         token = handler.create_access_token("glances")
         assert jwt.decode(token, bad, algorithms=["HS256"], options={"verify_signature": False})
-        with pytest.raises(JWTError):
+        with pytest.raises(jwt.PyJWTError):
             jwt.decode(token, bad, algorithms=["HS256"], issuer="glances")
     assert "jwt_secret_key is the example value or shorter than 32 bytes" in caplog.text
     assert not JWTHandler(secret_key="x" * 32).secret_was_generated

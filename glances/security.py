@@ -49,7 +49,7 @@ import uuid
 from datetime import datetime, timedelta, timezone
 
 import anyio
-from jose import JWTError, jwt
+import jwt
 
 logger = logging.getLogger(__name__)
 
@@ -255,9 +255,9 @@ class JWTHandler:
                 self._secret_key,
                 algorithms=[_JWT_ALG],
                 issuer=_JWT_ISSUER,
-                options={"require_exp": True, "require_iat": True},
+                options={"require": ["exp", "iat"]},
             )
-        except JWTError:
+        except jwt.PyJWTError:
             return None
         sub = payload.get("sub")
         if not isinstance(sub, str):
