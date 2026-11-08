@@ -933,6 +933,8 @@ def test_prompt_omits_unavailable_sections():
 def test_prompt_asks_for_a_one_sentence_summary_first():
     prompt = construct_prompt(ReportContext(_current(), trends=None, active_alerts=None, top_processes=None))
     assert 'Start with one line: "Summary: " followed by one sentence of at most 15 words.' in prompt
+    # An active alert left out of the summary would contradict the alert counts displayed next to it.
+    assert "If there are active alerts, the sentence must mention the most severe one." in prompt
 
 
 def test_prompt_with_alerts_engine_but_no_alert():

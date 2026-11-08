@@ -51,6 +51,7 @@ a concise health report in 4-6 sentences maximum."""
 
 _ANSWER_FORMAT = """\
 Start with one line: "Summary: " followed by one sentence of at most 15 words.
+If there are active alerts, the sentence must mention the most severe one.
 Then provide in order:
 1. Overall health status: OK | Degraded | Critical
 2. Root cause if any issue detected
