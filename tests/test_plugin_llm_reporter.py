@@ -19,6 +19,7 @@ import asyncio
 import logging
 import pathlib
 import sys
+import threading
 import time
 import types
 from datetime import datetime, timedelta, timezone
@@ -36,7 +37,7 @@ from glances.plugins.llm_reporter.llm_reporter import (
     _ReportCache,
     state_key,
 )
-from glances.plugins.llm_reporter.model import PluginModel
+from glances.plugins.llm_reporter.model import PluginModel, _run_in_daemon_thread
 from glances.plugins.llm_reporter.prompt import (
     CurrentState,
     ReportContext,
@@ -659,6 +660,69 @@ async def test_llm_call_does_not_block_the_event_loop(plugin):
     task.cancel()
     assert len(plugin._llm.prompts) == 1
     assert max(gaps) < 0.25
+
+
+class _BlockedLLM:
+    """An LLM call that runs until released, recording its thread."""
+
+    def __init__(self) -> None:
+        self.started = threading.Event()
+        self.release = threading.Event()
+        self.thread: threading.Thread | None = None
+
+    def __call__(self, prompt: str) -> str:
+        self.thread = threading.current_thread()
+        self.started.set()
+        self.release.wait(5)
+        return _REPORT
+
+
+def test_quitting_does_not_wait_for_the_llm_call(monkeypatch):
+    # Quitting Glances cancels the plugin and closes the event loop while the
+    # call runs: Python must not wait for the call, and its late answer is dropped.
+    llm = _BlockedLLM()
+    thread_errors: list = []
+    monkeypatch.setattr(threading, "excepthook", thread_errors.append)
+
+    async def quit_during_the_call():
+        task = asyncio.create_task(_run_in_daemon_thread(llm, "prompt"))
+        await asyncio.to_thread(llm.started.wait, 5)
+        task.cancel()
+
+    asyncio.run(quit_during_the_call())  # returns while the call still runs
+    assert llm.thread.daemon
+    assert llm.thread.is_alive()
+    llm.release.set()
+    llm.thread.join(5)
+    assert not llm.thread.is_alive()
+    assert thread_errors == []
+
+
+async def test_answer_of_a_cancelled_llm_call_is_dropped():
+    llm = _BlockedLLM()
+    loop = asyncio.get_running_loop()
+    loop_errors: list = []
+    loop.set_exception_handler(lambda _loop, context: loop_errors.append(context))
+    try:
+        task = asyncio.create_task(_run_in_daemon_thread(llm, "prompt"))
+        await asyncio.to_thread(llm.started.wait, 5)
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
+        llm.release.set()
+        await asyncio.to_thread(llm.thread.join, 5)
+        await asyncio.sleep(0)  # the late answer reaches the loop
+    finally:
+        loop.set_exception_handler(None)
+    assert loop_errors == []
+
+
+async def test_llm_call_error_reaches_the_plugin():
+    def failing(prompt: str) -> str:
+        raise PermissionError("401 invalid api key")
+
+    with pytest.raises(PermissionError, match="401 invalid api key"):
+        await _run_in_daemon_thread(failing, "prompt")
 
 
 async def test_scheduler_startup_makes_a_single_call(config_with, fake_openai):

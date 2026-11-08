@@ -17,7 +17,7 @@ one-sentence summary (``short_report``, displayed by the TUI and the WebUI).
   ``_ReportCache`` reuses the last report while the system state is unchanged.
 - The first report waits ``_WARMUP_CYCLES`` ticks, for trends, top processes
   and alerts to be available.
-- The LLM call runs in a worker thread.
+- The LLM call runs in a daemon thread, which quitting Glances does not wait for.
 - A configuration error is logged at startup and leaves the fields empty; a
   failed call is logged and the previous report is kept.
 
@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import threading
 import time
 from collections.abc import Callable
 from datetime import datetime
@@ -63,6 +64,32 @@ logger = logging.getLogger(__name__)
 _DEFAULT_TREND_SAMPLES = 3
 # Ticks before the first report, as the alerts engine's warm-up.
 _WARMUP_CYCLES = 3
+
+
+async def _run_in_daemon_thread(func: Callable[[str], str], arg: str) -> str:
+    """``await asyncio.to_thread(func, arg)``, in a thread that quitting Glances does not wait for."""
+    # Python waits for asyncio.to_thread's threads before exiting: quitting during
+    # an LLM call would wait for the answer, up to the timeout of every retry.
+    # A daemon thread is abandoned instead.
+    loop = asyncio.get_running_loop()
+    future = loop.create_future()
+
+    def settle(set_outcome: Callable[[Any], None], value: Any) -> None:
+        if not future.done():  # done: the await was cancelled
+            set_outcome(value)
+
+    def work() -> None:
+        try:
+            outcome = (future.set_result, func(arg))
+        except BaseException as e:
+            outcome = (future.set_exception, e)
+        try:
+            loop.call_soon_threadsafe(settle, *outcome)
+        except RuntimeError:
+            pass  # the loop is closed: Glances quit during the call
+
+    threading.Thread(target=work, name="llm_reporter", daemon=True).start()
+    return await future
 
 
 class PluginModel(GlancesPluginBase[dict]):
@@ -188,7 +215,7 @@ class PluginModel(GlancesPluginBase[dict]):
         # Each attempt starts the interval, so a failing provider is retried once per interval.
         self._last_call_ts = now
         try:
-            report = await asyncio.to_thread(self._llm, prompt)
+            report = await _run_in_daemon_thread(self._llm, prompt)
         except Exception as e:
             logger.warning(
                 "Plugin %s: report generation failed (%s: %s) — keeping the previous report",
