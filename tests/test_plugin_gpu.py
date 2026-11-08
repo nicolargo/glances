@@ -142,3 +142,20 @@ def test_build_backends_skips_a_constructor_that_raises(monkeypatch):
     monkeypatch.setattr(nvidia, "NvidiaGPU", boom)
     names = [type(b).__name__ for b in model._build_backends()]
     assert names == ["AmdGPU", "IntelGPU", "ArmGPU"]
+
+
+def test_intel_temperature_from_hwmon(tmp_path):
+    """Intel temperature is the mean of hwmon temp*_input; absent hwmon -> None."""
+    from glances.plugins.gpu.cards import intel
+
+    card = tmp_path / "card0"
+    (card / "device" / "hwmon" / "hwmon3").mkdir(parents=True)
+    (card / "gt_act_freq_mhz").write_text("300\n")
+    (card / "gt_max_freq_mhz").write_text("2000\n")
+    assert intel.get_temperature(str(card)) is None
+
+    (card / "device" / "hwmon" / "hwmon3" / "temp1_input").write_text("41000\n")
+    assert intel.get_temperature(str(card)) == 41
+
+    (card / "device" / "hwmon" / "hwmon3" / "temp2_input").write_text("45000\n")
+    assert intel.get_temperature(str(card)) == 43

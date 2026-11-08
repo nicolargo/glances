@@ -34,6 +34,8 @@ DEVICE_FOLDER_PATTERN: str = 'card[0-9]'
 INTELGPU_IDS_FILE: str = '/usr/share/misc/pci.ids'
 PCI_DEVICE_VENDOR: str = 'device/vendor'
 PCI_DEVICE_ID: str = 'device/device'
+HWMON_PATTERN: str = 'device/hwmon/hwmon*'
+HWMON_TEMP_PATTERN: str = 'temp*_input'
 PCI_ACT_FRQ_MHZ: str = 'gt_act_freq_mhz'
 PCI_MAX_FRQ_MHZ: str = 'gt_max_freq_mhz'
 
@@ -134,7 +136,23 @@ def get_proc(device_folder: str) -> int | None:
 
 
 def get_temperature(device_folder: str) -> int | None:
-    """Return the processor temperature in °C (mean of all HWMON)"""
+    """Return the processor temperature in °C (mean of all HWMON).
+
+    Discrete GPUs (e.g. Arc) expose temp*_input (millidegrees C) under
+    <card>/device/hwmon/hwmon*/. Integrated GPUs usually have no hwmon node
+    there: None is returned and the temperature is simply not displayed.
+    """
+    temps = []
+    for hwmon in glob.glob(HWMON_PATTERN, root_dir=device_folder):
+        hwmon_folder = os.path.join(device_folder, hwmon)
+        for temp_file in glob.glob(HWMON_TEMP_PATTERN, root_dir=hwmon_folder):
+            value = read_file(hwmon_folder, temp_file)
+            try:
+                temps.append(int(value) / 1000)
+            except (TypeError, ValueError):
+                continue
+    if temps:
+        return round(sum(temps) / len(temps))
     return None
 
 
