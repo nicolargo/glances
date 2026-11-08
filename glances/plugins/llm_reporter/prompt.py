@@ -42,13 +42,16 @@ _TREND_SERIES: dict[str, tuple[str, str, str]] = {
 # Historised percent fields of the gpu plugin, a collection: one trend line per GPU.
 _GPU_TREND_FIELDS = ("proc", "mem")
 _STATUS_RE = re.compile(r"\b(ok|degraded|critical)\b", re.IGNORECASE)
+# "Summary: ...", also with Markdown emphasis ("**Summary:** ...", "**Summary**: ...").
+_SUMMARY_RE = re.compile(r"^[\s*_#>-]*summary[\s*_]*:[\s*_]*(?P<text>.*?)[\s*_]*$", re.IGNORECASE)
 
 _INSTRUCTIONS = """\
 You are a system monitoring expert. Analyze the following metrics and produce
 a concise health report in 4-6 sentences maximum."""
 
 _ANSWER_FORMAT = """\
-Provide in order:
+Start with one line: "Summary: " followed by one sentence of at most 15 words.
+Then provide in order:
 1. Overall health status: OK | Degraded | Critical
 2. Root cause if any issue detected
 3. Recommended action (or "None required" if healthy)"""
@@ -255,6 +258,22 @@ def construct_prompt(ctx: ReportContext) -> str:
         sections.append("=== TOP PROCESSES ===\n" + "\n".join(f"- {p}" for p in ctx.top_processes))
     sections.append(_ANSWER_FORMAT)
     return "\n\n".join(sections)
+
+
+def split_summary(report: str) -> tuple[str | None, str]:
+    """``(summary, rest)``: the one-sentence summary the prompt asks for, and the report without it.
+
+    The summary is the first ``Summary:`` line, with control characters
+    replaced as it is displayed by the TUI; ``(None, report)`` when the report
+    states none.
+    """
+    lines = report.splitlines()
+    for index, line in enumerate(lines):
+        match = _SUMMARY_RE.match(line)
+        if match and match.group("text"):
+            rest = "\n".join(lines[:index] + lines[index + 1 :]).strip()
+            return match.group("text").translate(CONTROL_CHARS_TO_QUESTION_MARK), rest
+    return None, report
 
 
 def parse_status(report: str) -> str:

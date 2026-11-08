@@ -49,6 +49,7 @@ from glances.plugins.llm_reporter.prompt import (
     read_top_processes,
     read_trends,
     sample_evenly,
+    split_summary,
 )
 from glances.scheduler import AsyncScheduler
 from glances.stats_store import StatsStore
@@ -454,6 +455,7 @@ async def test_report_published_with_parsed_status(plugin):
     await plugin.update()
     stats = plugin.get_stats()
     assert stats["report"] == _REPORT
+    assert stats["short_report"] is None  # _REPORT states no summary
     assert stats["status"] == "degraded"
     assert stats["model"] == "gpt-4o-mini"
     assert "CPU       : 10.0%" in plugin._llm.prompts[0]
@@ -528,6 +530,36 @@ async def test_cache_calls_again_when_an_alert_opens(plugin):
     await plugin.update()
     assert len(plugin._llm.prompts) == 2
     assert "- cpu.total: critical" in plugin._llm.prompts[1]
+
+
+async def test_short_report_is_split_from_the_report(plugin):
+    plugin._llm = _FakeLLM("**Summary:** CPU is saturated by one process.\n" + _REPORT)
+    await _publish(plugin.store)
+    await plugin.update()
+    stats = plugin.get_stats()
+    assert stats["short_report"] == "CPU is saturated by one process."
+    assert stats["report"] == _REPORT
+    assert stats["status"] == "degraded"
+
+
+async def test_short_report_hidden_while_the_alert_count_differs(plugin):
+    alerts = _FakeAlerts()
+    plugin.set_alerts(alerts)
+    plugin._llm = _FakeLLM("Summary: CPU is saturated by one process.\n" + _REPORT)
+    await _publish(plugin.store)
+    await plugin.update()
+    assert plugin.get_stats()["short_report"] == "CPU is saturated by one process."
+    # An alert opens before the next report: the summary would describe a past state.
+    alerts.ongoing = {("cpu", None, "total"): "critical"}
+    await plugin.update()
+    assert len(plugin._llm.prompts) == 1
+    assert plugin.get_stats()["short_report"] is None
+    assert plugin.get_stats()["report"] == _REPORT  # the full report stays
+    # The count changed, so the next report calls the LLM and brings a current summary.
+    plugin._monotonic.now += 300
+    await plugin.update()
+    assert len(plugin._llm.prompts) == 2
+    assert plugin.get_stats()["short_report"] == "CPU is saturated by one process."
 
 
 async def test_failed_call_keeps_previous_report_and_retries_next_interval(plugin, caplog):
@@ -722,6 +754,11 @@ def test_prompt_omits_unavailable_sections():
     assert not any(line.startswith(" ") for line in prompt.splitlines())
 
 
+def test_prompt_asks_for_a_one_sentence_summary_first():
+    prompt = construct_prompt(ReportContext(_current(), trends=None, active_alerts=None, top_processes=None))
+    assert 'Start with one line: "Summary: " followed by one sentence of at most 15 words.' in prompt
+
+
 def test_prompt_with_alerts_engine_but_no_alert():
     prompt = construct_prompt(ReportContext(_current(), trends=None, active_alerts=[], top_processes=None))
     assert "=== ACTIVE ALERTS ===\nNone" in prompt
@@ -786,6 +823,27 @@ async def test_top_processes_by_name_only_and_neutralised():
 )
 def test_parse_status(report, status):
     assert parse_status(report) == status
+
+
+@pytest.mark.parametrize(
+    "report, summary, rest",
+    [
+        ("Summary: CPU is high.\n1. Status: Degraded", "CPU is high.", "1. Status: Degraded"),
+        ("**Summary:** CPU is high.\n1. Status: OK", "CPU is high.", "1. Status: OK"),
+        ("**Summary**: CPU is high.**", "CPU is high.", ""),
+        (
+            "Here is the report.\nsummary : CPU is high.\n1. Status: OK",
+            "CPU is high.",
+            "Here is the report.\n1. Status: OK",
+        ),
+        ("Summary:\n1. Status: OK", None, "Summary:\n1. Status: OK"),  # no sentence
+        ("1. Status: OK", None, "1. Status: OK"),
+        # Displayed by the TUI: control characters are replaced, as in the prompt.
+        ("Summary: CPU \x1b[31mhigh\x9b", "CPU ?[31mhigh?", ""),
+    ],
+)
+def test_split_summary(report, summary, rest):
+    assert split_summary(report) == (summary, rest)
 
 
 # ------------------------------------------------------------- wiring

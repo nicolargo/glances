@@ -10,7 +10,8 @@
 
 Every ``refresh`` seconds (default 300), the plugin asks the configured LLM
 for a short health report built from the stats Glances collects
-(``prompt.py``), and publishes it with the status it states.
+(``prompt.py``), and publishes it with the status it states and its
+one-sentence summary (``short_report``, displayed by the TUI and the WebUI).
 
 - The plugin ticks on the global cadence and paces the LLM calls itself;
   ``_ReportCache`` reuses the last report while the system state is unchanged.
@@ -49,6 +50,7 @@ from glances.plugins.llm_reporter.prompt import (
     read_current_state,
     read_top_processes,
     read_trends,
+    split_summary,
 )
 from glances.plugins.plugin.base import GlancesPluginBase
 from glances.stats_store import StatsStore
@@ -84,6 +86,12 @@ class PluginModel(GlancesPluginBase[dict]):
             "the active alerts and the top processes. None until the first report.",
             "unit": "string",
         },
+        "short_report": {
+            "description": "One-sentence summary of the report, shown in the ALERTS title of the TUI and the "
+            "WebUI. None until the first report, when the report states none, or while the number of "
+            "active alerts differs from when the report was generated.",
+            "unit": "string",
+        },
         "status": {
             "description": "Health status the report states: ok, degraded, critical, or unknown when "
             "the report states none. None until the first report.",
@@ -113,6 +121,9 @@ class PluginModel(GlancesPluginBase[dict]):
             # The plugin stays registered and publishes empty fields.
             logger.error("Plugin %s: %s — no report will be generated", self.plugin_name, e)
         self._report: str | None = None
+        self._short_report: str | None = None
+        # Active alerts when the report was generated.
+        self._report_alert_count: int | None = None
         self._status: str | None = None
         self._generated_at: str | None = None
         self._last_call_ts: float | None = None
@@ -139,10 +150,19 @@ class PluginModel(GlancesPluginBase[dict]):
             await self._update_report()
         return {
             "report": self._report,
+            "short_report": self._current_short_report(),
             "status": self._status,
             "model": self._model,
             "generated_at": self._generated_at,
         }
+
+    def _current_short_report(self) -> str | None:
+        """The summary, hidden once the number of active alerts changed: it would describe a past state.
+
+        That change also makes the cache call the LLM at the next report.
+        """
+        active = len(self._alerts.get_ongoing()) if self._alerts is not None else 0
+        return self._short_report if active == self._report_alert_count else None
 
     def _report_due(self) -> bool:
         return self._last_call_ts is None or self._monotonic() - self._last_call_ts >= self._interval
@@ -180,7 +200,10 @@ class PluginModel(GlancesPluginBase[dict]):
         if not report or not report.strip():
             logger.warning("Plugin %s: the LLM returned an empty report — keeping the previous one", self.plugin_name)
             return
-        self._report = report.strip()
+        self._short_report, body = split_summary(report.strip())
+        # A reply that is only the summary stays the report too.
+        self._report = body or report.strip()
+        self._report_alert_count = len(active_alerts or [])
         self._status = parse_status(self._report)
         self._generated_at = current.timestamp
         self._cache.store(key, now)

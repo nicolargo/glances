@@ -12,10 +12,14 @@
 		across the TIME and DURATION headers. Only the states that PAINT a
 		grid get it: the ones that do not collapse to the single line below
 		instead, which already carries the bare `ALERT`. -->
-		<div v-if="hasGrid" class="gl-plugin-title">
+		<!-- Both lines end with the llm_reporter plugin's one-sentence summary,
+		when it publishes one: `· <summary>`, cut with an ellipsis by the room
+		left, like `_summary_segments` in the TUI. -->
+		<div v-if="hasGrid" class="gl-plugin-title gl-alert-line">
 			<h2 class="gl-header">
 				{{ "ALERTS  " }}<button type="button" class="gl-alert-link" aria-haspopup="dialog" @click="openAll">{{ titleCounts }}</button>
 			</h2>
+			<span v-if="summary" class="gl-alert-summary" :title="summary"><span class="gl-header">·</span> {{ summary }}</span>
 		</div>
 		<!-- Every grid-less state is ONE glued line, `ALERT <state>`, not a
 		title line above a separate paragraph: that is what
@@ -31,8 +35,9 @@
 		zero while incidents still exist (row_budget.js's "header only"
 		step) -- that state renders the table with zero data rows, never
 		this collapse. -->
-		<p v-else class="gl-alert-collapse">
-			<span class="gl-header">{{ TITLE }}</span> <span :class="collapse.cls">{{ collapse.text }}</span>
+		<p v-else class="gl-alert-collapse gl-alert-line">
+			<span><span class="gl-header">{{ TITLE }}</span> <span :class="collapse.cls">{{ collapse.text }}</span></span>
+			<span v-if="summary" class="gl-alert-summary" :title="summary"><span class="gl-header">·</span> {{ summary }}</span>
 		</p>
 		<table v-if="hasGrid" class="gl-table gl-process-table">
 			<colgroup>
@@ -196,6 +201,13 @@ export default {
 		},
 		headerText() {
 			return this.hasGrid ? this.titleText : TITLE;
+		},
+		// The llm_reporter plugin's `short_report`, which AppShell adds to the
+		// payload. None over an error: the line then says what went wrong.
+		summary() {
+			if (this.error || !this.payload) return null;
+			const text = this.payload.shortReport;
+			return typeof text === "string" && text ? text : null;
 		},
 		// The state fragment glued after `ALERT` on the collapse line, and its
 		// colour. Mirrors `render_alert_block`'s own collapse
@@ -436,5 +448,25 @@ export default {
  * for. Same `margin: 0` reason as `.gl-plugin-title h2` (css/glances.css). */
 .gl-alert-collapse {
 	margin: 0;
+}
+
+/* The title or the collapse line, and the summary after it, on one row: only
+ * the summary gives way, so the line never wraps out of its one row. */
+.gl-alert-line {
+	display: flex;
+	gap: var(--gl-col);
+}
+.gl-alert-line > :first-child {
+	flex: none;
+}
+/* `.gl-truncate`'s rules, but not that class: `.gl-measuring` gives a
+ * `.gl-truncate` its natural width (css/glances.css), and a sentence measured
+ * at full length would make the cascade drop columns. The TUI never drops one
+ * for the summary either -- it cuts the summary first. */
+.gl-alert-summary {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	min-width: 0;
 }
 </style>

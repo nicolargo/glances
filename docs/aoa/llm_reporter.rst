@@ -99,15 +99,28 @@ Examples:
 The report is served by the REST API (``GET /api/5/llm_reporter``) and the
 MCP server (``glances://stats/llm_reporter``)::
 
-    {"report": "1. Overall health status: Degraded ...", "status": "degraded",
+    {"report": "1. Overall health status: Degraded ...",
+     "short_report": "CPU is saturated by the backup job.", "status": "degraded",
      "model": "claude-haiku-4-5", "generated_at": "2026-11-02T10:05:00+01:00"}
+
+``short_report`` is the one-sentence summary the model is asked to start
+with, taken out of ``report``. The TUI and the WebUI show it at the end of
+the first line of the alerts block::
+
+    ALERTS  2 ongoing · 1 resolved · CPU is saturated by the backup job.
+
+It is ``null`` until the first report, when the report states none, and
+while the number of active alerts differs from when the report was
+generated: it would then describe a past state, until the next report
+brings a current one.
 
 ``status`` is ``ok``, ``degraded`` or ``critical`` as stated by the report,
 and ``unknown`` when the report states none. ``generated_at`` is the date of
 the stats the report was generated from (ISO 8601): a report reused by the
-cache, or kept after a failed call, keeps its date. All three are ``null``
-(as is ``report``) until the first report. The report is not displayed by
-the TUI and the WebUI, and it is not exported.
+cache, or kept after a failed call, keeps its date. Both are ``null`` (as
+is ``report``) until the first report; ``model`` is the configured model
+from the start. The TUI and the WebUI display only ``short_report``, and
+none of these fields is exported.
 
 Privacy and cost: a cloud provider receives the metrics above and the names
 of the top processes, never their command lines. With a 5 minute interval, a

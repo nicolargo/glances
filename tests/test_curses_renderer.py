@@ -907,6 +907,59 @@ def test_render_alert_block_title_degrades_instead_of_cutting_mid_word():
     assert narrower == "ALERTS  2 ongoing"
 
 
+_SUMMARY = "The system CPU is high because the backup job is compressing files."
+
+
+def test_render_alert_block_title_carries_the_llm_summary():
+    rows = render_alert_block(
+        _GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=120, summary=_SUMMARY
+    )
+    head = "ALERTS  2 ongoing · 1 resolved · " + _SUMMARY
+    # The trailing rule still fills what the summary leaves.
+    assert _line(rows[0]) == head + " " + "─" * (120 - len(head) - 1)
+    summary_cell = next(c for c in rows[0].cells if c.text == _SUMMARY)
+    assert summary_cell.color == ColorRole.DEFAULT  # never a level colour
+
+
+def test_render_alert_block_title_cuts_the_summary_first():
+    """The summary is the first thing the title drops: cut with `…`, gone below
+    10 columns, then the ladder of the title without a summary, unchanged."""
+    expected = {
+        61: "ALERTS  2 ongoing · 1 resolved · The system CPU is high beca…",
+        43: "ALERTS  2 ongoing · 1 resolved · The syste…",
+        42: "ALERTS  2 ongoing · 1 resolved " + "─" * 11,
+        29: "ALERTS  2 ongoing",
+    }
+    for width, text in expected.items():
+        rows = render_alert_block(
+            _GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=width, summary=_SUMMARY
+        )
+        assert _line(rows[0]) == text, f"width={width}"
+
+
+def test_render_alert_block_summary_is_ascii_without_unicode():
+    rows = render_alert_block(
+        _GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=43, unicode_ok=False, summary=_SUMMARY
+    )
+    assert _line(rows[0]) == "ALERTS  2 ongoing - 1 resolved - The syste."
+
+
+def test_render_alert_block_no_alert_line_carries_the_summary():
+    rows = render_alert_block([], limit=10, ongoing={}, width=80, summary="The system is healthy.")
+    assert _line(rows[0]) == "ALERT (no alert detected) · The system is healthy."
+
+
+def test_build_frame_passes_the_llm_summary_to_the_alert_title():
+    snapshot = {"llm_reporter": {"report": "...", "short_report": "The system is healthy."}}
+    frame = build_frame(snapshot, {}, [], alerts_history=[])
+    alert = next(b for b in frame.right if b.name == "alert")
+    assert _line(alert.rows[0]) == "ALERT (no alert detected) · The system is healthy."
+    # Without the plugin, or before its first report, the title is unchanged.
+    for snapshot in ({}, {"llm_reporter": {"short_report": None}}):
+        alert = next(b for b in build_frame(snapshot, {}, [], alerts_history=[]).right if b.name == "alert")
+        assert _line(alert.rows[0]) == "ALERT (no alert detected)"
+
+
 def test_render_alert_block_drops_level_below_43_columns():
     """§6.3 first step — TARGET has a 12-column floor."""
     wide = render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=43)

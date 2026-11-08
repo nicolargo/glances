@@ -552,6 +552,8 @@ _ALERT_MIN_TOP = 22
 # TOP is the FIRST column to drop, so every threshold above is unchanged and
 # no terminal that renders the block correctly today changes behaviour.
 _ALERT_W_WITH_TOP = _ALERT_W_WITH_STATE + 1 + _ALERT_MIN_TOP  # 76
+# Columns the LLM summary of the title needs to be shown at all: a shorter cut says nothing.
+_ALERT_MIN_SUMMARY = 10
 _ALERT_GLYPHS = {
     True: {True: "●", False: "*"},  # ongoing
     False: {True: "○", False: "-"},  # resolved
@@ -641,7 +643,30 @@ def _alert_block_height(n_incidents: int, quota: int) -> int:
     return 2 + min(n_incidents, quota)
 
 
-def _build_alert_title_cells(width: int | None, n_ongoing: int, n_resolved: int, unicode_ok: bool) -> list[Cell]:
+def _summary_segments(
+    summary: str | None, used: int, width: int | None, unicode_ok: bool
+) -> list[tuple[str, ColorRole]]:
+    """`· <summary>` after a title of `used` columns, cut to `width`.
+
+    The llm_reporter plugin's one-sentence summary. Nothing without one, or
+    with fewer than `_ALERT_MIN_SUMMARY` columns left for it: it is the first
+    thing the title drops. DEFAULT, never a level colour (design §6.5).
+    """
+    if not summary:
+        return []
+    lead = f" {'·' if unicode_ok else '-'} "
+    if width is None:
+        return [(lead, ColorRole.HEADER), (summary, ColorRole.DEFAULT)]
+    room = width - used - len(lead)
+    if room < _ALERT_MIN_SUMMARY:
+        return []
+    text = _fit_text(summary, room, ellipsis="…" if unicode_ok else ".").rstrip()
+    return [(lead, ColorRole.HEADER), (text, ColorRole.DEFAULT)]
+
+
+def _build_alert_title_cells(
+    width: int | None, n_ongoing: int, n_resolved: int, unicode_ok: bool, summary: str | None = None
+) -> list[Cell]:
     """Build the `ALERTS N ongoing · M resolved ────` title cells.
 
     Split out of ``render_alert_block`` (pure C901 extraction, no behaviour
@@ -669,9 +694,11 @@ def _build_alert_title_cells(width: int | None, n_ongoing: int, n_resolved: int,
     segments: list[tuple[str, ColorRole]] = [(prefix, ColorRole.HEADER), (count, count_role)]
     if width is None or width >= full_len:
         segments.append((resolved, ColorRole.HEADER))
+        segments += _summary_segments(summary, full_len, width, unicode_ok)
+        used = sum(len(text) for text, _ in segments)
         # The rule needs a separating space of its own before it fits.
-        if width is not None and width > full_len + 1:
-            segments.append((" " + rule_char * (width - full_len - 1), ColorRole.HEADER))
+        if width is not None and width > used + 1:
+            segments.append((" " + rule_char * (width - used - 1), ColorRole.HEADER))
     elif width < base_len:
         # Last resort: cut across the segments, keeping the ongoing count as
         # long as anything survives.
@@ -701,6 +728,7 @@ def render_alert_block(
     incidents: list[dict[str, Any]] | None = None,
     ongoing_since: dict[tuple[str, Any, str], str] | None = None,
     ongoing_top: dict[tuple[str, Any, str], dict[str, Any]] | None = None,
+    summary: str | None = None,
 ) -> list[Row]:
     """Render the alert history as an aligned incident grid (design §6).
 
@@ -740,6 +768,9 @@ def render_alert_block(
         ongoing_top: ``GlancesAlerts.get_ongoing_top()`` — the accumulated
             top processes of each active incident. Ignored when ``incidents``
             is passed (the caller already applied it while deriving).
+        summary: the llm_reporter plugin's one-sentence ``short_report``,
+            appended to the title line (`_summary_segments`), None to leave
+            the title as it is.
 
     Empty history AND nothing ongoing collapses to a single header-styled
     line, exactly as before the redesign:
@@ -759,14 +790,12 @@ def render_alert_block(
         else:
             state, state_role = "(no alert detected)", ColorRole.OK
         # Glued, so the painted line is unchanged: `ALERT (no alert detected)`.
-        return [
-            Row(
-                cells=[
-                    Cell(text="ALERT ", color=ColorRole.HEADER),
-                    Cell(text=state, color=state_role, glue=True),
-                ]
-            )
+        cells = [Cell(text="ALERT ", color=ColorRole.HEADER), Cell(text=state, color=state_role, glue=True)]
+        cells += [
+            Cell(text=text, color=role, glue=True)
+            for text, role in _summary_segments(summary, len("ALERT ") + len(state), width, unicode_ok)
         ]
+        return [Row(cells=cells)]
 
     now_local = (now or datetime.now(tz=timezone.utc)).astimezone()
     n_ongoing = sum(1 for i in incidents if i["ongoing"])
@@ -821,7 +850,7 @@ def render_alert_block(
     # trailing rule goes first, then the `resolved` clause, and only the
     # `ongoing` count survives to a hard truncation. See
     # `_build_alert_title_cells` for the shrink ladder itself.
-    title_cells = _build_alert_title_cells(width, n_ongoing, n_resolved, unicode_ok)
+    title_cells = _build_alert_title_cells(width, n_ongoing, n_resolved, unicode_ok, summary)
     rows: list[Row] = [Row(cells=title_cells or [Cell(text="", color=ColorRole.HEADER)])]
 
     if not visible:
@@ -1372,6 +1401,9 @@ def build_frame(
     # as `n_alerts` — counts the very same list the block renders, never a
     # second, independently derived list that could drift from it.
     alert_incidents = _derive_incidents(alerts_history, alerts_ongoing, alerts_ongoing_since, alerts_ongoing_top)
+    # The llm_reporter plugin's one-sentence summary, shown on the alert title.
+    llm_report = store_snapshot.get("llm_reporter")
+    summary = llm_report.get("short_report") if isinstance(llm_report, dict) else None
     frame.right.append(
         PluginBlock(
             name="alert",
@@ -1383,6 +1415,7 @@ def build_frame(
                 width=(view or {}).get("right_width"),
                 unicode_ok=bool((view or {}).get("unicode", True)),
                 incidents=alert_incidents,
+                summary=summary if isinstance(summary, str) else None,
             ),
             data_count=len(alert_incidents),
             data_pinned=sum(1 for i in alert_incidents if i["ongoing"]),

@@ -297,6 +297,18 @@ const ALERT_INCIDENTS_UNREACHABLE_SCENARIOS = new Set(["alert-incidents-unreacha
 const ALERT_INCIDENTS_SCENARIOS = {
 	"alert-initializing": { is_initializing: true, incidents: [] },
 	"alert-empty": { is_initializing: false, incidents: [] },
+	"alert-empty-summary": { is_initializing: false, incidents: [] },
+};
+
+// The llm_reporter plugin's payload in /api/5/all: its `short_report` ends the
+// alert title (`alert-summary`, over the populated fixture) or the collapse
+// line (`alert-empty-summary`).
+const LLM_REPORTER_FIXTURE = {
+	report: "1. Overall health status: Degraded",
+	short_report: "CPU is saturated by the backup job.",
+	status: "degraded",
+	model: "claude-haiku-4-5",
+	generated_at: "2026-11-07T10:00:00+00:00",
 };
 
 // `/api/5/all` fixtures for the `mem` render-parity tests
@@ -1065,6 +1077,8 @@ const CONTAINERS_LONG_NAMES = {
 
 const ALL_FIXTURES = {
 	default: {},
+	"alert-summary": { llm_reporter: LLM_REPORTER_FIXTURE },
+	"alert-empty-summary": { llm_reporter: LLM_REPORTER_FIXTURE },
 	"gpu-disabled": {},
 	"pluginslist-unreachable": {},
 	"mem-with-available": { mem: MEM_FIXTURE_WITH_AVAILABLE },

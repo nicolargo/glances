@@ -3102,6 +3102,28 @@ def test_the_alert_grid_renders_the_tui_columns():
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_alert_title_ends_with_the_llm_summary():
+    """The llm_reporter plugin's `short_report`, read from the same /api/5/all
+    request as the other plugins, follows the counts like the TUI's
+    `_summary_segments`. It sits beside the title's <h2>, which is unchanged."""
+    payload = _run_render_probe("alert-summary")
+    assert _alert_title(payload) == "ALERTS  3 ongoing · 2 resolved", f"got {_alert_title(payload)!r}"
+    text = payload["pluginText"]["alert"]
+    assert "· CPU is saturated by the backup job." in text, f"got {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_no_alert_line_ends_with_the_llm_summary():
+    """The collapse line carries the summary too, as `render_alert_block` does.
+    Without one (test_the_alert_block_shows_no_alert_detected_once_warmed_up),
+    the line is exactly `ALERT (no alert detected)`."""
+    payload = _run_render_probe("alert-empty-summary")
+    text = payload["pluginText"]["alert"]
+    assert text.startswith("ALERT (no alert detected)"), f"got {text!r}"
+    assert text.endswith("· CPU is saturated by the backup job."), f"got {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
 def test_the_alert_title_counts_are_a_link_to_the_full_list():
     """The row budget caps the grid, so the "N ongoing · M resolved" counts in
     the title are a button opening an overlay with every incident. Its text is
