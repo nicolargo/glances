@@ -126,6 +126,19 @@ def _import_provider(provider: LLMProvider) -> Any:
         ) from e
 
 
+def _answer(text: str | None, hit_limit: bool, max_tokens: int) -> str | None:
+    """Return the model's answer; raise when it is empty because the model hit max_tokens."""
+    # A reasoning model counts its thinking against max_tokens and can spend them all
+    # before answering. The empty answer would only be logged as an empty report:
+    # raise instead, so the log says why, and what to change.
+    if hit_limit and not (text or "").strip():
+        raise RuntimeError(
+            f"max_tokens ({max_tokens}) used up by reasoning before any answer: "
+            "raise max_tokens or use a model without reasoning"
+        )
+    return text
+
+
 def _build_reporter(config: LLMConfig) -> Callable[[str], str]:
     """Factory: return a provider-agnostic ``(prompt) -> report`` callable.
 
@@ -147,7 +160,8 @@ def _build_reporter(config: LLMConfig) -> Callable[[str], str]:
                     timeout=_LLM_REPORTER_TIMEOUT,
                     num_retries=_LLM_MAX_RETRIES,
                 )
-                return r.choices[0].message.content
+                choice = r.choices[0]
+                return _answer(choice.message.content, choice.finish_reason == "length", config.max_tokens)
 
         case LLMProvider.ANTHROPIC:
             client = sdk.Anthropic(
@@ -163,7 +177,8 @@ def _build_reporter(config: LLMConfig) -> Callable[[str], str]:
                     max_tokens=config.max_tokens,
                     messages=[{"role": "user", "content": prompt}],
                 )
-                return "".join(block.text for block in r.content if block.type == "text")
+                text = "".join(block.text for block in r.content if block.type == "text")
+                return _answer(text, r.stop_reason == "max_tokens", config.max_tokens)
 
         case LLMProvider.OPENAI | LLMProvider.OLLAMA:
             client = sdk.OpenAI(
@@ -181,7 +196,8 @@ def _build_reporter(config: LLMConfig) -> Callable[[str], str]:
                     messages=[{"role": "user", "content": prompt}],
                     **{token_limit: config.max_tokens},
                 )
-                return r.choices[0].message.content
+                choice = r.choices[0]
+                return _answer(choice.message.content, choice.finish_reason == "length", config.max_tokens)
 
         case _:
             raise ValueError(f"Unsupported LLM Provider: {config.provider}")

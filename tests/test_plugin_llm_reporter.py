@@ -61,7 +61,7 @@ _SDK_MODULES = ("openai", "anthropic", "litellm")
 # --------------------------------------------------------------- fakes
 
 
-def _fake_openai(calls: dict, content: str = _REPORT) -> types.ModuleType:
+def _fake_openai(calls: dict, content: str = _REPORT, finish_reason: str = "stop") -> types.ModuleType:
     module = types.ModuleType("openai")
 
     class OpenAI:
@@ -71,13 +71,17 @@ def _fake_openai(calls: dict, content: str = _REPORT) -> types.ModuleType:
 
         def _create(self, **kwargs):
             calls["create"] = kwargs
-            return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=content))])
+            return SimpleNamespace(
+                choices=[SimpleNamespace(finish_reason=finish_reason, message=SimpleNamespace(content=content))]
+            )
 
     module.OpenAI = OpenAI
     return module
 
 
-def _fake_anthropic(calls: dict) -> types.ModuleType:
+def _fake_anthropic(
+    calls: dict, text: str = "1. Overall health status: OK", stop_reason: str = "end_turn"
+) -> types.ModuleType:
     module = types.ModuleType("anthropic")
 
     class Anthropic:
@@ -88,22 +92,25 @@ def _fake_anthropic(calls: dict) -> types.ModuleType:
         def _create(self, **kwargs):
             calls["create"] = kwargs
             return SimpleNamespace(
+                stop_reason=stop_reason,
                 content=[
                     SimpleNamespace(type="thinking", text="must not leak"),
-                    SimpleNamespace(type="text", text="1. Overall health status: OK"),
-                ]
+                    SimpleNamespace(type="text", text=text),
+                ],
             )
 
     module.Anthropic = Anthropic
     return module
 
 
-def _fake_litellm(calls: dict) -> types.ModuleType:
+def _fake_litellm(calls: dict, content: str = _REPORT, finish_reason: str = "stop") -> types.ModuleType:
     module = types.ModuleType("litellm")
 
     def completion(**kwargs):
         calls["completion"] = kwargs
-        return SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=_REPORT))])
+        return SimpleNamespace(
+            choices=[SimpleNamespace(finish_reason=finish_reason, message=SimpleNamespace(content=content))]
+        )
 
     module.completion = completion
     return module
@@ -363,6 +370,40 @@ def test_litellm_factory(config_with, monkeypatch):
     assert sent["num_retries"] == 3
     assert sent["api_key"] == "sk-test"
     assert sent["base_url"] is None
+
+
+def _install_fake_sdk(monkeypatch, provider: str, text: str, hit_limit: bool) -> None:
+    """Install the fake SDK of ``provider``, answering ``text``, stopped by max_tokens or not."""
+    calls: dict = {}
+    if provider == "anthropic":
+        module = _fake_anthropic(calls, text, "max_tokens" if hit_limit else "end_turn")
+    elif provider == "litellm":
+        module = _fake_litellm(calls, text, "length" if hit_limit else "stop")
+    else:
+        module = _fake_openai(calls, text, "length" if hit_limit else "stop")
+    monkeypatch.setitem(sys.modules, module.__name__, module)
+
+
+@pytest.mark.parametrize("provider", ["openai", "ollama", "anthropic", "litellm"])
+def test_an_answer_emptied_by_max_tokens_says_why(config_with, monkeypatch, provider):
+    # A reasoning model can spend the whole max_tokens thinking, and return no answer.
+    _install_fake_sdk(monkeypatch, provider, "", hit_limit=True)
+    call = _build_reporter(
+        LLMConfig.from_glances_config(config_with(_llm_section(provider=provider, max_tokens="300")))
+    )
+    with pytest.raises(RuntimeError) as error:
+        call("prompt")
+    assert str(error.value) == (
+        "max_tokens (300) used up by reasoning before any answer: raise max_tokens or use a model without reasoning"
+    )
+
+
+@pytest.mark.parametrize("provider", ["openai", "ollama", "anthropic", "litellm"])
+def test_an_answer_cut_by_max_tokens_is_kept(config_with, monkeypatch, provider):
+    # A cut answer still starts with its summary: it is published, not discarded.
+    _install_fake_sdk(monkeypatch, provider, "Summary: CPU is high.\n1. Overall health", hit_limit=True)
+    call = _build_reporter(LLMConfig.from_glances_config(config_with(_llm_section(provider=provider))))
+    assert call("prompt") == "Summary: CPU is high.\n1. Overall health"
 
 
 def test_real_openai_sdk_ignores_the_env_key(config_with, monkeypatch):
