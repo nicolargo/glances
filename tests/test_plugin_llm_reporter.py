@@ -16,6 +16,7 @@ No test reaches a real LLM: provider SDKs are replaced by fake modules in
 from __future__ import annotations
 
 import asyncio
+import io
 import logging
 import pathlib
 import sys
@@ -405,6 +406,28 @@ def test_an_answer_cut_by_max_tokens_is_kept(config_with, monkeypatch, provider)
     _install_fake_sdk(monkeypatch, provider, "Summary: CPU is high.\n1. Overall health", hit_limit=True)
     call = _build_reporter(LLMConfig.from_glances_config(config_with(_llm_section(provider=provider))))
     assert call("prompt") == "Summary: CPU is high.\n1. Overall health"
+
+
+def test_litellm_writes_nothing_to_the_terminal(config_with, caplog):
+    # LiteLLM's console handlers, and its banner on errors, would land in the TUI's curses screen.
+    litellm = pytest.importorskip("litellm")
+    consoles = {}
+    for name in ("LiteLLM", "LiteLLM Router", "LiteLLM Proxy"):
+        consoles[name] = logging.StreamHandler(io.StringIO())  # as LiteLLM adds when imported
+        logging.getLogger(name).addHandler(consoles[name])
+    _build_reporter(LLMConfig.from_glances_config(config_with(_llm_section(provider="litellm"))))
+    with caplog.at_level(logging.WARNING):
+        for name in consoles:
+            logging.getLogger(name).warning("message from %s", name)
+    assert [handler.stream.getvalue() for handler in consoles.values()] == ["", "", ""]
+    assert all(f"message from {name}" in caplog.text for name in consoles)  # in the Glances log instead
+    assert not [
+        handler
+        for name in consoles
+        for handler in logging.getLogger(name).handlers
+        if isinstance(handler, logging.StreamHandler) and not isinstance(handler, logging.FileHandler)
+    ]
+    assert litellm.suppress_debug_info is True
 
 
 def test_real_openai_sdk_ignores_the_env_key(config_with, monkeypatch):

@@ -22,6 +22,7 @@ the bucketed system state changed, or when the last report is older than
 from __future__ import annotations
 
 import importlib
+import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
@@ -116,6 +117,18 @@ class LLMConfig:
         return cls(provider, model, api_key, max_tokens, base_url)
 
 
+def _keep_litellm_off_the_terminal(litellm: Any) -> None:
+    """Send LiteLLM's messages to the Glances log instead of the console."""
+    # LiteLLM adds its own console handlers to its loggers, and prints a banner when
+    # a call fails: in the TUI, that text lands in the curses screen and breaks it.
+    litellm.suppress_debug_info = True
+    for name in ("LiteLLM", "LiteLLM Router", "LiteLLM Proxy"):
+        litellm_logger = logging.getLogger(name)
+        for handler in list(litellm_logger.handlers):
+            if isinstance(handler, logging.StreamHandler) and not isinstance(handler, logging.FileHandler):
+                litellm_logger.removeHandler(handler)
+
+
 def _import_provider(provider: LLMProvider) -> Any:
     """Import the SDK ``provider`` needs, with an actionable error when it is not installed."""
     module_name = _PROVIDER_MODULES[provider]
@@ -152,6 +165,7 @@ def _build_reporter(config: LLMConfig) -> Callable[[str], str]:
 
     match config.provider:
         case LLMProvider.LITELLM:
+            _keep_litellm_off_the_terminal(sdk)
 
             def _call(prompt: str) -> str:
                 r = sdk.completion(
