@@ -226,9 +226,9 @@ def _bucket(percent: float | None) -> int | None:
     return None if percent is None else int(percent // _STATE_BUCKET_PERCENT)
 
 
-def state_key(cpu: float, mem: float, swap: float | None, alert_count: int) -> tuple[Any, ...]:
-    """The system state the cache compares: CPU, memory and swap buckets, and the active alert count."""
-    return (_bucket(cpu), _bucket(mem), _bucket(swap), alert_count)
+def state_key(cpu: float, mem: float, swap: float | None, alerts: frozenset) -> tuple[Any, ...]:
+    """The system state the cache compares: CPU, memory and swap buckets, and the active alerts with their levels."""
+    return (_bucket(cpu), _bucket(mem), _bucket(swap), alerts)
 
 
 class _ReportCache:

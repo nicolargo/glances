@@ -6,14 +6,15 @@ LLM reporter
 *Availability: all; requires the SDK of the chosen LLM provider*
 
 Glances can ask a Large Language Model for a short health report of the
-system. Every ``refresh`` seconds (5 minutes by default), the plugin sends
-the model the current CPU, memory, swap and load, their trend over the last
-interval (with the processor and memory trend of each GPU), the active
-alerts and the five most CPU-hungry processes, and publishes the answer: a
-4 to 6 sentence report with an overall status (OK,
-Degraded or Critical), a root cause and a recommended action. The first
-report comes a few global refresh cycles after start (about 8 seconds by
-default), once the trends, the process list and the alerts are available.
+system. Every ``refresh`` seconds (5 minutes by default), and soon after the
+active alerts change, the plugin sends the model the current CPU, memory,
+swap and load, their trend over the last interval (with the processor and
+memory trend of each GPU), the active alerts and the five most CPU-hungry
+processes, and publishes the answer: a 4 to 6 sentence report with an
+overall status (OK, Degraded or Critical), a root cause and a recommended
+action. The first report comes a few global refresh cycles after start
+(about 8 seconds by default), once the trends, the process list and the
+alerts are available.
 
 The plugin is disabled by default. Enable it, choose a provider and a model,
 and install the SDK of that provider (only that one):
@@ -32,6 +33,7 @@ Configuration (``[llm_reporter]`` section):
     [llm_reporter]
     disable=False
     refresh=300
+    min_interval=60
     provider=litellm
     model=claude-haiku-4-5
     #api_key=
@@ -56,6 +58,10 @@ Configuration (``[llm_reporter]`` section):
     environment variable.
 
 - ``refresh`` — seconds between two reports (default 300).
+- ``min_interval`` — when the active alerts change (an alert opens, closes or
+  changes level), a report is requested right away instead of waiting for
+  ``refresh``, at most once every ``min_interval`` seconds (default 60). Set
+  it to ``refresh`` or more to wait for ``refresh``.
 - ``provider`` — ``litellm``, ``anthropic``, ``openai`` or ``ollama``.
 - ``model`` — the model, as the provider names it.
 - ``api_key`` — the API key of the provider, required except for Ollama. You
@@ -67,8 +73,8 @@ Configuration (``[llm_reporter]`` section):
   server (Ollama default: ``http://localhost:11434/v1``).
 - ``max_tokens`` — hard cap on the output tokens of each report (default 500).
 - ``cache_ttl`` — a report is reused without calling the model while CPU,
-  memory and swap stay in the same 5% bucket and the number of active alerts
-  is unchanged, for up to ``cache_ttl`` seconds (default 3600). It must be
+  memory and swap stay in the same 5% bucket and the active alerts are
+  unchanged, for up to ``cache_ttl`` seconds (default 3600). It must be
   larger than ``refresh`` to save any call: an idle machine then costs one
   call per hour instead of twelve.
 - ``trend_samples`` — points of each metric's trend sent to the model,
@@ -109,10 +115,11 @@ the first line of the alerts block::
 
     ALERTS  2 ongoing · 1 resolved · CPU is saturated by the backup job.
 
-It is ``null`` until the first report, when the report states none, and
-while the number of active alerts differs from when the report was
-generated: it would then describe a past state, until the next report
-brings a current one.
+It is ``null`` until the first report, and when the report states none. The
+summary describes the alerts the report was generated from, while the alert
+counts next to it are live: when the active alerts change, a new report is
+requested right away (see ``min_interval``), so the summary catches up within
+about a minute.
 
 ``status`` is ``ok``, ``degraded`` or ``critical`` as stated by the report,
 and ``unknown`` when the report states none. ``generated_at`` is the date of
@@ -125,7 +132,8 @@ none of these fields is exported.
 Privacy and cost: a cloud provider receives the metrics above and the names
 of the top processes, never their command lines. With a 5 minute interval, a
 small model such as ``claude-haiku-4-5`` or ``gpt-4o-mini`` costs about
-$0.001 per report.
+$0.001 per report. Alert changes add reports, at most one every
+``min_interval`` seconds.
 
 A configuration error or a missing SDK is logged at startup, and the plugin
 then publishes empty fields. A failed call (timeout, rate limit, invalid key)

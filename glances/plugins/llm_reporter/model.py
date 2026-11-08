@@ -15,6 +15,8 @@ one-sentence summary (``short_report``, displayed by the TUI and the WebUI).
 
 - The plugin ticks on the global cadence and paces the LLM calls itself;
   ``_ReportCache`` reuses the last report while the system state is unchanged.
+- A change of the active alerts brings the next report early, at most every
+  ``min_interval`` seconds (default 60), so the summary follows the alerts.
 - The first report waits ``_WARMUP_CYCLES`` ticks, for trends, top processes
   and alerts to be available.
 - The LLM call runs in a daemon thread, which quitting Glances does not wait for.
@@ -62,6 +64,8 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 _DEFAULT_TREND_SAMPLES = 3
+# Seconds: when the active alerts change, the next report comes early, at most this often.
+_DEFAULT_MIN_INTERVAL = 60.0
 # Ticks before the first report, as the alerts engine's warm-up.
 _WARMUP_CYCLES = 3
 
@@ -115,8 +119,7 @@ class PluginModel(GlancesPluginBase[dict]):
         },
         "short_report": {
             "description": "One-sentence summary of the report, shown in the ALERTS title of the TUI and the "
-            "WebUI. None until the first report, when the report states none, or while the number of "
-            "active alerts differs from when the report was generated.",
+            "WebUI. None until the first report, or when the report states none.",
             "unit": "string",
         },
         "status": {
@@ -136,6 +139,7 @@ class PluginModel(GlancesPluginBase[dict]):
         super().__init__(store, config)
         self._alerts: GlancesAlerts | None = None
         self._interval = self._resolve_interval()
+        self._min_interval = config.get(self.plugin_name, "min_interval", _DEFAULT_MIN_INTERVAL)
         self._cache = _ReportCache(config.get(self.plugin_name, "cache_ttl", _DEFAULT_CACHE_TTL))
         self._trend_samples = config.get(self.plugin_name, "trend_samples", _DEFAULT_TREND_SAMPLES)
         self._model: str | None = None
@@ -149,11 +153,11 @@ class PluginModel(GlancesPluginBase[dict]):
             logger.error("Plugin %s: %s — no report will be generated", self.plugin_name, e)
         self._report: str | None = None
         self._short_report: str | None = None
-        # Active alerts when the report was generated.
-        self._report_alert_count: int | None = None
         self._status: str | None = None
         self._generated_at: str | None = None
         self._last_call_ts: float | None = None
+        # Active alerts (and their levels) when the LLM was last called.
+        self._called_alerts: frozenset | None = None
         self._warmup_left = _WARMUP_CYCLES
         # Clock the tests can set.
         self._monotonic = time.monotonic
@@ -177,22 +181,26 @@ class PluginModel(GlancesPluginBase[dict]):
             await self._update_report()
         return {
             "report": self._report,
-            "short_report": self._current_short_report(),
+            "short_report": self._short_report,
             "status": self._status,
             "model": self._model,
             "generated_at": self._generated_at,
         }
 
-    def _current_short_report(self) -> str | None:
-        """The summary, hidden once the number of active alerts changed: it would describe a past state.
-
-        That change also makes the cache call the LLM at the next report.
-        """
-        active = len(self._alerts.get_ongoing()) if self._alerts is not None else 0
-        return self._short_report if active == self._report_alert_count else None
+    def _active_alerts(self) -> frozenset:
+        """The ongoing alerts with their levels: an alert opening, closing or changing level changes it."""
+        return frozenset(self._alerts.get_ongoing().items()) if self._alerts is not None else frozenset()
 
     def _report_due(self) -> bool:
-        return self._last_call_ts is None or self._monotonic() - self._last_call_ts >= self._interval
+        """Every ``refresh`` seconds, and early when the active alerts change, at most every ``min_interval``."""
+        # The report describes the alerts it was given: a change makes it, and its
+        # summary shown next to the live alert counts, out of date.
+        if self._last_call_ts is None:
+            return True
+        elapsed = self._monotonic() - self._last_call_ts
+        if elapsed >= self._interval:
+            return True
+        return elapsed >= self._min_interval and self._active_alerts() != self._called_alerts
 
     async def _update_report(self) -> None:
         """Ask the LLM for a new report, unless the inputs are not ready or the state is unchanged."""
@@ -200,8 +208,9 @@ class PluginModel(GlancesPluginBase[dict]):
         if current is None:
             return  # waits for cpu and mem
         active_alerts = read_active_alerts(self._alerts)
+        alerts = self._active_alerts()
         now = self._monotonic()
-        key = state_key(current.cpu, current.mem_percent, current.swap_percent, len(active_alerts or []))
+        key = state_key(current.cpu, current.mem_percent, current.swap_percent, alerts)
         if not self._cache.is_stale(key, now):
             return
         prompt = construct_prompt(
@@ -212,8 +221,10 @@ class PluginModel(GlancesPluginBase[dict]):
                 top_processes=read_top_processes(self.store),
             )
         )
-        # Each attempt starts the interval, so a failing provider is retried once per interval.
+        # Each attempt starts the interval, so a failing provider is retried once per interval
+        # (or on the next change of the alerts).
         self._last_call_ts = now
+        self._called_alerts = alerts
         try:
             report = await _run_in_daemon_thread(self._llm, prompt)
         except Exception as e:
@@ -230,7 +241,6 @@ class PluginModel(GlancesPluginBase[dict]):
         self._short_report, body = split_summary(report.strip())
         # A reply that is only the summary stays the report too.
         self._report = body or report.strip()
-        self._report_alert_count = len(active_alerts or [])
         self._status = parse_status(self._report)
         self._generated_at = current.timestamp
         self._cache.store(key, now)

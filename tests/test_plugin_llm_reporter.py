@@ -607,24 +607,71 @@ async def test_short_report_is_split_from_the_report(plugin):
     assert stats["status"] == "degraded"
 
 
-async def test_short_report_hidden_while_the_alert_count_differs(plugin):
+async def test_short_report_stays_when_the_alerts_change(plugin):
     alerts = _FakeAlerts()
     plugin.set_alerts(alerts)
     plugin._llm = _FakeLLM("Summary: CPU is saturated by one process.\n" + _REPORT)
     await _publish(plugin.store)
     await plugin.update()
-    assert plugin.get_stats()["short_report"] == "CPU is saturated by one process."
-    # An alert opens before the next report: the summary would describe a past state.
+    # An alert opens: the summary stays until the early report replaces it.
     alerts.ongoing = {("cpu", None, "total"): "critical"}
     await plugin.update()
     assert len(plugin._llm.prompts) == 1
-    assert plugin.get_stats()["short_report"] is None
-    assert plugin.get_stats()["report"] == _REPORT  # the full report stays
-    # The count changed, so the next report calls the LLM and brings a current summary.
-    plugin._monotonic.now += 300
+    assert plugin.get_stats()["short_report"] == "CPU is saturated by one process."
+
+
+async def test_alert_change_brings_the_next_report_early(plugin):
+    alerts = _FakeAlerts()
+    plugin.set_alerts(alerts)
+    await _publish(plugin.store)
+    await plugin.update()
+    alerts.ongoing = {("cpu", None, "total"): "critical"}
+    plugin._monotonic.now += 59  # at most one report per min_interval (60 s)
+    await plugin.update()
+    assert len(plugin._llm.prompts) == 1
+    plugin._monotonic.now += 1
     await plugin.update()
     assert len(plugin._llm.prompts) == 2
-    assert plugin.get_stats()["short_report"] == "CPU is saturated by one process."
+    assert "- cpu.total: critical" in plugin._llm.prompts[1]
+    # The alerts no longer change: back to one report per refresh.
+    plugin._monotonic.now += 120
+    await plugin.update()
+    assert len(plugin._llm.prompts) == 2
+
+
+@pytest.mark.parametrize(
+    "before, after",
+    [
+        ({("cpu", None, "total"): "warning"}, {("mem", None, "percent"): "warning"}),
+        ({("cpu", None, "total"): "warning"}, {("cpu", None, "total"): "critical"}),
+        ({("cpu", None, "total"): "warning"}, {}),
+    ],
+    ids=["another-alert-same-count", "level-change", "alert-closed"],
+)
+async def test_any_alert_change_brings_an_early_report(plugin, before, after):
+    alerts = _FakeAlerts(ongoing=before)
+    plugin.set_alerts(alerts)
+    await _publish(plugin.store)
+    await plugin.update()
+    alerts.ongoing = after
+    plugin._monotonic.now += 60
+    await plugin.update()
+    assert len(plugin._llm.prompts) == 2
+
+
+@pytest.mark.parametrize("min_interval, elapsed, calls", [("10", 10, 2), ("300", 299, 1)])
+async def test_min_interval_is_read_from_the_config(config_with, fake_openai, min_interval, elapsed, calls):
+    # Set to refresh (300) or more, it waits for refresh.
+    p = PluginModel(StatsStore(), config_with(_llm_section(min_interval=min_interval)))
+    p._llm, p._monotonic, p._warmup_left = _FakeLLM(), _Clock(), 0
+    alerts = _FakeAlerts()
+    p.set_alerts(alerts)
+    await _publish(p.store)
+    await p.update()
+    alerts.ongoing = {("cpu", None, "total"): "critical"}
+    p._monotonic.now += elapsed
+    await p.update()
+    assert len(p._llm.prompts) == calls
 
 
 async def test_failed_call_keeps_previous_report_and_retries_next_interval(plugin, caplog):
@@ -775,10 +822,11 @@ async def test_scheduler_startup_makes_a_single_call(config_with, fake_openai):
 
 
 def test_state_key_buckets_by_five_percent():
-    assert state_key(11.0, 40.0, 0.0, 0) == state_key(14.9, 44.9, 4.9, 0)
-    assert state_key(11.0, 40.0, 0.0, 0) != state_key(15.0, 40.0, 0.0, 0)
-    assert state_key(11.0, 40.0, 0.0, 0) != state_key(11.0, 40.0, 0.0, 1)
-    assert state_key(11.0, 40.0, None, 0) == (2, 8, None, 0)
+    none, cpu = frozenset(), frozenset({(("cpu", None, "total"), "warning")})
+    assert state_key(11.0, 40.0, 0.0, none) == state_key(14.9, 44.9, 4.9, none)
+    assert state_key(11.0, 40.0, 0.0, none) != state_key(15.0, 40.0, 0.0, none)
+    assert state_key(11.0, 40.0, 0.0, none) != state_key(11.0, 40.0, 0.0, cpu)
+    assert state_key(11.0, 40.0, None, none) == (2, 8, None, none)
 
 
 def test_report_cache_hit_miss_and_expiry():
