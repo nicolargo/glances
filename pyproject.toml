@@ -99,7 +99,9 @@ gpu = ["nvidia-ml-py"]
 graph = ["pygal"]
 # Optional LLM reporting providers
 llm-anthropic = ["anthropic"]
-llm-litellm = ["litellm"]
+# litellm>=1.100.4 fixes CVE-2026-114612. Its boto3 dependency needs python-dateutil<3,
+# while ibm-cloud-sdk-core (export) needs >=3: without the cap, pip backtracks for minutes.
+llm-litellm = ["litellm>=1.100.4", "python-dateutil<3"]
 llm-ollama = ["openai"]  # Uses Ollama's OpenAI-compatible API
 llm-openai = ["openai"]
 mcp = ["mcp>=1.23.0,<3"]
