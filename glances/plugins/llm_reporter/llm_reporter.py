@@ -29,7 +29,10 @@ from typing import Any
 
 from glances.config import GlancesConfig
 
-_LLM_REPORTER_TIMEOUT = 30
+# Per attempt. A local reasoning model needs this long (qwen3 27B took 40-45 s on a
+# laptop), and a failing report, with its retries, still ends within the default
+# 300 s refresh (4 x 60 s).
+_LLM_REPORTER_TIMEOUT = 60
 _LLM_MAX_RETRIES = 3
 _DEFAULT_MAX_TOKENS = 500
 _DEFAULT_CACHE_TTL = 3600.0

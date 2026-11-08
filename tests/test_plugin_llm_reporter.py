@@ -330,7 +330,7 @@ def test_config_ollama_defaults(config_with):
 def test_openai_factory(config_with, fake_openai):
     call = _build_reporter(LLMConfig.from_glances_config(config_with(_llm_section(api_key="sk-x", max_tokens="300"))))
     assert call("prompt") == _REPORT
-    assert fake_openai["client"] == {"api_key": "sk-x", "base_url": None, "max_retries": 3, "timeout": 30}
+    assert fake_openai["client"] == {"api_key": "sk-x", "base_url": None, "max_retries": 3, "timeout": 60}
     assert fake_openai["create"]["max_completion_tokens"] == 300
     assert "max_tokens" not in fake_openai["create"]
     assert fake_openai["create"]["messages"] == [{"role": "user", "content": "prompt"}]
@@ -352,7 +352,7 @@ def test_anthropic_factory(config_with, monkeypatch):
     monkeypatch.setitem(sys.modules, "anthropic", _fake_anthropic(calls))
     cfg = LLMConfig.from_glances_config(config_with(_llm_section(provider="anthropic", model="claude-haiku-4-5")))
     assert _build_reporter(cfg)("prompt") == "1. Overall health status: OK"  # text blocks only
-    assert calls["client"] == {"api_key": "sk-test", "base_url": None, "timeout": 30, "max_retries": 3}
+    assert calls["client"] == {"api_key": "sk-test", "base_url": None, "timeout": 60, "max_retries": 3}
     assert calls["create"]["max_tokens"] == 500
     assert calls["create"]["model"] == "claude-haiku-4-5"
 
@@ -367,7 +367,7 @@ def test_litellm_factory(config_with, monkeypatch):
     sent = calls["completion"]
     assert sent["model"] == "mistral/mistral-large-latest"
     assert sent["max_completion_tokens"] == 500
-    assert sent["timeout"] == 30
+    assert sent["timeout"] == 60
     assert sent["num_retries"] == 3
     assert sent["api_key"] == "sk-test"
     assert sent["base_url"] is None
