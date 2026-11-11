@@ -31,11 +31,12 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import math
 import threading
 import time
 from collections.abc import Callable
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar, TypeVar
 
 from glances.config import GlancesConfig
 from glances.plugins.llm_reporter.llm_reporter import (
@@ -68,6 +69,7 @@ _DEFAULT_TREND_SAMPLES = 3
 _DEFAULT_MIN_INTERVAL = 60.0
 # Ticks before the first report, as the alerts engine's warm-up.
 _WARMUP_CYCLES = 3
+_Number = TypeVar("_Number", int, float)
 
 
 async def _run_in_daemon_thread(func: Callable[[str], str], arg: str) -> str:
@@ -138,13 +140,17 @@ class PluginModel(GlancesPluginBase[dict]):
     def __init__(self, store: StatsStore, config: GlancesConfig) -> None:
         super().__init__(store, config)
         self._alerts: GlancesAlerts | None = None
-        self._interval = self._resolve_interval()
-        self._min_interval = config.get(self.plugin_name, "min_interval", _DEFAULT_MIN_INTERVAL)
-        self._cache = _ReportCache(config.get(self.plugin_name, "cache_ttl", _DEFAULT_CACHE_TTL))
-        self._trend_samples = config.get(self.plugin_name, "trend_samples", _DEFAULT_TREND_SAMPLES)
+        self._interval = self.DEFAULT_REFRESH_TIME
+        self._min_interval = _DEFAULT_MIN_INTERVAL
+        self._cache = _ReportCache(_DEFAULT_CACHE_TTL)
+        self._trend_samples = _DEFAULT_TREND_SAMPLES
         self._model: str | None = None
         self._llm: Callable[[str], str] | None = None
         try:
+            self._interval = self._resolve_interval()
+            self._min_interval = self._config_number("min_interval", _DEFAULT_MIN_INTERVAL)
+            self._cache = _ReportCache(self._config_number("cache_ttl", _DEFAULT_CACHE_TTL))
+            self._trend_samples = self._config_number("trend_samples", _DEFAULT_TREND_SAMPLES)
             llm_config = LLMConfig.from_glances_config(config)
             self._model = llm_config.model
             self._llm = _build_reporter(llm_config)
@@ -165,10 +171,23 @@ class PluginModel(GlancesPluginBase[dict]):
     def _resolve_interval(self) -> float:
         """Seconds between two reports: ``[llm_reporter] refresh`` (or ``refresh_time``), else 300."""
         for key in ("refresh", "refresh_time"):
-            value = self.config.get(self.plugin_name, key, -1.0)
+            # Non-positive values still fall through to the alias or default, as in the scheduler.
+            value = self._config_number(key, -1.0, allow_negative=True)
             if value > 0:
                 return value
         return self.DEFAULT_REFRESH_TIME
+
+    def _config_number(self, key: str, default: _Number, *, allow_negative: bool = False) -> _Number:
+        """Read a finite tuning value; report the key, never the possibly secret malformed value."""
+        kind = "integer" if isinstance(default, int) else "number"
+        expected = f"finite {'non-negative ' if not allow_negative else ''}{kind}"
+        try:
+            value = self.config.get(self.plugin_name, key, default)
+            if not math.isfinite(value) or (not allow_negative and value < 0):
+                raise ValueError
+        except (TypeError, ValueError, OverflowError):
+            raise ValueError(f"[llm_reporter] {key} must be a {expected}") from None
+        return value
 
     def set_alerts(self, alerts: GlancesAlerts) -> None:
         """Hook called by ``main.attach_alerts()``: the active alerts enrich the prompt."""

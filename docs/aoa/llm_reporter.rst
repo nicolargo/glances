@@ -136,6 +136,9 @@ $0.001 per report. Alert changes add reports, at most one every
 ``min_interval`` seconds.
 
 A configuration error or a missing SDK is logged at startup, and the plugin
-then publishes empty fields. A failed call (timeout, rate limit, invalid key)
-is logged as a warning, keeps the previous report, and is retried at the
-next interval.
+then publishes empty fields without calling the model. Numeric settings must
+be finite; ``min_interval``, ``cache_ttl`` and ``trend_samples`` must also be
+non-negative. A zero ``cache_ttl`` disables cache reuse, and setting
+``trend_samples`` to zero or one omits trends. A failed call (timeout, rate
+limit, invalid key) is logged as a warning, keeps the previous report, and
+is retried at the next interval.

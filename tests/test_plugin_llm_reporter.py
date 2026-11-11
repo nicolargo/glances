@@ -461,6 +461,69 @@ def test_missing_sdk_error_names_the_extra(config_with, monkeypatch, provider, m
 # ------------------------------------------ construction always succeeds
 
 
+_INVALID_REPORT_SETTINGS = (
+    [
+        (key, value)
+        for key in ("refresh", "refresh_time", "min_interval", "cache_ttl", "trend_samples")
+        for value in ("invalid", "nan", "inf", "-inf")
+    ]
+    + [(key, "-1") for key in ("min_interval", "cache_ttl", "trend_samples")]
+    + [("trend_samples", "1.5")]
+)
+
+
+@pytest.mark.parametrize("key, value", _INVALID_REPORT_SETTINGS)
+async def test_invalid_numeric_setting_logs_once_and_publishes_empty_fields(
+    config_with, fake_openai, caplog, key, value
+):
+    with caplog.at_level(logging.ERROR):
+        p = PluginModel(StatsStore(), config_with(_llm_section(**{key: value})))
+    assert p._llm is None
+    assert fake_openai == {}  # validation happens before any SDK client is built
+    assert f"[llm_reporter] {key} must be" in caplog.text
+    assert "no report will be generated" in caplog.text
+    assert len([record for record in caplog.records if record.name == PluginModel.__module__]) == 1
+    await _publish(p.store)
+    for _ in range(5):  # beyond warm-up: no call, and no missing-attribute errors
+        await p.update()
+    assert {key: p.get_stats()[key] for key in ("report", "short_report", "status", "model", "generated_at")} == {
+        "report": None,
+        "short_report": None,
+        "status": None,
+        "model": None,
+        "generated_at": None,
+    }
+    assert fake_openai == {}
+
+
+@pytest.mark.parametrize("key, value", _INVALID_REPORT_SETTINGS)
+def test_invalid_numeric_setting_does_not_break_the_python_api(
+    config_with, fake_openai, monkeypatch, caplog, key, value
+):
+    from glances.api import GlancesAPI
+
+    config_with(_llm_section(**{key: value}))
+    # Isolate the reporter's construction; dependency discovery has its own test.
+    monkeypatch.setattr(PluginModel, "DEPENDS_ON", ())
+    with caplog.at_level(logging.ERROR), GlancesAPI(plugins=["llm_reporter"]) as gl:
+        assert gl.plugins() == ["llm_reporter"]
+        assert gl.llm_reporter["report"] is None
+        assert gl._plugins["llm_reporter"]._llm is None
+    assert f"[llm_reporter] {key} must be" in caplog.text
+    assert fake_openai == {}
+
+
+@pytest.mark.parametrize("key", ["refresh", "refresh_time", "min_interval", "cache_ttl", "trend_samples"])
+def test_invalid_numeric_setting_does_not_echo_its_value(config_with, fake_openai, caplog, key):
+    # As with an indented line after model, a malformed numeric value may contain a secret.
+    with caplog.at_level(logging.ERROR):
+        p = PluginModel(StatsStore(), config_with(_llm_section(**{key: "1\n  api_key=sk-secret"})))
+    assert f"[llm_reporter] {key} must be" in caplog.text
+    assert "sk-secret" not in caplog.text
+    assert p._llm is None
+    assert fake_openai == {}
+
+
 def test_misconfigured_plugin_logs_once_and_publishes_empty_fields(config_with, caplog):
     with caplog.at_level(logging.ERROR):
         p = PluginModel(StatsStore(), config_with({"llm_reporter": {"disable": "False"}}))
@@ -513,6 +576,45 @@ def test_shipped_conf_constructs_without_any_sdk(monkeypatch):
 
 
 # ------------------------------------------------ report and cadence
+
+
+@pytest.mark.parametrize(
+    "options, expected",
+    [
+        ({}, 300),
+        ({"refresh": "120"}, 120),
+        ({"refresh_time": "90"}, 90),
+        ({"refresh": "120", "refresh_time": "90"}, 120),
+        ({"refresh": "120", "refresh_time": "invalid"}, 120),
+        ({"refresh": "0", "refresh_time": "90"}, 90),
+        ({"refresh": "-1"}, 300),
+    ],
+)
+def test_refresh_resolution_is_preserved(config_with, fake_openai, options, expected):
+    p = PluginModel(StatsStore(), config_with(_llm_section(**options)))
+    assert p._interval == expected
+    assert p._llm is not None
+
+
+@pytest.mark.parametrize("samples", ["0", "1"])
+async def test_fewer_than_two_trend_samples_still_omits_trends(config_with, fake_openai, samples):
+    p = PluginModel(StatsStore(), config_with(_llm_section(trend_samples=samples)))
+    p._llm, p._warmup_left = _FakeLLM(), 0
+    p.history = _history_with_cpu([time.time() - 10, time.time()])
+    await _publish(p.store)
+    await p.update()
+    assert len(p._llm.prompts) == 1
+    assert "TRENDS" not in p._llm.prompts[0]
+
+
+async def test_zero_cache_ttl_still_disables_cache_reuse(config_with, fake_openai):
+    p = PluginModel(StatsStore(), config_with(_llm_section(cache_ttl="0")))
+    p._llm, p._monotonic, p._warmup_left = _FakeLLM(), _Clock(), 0
+    await _publish(p.store)
+    await p.update()
+    p._monotonic.now += 300
+    await p.update()
+    assert len(p._llm.prompts) == 2
 
 
 async def test_report_published_with_parsed_status(plugin):
@@ -659,7 +761,7 @@ async def test_any_alert_change_brings_an_early_report(plugin, before, after):
     assert len(plugin._llm.prompts) == 2
 
 
-@pytest.mark.parametrize("min_interval, elapsed, calls", [("10", 10, 2), ("300", 299, 1)])
+@pytest.mark.parametrize("min_interval, elapsed, calls", [("0", 0, 2), ("10", 10, 2), ("300", 299, 1)])
 async def test_min_interval_is_read_from_the_config(config_with, fake_openai, min_interval, elapsed, calls):
     # Set to refresh (300) or more, it waits for refresh.
     p = PluginModel(StatsStore(), config_with(_llm_section(min_interval=min_interval)))
