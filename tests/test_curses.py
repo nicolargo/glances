@@ -1415,6 +1415,38 @@ def test_tui_repaint_uses_help_when_open(fake_store, fake_alerts, fake_config):
     assert "Glances" in flat and "help" in flat
 
 
+def test_tui_repaint_brackets_refresh_with_synchronized_output(monkeypatch, fake_store, fake_alerts, fake_config):
+    """The terminal write is wrapped in DEC mode 2026 so a frame is never
+    displayed half-drawn (ncurses scrolls rows mid-frame, then repairs them)."""
+    from glances.outputs import glances_curses as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    events = []
+    monkeypatch.setattr(tui_mod.os, "write", lambda fd, data: events.append((fd, data)))
+    fake_stdscr = MagicMock()
+    fake_stdscr.getmaxyx.return_value = (24, 80)
+    fake_stdscr.refresh.side_effect = lambda: events.append("refresh")
+    tui._repaint(fake_stdscr)
+
+    assert events == [(1, b"\x1b[?2026h"), "refresh", (1, b"\x1b[?2026l")]
+
+
+def test_tui_repaint_ends_synchronized_output_when_refresh_fails(monkeypatch, fake_store, fake_alerts, fake_config):
+    """A failing refresh must not leave the terminal holding its display."""
+    from glances.outputs import glances_curses as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    written = []
+    monkeypatch.setattr(tui_mod.os, "write", lambda fd, data: written.append(data))
+    fake_stdscr = MagicMock()
+    fake_stdscr.getmaxyx.return_value = (24, 80)
+    fake_stdscr.refresh.side_effect = curses.error("boom")
+    with pytest.raises(curses.error):
+        tui._repaint(fake_stdscr)
+
+    assert written == [b"\x1b[?2026h", b"\x1b[?2026l"]
+
+
 def test_tui_q_key_fires_on_quit_callback(monkeypatch, fake_store, fake_alerts, fake_config):
     """Pressing 'q' fires the on_quit callback so the main loop can shut down."""
     from glances.outputs import glances_curses as tui_mod

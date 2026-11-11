@@ -124,6 +124,11 @@ STARTUP_HIDE_KEYS: dict[str, tuple[str, ...]] = {
 
 _COLOR_PAIRS: dict[ColorRole, int] = {}
 
+# DEC private mode 2026 (synchronized output), written to the fd curses uses.
+_STDOUT_FD = 1
+_SYNC_OUTPUT_BEGIN = b"\x1b[?2026h"
+_SYNC_OUTPUT_END = b"\x1b[?2026l"
+
 
 @dataclass
 class ViewState:
@@ -1529,7 +1534,17 @@ class Tui(threading.Thread):
             frame = self._build_fitted_frame(max_x, max_y)
             self._note_cursor_bound(frame)
             self._paint(stdscr, frame)
-        stdscr.refresh()
+        # ncurses emits a frame as many small writes and, when process rows
+        # reorder, scrolls whole screen rows before repairing them: a terminal
+        # drawing mid-frame shows ghost lines. Synchronized output makes it
+        # hold the display until the frame is complete; terminals without
+        # the mode ignore the sequences. curses has nothing buffered outside
+        # `refresh()`, so raw writes to its fd bracket the frame exactly.
+        os.write(_STDOUT_FD, _SYNC_OUTPUT_BEGIN)
+        try:
+            stdscr.refresh()
+        finally:
+            os.write(_STDOUT_FD, _SYNC_OUTPUT_END)
 
     # Name of the process block the cursor addresses, per view mode. `j`
     # swaps which of the two is in the frame (`_frame_for_view`), and the
