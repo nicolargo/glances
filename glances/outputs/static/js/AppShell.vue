@@ -199,6 +199,13 @@ const HIDDEN_BY = {
 	hide_quicklook: "quicklook",
 };
 
+// Read along with the registry's plugins from the same /api/5/all request:
+// its `short_report` (one sentence) goes on the alert title, as in the TUI
+// (curses_renderer.py `_summary_segments`), and its full `report` to the top
+// of the alerts window. Not in the registry, as it renders
+// no block of its own. Absent from /all when the plugin is disabled.
+const LLM_REPORTER_SPEC = { name: "llm_reporter", spec: { shape: "scalar", required: [] } };
+
 // The browser's own stacking threshold, not a TUI rule (spec D3). Kept next to
 // the media query that owns it -- test_webui_tokens.py pins the two
 // together so the constant cannot drift from the stylesheet.
@@ -866,7 +873,10 @@ export default {
 				// coupling the brief forbade, just in the direction nobody thought
 				// to look.
 				const ownEndpointPlugins = this.plugins.filter((plugin) => plugin.ownEndpoint);
-				const { results, errors, offline } = await fetchAll(this.plugins.filter((plugin) => !plugin.ownEndpoint));
+				const { results, errors, offline } = await fetchAll([
+					...this.plugins.filter((plugin) => !plugin.ownEndpoint),
+					LLM_REPORTER_SPEC,
+				]);
 				if (offline) {
 					// The server is gone. Return BEFORE touching `results` /
 					// `errors`: the last good frame stays on screen under the
@@ -927,7 +937,13 @@ export default {
 					const nextErrors = { ...this.errors };
 					delete nextErrors.alert;
 					this.errors = markRaw(nextErrors);
-					this.results = markRaw({ ...this.results, alert: { isInitializing, incidents } });
+					const llm = this.results.llm_reporter;
+					const shortReport = llm?.short_report ?? null;
+					// The full report goes to the top of the alerts window.
+					const llmReport = llm?.report
+						? { text: llm.report, model: llm.model ?? null, generatedAt: llm.generated_at ?? null }
+						: null;
+					this.results = markRaw({ ...this.results, alert: { isInitializing, incidents, shortReport, llmReport } });
 				} catch (e) {
 					this.errors = markRaw({ ...this.errors, alert: e.message });
 				}

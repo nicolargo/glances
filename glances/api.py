@@ -50,7 +50,7 @@ from glances import __version__
 from glances.alerts import GlancesAlerts
 from glances.config import GlancesConfig
 from glances.globals import auto_unit
-from glances.main import _global_refresh, attach_history, discover_plugin_classes
+from glances.main import _global_refresh, attach_alerts, attach_history, discover_plugin_classes
 from glances.outputs.glances_bars import Bar
 from glances.plugins.plugin.base import GlancesPluginBase
 from glances.processes import sort_stats
@@ -177,6 +177,7 @@ class GlancesAPI:
         # No actions: an API object records alerts, it never runs the
         # `<field>_<level>_action` commands of glances.conf (design §5.3).
         self._alerts = GlancesAlerts(self._config, actions={})
+        attach_alerts(list(self._plugins.values()), self._alerts)
         self._updated: dict[str, float] = {}
         self._locks: dict[str, asyncio.Lock] = {}
 

@@ -12,10 +12,16 @@
 		across the TIME and DURATION headers. Only the states that PAINT a
 		grid get it: the ones that do not collapse to the single line below
 		instead, which already carries the bare `ALERT`. -->
-		<div v-if="hasGrid" class="gl-plugin-title">
+		<!-- Both lines end with the llm_reporter plugin's one-sentence summary,
+		when it publishes one: `· <summary>`, cut with an ellipsis by the room
+		left, like `_summary_segments` in the TUI. Clicked, it opens the alerts
+		window, whose top shows the full report: with no incident, there is no
+		counts link to open it from. -->
+		<div v-if="hasGrid" class="gl-plugin-title gl-alert-line">
 			<h2 class="gl-header">
 				{{ "ALERTS  " }}<button type="button" class="gl-alert-link" aria-haspopup="dialog" @click="openAll">{{ titleCounts }}</button>
 			</h2>
+			<span v-if="summary" class="gl-alert-summary gl-alert-report-link" role="button" tabindex="0" aria-haspopup="dialog" :title="summary" @click="openAll" @keydown.enter.prevent="openAll" @keydown.space.prevent="openAll"><span class="gl-header">·</span> {{ summary }}</span>
 		</div>
 		<!-- Every grid-less state is ONE glued line, `ALERT <state>`, not a
 		title line above a separate paragraph: that is what
@@ -31,8 +37,9 @@
 		zero while incidents still exist (row_budget.js's "header only"
 		step) -- that state renders the table with zero data rows, never
 		this collapse. -->
-		<p v-else class="gl-alert-collapse">
-			<span class="gl-header">{{ TITLE }}</span> <span :class="collapse.cls">{{ collapse.text }}</span>
+		<p v-else class="gl-alert-collapse gl-alert-line">
+			<span><span class="gl-header">{{ TITLE }}</span> <span :class="collapse.cls">{{ collapse.text }}</span></span>
+			<span v-if="summary" class="gl-alert-summary gl-alert-report-link" role="button" tabindex="0" aria-haspopup="dialog" :title="summary" @click="openAll" @keydown.enter.prevent="openAll" @keydown.space.prevent="openAll"><span class="gl-header">·</span> {{ summary }}</span>
 		</p>
 		<table v-if="hasGrid" class="gl-table gl-process-table">
 			<colgroup>
@@ -94,7 +101,12 @@
 						<span class="gl-header">{{ titleText }}</span>
 						<button type="button" class="gl-alert-link" aria-label="Close" @click="closeAll">×</button>
 					</div>
-					<table class="gl-table">
+					<!-- The full llm_reporter report, above the incidents. -->
+					<section v-if="report" class="gl-alert-report" aria-label="LLM report">
+						<div class="gl-header">{{ reportHeading }}</div>
+						<p class="gl-alert-report-text">{{ report.text }}</p>
+					</section>
+					<table v-if="allRows.length" class="gl-table">
 						<thead>
 							<tr>
 								<th class="gl-header"></th>
@@ -197,6 +209,32 @@ export default {
 		headerText() {
 			return this.hasGrid ? this.titleText : TITLE;
 		},
+		// The llm_reporter plugin's `short_report`, which AppShell adds to the
+		// payload. None over an error: the line then says what went wrong.
+		summary() {
+			if (this.error || !this.payload) return null;
+			const text = this.payload.shortReport;
+			return typeof text === "string" && text ? text : null;
+		},
+		// The llm_reporter plugin's full report ({text, model, generatedAt}),
+		// also added by AppShell: shown at the top of the alerts window.
+		report() {
+			if (this.error || !this.payload) return null;
+			const report = this.payload.llmReport;
+			return report && typeof report.text === "string" && report.text ? report : null;
+		},
+		// `LLM REPORT · 11:04 · mistral-tiny`: the time of the stats it was
+		// generated from, in the viewer's local time, and the model.
+		reportHeading() {
+			const parts = ["LLM REPORT"];
+			const date = new Date(this.report.generatedAt);
+			if (this.report.generatedAt && !Number.isNaN(date.getTime())) {
+				const pad = (n) => String(n).padStart(2, "0");
+				parts.push(`${pad(date.getHours())}:${pad(date.getMinutes())}`);
+			}
+			if (this.report.model) parts.push(this.report.model);
+			return parts.join(" · ");
+		},
 		// The state fragment glued after `ALERT` on the collapse line, and its
 		// colour. Mirrors `render_alert_block`'s own collapse
 		// (curses_renderer.py:738-754): only the fragment is coloured,
@@ -295,8 +333,20 @@ export default {
 			this.fitBlock().catch(() => {});
 		},
 	},
+	mounted() {
+		// The render probe's fake document dispatches no events: it opens the
+		// window through the method the counts link and the summary call, as
+		// it does for AppShell's buttons.
+		if (typeof window !== "undefined") {
+			window.__glancesOpenAlerts = async () => {
+				this.openAll();
+				await this.$nextTick();
+			};
+		}
+	},
 	beforeUnmount() {
 		if (this.showAll) this.closeAll();
+		if (typeof window !== "undefined") delete window.__glancesOpenAlerts;
 	},
 	methods: {
 		openAll() {
@@ -436,5 +486,44 @@ export default {
  * for. Same `margin: 0` reason as `.gl-plugin-title h2` (css/glances.css). */
 .gl-alert-collapse {
 	margin: 0;
+}
+
+/* The title or the collapse line, and the summary after it, on one row: only
+ * the summary gives way, so the line never wraps out of its one row. */
+.gl-alert-line {
+	display: flex;
+	gap: var(--gl-col);
+}
+.gl-alert-line > :first-child {
+	flex: none;
+}
+/* `.gl-truncate`'s rules, but not that class: `.gl-measuring` gives a
+ * `.gl-truncate` its natural width (css/glances.css), and a sentence measured
+ * at full length would make the cascade drop columns. The TUI never drops one
+ * for the summary either -- it cuts the summary first. */
+.gl-alert-summary {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	min-width: 0;
+}
+/* The summary opens the alerts window: text, not chrome, like `.gl-history-link`
+ * (css/glances.css) -- only the underline on hover or focus says so. */
+.gl-alert-report-link {
+	cursor: pointer;
+}
+.gl-alert-report-link:hover,
+.gl-alert-report-link:focus-visible {
+	text-decoration: underline;
+}
+/* The full report at the top of the alerts window, with the model's own line
+ * breaks (its numbered points). */
+.gl-alert-report {
+	margin-bottom: var(--gl-gap);
+}
+.gl-alert-report-text {
+	margin: 0;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
 }
 </style>

@@ -49,3 +49,4 @@ Legend:
    amps
    events
    actions
+   llm_reporter
