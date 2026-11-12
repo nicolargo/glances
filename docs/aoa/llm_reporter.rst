@@ -12,9 +12,10 @@ swap and load, their trend over the last interval (with the processor and
 memory trend of each GPU), the active alerts and the five most CPU-hungry
 processes, and publishes the answer: a 4 to 6 sentence report with an
 overall status (OK, Degraded or Critical), a root cause and a recommended
-action. The first report comes 30 seconds after start, once Glances' own
-startup load is over: its trends leave out the first 10 seconds, and Glances
-itself is never listed among the top processes.
+action. The first report comes at least 30 seconds and 3 refresh cycles
+after start, once Glances' own startup load and the alerts engine's warm-up
+are over: its trends leave out the first 10 seconds, and Glances itself is
+never listed among the top processes.
 
 The plugin is disabled by default. Enable it, choose a provider and a model,
 and install the SDK of that provider (only that one):

@@ -17,9 +17,10 @@ one-sentence summary (``short_report``, displayed by the TUI and the WebUI).
   ``_ReportCache`` reuses the last report while the system state is unchanged.
 - A change of the active alerts brings the next report early, at most every
   ``min_interval`` seconds (default 60), so the summary follows the alerts.
-- The first report waits ``_STARTUP_DELAY`` seconds, past Glances' own startup
-  load and the alerts engine's warm-up; its trends leave out the samples of the
-  first ``_STARTUP_SAMPLES_SKIPPED`` seconds.
+- The first report waits ``_STARTUP_DELAY`` seconds and ``_STARTUP_CYCLES``
+  refresh cycles, past Glances' own startup load, and the end of the alerts
+  engine's warm-up; its trends leave out the samples of the first
+  ``_STARTUP_SAMPLES_SKIPPED`` seconds.
 - The LLM call runs in a daemon thread, which quitting Glances does not wait for.
 - A configuration error is logged at startup and leaves the fields empty; a
   failed call is logged and the previous report is kept.
@@ -69,8 +70,12 @@ _DEFAULT_TREND_SAMPLES = 3
 # Seconds: when the active alerts change, the next report comes early, at most this often.
 _DEFAULT_MIN_INTERVAL = 60.0
 # Seconds from the first tick to the first report: Glances' own startup load is over
-# by then (it would be reported as a process using the CPU), and the alerts too.
+# by then (it would be reported as a process using the CPU).
 _STARTUP_DELAY = 30.0
+# Refresh cycles the first report waits too, as the alerts engine's warm-up: with a
+# slow global refresh, the seconds alone pass while the engine still skips its first
+# cycles. The engine itself is also asked (`_startup_over`).
+_STARTUP_CYCLES = 3
 # Seconds of samples the trends leave out at startup: a process's first CPU reading is
 # always 0, then comes Glances' own startup load.
 _STARTUP_SAMPLES_SKIPPED = 10.0
@@ -172,6 +177,9 @@ class PluginModel(GlancesPluginBase[dict]):
         # The first tick (monotonic clock), and the oldest sample the trends use (history clock).
         self._started: float | None = None
         self._trends_since: float | None = None
+        self._ticks = 0
+        # Set once the startup is over (`_startup_over`), for good.
+        self._ready = False
         # Clock the tests can set.
         self._monotonic = time.monotonic
 
@@ -205,7 +213,10 @@ class PluginModel(GlancesPluginBase[dict]):
         if self._started is None:
             self._started = now
             self._trends_since = time.time() + _STARTUP_SAMPLES_SKIPPED
-        if self._llm is not None and now - self._started >= _STARTUP_DELAY and self._report_due():
+        self._ticks += 1
+        if not self._ready:
+            self._ready = self._startup_over(now)
+        if self._llm is not None and self._ready and self._report_due():
             await self._update_report()
         return {
             "report": self._report,
@@ -214,6 +225,13 @@ class PluginModel(GlancesPluginBase[dict]):
             "model": self._model,
             "generated_at": self._generated_at,
         }
+
+    def _startup_over(self, now: float) -> bool:
+        """Past ``_STARTUP_DELAY`` seconds and ``_STARTUP_CYCLES`` cycles, and the alerts engine's warm-up."""
+        # During its warm-up, the engine has no alert yet: the prompt would claim none.
+        if now - self._started < _STARTUP_DELAY or self._ticks <= _STARTUP_CYCLES:
+            return False
+        return self._alerts is None or not self._alerts.is_initializing()
 
     def _active_alerts(self) -> frozenset:
         """The ongoing alerts with their levels: an alert opening, closing or changing level changes it."""

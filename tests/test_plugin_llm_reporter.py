@@ -137,10 +137,14 @@ class _FakeLLM:
 
 
 class _FakeAlerts:
-    def __init__(self, ongoing=None, since=None, top=None) -> None:
+    def __init__(self, ongoing=None, since=None, top=None, initializing=False) -> None:
         self.ongoing = ongoing or {}
         self.since = since or {}
         self.top = top or {}
+        self.initializing = initializing
+
+    def is_initializing(self):
+        return self.initializing
 
     def get_ongoing(self):
         return dict(self.ongoing)
@@ -201,7 +205,7 @@ def plugin(config_with, fake_openai, monkeypatch):
     p = PluginModel(StatsStore(), config_with(_llm_section()))
     p._llm = _FakeLLM()
     p._monotonic = _Clock()
-    p._started = 0.0  # long started: test_first_report_waits_after_start covers the startup
+    p._started, p._ready = 0.0, True  # long started: the test_first_report_waits_* tests cover the startup
     return p
 
 
@@ -602,7 +606,7 @@ def test_refresh_resolution_is_preserved(config_with, fake_openai, options, expe
 @pytest.mark.parametrize("samples", ["0", "1"])
 async def test_fewer_than_two_trend_samples_still_omits_trends(config_with, fake_openai, samples):
     p = PluginModel(StatsStore(), config_with(_llm_section(trend_samples=samples)))
-    p._llm, p._started = _FakeLLM(), 0.0
+    p._llm, p._started, p._ready = _FakeLLM(), 0.0, True
     p.history = _history_with_cpu([time.time() - 10, time.time()])
     await _publish(p.store)
     await p.update()
@@ -612,7 +616,7 @@ async def test_fewer_than_two_trend_samples_still_omits_trends(config_with, fake
 
 async def test_zero_cache_ttl_still_disables_cache_reuse(config_with, fake_openai):
     p = PluginModel(StatsStore(), config_with(_llm_section(cache_ttl="0")))
-    p._llm, p._monotonic, p._started = _FakeLLM(), _Clock(), 0.0
+    p._llm, p._monotonic, p._started, p._ready = _FakeLLM(), _Clock(), 0.0, True
     await _publish(p.store)
     await p.update()
     p._monotonic.now += 300
@@ -639,11 +643,40 @@ async def test_first_report_waits_after_start(config_with, fake_openai):
     p = PluginModel(StatsStore(), config_with(_llm_section()))
     p._llm, p._monotonic = _FakeLLM(), _Clock()
     await _publish(p.store)
-    await p.update()
-    p._monotonic.now += 29
-    await p.update()
+    for _ in range(15):  # every 2 s (the default refresh): past the cycles, not the 30 s
+        await p.update()
+        p._monotonic.now += 2
     assert p._llm.prompts == []
-    p._monotonic.now += 1
+    await p.update()  # 30 s after the first tick
+    assert len(p._llm.prompts) == 1
+
+
+async def test_first_report_waits_for_the_alerts_warm_up(config_with, fake_openai):
+    # With a slow global refresh, 30 s pass by the second cycle while the alerts engine
+    # still skips its first cycles: the prompt would claim no alert.
+    p = PluginModel(StatsStore(), config_with(_llm_section()))
+    p._llm, p._monotonic = _FakeLLM(), _Clock()
+    alerts = _FakeAlerts(initializing=True)
+    p.set_alerts(alerts)
+    await _publish(p.store)
+    for _ in range(6):  # one cycle a minute, the engine still warming up
+        await p.update()
+        p._monotonic.now += 60
+    assert p._llm.prompts == []
+    alerts.initializing = False
+    await p.update()
+    assert len(p._llm.prompts) == 1
+
+
+async def test_first_report_waits_three_cycles_without_alerts_engine(config_with, fake_openai):
+    # The Python API attaches no alerts engine: the first report still waits its cycles.
+    p = PluginModel(StatsStore(), config_with(_llm_section()))
+    p._llm, p._monotonic = _FakeLLM(), _Clock()
+    await _publish(p.store)
+    for _ in range(3):  # one cycle a minute: past the 30 s, not the cycles
+        await p.update()
+        p._monotonic.now += 60
+    assert p._llm.prompts == []
     await p.update()
     assert len(p._llm.prompts) == 1
 
@@ -658,8 +691,9 @@ async def test_trends_leave_out_the_startup_samples(config_with, fake_openai):
     p.history = HistoryStore(1200)
     for ts, cpu in [(start, 0.0), (start + 2, 45.0), (start + 15, 30.0), (start + 25, 32.0)]:
         p.history.record("cpu", {"total": cpu}, ["total"], now=ts)
-    p._monotonic.now += 30
-    await p.update()
+    for _ in range(3):  # to 30 s after start, past the startup cycles
+        p._monotonic.now += 10
+        await p.update()
     assert "CPU    : 30% → 32%  (+2%)" in p._llm.prompts[0]
 
 
@@ -786,7 +820,7 @@ async def test_any_alert_change_brings_an_early_report(plugin, before, after):
 async def test_min_interval_is_read_from_the_config(config_with, fake_openai, min_interval, elapsed, calls):
     # Set to refresh (300) or more, it waits for refresh.
     p = PluginModel(StatsStore(), config_with(_llm_section(min_interval=min_interval)))
-    p._llm, p._monotonic, p._started = _FakeLLM(), _Clock(), 0.0
+    p._llm, p._monotonic, p._started, p._ready = _FakeLLM(), _Clock(), 0.0, True
     alerts = _FakeAlerts()
     p.set_alerts(alerts)
     await _publish(p.store)
@@ -926,7 +960,7 @@ async def test_scheduler_startup_makes_a_single_call(config_with, fake_openai):
     store = StatsStore()
     await _publish(store)
     p = PluginModel(store, cfg)
-    p._llm, p._started = _FakeLLM(), 0.0
+    p._llm, p._started, p._ready = _FakeLLM(), 0.0, True
     scheduler = AsyncScheduler(store, cfg)
     scheduler.register(p)
 
