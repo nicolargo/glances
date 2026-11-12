@@ -3124,6 +3124,42 @@ def test_the_no_alert_line_ends_with_the_llm_summary():
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_alerts_window_starts_with_the_full_llm_report():
+    """The window the counts link opens shows the full report first: its time
+    (local, HH:MM) and model, then its text with the model's own line breaks,
+    then the incidents."""
+    window = _run_render_probe("alert-summary", "click:alerts")["alertWindow"]
+    assert window is not None, "the alerts window did not open"
+    assert re.search(r"LLM REPORT · \d\d:\d\d · claude-haiku-4-5", window["text"]), f"got {window['text']!r}"
+    assert window["reportText"] == (
+        "1. Overall health status: Degraded\n2. Root cause: the backup job saturates the CPU.\n"
+        "3. Recommended action: move it out of working hours."
+    )
+    assert window["hasTable"]
+    assert window["text"].index("LLM REPORT") < window["text"].index("TIME"), (
+        "the report must come before the incidents"
+    )
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_summary_opens_the_alerts_window_without_incidents():
+    """With no incident there is no counts link: the summary opens the window,
+    which then holds the report alone."""
+    payload = _run_render_probe("alert-empty-summary", "click:alerts")
+    assert payload["alertSummaryRole"] == "button"
+    window = payload["alertWindow"]
+    assert window is not None and "LLM REPORT" in window["text"], f"got {window!r}"
+    assert not window["hasTable"]
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_alerts_window_has_no_report_without_llm_reporter():
+    window = _run_render_probe("default", "click:alerts")["alertWindow"]
+    assert window is not None and window["hasTable"]
+    assert "LLM REPORT" not in window["text"]
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
 def test_the_alert_title_counts_are_a_link_to_the_full_list():
     """The row budget caps the grid, so the "N ongoing · M resolved" counts in
     the title are a button opening an overlay with every incident. Its text is

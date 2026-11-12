@@ -304,7 +304,7 @@ const ALERT_INCIDENTS_SCENARIOS = {
 // alert title (`alert-summary`, over the populated fixture) or the collapse
 // line (`alert-empty-summary`).
 const LLM_REPORTER_FIXTURE = {
-	report: "1. Overall health status: Degraded",
+	report: "1. Overall health status: Degraded\n2. Root cause: the backup job saturates the CPU.\n3. Recommended action: move it out of working hours.",
 	short_report: "CPU is saturated by the backup job.",
 	status: "degraded",
 	model: "claude-haiku-4-5",

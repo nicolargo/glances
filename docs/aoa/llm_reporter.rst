@@ -124,10 +124,12 @@ about a minute.
 ``status`` is ``ok``, ``degraded`` or ``critical`` as stated by the report,
 and ``unknown`` when the report states none. ``generated_at`` is the date of
 the stats the report was generated from (ISO 8601): a report reused by the
-cache, or kept after a failed call, keeps its date. Both are ``null`` (as
-is ``report``) until the first report; ``model`` is the configured model
-from the start. The TUI and the WebUI display only ``short_report``, and
-none of these fields is exported.
+cache, or kept after a failed call, keeps its date. Both are ``null`` (as is
+``report``) until the first report; ``model`` is the configured model from
+the start. The TUI displays only ``short_report``. The WebUI also shows the
+full report, with its time and model, at the top of its alerts window,
+opened by clicking the alert counts or the summary. None of these fields is
+exported.
 
 Privacy and cost: a cloud provider receives the metrics above and the names
 of the top processes, never their command lines. With a 5 minute interval, a

@@ -273,8 +273,14 @@ const document = {
 	// each <style> tag via `document.querySelector("head")` -- without a
 	// head node it throws "Couldn't find a style target" before Vue ever
 	// gets to mount.
+	// PluginAlert.vue's alerts window listens for Escape while it is open;
+	// like the window's, these never fire here.
+	addEventListener: () => {},
+	removeEventListener: () => {},
 	querySelector: (selector) => {
 		if (selector === "head") return head;
+		// Overlays teleported to the page (PluginAlert.vue's alerts window).
+		if (selector === "body") return body;
 		if (selector.startsWith("#")) return findById(body, selector.slice(1));
 		return null;
 	},
@@ -595,6 +601,21 @@ function collect() {
 			})),
 		),
 		browserText: (findDescendantByClass(appDiv, "gl-browser") || { textContent: "" }).textContent.replace(/\s+/g, " ").trim(),
+		// The alerts window, teleported to the page: its text, whether it lists
+		// incidents, and the full report's own text (line breaks kept). null
+		// when it is not open.
+		alertWindow: (() => {
+			const win = findDescendantByClass(body, "gl-alert-all");
+			if (!win) return null;
+			const report = findDescendantByClass(win, "gl-alert-report-text");
+			return {
+				text: win.textContent.replace(/\s+/g, " ").trim(),
+				hasTable: !!findDescendantTag(win, "TABLE"),
+				reportText: report ? report.textContent : null,
+			};
+		})(),
+		// The LLM summary on the alert line: a button-like text, or null.
+		alertSummaryRole: (findDescendantByClass(appDiv, "gl-alert-summary") || { getAttribute: () => null }).getAttribute("role"),
 		// What that overlay showed after each attempt of the ladder script
 		// below -- null for the attempt that found the server back. [] for
 		// every scenario that does not run it.
@@ -1060,6 +1081,9 @@ setImmediate(async () => {
 		// same method the button's @click calls.
 		if (key === "click:hotkeys") {
 			if (sandbox.__glancesToggleHelp) await sandbox.__glancesToggleHelp();
+		} else if (key === "click:alerts") {
+			// The alert counts link, or the LLM summary: both call openAll().
+			if (sandbox.__glancesOpenAlerts) await sandbox.__glancesOpenAlerts();
 		} else if (sandbox.__glancesHotkey) {
 			await sandbox.__glancesHotkey(key);
 		}
