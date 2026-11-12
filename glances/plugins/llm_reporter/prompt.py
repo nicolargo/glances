@@ -23,6 +23,7 @@ import os
 import re
 import time
 from dataclasses import dataclass
+from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 from glances.globals import CONTROL_CHARS_TO_QUESTION_MARK, auto_unit
@@ -197,6 +198,19 @@ def read_trends(
     return Trends(window_seconds=round(max(spans)), **lines, gpus=gpus)
 
 
+def _local_time(iso: str) -> str:
+    """An alert's start in local time, as the prompt's timestamp: ``HH:MM:SS``, with the date if not today.
+
+    The alerts engine dates in UTC, to the microsecond; a model copied that into its summary.
+    """
+    try:
+        start = datetime.fromisoformat(iso).astimezone()
+    except ValueError:
+        return iso
+    today = datetime.now().astimezone().date()
+    return start.strftime("%H:%M:%S" if start.date() == today else "%Y-%m-%d %H:%M:%S")
+
+
 def read_active_alerts(alerts: GlancesAlerts | None) -> list[str] | None:
     """One line per active alert, or None without an alerts engine."""
     if alerts is None:
@@ -207,7 +221,7 @@ def read_active_alerts(alerts: GlancesAlerts | None) -> list[str] | None:
     for key, level in sorted(alerts.get_ongoing().items(), key=lambda item: [str(part) for part in item[0]]):
         line = f"{'.'.join(str(part) for part in key if part)}: {level}"
         if key in since:
-            line += f" since {since[key]}"
+            line += f" since {_local_time(since[key])}"
         if key in top:
             line += f" (top processes: {', '.join(top[key]['top'])})"
         lines.append(line)

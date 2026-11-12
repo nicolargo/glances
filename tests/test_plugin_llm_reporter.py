@@ -1088,9 +1088,22 @@ def test_active_alerts_lines():
     )
     assert read_active_alerts(alerts) == [
         "cpu.total: critical",
-        "network.eth0.bytes_recv: warning since 2026-11-02T10:00:00+00:00 (top processes: rsync, curl)",
+        f"network.eth0.bytes_recv: warning since {_local('2026-11-02T10:00:00+00:00', '%Y-%m-%d %H:%M:%S')} "
+        "(top processes: rsync, curl)",
     ]
     assert read_active_alerts(None) is None
+
+
+def _local(iso: str, fmt: str) -> str:
+    return datetime.fromisoformat(iso).astimezone().strftime(fmt)
+
+
+def test_alert_start_today_is_local_time_only():
+    # In UTC to the microsecond, a small model copied the alerts engine's date into its summary.
+    key = ("cpu", None, "total")
+    started = datetime.now(timezone.utc).replace(microsecond=898256)
+    alerts = _FakeAlerts(ongoing={key: "critical"}, since={key: started.isoformat()})
+    assert read_active_alerts(alerts) == [f"cpu.total: critical since {started.astimezone().strftime('%H:%M:%S')}"]
 
 
 async def test_top_processes_leave_out_glances_itself():
