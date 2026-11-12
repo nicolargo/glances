@@ -18,6 +18,7 @@ from __future__ import annotations
 import asyncio
 import io
 import logging
+import os
 import pathlib
 import sys
 import threading
@@ -200,7 +201,7 @@ def plugin(config_with, fake_openai, monkeypatch):
     p = PluginModel(StatsStore(), config_with(_llm_section()))
     p._llm = _FakeLLM()
     p._monotonic = _Clock()
-    p._warmup_left = 0  # test_first_report_waits_for_the_warmup covers it
+    p._started = 0.0  # long started: test_first_report_waits_after_start covers the startup
     return p
 
 
@@ -599,7 +600,7 @@ def test_refresh_resolution_is_preserved(config_with, fake_openai, options, expe
 @pytest.mark.parametrize("samples", ["0", "1"])
 async def test_fewer_than_two_trend_samples_still_omits_trends(config_with, fake_openai, samples):
     p = PluginModel(StatsStore(), config_with(_llm_section(trend_samples=samples)))
-    p._llm, p._warmup_left = _FakeLLM(), 0
+    p._llm, p._started = _FakeLLM(), 0.0
     p.history = _history_with_cpu([time.time() - 10, time.time()])
     await _publish(p.store)
     await p.update()
@@ -609,7 +610,7 @@ async def test_fewer_than_two_trend_samples_still_omits_trends(config_with, fake
 
 async def test_zero_cache_ttl_still_disables_cache_reuse(config_with, fake_openai):
     p = PluginModel(StatsStore(), config_with(_llm_section(cache_ttl="0")))
-    p._llm, p._monotonic, p._warmup_left = _FakeLLM(), _Clock(), 0
+    p._llm, p._monotonic, p._started = _FakeLLM(), _Clock(), 0.0
     await _publish(p.store)
     await p.update()
     p._monotonic.now += 300
@@ -631,15 +632,33 @@ async def test_report_published_with_parsed_status(plugin):
     assert f"Timestamp : {stats['generated_at']}" in plugin._llm.prompts[0]
 
 
-async def test_first_report_waits_for_the_warmup(config_with, fake_openai):
+async def test_first_report_waits_after_start(config_with, fake_openai):
+    # Glances' own startup load would be reported as a process using the CPU.
     p = PluginModel(StatsStore(), config_with(_llm_section()))
-    p._llm = _FakeLLM()
+    p._llm, p._monotonic = _FakeLLM(), _Clock()
     await _publish(p.store)
-    for _ in range(3):  # the alerts engine's warm-up: no history, processes or alerts yet
-        await p.update()
+    await p.update()
+    p._monotonic.now += 29
+    await p.update()
     assert p._llm.prompts == []
+    p._monotonic.now += 1
     await p.update()
     assert len(p._llm.prompts) == 1
+
+
+async def test_trends_leave_out_the_startup_samples(config_with, fake_openai):
+    # A process's first CPU reading is 0, then comes Glances' own startup load.
+    p = PluginModel(StatsStore(), config_with(_llm_section()))
+    p._llm, p._monotonic = _FakeLLM(), _Clock()
+    await _publish(p.store)
+    await p.update()  # first tick: Glances starts
+    start = p._trends_since - 10
+    p.history = HistoryStore(1200)
+    for ts, cpu in [(start, 0.0), (start + 2, 45.0), (start + 15, 30.0), (start + 25, 32.0)]:
+        p.history.record("cpu", {"total": cpu}, ["total"], now=ts)
+    p._monotonic.now += 30
+    await p.update()
+    assert "CPU    : 30% → 32%  (+2%)" in p._llm.prompts[0]
 
 
 async def test_waits_for_cpu_and_mem_before_the_first_report(plugin):
@@ -765,7 +784,7 @@ async def test_any_alert_change_brings_an_early_report(plugin, before, after):
 async def test_min_interval_is_read_from_the_config(config_with, fake_openai, min_interval, elapsed, calls):
     # Set to refresh (300) or more, it waits for refresh.
     p = PluginModel(StatsStore(), config_with(_llm_section(min_interval=min_interval)))
-    p._llm, p._monotonic, p._warmup_left = _FakeLLM(), _Clock(), 0
+    p._llm, p._monotonic, p._started = _FakeLLM(), _Clock(), 0.0
     alerts = _FakeAlerts()
     p.set_alerts(alerts)
     await _publish(p.store)
@@ -899,12 +918,13 @@ async def test_llm_call_error_reaches_the_plugin():
 
 async def test_scheduler_startup_makes_a_single_call(config_with, fake_openai):
     # The scheduler ticks the plugin every global refresh; `refresh` (300s)
-    # paces the calls. Six ticks here: warm-up, then one call only.
+    # paces the calls. Six ticks here: one call only (test_first_report_waits_after_start
+    # covers the startup delay).
     cfg = config_with({"global": {"refresh": "0.1"}, **_llm_section()})
     store = StatsStore()
     await _publish(store)
     p = PluginModel(store, cfg)
-    p._llm = _FakeLLM()
+    p._llm, p._started = _FakeLLM(), 0.0
     scheduler = AsyncScheduler(store, cfg)
     scheduler.register(p)
 
@@ -1052,6 +1072,11 @@ def test_prompt_missing_swap_and_load():
     assert "Load avg  : n/a" in prompt
 
 
+def test_trends_not_before_leaves_out_older_samples():
+    trends = read_trends(_history_with_cpu([100.0, 200.0, 300.0]), window=300, samples=3, now=300.0, not_before=150.0)
+    assert trends.cpu == "1% → 2%  (+1%)"
+
+
 def test_active_alerts_lines():
     key = ("network", "eth0", "bytes_recv")
     alerts = _FakeAlerts(
@@ -1064,6 +1089,21 @@ def test_active_alerts_lines():
         "network.eth0.bytes_recv: warning since 2026-11-02T10:00:00+00:00 (top processes: rsync, curl)",
     ]
     assert read_active_alerts(None) is None
+
+
+async def test_top_processes_leave_out_glances_itself():
+    # Busy at startup, Glances would be reported as the process using the CPU.
+    store = StatsStore()
+    await store.set(
+        "processlist",
+        {
+            "data": [
+                {"pid": os.getpid(), "name": "python", "cpu_percent": 50.8, "memory_percent": 0.3},
+                {"pid": 1, "name": "launchd", "cpu_percent": 1.0, "memory_percent": 0.1},
+            ]
+        },
+    )
+    assert read_top_processes(store) == ["launchd: CPU 1.0%, MEM 0.1%"]
 
 
 async def test_top_processes_by_name_only_and_neutralised():

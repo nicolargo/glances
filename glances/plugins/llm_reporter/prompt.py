@@ -19,6 +19,7 @@ characters replaced so that each one stays on its own line.
 
 from __future__ import annotations
 
+import os
 import re
 import time
 from dataclasses import dataclass
@@ -152,16 +153,24 @@ def _recent_points(
     return [(ts, v) for ts, v in zip(hist["timestamps"], values) if ts >= since and v is not None]
 
 
-def read_trends(history: HistoryStore | None, window: float, samples: int, now: float | None = None) -> Trends | None:
+def read_trends(
+    history: HistoryStore | None,
+    window: float,
+    samples: int,
+    now: float | None = None,
+    not_before: float | None = None,
+) -> Trends | None:
     """Each metric's trend over the last ``window`` seconds, ``samples`` points each.
 
     None — the section is left out — when history is disabled, or when no
     metric has 2 points yet (cold start). A metric short of points alone
-    reads ``n/a``.
+    reads ``n/a``. Samples older than ``not_before`` are left out.
     """
     if history is None or samples < 2:
         return None
     since = (time.time() if now is None else now) - window
+    if not_before is not None:
+        since = max(since, not_before)
     lines: dict[str, str] = {}
     spans: list[float] = []
     for name, (plugin_name, field, value_format) in _TREND_SERIES.items():
@@ -206,11 +215,16 @@ def read_active_alerts(alerts: GlancesAlerts | None) -> list[str] | None:
 
 
 def read_top_processes(store: StatsStore, n: int = _TOP_PROCESSES) -> list[str] | None:
-    """The ``n`` most CPU-hungry processes, by name; None when processlist publishes nothing."""
+    """The ``n`` most CPU-hungry processes, by name; None when processlist publishes nothing.
+
+    Glances itself is left out: busy at startup, it would be reported as the
+    process using the CPU.
+    """
     items = _scalar(store, "processlist").get("data")
     if not items:
         return None
-    top = sorted(items, key=lambda p: p.get("cpu_percent") or 0.0, reverse=True)[:n]
+    others = [p for p in items if p.get("pid") != os.getpid()]
+    top = sorted(others, key=lambda p: p.get("cpu_percent") or 0.0, reverse=True)[:n]
     return [
         f"{str(p.get('name') or '?').translate(CONTROL_CHARS_TO_QUESTION_MARK)}: "
         f"CPU {p.get('cpu_percent') or 0.0:.1f}%, MEM {p.get('memory_percent') or 0.0:.1f}%"

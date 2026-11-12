@@ -17,8 +17,9 @@ one-sentence summary (``short_report``, displayed by the TUI and the WebUI).
   ``_ReportCache`` reuses the last report while the system state is unchanged.
 - A change of the active alerts brings the next report early, at most every
   ``min_interval`` seconds (default 60), so the summary follows the alerts.
-- The first report waits ``_WARMUP_CYCLES`` ticks, for trends, top processes
-  and alerts to be available.
+- The first report waits ``_STARTUP_DELAY`` seconds, past Glances' own startup
+  load and the alerts engine's warm-up; its trends leave out the samples of the
+  first ``_STARTUP_SAMPLES_SKIPPED`` seconds.
 - The LLM call runs in a daemon thread, which quitting Glances does not wait for.
 - A configuration error is logged at startup and leaves the fields empty; a
   failed call is logged and the previous report is kept.
@@ -67,8 +68,12 @@ logger = logging.getLogger(__name__)
 _DEFAULT_TREND_SAMPLES = 3
 # Seconds: when the active alerts change, the next report comes early, at most this often.
 _DEFAULT_MIN_INTERVAL = 60.0
-# Ticks before the first report, as the alerts engine's warm-up.
-_WARMUP_CYCLES = 3
+# Seconds from the first tick to the first report: Glances' own startup load is over
+# by then (it would be reported as a process using the CPU), and the alerts too.
+_STARTUP_DELAY = 30.0
+# Seconds of samples the trends leave out at startup: a process's first CPU reading is
+# always 0, then comes Glances' own startup load.
+_STARTUP_SAMPLES_SKIPPED = 10.0
 _Number = TypeVar("_Number", int, float)
 
 
@@ -164,7 +169,9 @@ class PluginModel(GlancesPluginBase[dict]):
         self._last_call_ts: float | None = None
         # Active alerts (and their levels) when the LLM was last called.
         self._called_alerts: frozenset | None = None
-        self._warmup_left = _WARMUP_CYCLES
+        # The first tick (monotonic clock), and the oldest sample the trends use (history clock).
+        self._started: float | None = None
+        self._trends_since: float | None = None
         # Clock the tests can set.
         self._monotonic = time.monotonic
 
@@ -194,9 +201,11 @@ class PluginModel(GlancesPluginBase[dict]):
         self._alerts = alerts
 
     async def _grab_stats(self) -> dict:
-        if self._warmup_left:
-            self._warmup_left -= 1
-        elif self._llm is not None and self._report_due():
+        now = self._monotonic()
+        if self._started is None:
+            self._started = now
+            self._trends_since = time.time() + _STARTUP_SAMPLES_SKIPPED
+        if self._llm is not None and now - self._started >= _STARTUP_DELAY and self._report_due():
             await self._update_report()
         return {
             "report": self._report,
@@ -235,7 +244,7 @@ class PluginModel(GlancesPluginBase[dict]):
         prompt = construct_prompt(
             ReportContext(
                 current=current,
-                trends=read_trends(self.history, self._interval, self._trend_samples),
+                trends=read_trends(self.history, self._interval, self._trend_samples, not_before=self._trends_since),
                 active_alerts=active_alerts,
                 top_processes=read_top_processes(self.store),
             )
