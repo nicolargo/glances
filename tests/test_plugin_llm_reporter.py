@@ -417,11 +417,13 @@ def test_litellm_writes_nothing_to_the_terminal(config_with, caplog):
         consoles[name] = logging.StreamHandler(io.StringIO())  # as LiteLLM adds when imported
         logging.getLogger(name).addHandler(consoles[name])
     _build_reporter(LLMConfig.from_glances_config(config_with(_llm_section(provider="litellm"))))
-    with caplog.at_level(logging.WARNING):
+    with caplog.at_level(logging.INFO):
         for name in consoles:
-            logging.getLogger(name).warning("message from %s", name)
+            logging.getLogger(name).info("info from %s", name)  # two per call
+            logging.getLogger(name).warning("warning from %s", name)
     assert [handler.stream.getvalue() for handler in consoles.values()] == ["", "", ""]
-    assert all(f"message from {name}" in caplog.text for name in consoles)  # in the Glances log instead
+    assert all(f"warning from {name}" in caplog.text for name in consoles)  # in the Glances log instead
+    assert "info from" not in caplog.text
     assert not [
         handler
         for name in consoles

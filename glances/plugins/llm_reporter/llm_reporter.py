@@ -118,12 +118,14 @@ class LLMConfig:
 
 
 def _keep_litellm_off_the_terminal(litellm: Any) -> None:
-    """Send LiteLLM's messages to the Glances log instead of the console."""
+    """Send LiteLLM's warnings and errors to the Glances log instead of the console."""
     # LiteLLM adds its own console handlers to its loggers, and prints a banner when
     # a call fails: in the TUI, that text lands in the curses screen and breaks it.
+    # Its INFO messages, two per call, would only fill the Glances log.
     litellm.suppress_debug_info = True
     for name in ("LiteLLM", "LiteLLM Router", "LiteLLM Proxy"):
         litellm_logger = logging.getLogger(name)
+        litellm_logger.setLevel(logging.WARNING)
         for handler in list(litellm_logger.handlers):
             if isinstance(handler, logging.StreamHandler) and not isinstance(handler, logging.FileHandler):
                 litellm_logger.removeHandler(handler)
