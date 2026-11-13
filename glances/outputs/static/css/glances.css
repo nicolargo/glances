@@ -559,6 +559,10 @@ body {
 	stroke-width: 1.5;
 	vector-effect: non-scaling-stroke;
 }
+.gl-history-line.gl-level-ok { stroke: var(--gl-level-ok); }
+.gl-history-line.gl-level-careful { stroke: var(--gl-level-careful); }
+.gl-history-line.gl-level-warning { stroke: var(--gl-level-warning); }
+.gl-history-line.gl-level-critical { stroke: var(--gl-level-critical); }
 .gl-history-grid,
 .gl-history-cursor {
 	stroke: var(--gl-border);
@@ -574,6 +578,10 @@ body {
 	background: var(--gl-level-careful);
 	pointer-events: none;
 }
+.gl-history-dot.gl-level-ok { background: var(--gl-level-ok); }
+.gl-history-dot.gl-level-careful { background: var(--gl-level-careful); }
+.gl-history-dot.gl-level-warning { background: var(--gl-level-warning); }
+.gl-history-dot.gl-level-critical { background: var(--gl-level-critical); }
 .gl-history-axis {
 	margin: var(--gl-gap) 0 0;
 	display: flex;

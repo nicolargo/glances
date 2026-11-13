@@ -42,3 +42,18 @@ export async function fetchSeries({ plugin, field, item }) {
 	if (!Array.isArray(values)) return [];
 	return data.timestamps.map((t, i) => ({ t, v: values[i] }));
 }
+
+/**
+ * The `{careful, warning, critical}` limits of one historised field, or null
+ * when it has none (the curve then keeps its single colour). Read from the
+ * existing `/limits` route; a per-item override wins over the plugin-level one.
+ */
+export async function fetchThresholds({ plugin, field, item }) {
+	try {
+		const limits = await getJson(`api/5/${encodeURIComponent(plugin)}/limits`);
+		const override = item !== undefined && item !== null ? limits?._per_item?.[item]?.[field] : null;
+		return { ...limits?.[field], ...override };
+	} catch {
+		return null;
+	}
+}
