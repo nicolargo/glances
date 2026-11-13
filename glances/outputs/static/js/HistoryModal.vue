@@ -36,10 +36,10 @@
 							@mouseleave="hover = null"
 						>
 							<line v-for="tick in yTicks" :key="tick.y" class="gl-history-grid" :x1="0" :x2="W" :y1="tick.y" :y2="tick.y" />
-							<path class="gl-history-line" :d="path" />
+							<path v-for="seg in segments" :key="seg.d" class="gl-history-line" :class="seg.cls" :d="seg.d" />
 							<line v-if="hoverPoint" class="gl-history-cursor" :x1="hoverPoint.x" :x2="hoverPoint.x" :y1="0" :y2="H" />
 						</svg>
-						<span v-if="hoverPoint" class="gl-history-dot" :style="dotStyle"></span>
+						<span v-if="hoverPoint" class="gl-history-dot" :class="levelCls(hoverPoint.v)" :style="dotStyle"></span>
 						</div>
 					</div>
 					<p class="gl-history-axis">
@@ -54,8 +54,9 @@
 </template>
 
 <script>
-import { fetchSeries } from "./history.js";
+import { fetchSeries, fetchThresholds } from "./history.js";
 import { closeHistory, historyState } from "./history_state.js";
+import { computeLevel, levelClass } from "./levels.js";
 import { formatBytes, formatNetworkRate, formatPercent, formatRate } from "./format.js";
 
 // The SVG's own coordinate space, stretched to the panel by
@@ -80,7 +81,7 @@ export default {
 	// (`refresh`, seconds) while the popup is open.
 	props: { refresh: { type: Number, default: 2 } },
 	data() {
-		return { W, H, PAD_L, PAD_R, PAD_T, PAD_B, points: [], loading: false, error: "", hover: null, timer: null, listening: false };
+		return { W, H, PAD_L, PAD_R, PAD_T, PAD_B, points: [], thresholds: null, loading: false, error: "", hover: null, timer: null, listening: false };
 	},
 	computed: {
 		target: () => historyState.target,
@@ -116,19 +117,24 @@ export default {
 				y: typeof p.v === "number" ? PAD_T + (1 - (p.v - lo) / (hi - lo)) * (H - PAD_T - PAD_B) : null,
 			}));
 		},
-		// A gap (`null`, the series did not exist yet) breaks the line.
-		path() {
-			let d = "";
-			let pen = false;
+		// One path per run of segments sharing a tier, so the curve changes colour
+		// along the way. A segment takes the tier of the point it reaches; a gap
+		// (`null`, the series did not exist yet) breaks the line.
+		segments() {
+			const out = [];
+			let prev = null;
 			for (const c of this.coords) {
-				if (c.y === null) {
-					pen = false;
-					continue;
+				if (c.y !== null && prev) {
+					const cls = this.levelCls(c.v);
+					const point = `${c.x.toFixed(1)},${c.y.toFixed(1)}`;
+					const last = out[out.length - 1];
+					if (last && last.end === prev && last.cls === cls) last.d += `L${point}`;
+					else out.push({ cls, d: `M${prev.x.toFixed(1)},${prev.y.toFixed(1)}L${point}` });
+					out[out.length - 1].end = c;
 				}
-				d += `${pen ? "L" : "M"}${c.x.toFixed(1)},${c.y.toFixed(1)}`;
-				pen = true;
+				prev = c.y === null ? null : c;
 			}
-			return d;
+			return out;
 		},
 		yTicks() {
 			const [lo, hi] = this.range;
@@ -152,6 +158,7 @@ export default {
 			handler(target) {
 				this.stop();
 				this.points = [];
+				this.thresholds = null;
 				this.hover = null;
 				if (!target) return;
 				this.loading = true;
@@ -159,6 +166,9 @@ export default {
 				document.addEventListener("keydown", this.onKeydown);
 				this.listening = true;
 				this.load();
+				fetchThresholds(target).then((t) => {
+					if (this.target === target) this.thresholds = t;
+				});
 				this.timer = setInterval(this.load, Math.max(1, this.refresh) * 1000);
 			},
 		},
@@ -173,6 +183,10 @@ export default {
 			// Network rates follow the table: bits/s, or bytes/s under --byte.
 			if (this.target.plugin === "network") return `${formatNetworkRate(value, !!this.target.byte)}/s`;
 			return (FORMATTERS[this.unit] || ((v) => String(Math.round(v * 100) / 100)))(value);
+		},
+		// "" (the default colour) when the field has no limits.
+		levelCls(value) {
+			return levelClass(computeLevel(value, this.thresholds));
 		},
 		clock(t) {
 			return new Date(t * 1000).toTimeString().slice(0, 8);
