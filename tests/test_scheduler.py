@@ -280,6 +280,7 @@ def test_shipped_plugin_default_refresh_times():
         "system": 60.0,
         "core": 60.0,
         "ports": 30.0,
+        "zfs": 300.0,
     }
     found = {
         cls.plugin_name: cls.DEFAULT_REFRESH_TIME

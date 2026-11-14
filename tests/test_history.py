@@ -271,6 +271,7 @@ _HISTORISED = {
     "mpp": ["load"],
     "containers": ["cpu_percent"],
     "vms": ["memory_usage"],
+    "zfs": ["allocated", "capacity"],
 }
 
 
