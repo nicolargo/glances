@@ -1,4 +1,4 @@
-# Glances 4.5.9 vs Glances 5.0.0: why move to v5?
+# Glances 4.5.9 vs Glances 5.0.0
 
 Glances 5 is a complete rewrite of the monitoring engine, the REST API, the
 terminal UI and the Web UI. This page compares the current stable release
