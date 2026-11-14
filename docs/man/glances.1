@@ -28,7 +28,7 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
 ..
-.TH "GLANCES" "1" "Oct 21, 2026" "5.0.0b1" "Glances"
+.TH "GLANCES" "1" "Nov 14, 2026" "5.0.0b1" "Glances"
 .SH NAME
 glances \- An eye on your system
 .SH SYNOPSIS
@@ -759,13 +759,20 @@ when \fBXDG_CONFIG_HOME\fP is not set);
 Files are not merged: a user file hides the system\-wide one entirely. Running
 without any configuration file is valid, the built\-in defaults are used.
 .sp
-A file that exists but cannot be read or parsed stops Glances: it is never
-skipped silently (it could hold the \fB[outputs] password\fP).
+A file that exists but cannot be read or parsed stops Glances, and so does a
+\fB\-C\fP path that does not exist: it is never skipped silently (it could hold
+the \fB[outputs] password\fP). When Glances runs as root, a user configuration
+file that is not owned by root, or that is writable by its group or others,
+is ignored with a warning (\fBsudo \-E\fP keeps the invoking user’s \fBHOME\fP) and
+the system\-wide file is used instead.
 .sp
 Any option can then be overridden with an environment variable named
 \fBGLANCES_<SECTION>__<KEY>\fP (note the double underscore), for example
 \fBGLANCES_OUTPUTS__BIND_ADDRESS=0.0.0.0\fP\&. This is handy in containers.
-Options given on the command line override both.
+Options given on the command line override both. Every option can be set
+this way, the security ones included (\fBpassword\fP, \fBauth_fail_per_minute\fP,
+the \fB*_action\fP commands): the environment of the Glances process is
+trusted as much as its configuration file.
 .sp
 \fBglances \-\-issue\fP shows which configuration file was loaded.
 .SH SYNTAX
@@ -844,7 +851,7 @@ max_processes_display=25
 #port=61208
 # PBKDF2 hash of the REST API / WebUI password, printed by
 # \(dqglances \-\-set\-password\(dq (never the clear password)
-#password=<salt>$<pbkdf2 hex digest>
+#password=pbkdf2_sha256$600000$<salt>$<hex digest>
 # User name expected with the password (default: glances)
 #username=glances
 # Serve the interactive API documentation: Swagger UI at /docs and ReDoc at
@@ -899,13 +906,16 @@ $ glances \-\-set\-password
 .UNINDENT
 .sp
 and paste the printed value into \fB[outputs] password\fP\&. The key holds a
-PBKDF2 hash (\fB<salt>$<hex digest>\fP), never the clear password: Glances
-never writes to \fBglances.conf\fP itself. Hashes made by Glances 4 are not
-compatible and must be generated again. The user name is \fBglances\fP unless
+PBKDF2 hash (\fBpbkdf2_sha256$<iterations>$<salt>$<hex digest>\fP), never the
+clear password: Glances never writes to \fBglances.conf\fP itself. Hashes made
+by Glances 4 are not compatible and must be generated again; the
+\fB<salt>$<hex digest>\fP values of Glances 5.0.0b1 are still accepted. The user name is \fBglances\fP unless
 \fBusername\fP is set. Clients authenticate with HTTP Basic, or with a JWT
-Bearer token obtained from \fB/api/5/token\fP; \fBjwt_secret_key\fP (a random
-key per run when unset, so tokens do not survive a restart) and
-\fBjwt_expire_minutes\fP (default \fB60\fP) configure the tokens.
+Bearer token obtained from \fB/api/5/token\fP; \fBjwt_secret_key\fP (at least
+32 characters, for example \fBpython3 \-c \(dqimport secrets;
+print(secrets.token_urlsafe(32))\(dq\fP; a random key per run when unset or too
+short, so tokens do not survive a restart) and \fBjwt_expire_minutes\fP
+(default \fB60\fP, at most \fB1440\fP) configure the tokens.
 .sp
 \fBRate limiting.\fP Requests are counted per client address (an IPv6 client
 per /64):
@@ -922,6 +932,12 @@ client about 90.
 .IP \(bu 2
 \fBrate_limit_burst\fP (default \fB0\fP, meaning one minute’s worth): requests
 allowed at once.
+.IP \(bu 2
+\fBforwarded_allow_ips\fP (default empty): behind a reverse proxy, the
+comma\-separated addresses of the proxies whose \fBX\-Forwarded\-For\fP header
+gives the real client address. When empty, the header is ignored and every
+request counts for the address it came from, so a local client cannot
+rotate the header to escape the limits.
 .UNINDENT
 .sp
 \fB/status\fP and \fB/healthz\fP are never limited.
@@ -950,7 +966,11 @@ contains \fB*\fP, which the CORS specification forbids.
 no password is set, it only exposes the options the WebUI needs
 (\fB[global] refresh\fP and \fB[outputs] theme\fP, \fBmax_processes_display\fP,
 \fBapi_doc\fP). With a password, authenticated clients get the whole
-configuration, secrets (passwords, tokens, keys…) redacted.
+configuration, with the options whose \fIname\fP designates a secret (passwords,
+tokens, keys…) and the credentials embedded in URL values redacted. A
+secret written inside another value (an action command line, an AMP
+command) is served as is to an authenticated client: there is a single
+role, the operator.
 .sp
 Each plugin, export module, and application monitoring process (AMP) can
 have a section. Below is an example for the CPU plugin:
