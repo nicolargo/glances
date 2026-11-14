@@ -65,6 +65,7 @@ An Eye on your System
     source code and documentation. ``pip install glances`` installs it.
 
     **This branch (develop) contains Glances 5.0.0, currently in beta.**
+    For a quick comparaison between Glances 4 and Glances 5, have a look to `this page <https://github.com/nicolargo/glances/blob/develop/glances-v4-vs-v5.md>`__.
     The rest of this page describes Glances 5.
 
 .. warning::
