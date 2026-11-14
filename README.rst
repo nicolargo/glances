@@ -150,6 +150,14 @@ The server listens on ``127.0.0.1`` by default. To reach it from another machine
 listen on all interfaces with ``-B 0.0.0.0`` (or ``bind_address`` in the ``[outputs]``
 section of the configuration file) and enter the URL ``http://<ip>:61208``.
 
+It's also propose additional features like charts:
+
+.. image:: ./docs/_static/webui-cpu-chart.png
+
+and alerts summary:
+
+.. image:: ./docs/_static/webui-alert-list.png
+
 The same server exposes a HTTP/RESTful API under ``/api/5``, see the `RestfulApi`_
 documentation. It is **not protected by default**, see `Advanced usage 🔧`_ to set a
 password.

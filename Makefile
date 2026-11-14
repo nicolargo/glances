@@ -259,16 +259,16 @@ install: ## Open a Web Browser to the installation procedure
 webui webui%: DIR = glances/outputs/static/
 
 webui: ## Build the Web UI
-	cd $(DIR) && npm ci && npm run build
+	cd $(DIR) && npm ci && npm run build && npm audit --omit=dev
 
 webui-audit: ## Audit the Web UI
 	cd $(DIR) && npm audit --omit=dev
 
 webui-audit-fix: ## Fix audit the Web UI
-	cd $(DIR) && npm ci && { npm audit fix --omit=dev || true; } && npm ci && npm run build
+	cd $(DIR) && npm ci && { npm audit fix --omit=dev || true; } && npm ci && npm run build && npm audit --omit=dev
 
 webui-update: ## Update JS dependencies
-	cd $(DIR) && npm update --save && npm ci && npm run build
+	cd $(DIR) && npm update --save && npm ci && npm run build && npm audit --omit=dev
 
 # ===================================================================
 # Packaging
