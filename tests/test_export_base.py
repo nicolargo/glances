@@ -607,6 +607,30 @@ def test_normalize_for_influxdb_keeps_dotted_item_keys_as_separate_measurements(
     ]
 
 
+def test_normalize_for_influxdb_keeps_a_vlan_out_of_its_parent_interface():
+    """`eth0.100.rx` starts with `eth0.` too: it belongs to the VLAN only."""
+    exporter = make_influx_exporter()
+
+    ret = exporter.normalize_for_influxdb(
+        "network",
+        [
+            "eth0.key",
+            "eth0.interface_name",
+            "eth0.rx",
+            "eth0.100.key",
+            "eth0.100.interface_name",
+            "eth0.100.rx",
+        ],
+        ["interface_name", "eth0", 10, "interface_name", "eth0.100", 20],
+    )
+
+    assert [m["tags"]["interface_name"] for m in ret] == ["eth0", "eth0.100"]
+    assert [m["fields"] for m in ret] == [
+        {"key": "interface_name", "rx": 10.0},
+        {"key": "interface_name", "rx": 20.0},
+    ]
+
+
 def test_normalize_for_influxdb_drops_fields_left_at_none():
     """v5 keeps a rate field present with the value None on the first cycle,
     and roughly 46 optional fields (unset thresholds, unreported GPU sensors)
