@@ -85,8 +85,8 @@ exécuter le jour de la bascule.
   `docs/config.rst` relus pour la v5.
 - [x] `conf/glances.conf` et `docker-compose/glances.conf` : plus aucune clé
   v4 ignorée par la v5.
-- [ ] `glances-v5-v4-parity-inventory.md` (2026-09-10) recompté : il affiche
-  encore 153 `❌ absent`, dont beaucoup livrés depuis.
+- [x] `glances-v5-v4-parity-inventory.md` recompté le 2026-11-15 : 306 `✅`, 14 `⚠️`,
+  12 `❌`, 27 `🚫` sur 359 lignes (les `✅` d'origine n'ont pas été rouverts).
 
 ## 5. Restes dans le code
 
