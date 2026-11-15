@@ -102,12 +102,18 @@ class Export(GlancesExportBase):
         for metric, value in data.items():
             parsed_labels = self.parse_tags(self.labels)
             metric_name = self.prefix + self.METRIC_SEPARATOR + name + self.METRIC_SEPARATOR
+            primary_key = self.keys_name.get(name)
             try:
-                # ValueError when the metric has no dot OR more than one: v4
-                # relies on that to route both plain fields and multi-dot names
-                # to the un-labelled branch. A `"." in metric` test would not
-                # behave the same for a name such as `/media/data.percent`.
-                obj, stat = metric.split(".")
+                if primary_key is not None:
+                    # A collection item is exported as `<item key>.<field>`:
+                    # the item key itself may hold dots (VLAN `eth0.100`,
+                    # mount point `/mnt/v1.2`), field names never do.
+                    obj, stat = metric.rsplit(".", 1)
+                else:
+                    # ValueError when the metric has no dot OR more than one:
+                    # v4 relies on that to route both plain fields and
+                    # multi-dot names to the un-labelled branch.
+                    obj, stat = metric.split(".")
             except ValueError:
                 metric_name += metric
             else:
@@ -116,7 +122,7 @@ class Export(GlancesExportBase):
                 # appended `,<key>:<value>` to the `k:v,k:v` string and parsed
                 # it again: `eth0,src:spoofed` overwrote a configured label and
                 # `a,b` made the labels malformed (security audit 2026-10-17, B-20).
-                parsed_labels[str(self.keys_name.get(name))] = obj
+                parsed_labels[str(primary_key)] = obj
 
             # Prometheus is very sensitive to metric names.
             # See: https://prometheus.io/docs/practices/naming/
