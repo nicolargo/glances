@@ -265,7 +265,7 @@ Features list:
 - sensors: install dependencies for sensors plugin
 - smart: install dependencies for smart plugin
 - web: install dependencies for Webserver (WebUI) and Web API
-- wifi: install dependencies for Wifi plugin
+- wifi: no dependency (kept for backward compatibility)
 
 To upgrade Glances to the latest version:
 
@@ -367,7 +367,6 @@ Extra dependencies:
 - ``pySMART.smartx`` (for HDD Smart support) [Linux-only]
 - ``pyzmq`` (for the ZeroMQ export module)
 - ``statsd`` (for the StatsD export module)
-- ``wifi`` (for the wifi plugin) [Linux-only]
 - ``zeroconf`` (for the autodiscover mode)
 
 Project sponsorship 🙌

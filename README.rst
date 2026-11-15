@@ -528,8 +528,10 @@ interface. Pick only the features you need between the brackets, for example
      - NVIDIA GPU
    * - ``sensors``
      - Battery (Linux)
-   * - ``raid`` / ``smart`` / ``wifi``
-     - RAID, S.M.A.R.T. and Wifi plugins (Linux)
+   * - ``raid`` / ``smart``
+     - RAID and S.M.A.R.T. plugins (Linux)
+   * - ``wifi``
+     - No dependency (kept for backward compatibility)
    * - ``cloud``
      - Cloud instance metadata
    * - ``action``
@@ -671,7 +673,7 @@ of ``pyproject.toml`` for the exact versions):
    * - ``browser``
      - ``zeroconf``
    * - ``containers``
-     - ``docker``, ``podman``, ``pylxd`` (and ``packaging``, ``python-dateutil``, ``six``)
+     - ``docker``, ``podman``, ``pylxd`` (and ``python-dateutil``)
    * - ``gpu``
      - ``nvidia-ml-py``
    * - ``sensors``
@@ -681,7 +683,7 @@ of ``pyproject.toml`` for the exact versions):
    * - ``smart``
      - ``pySMART`` [Linux only]
    * - ``wifi``
-     - ``wifi`` [Linux only]
+     - none (kept for backward compatibility)
    * - ``cloud``
      - ``requests``
    * - ``action``

@@ -27,12 +27,6 @@ jobs:
         with:
           args: 'check'
 
-      # - name: Static type check
-      #   run: |
-      #     echo "Skipping static type check for the moment, too much error...";
-      #     # pip install pyright
-      #     # pyright glances
-
 
   test-linux:
 

@@ -46,15 +46,11 @@ dev = [
   "pre-commit",
   "pyinstrument>=5.1.2",
   "playwright",
-  "pyright",
   "pytest",
   "pytest-asyncio",
-  "requirements-parser",
-  "reuse",
   "rstcheck",
   "ruff",
   "semgrep",
-  "setuptools>=65.5.1",
   "sphinx",
   "sphinx_rtd_theme",
 ]
@@ -67,11 +63,9 @@ browser = ["zeroconf"]
 cloud = ["requests>=2.32.4"]
 containers = [
   "docker>=6.1.1",
-  "packaging",
   "podman",
   "pylxd>=2.3.1",
   "python-dateutil",
-  "six",
 ]
 export = [
   "bernhard",
@@ -110,7 +104,8 @@ web = [
   "starlette>=0.49.1",
   "uvicorn",
 ]
-wifi = ["wifi"]
+# Kept empty for backward compatibility: the wifi plugin reads nl80211 directly.
+wifi = []
 
 [project.scripts]
 glances = "glances:main"

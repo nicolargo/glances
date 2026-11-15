@@ -17,12 +17,6 @@ repos:
       types_or: [ python, pyi ]
       args: [ --fix, --target-version, py311, --config, './pyproject.toml' ]
 
-  # - repo: https://github.com/RobertCraigie/pyright-python
-  #   rev: v1.1.391
-  #   hooks:
-  #     - id: pyright
-  #       name: "🐍 python · Check types"
-
   # - repo: https://github.com/biomejs/pre-commit
   #   rev: "v2.3.7"
   #   hooks:

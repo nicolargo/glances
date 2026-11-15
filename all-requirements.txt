@@ -891,17 +891,10 @@ opentelemetry-api==1.45.2 \
     # via
     #   fastapi
     #   mcp
-packaging==26.3 \
-    --hash=sha256:94edc256424af38762eb31306eed28beb9f0efc50a8837492c9d6fd6004aed79 \
-    --hash=sha256:d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c
-    # via glances
 paho-mqtt==2.2.0 \
     --hash=sha256:3243630f7c2b05f71d1de8c6f59865eb04d3a59ae8c866e92377faed6753db4d \
     --hash=sha256:bcf706f03f1f49e0fc3ae166dc7b67ee35463496f8bdfd7c9c36181f6ba635c9
     # via glances
-pbkdf2==1.3 \
-    --hash=sha256:ac6397369f128212c43064a2b4878038dab78dab41875364554aaf2a684e6979
-    # via wifi
 pika==1.4.4 \
     --hash=sha256:48de960c97a93b55db06b8be4c53eb977c9c8a2754c57cdae9097abcbd70ce04 \
     --hash=sha256:8cfc8b33a5cb16e733bd60cffca9732c0d1d761ecd80a89f34ed7df2cd38d6d6
@@ -1563,10 +1556,6 @@ rpds-py==2026.9.1 \
     # via
     #   jsonschema
     #   referencing
-setuptools==84.2.1 \
-    --hash=sha256:3ff8b3b5492a0aa66960f4419365a86b84e013070d4313e4d4a6894f5d64d6bc \
-    --hash=sha256:ca140b45d5325a9478f880e351484f62fef15f336462e449ca0c03c873d589c2
-    # via wifi
 shtab==1.13.0 ; sys_platform != 'win32' \
     --hash=sha256:0a5be9d7ab2b4549e9a38252abcd5ecf5ec6813ecd80c6b06fa851bff55a5085 \
     --hash=sha256:cdf7543fc1888dd131320917f3ba9643d8f1a77d406114a09d5a31f76274c7d9
@@ -1575,7 +1564,6 @@ six==1.17.0 \
     --hash=sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274 \
     --hash=sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81
     # via
-    #   glances
     #   influxdb
     #   python-dateutil
 sniffio==1.3.1 \
@@ -1655,9 +1643,6 @@ uvicorn==0.54.0 \
     # via
     #   glances
     #   mcp
-wifi==0.3.8 \
-    --hash=sha256:a9880b2e91ea8420154c6826c8112a2f541bbae5641d59c5cb031d27138d7f26
-    # via glances
 windows-curses==2.4.2 ; sys_platform == 'win32' \
     --hash=sha256:03c4ef0095ab8212ed964236d51b4d8c815f302c5a7de94831dae468f05ce333 \
     --hash=sha256:1bf3d0c902374b6c430a954adcb686a5ecd7a31fc4195d31136385b5c1bea925 \

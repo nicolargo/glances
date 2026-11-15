@@ -167,15 +167,6 @@ wheels = [
 ]
 
 [[package]]
-name = "boolean-py"
-version = "5.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/c4/cf/85379f13b76f3a69bca86b60237978af17d6aa0bc5998978c3b8cf05abb2/boolean_py-5.0.tar.gz", hash = "sha256:60cbc4bad079753721d32649545505362c754e121570ada4658b852a3a318d95", size = 37047, upload-time = "2025-04-03T10:39:49.734Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/e5/ca/78d423b324b8d77900030fa59c4aa9054261ef0925631cd2501dd015b7b7/boolean_py-5.0-py3-none-any.whl", hash = "sha256:ef28a70bd43115208441b53a045d1549e2f0ec6e3d08a9d142cbc41c1938e8d9", size = 26577, upload-time = "2025-04-03T10:39:48.449Z" },
-]
-
-[[package]]
 name = "bracex"
 version = "3.2.3"
 source = { registry = "https://pypi.org/simple" }
@@ -1100,7 +1091,6 @@ all = [
     { name = "msgpack", marker = "sys_platform != 'win32'" },
     { name = "nats-py" },
     { name = "nvidia-ml-py" },
-    { name = "packaging" },
     { name = "paho-mqtt" },
     { name = "pika" },
     { name = "podman" },
@@ -1117,11 +1107,9 @@ all = [
     { name = "python-dateutil" },
     { name = "pyzmq" },
     { name = "requests" },
-    { name = "six" },
     { name = "starlette" },
     { name = "statsd" },
     { name = "uvicorn" },
-    { name = "wifi" },
     { name = "zeroconf" },
 ]
 browser = [
@@ -1132,11 +1120,9 @@ cloud = [
 ]
 containers = [
     { name = "docker" },
-    { name = "packaging" },
     { name = "podman" },
     { name = "pylxd" },
     { name = "python-dateutil" },
-    { name = "six" },
 ]
 export = [
     { name = "bernhard" },
@@ -1184,9 +1170,6 @@ web = [
     { name = "starlette" },
     { name = "uvicorn" },
 ]
-wifi = [
-    { name = "wifi" },
-]
 
 [package.dev-dependencies]
 dev = [
@@ -1202,15 +1185,11 @@ dev = [
     { name = "playwright" },
     { name = "pre-commit" },
     { name = "pyinstrument" },
-    { name = "pyright" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
-    { name = "requirements-parser" },
-    { name = "reuse" },
     { name = "rstcheck" },
     { name = "ruff" },
     { name = "semgrep" },
-    { name = "setuptools" },
     { name = "sphinx", version = "9.0.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "sphinx", version = "9.1.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.12.*'" },
     { name = "sphinx", version = "9.2.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.13'" },
@@ -1237,7 +1216,6 @@ requires-dist = [
     { name = "msgpack", marker = "sys_platform != 'win32' and extra == 'web'", specifier = ">=1.2.3" },
     { name = "nats-py", marker = "extra == 'export'" },
     { name = "nvidia-ml-py", marker = "extra == 'gpu'" },
-    { name = "packaging", marker = "extra == 'containers'" },
     { name = "paho-mqtt", marker = "extra == 'export'" },
     { name = "pika", marker = "extra == 'export'" },
     { name = "podman", marker = "extra == 'containers'" },
@@ -1258,11 +1236,9 @@ requires-dist = [
     { name = "requests", marker = "extra == 'cloud'", specifier = ">=2.32.4" },
     { name = "requests", marker = "extra == 'web'", specifier = ">=2.32.4" },
     { name = "shtab", marker = "sys_platform != 'win32'" },
-    { name = "six", marker = "extra == 'containers'" },
     { name = "starlette", marker = "extra == 'web'", specifier = ">=0.49.1" },
     { name = "statsd", marker = "extra == 'export'" },
     { name = "uvicorn", marker = "extra == 'web'" },
-    { name = "wifi", marker = "extra == 'wifi'" },
     { name = "windows-curses", marker = "sys_platform == 'win32'" },
     { name = "zeroconf", marker = "extra == 'browser'" },
 ]
@@ -1281,15 +1257,11 @@ dev = [
     { name = "playwright" },
     { name = "pre-commit" },
     { name = "pyinstrument", specifier = ">=5.1.2" },
-    { name = "pyright" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
-    { name = "requirements-parser" },
-    { name = "reuse" },
     { name = "rstcheck" },
     { name = "ruff" },
     { name = "semgrep" },
-    { name = "setuptools", specifier = ">=65.5.1" },
     { name = "sphinx" },
     { name = "sphinx-rtd-theme" },
 ]
@@ -1753,18 +1725,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/d9/23/d2c8308466a6831043ac3518e480c2e1a06b21a13e0a8f6542ab29cf592a/lazy_importer-0.1.0.tar.gz", hash = "sha256:b2e296716ce015c0cd80e57b940e52727c5b934b34b8656d5ce06bdd0ee5fbdd", size = 84008, upload-time = "2026-10-20T00:36:58.369Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/0a/28/7ded071d0975dcc6d5d106ffbf7b3ca420f7caa3b8a235fa604b6e37032a/lazy_importer-0.1.0-py3-none-any.whl", hash = "sha256:bd93fab7bef18e842eea02b839410954d37889140dc64ca4d9680aec6880c739", size = 12580, upload-time = "2026-10-20T00:36:57.176Z" },
-]
-
-[[package]]
-name = "license-expression"
-version = "30.4.4"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "boolean-py" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/40/71/d89bb0e71b1415453980fd32315f2a037aad9f7f70f695c7cec7035feb13/license_expression-30.4.4.tar.gz", hash = "sha256:73448f0aacd8d0808895bdc4b2c8e01a8d67646e4188f887375398c761f340fd", size = 186402, upload-time = "2025-07-22T11:13:32.17Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/af/40/791891d4c0c4dab4c5e187c17261cedc26285fd41541577f900470a45a4d/license_expression-30.4.4-py3-none-any.whl", hash = "sha256:421788fdcadb41f049d2dc934ce666626265aeccefddd25e162a26f23bcbf8a4", size = 120615, upload-time = "2025-07-22T11:13:31.217Z" },
 ]
 
 [[package]]
@@ -2479,12 +2439,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/da/66/bba39edaac8532353
 wheels = [
     { url = "https://files.pythonhosted.org/packages/bf/af/fea4b0ee14cee6149f18d180430a14be0963b9a4fbc7875421a7de75f831/paho_mqtt-2.2.0-py3-none-any.whl", hash = "sha256:3243630f7c2b05f71d1de8c6f59865eb04d3a59ae8c866e92377faed6753db4d", size = 77202, upload-time = "2026-11-04T20:10:50.148Z" },
 ]
-
-[[package]]
-name = "pbkdf2"
-version = "1.3"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/02/c0/6a2376ae81beb82eda645a091684c0b0becb86b972def7849ea9066e3d5e/pbkdf2-1.3.tar.gz", hash = "sha256:ac6397369f128212c43064a2b4878038dab78dab41875364554aaf2a684e6979", size = 6360, upload-time = "2011-06-14T05:18:10.981Z" }
 
 [[package]]
 name = "peewee"
@@ -3240,19 +3194,6 @@ wheels = [
 ]
 
 [[package]]
-name = "pyright"
-version = "1.1.414"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "nodeenv" },
-    { name = "typing-extensions" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/e1/1b/244c7b710031ada80f27e579ec20d28a2285dfc318fed0339866b1047f12/pyright-1.1.414.tar.gz", hash = "sha256:523c0a97c60da6333234955c277730c9cf4f5bd6d5399e7b7d2b0fc5d3599524", size = 4154638, upload-time = "2026-09-10T12:26:53.181Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/d7/ba/18b6e682ead424ad24bcc134339ae5d1b931cd9ae260540592a058a91279/pyright-1.1.414-py3-none-any.whl", hash = "sha256:2a6b4b3298c9eec174c5ed83bd338de6eee82df2992f3e1930e6199d381be36f", size = 6225049, upload-time = "2026-09-10T12:26:51.427Z" },
-]
-
-[[package]]
 name = "pysmart"
 version = "1.4.3"
 source = { registry = "https://pypi.org/simple" }
@@ -3308,15 +3249,6 @@ wheels = [
 ]
 
 [[package]]
-name = "python-debian"
-version = "1.1.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/75/36/f90e7d006dd9311a6185f1c34b403dd6d76ff583e7962c56e9374c462a48/python_debian-1.1.1.tar.gz", hash = "sha256:fe4fc3dc798dbf1f0ef5865e2b1b4f7cc0352b6a511b25ab7594906c64a73629", size = 127956, upload-time = "2026-06-07T11:06:58.282Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/6e/47/e184f0004e63dbc49c4bad5e811218f66bece1b519f80b06a619b42e6ec3/python_debian-1.1.1-py3-none-any.whl", hash = "sha256:f98ae013e8e5310e49041cc3860a7105df73af73d4ff1d8afb474770d328a6ad", size = 138101, upload-time = "2026-06-07T11:06:56.632Z" },
-]
-
-[[package]]
 name = "python-discovery"
 version = "1.9.5"
 source = { registry = "https://pypi.org/simple" }
@@ -3326,15 +3258,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/68/55/70b46fae646bc6f5cb5e82569949d925cff1c7b5ce20ec4a11e0d977f8c6/python_discovery-1.9.5.tar.gz", hash = "sha256:86279f5d2728bc067de28b7ddc571be2eacc2ae0e7048f8629d2481a0f8848a2", size = 141121, upload-time = "2026-11-06T15:32:11.331Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/ac/35/25bd092ca8a7e71192afdca67fbff4f797da74408e74ac3626e13b409ec0/python_discovery-1.9.5-py3-none-any.whl", hash = "sha256:a1fae8fca11e4bc61e38491c2aafff29e430b3c5e272d51ae52fb895bc4c0fac", size = 44377, upload-time = "2026-11-06T15:32:09.821Z" },
-]
-
-[[package]]
-name = "python-magic"
-version = "0.4.27"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/da/db/0b3e28ac047452d079d375ec6798bf76a036a08182dbb39ed38116a49130/python-magic-0.4.27.tar.gz", hash = "sha256:c1ba14b08e4a5f5c31a302b7721239695b2f0f058d125bd5ce1ee36b9d9d3c3b", size = 14677, upload-time = "2022-06-07T20:16:59.508Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/6c/73/9f872cb81fc5c3bb48f7227872c28975f998f3e7c2b1c16e95e6432bbb90/python_magic-0.4.27-py2.py3-none-any.whl", hash = "sha256:c212960ad306f700aa0d01e5d7a325d20548ff97eb9920dcd29513174f0294d3", size = 13840, upload-time = "2022-06-07T20:16:57.763Z" },
 ]
 
 [[package]]
@@ -3553,36 +3476,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/f3/61/d7545dafb7ac2230c70d38d31cbfe4cc64f7144dc41f6e4e4b78ecd9f5bb/requests-toolbelt-1.0.0.tar.gz", hash = "sha256:7681a0a3d047012b5bdc0ee37d7f8f07ebe76ab08caeccfc3921ce23c88d5bc6", size = 206888, upload-time = "2023-05-01T04:11:33.229Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/3f/51/d4db610ef29373b879047326cbf6fa98b6c1969d6f6dc423279de2b1be2c/requests_toolbelt-1.0.0-py2.py3-none-any.whl", hash = "sha256:cccfdd665f0a24fcf4726e690f65639d272bb0637b9b92dfd91a5568ccf6bd06", size = 54481, upload-time = "2023-05-01T04:11:28.427Z" },
-]
-
-[[package]]
-name = "requirements-parser"
-version = "0.13.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "packaging" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/89/1a/5f3c22d38bf1d87d1f4a961489d9eba35c4370a21395562d94410cdd0e73/requirements_parser-0.13.1.tar.gz", hash = "sha256:78811383b2089b6c5197a1431bc2c12ff950245edca39a23eea3460782038dd3", size = 22783, upload-time = "2026-06-18T07:52:25.291Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/bb/f9/15b44d5e4401b0013bbcefe3c09d7bfddcce28cc3d41b1d3077bcedf5b1f/requirements_parser-0.13.1-py3-none-any.whl", hash = "sha256:6e385663eb32589d16e5b22bb6e5251a57908e73803ffff438b53cd6ea2056e0", size = 14926, upload-time = "2026-06-18T07:52:24.171Z" },
-]
-
-[[package]]
-name = "reuse"
-version = "6.3.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "attrs" },
-    { name = "click" },
-    { name = "jinja2" },
-    { name = "license-expression" },
-    { name = "python-debian" },
-    { name = "python-magic" },
-    { name = "tomlkit" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/13/d9/b8dd83a81030450e5eb11d337c3d362769b57c763b388bfc849bfa76bbd9/reuse-6.3.0.tar.gz", hash = "sha256:5a6ca437057c07ca22a67256520e2783ab03b5524d3a4535603c3d49e3d4b001", size = 524060, upload-time = "2026-10-30T13:34:54.743Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/b5/28/2206a2fa719f303b40b2bc2b50ccf06f59d64d22f2106258b2cf141e4db3/reuse-6.3.0-py3-none-any.whl", hash = "sha256:be6b598aa6d5cdf44af0da265572a72f0adcd30033857af874fd8607188259c1", size = 348530, upload-time = "2026-10-30T13:34:52.686Z" },
 ]
 
 [[package]]
@@ -3886,15 +3779,6 @@ wheels = [
 ]
 
 [[package]]
-name = "setuptools"
-version = "84.2.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/70/b3/c19426f783614d625699a4b247faf628ea9ab1db228674491767b417f9e1/setuptools-84.2.1.tar.gz", hash = "sha256:3ff8b3b5492a0aa66960f4419365a86b84e013070d4313e4d4a6894f5d64d6bc", size = 1230289, upload-time = "2026-10-20T19:01:37.742Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/ef/55/6dc6d6bb953bdfc52519a0059592c52b6e3b8ad51cf8256dffceb55b0610/setuptools-84.2.1-py3-none-any.whl", hash = "sha256:ca140b45d5325a9478f880e351484f62fef15f336462e449ca0c03c873d589c2", size = 876263, upload-time = "2026-10-20T19:01:35.678Z" },
-]
-
-[[package]]
 name = "shellingham"
 version = "1.5.4"
 source = { registry = "https://pypi.org/simple" }
@@ -4179,15 +4063,6 @@ wheels = [
 ]
 
 [[package]]
-name = "tomlkit"
-version = "0.15.2"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/08/72/fc01563df95c189a9f65850096bdc205bc2fe37da6c740cd64afaf18d07e/tomlkit-0.15.2.tar.gz", hash = "sha256:83e32755ba1d20d9340bd069ee97e9f6232ba2346b63ffcba425de01f7e327a6", size = 190522, upload-time = "2026-10-16T04:07:08.166Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/da/46/7d84138a60a8bd796825b2d38ebe92d0d16501ca57d501b7c5d677401bbc/tomlkit-0.15.2-py3-none-any.whl", hash = "sha256:05562412163a3037b94497385fb7f9204c637bc605af7a48199e41cf2272f437", size = 52225, upload-time = "2026-10-16T04:07:09.216Z" },
-]
-
-[[package]]
 name = "truststore"
 version = "0.10.5"
 source = { registry = "https://pypi.org/simple" }
@@ -4291,16 +4166,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/ea/c4/55e0d36da61d7b8b2
 wheels = [
     { url = "https://files.pythonhosted.org/packages/09/78/533ef890536e5ba0fd4f7df37482b5800ecaaceae9afc30978a1a7f88ff1/wcmatch-8.5.2-py3-none-any.whl", hash = "sha256:17d3ad3758f9d0b5b4dedc770b65420d4dac62e680229c287bf24c9db856a478", size = 39397, upload-time = "2024-05-15T12:51:06.2Z" },
 ]
-
-[[package]]
-name = "wifi"
-version = "0.3.8"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "pbkdf2" },
-    { name = "setuptools" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/fe/a9/d026afe8a400dd40122385cd690e4fff4d574ed16f5c3a0f5e3921bfd383/wifi-0.3.8.tar.gz", hash = "sha256:a9880b2e91ea8420154c6826c8112a2f541bbae5641d59c5cb031d27138d7f26", size = 11964, upload-time = "2016-03-10T23:35:58.739Z" }
 
 [[package]]
 name = "windows-curses"

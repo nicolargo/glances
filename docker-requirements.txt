@@ -591,10 +591,6 @@ opentelemetry-api==1.45.2 \
     # via
     #   fastapi
     #   mcp
-packaging==26.3 \
-    --hash=sha256:94edc256424af38762eb31306eed28beb9f0efc50a8837492c9d6fd6004aed79 \
-    --hash=sha256:d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c
-    # via glances
 podman==5.8.0 \
     --hash=sha256:0c0383386fc926e15b58890a727d8bb53b0c42730a5c610db391bfd20310ceeb \
     --hash=sha256:bc39b77f4a6a0598bbe860d199e0d54ef2ec551131ae7eab66f0557c43331fb3
@@ -958,9 +954,7 @@ shtab==1.13.0 ; sys_platform != 'win32' \
 six==1.17.0 \
     --hash=sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274 \
     --hash=sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81
-    # via
-    #   glances
-    #   python-dateutil
+    # via python-dateutil
 sse-starlette==3.7.0 \
     --hash=sha256:326416da2ab52e9a41b3f409d3ff897eda45aa68c9f3b7b17d0913aab8d219c3 \
     --hash=sha256:f1d3136caa12d129284fca3d2ded79bc9af943320b6472712955fea52a6d3eea
