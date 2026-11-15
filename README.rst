@@ -241,6 +241,98 @@ Get (and share) a quick look of a machine, then exit:
 The output can be customized with a Jinja template (``--fetch-template``),
 see the `Fetch`_ documentation.
 
+Gateway to other services 🌐
+============================
+
+Glances can export its stats to:
+
+.. list-table::
+   :widths: 25 75
+
+   * - 📁 **Files**
+     - |csv| |json| |graph|
+   * - 📈 **Time series**
+     - |influxdb| |prometheus| |timescaledb| |graphite| |opentsdb| |statsd| |riemann|
+   * - 🗄️ **Databases**
+     - |elasticsearch| |clickhouse| |duckdb| |mongodb| |cassandra| |couchdb|
+   * - 📨 **Message brokers**
+     - |kafka| |rabbitmq| |mqtt| |nats| |zeromq|
+   * - 🔗 **HTTP**
+     - |restful|
+
+.. |csv| image:: https://img.shields.io/badge/CSV-217346?logo=files&logoColor=white
+    :target: https://glances.readthedocs.io/en/develop/gw/csv.html
+    :alt: CSV
+.. |json| image:: https://img.shields.io/badge/JSON-000000?logo=json&logoColor=white
+    :target: https://glances.readthedocs.io/en/develop/gw/json.html
+    :alt: JSON
+.. |graph| image:: https://img.shields.io/badge/Graph%20(SVG)-FFB13B?logo=svg&logoColor=white
+    :target: https://glances.readthedocs.io/en/develop/gw/graph.html
+    :alt: Graph
+.. |influxdb| image:: https://img.shields.io/badge/InfluxDB%201%2F2%2F3-22ADF6?logo=influxdb&logoColor=white
+    :target: https://glances.readthedocs.io/en/develop/gw/influxdb.html
+    :alt: InfluxDB
+.. |prometheus| image:: https://img.shields.io/badge/Prometheus-E6522C?logo=prometheus&logoColor=white
+    :target: https://glances.readthedocs.io/en/develop/gw/prometheus.html
+    :alt: Prometheus
+.. |timescaledb| image:: https://img.shields.io/badge/PostgreSQL%2FTimescaleDB-4169E1?logo=postgresql&logoColor=white
+    :target: https://glances.readthedocs.io/en/develop/gw/timescaledb.html
+    :alt: PostgreSQL/TimescaleDB
+.. |graphite| image:: https://img.shields.io/badge/Graphite-5A5A5A
+    :target: https://glances.readthedocs.io/en/develop/gw/graphite.html
+    :alt: Graphite
+.. |opentsdb| image:: https://img.shields.io/badge/OpenTSDB-4B8BBE
+    :target: https://glances.readthedocs.io/en/develop/gw/opentsdb.html
+    :alt: OpenTSDB
+.. |statsd| image:: https://img.shields.io/badge/StatsD-6E4A7E
+    :target: https://glances.readthedocs.io/en/develop/gw/statsd.html
+    :alt: StatsD
+.. |riemann| image:: https://img.shields.io/badge/Riemann-C0392B
+    :target: https://glances.readthedocs.io/en/develop/gw/riemann.html
+    :alt: Riemann
+.. |elasticsearch| image:: https://img.shields.io/badge/Elasticsearch-005571?logo=elasticsearch&logoColor=white
+    :target: https://glances.readthedocs.io/en/develop/gw/elastic.html
+    :alt: Elasticsearch
+.. |clickhouse| image:: https://img.shields.io/badge/ClickHouse-FFCC01?logo=clickhouse&logoColor=black
+    :target: https://glances.readthedocs.io/en/develop/gw/clickhouse.html
+    :alt: ClickHouse
+.. |duckdb| image:: https://img.shields.io/badge/DuckDB-FFF000?logo=duckdb&logoColor=black
+    :target: https://glances.readthedocs.io/en/develop/gw/duckdb.html
+    :alt: DuckDB
+.. |mongodb| image:: https://img.shields.io/badge/MongoDB-47A248?logo=mongodb&logoColor=white
+    :target: https://glances.readthedocs.io/en/develop/gw/mongodb.html
+    :alt: MongoDB
+.. |cassandra| image:: https://img.shields.io/badge/Cassandra-1287B1?logo=apachecassandra&logoColor=white
+    :target: https://glances.readthedocs.io/en/develop/gw/cassandra.html
+    :alt: Cassandra
+.. |couchdb| image:: https://img.shields.io/badge/CouchDB-E42528?logo=apachecouchdb&logoColor=white
+    :target: https://glances.readthedocs.io/en/develop/gw/couchdb.html
+    :alt: CouchDB
+.. |kafka| image:: https://img.shields.io/badge/Kafka-231F20?logo=apachekafka&logoColor=white
+    :target: https://glances.readthedocs.io/en/develop/gw/kafka.html
+    :alt: Kafka
+.. |rabbitmq| image:: https://img.shields.io/badge/RabbitMQ%2FActiveMQ-FF6600?logo=rabbitmq&logoColor=white
+    :target: https://glances.readthedocs.io/en/develop/gw/rabbitmq.html
+    :alt: RabbitMQ/ActiveMQ
+.. |mqtt| image:: https://img.shields.io/badge/MQTT-660066?logo=mqtt&logoColor=white
+    :target: https://glances.readthedocs.io/en/develop/gw/mqtt.html
+    :alt: MQTT
+.. |nats| image:: https://img.shields.io/badge/NATS-27AAE1?logo=natsdotio&logoColor=white
+    :target: https://glances.readthedocs.io/en/develop/gw/nats.html
+    :alt: NATS
+.. |zeromq| image:: https://img.shields.io/badge/ZeroMQ-DF0000?logo=zeromq&logoColor=white
+    :target: https://glances.readthedocs.io/en/develop/gw/zeromq.html
+    :alt: ZeroMQ
+.. |restful| image:: https://img.shields.io/badge/RESTful%20endpoint-009688?logo=fastapi&logoColor=white
+    :target: https://glances.readthedocs.io/en/develop/gw/restful.html
+    :alt: RESTful
+
+Example: export stats without any interface (-q is the quiet mode), thanks to the CSV export module:
+
+.. code-block:: console
+
+    $ glances -q --export csv --export-csv-file /tmp/glances.csv
+
 Advanced usage 🔧
 =================
 
@@ -274,12 +366,6 @@ or in a JSON format thanks to the stdout-json option (one JSON object per refres
     $ glances --stdout-json cpu,mem
     {"cpu": {"user": 24.7, "system": 3.8, "idle": 71.4, "nice": 0.0, "iowait": 0.0, "irq": 0.0, "steal": 0.0, "guest": 0.0, "total": 29.0, "ctx_switches": 0, "interrupts": 0, "soft_interrupts": 0, "syscalls": 0, "cpucore": 4}, "mem": {"total": 7837949952, "available": 2919079936, "percent": 62.8, "used": 4918870016, "free": 2919079936, "active": 2841214976, "inactive": 3340550144, "buffers": 546799616, "cached": 3068141568, "shared": 788156416, "slab": 158588928}}
     ...
-
-Export stats without any interface, thanks to the quiet mode:
-
-.. code-block:: console
-
-    $ glances -q --export csv --export-csv-file /tmp/glances.csv
 
 Protect the Web server with a password: generate a password hash
 
@@ -387,92 +473,6 @@ The complete documentation is on readthedocs_:
 
 If you have any question (after RTFM! and the `FAQ`_), please post it on the official
 Reddit `forum`_ or in GitHub `Discussions`_.
-
-Gateway to other services 🌐
-============================
-
-Glances can export its stats to:
-
-.. list-table::
-   :widths: 25 75
-
-   * - 📁 **Files**
-     - |csv| |json| |graph|
-   * - 📈 **Time series**
-     - |influxdb| |prometheus| |timescaledb| |graphite| |opentsdb| |statsd| |riemann|
-   * - 🗄️ **Databases**
-     - |elasticsearch| |clickhouse| |duckdb| |mongodb| |cassandra| |couchdb|
-   * - 📨 **Message brokers**
-     - |kafka| |rabbitmq| |mqtt| |nats| |zeromq|
-   * - 🔗 **HTTP**
-     - |restful|
-
-.. |csv| image:: https://img.shields.io/badge/CSV-217346?logo=files&logoColor=white
-    :target: https://glances.readthedocs.io/en/develop/gw/csv.html
-    :alt: CSV
-.. |json| image:: https://img.shields.io/badge/JSON-000000?logo=json&logoColor=white
-    :target: https://glances.readthedocs.io/en/develop/gw/json.html
-    :alt: JSON
-.. |graph| image:: https://img.shields.io/badge/Graph%20(SVG)-FFB13B?logo=svg&logoColor=white
-    :target: https://glances.readthedocs.io/en/develop/gw/graph.html
-    :alt: Graph
-.. |influxdb| image:: https://img.shields.io/badge/InfluxDB%201%2F2%2F3-22ADF6?logo=influxdb&logoColor=white
-    :target: https://glances.readthedocs.io/en/develop/gw/influxdb.html
-    :alt: InfluxDB
-.. |prometheus| image:: https://img.shields.io/badge/Prometheus-E6522C?logo=prometheus&logoColor=white
-    :target: https://glances.readthedocs.io/en/develop/gw/prometheus.html
-    :alt: Prometheus
-.. |timescaledb| image:: https://img.shields.io/badge/PostgreSQL%2FTimescaleDB-4169E1?logo=postgresql&logoColor=white
-    :target: https://glances.readthedocs.io/en/develop/gw/timescaledb.html
-    :alt: PostgreSQL/TimescaleDB
-.. |graphite| image:: https://img.shields.io/badge/Graphite-5A5A5A
-    :target: https://glances.readthedocs.io/en/develop/gw/graphite.html
-    :alt: Graphite
-.. |opentsdb| image:: https://img.shields.io/badge/OpenTSDB-4B8BBE
-    :target: https://glances.readthedocs.io/en/develop/gw/opentsdb.html
-    :alt: OpenTSDB
-.. |statsd| image:: https://img.shields.io/badge/StatsD-6E4A7E
-    :target: https://glances.readthedocs.io/en/develop/gw/statsd.html
-    :alt: StatsD
-.. |riemann| image:: https://img.shields.io/badge/Riemann-C0392B
-    :target: https://glances.readthedocs.io/en/develop/gw/riemann.html
-    :alt: Riemann
-.. |elasticsearch| image:: https://img.shields.io/badge/Elasticsearch-005571?logo=elasticsearch&logoColor=white
-    :target: https://glances.readthedocs.io/en/develop/gw/elastic.html
-    :alt: Elasticsearch
-.. |clickhouse| image:: https://img.shields.io/badge/ClickHouse-FFCC01?logo=clickhouse&logoColor=black
-    :target: https://glances.readthedocs.io/en/develop/gw/clickhouse.html
-    :alt: ClickHouse
-.. |duckdb| image:: https://img.shields.io/badge/DuckDB-FFF000?logo=duckdb&logoColor=black
-    :target: https://glances.readthedocs.io/en/develop/gw/duckdb.html
-    :alt: DuckDB
-.. |mongodb| image:: https://img.shields.io/badge/MongoDB-47A248?logo=mongodb&logoColor=white
-    :target: https://glances.readthedocs.io/en/develop/gw/mongodb.html
-    :alt: MongoDB
-.. |cassandra| image:: https://img.shields.io/badge/Cassandra-1287B1?logo=apachecassandra&logoColor=white
-    :target: https://glances.readthedocs.io/en/develop/gw/cassandra.html
-    :alt: Cassandra
-.. |couchdb| image:: https://img.shields.io/badge/CouchDB-E42528?logo=apachecouchdb&logoColor=white
-    :target: https://glances.readthedocs.io/en/develop/gw/couchdb.html
-    :alt: CouchDB
-.. |kafka| image:: https://img.shields.io/badge/Kafka-231F20?logo=apachekafka&logoColor=white
-    :target: https://glances.readthedocs.io/en/develop/gw/kafka.html
-    :alt: Kafka
-.. |rabbitmq| image:: https://img.shields.io/badge/RabbitMQ%2FActiveMQ-FF6600?logo=rabbitmq&logoColor=white
-    :target: https://glances.readthedocs.io/en/develop/gw/rabbitmq.html
-    :alt: RabbitMQ/ActiveMQ
-.. |mqtt| image:: https://img.shields.io/badge/MQTT-660066?logo=mqtt&logoColor=white
-    :target: https://glances.readthedocs.io/en/develop/gw/mqtt.html
-    :alt: MQTT
-.. |nats| image:: https://img.shields.io/badge/NATS-27AAE1?logo=natsdotio&logoColor=white
-    :target: https://glances.readthedocs.io/en/develop/gw/nats.html
-    :alt: NATS
-.. |zeromq| image:: https://img.shields.io/badge/ZeroMQ-DF0000?logo=zeromq&logoColor=white
-    :target: https://glances.readthedocs.io/en/develop/gw/zeromq.html
-    :alt: ZeroMQ
-.. |restful| image:: https://img.shields.io/badge/RESTful%20endpoint-009688?logo=fastapi&logoColor=white
-    :target: https://glances.readthedocs.io/en/develop/gw/restful.html
-    :alt: RESTful
 
 Installation 🚀
 ===============
