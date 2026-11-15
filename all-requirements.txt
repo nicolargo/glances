@@ -571,14 +571,6 @@ humanfriendly==10.0 \
     --hash=sha256:1697e1a8a8f550fd43c2865cd84542fc175a61dcb779b6fee18cf6b6ccba1477 \
     --hash=sha256:6b0b831ce8f15f7300721aa49829fc4e83921a9a301cc7f606be6686a2288ddc
     # via pysmart
-ibm-cloud-sdk-core==3.28.1 \
-    --hash=sha256:587e05ea36c604a95ba68e93b04b96729aba8153517c49e0f612c223a5e7edfd \
-    --hash=sha256:76d255273232ff82188916cfeecafeeb1867b49862333e0471629804451aaf48
-    # via ibmcloudant
-ibmcloudant==0.11.13 \
-    --hash=sha256:6ba23cc2e514364e4156b6e86c9f3f4bd03a500e5ab3e2c297bea95588a9cd62 \
-    --hash=sha256:f3e41e295c30c5792e891e2ca7eb095c7584b4ec0c8c323c6983086e8f4c2034
-    # via glances
 idna==3.20 \
     --hash=sha256:a7db850025b95ded1eae8a46181a1a6c56c92c96f0e2b005d9ff8dc0210cab44 \
     --hash=sha256:ab7ae7122974553370f0bdb919e1a960b2cd1bc1ef0276416d896db81c14582c
@@ -1223,7 +1215,6 @@ pyjwt==2.15.1 \
     --hash=sha256:4f259e80cdfb6b3fc18a7de51fd1ef9ec79652f25019bae68975ca2468a34df8
     # via
     #   glances
-    #   ibm-cloud-sdk-core
     #   mcp
 pylxd==2.4.2 \
     --hash=sha256:41161a731b01ff9bd1b6c8607eab81f9564873b338e068160bcd517a64c057f3 \
@@ -1320,7 +1311,6 @@ python-dateutil==3.0.0 \
     # via
     #   elasticsearch
     #   glances
-    #   ibm-cloud-sdk-core
     #   influxdb
     #   influxdb-client
     #   influxdb3-python
@@ -1432,8 +1422,6 @@ requests==2.34.2 \
     # via
     #   docker
     #   glances
-    #   ibm-cloud-sdk-core
-    #   ibmcloudant
     #   influxdb
     #   podman
     #   pycouchdb
@@ -1657,7 +1645,6 @@ urllib3==2.8.0 \
     #   clickhouse-connect
     #   docker
     #   elastic-transport
-    #   ibm-cloud-sdk-core
     #   influxdb-client
     #   influxdb3-python
     #   podman

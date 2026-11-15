@@ -690,7 +690,7 @@ of ``pyproject.toml`` for the exact versions):
      - ``pygal``
    * - ``export``
      - ``bernhard``, ``clickhouse-connect``, ``elasticsearch``, ``graphitesender``,
-       ``ibmcloudant``, ``influxdb``, ``influxdb-client``, ``influxdb3-python``,
+       ``influxdb``, ``influxdb-client``, ``influxdb3-python``,
        ``kafka-python``, ``nats-py``, ``paho-mqtt``, ``pika``, ``potsdb``,
        ``prometheus_client``, ``psycopg[binary]``, ``pymongo``, ``pyzmq``, ``statsd``,
        ``pycouchdb``

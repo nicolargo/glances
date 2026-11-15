@@ -1092,7 +1092,6 @@ all = [
     { name = "elasticsearch" },
     { name = "fastapi" },
     { name = "graphitesender" },
-    { name = "ibmcloudant" },
     { name = "influxdb" },
     { name = "influxdb-client" },
     { name = "influxdb3-python" },
@@ -1144,7 +1143,6 @@ export = [
     { name = "clickhouse-connect" },
     { name = "elasticsearch" },
     { name = "graphitesender" },
-    { name = "ibmcloudant" },
     { name = "influxdb" },
     { name = "influxdb-client" },
     { name = "influxdb3-python" },
@@ -1230,7 +1228,6 @@ requires-dist = [
     { name = "fastapi", marker = "extra == 'web'", specifier = ">=0.82.0" },
     { name = "glances", extras = ["action", "browser", "cloud", "containers", "export", "gpu", "graph", "mcp", "raid", "sensors", "smart", "web", "wifi"], marker = "extra == 'all'" },
     { name = "graphitesender", marker = "extra == 'export'" },
-    { name = "ibmcloudant", marker = "extra == 'export'" },
     { name = "influxdb", marker = "extra == 'export'", specifier = ">=1.0.0" },
     { name = "influxdb-client", marker = "extra == 'export'" },
     { name = "influxdb3-python", marker = "extra == 'export'" },
@@ -1464,34 +1461,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/cc/3f/2c29224acb2e2df4d2046e4c73ee2662023c58ff5b113c4c1adac0886c43/humanfriendly-10.0.tar.gz", hash = "sha256:6b0b831ce8f15f7300721aa49829fc4e83921a9a301cc7f606be6686a2288ddc", size = 360702, upload-time = "2021-09-17T21:40:43.31Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f0/0f/310fb31e39e2d734ccaa2c0fb981ee41f7bd5056ce9bc29b2248bd569169/humanfriendly-10.0-py2.py3-none-any.whl", hash = "sha256:1697e1a8a8f550fd43c2865cd84542fc175a61dcb779b6fee18cf6b6ccba1477", size = 86794, upload-time = "2021-09-17T21:40:39.897Z" },
-]
-
-[[package]]
-name = "ibm-cloud-sdk-core"
-version = "3.28.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "pyjwt" },
-    { name = "python-dateutil" },
-    { name = "requests" },
-    { name = "urllib3" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/67/3f/177e9da049253f562fd78085c3ef54083768c5a36c2b43873de1986760c9/ibm_cloud_sdk_core-3.28.1.tar.gz", hash = "sha256:587e05ea36c604a95ba68e93b04b96729aba8153517c49e0f612c223a5e7edfd", size = 87688, upload-time = "2026-10-29T13:19:53.386Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/9c/99/e470340db543e39a04562b9cca995cd04864205b827685dfe991a5d22f86/ibm_cloud_sdk_core-3.28.1-py3-none-any.whl", hash = "sha256:76d255273232ff82188916cfeecafeeb1867b49862333e0471629804451aaf48", size = 76754, upload-time = "2026-10-29T13:19:51.871Z" },
-]
-
-[[package]]
-name = "ibmcloudant"
-version = "0.11.13"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "ibm-cloud-sdk-core" },
-    { name = "requests" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/40/fd/bef6ba24ed32e188fcada1c34c7709330974501b599872bf7777bbf4fe56/ibmcloudant-0.11.13.tar.gz", hash = "sha256:6ba23cc2e514364e4156b6e86c9f3f4bd03a500e5ab3e2c297bea95588a9cd62", size = 122175, upload-time = "2026-11-03T14:32:50.266Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/c2/dd/c8ec3858ae7da9a02c95d8bf9bf0f2a968faee62cbf3d688124fc02841f1/ibmcloudant-0.11.13-py3-none-any.whl", hash = "sha256:f3e41e295c30c5792e891e2ca7eb095c7584b4ec0c8c323c6983086e8f4c2034", size = 125033, upload-time = "2026-11-03T14:32:48.745Z" },
 ]
 
 [[package]]

@@ -79,7 +79,6 @@ export = [
   # "duckdb",  # Not added: no prebuilt package for Alpine Linux, so the Docker image build fails
   "elasticsearch",
   "graphitesender",
-  "ibmcloudant",
   "influxdb-client",
   "influxdb>=1.0.0",
   "influxdb3-python",
