@@ -260,6 +260,27 @@ def test_prometheus_sanitises_characters_forbidden_in_metric_names(prometheus_cl
     assert gauge.last_labels == {"src": "glances", "mnt_point": "/media/data"}
 
 
+def test_prometheus_a_key_holding_dots_is_one_label_value(prometheus_client):
+    """A VLAN interface (`eth0.100`) or a mount point with a dot keeps the
+    metric name of its plugin and carries its full key as the label value,
+    like any other item."""
+    from glances.exports.glances_prometheus.export import Export
+
+    exporter = Export(make_config(PROM_SECTION), args=None)
+    exporter.keys_name = {"network": "interface_name", "fs": "mnt_point"}
+    exporter.export("network", ["eth0.rx", "eth0.100.rx"], [1.0, 2.0])
+    exporter.export("fs", ["/mnt/v1.2.percent"], [42.0])
+
+    assert "glances_network_eth0_100_rx" not in prometheus_client.created
+    gauge = prometheus_client.created["glances_network_rx"]
+    assert gauge.last_labels == {"src": "glances", "interface_name": "eth0.100"}
+    assert gauge.values == [1.0, 2.0]
+
+    assert "glances_fs__mnt_v1_2_percent" not in prometheus_client.created
+    gauge = prometheus_client.created["glances_fs_percent"]
+    assert gauge.last_labels == {"src": "glances", "mnt_point": "/mnt/v1.2"}
+
+
 def test_prometheus_a_key_holding_a_comma_is_one_label_value(prometheus_client):
     """Audit B-20: `a,b` appended to the `k:v,k:v` label string made it
     malformed, the gauge was created without label names, and the next item
