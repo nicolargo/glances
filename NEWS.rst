@@ -205,7 +205,7 @@ Security (post-cutover audit of 2026-10-17):
 
 Special notes for package maintainers:
 
-* Minimal Python version is still 3.10
+* Minimal Python version is now 3.11 (Python 3.10 is end-of-life)
 * Core dependencies are psutil, requests, jinja2, shtab (all but Windows) and
   windows-curses (Windows only): defusedxml and packaging are no longer needed
 * The ``snmp`` and ``sparklines`` extras are removed

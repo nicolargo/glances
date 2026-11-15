@@ -11,11 +11,11 @@ repos:
     - id: ruff-format
       name: "🐍 python · Formatter with Ruff"
       types_or: [ python, pyi ]
-      args: [ --target-version, py310, --config, './pyproject.toml' ]
+      args: [ --target-version, py311, --config, './pyproject.toml' ]
     - id: ruff-check
       name: "🐍 python · Linter with Ruff"
       types_or: [ python, pyi ]
-      args: [ --fix, --target-version, py310, --config, './pyproject.toml' ]
+      args: [ --fix, --target-version, py311, --config, './pyproject.toml' ]
 
   # - repo: https://github.com/RobertCraigie/pyright-python
   #   rev: v1.1.391

@@ -20,7 +20,7 @@ is imported when the exporter starts.
 from __future__ import annotations
 
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
 from glances.exports.export_base import GlancesExportBase
@@ -34,7 +34,7 @@ if TYPE_CHECKING:
 
 def _utcnow() -> datetime:
     """Naive UTC now — v4's `datetime.utcnow()`, which is deprecated."""
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 class Export(GlancesExportBase):

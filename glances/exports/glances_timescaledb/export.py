@@ -35,7 +35,7 @@ importable without it.
 from __future__ import annotations
 
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from platform import node
 from typing import TYPE_CHECKING, Any
 
@@ -117,7 +117,7 @@ class Export(GlancesExportBase):
         self, plugin: str, payload: dict | list
     ) -> tuple[list[tuple[str, str]], list[str], list[list[Any]]] | None:
         """Build (columns as (name, type), segment-by columns, rows), v4 layout."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         columns = [("time", "TIMESTAMPTZ NOT NULL"), ("hostname_id", "TEXT NOT NULL")]
         if isinstance(payload, dict):
             stats = self._rename_user(plugin, payload)

@@ -20,7 +20,7 @@ on Debian/Ubuntu, you must first install the *python-dev* package.
 On Fedora/CentOS/RHEL, first, install the *python-devel* package. For Windows,
 psutil can be installed from the binary installation file.
 
-Glances requires Python 3.10 or higher.
+Glances requires Python 3.11 or higher.
 
 The optional features are installed through extras. For example, the
 server mode (``-s``, REST API and Web UI) needs the ``web`` extra:

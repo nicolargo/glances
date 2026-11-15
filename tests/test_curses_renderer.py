@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 
@@ -386,13 +386,13 @@ def test_render_alert_block_empty_history_shows_initializing_during_warmup():
 
 def test_format_alert_time_same_day_returns_hms_local():
     """Same-day event → ``HH:MM:SS`` in local timezone."""
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     from glances.outputs.curses_renderer import _format_alert_time
 
     # UTC noon → local time (whatever the test machine TZ is).
     ts = "2026-05-15T12:00:00+00:00"
-    now_utc = datetime(2026, 5, 15, 14, 0, 0, tzinfo=timezone.utc)
+    now_utc = datetime(2026, 5, 15, 14, 0, 0, tzinfo=UTC)
     result = _format_alert_time(ts, now=now_utc)
     # Must be exactly 8 chars HH:MM:SS — no date, no TZ suffix.
     assert len(result) == 8
@@ -408,11 +408,11 @@ def test_format_alert_time_other_day_returns_full_date_within_8_columns():
     `HH:MM:SS` of the same-day rows, and `YY-MM-DD` reads in the same
     descending order.
     """
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     from glances.outputs.curses_renderer import _format_alert_time
 
-    now_utc = datetime(2026, 8, 16, 12, 0, 0, tzinfo=timezone.utc)
+    now_utc = datetime(2026, 8, 16, 12, 0, 0, tzinfo=UTC)
     result = _format_alert_time("2026-08-14T09:30:00+00:00", now=now_utc)
     assert len(result) == 8
     assert result == "26-08-14"
@@ -420,12 +420,12 @@ def test_format_alert_time_other_day_returns_full_date_within_8_columns():
 
 def test_format_alert_time_naive_utc_is_handled():
     """If the timestamp lacks tzinfo, treat it as UTC (matches v5 emitter)."""
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     from glances.outputs.curses_renderer import _format_alert_time
 
     ts = "2026-05-15T12:00:00"  # no tz suffix
-    now_utc = datetime(2026, 5, 15, 14, 0, 0, tzinfo=timezone.utc)
+    now_utc = datetime(2026, 5, 15, 14, 0, 0, tzinfo=UTC)
     result = _format_alert_time(ts, now=now_utc)
     # Same-day → 8 chars HH:MM:SS.
     assert len(result) == 8
@@ -478,22 +478,22 @@ def test_format_duration_compact_never_exceeds_eight_columns():
 
 
 def test_incident_duration_ongoing_measures_from_begin_to_now():
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     from glances.outputs.curses_renderer import _incident_duration
 
-    now = datetime(2026, 8, 16, 10, 3, 0, tzinfo=timezone.utc)
+    now = datetime(2026, 8, 16, 10, 3, 0, tzinfo=UTC)
     incident = {"begin": "2026-08-16T10:00:00+00:00", "end": None, "ongoing": True, "partial": False}
     assert _incident_duration(incident, now=now) == "3m00s"
 
 
 def test_incident_duration_closed_measures_begin_to_end():
     """A resolved incident freezes its duration — it must not keep ticking."""
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     from glances.outputs.curses_renderer import _incident_duration
 
-    now = datetime(2026, 8, 16, 23, 0, 0, tzinfo=timezone.utc)
+    now = datetime(2026, 8, 16, 23, 0, 0, tzinfo=UTC)
     incident = {
         "begin": "2026-08-16T10:00:00+00:00",
         "end": "2026-08-16T10:00:43+00:00",
@@ -505,11 +505,11 @@ def test_incident_duration_closed_measures_begin_to_end():
 
 def test_incident_duration_partial_is_prefixed_with_a_lower_bound_marker():
     """Opener evicted → the duration is a floor, and says so."""
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     from glances.outputs.curses_renderer import _incident_duration
 
-    now = datetime(2026, 8, 16, 10, 3, 0, tzinfo=timezone.utc)
+    now = datetime(2026, 8, 16, 10, 3, 0, tzinfo=UTC)
     incident = {"begin": "2026-08-16T10:00:00+00:00", "end": None, "ongoing": True, "partial": True}
     assert _incident_duration(incident, now=now) == ">3m00s"
 
@@ -530,21 +530,21 @@ def test_incident_duration_malformed_begin_returns_none():
 
 def test_incident_duration_future_begin_returns_none():
     """Clock skew must not print a negative duration."""
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     from glances.outputs.curses_renderer import _incident_duration
 
-    now = datetime(2026, 8, 16, 10, 0, 0, tzinfo=timezone.utc)
+    now = datetime(2026, 8, 16, 10, 0, 0, tzinfo=UTC)
     incident = {"begin": "2026-08-16T11:00:00+00:00", "end": None, "ongoing": True, "partial": False}
     assert _incident_duration(incident, now=now) is None
 
 
 def test_incident_duration_naive_begin_assumed_utc():
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     from glances.outputs.curses_renderer import _incident_duration
 
-    now = datetime(2026, 8, 16, 10, 1, 0, tzinfo=timezone.utc)
+    now = datetime(2026, 8, 16, 10, 1, 0, tzinfo=UTC)
     incident = {"begin": "2026-08-16T10:00:00", "end": None, "ongoing": True, "partial": False}
     assert _incident_duration(incident, now=now) == "1m00s"
 
@@ -553,7 +553,7 @@ def test_render_alert_block_uses_local_time_for_events():
     """End-to-end: render_alert_block formats the ts via the local converter.
     We pick a UTC timestamp and assert it does NOT appear verbatim (a TZ
     conversion or local format must have happened)."""
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     history = [
         {
@@ -574,7 +574,7 @@ def test_render_alert_block_uses_local_time_for_events():
         history,
         limit=10,
         is_initializing=False,
-        now=datetime(2026, 5, 15, 14, 0, 0, tzinfo=timezone.utc),
+        now=datetime(2026, 5, 15, 14, 0, 0, tzinfo=UTC),
     )
     flat = " ".join(c.text for row in rows for c in row.cells)
     # Date prefix expected (event is 2 days old).
@@ -685,7 +685,7 @@ _GRID_ONGOING = {
     ("cpu", None, "total"): "critical",
     ("containers", "nginx", "mem_usage"): "warning",
 }
-_GRID_NOW = datetime(2026, 8, 16, 14, 5, 9, tzinfo=timezone.utc)
+_GRID_NOW = datetime(2026, 8, 16, 14, 5, 9, tzinfo=UTC)
 
 
 def test_render_alert_block_full_grid_columns_are_aligned():
