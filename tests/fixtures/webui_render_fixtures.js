@@ -1055,6 +1055,35 @@ const CONTAINERS_UNMAPPED_STATUS = {
 	data: CONTAINERS_FIXTURE.data.map((item, i) => (i === 0 ? { ...item, status: "removing" } : item)),
 };
 
+// #3782: an `unhealthy` container whose stats came back empty (null rates, empty
+// cpu/memory/io/network dicts), and one with no `status` key at all. The row
+// must render with placeholders instead of throwing and blanking the panel.
+const CONTAINERS_INCOMPLETE_STATS = {
+	...CONTAINERS_FIXTURE,
+	data: [
+		CONTAINERS_FIXTURE.data[0],
+		{
+			name: "seerr",
+			engine: "docker",
+			pod_name: "frontend",
+			status: "unhealthy",
+			io: {},
+			cpu: {},
+			memory: {},
+			network: {},
+			io_rx: null,
+			io_wx: null,
+			cpu_percent: null,
+			memory_percent: null,
+			network_rx: null,
+			network_tx: null,
+			uptime: null,
+			image: ["ghcr.io/seerr-team/seerr:latest"],
+		},
+		{ name: "ghost", engine: "docker", pod_name: "frontend" },
+	],
+};
+
 // A 25-character name against the fixture's own `max_name_size: 20`: the
 // name <col> must grow past the header label and stop at the configured cap,
 // so the tail column gets every character the names do not need.
@@ -1287,6 +1316,7 @@ const ALL_FIXTURES = {
 	"containers-no-limits": { containers: CONTAINERS_NO_LIMITS },
 	"containers-unmapped-status": { containers: CONTAINERS_UNMAPPED_STATUS },
 	"containers-long-names": { containers: CONTAINERS_LONG_NAMES },
+	"containers-incomplete-stats": { containers: CONTAINERS_INCOMPLETE_STATS },
 	"containers-empty": { containers: { _key: "name", data: [], _levels: {} } },
 	// G9-9A Task 6: the containers block's own width cascade (fit_block.js),
 	// reusing the Task 4 payload -- see BLOCK_WIDTH_FIXTURES below.
