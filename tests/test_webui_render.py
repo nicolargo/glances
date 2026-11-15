@@ -2785,6 +2785,24 @@ def test_containers_shows_the_placeholder_for_every_missing_value():
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_containers_panel_survives_a_container_with_incomplete_stats():
+    """#3782: an `unhealthy` container returning empty stats, or no `status`
+    at all, threw `toLowerCase` of undefined and the whole panel vanished.
+    Every row must still render, with the placeholder for what is missing,
+    and `unhealthy` must keep its critical colour."""
+    payload = _run_render_probe("containers-incomplete-stats")
+    # One engine only: Engine is hidden, so 13 cells per row (Pod, CONTAINER, Status, ...).
+    rows = _table_rows(payload, "containers", 13)
+    assert [row[1] for row in rows] == ["web", "seerr", "ghost"], f"got {rows!r}"
+    seerr, ghost = rows[1], rows[2]
+    assert seerr[2] == "unhealthy", f"got {seerr!r}"
+    assert seerr[4] == "-" and seerr[7:11] == ["-"] * 4, f"got {seerr!r}"
+    assert ghost[2] == "-", f"got {ghost!r}"
+    cells = payload["pluginTableCells"]["containers"]
+    assert _tier_classes(cells[13 + 2]["value"]) == {"gl-level-critical"}, cells[15]
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
 def test_containers_honours_disable_stats_from_the_config():
     """`[containers] disable_stats` reaches the browser as payload metadata
     (containers/model.py:220-221) and removes columns regardless of

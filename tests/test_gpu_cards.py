@@ -9,10 +9,13 @@
 
 """Tests for the GPU plugin (ARM and Tegra backends)."""
 
+import builtins
+import errno
+
 import pytest
 
 from glances.globals import LINUX
-from glances.plugins.gpu.cards import tegra
+from glances.plugins.gpu.cards import amd, tegra
 from glances.plugins.gpu.cards.arm import (
     ArmGPU,
     aggregate_fdinfo,
@@ -272,3 +275,25 @@ class TestTegraBackend:
 
     def test_temperature_missing_root(self):
         assert tegra.get_temperature(thermal_root='/this/does/not/exist') is None  # nosec B101
+
+
+class TestAmdUnsupportedBusyCounter:
+    """#3797: `gpu_busy_percent` exists but reading it raises EOPNOTSUPP
+    (amdgpu on SI/Oland). The load must read as None, not kill Glances."""
+
+    def test_get_proc_is_none_when_the_read_is_not_supported(self, tmp_path, monkeypatch):
+        busy = tmp_path / amd.GPU_PROC_PERCENT
+        busy.write_text("42\n")
+        real_open = builtins.open
+
+        def fake_open(path, *args, **kwargs):
+            if str(path) == str(busy):
+                raise OSError(errno.EOPNOTSUPP, "Operation not supported")
+            return real_open(path, *args, **kwargs)
+
+        monkeypatch.setattr(builtins, "open", fake_open)
+        assert amd.get_proc(str(tmp_path)) is None
+
+    def test_get_proc_reads_a_supported_counter(self, tmp_path):
+        (tmp_path / amd.GPU_PROC_PERCENT).write_text("42\n")
+        assert amd.get_proc(str(tmp_path)) == 42
