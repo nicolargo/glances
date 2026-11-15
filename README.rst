@@ -7,8 +7,9 @@
    <h1>Glances</h1>
 
 .. image:: ./docs/_static/Glances\ Logo.svg
-    :scale: 50%
-    :align: center
+   :height: 256
+   :width: 233    
+   :align: center
 An Eye on your System
 
 |  |pypi| |test| |contributors| |codacity| |quality|
