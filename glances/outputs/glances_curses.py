@@ -474,6 +474,12 @@ class Tui(threading.Thread):
     # Guard-rail: a key-driven repaint happens at most once per this window —
     # instant when idle, coalesced under rapid key mashing.
     _MIN_KEY_REPAINT_INTERVAL = 1.0
+    # The command column's horizontal scroll gets its own, much shorter
+    # window: a held arrow auto-repeats at ~30 Hz, and at the 1 s guard-rail
+    # each visible step was a jump of ~30 characters. 25 frames/s reads as
+    # continuous motion while a frame (~10 ms at 200x60) still leaves the
+    # core mostly idle, and a slower machine still coalesces.
+    _MIN_SCROLL_REPAINT_INTERVAL = 0.04
     # Upper bound on a single blocking ``getch`` so an external ``stop()`` is
     # honoured promptly even when the next scheduled repaint is far off.
     _MAX_GETCH_BLOCK = 0.25
@@ -653,6 +659,8 @@ class Tui(threading.Thread):
         - ``"quit"``    — ``q`` / ESC: the loop should shut down.
         - ``"changed"`` — a mapped key mutated the view state or sort key
           (the caller should repaint, rate-limited).
+        - ``"scrolled"`` — the command column scrolled: same as
+          ``"changed"``, on the short ``_MIN_SCROLL_REPAINT_INTERVAL``.
         - ``"repaint"`` — a help-overlay key (open / close / scroll) or a
           terminal resize (``curses.KEY_RESIZE``): the caller should repaint
           *immediately*, bypassing the key throttle (the help frame is static
@@ -775,14 +783,14 @@ class Tui(threading.Thread):
             if self._view.command_offset == 0:
                 return "ignored"
             self._view.command_offset -= 1
-            return "changed"
+            return "scrolled"
         if verb == "command_right":
             # No ceiling: the longest argument string on screen is not known
             # until the frame is built, and clamping to it would make the key
             # stop working because of a row the user cannot see. Scrolling
             # past the end shows an empty column, which is self-correcting.
             self._view.command_offset += 1
-            return "changed"
+            return "scrolled"
         if verb == "refresh":
             # v4's `_handle_refresh` (`glances_curses.py:432-433`). Silent by
             # nature: nothing visible happens until the next collection cycle,
@@ -1414,6 +1422,10 @@ class Tui(threading.Thread):
             # Seed so the first keypress is eligible for an instant repaint.
             last_change_paint = now - self._MIN_KEY_REPAINT_INTERVAL
             dirty = False
+            # Throttle window of the pending change: the strictest of the
+            # keys pressed since the last paint, so a scroll arrow cannot
+            # lift the guard-rail of another key queued with it.
+            change_interval = self._MIN_SCROLL_REPAINT_INTERVAL
             # Startup catch-up: the frame just painted was built *before* the
             # scheduler ran a single plugin update, so it carries headers and
             # no stats. Until every displayed plugin has published (or the
@@ -1427,7 +1439,7 @@ class Tui(threading.Thread):
             while not self._stop_event.is_set():
                 now = time.monotonic()
                 next_regular = last_paint + self.refresh_interval
-                next_change = last_change_paint + self._MIN_KEY_REPAINT_INTERVAL if dirty else float("inf")
+                next_change = last_change_paint + change_interval if dirty else float("inf")
                 block = max(0.0, min(min(next_regular, next_change) - now, self._MAX_GETCH_BLOCK))
                 if in_startup:
                     block = min(block, self._STARTUP_POLL_INTERVAL)
@@ -1462,7 +1474,11 @@ class Tui(threading.Thread):
                         last_change_paint = now - self._MIN_KEY_REPAINT_INTERVAL
                         dirty = False
                         continue
-                    if result == "changed":
+                    if result in ("changed", "scrolled"):
+                        if not dirty:
+                            change_interval = self._MIN_SCROLL_REPAINT_INTERVAL
+                        if result == "changed":
+                            change_interval = self._MIN_KEY_REPAINT_INTERVAL
                         dirty = True
                     # Loop back to recompute the block; a due (or rate-limited)
                     # repaint happens on the next timeout, not on every keystroke.
@@ -1471,7 +1487,9 @@ class Tui(threading.Thread):
                 # getch timed out — repaint only if a paint is actually due
                 # (a capped block may expire before the next paint is due).
                 now = time.monotonic()
-                regular_due, change_due = self._repaint_decision(now, last_paint, last_change_paint, dirty)
+                regular_due, change_due = self._repaint_decision(
+                    now, last_paint, last_change_paint, dirty, change_interval
+                )
                 data_due = in_startup and self.store.revision != last_revision
                 if regular_due or change_due or data_due:
                     last_revision = self.store.revision
@@ -1509,17 +1527,20 @@ class Tui(threading.Thread):
         return all(name in published for name, _ in self.registry)
 
     def _repaint_decision(
-        self, now: float, last_paint: float, last_change_paint: float, dirty: bool
+        self, now: float, last_paint: float, last_change_paint: float, dirty: bool, interval: float | None = None
     ) -> tuple[bool, bool]:
         """Return ``(regular_due, change_due)`` for the repaint policy. Pure.
 
         - ``regular_due``: the periodic ``refresh_interval`` cadence elapsed.
         - ``change_due``: a pending key change exists AND at least
           ``_MIN_KEY_REPAINT_INTERVAL`` has passed since the last key-driven
-          repaint (the once-per-second guard-rail).
+          repaint (the once-per-second guard-rail), or ``interval`` when
+          the pending change asks for a shorter one (command scroll).
         """
+        if interval is None:
+            interval = self._MIN_KEY_REPAINT_INTERVAL
         regular_due = (now - last_paint) >= self.refresh_interval
-        change_due = dirty and (now - last_change_paint) >= self._MIN_KEY_REPAINT_INTERVAL
+        change_due = dirty and (now - last_change_paint) >= interval
         return regular_due, change_due
 
     def _repaint(self, stdscr) -> None:

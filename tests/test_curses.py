@@ -898,6 +898,25 @@ def test_tui_repaint_decision_guard_rail(fake_store, fake_alerts, fake_config):
     assert change_due is False
 
 
+def test_tui_repaint_decision_honours_a_shorter_interval(fake_store, fake_alerts, fake_config):
+    """The command scroll is repainted on its own, much shorter interval: at
+    the 1 s guard-rail a held arrow advanced ~30 characters per visible jump."""
+    from glances.outputs import glances_curses as tui_mod
+
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
+    scroll = tui._MIN_SCROLL_REPAINT_INTERVAL
+    assert scroll < tui._MIN_KEY_REPAINT_INTERVAL
+
+    _, change_due = tui._repaint_decision(
+        now=100.0, last_paint=100.0, last_change_paint=100.0 - scroll, dirty=True, interval=scroll
+    )
+    assert change_due is True
+    _, change_due = tui._repaint_decision(
+        now=100.0, last_paint=100.0, last_change_paint=100.0 - 0.5 * scroll, dirty=True, interval=scroll
+    )
+    assert change_due is False
+
+
 def test_tui_repaint_decision_regular_cadence(fake_store, fake_alerts, fake_config):
     """Regular cadence is independent of key changes."""
     from glances.outputs import glances_curses as tui_mod
@@ -1076,6 +1095,78 @@ def test_tui_startup_polling_stops_after_catchup(monkeypatch, fake_alerts, fake_
 
     assert screen.blocks[0] == pytest.approx(tui._STARTUP_POLL_INTERVAL)
     assert screen.blocks[-1] == pytest.approx(tui._MAX_GETCH_BLOCK)
+
+
+class _KeyRepeatScreen:
+    """A held key at the terminal's auto-repeat rate, on a fake clock.
+
+    `getch` honours the `timeout` like curses does: it returns the next
+    press if one arrives within the window (advancing the clock to it),
+    otherwise -1 once the window is spent. Deterministic -- no sleep."""
+
+    def __init__(self, stop_event, clock: list[float], key: int, presses: int, period: float, max_polls: int) -> None:
+        self._stop = stop_event
+        self._clock = clock
+        self._key = key
+        self._max = max_polls
+        self._due = [clock[0] + period * (i + 1) for i in range(presses)]
+        self._block = 0.0
+        self.calls = 0
+
+    def timeout(self, ms: int) -> None:
+        self._block = ms / 1000.0
+
+    def nodelay(self, flag: bool) -> None:
+        pass
+
+    def getch(self) -> int:
+        self.calls += 1
+        if self.calls >= self._max:
+            self._stop.set()
+        if self._due and self._due[0] <= self._clock[0] + self._block:
+            self._clock[0] = max(self._clock[0], self._due.pop(0))
+            return self._key
+        # A real call is never free: without this a 0 ms timeout would
+        # freeze the clock and spin the loop.
+        self._clock[0] += max(self._block, 0.001)
+        return -1
+
+    def getmaxyx(self) -> tuple[int, int]:
+        return (50, 200)
+
+    def refresh(self) -> None:
+        pass
+
+
+def _paints_while_holding(monkeypatch, fake_alerts, fake_config, key: int) -> int:
+    """Key-driven repaints while `key` is held for ~0.6 s at 30 Hz."""
+    from glances.outputs import glances_curses as tui_mod
+
+    clock = [1000.0]
+    monkeypatch.setattr(tui_mod.time, "monotonic", lambda: clock[0])
+    monkeypatch.setattr(tui_mod, "_init_colors", lambda theme: None)
+    store = _CatchupStore()
+    store.publish("mem")  # no startup catch-up: steady state from the start
+    tui = _make_catchup_tui(tui_mod, store, fake_alerts, fake_config, [("mem", False)])
+    paints: list[float] = []
+    monkeypatch.setattr(tui, "_repaint", lambda scr: paints.append(clock[0]))
+
+    start = clock[0]
+    tui._loop(_KeyRepeatScreen(tui._stop_event, clock, key, presses=20, period=0.03, max_polls=200))
+    # Only what the user sees while the key is down: not the initial paint,
+    # not the trailing coalesced one, not the regular cadence.
+    return sum(1 for t in paints if start < t <= start + 20 * 0.03)
+
+
+def test_a_held_scroll_arrow_repaints_smoothly(monkeypatch, fake_alerts, fake_config):
+    """At the 1 s key guard-rail, a held RIGHT showed one jump of ~30
+    characters per second. The command scroll has its own short interval."""
+    assert _paints_while_holding(monkeypatch, fake_alerts, fake_config, curses.KEY_RIGHT) >= 8
+
+
+def test_a_held_hotkey_keeps_the_one_second_guard_rail(monkeypatch, fake_alerts, fake_config):
+    """Non-regression: every other key still coalesces at the guard-rail."""
+    assert _paints_while_holding(monkeypatch, fake_alerts, fake_config, ord("m")) == 1
 
 
 def test_tui_live_sort_reorders_by_engine_key(monkeypatch, fake_store, fake_alerts, fake_config):
@@ -4739,10 +4830,10 @@ def test_the_command_arrows_scroll_and_floor_at_zero(fake_store, fake_alerts, fa
     tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config)
 
     assert tui._handle_key(curses.KEY_LEFT) == "ignored"  # already at 0
-    assert tui._handle_key(curses.KEY_RIGHT) == "changed"
-    assert tui._handle_key(curses.KEY_RIGHT) == "changed"
+    assert tui._handle_key(curses.KEY_RIGHT) == "scrolled"
+    assert tui._handle_key(curses.KEY_RIGHT) == "scrolled"
     assert tui._view.command_offset == 2
-    assert tui._handle_key(curses.KEY_LEFT) == "changed"
+    assert tui._handle_key(curses.KEY_LEFT) == "scrolled"
     assert tui._view.command_offset == 1
     assert tui._build_view(120)["command_offset"] == 1
 
@@ -4758,7 +4849,7 @@ def test_arrow_keys_sort_swaps_the_two_pairs(sorted_engine, fake_store, fake_ale
     assert sorted_engine.sort_key != "cpu_percent"
     assert tui._view.command_offset == 0
     # ... and SHIFT+arrows scroll.
-    assert tui._handle_key(curses.KEY_SRIGHT) == "changed"
+    assert tui._handle_key(curses.KEY_SRIGHT) == "scrolled"
     assert tui._view.command_offset == 1
 
 

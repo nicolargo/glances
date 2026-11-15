@@ -178,10 +178,7 @@ class CsvRenderer:
                 return [str(stat.get(attribute, _NA))]
             if isinstance(stat, list):
                 current = {_item_key(i, pk): i for i in stat if isinstance(i, dict)}
-                return [
-                    str(current.get(ident, {}).get(attribute, _NA))
-                    for ident in self._keys.get(plugin, [])
-                ]
+                return [str(current.get(ident, {}).get(attribute, _NA)) for ident in self._keys.get(plugin, [])]
             return [str(stat.get(attribute, _NA)) if isinstance(stat, dict) else _NA]
         if isinstance(stat, dict):
             return [str(stat.get(k, _NA)) for k in self._dict_keys.get(plugin, [])]

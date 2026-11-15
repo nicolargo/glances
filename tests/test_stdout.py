@@ -145,9 +145,7 @@ def test_csv_dict_plugin_locks_columns_when_keys_change():
     csv = CsvRenderer([("ip", None)])
     first = {"ip": {"address": "192.168.1.5", "mask": "255.255.255.0"}}
     assert csv.render(first, {"ip": None}) == "ip.address,ip.mask"
-    grown = {
-        "ip": {"address": "192.168.1.5", "mask": "255.255.255.0", "public_address": "8.8.8.8"}
-    }
+    grown = {"ip": {"address": "192.168.1.5", "mask": "255.255.255.0", "public_address": "8.8.8.8"}}
     assert csv.render(grown, {"ip": None}) == "192.168.1.5,255.255.255.0"
     shrunk = {"ip": {"address": "192.168.1.5"}}
     assert csv.render(shrunk, {"ip": None}) == "192.168.1.5,N/A"

@@ -1056,6 +1056,28 @@ def test_the_offset_scrolls_the_arguments_only(payload, fields):
     assert "cript.py" in text
 
 
+def _painted_command(rows, index=1):
+    """The command column as the painter lays it out: one space between
+    cells, none before a ``glue`` cell."""
+    from glances.plugins.processlist.render_curses import _FIXED_COL_KEYS
+
+    out = ""
+    for i, cell in enumerate(rows[index].cells[len(_FIXED_COL_KEYS) :]):
+        out += cell.text if (i == 0 or cell.glue) else " " + cell.text
+    return out
+
+
+def test_each_offset_step_moves_the_arguments_by_one_column(fields):
+    """The first RIGHT press must visibly scroll. v4 swaps its leading
+    space for the `…` (`processlist/__init__.py:566-567`), so the arguments
+    move one column per step from the very first one. v5's painter supplies
+    that space as a separator, so a `…` that is not glued replaced the first
+    argument character instead and nothing moved until the second press."""
+    payload = {"data": [_proc(pid=1, cmdline=["python3", "abcdef"])], "_levels": {}}
+    painted = [_painted_command(render(payload, fields, view={"command_offset": n})) for n in range(3)]
+    assert painted == ["python3 abcdef", "python3…bcdef", "python3…cdef"]
+
+
 def test_a_scrolled_row_keeps_its_marker_when_the_arguments_run_out(payload, fields):
     """Losing the column silently would leave a user with no clue that the
     text is off to the left."""

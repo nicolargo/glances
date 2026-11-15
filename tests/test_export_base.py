@@ -647,9 +647,7 @@ def test_normalize_for_influxdb_keeps_a_numeric_username_a_string():
     usernames like 'root' on a stricter backend such as InfluxDB 3 (#3802)."""
     exporter = make_influx_exporter()
 
-    ret = exporter.normalize_for_influxdb(
-        "processlist", ["username", "cpu_percent"], ["1000", 3.5]
-    )
+    ret = exporter.normalize_for_influxdb("processlist", ["username", "cpu_percent"], ["1000", 3.5])
 
     assert ret[0]["fields"]["username"] == "1000"
     assert isinstance(ret[0]["fields"]["username"], str)

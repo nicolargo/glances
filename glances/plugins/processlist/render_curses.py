@@ -384,8 +384,10 @@ def _command_cells(item: dict[str, Any], short_name: bool = True, offset: int = 
     if offset > 0:
         # A scrolled row whose arguments have run out shows the marker alone,
         # rather than silently losing the column: the user can see that the
-        # text is off to the left and scroll back.
-        cells.append(Cell(text="…" + args[offset:]))
+        # text is off to the left and scroll back. Glued: the `…` takes the
+        # separator's column, as it takes v4's leading space, so the very
+        # first step already moves the arguments.
+        cells.append(Cell(text="…" + args[offset:], glue=True))
     elif args:
         # No leading space: the painter already inserts one separator space
         # between this cell and the command (single space, not double).
