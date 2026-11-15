@@ -571,9 +571,9 @@ humanfriendly==10.0 \
     --hash=sha256:1697e1a8a8f550fd43c2865cd84542fc175a61dcb779b6fee18cf6b6ccba1477 \
     --hash=sha256:6b0b831ce8f15f7300721aa49829fc4e83921a9a301cc7f606be6686a2288ddc
     # via pysmart
-ibm-cloud-sdk-core==3.28.1 \
-    --hash=sha256:587e05ea36c604a95ba68e93b04b96729aba8153517c49e0f612c223a5e7edfd \
-    --hash=sha256:76d255273232ff82188916cfeecafeeb1867b49862333e0471629804451aaf48
+ibm-cloud-sdk-core==3.28.2 \
+    --hash=sha256:0d2bd7b835e0cbb0d3ad22d7b8de8ead0cce395261f4df4ec343152235bdc758 \
+    --hash=sha256:9ea551afbd0f627709b8d8a67db4a41d9d16c713014c5a6b1ce1617fae29b2c5
     # via ibmcloudant
 ibmcloudant==0.11.13 \
     --hash=sha256:6ba23cc2e514364e4156b6e86c9f3f4bd03a500e5ab3e2c297bea95588a9cd62 \
@@ -1314,9 +1314,9 @@ pysmart==1.4.3 \
     --hash=sha256:4a3e0bcdf45ae49b7a120300e20434e2fd2e5bb0fa68e0179acb3ab5fbcaae5e \
     --hash=sha256:64bcce7da044efe9e23f7a813ce748775abd4803a7fc9b9617f530a56853c179
     # via glances
-python-dateutil==3.0.0 \
-    --hash=sha256:3c79630202e4152c6add678446984236efe4f57e84d8e892aab0637bab82e9fd \
-    --hash=sha256:7ebcb3c29a92f3ceafe79a7a48a5c45677e9e004bbeec5742ac0bbb00560b7a2
+python-dateutil==4.0.0 \
+    --hash=sha256:a5e246f79eb80475e691bf93862cead98decd8a498cf53ba0516fcdc0f50dc1c \
+    --hash=sha256:d7295ff14fdc0f92f662100bfb6c551d160ca090f2939f1ec5b9794265c03f06
     # via
     #   elasticsearch
     #   glances

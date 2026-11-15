@@ -771,9 +771,9 @@ pylxd==2.4.2 \
     --hash=sha256:41161a731b01ff9bd1b6c8607eab81f9564873b338e068160bcd517a64c057f3 \
     --hash=sha256:759881fd94b6dda56ecde44ca1b7c0a7b478b4282ed950cff4f99e28cb207e3a
     # via glances
-python-dateutil==3.0.0 \
-    --hash=sha256:3c79630202e4152c6add678446984236efe4f57e84d8e892aab0637bab82e9fd \
-    --hash=sha256:7ebcb3c29a92f3ceafe79a7a48a5c45677e9e004bbeec5742ac0bbb00560b7a2
+python-dateutil==4.0.0 \
+    --hash=sha256:a5e246f79eb80475e691bf93862cead98decd8a498cf53ba0516fcdc0f50dc1c \
+    --hash=sha256:d7295ff14fdc0f92f662100bfb6c551d160ca090f2939f1ec5b9794265c03f06
     # via
     #   glances
     #   pylxd
