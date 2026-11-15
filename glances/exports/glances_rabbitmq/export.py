@@ -76,7 +76,7 @@ class Export(GlancesExportBase):
 
     def export(self, name: str, columns: list[str], points: list[Any]) -> None:
         # Naive UTC, as v4's datetime.utcnow() (deprecated) produced: no "+00:00".
-        dateinfo = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None).isoformat()
+        dateinfo = datetime.datetime.now(datetime.UTC).replace(tzinfo=None).isoformat()
         data = f"hostname={self.hostname}, name={name}, dateinfo={dateinfo}"
         for column, value in zip(columns, points):
             if isinstance(value, Number):

@@ -38,7 +38,7 @@ import inspect
 import logging
 from collections.abc import Callable
 from dataclasses import dataclass, field, replace
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 
@@ -505,9 +505,9 @@ def _format_alert_time(ts: str, now: datetime | None = None) -> str:
     except (ValueError, TypeError):
         return str(ts)[:8]
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
+        dt = dt.replace(tzinfo=UTC)
     local_dt = dt.astimezone()
-    now_local = (now or datetime.now(tz=timezone.utc)).astimezone()
+    now_local = (now or datetime.now(tz=UTC)).astimezone()
     if local_dt.date() == now_local.date():
         return local_dt.strftime("%H:%M:%S")
     # Another day: `YY-MM-DD` fills the column exactly, and reads in the same
@@ -768,7 +768,7 @@ def render_alert_block(
             )
         ]
 
-    now_local = (now or datetime.now(tz=timezone.utc)).astimezone()
+    now_local = (now or datetime.now(tz=UTC)).astimezone()
     n_ongoing = sum(1 for i in incidents if i["ongoing"])
     n_resolved = len(incidents) - n_ongoing
 

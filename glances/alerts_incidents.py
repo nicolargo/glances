@@ -22,7 +22,7 @@ block (`glances/outputs/curses_renderer.py`) and the
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 
@@ -65,7 +65,7 @@ def incident_duration(incident: dict[str, Any], now: datetime | None = None) -> 
     except (ValueError, TypeError):
         return None
     if begin.tzinfo is None:
-        begin = begin.replace(tzinfo=timezone.utc)
+        begin = begin.replace(tzinfo=UTC)
 
     end_raw = incident.get("end")
     end: datetime | None = None
@@ -75,9 +75,9 @@ def incident_duration(incident: dict[str, Any], now: datetime | None = None) -> 
         except (ValueError, TypeError):
             end = None
         if end is not None and end.tzinfo is None:
-            end = end.replace(tzinfo=timezone.utc)
+            end = end.replace(tzinfo=UTC)
     if end is None:
-        end = now or datetime.now(tz=timezone.utc)
+        end = now or datetime.now(tz=UTC)
 
     elapsed = (end - begin).total_seconds()
     if elapsed < 0:

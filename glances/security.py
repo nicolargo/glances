@@ -46,7 +46,7 @@ import hmac
 import logging
 import secrets
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import anyio
 import jwt
@@ -236,7 +236,7 @@ class JWTHandler:
         return self._secret_was_generated
 
     def create_access_token(self, username: str) -> str:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         payload = {
             "sub": username,
             "exp": now + timedelta(minutes=self._expire_minutes),

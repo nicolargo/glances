@@ -27,7 +27,7 @@ from __future__ import annotations
 import re
 import sys
 from collections.abc import Callable
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from platform import node
 from typing import TYPE_CHECKING, Any
 
@@ -125,7 +125,7 @@ class Export(GlancesExportBase):
 
     def _table(self, payload: dict | list) -> tuple[list[str], list[list[Any]]] | None:
         """v4's rows for one plugin: (column names, rows), or None to skip it."""
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         if isinstance(payload, dict):
             columns = ["time", "hostname_id", *payload]
             return columns, [[now, self.hostname, *payload.values()]]

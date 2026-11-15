@@ -17,7 +17,7 @@ Pod only when a pod is present), and by the painted width (see
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from glances.globals import auto_unit, pretty_date
@@ -172,7 +172,7 @@ def _uptime_text(started_at: Any) -> str:
     """v4's uptime string (``pretty_date``), from the ``started_at`` timestamp."""
     if not isinstance(started_at, (int, float)):
         return ""
-    return pretty_date(datetime.fromtimestamp(started_at, timezone.utc), now=datetime.now(timezone.utc))
+    return pretty_date(datetime.fromtimestamp(started_at, UTC), now=datetime.now(UTC))
 
 
 def _name_status_uptime_cells(c: dict[str, Any], disable: set[str], name_w: int) -> list[Cell]:

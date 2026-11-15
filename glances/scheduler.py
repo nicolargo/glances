@@ -130,7 +130,7 @@ class AsyncScheduler:
             seconds *= self._idle_factor
         try:
             await asyncio.wait_for(self._wake.wait(), seconds)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             pass
 
     def _config_float(self, section: str, key: str, default: float) -> float:

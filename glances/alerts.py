@@ -42,7 +42,7 @@ import time
 from collections import Counter, deque
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from glances.actions.action_base import GlancesActionBase
@@ -785,7 +785,7 @@ class GlancesAlerts:
         is_initial: bool = False,
     ) -> dict[str, Any]:
         return {
-            "ts": datetime.now(timezone.utc).isoformat(),
+            "ts": datetime.now(UTC).isoformat(),
             "plugin": plugin_name,
             "key": key,
             "field": field_name,
@@ -836,7 +836,7 @@ class GlancesAlerts:
             "_glances_hostname": self._hostname,
             "_glances_plugin": plugin.plugin_name,
             "_glances_level": level,
-            "_glances_timestamp": datetime.now(timezone.utc).isoformat(),
+            "_glances_timestamp": datetime.now(UTC).isoformat(),
         }
 
     def _lookup_action_value(

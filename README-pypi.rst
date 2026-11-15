@@ -321,12 +321,12 @@ Following shells are supported: bash, zsh and tcsh.
 Requirements 🧩
 ===============
 
-Glances is developed in Python. A minimal Python version 3.10 or higher
+Glances is developed in Python. A minimal Python version 3.11 or higher
 should be installed on your system.
 
 *Note for Python 2 users*
 
-Glances version 4 or higher do not support Python 2 (and Python 3 < 3.10).
+Glances version 4 or higher do not support Python 2 (and Python 3 < 3.11).
 Please uses Glances version 3.4.x if you need Python 2 support.
 
 Dependencies:
