@@ -644,7 +644,7 @@ Following shells are supported: bash, zsh, tcsh, fish and powershell.
 Requirements 🧩
 ===============
 
-Glances 5 requires **Python 3.11 or higher** (tested up to Python 3.14) and runs on
+Glances 5 requires **Python 3.11 or higher** (tested up to Python 3.15) and runs on
 Linux, macOS, FreeBSD and Windows.
 
 Core dependencies (always installed):
