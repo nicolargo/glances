@@ -55,7 +55,8 @@ def test_webui_builtin_themes_carry_no_css():
 
 def test_webui_user_theme_is_read(tmp_path):
     css_file = tmp_path / "t.css"
-    css_file.write_text(":root { --gl-bg: #000; }\n", encoding="utf-8")
+    # Bytes, not text: `write_text` would turn `\n` into `\r\n` on Windows.
+    css_file.write_bytes(b":root { --gl-bg: #000; }\n")
     assert webui_theme(f"  {css_file} ") == {"name": "custom", "css": ":root { --gl-bg: #000; }\n"}
 
 
@@ -68,6 +69,7 @@ def test_webui_user_theme_path_is_case_sensitive(tmp_path):
 
 def test_webui_user_theme_expands_the_home_directory(tmp_path, monkeypatch):
     monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setenv("USERPROFILE", str(tmp_path))  # what `expanduser()` reads on Windows
     (tmp_path / "t.css").write_text(":root {}", encoding="utf-8")
     assert webui_theme("~/t.css")["name"] == "custom"
 
