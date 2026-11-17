@@ -78,9 +78,11 @@ def test_webui_falls_back_to_dark_on_a_value_that_is_no_theme(value):
 
 
 def test_webui_falls_back_to_dark_on_a_missing_file(tmp_path, caplog):
+    """The warning must not leak the configured path (nor the OSError, which carries it)."""
     with caplog.at_level(logging.WARNING, logger="glances.theme"):
         assert webui_theme(str(tmp_path / "nope.css")) == {"name": "dark", "css": None}
-    assert "nope.css" in caplog.text
+    assert "cannot be read" in caplog.text
+    assert "nope.css" not in caplog.text
 
 
 def test_webui_only_serves_css_files(tmp_path, caplog):
