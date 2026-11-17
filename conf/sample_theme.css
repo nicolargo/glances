@@ -1,0 +1,59 @@
+/* Glances WebUI — sample user theme: "Quantum Blue".
+ *
+ * Deep navy surfaces, a mint-cyan accent and a magenta alert colour, taken
+ * from the Qendra "One control system, from camera to decoder" slide
+ * (World Quantum Cannes Festival 2026).
+ *
+ * Use it:
+ *
+ *   [outputs]
+ *   theme=./conf/sample_theme.css
+ *
+ * then reload the WebUI. The file is read at each page load: edit, reload,
+ * no restart. A relative path is resolved from the directory Glances is
+ * started in; use an absolute path (or ~/...) for a service. The file must
+ * end with .css and stay under 64 KiB. If it cannot be read, Glances logs a
+ * warning and the WebUI uses the dark theme. The TUI ignores user themes.
+ *
+ * Write your own:
+ *
+ * - A theme is ONE block of custom properties. The WebUI sets
+ *   data-theme="custom" on <html>, so none of the shipped light/dark blocks
+ *   apply: every token you leave out keeps its dark-theme value.
+ * - The full list of tokens, with the dark and light values, is at the top of
+ *   glances/outputs/static/css/glances.css. Colours only live in these
+ *   tokens, so nothing else needs overriding.
+ * - Keep the four --gl-level-* colours readable (4.5:1) on --gl-bg AND on
+ *   --gl-surface: a tier is a text colour, and a filled badge (--gl-bg as
+ *   text on the tier colour) when it is critical.
+ * - --gl-font must be a MONOSPACE stack whose glyphs are at most 0.62em wide
+ *   (the columns are sized for that: JetBrains Mono, Fira Code, IBM Plex Mono,
+ *   Menlo, Consolas and DejaVu Sans Mono all fit). The WebUI loads no web
+ *   font, so name a font installed on the machine that browses it, and end
+ *   with a generic fallback.
+ */
+
+:root[data-theme="custom"] {
+  /* Surfaces: the slide's blue, taken down to a navy so text and tier colours
+   * keep their contrast on a screen left open all day. */
+  --gl-bg: #16276f;
+  --gl-surface: #1e3084;
+  --gl-border: #34499f;
+  /* The row under the cursor in the process list: 1.4:1 against --gl-bg. */
+  --gl-row-hover: #283c9a;
+
+  /* Text. */
+  --gl-fg: #f2f6ff;
+  --gl-muted: #a9b8ee;
+
+  /* Tiers. ok is the slide's cyan, critical its laser magenta. */
+  --gl-level-ok: #14ffe0;
+  --gl-level-careful: #8cc2ff;
+  --gl-level-warning: #ffd166;
+  --gl-level-critical: #ff7ad9;
+
+  --gl-font: "JetBrains Mono", "Fira Code", "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Not a token: dark scrollbars and form controls to match. */
+  color-scheme: dark;
+}

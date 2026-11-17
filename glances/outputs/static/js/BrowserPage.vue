@@ -52,6 +52,7 @@
 // `[global] refresh`, in the WebUI's tokens. Served at /browser by
 // `glances -s --browser`. A click opens the server's own Web UI.
 import { getJson, resolveConfig } from "./api.js";
+import { applyTheme } from "./theme.js";
 import {
 	cellClass,
 	columnLabels,
@@ -74,8 +75,7 @@ export default {
 		},
 	},
 	async mounted() {
-		const { refreshSeconds, theme } = await resolveConfig();
-		document.documentElement.dataset.theme = theme;
+		const [{ refreshSeconds }] = await Promise.all([resolveConfig(), applyTheme()]);
 		await this.tick();
 		this.timer = setInterval(() => this.tick(), refreshSeconds * 1000);
 	},

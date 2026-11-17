@@ -101,8 +101,12 @@ than a second one concerning the user interface:
     # background. "dark" (default) is bold white, suited to the dark
     # backgrounds most terminals use; "light" is a dark grey for a white
     # background. No single colour is legible on both, hence the switch.
-    # The WebUI uses the same key to pick its dark or light theme.
+    # The WebUI uses the same key to pick its theme: dark, light ("white" is
+    # an alias), or the path of a CSS file with your own colours and font
+    # (see conf/sample_theme.css). The TUI ignores a CSS file (dark).
     #theme=light
+    #theme=white
+    #theme=./conf/sample_theme.css
     # Options for the server (glances -s / -w)
     #-----------------------------------------
     # Address and TCP port the server listens on (--bind / --port)
@@ -214,8 +218,9 @@ contains ``*``, which the CORS specification forbids.
 
 **Configuration endpoint.** ``/api/5/config`` serves the configuration. When
 no password is set, it only exposes the options the WebUI needs
-(``[global] refresh`` and ``[outputs] theme``, ``max_processes_display``,
-``api_doc``). With a password, authenticated clients get the whole
+(``[global] refresh`` and ``[outputs] max_processes_display``,
+``api_doc``). The WebUI theme is served apart, by ``/api/5/theme``, because
+``[outputs] theme`` can be a file path. With a password, authenticated clients get the whole
 configuration, with the options whose *name* designates a secret (passwords,
 tokens, keys...) and the credentials embedded in URL values redacted. A
 secret written inside another value (an action command line, an AMP

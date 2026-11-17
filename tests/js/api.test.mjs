@@ -4,6 +4,7 @@ import {
 	getJson,
 	validate,
 	resolveConfig,
+	resolveTheme,
 	resolveArgs,
 	resolvePluginNames,
 	resolveVersion,
@@ -78,11 +79,10 @@ test("validate passes a cycle-0 null through untouched", () => {
 
 
 
-test("resolveConfig reads [global] refresh and [outputs] theme from one fetch", async () => {
-	stubFetch({ "api/5/config": { body: { global: { refresh: 5 }, outputs: { theme: "light" } } } });
+test("resolveConfig reads [global] refresh from the config fetch", async () => {
+	stubFetch({ "api/5/config": { body: { global: { refresh: 5 } } } });
 	assert.deepEqual(await resolveConfig(), {
 		refreshSeconds: 5,
-		theme: "light",
 		maxProcessesDisplay: null,
 		apiDoc: DEFAULT_API_DOC,
 	});
@@ -92,7 +92,6 @@ test("resolveConfig falls back to defaults when config is unreachable", async ()
 	stubFetch({});
 	assert.deepEqual(await resolveConfig(), {
 		refreshSeconds: DEFAULT_REFRESH_SECONDS,
-		theme: DEFAULT_THEME,
 		maxProcessesDisplay: null,
 		apiDoc: DEFAULT_API_DOC,
 	});
@@ -100,7 +99,7 @@ test("resolveConfig falls back to defaults when config is unreachable", async ()
 
 // Fix round 1, IMPORTANT 1: `[outputs] max_processes_display` is resolved
 // from this SAME /api/5/config fetch (not a second one from
-// PluginProcesslist.vue), the same way refresh/theme already are, and
+// PluginProcesslist.vue), the same way refresh already is, and
 // handed down through AppShell's provide()/inject.
 test("resolveConfig reads [outputs] max_processes_display", async () => {
 	stubFetch({ "api/5/config": { body: { outputs: { max_processes_display: 25 } } } });
@@ -123,16 +122,34 @@ test("resolveConfig treats an absent, zero or negative max_processes_display as 
 	assert.equal((await resolveConfig()).maxProcessesDisplay, null);
 });
 
-test("resolveConfig falls back to the default theme when config has no theme key", async () => {
-	stubFetch({ "api/5/config": { body: { global: { refresh: 5 } } } });
-	assert.equal((await resolveConfig()).theme, DEFAULT_THEME);
+test("resolveTheme reads a built-in theme name", async () => {
+	stubFetch({ "api/5/theme": { body: { name: "light", css: null } } });
+	assert.deepEqual(await resolveTheme(), { name: "light", css: null });
 });
 
-test("resolveConfig falls back to the default theme on an unrecognised value", async () => {
-	// A config typo must not be written through to data-theme -- fall back
-	// rather than ship an unstyled page.
-	stubFetch({ "api/5/config": { body: { outputs: { theme: "solarized" } } } });
-	assert.equal((await resolveConfig()).theme, DEFAULT_THEME);
+test("resolveTheme carries the stylesheet of a user theme", async () => {
+	const css = ':root[data-theme="custom"] { --gl-bg: #16276f; }';
+	stubFetch({ "api/5/theme": { body: { name: "custom", css } } });
+	assert.deepEqual(await resolveTheme(), { name: "custom", css });
+});
+
+test("resolveTheme falls back to the default theme when the endpoint is unreachable", async () => {
+	stubFetch({});
+	assert.deepEqual(await resolveTheme(), { name: DEFAULT_THEME, css: null });
+});
+
+test("resolveTheme falls back to the default theme on an unrecognised name", async () => {
+	// A name outside dark/light/custom must not be written through to
+	// data-theme -- fall back rather than ship an unstyled page.
+	stubFetch({ "api/5/theme": { body: { name: "solarized", css: "body { display: none }" } } });
+	assert.deepEqual(await resolveTheme(), { name: DEFAULT_THEME, css: null });
+});
+
+test("resolveTheme ignores a stylesheet that is not text, or that comes with a built-in name", async () => {
+	stubFetch({ "api/5/theme": { body: { name: "custom", css: 42 } } });
+	assert.equal((await resolveTheme()).css, null);
+	stubFetch({ "api/5/theme": { body: { name: "dark", css: "body { display: none }" } } });
+	assert.equal((await resolveTheme()).css, null);
 });
 
 test("fetchAll issues exactly one request", async () => {

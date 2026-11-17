@@ -162,6 +162,7 @@
 <script>
 import { computed, markRaw } from "vue";
 import { fetchAll, resolveConfig, resolveArgs, resolvePluginNames, resolveVersion, getJson, requestSort } from "./api.js";
+import { applyTheme } from "./theme.js";
 import { REFRESH_STEPS, stepRefresh, initialRefresh, saveRefresh } from "./refresh.js";
 import { resolveAllLabels } from "./labels.js";
 import HistoryModal from "./HistoryModal.vue";
@@ -295,7 +296,7 @@ export default {
 			// /api/5/pluginslist. null until read, and null if it cannot be read:
 			// visiblePlugins() then renders the whole registry.
 			pluginNames: null,
-			// `[outputs] max_processes_display`, resolved alongside refresh/theme
+			// `[outputs] max_processes_display`, resolved alongside refresh
 			// in mounted() below and handed down via provide() above. `null` means
 			// "no cap", both before resolveConfig() resolves and when the key is
 			// absent/unparsable.
@@ -514,17 +515,14 @@ export default {
 		},
 	},
 	async mounted() {
-		const { refreshSeconds, theme, maxProcessesDisplay, apiDoc } = await resolveConfig();
+		// The theme is applied in parallel with the config: no extra round-trip.
+		const [{ refreshSeconds, maxProcessesDisplay, apiDoc }] = await Promise.all([resolveConfig(), applyTheme()]);
 		// `?refresh=N`, then a cadence the viewer picked with the footer's -/+
 		// buttons, win over `[global] refresh`, which stays the value a first
 		// visit starts at.
 		this.refresh = initialRefresh(refreshSeconds);
 		this.apiDoc = apiDoc;
-		// [outputs] theme, mapped straight to data-theme -- see the design
-		// spec, section 5. The static template hardcodes "dark" so the page
-		// has a theme before this fetch resolves.
-		document.documentElement.dataset.theme = theme;
-		// Resolved from the SAME /api/5/config fetch as refresh/theme above --
+		// Resolved from the SAME /api/5/config fetch as refresh above --
 		// no second round-trip. Provided to `processlist`/`programlist`
 		// (provide() above) before the first tick(), so their very first paint
 		// is already capped: the cap used to arrive after mount, one refresh

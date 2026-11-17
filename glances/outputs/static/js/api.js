@@ -13,7 +13,7 @@
 export const DEFAULT_REFRESH_SECONDS = 2;
 export const DEFAULT_THEME = "dark";
 export const DEFAULT_API_DOC = true;
-const VALID_THEMES = new Set(["dark", "light"]);
+const VALID_THEMES = new Set(["dark", "light", "custom"]);
 const TRUE_STRINGS = new Set(["1", "true", "yes", "on"]);
 const FALSE_STRINGS = new Set(["0", "false", "no", "off"]);
 
@@ -113,21 +113,20 @@ function requireFields(obj, required) {
 }
 
 export async function resolveConfig() {
-	// [global] refresh and [outputs] theme, both via the SAME /api/5/config
-	// fetch. NOT /api/5/args: measured -- the v5 argument namespace
-	// carries no refresh key at all.
+	// [global] refresh and [outputs] max_processes_display / api_doc, all via
+	// the SAME /api/5/config fetch. NOT /api/5/args: measured -- the v5
+	// argument namespace carries no refresh key at all. The theme is not here
+	// -- see resolveTheme().
 	let config;
 	try {
 		config = await getJson("api/5/config");
 	} catch {
 		// Only a failure to REACH the config falls back. A UI that cannot read
 		// the cadence still polls at the default rather than not polling at
-		// all, and stays on the default theme rather than going unstyled.
-		// Anything thrown by the extraction below is a programming error and
-		// must surface, not be disguised as an unreachable server.
+		// all. Anything thrown by the extraction below is a programming error
+		// and must surface, not be disguised as an unreachable server.
 		return {
 			refreshSeconds: DEFAULT_REFRESH_SECONDS,
-			theme: DEFAULT_THEME,
 			maxProcessesDisplay: null,
 			apiDoc: DEFAULT_API_DOC,
 		};
@@ -136,16 +135,10 @@ export async function resolveConfig() {
 	const seconds = Number(refresh);
 	const refreshSeconds = Number.isFinite(seconds) && seconds > 0 ? seconds : DEFAULT_REFRESH_SECONDS;
 
-	// A typo or unrecognised value must not be written through to
-	// data-theme -- fall back to the same default `[outputs] theme` itself
-	// uses (glances_curses.py:226) rather than shipping an unstyled page.
-	const rawTheme = config && config.outputs && config.outputs.theme;
-	const theme = VALID_THEMES.has(rawTheme) ? rawTheme : DEFAULT_THEME;
-
 	// `[outputs] max_processes_display` -- v4 parity (plugin-processlist.vue:590
 	// reads it and slices IN THE BROWSER; the server-side read in
 	// glances_restful_api.py assigns a local and only logs it, dead code not
-	// reproduced here). Resolved once, here, alongside refresh/theme -- not
+	// reproduced here). Resolved once, here, alongside refresh -- not
 	// fetched a second time by PluginProcesslist.vue itself -- and handed
 	// down through AppShell's `provide()`, the same
 	// mechanism `serverPlugins` already uses for a value only ONE plugin reads.
@@ -161,7 +154,26 @@ export async function resolveConfig() {
 	// no link. Defaults to true, as GlancesConfig.DEFAULTS does.
 	const apiDoc = coerceBool(config && config.outputs && config.outputs.api_doc, DEFAULT_API_DOC);
 
-	return { refreshSeconds, theme, maxProcessesDisplay, apiDoc };
+	return { refreshSeconds, maxProcessesDisplay, apiDoc };
+}
+
+export async function resolveTheme() {
+	// `[outputs] theme` is `dark`, `light`, or the path of a user CSS file.
+	// Read from /api/5/theme, NOT /api/5/config: the public config never
+	// serves it, because a path discloses the local user and directory
+	// layout. The payload is `{name, css}`: `css` is the user's stylesheet when
+	// `name` is "custom", null otherwise.
+	let payload;
+	try {
+		payload = await getJson("api/5/theme");
+	} catch {
+		// Unreachable: stay on the default theme rather than going unstyled.
+		return { name: DEFAULT_THEME, css: null };
+	}
+	// An unrecognised name must not be written through to data-theme.
+	const name = payload && VALID_THEMES.has(payload.name) ? payload.name : DEFAULT_THEME;
+	const css = name === "custom" && typeof payload.css === "string" ? payload.css : null;
+	return { name, css };
 }
 
 function coerceBool(raw, fallback) {

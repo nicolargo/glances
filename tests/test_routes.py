@@ -678,13 +678,52 @@ def test_config_open_when_no_auth(config_factory, store):
 def test_config_without_auth_serves_only_the_public_options(config_factory, store, monkeypatch):
     """Audit M1: the unauthenticated view is an allowlist, not a redacted dump."""
     monkeypatch.setenv("GLANCES_CPU__CRITICAL_ACTION", "curl https://hooks.example/T0/ACTIONSECRET")
-    config = config_factory(theme="white", cors_origins="https://ok.example")
+    config = config_factory(theme="/home/alice/glances.css", cors_origins="https://ok.example")
     with TestClient(_make_app_with_plugins(config, store)) as client:
         body = client.get("/api/5/config").json()
     assert "ACTIONSECRET" not in str(body)
     assert "cpu" not in body
-    assert body["outputs"] == {"theme": "white", "api_doc": True}
+    # `theme` may be a file path: it is served by /api/5/theme, never here.
+    assert "alice" not in str(body)
+    assert body["outputs"] == {"api_doc": True}
     assert set(body) <= set(GlancesConfig.PUBLIC_OPTIONS)
+
+
+def test_theme_defaults_to_dark(config_factory, store):
+    with TestClient(_make_app_with_plugins(config_factory(), store)) as client:
+        r = client.get("/api/5/theme")
+    assert r.status_code == 200
+    assert r.json() == {"name": "dark", "css": None}
+
+
+def test_theme_white_is_the_light_theme(config_factory, store):
+    with TestClient(_make_app_with_plugins(config_factory(theme="white"), store)) as client:
+        assert client.get("/api/5/theme").json() == {"name": "light", "css": None}
+
+
+def test_theme_serves_the_css_of_a_user_theme(config_factory, store, tmp_path):
+    css_file = tmp_path / "mine.css"
+    css_file.write_text(':root[data-theme="custom"] { --gl-bg: #123456; }', encoding="utf-8")
+    config = config_factory(theme=str(css_file))
+    with TestClient(_make_app_with_plugins(config, store)) as client:
+        body = client.get("/api/5/theme").json()
+    assert body == {"name": "custom", "css": ':root[data-theme="custom"] { --gl-bg: #123456; }'}
+    assert str(tmp_path) not in str(body)
+
+
+def test_theme_falls_back_to_dark_on_an_unreadable_user_theme(config_factory, store, tmp_path):
+    config = config_factory(theme=str(tmp_path / "missing.css"))
+    with TestClient(_make_app_with_plugins(config, store)) as client:
+        assert client.get("/api/5/theme").json() == {"name": "dark", "css": None}
+
+
+def test_theme_requires_auth_when_a_password_is_set(config_factory, store):
+    config = config_factory(password=hash_password("hunter2"))
+    with TestClient(_make_app_with_plugins(config, store)) as client:
+        assert client.get("/api/5/theme").status_code == 401
+        r = client.get("/api/5/theme", headers=_basic_header("glances", "hunter2"))
+    assert r.status_code == 200
+    assert r.json()["name"] == "dark"
 
 
 def test_config_with_auth_serves_the_redacted_dump(config_factory, store):

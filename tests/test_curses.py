@@ -2731,6 +2731,19 @@ def test_tui_reads_theme_from_config(fake_store, fake_alerts):
     assert tui._theme == "light"
 
 
+def test_tui_treats_white_as_light_and_a_user_theme_as_dark(fake_store, fake_alerts):
+    """`theme=white` is `light`; a user theme (a .css path) is WebUI-only, so the TUI stays dark."""
+    from unittest.mock import MagicMock
+
+    from glances.outputs import glances_curses as tui_mod
+
+    for value, expected in (("white", "light"), ("./conf/sample_theme.css", "dark")):
+        cfg = MagicMock()
+        cfg.get.side_effect = lambda section, key, default=None, value=value: value if key == "theme" else default
+        tui = _make_tui(tui_mod, fake_store, fake_alerts, cfg)
+        assert tui._theme == expected
+
+
 def test_tui_theme_defaults_to_dark(fake_store, fake_alerts, fake_config):
     """No config key → dark, so an unconfigured user keeps the majority case."""
     from glances.outputs import glances_curses as tui_mod
