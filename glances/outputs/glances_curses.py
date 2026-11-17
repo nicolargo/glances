@@ -52,6 +52,7 @@ from glances.outputs.curses_renderer import (
 )
 from glances.plugins.processlist.render_curses import process_extra_rows, summarise
 from glances.processes import glances_processes, sort_processes_stats_list, sort_stats
+from glances.theme import tui_theme
 
 if TYPE_CHECKING:
     from glances.alerts import GlancesAlerts
@@ -550,7 +551,7 @@ class Tui(threading.Thread):
         # light amber tuned for the dark backgrounds most terminals use;
         # ``light`` swaps to a dark amber for white backgrounds. A single
         # colour cannot clear 4.6:1 on both, hence the key.
-        self._theme = str(self.config.get("outputs", "theme", "dark")).strip().lower()
+        self._theme = tui_theme(self.config.get("outputs", "theme", "dark"))
         self._stop_event = threading.Event()
         # User-toggled view options (percpu / short-name / programs),
         # driven by the hotkey dispatch table. ``programs`` starts from the

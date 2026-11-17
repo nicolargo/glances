@@ -643,7 +643,7 @@ def test_public_view_serves_only_the_webui_keys(env: Path) -> None:
     public = GlancesConfig().as_dict_public()
     assert public == {
         "global": {"refresh": "3"},
-        "outputs": {"theme": "white", "max_processes_display": "25", "api_doc": "false"},
+        "outputs": {"max_processes_display": "25", "api_doc": "false"},
     }
 
 
@@ -656,12 +656,12 @@ def test_public_view_resolves_option_names_like_get(env: Path) -> None:
         Refresh = 5
 
         [outputs]
-        Theme = white
+        Max_Processes_Display = 25
         Cors_Origins = https://ok.example
     """,
     )
     public = GlancesConfig().as_dict_public()
-    assert public == {"global": {"refresh": "5"}, "outputs": {"api_doc": True, "theme": "white"}}
+    assert public == {"global": {"refresh": "5"}, "outputs": {"api_doc": True, "max_processes_display": "25"}}
 
 
 def test_public_view_never_serves_a_key_outside_the_allowlist(env: Path) -> None:

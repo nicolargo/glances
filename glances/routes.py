@@ -28,6 +28,7 @@ Route inventory:
 | ``/api/5/alert/incidents``    | GET    | ``{is_initializing, incidents}`` envelope (``incidents_payload()``) |
 | ``/api/5/config``             | GET    | ``as_dict_secure()`` with a password, else ``as_dict_public()`` |
 | ``/api/5/args``               | GET    | ``PUBLIC_ARGS`` without a password, else ``app.state.args``, redacted |
+| ``/api/5/theme``              | GET    | ``{name, css}``: the WebUI theme of ``[outputs] theme`` (``glances.theme``) |
 | ``/api/5/<plugin>``           | GET    | ``plugin.get_api_payload()`` (``_levels`` included) |
 | ``/api/5/<plugin>/info``      | GET    | ``plugin.fields_description``|
 | ``/api/5/<plugin>/limits``    | GET    | ``plugin.get_limits()``      |
@@ -64,6 +65,7 @@ from glances.plugins.plugin import query as plugin_query
 from glances.plugins.plugin.query import PluginQueryError
 from glances.processes import glances_processes, sort_processes_stats_list
 from glances.security import check_basic, decode_basic
+from glances.theme import DEFAULT_THEME, webui_theme
 
 try:
     import msgpack
@@ -78,11 +80,12 @@ logger = logging.getLogger(__name__)
 # Converts /all/msgpack's payload the way FastAPI converts /all's.
 _ALL_STATS = TypeAdapter(dict[str, Any])
 
+
 # Static path segments that the dynamic ``/{plugin_name}`` handler must not
 # capture. FastAPI matches routes in declaration order, so listing static
 # routes first is enough, but this set documents the reservation explicitly
 # and guards against rename mistakes in test fixtures.
-_RESERVED_NAMES: frozenset[str] = frozenset({"token", "pluginslist", "all", "alert", "config", "args"})
+_RESERVED_NAMES: frozenset[str] = frozenset({"token", "pluginslist", "all", "alert", "config", "args", "theme"})
 
 # Argument names that are sensitive beyond what GlancesConfig._secure_value()
 # catches. `config_path` is a filesystem path: it discloses the local username
@@ -342,6 +345,7 @@ def build_router() -> APIRouter:
     router.add_api_route("/serverslist", _servers_list, methods=["GET"], name="servers_list")
 
     router.add_api_route("/config", _config_dump, methods=["GET"], name="config_dump")
+    router.add_api_route("/theme", _theme, methods=["GET"], name="theme")
 
     @router.get("/args")
     async def args_dump(request: Request) -> dict[str, Any]:
@@ -453,6 +457,16 @@ async def _config_dump(request: Request) -> dict[str, Any]:
     if request.app.state.jwt_handler is None:
         return config.as_dict_public()
     return config.as_dict_secure()
+
+
+async def _theme(request: Request) -> dict[str, str | None]:
+    """The WebUI theme: a built-in name, or ``custom`` with the CSS of the user's file.
+
+    Served apart from `/config` on purpose: the `theme` option may be a file
+    path, and a path discloses the local username and directory layout to an
+    unauthenticated reader (`_SENSITIVE_ARGS` explains the same rule).
+    """
+    return webui_theme(request.app.state.config.get("outputs", "theme", DEFAULT_THEME))
 
 
 async def _servers_list(request: Request) -> list[dict[str, Any]]:

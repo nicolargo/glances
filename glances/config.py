@@ -164,7 +164,7 @@ class GlancesConfig:
     # audit 2026-10-04, M1).
     PUBLIC_OPTIONS: dict[str, frozenset[str]] = {
         "global": frozenset({"refresh"}),
-        "outputs": frozenset({"theme", "max_processes_display", "api_doc"}),
+        "outputs": frozenset({"max_processes_display", "api_doc"}),
     }
 
     # Class-level paths, indirected for testability (patch.object friendly).

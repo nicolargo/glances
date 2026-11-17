@@ -113,6 +113,8 @@ REST API:
   read the key from ``/api/5/config``
 * Without a password, ``/api/5/config`` only returns the keys the WebUI uses; the
   full (redacted) configuration needs a password
+* ``[outputs] theme`` is no longer served by ``/api/5/config`` (it can be a file
+  path): the WebUI reads it from the new ``/api/5/theme`` endpoint
 * A server bound on a loopback address only accepts the ``localhost``,
   ``127.0.0.1`` and ``[::1]`` Host headers (DNS rebinding protection): a reverse
   proxy on the same host which forwards its own Host header must be listed in
@@ -265,6 +267,9 @@ Bugs corrected:
 
 Enhancements:
 
+* WebUI: user themes. ``[outputs] theme`` also takes ``white`` (alias of ``light``)
+  and the path of a CSS file which sets the ``--gl-*`` colour and font tokens, see
+  ``conf/sample_theme.css``
 * WebUI: make the container table sortable by status #3763
 * Processlist: only build curses rows for the processes that fit on screen (performance) #3762
 

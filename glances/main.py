@@ -65,6 +65,7 @@ from glances.processes import glances_processes, sort_processes_stats_list
 from glances.scheduler import AsyncScheduler
 from glances.security import hash_password, verify_password
 from glances.stats_store import StatsStore
+from glances.theme import tui_theme
 
 # Shell completion (`--print-completion`), v4 parity (`main.py:17-22`). Optional:
 # shtab is not installed on Windows, and the option is then simply absent.
@@ -1511,7 +1512,7 @@ def run_browser(args: argparse.Namespace, config: GlancesConfig) -> int:
     options = tui_view_options(args)
     browser = BrowserTui(
         poller,
-        theme=str(config.get("outputs", "theme", "dark")).strip().lower(),
+        theme=tui_theme(config.get("outputs", "theme", "dark")),
         disable_bold=options["disable_bold"],
         disable_bg=options["disable_bg"],
     )
