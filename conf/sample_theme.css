@@ -1,8 +1,9 @@
-/* Glances WebUI — sample user theme: "Quantum Blue".
+/* Glances WebUI — sample user theme: "Slate & Sun".
  *
- * Deep navy surfaces, a mint-cyan accent and a magenta alert colour, taken
- * from the Qendra "One control system, from camera to decoder" slide
- * (World Quantum Cannes Festival 2026).
+ * Slate-blue surfaces, cream text, sand secondary text and sun-yellow
+ * headers, from the colours.cafe palette #264 (393F50, 435892, F2EEE7,
+ * BCAA8A, FCCE52). The palette has no green or red, so the tier colours
+ * are added in the same soft register.
  *
  * Use it:
  *
@@ -34,23 +35,25 @@
  */
 
 :root[data-theme="custom"] {
-  /* Surfaces: the slide's blue, taken down to a navy so text and tier colours
-   * keep their contrast on a screen left open all day. */
-  --gl-bg: #16276f;
-  --gl-surface: #1e3084;
-  --gl-border: #34499f;
-  /* The row under the cursor in the process list: 1.4:1 against --gl-bg. */
-  --gl-row-hover: #283c9a;
+  /* Surfaces: the palette's slate, on the darker slate it is shown on. */
+  --gl-bg: #252b3b;
+  --gl-surface: #393f50;
+  --gl-border: #435892;
+  /* The row under the cursor in the process list: 1.39:1 against --gl-bg. */
+  --gl-row-hover: #35415f;
 
-  /* Text. */
-  --gl-fg: #f2f6ff;
-  --gl-muted: #a9b8ee;
+  /* Text: cream, and sand for secondary text. */
+  --gl-fg: #f2eee7;
+  --gl-muted: #bcaa8a;
+  /* Block titles and column headers: the palette's yellow. */
+  --gl-header: #fcce52;
 
-  /* Tiers. ok is the slide's cyan, critical its laser magenta. */
-  --gl-level-ok: #14ffe0;
-  --gl-level-careful: #8cc2ff;
-  --gl-level-warning: #ffd166;
-  --gl-level-critical: #ff7ad9;
+  /* Tiers: not in the palette. warning is orange, not the palette's yellow,
+   * so a warning value never reads as a header. */
+  --gl-level-ok: #8bd8a0;
+  --gl-level-careful: #9db4ff;
+  --gl-level-warning: #ff9f45;
+  --gl-level-critical: #ff8f87;
 
   --gl-font: "JetBrains Mono", "Fira Code", "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
