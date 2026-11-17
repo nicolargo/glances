@@ -70,16 +70,16 @@ def webui_theme(value: Any) -> dict[str, str | None]:
 def _read_css(value: str) -> str | None:
     path = Path(value).expanduser()
     if path.suffix.lower() != ".css":
-        logger.warning("[outputs] theme=%s is neither dark, light nor a .css file: using the dark theme", value)
+        logger.warning("[outputs] theme is neither dark, light nor a .css file: using the dark theme")
         return None
     try:
         # `open()` inside the try: Snap's strict confinement refuses at open, not at read.
         with path.open("rb") as css_file:
             data = css_file.read(MAX_CSS_BYTES + 1)
         if len(data) > MAX_CSS_BYTES:
-            logger.warning("[outputs] theme=%s is larger than %d bytes: using the dark theme", value, MAX_CSS_BYTES)
+            logger.warning("[outputs] theme is larger than %d bytes: using the dark theme", MAX_CSS_BYTES)
             return None
         return data.decode("utf-8")
-    except (OSError, UnicodeDecodeError) as exc:
-        logger.warning("[outputs] theme=%s cannot be read (%s): using the dark theme", value, exc)
+    except (OSError, UnicodeDecodeError):
+        logger.warning("[outputs] theme cannot be read: falling back to the dark theme")
         return None
