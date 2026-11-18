@@ -68,6 +68,7 @@ LEFT_SLOT: tuple[str, ...] = (
     "connections",
     "diskio",
     "fs",
+    "zfs",
     "irq",
     "folders",
     "raid",
