@@ -28,6 +28,8 @@ under the ``[containers]`` section:
     show=thiscontainer,andthisone,andthoseones.*
     # Hide some containers (comma-separated list of container name or regular expression)
     hide=donotshowthisone,andthose.*
+    # Do not collect stats for matching Docker containers (disabled by default)
+    #no_stats=^skip-this-container$,^ignore-.*
     # Show only specific containers (comma-separated list of container name or regular expression)
     #show=showthisone,andthose.*
     # Define the maximum containers size name (default is 20 chars)
@@ -57,6 +59,15 @@ under the ``[containers]`` section:
     #lxd_urls=unix:///var/snap/lxd/common/lxd/unix.socket
     # Define Podman sock (legacy fallback if podman_urls is not set)
     #podman_sock=unix:///run/user/1000/podman/podman.sock
+
+To avoid opening stats streams and starting background threads for selected
+Docker containers, set ``no_stats`` to a comma-separated list of container names
+or regular expressions. Matching is case-insensitive, as with ``hide`` and
+``show``. Excluded containers are absent from the collected stats, including
+the REST API and exports. Glances still lists and inspects them to obtain their
+names. This option applies only to Docker; it does not affect Podman or LXD.
+When omitted, all containers continue to be collected, regardless of the
+``hide`` and ``show`` display filters.
 
 .. note::
 

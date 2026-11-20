@@ -21,6 +21,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import re
 from typing import Any, ClassVar
 
 from glances.plugins.containers.engines import ContainerEngineMonitor
@@ -197,10 +198,14 @@ class PluginModel(GlancesPluginBase[list]):
         ``name`` primary key — not re-implemented here.
         """
         all_tag = self._all_tag()
+        no_stats = self._compile_filter("no_stats", flags=re.IGNORECASE)
         items: list[dict[str, Any]] = []
         for monitor in self.monitors:
             try:
-                _version, containers = monitor.update(all_tag=all_tag)
+                if no_stats and isinstance(monitor, DockerEngineMonitor):
+                    _version, containers = monitor.update(all_tag=all_tag, no_stats=no_stats)
+                else:
+                    _version, containers = monitor.update(all_tag=all_tag)
             except Exception as e:
                 logger.warning("containers: monitor update failed: %s", e)
                 continue

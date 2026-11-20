@@ -283,7 +283,7 @@ class DockerEngineMonitor:
         for t in self.stats_fetchers.values():
             t.stop()
 
-    def update(self, all_tag) -> tuple[dict, list[dict]]:
+    def update(self, all_tag, no_stats=()) -> tuple[dict, list[dict]]:
         """Update Docker stats using the input method."""
 
         if not self.client or self.disable:
@@ -311,6 +311,10 @@ class DockerEngineMonitor:
 
         # Inspect the containers concurrently to populate their attributes (issue #3559)
         containers = self._inspect_concurrently(containers)
+
+        # Exclude containers before opening their stats streams or starting threads.
+        if no_stats:
+            containers = [c for c in containers if not any(pattern.search(c.name) for pattern in no_stats)]
 
         # Start new thread for new container
         for container in containers:
