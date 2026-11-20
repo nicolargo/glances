@@ -1107,6 +1107,7 @@ def test_derive_incidents_deescalation_shows_current_level_when_ongoing():
     incidents = _derive_incidents(history, {("cpu", None, "total"): "warning"})
     assert len(incidents) == 1
     assert incidents[0]["level"] == "warning"
+    assert incidents[0]["peak_level"] == "critical"
     assert incidents[0]["ongoing"] is True
 
 
@@ -1119,6 +1120,7 @@ def test_derive_incidents_resolved_keeps_the_peak_level():
     ]
     incidents = _derive_incidents(history, {})
     assert incidents[0]["level"] == "critical"
+    assert incidents[0]["peak_level"] == "critical"
     assert incidents[0]["ongoing"] is False
 
 

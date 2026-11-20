@@ -86,8 +86,8 @@ def incident_duration(incident: dict[str, Any], now: datetime | None = None) -> 
     return f">{text}" if incident.get("partial") else text
 
 
-# Severity ranking, used to keep a RESOLVED incident's level at its peak.
-# An ongoing incident reports its current committed level instead.
+# Severity ranking, used to track an incident's `peak_level`. `level` is the
+# current level while the incident is ongoing and the peak once resolved.
 _LEVEL_ORDER: dict[str, int] = {"ok": 0, "careful": 1, "warning": 2, "critical": 3}
 
 
@@ -138,6 +138,8 @@ def derive_incidents(
             if closed is not None:
                 closed["end"] = ts
                 closed["ongoing"] = False
+                # A resolved row has no "current" level left: show its peak.
+                closed["level"] = closed["peak_level"]
             continue
         incident = open_by_tuple.get(state_key)
         if incident is None:
@@ -153,6 +155,7 @@ def derive_incidents(
                 "key": state_key[1],
                 "field": state_key[2],
                 "level": level,
+                "peak_level": level,
                 "begin": ts,
                 "end": None,
                 "ongoing": True,
@@ -164,8 +167,9 @@ def derive_incidents(
             open_by_tuple[state_key] = incident
             incidents.append(incident)
             continue
-        if _LEVEL_ORDER.get(level, 0) > _LEVEL_ORDER.get(incident["level"], 0):
-            incident["level"] = level
+        incident["level"] = level
+        if _LEVEL_ORDER.get(level, 0) > _LEVEL_ORDER.get(incident["peak_level"], 0):
+            incident["peak_level"] = level
         incident["prominent"] = incident["prominent"] or bool(evt.get("prominent", False))
 
     if ongoing is not None:
@@ -179,6 +183,8 @@ def derive_incidents(
                 # An ongoing incident reports where it is now, not the peak it
                 # once reached (a critical -> warning de-escalation shows WARNING).
                 incident["level"] = committed
+                if _LEVEL_ORDER.get(committed, 0) > _LEVEL_ORDER.get(incident["peak_level"], 0):
+                    incident["peak_level"] = committed
         # Tuples the engine reports active but the history no longer covers at
         # all. Without this the block would silently drop a live alert.
         for state_key, committed in ongoing.items():
@@ -190,6 +196,7 @@ def derive_incidents(
                     "key": state_key[1],
                     "field": state_key[2],
                     "level": committed,
+                    "peak_level": committed,
                     "begin": None,
                     "end": None,
                     "ongoing": True,
