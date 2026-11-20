@@ -86,10 +86,8 @@ def incident_duration(incident: dict[str, Any], now: datetime | None = None) -> 
     return f">{text}" if incident.get("partial") else text
 
 
-# Severity ranking, used to keep an incident's level monotonic: once an
-# incident has reached `critical` it keeps reporting `critical` even if it
-# later de-escalates. v4 parity — `GlancesEvent.update()` assigns `state`
-# only on CRITICAL (design §2.6).
+# Severity ranking, used to keep a RESOLVED incident's level at its peak.
+# An ongoing incident reports its current committed level instead.
 _LEVEL_ORDER: dict[str, int] = {"ok": 0, "careful": 1, "warning": 2, "critical": 3}
 
 
@@ -177,7 +175,9 @@ def derive_incidents(
                 # The engine says recovered but no `→ ok` event survives.
                 # Trust the engine and close the incident with an unknown end.
                 incident["ongoing"] = False
-            elif _LEVEL_ORDER.get(committed, 0) > _LEVEL_ORDER.get(incident["level"], 0):
+            else:
+                # An ongoing incident reports where it is now, not the peak it
+                # once reached (a critical -> warning de-escalation shows WARNING).
                 incident["level"] = committed
         # Tuples the engine reports active but the history no longer covers at
         # all. Without this the block would silently drop a live alert.
