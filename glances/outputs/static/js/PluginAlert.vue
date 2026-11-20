@@ -331,14 +331,15 @@ export default {
 		glyphOf(incident) {
 			return incident.ongoing ? "●" : "○";
 		},
-		// The glyph keeps the level colour regardless of ongoing/resolved, so
-		// the severity an incident reached always stays readable
+		// The glyph keeps the PEAK level colour regardless of ongoing/resolved
+		// (LEVEL shows the current one), so the severity an incident reached
+		// always stays readable
 		// (curses_renderer.py:840-843). Divergence from the TUI: there the
 		// glyph carries `prominent` only once LEVEL is width-dropped: the
 		// browser drops LEVEL too now, but `prominent` still belongs on LEVEL
 		// alone here -- see levelClassOf().
 		glyphClass(incident) {
-			return levelClass({ level: incident.level });
+			return levelClass({ level: incident.peak_level || incident.level });
 		},
 		// curses_renderer.py:851-861 -- LEVEL is tier-COLOURED only while the
 		// incident is ONGOING, so colour in this column means "still

@@ -300,13 +300,13 @@ the closing transition's `ts`. A tuple may therefore contribute several rows
 — one per incident, not one per tuple. Intermediate escalations
 (`warning → critical`) mutate the open incident; they never open a new one.
 
-**Level shown = the maximum reached during the incident**, i.e.
-`max(levels of the incident's transitions, committed_level if still open)`.
-This is v4 parity (§2.6, monotonic `state`). Accepted consequence: an
+**Two levels per incident.** `peak_level` is the maximum reached during the
+incident (v4 parity, §2.6, monotonic `state`). `level` is the CURRENT level
+while the incident is ongoing — `committed_level` from `get_ongoing()` — and
+equals `peak_level` once resolved. The glyph is coloured by `peak_level` ("how
+bad did it get"); the `LEVEL` column shows `level` ("where are we now"). An
 incident that de-escalated from `critical` to `warning` and is still active
-keeps showing `CRITICAL` in the block while the owning plugin's cell shows
-the warning colour. The block is a journal of what happened, not a gauge of
-where we are (§5.1).
+therefore shows a red glyph and `WARNING` in the `LEVEL` column.
 
 **Accepted loss:** `previous → level` is no longer displayed. That is the
 §3.1.2 fix, and it means an escalation is visible only through the final
@@ -502,7 +502,7 @@ glyph carries that state, which is what frees the column.
 **Revised 2026-08-18: colour in the `LEVEL` column means "still happening".**
 It first carried the level colour for resolved incidents too, which left the
 whole block coloured end to end and drowned the active rows among the settled
-ones. A resolved incident's level text is now `DEFAULT`; its **glyph keeps the
+ones. A resolved incident's level text is now `DEFAULT`; its **glyph keeps the peak
 level colour**, so the severity it reached stays readable. That split is
 deliberate — the glyph answers "how bad was it", the level colour answers "is
 it still going".
@@ -609,7 +609,7 @@ Constraints on the plans pass:
   watched field of every plugin on every cycle**. It is on the hot path.
   A perf check is mandatory, not optional (Phase 2 spec §5.1 item 6).
 - `avg` accumulates over above-threshold samples only (v4 parity, §2.6).
-- `level` stays monotonic within an incident (v4 parity, §2.6).
+- `peak_level` stays monotonic within an incident (v4 parity, §2.6); `level` is the current level while ongoing.
 
 ## 8. Configuration
 

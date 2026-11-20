@@ -1098,16 +1098,30 @@ def test_derive_incidents_escalation_keeps_one_row_at_max_level():
     assert incidents[0]["begin"] == "2026-08-16T10:00:00+00:00"
 
 
-def test_derive_incidents_deescalation_keeps_the_peak_level():
-    """critical → warning, still active: the journal keeps CRITICAL (v4 parity §2.6)."""
+def test_derive_incidents_deescalation_shows_current_level_when_ongoing():
+    """critical → warning, still active: the row shows the current WARNING."""
     history = [
         _evt("2026-08-16T10:00:00+00:00", "cpu", "total", "critical"),
         _evt("2026-08-16T10:05:00+00:00", "cpu", "total", "warning", previous="critical"),
     ]
     incidents = _derive_incidents(history, {("cpu", None, "total"): "warning"})
     assert len(incidents) == 1
-    assert incidents[0]["level"] == "critical"
+    assert incidents[0]["level"] == "warning"
+    assert incidents[0]["peak_level"] == "critical"
     assert incidents[0]["ongoing"] is True
+
+
+def test_derive_incidents_resolved_keeps_the_peak_level():
+    """critical → warning → ok: the resolved row keeps its CRITICAL peak."""
+    history = [
+        _evt("2026-08-16T10:00:00+00:00", "cpu", "total", "critical"),
+        _evt("2026-08-16T10:05:00+00:00", "cpu", "total", "warning", previous="critical"),
+        _evt("2026-08-16T10:06:00+00:00", "cpu", "total", "ok", previous="warning"),
+    ]
+    incidents = _derive_incidents(history, {})
+    assert incidents[0]["level"] == "critical"
+    assert incidents[0]["peak_level"] == "critical"
+    assert incidents[0]["ongoing"] is False
 
 
 def test_derive_incidents_resolution_closes_the_row_instead_of_adding_one():

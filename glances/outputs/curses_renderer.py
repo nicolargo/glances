@@ -848,6 +848,8 @@ def render_alert_block(
         is_ongoing = bool(incident["ongoing"])
         level = str(incident["level"])
         role = _LEVEL_TO_ROLE.get(level, ColorRole.DEFAULT)
+        # The glyph keeps the peak reached; the LEVEL column the current level.
+        peak_role = _LEVEL_TO_ROLE.get(str(incident.get("peak_level", level)), ColorRole.DEFAULT)
         prominent = bool(incident["prominent"])
         begin = incident["begin"]
         ts_text = _format_alert_time(str(begin), now=now_local) if begin else _ALERT_TIME_UNKNOWN
@@ -856,7 +858,7 @@ def render_alert_block(
         cells = [
             Cell(
                 text=_ALERT_GLYPHS[is_ongoing][unicode_ok],
-                color=role,
+                color=peak_role,
                 # When LEVEL is dropped the glyph is the only cell left that
                 # can carry `prominent` — never silently lose the flag.
                 prominent=prominent and not show_level,
@@ -875,7 +877,7 @@ def render_alert_block(
                 Cell(
                     text=_fit_text(level.upper(), _ALERT_W_LEVEL, right=True),
                     # A resolved incident goes neutral here so colour in this
-                    # column means "still happening". Its glyph keeps the level
+                    # column means "still happening". Its glyph keeps the peak level
                     # colour, so the severity it reached stays readable.
                     color=role if is_ongoing else ColorRole.DEFAULT,
                     prominent=prominent,
