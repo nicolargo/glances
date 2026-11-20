@@ -268,3 +268,20 @@ def test_extended_stats_survive_a_platform_without_an_optional_psutil_attribute(
     result = engine.set_extended_stats({"pid": os.getpid()})
     assert result["extended_stats"] is True
     assert missing not in result
+
+
+def test_extended_stats_keep_the_num_ctx_switches_key_without_a_deprecation_warning():
+    """psutil 8.0 deprecates `num_ctx_switches()` in favor of `ctx_switches()`:
+    the engine asks for the new name when psutil has it, and still publishes
+    the `num_ctx_switches` key."""
+    import os
+    import warnings
+
+    engine = GlancesProcesses()
+    engine.extended_process = {}
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", DeprecationWarning)
+        result = engine.set_extended_stats({"pid": os.getpid()})
+    assert result["extended_stats"] is True
+    assert "num_ctx_switches" in result
+    assert "ctx_switches" not in result
