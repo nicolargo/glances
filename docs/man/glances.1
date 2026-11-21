@@ -28,7 +28,7 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
 ..
-.TH "GLANCES" "1" "Nov 15, 2026" "5.0.0b1" "Glances"
+.TH "GLANCES" "1" "Nov 21, 2026" "5.0.0b2" "Glances"
 .SH NAME
 glances \- An eye on your system
 .SH SYNOPSIS
@@ -841,8 +841,12 @@ max_processes_display=25
 # background. \(dqdark\(dq (default) is bold white, suited to the dark
 # backgrounds most terminals use; \(dqlight\(dq is a dark grey for a white
 # background. No single colour is legible on both, hence the switch.
-# The WebUI uses the same key to pick its dark or light theme.
+# The WebUI uses the same key to pick its theme: dark, light (\(dqwhite\(dq is
+# an alias), or the path of a CSS file with your own colours and font
+# (see conf/sample_theme.css). The TUI ignores a CSS file (dark).
 #theme=light
+#theme=white
+#theme=./conf/sample_theme.css
 # Options for the server (glances \-s / \-w)
 #\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-\-
 # Address and TCP port the server listens on (\-\-bind / \-\-port)
@@ -964,8 +968,9 @@ contains \fB*\fP, which the CORS specification forbids.
 .sp
 \fBConfiguration endpoint.\fP \fB/api/5/config\fP serves the configuration. When
 no password is set, it only exposes the options the WebUI needs
-(\fB[global] refresh\fP and \fB[outputs] theme\fP, \fBmax_processes_display\fP,
-\fBapi_doc\fP). With a password, authenticated clients get the whole
+(\fB[global] refresh\fP and \fB[outputs] max_processes_display\fP,
+\fBapi_doc\fP). The WebUI theme is served apart, by \fB/api/5/theme\fP, because
+\fB[outputs] theme\fP can be a file path. With a password, authenticated clients get the whole
 configuration, with the options whose \fIname\fP designates a secret (passwords,
 tokens, keys…) and the credentials embedded in URL values redacted. A
 secret written inside another value (an action command line, an AMP

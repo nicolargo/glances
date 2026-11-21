@@ -17,7 +17,7 @@ import sys
 # Version should start and end with a numerical char
 # See https://packaging.python.org/specifications/core-metadata/#version
 # Examples: 1.0.0, 1.0.0rc1, 1.1.0_dev1
-__version__ = "5.0.0b1"
+__version__ = "5.0.0b2"
 __apiversion__ = "5"
 __author__ = 'Nicolas Hennion <nicolas@nicolargo.com>'
 __license__ = 'LGPLv3'

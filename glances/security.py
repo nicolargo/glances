@@ -14,7 +14,7 @@ Two primitives, both kept algorithmically equivalent to v4 (CVE-2026-32596
 
 - ``hash_password(plain)`` / ``verify_password(plain, stored)`` — PBKDF2-SHA256,
   stored as ``pbkdf2_sha256$<iterations>$<salt>$<hex>`` (600 000 iterations,
-  ``dklen=32``). The format of 5.0.0b1, ``<salt>$<hex>`` (100 000 iterations,
+  ``dklen=32``). The format of v5, ``<salt>$<hex>`` (100 000 iterations,
   ``dklen=128``), is still read: with ``dklen`` four times SHA-256's output
   the server did four times the work of an attacker checking one candidate
   (security audit 2026-10-17, B-3). Salt is a UUID4 hex (matching v4
@@ -86,8 +86,7 @@ def hash_password(plaintext: str, *, salt: str | None = None) -> str:
 def _parse_stored(stored: str) -> tuple[str, int, int, bytes] | None:
     """``(salt, iterations, dklen, digest)`` of a stored hash, ``None`` when malformed.
 
-    Both formats: ``pbkdf2_sha256$<iterations>$<salt>$<hex>`` and the
-    ``<salt>$<hex>`` of 5.0.0b1.
+    Both formats: ``pbkdf2_sha256$<iterations>$<salt>$<hex>`` and the ``<salt>$<hex>``.
     """
     fields = stored.split("$") if stored else []
     if len(fields) == 2:

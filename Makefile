@@ -63,6 +63,7 @@ venv-clean: ## Remove the virtualenv
 
 venv-dev: ## Create the virtualenv with dev dependencies
 	$(UV_RUN) sync --dev --all-extras
+	$(UV_RUN) run python -m playwright install chromium
 	$(UV_RUN) run pre-commit install --hook-type pre-commit
 
 venv-dev-upgrade: ## Upgrade the virtualenv with dev dependencies
