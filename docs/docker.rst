@@ -129,40 +129,61 @@ A liveness probe is available, without authentication, on ``/healthz``. The prov
 
 Note: if you want to see the network interface stats within the container, add --net=host --privileged
 
-You can also include Glances container in you own `docker-compose.yml`. A realistic example includes a "traefik" reverse proxy serving an "whoami" app container plus a Glances container, providing a simple and efficient monitoring webui.
+You can also include Glances container in you own `docker-compose.yml`. A realistic example includes a
+`Traefik <https://doc.traefik.io/traefik/>`_ (v3) reverse proxy serving a "whoami" app container plus a Glances
+container, providing a simple and efficient monitoring webui. The Glances router goes through a
+`RateLimit <https://doc.traefik.io/traefik/middlewares/http/ratelimit/>`_ and a
+`BasicAuth <https://doc.traefik.io/traefik/middlewares/http/basicauth/>`_ middleware.
 
-.. code-block:: console
-
-    version: '3'
+.. code-block:: yaml
 
     services:
       reverse-proxy:
-        image: traefik:alpine
-        command: --api --docker
+        image: traefik:v3
+        command:
+          - "--providers.docker=true"
+          - "--providers.docker.exposedbydefault=false"
+          - "--entrypoints.web.address=:80"
         ports:
           - "80:80"
-          - "8080:8080"
         volumes:
-          - /var/run/docker.sock:/var/run/docker.sock
+          - "/var/run/docker.sock:/var/run/docker.sock:ro"
 
       whoami:
-        image: emilevauge/whoami
+        image: traefik/whoami
         labels:
-          - "traefik.frontend.rule=Host:whoami.docker.localhost"
+          - "traefik.enable=true"
+          - "traefik.http.routers.whoami.rule=Host(`whoami.docker.localhost`)"
+          - "traefik.http.routers.whoami.entrypoints=web"
 
       monitoring:
-        image: nicolargo/glances:latest
+        image: nicolargo/glances:latest-full
         restart: always
         pid: host
         volumes:
-          - /var/run/docker.sock:/var/run/docker.sock
+          - "/var/run/docker.sock:/var/run/docker.sock:ro"
           # Uncomment the below line if you want glances to display host OS detail instead of container's
-          # - /etc/os-release:/etc/os-release:ro
+          # - "/etc/os-release:/etc/os-release:ro"
         environment:
-          - "GLANCES_OPT=-w"
+          # Glances v5 listens on 127.0.0.1 by default: bind on 0.0.0.0 so that Traefik can reach it
+          - "GLANCES_OPT=-w --bind 0.0.0.0"
         labels:
-          - "traefik.port=61208"
-          - "traefik.frontend.rule=Host:glances.docker.localhost"
+          - "traefik.enable=true"
+          - "traefik.http.routers.glances.rule=Host(`glances.docker.localhost`)"
+          - "traefik.http.routers.glances.entrypoints=web"
+          - "traefik.http.routers.glances.middlewares=glances-ratelimit,glances-auth"
+          - "traefik.http.services.glances.loadbalancer.server.port=61208"
+          # 20 requests per second on average per client IP, bursts up to 50
+          - "traefik.http.middlewares.glances-ratelimit.ratelimit.average=20"
+          - "traefik.http.middlewares.glances-ratelimit.ratelimit.burst=50"
+          # Login glances, password glances: replace it by the output of `htpasswd -nB <user>`,
+          # with every `$` doubled to `$$` (Compose escaping)
+          - "traefik.http.middlewares.glances-auth.basicauth.users=glances:$$2y$$05$$kNpYwnnW7qWteNL4LzmC/.2gl4sXJsnbXWVwpO0Ms0dekTmMhTNii"
+
+Then browse ``http://glances.docker.localhost`` (``*.docker.localhost`` resolves to the local host).
+For an OAuth/SSO login instead of a password, Traefik's
+`ForwardAuth <https://doc.traefik.io/traefik/middlewares/http/forwardauth/>`_ middleware can delegate the
+authentication to a service such as `traefik-forward-auth <https://github.com/thomseddon/traefik-forward-auth>`_.
 
 How to protect your Dockerized server with a login/password ?
 --------------------------------------------------------------
