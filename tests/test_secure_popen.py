@@ -138,7 +138,16 @@ class TestSecurePopenRender:
 def _sleepers(marker):
     import psutil
 
-    return [p for p in psutil.process_iter(["cmdline"]) if (p.info["cmdline"] or [])[:2] == ["sleep", marker]]
+    # Read cmdline() directly: Process.info is deprecated since psutil 8.0
+    sleepers = []
+    for p in psutil.process_iter():
+        try:
+            cmdline = p.cmdline()
+        except psutil.Error:
+            continue
+        if cmdline[:2] == ["sleep", marker]:
+            sleepers.append(p)
+    return sleepers
 
 
 def test_a_stage_that_cannot_start_kills_the_stages_already_started():

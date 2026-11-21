@@ -2,6 +2,7 @@
 
 import os
 import time
+import warnings
 
 import psutil
 import pytest
@@ -83,6 +84,14 @@ def test_build_process_list_skips_only_the_process_raising_system_error(processe
     pids = {p['pid'] for p in processes.build_process_list(attrs)}
     assert os.getpid() in pids
     assert failing_pid not in pids
+
+
+def test_build_process_list_raises_no_psutil_deprecation_warning(processes):
+    # psutil 8.0 deprecates setting and reading Process.info
+    attrs = processes.get_sorted_attrs() + ['pid'] + processes.get_cached_attrs()
+    with warnings.catch_warnings():
+        warnings.simplefilter('error', DeprecationWarning)
+        assert processes.build_process_list(attrs)
 
 
 def _cpu_time(fn):

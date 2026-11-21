@@ -375,9 +375,9 @@ class GlancesProcesses:
         # Keep what this psutil build exposes: `as_dict()` raises on an unknown
         # attribute name, which would disable the extended stats altogether
         # (macOS has no cpu_affinity/ionice, FreeBSD no ionice).
-        extended_stats = [
-            attr for attr in ('cpu_affinity', 'ionice', 'num_ctx_switches') if hasattr(psutil.Process, attr)
-        ]
+        # psutil 8.0 deprecates num_ctx_switches in favor of ctx_switches.
+        ctx_switches = 'ctx_switches' if hasattr(psutil.Process, 'ctx_switches') else 'num_ctx_switches'
+        extended_stats = [attr for attr in ('cpu_affinity', 'ionice', ctx_switches) if hasattr(psutil.Process, attr)]
         if LINUX:
             # num_fds only available on Unix system (see issue #1351)
             extended_stats += ['num_fds']
@@ -393,6 +393,9 @@ class GlancesProcesses:
 
             # Get the extended stats for the selected process
             ret = selected_process.as_dict(attrs=extended_stats, ad_value=None)
+            # Keep the num_ctx_switches key whatever the psutil version
+            if 'ctx_switches' in ret:
+                ret['num_ctx_switches'] = ret.pop('ctx_switches')
 
             # Get memory swap for the selected process (Linux Only)
             ret['memory_swap'] = self.__get_extended_memory_swap(selected_process)
@@ -533,31 +536,32 @@ class GlancesProcesses:
     def process_iter(attrs):
         # Same as psutil.process_iter(attrs=attrs, ad_value=None) but skip a process raising
         # SystemError instead of aborting the whole list (see psutil issue #3024 and issue #3811)
+        # Yield (process, info) pairs: setting Process.info is deprecated since psutil 8.0
         for p in psutil.process_iter():
             try:
-                p.info = p.as_dict(attrs=attrs, ad_value=None)
+                info = p.as_dict(attrs=attrs, ad_value=None)
             except (psutil.NoSuchProcess, SystemError):
                 continue
-            yield p
+            yield p, info
 
     def build_process_list(self, sorted_attrs):
         # Build the processes stats list (it is why we need psutil>=5.3.0) (see issue #2755)
         processlist = list(
             filter(
-                lambda p: (
-                    not (BSD and p.info['name'] == 'idle')
-                    and not (WINDOWS and p.info['name'] == 'System Idle Process')
-                    and not (MACOS and p.info['name'] == 'kernel_task')
-                    and not (self.no_kernel_threads and LINUX and p.info['gids'].real == 0)
+                lambda p_info: (
+                    not (BSD and p_info[1]['name'] == 'idle')
+                    and not (WINDOWS and p_info[1]['name'] == 'System Idle Process')
+                    and not (MACOS and p_info[1]['name'] == 'kernel_task')
+                    and not (self.no_kernel_threads and LINUX and p_info[1]['gids'].real == 0)
                 ),
                 self.process_iter(sorted_attrs),
             )
         )
 
-        # Only get the info key
+        # Only get the info dict
         # PsUtil 6+ no longer check PID reused #2755 so use is_running in the loop
         # Note: not sure it is realy needed but CPU consumption look the same with or without it
-        return [p.info for p in processlist if p.is_running()]
+        return [info for p, info in processlist if p.is_running()]
 
     def get_sorted_attrs(self):
         defaults = ['cpu_percent', 'cpu_times', 'memory_percent', 'name', 'status', 'num_threads']

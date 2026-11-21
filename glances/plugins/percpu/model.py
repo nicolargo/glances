@@ -231,7 +231,11 @@ class PluginModel(GlancesPluginBase[list]):
                 "dpc",
                 "interrupt",
             ):
-                if hasattr(cpu_times, name):
+                # Real fields only: hasattr() would read psutil 8.0's deprecated `interrupt` alias
+                if name in cpu_times._fields:
                     entry[name] = getattr(cpu_times, name)
+            # psutil 8.0 renamed the Windows `interrupt` field (next to `dpc`) to `irq`
+            if "dpc" in entry and "interrupt" not in entry and "irq" in entry:
+                entry["interrupt"] = entry["irq"]
             out.append(entry)
         return out

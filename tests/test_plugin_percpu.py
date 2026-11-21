@@ -158,6 +158,24 @@ async def test_update_drops_undeclared_fields(store, config):
     assert "future_attr" not in data[0]
 
 
+async def test_windows_interrupt_comes_from_the_psutil_8_irq_field(store, config):
+    """psutil 8.0 renamed the Windows `interrupt` field to `irq` and kept
+    `interrupt` as a deprecated property: the plugin still publishes
+    `interrupt`, without reading that property."""
+
+    class WindowsCpuTimes(namedtuple("scputimes_percent", ["user", "system", "idle", "irq", "dpc"])):
+        @property
+        def interrupt(self):
+            raise AssertionError("deprecated `interrupt` alias read")
+
+    plugin = PluginModel(store, config)
+    with _patch_sampler([WindowsCpuTimes(user=10.0, system=15.0, idle=70.0, irq=3.0, dpc=2.0)]):
+        await plugin.update()
+    data = store.get("percpu")["data"]
+    assert data[0]["interrupt"] == 3.0
+    assert data[0]["dpc"] == 2.0
+
+
 # ---------------------------------------------------------- _levels
 
 
