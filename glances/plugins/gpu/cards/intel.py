@@ -107,7 +107,7 @@ class IntelGPU:
             # GPU name
             device_stats['name'] = get_device_name(device)
             # Memory consumption in % (not available on all GPU)
-            device_stats['mem'] = get_mem(device)
+            device_stats['mem'] = get_mem(device, snapshot, os.path.join(self.proc_root_folder, 'meminfo'))
             # Processor consumption in %: real engine busy time,
             # frequency ratio as fallback (see module docstring)
             device_stats['proc'] = self._compute_proc_percent(device, snapshot)
@@ -226,9 +226,27 @@ def get_device_name(device_folder: str) -> str:
     return 'Intel GPU'
 
 
-def get_mem(device_folder: str) -> int | None:
-    """Return the memory consumption in %."""
-    return None
+def get_mem(device_folder: str, snapshot: dict | None, meminfo_path: str = '/proc/meminfo') -> int | None:
+    """Return the memory consumption in %, or None when it cannot be trusted.
+
+    A card holding resident local memory (VRAM) is discrete: report it over
+    the local aperture. Otherwise report system memory over MemTotal, which
+    is right for an integrated GPU and reads ~0% for an idle discrete one.
+    """
+    if snapshot is None:
+        return None
+    local = snapshot.get('mem_local_bytes', 0)
+    if local > 0:
+        capacity = get_local_mem_capacity(device_folder)
+        used = local
+    else:
+        capacity = get_system_mem_capacity(meminfo_path)
+        used = snapshot.get('mem_system_bytes', 0)
+    # Without resizable BAR the aperture is smaller than VRAM: no valid
+    # percentage exists, and one above 100 would be wrong.
+    if not capacity or used > capacity:
+        return None
+    return round(used / capacity * 100)
 
 
 def get_system_mem_capacity(meminfo_path: str = '/proc/meminfo') -> int | None:

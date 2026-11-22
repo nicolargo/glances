@@ -536,3 +536,60 @@ class TestIntelMemCapacity:
         meminfo = tmp_path / 'meminfo'
         meminfo.write_text('MemFree: 1 kB\n')
         assert intel_backend.get_system_mem_capacity(str(meminfo)) is None
+
+
+class TestIntelMemPercent:
+    """Memory percentage from the aggregated resident bytes."""
+
+    GIB = 1024**3
+
+    @staticmethod
+    def _card(tmp_path, resource: str = ARC_A310_RESOURCE):
+        device = tmp_path / 'card0' / 'device'
+        device.mkdir(parents=True)
+        (device / 'resource').write_text(resource)
+        return str(tmp_path / 'card0')
+
+    @staticmethod
+    def _meminfo(tmp_path, kib: int = 64 * 1024**2):
+        path = tmp_path / 'meminfo'
+        path.write_text(f'MemTotal: {kib} kB\n')
+        return str(path)
+
+    def _snapshot(self, system=0, local=0):
+        return {'engine_total_ns': 0, 'mem_system_bytes': system, 'mem_local_bytes': local}
+
+    def test_discrete_is_local_resident_over_the_bar(self, tmp_path):
+        card, meminfo = self._card(tmp_path), self._meminfo(tmp_path)
+        snapshot = self._snapshot(system=self.GIB, local=self.GIB)
+        assert intel_backend.get_mem(card, snapshot, meminfo) == 25
+
+    def test_integrated_is_system_resident_over_mem_total(self, tmp_path):
+        card, meminfo = self._card(tmp_path, '0x0 0x0 0x0\n'), self._meminfo(tmp_path)
+        snapshot = self._snapshot(system=16 * self.GIB)
+        assert intel_backend.get_mem(card, snapshot, meminfo) == 25
+
+    def test_idle_discrete_reads_zero(self, tmp_path):
+        card, meminfo = self._card(tmp_path), self._meminfo(tmp_path)
+        assert intel_backend.get_mem(card, self._snapshot(), meminfo) == 0
+
+    def test_resident_above_the_bar_is_not_reported(self, tmp_path):
+        # Resizable BAR off: the 256 MiB aperture is smaller than the VRAM in use.
+        resource = ARC_A310_RESOURCE.replace('0x000000feffffffff', '0x000000fe0fffffff')
+        card, meminfo = self._card(tmp_path, resource), self._meminfo(tmp_path)
+        snapshot = self._snapshot(local=self.GIB)
+        assert intel_backend.get_mem(card, snapshot, meminfo) is None
+
+    def test_discrete_without_a_bar_is_not_reported(self, tmp_path):
+        card, meminfo = self._card(tmp_path, '0x0 0x0 0x0\n'), self._meminfo(tmp_path)
+        assert intel_backend.get_mem(card, self._snapshot(local=self.GIB), meminfo) is None
+
+    def test_no_scan_or_no_meminfo_is_not_reported(self, tmp_path):
+        card = self._card(tmp_path)
+        assert intel_backend.get_mem(card, None, self._meminfo(tmp_path)) is None
+        assert intel_backend.get_mem(card, self._snapshot(), str(tmp_path / 'nope')) is None
+
+    def test_get_device_stats_mem_is_none_without_capacity(self):
+        gpu = intel_backend.IntelGPU(INTEL_DRM_ROOT, INTEL_DISCRETE_PROC_ROOT)
+        # Fixture proc root has no meminfo and the card has no resource file.
+        assert gpu.get_device_stats()[0]['mem'] is None
