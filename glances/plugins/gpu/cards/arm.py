@@ -190,11 +190,7 @@ def get_device_name(driver: str) -> str:
 
 
 def get_temperature(device_folder: str, thermal_root: str = THERMAL_ROOT_FOLDER) -> int | None:
-    """Return the GPU temperature in °C.
-
-    Mean of the device's HWMON probes; when the device has none (v3d on the
-    Raspberry Pi), fall back to the SoC thermal zone.
-    """
+    """Return the GPU temperature in °C (HWMON probes, else the SoC thermal zone)."""
     temp_input = []
     device_path = os.path.join(device_folder, 'device')
     search_root = device_path if os.path.isdir(device_path) else device_folder
