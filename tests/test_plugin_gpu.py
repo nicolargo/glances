@@ -313,6 +313,9 @@ class TestIntelIdleAndPartialScan:
         fdinfo = tmp_path / 'proc' / '42' / 'fdinfo'
         fdinfo.mkdir(parents=True)
         (fdinfo / '0').write_text('pos:\t0\nflags:\t02\n')
+        fd = tmp_path / 'proc' / '42' / 'fd'
+        fd.mkdir()
+        (fd / '0').symlink_to('/dev/null')
         return tmp_path / 'proc'
 
     def test_idle_gpu_reports_zero(self, tmp_path):
@@ -322,7 +325,7 @@ class TestIntelIdleAndPartialScan:
 
     def test_client_exit_reports_zero_not_frequency(self, tmp_path):
         proc = tmp_path / 'proc'
-        shutil.copytree(INTEL_PROC_ROOT, proc)
+        shutil.copytree(INTEL_PROC_ROOT, proc, symlinks=True)
         backend = self._backend(proc)
         backend.get_device_stats()
         shutil.rmtree(proc / '1234')
@@ -334,7 +337,7 @@ class TestIntelIdleAndPartialScan:
         real_listdir = os.listdir
 
         def listdir(path):
-            if str(path).endswith(os.path.join('42', 'fdinfo')):
+            if str(path).endswith(os.path.join('42', 'fd')):
                 raise PermissionError(path)
             return real_listdir(path)
 
@@ -348,3 +351,21 @@ class TestIntelIdleAndPartialScan:
         devices = intel_backend.get_device_list(INTEL_DRM_ROOT)
         per_device = intel_backend.aggregate_fdinfo(str(self._idle_proc(tmp_path)), devices)
         assert per_device == {devices[0][0]: {'engine_total_ns': 0}}
+
+    def test_aggregate_skips_non_drm_fd(self, tmp_path):
+        # The fdinfo of an fd not pointing into /dev/dri/ is never read.
+        proc = self._idle_proc(tmp_path)
+        (proc / '42' / 'fdinfo' / '0').write_text('drm-driver:\ti915\ndrm-engine-render:\t7 ns\n')
+        devices = intel_backend.get_device_list(INTEL_DRM_ROOT)
+        per_device = intel_backend.aggregate_fdinfo(str(proc), devices)
+        assert per_device == {devices[0][0]: {'engine_total_ns': 0}}
+
+    def test_aggregate_counts_shared_client_once(self, tmp_path):
+        # dup()/fork() expose one DRM client on several fds: count it once.
+        proc = tmp_path / 'proc'
+        shutil.copytree(INTEL_PROC_ROOT, proc, symlinks=True)
+        (proc / '1234' / 'fd' / '8').symlink_to('/dev/dri/renderD128')
+        shutil.copy(proc / '1234' / 'fdinfo' / '7', proc / '1234' / 'fdinfo' / '8')
+        devices = intel_backend.get_device_list(INTEL_DRM_ROOT)
+        per_device = intel_backend.aggregate_fdinfo(str(proc), devices)
+        assert next(iter(per_device.values()))['engine_total_ns'] == 9_500_000

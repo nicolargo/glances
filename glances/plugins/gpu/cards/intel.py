@@ -43,6 +43,7 @@ from glances.logger import logger
 
 DRM_ROOT_FOLDER: str = '/sys/class/drm'
 PROC_ROOT_FOLDER: str = '/proc'
+DRM_DEV_PREFIX: str = '/dev/dri/'
 DEVICE_FOLDER_PATTERN: str = 'card[0-9]'
 INTELGPU_IDS_FILE: str = '/usr/share/misc/pci.ids'
 PCI_DEVICE_VENDOR: str = 'device/vendor'
@@ -260,6 +261,8 @@ def parse_fdinfo(text: str) -> dict | None:
     Returns a dict with keys:
         - driver: str
         - pdev:   str | None
+        - client_id: str | None (``drm-client-id``; one DRM client is visible
+          through every fd that shares it, after dup() or fork())
         - engine_total_ns: int (sum of all drm-engine-* time counters,
           excluding drm-engine-capacity-* which is a count, not a time)
 
@@ -270,6 +273,7 @@ def parse_fdinfo(text: str) -> dict | None:
 
     driver: str | None = None
     pdev: str | None = None
+    client_id: str | None = None
     engine_total_ns = 0
 
     for raw_line in text.splitlines():
@@ -284,6 +288,8 @@ def parse_fdinfo(text: str) -> dict | None:
             driver = value
         elif key == 'drm-pdev':
             pdev = value
+        elif key == 'drm-client-id':
+            client_id = value
         elif key.startswith('drm-engine-') and not key.startswith('drm-engine-capacity'):
             parts = value.split()
             if not parts:
@@ -302,6 +308,7 @@ def parse_fdinfo(text: str) -> dict | None:
     return {
         'driver': driver,
         'pdev': pdev,
+        'client_id': client_id,
         'engine_total_ns': engine_total_ns,
     }
 
@@ -352,6 +359,8 @@ def aggregate_fdinfo(
 
     pdev_to_device, single_device_per_driver = _build_device_lookup(device_folders)
     per_device: dict[str, dict] = {}
+    # Clients already counted: the same client shows up on several fds.
+    seen_clients: set[tuple[str, str | None, str]] = set()
 
     try:
         pids = os.listdir(proc_root)
@@ -363,9 +372,9 @@ def aggregate_fdinfo(
     for pid in pids:
         if not pid.isdigit():
             continue
-        fdinfo_dir = os.path.join(proc_root, pid, 'fdinfo')
+        fd_dir = os.path.join(proc_root, pid, 'fd')
         try:
-            fds = os.listdir(fdinfo_dir)
+            fds = os.listdir(fd_dir)
         except PermissionError:
             complete = False
             continue
@@ -373,7 +382,15 @@ def aggregate_fdinfo(
             # Process exited mid-scan, or not a process directory.
             continue
         for fd in fds:
-            fd_path = os.path.join(fdinfo_dir, fd)
+            # Only DRM fds carry engine counters: one readlink is far cheaper
+            # than opening and reading the fdinfo of every fd on the system.
+            try:
+                if not os.readlink(os.path.join(fd_dir, fd)).startswith(DRM_DEV_PREFIX):
+                    continue
+            except OSError:
+                # fd closed mid-scan.
+                continue
+            fd_path = os.path.join(proc_root, pid, 'fdinfo', fd)
             try:
                 with open(fd_path) as f:
                     text = f.read()
@@ -395,6 +412,11 @@ def aggregate_fdinfo(
                 target = single_device_per_driver[record['driver']]
             if target is None:
                 continue
+            if record['client_id'] is not None:
+                client_key = (record['driver'], record['pdev'], record['client_id'])
+                if client_key in seen_clients:
+                    continue
+                seen_clients.add(client_key)
 
             bucket = per_device.setdefault(target, {'engine_total_ns': 0})
             bucket['engine_total_ns'] += record['engine_total_ns']
