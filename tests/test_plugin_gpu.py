@@ -477,3 +477,62 @@ def test_card_backends_declare_sensors_coverage():
     assert IntelGPU.TEMPERATURE_IN_SENSORS is True
     assert NvidiaGPU.TEMPERATURE_IN_SENSORS is False
     assert ArmGPU.TEMPERATURE_IN_SENSORS is False
+
+
+# Contents of /sys/class/drm/card0/device/resource on an Arc A310 (resizable BAR on).
+ARC_A310_RESOURCE = """\
+0x00000000fb000000 0x00000000fbffffff 0x0000000000140204
+0x0000000000000000 0x0000000000000000 0x0000000000000000
+0x000000fe00000000 0x000000feffffffff 0x000000000014220c
+0x0000000000000000 0x0000000000000000 0x0000000000000000
+0x0000000000000000 0x0000000000000000 0x0000000000000000
+0x0000000000000000 0x0000000000000000 0x0000000000000000
+0x00000000fc000000 0x00000000fc1fffff 0x0000000000046200
+0x0000000000000000 0x0000000000000000 0x0000000000000000
+"""
+
+
+class TestIntelMemCapacity:
+    """Denominators for the Intel memory percentage."""
+
+    @staticmethod
+    def _card(tmp_path, resource: str | None):
+        device = tmp_path / 'card0' / 'device'
+        device.mkdir(parents=True)
+        if resource is not None:
+            (device / 'resource').write_text(resource)
+        return str(tmp_path / 'card0')
+
+    def test_local_capacity_is_the_prefetchable_bar(self, tmp_path):
+        card = self._card(tmp_path, ARC_A310_RESOURCE)
+        assert intel_backend.get_local_mem_capacity(card) == 4 * 1024**3
+
+    def test_local_capacity_without_resizable_bar_is_the_small_aperture(self, tmp_path):
+        resource = ARC_A310_RESOURCE.replace('0x000000feffffffff', '0x000000fe0fffffff')
+        card = self._card(tmp_path, resource)
+        assert intel_backend.get_local_mem_capacity(card) == 256 * 1024**2
+
+    def test_local_capacity_none_for_integrated_gpu(self, tmp_path):
+        # Registers only: a non-prefetchable BAR is not video memory.
+        card = self._card(tmp_path, '0x00000000fb000000 0x00000000fbffffff 0x0000000000140204\n')
+        assert intel_backend.get_local_mem_capacity(card) is None
+
+    def test_local_capacity_ignores_the_expansion_rom_line(self, tmp_path):
+        rom = '0x0000000100000000 0x00000001ffffffff 0x000000000014220c\n'
+        card = self._card(tmp_path, '0x0 0x0 0x0\n' * 6 + rom)
+        assert intel_backend.get_local_mem_capacity(card) is None
+
+    def test_local_capacity_none_when_unreadable_or_malformed(self, tmp_path):
+        assert intel_backend.get_local_mem_capacity(self._card(tmp_path / 'a', None)) is None
+        assert intel_backend.get_local_mem_capacity(self._card(tmp_path / 'b', 'garbage\n0x1 0x2\n')) is None
+
+    def test_system_capacity_is_mem_total_not_cma(self, tmp_path):
+        meminfo = tmp_path / 'meminfo'
+        meminfo.write_text('MemTotal:       65432100 kB\nCmaTotal:          16384 kB\n')
+        assert intel_backend.get_system_mem_capacity(str(meminfo)) == 65432100 * 1024
+
+    def test_system_capacity_none_when_missing_or_zero(self, tmp_path):
+        assert intel_backend.get_system_mem_capacity(str(tmp_path / 'nope')) is None
+        meminfo = tmp_path / 'meminfo'
+        meminfo.write_text('MemFree: 1 kB\n')
+        assert intel_backend.get_system_mem_capacity(str(meminfo)) is None

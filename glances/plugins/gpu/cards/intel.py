@@ -40,7 +40,7 @@ import time
 
 from glances.globals import LINUX
 from glances.logger import logger
-from glances.plugins.gpu.cards.arm import _parse_memory
+from glances.plugins.gpu.cards.arm import _parse_meminfo, _parse_memory
 
 DRM_ROOT_FOLDER: str = '/sys/class/drm'
 PROC_ROOT_FOLDER: str = '/proc'
@@ -53,6 +53,12 @@ HWMON_PATTERN: str = 'device/hwmon/hwmon*'
 HWMON_TEMP_PATTERN: str = 'temp*_input'
 PCI_ACT_FRQ_MHZ: str = 'gt_act_freq_mhz'
 PCI_MAX_FRQ_MHZ: str = 'gt_max_freq_mhz'
+PCI_RESOURCE: str = 'device/resource'
+# Lines 1-6 of the resource file are BAR0-5; line 7 is the expansion ROM.
+PCI_BAR_COUNT: int = 6
+# Resource flags, see include/linux/ioport.h.
+IORESOURCE_MEM: int = 0x200
+IORESOURCE_PREFETCH: int = 0x2000
 
 # DRM drivers exposing the standardised drm-engine-* fdinfo counters.
 SUPPORTED_DRIVERS: set[str] = {'i915', 'xe'}
@@ -223,6 +229,39 @@ def get_device_name(device_folder: str) -> str:
 def get_mem(device_folder: str) -> int | None:
     """Return the memory consumption in %."""
     return None
+
+
+def get_system_mem_capacity(meminfo_path: str = '/proc/meminfo') -> int | None:
+    """Return MemTotal in bytes, or None if unreadable.
+
+    Not arm.get_mem_capacity_bytes: it prefers CmaTotal, the ARM DMA pool,
+    which is not where Intel GPU buffers come from.
+    """
+    text = read_file(meminfo_path)
+    if text is None:
+        return None
+    return _parse_meminfo(text).get('MemTotal') or None
+
+
+def get_local_mem_capacity(device_folder: str) -> int | None:
+    """Return the size in bytes of the card's local memory aperture, or None.
+
+    It is the largest prefetchable memory BAR. That equals the VRAM size only
+    with resizable BAR enabled; otherwise it is smaller, and the caller must
+    not report a percentage above 100.
+    """
+    text = read_file(device_folder, PCI_RESOURCE)
+    if text is None:
+        return None
+    largest = 0
+    for line in text.splitlines()[:PCI_BAR_COUNT]:
+        try:
+            start, end, flags = (int(field, 16) for field in line.split()[:3])
+        except ValueError:
+            continue
+        if flags & IORESOURCE_MEM and flags & IORESOURCE_PREFETCH and end > start:
+            largest = max(largest, end - start + 1)
+    return largest or None
 
 
 def get_proc(device_folder: str) -> int | None:
