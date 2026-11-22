@@ -42,6 +42,11 @@ PROC_ROOT_FOLDER: str = '/proc'
 DEVICE_FOLDER_PATTERN: str = 'card[0-9]'
 HWMON_TEMPERATURE_PATTERN: str = 'hwmon/hwmon[0-9]*/temp[0-9]_input'
 
+THERMAL_ROOT_FOLDER: str = '/sys/class/thermal'
+# ARM GPUs sit on the same die as the CPU. Drivers such as v3d (Raspberry Pi)
+# expose no hwmon node, so the SoC thermal zone is the closest reading (#3863).
+SOC_THERMAL_ZONE_TYPES: tuple[str, ...] = ('cpu-thermal', 'soc-thermal')
+
 SUPPORTED_DRIVERS: set[str] = {'msm', 'panfrost', 'panthor', 'v3d', 'lima', 'etnaviv'}
 
 DRIVER_NAMES: dict[str, str] = {
@@ -70,10 +75,12 @@ class ArmGPU:
         self,
         drm_root_folder: str = DRM_ROOT_FOLDER,
         proc_root_folder: str = PROC_ROOT_FOLDER,
+        thermal_root_folder: str = THERMAL_ROOT_FOLDER,
     ):
         """Init ARM GPU card class."""
         self.drm_root_folder = drm_root_folder
         self.proc_root_folder = proc_root_folder
+        self.thermal_root_folder = thermal_root_folder
         self.device_folders: list[tuple[str, str, str | None]] = []
         if LINUX and os.path.isdir(drm_root_folder):
             self.device_folders = get_device_list(drm_root_folder)
@@ -101,7 +108,7 @@ class ArmGPU:
                 'name': get_device_name(driver),
                 'mem': compute_mem_percent(snapshot, self._mem_capacity_bytes),
                 'proc': self._compute_proc_percent(device, snapshot),
-                'temperature': get_temperature(device),
+                'temperature': get_temperature(device, self.thermal_root_folder),
                 'fan_speed': None,
             }
             stats.append(device_stats)
@@ -182,8 +189,12 @@ def get_device_name(driver: str) -> str:
     return DRIVER_NAMES.get(driver, 'ARM GPU')
 
 
-def get_temperature(device_folder: str) -> int | None:
-    """Return the GPU temperature in °C (mean of all HWMON probes)."""
+def get_temperature(device_folder: str, thermal_root: str = THERMAL_ROOT_FOLDER) -> int | None:
+    """Return the GPU temperature in °C.
+
+    Mean of the device's HWMON probes; when the device has none (v3d on the
+    Raspberry Pi), fall back to the SoC thermal zone.
+    """
     temp_input = []
     device_path = os.path.join(device_folder, 'device')
     search_root = device_path if os.path.isdir(device_path) else device_folder
@@ -197,6 +208,19 @@ def get_temperature(device_folder: str) -> int | None:
             return None
     if temp_input:
         return round(sum(temp_input) / len(temp_input) / 1000)
+    return get_soc_temperature(thermal_root)
+
+
+def get_soc_temperature(thermal_root: str = THERMAL_ROOT_FOLDER) -> int | None:
+    """Return the temperature in °C of the first cpu/soc thermal zone, or None."""
+    for zone in sorted(glob.glob('thermal_zone*', root_dir=thermal_root)):
+        if read_file(thermal_root, zone, 'type') not in SOC_THERMAL_ZONE_TYPES:
+            continue
+        value = read_file(thermal_root, zone, 'temp')
+        try:
+            return round(int(value) / 1000)
+        except (TypeError, ValueError):
+            return None
     return None
 
 
