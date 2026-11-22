@@ -112,6 +112,8 @@ class IntelGPU:
     def _compute_proc_percent(self, device: str, snapshot: dict | None) -> int | None:
         """Compute the GPU busy % based on delta of cumulative engine ns counters."""
         if snapshot is None:
+            # No trustworthy scan: a later delta must not use this stale baseline.
+            self._last_sample.pop(device, None)
             return None
         busy_ns = snapshot.get('engine_total_ns', 0)
         now_ns = time.monotonic_ns()
@@ -120,9 +122,11 @@ class IntelGPU:
         if prev is None:
             return None
         delta_t = now_ns - prev[0]
-        delta_busy = busy_ns - prev[1]
-        if delta_t <= 0 or delta_busy < 0:
+        if delta_t <= 0:
             return None
+        # The sum drops when a client exits (its counters vanish); report idle
+        # rather than the frequency ratio, which is not a load figure.
+        delta_busy = max(0, busy_ns - prev[1])
         # Engines can run in parallel, so the summed busy time can exceed
         # the elapsed wall-clock time -- clamp to 100, as in the ARM backend.
         return max(0, min(100, round(delta_busy / delta_t * 100)))
@@ -302,21 +306,14 @@ def parse_fdinfo(text: str) -> dict | None:
     }
 
 
-def aggregate_fdinfo(
-    proc_root: str,
+def _build_device_lookup(
     device_folders: list[tuple[str, str | None, str | None]],
-) -> dict[str, dict]:
-    """Scan /proc/*/fdinfo/* and aggregate engine time per device folder.
+) -> tuple[dict[str, str], dict[str, str]]:
+    """Return ({pdev: device}, {driver: device}) for fdinfo attribution.
 
-    Matching strategy:
-    - If fdinfo has a ``drm-pdev`` and a device matches it, attribute to that
-      device.
-    - Else, if exactly one device uses that driver, attribute to it.
-    - Else, skip the record.
+    The driver map only holds drivers bound to exactly one device: with
+    several, a record lacking a usable pdev is ambiguous.
     """
-    if not device_folders or not os.path.isdir(proc_root):
-        return {}
-
     pdev_to_device: dict[str, str] = {}
     drivers_count: dict[str, int] = {}
     single_device_per_driver: dict[str, str] = {}
@@ -330,7 +327,30 @@ def aggregate_fdinfo(
     for driver, count in drivers_count.items():
         if count > 1:
             single_device_per_driver.pop(driver, None)
+    return pdev_to_device, single_device_per_driver
 
+
+def aggregate_fdinfo(
+    proc_root: str,
+    device_folders: list[tuple[str, str | None, str | None]],
+) -> dict[str, dict]:
+    """Scan /proc/*/fdinfo/* and aggregate engine time per device folder.
+
+    Matching strategy:
+    - If fdinfo has a ``drm-pdev`` and a device matches it, attribute to that
+      device.
+    - Else, if exactly one device uses that driver, attribute to it.
+    - Else, skip the record.
+
+    When every process could be inspected, each device gets an entry (zero
+    engine time if it has no client), so an idle GPU reads 0 rather than
+    unknown. If any process was unreadable the view is partial: devices
+    without a visible client are left out and the caller falls back.
+    """
+    if not device_folders or not os.path.isdir(proc_root):
+        return {}
+
+    pdev_to_device, single_device_per_driver = _build_device_lookup(device_folders)
     per_device: dict[str, dict] = {}
 
     try:
@@ -339,22 +359,28 @@ def aggregate_fdinfo(
         logger.debug(f'Intel GPU: cannot list {proc_root}: {e}')
         return {}
 
+    complete = True
     for pid in pids:
         if not pid.isdigit():
             continue
         fdinfo_dir = os.path.join(proc_root, pid, 'fdinfo')
         try:
             fds = os.listdir(fdinfo_dir)
-        except (FileNotFoundError, PermissionError, NotADirectoryError):
+        except PermissionError:
+            complete = False
             continue
         except OSError:
+            # Process exited mid-scan, or not a process directory.
             continue
         for fd in fds:
             fd_path = os.path.join(fdinfo_dir, fd)
             try:
                 with open(fd_path) as f:
                     text = f.read()
-            except (FileNotFoundError, PermissionError, OSError):
+            except PermissionError:
+                complete = False
+                continue
+            except OSError:
                 continue
             record = parse_fdinfo(text)
             if record is None:
@@ -372,5 +398,9 @@ def aggregate_fdinfo(
 
             bucket = per_device.setdefault(target, {'engine_total_ns': 0})
             bucket['engine_total_ns'] += record['engine_total_ns']
+
+    if complete:
+        for device, _driver, _pdev in device_folders:
+            per_device.setdefault(device, {'engine_total_ns': 0})
 
     return per_device

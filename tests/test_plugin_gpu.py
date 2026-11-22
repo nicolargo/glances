@@ -10,6 +10,9 @@
 
 from __future__ import annotations
 
+import os
+import shutil
+
 import pytest
 
 from glances.config import GlancesConfig
@@ -241,7 +244,7 @@ class TestIntelBackendDiscovery:
         assert entry['key'] == 'gpu_id'
         assert entry['gpu_id'] == 'intel0'
 
-    def test_mem_temp_fan_always_none(self, intel_gpu):
+    def test_mem_temp_fan_none_without_sensors(self, intel_gpu):
         stats = intel_gpu.get_device_stats()
         assert stats[0]['mem'] is None
         assert stats[0]['temperature'] is None
@@ -296,3 +299,52 @@ class TestIntelAggregation:
         assert bucket['engine_total_ns'] == 9_500_000
 
 
+@pytest.mark.skipif(not LINUX, reason="Intel GPU backend is Linux-only")
+class TestIntelIdleAndPartialScan:
+    """Idle GPUs read 0; an incomplete /proc view never claims it."""
+
+    @staticmethod
+    def _backend(proc_root):
+        return IntelGPU(drm_root_folder=INTEL_DRM_ROOT, proc_root_folder=str(proc_root))
+
+    @staticmethod
+    def _idle_proc(tmp_path):
+        # One process, no DRM fd: what a discrete card with no client looks like.
+        fdinfo = tmp_path / 'proc' / '42' / 'fdinfo'
+        fdinfo.mkdir(parents=True)
+        (fdinfo / '0').write_text('pos:\t0\nflags:\t02\n')
+        return tmp_path / 'proc'
+
+    def test_idle_gpu_reports_zero(self, tmp_path):
+        backend = self._backend(self._idle_proc(tmp_path))
+        assert backend.get_device_stats()[0]['proc'] == INTEL_FREQ_FALLBACK
+        assert backend.get_device_stats()[0]['proc'] == 0
+
+    def test_client_exit_reports_zero_not_frequency(self, tmp_path):
+        proc = tmp_path / 'proc'
+        shutil.copytree(INTEL_PROC_ROOT, proc)
+        backend = self._backend(proc)
+        backend.get_device_stats()
+        shutil.rmtree(proc / '1234')
+        shutil.rmtree(proc / '5678')
+        assert backend.get_device_stats()[0]['proc'] == 0
+
+    def test_unreadable_process_keeps_frequency_fallback(self, tmp_path, monkeypatch):
+        proc = self._idle_proc(tmp_path)
+        real_listdir = os.listdir
+
+        def listdir(path):
+            if str(path).endswith(os.path.join('42', 'fdinfo')):
+                raise PermissionError(path)
+            return real_listdir(path)
+
+        monkeypatch.setattr(intel_backend.os, 'listdir', listdir)
+        backend = self._backend(proc)
+        backend.get_device_stats()
+        # Cannot tell idle from invisible: never report 0.
+        assert backend.get_device_stats()[0]['proc'] == INTEL_FREQ_FALLBACK
+
+    def test_aggregate_complete_scan_zero_fills_idle_device(self, tmp_path):
+        devices = intel_backend.get_device_list(INTEL_DRM_ROOT)
+        per_device = intel_backend.aggregate_fdinfo(str(self._idle_proc(tmp_path)), devices)
+        assert per_device == {devices[0][0]: {'engine_total_ns': 0}}
