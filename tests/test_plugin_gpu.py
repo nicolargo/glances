@@ -25,6 +25,9 @@ from glances.stats_store import StatsStore
 INTEL_TEST_DATA_ROOT = './tests-data/plugins/gpu/intel'
 INTEL_DRM_ROOT = f'{INTEL_TEST_DATA_ROOT}/sys/class/drm'
 INTEL_PROC_ROOT = f'{INTEL_TEST_DATA_ROOT}/proc'
+# fdinfo captured from an Arc A310 (i915, discrete): local0 is its VRAM.
+INTEL_DISCRETE_PROC_ROOT = f'{INTEL_TEST_DATA_ROOT}/proc-discrete'
+INTEL_EMPTY_BUCKET = {'engine_total_ns': 0, 'mem_system_bytes': 0, 'mem_local_bytes': 0}
 # Fixture frequencies: 300 / 1450 MHz -> frequency fallback is 21 %.
 INTEL_FREQ_FALLBACK = 21
 
@@ -223,6 +226,53 @@ class TestIntelFdinfoParser:
         assert record is not None
         assert record['engine_total_ns'] == 0
 
+    def test_resident_memory_split_by_region_class(self):
+        text = (
+            "drm-driver:\ti915\n"
+            "drm-total-system0:\t900 KiB\n"
+            "drm-resident-system0:\t100 KiB\n"
+            "drm-shared-system0:\t50 KiB\n"
+            "drm-active-system0:\t60 KiB\n"
+            "drm-purgeable-system0:\t10 KiB\n"
+            "drm-total-local0:\t9000 KiB\n"
+            "drm-resident-local0:\t2 MiB\n"
+            "drm-resident-stolen-local0:\t777 KiB\n"
+        )
+        record = intel_backend.parse_fdinfo(text)
+        assert record is not None
+        # Only drm-resident-*: total/shared/active/purgeable and stolen-* are left out.
+        assert record['mem_system_bytes'] == 100 * 1024
+        assert record['mem_local_bytes'] == 2 * 1024 * 1024
+
+    def test_resident_memory_xe_vram_region_counts_as_local(self):
+        record = intel_backend.parse_fdinfo("drm-driver:\txe\ndrm-resident-vram0:\t64 KiB\n")
+        assert record is not None
+        assert record['mem_local_bytes'] == 64 * 1024
+        assert record['mem_system_bytes'] == 0
+
+    def test_resident_memory_default_unit_is_kib(self):
+        record = intel_backend.parse_fdinfo("drm-driver:\ti915\ndrm-resident-system0:\t8\n")
+        assert record is not None
+        assert record['mem_system_bytes'] == 8 * 1024
+
+    def test_resident_memory_unparseable_or_unknown_ignored(self):
+        text = (
+            "drm-driver:\ti915\n"
+            "drm-resident-system0:\tlots\n"
+            "drm-resident-local0:\t5 parsecs\n"
+            "drm-resident-mystery0:\t5 KiB\n"
+        )
+        record = intel_backend.parse_fdinfo(text)
+        assert record is not None
+        assert record['mem_system_bytes'] == 0
+        assert record['mem_local_bytes'] == 0
+
+    def test_no_memory_keys_is_zero(self):
+        record = intel_backend.parse_fdinfo("drm-driver:\ti915\ndrm-engine-render:\t1 ns\n")
+        assert record is not None
+        assert record['mem_system_bytes'] == 0
+        assert record['mem_local_bytes'] == 0
+
 
 @pytest.mark.skipif(not LINUX, reason="Intel GPU backend is Linux-only")
 class TestIntelBackendDiscovery:
@@ -298,6 +348,23 @@ class TestIntelAggregation:
         # Client 2: 1_000_000 + 500_000 = 1_500_000 ns
         assert bucket['engine_total_ns'] == 9_500_000
 
+    def test_aggregate_fdinfo_integrated_memory_is_system_only(self):
+        devices = intel_backend.get_device_list(INTEL_DRM_ROOT)
+        bucket = next(iter(intel_backend.aggregate_fdinfo(INTEL_PROC_ROOT, devices).values()))
+        # Client 42 holds 0 KiB, client 43 holds 512 KiB; no local memory regions.
+        assert bucket['mem_system_bytes'] == 512 * 1024
+        assert bucket['mem_local_bytes'] == 0
+
+    def test_aggregate_fdinfo_discrete_memory_counts_each_client_once(self):
+        devices = intel_backend.get_device_list(INTEL_DRM_ROOT)
+        per_device = intel_backend.aggregate_fdinfo(INTEL_DISCRETE_PROC_ROOT, devices)
+        assert len(per_device) == 1
+        bucket = next(iter(per_device.values()))
+        # Client 34 (4122156 KiB in local0) is held by two processes: counted once.
+        # Client 35 holds nothing resident.
+        assert bucket['mem_local_bytes'] == 4122156 * 1024
+        assert bucket['mem_system_bytes'] == 428 * 1024
+
 
 @pytest.mark.skipif(not LINUX, reason="Intel GPU backend is Linux-only")
 class TestIntelIdleAndPartialScan:
@@ -350,7 +417,7 @@ class TestIntelIdleAndPartialScan:
     def test_aggregate_complete_scan_zero_fills_idle_device(self, tmp_path):
         devices = intel_backend.get_device_list(INTEL_DRM_ROOT)
         per_device = intel_backend.aggregate_fdinfo(str(self._idle_proc(tmp_path)), devices)
-        assert per_device == {devices[0][0]: {'engine_total_ns': 0}}
+        assert per_device == {devices[0][0]: INTEL_EMPTY_BUCKET}
 
     def test_aggregate_skips_non_drm_fd(self, tmp_path):
         # The fdinfo of an fd not pointing into /dev/dri/ is never read.
@@ -358,7 +425,7 @@ class TestIntelIdleAndPartialScan:
         (proc / '42' / 'fdinfo' / '0').write_text('drm-driver:\ti915\ndrm-engine-render:\t7 ns\n')
         devices = intel_backend.get_device_list(INTEL_DRM_ROOT)
         per_device = intel_backend.aggregate_fdinfo(str(proc), devices)
-        assert per_device == {devices[0][0]: {'engine_total_ns': 0}}
+        assert per_device == {devices[0][0]: INTEL_EMPTY_BUCKET}
 
     def test_aggregate_counts_shared_client_once(self, tmp_path):
         # dup()/fork() expose one DRM client on several fds: count it once.

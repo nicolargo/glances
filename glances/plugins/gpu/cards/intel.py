@@ -40,6 +40,7 @@ import time
 
 from glances.globals import LINUX
 from glances.logger import logger
+from glances.plugins.gpu.cards.arm import _parse_memory
 
 DRM_ROOT_FOLDER: str = '/sys/class/drm'
 PROC_ROOT_FOLDER: str = '/proc'
@@ -269,6 +270,12 @@ def parse_fdinfo(text: str) -> dict | None:
           through every fd that shares it, after dup() or fork())
         - engine_total_ns: int (sum of all drm-engine-* time counters,
           excluding drm-engine-capacity-* which is a count, not a time)
+        - mem_system_bytes: int (sum of drm-resident-system* regions: host RAM)
+        - mem_local_bytes: int (sum of drm-resident-local* / -vram* regions:
+          the card's own memory, discrete GPUs only)
+
+    Only resident counters are used: shared/active/purgeable are subsets of
+    it, and stolen-* regions are a separate reserved pool.
 
     Returns None if the text does not look like a DRM fdinfo entry.
     """
@@ -279,6 +286,7 @@ def parse_fdinfo(text: str) -> dict | None:
     pdev: str | None = None
     client_id: str | None = None
     engine_total_ns = 0
+    resident = {'system': 0, 'local': 0}
 
     for raw_line in text.splitlines():
         if ':' not in raw_line:
@@ -305,6 +313,11 @@ def parse_fdinfo(text: str) -> dict | None:
             if len(parts) >= 2 and parts[1] != 'ns':
                 continue
             engine_total_ns += number
+        elif key.startswith('drm-resident-'):
+            region = _memory_region(key.removeprefix('drm-resident-'))
+            parsed = _parse_memory(value)
+            if region and parsed is not None:
+                resident[region] += parsed
 
     if driver is None:
         return None
@@ -314,7 +327,24 @@ def parse_fdinfo(text: str) -> dict | None:
         'pdev': pdev,
         'client_id': client_id,
         'engine_total_ns': engine_total_ns,
+        'mem_system_bytes': resident['system'],
+        'mem_local_bytes': resident['local'],
     }
+
+
+def _memory_region(name: str) -> str | None:
+    """Map an fdinfo region name (``system0``, ``local0``, ``vram0``) to a class."""
+    if name.startswith('system'):
+        return 'system'
+    if name.startswith(('local', 'vram')):
+        return 'local'
+    # stolen-*, or a region we do not know about.
+    return None
+
+
+def _empty_bucket() -> dict[str, int]:
+    """Return the per-device accumulator used by aggregate_fdinfo."""
+    return {'engine_total_ns': 0, 'mem_system_bytes': 0, 'mem_local_bytes': 0}
 
 
 def _build_device_lookup(
@@ -339,6 +369,17 @@ def _build_device_lookup(
         if count > 1:
             single_device_per_driver.pop(driver, None)
     return pdev_to_device, single_device_per_driver
+
+
+def _attribute_record(
+    record: dict,
+    pdev_to_device: dict[str, str],
+    single_device_per_driver: dict[str, str],
+) -> str | None:
+    """Return the device folder an fdinfo record belongs to, or None."""
+    if record['pdev'] and record['pdev'] in pdev_to_device:
+        return pdev_to_device[record['pdev']]
+    return single_device_per_driver.get(record['driver'])
 
 
 def aggregate_fdinfo(
@@ -409,11 +450,7 @@ def aggregate_fdinfo(
             if record['driver'] not in SUPPORTED_DRIVERS:
                 continue
 
-            target = None
-            if record['pdev'] and record['pdev'] in pdev_to_device:
-                target = pdev_to_device[record['pdev']]
-            elif record['driver'] in single_device_per_driver:
-                target = single_device_per_driver[record['driver']]
+            target = _attribute_record(record, pdev_to_device, single_device_per_driver)
             if target is None:
                 continue
             if record['client_id'] is not None:
@@ -422,11 +459,12 @@ def aggregate_fdinfo(
                     continue
                 seen_clients.add(client_key)
 
-            bucket = per_device.setdefault(target, {'engine_total_ns': 0})
-            bucket['engine_total_ns'] += record['engine_total_ns']
+            bucket = per_device.setdefault(target, _empty_bucket())
+            for key in bucket:
+                bucket[key] += record[key]
 
     if complete:
         for device, _driver, _pdev in device_folders:
-            per_device.setdefault(device, {'engine_total_ns': 0})
+            per_device.setdefault(device, _empty_bucket())
 
     return per_device
