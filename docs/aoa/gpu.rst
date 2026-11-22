@@ -16,8 +16,9 @@ For the moment, following GPU are supported:
 The GPU stats are shown as a percentage of value and for the configured
 refresh time. It displays:
 
-- GPU usage (NVidia, AMD, ARM and Intel) or frequency (Intel fallback when
-  no per-client engine counters are available in ``/proc/*/fdinfo``)
+- GPU usage (NVidia, AMD, ARM and Intel) or frequency (Intel fallback on the
+  first sample, or when ``/proc/*/fdinfo`` cannot be fully read, for example
+  without permission to inspect other users' processes)
 - memory consumption (NVidia, AMD, and ARM when exposed by fdinfo)
 - temperature (if available)
 
