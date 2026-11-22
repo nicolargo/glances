@@ -147,6 +147,14 @@ class PluginModel(GlancesPluginBase[list]):
             "unit": "number",
             "internal": True,
         },
+        # `[processlist] disable_virtual_memory` (v4 parity), published so the
+        # TUI and the browser both hide the VIRT column. Display only:
+        # `memory_info.vms` is still collected and exported.
+        "disable_virtual_memory": {
+            "description": "Hide the VIRT column (`[processlist] disable_virtual_memory`).",
+            "unit": "boolean",
+            "internal": True,
+        },
     }
 
     def __init__(self, store: StatsStore, config: GlancesConfig) -> None:
@@ -156,10 +164,14 @@ class PluginModel(GlancesPluginBase[list]):
         # filter for both the per-process and per-program export views, and
         # measured v4 behaviour is zero columns from BOTH plugins by default.
         self._export_patterns: list[re.Pattern[str]] = self._compile_filter("export", section="processlist")
+        # Read once: both views (`programlist` too, as v4 shares the plugin) use
+        # the `[processlist]` section.
+        self._disable_virtual_memory: bool = bool(self.config.get("processlist", "disable_virtual_memory", False))
 
     def _add_metadata(self) -> None:
         super()._add_metadata()
         self._metadata["cpucore"] = _LOGICAL_CORES
+        self._metadata["disable_virtual_memory"] = self._disable_virtual_memory
 
     def get_export(self) -> list[dict[str, Any]]:
         """Filtered export view (v4 parity, issue #794). See `processlist.get_export()`."""

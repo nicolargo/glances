@@ -175,9 +175,18 @@ export default {
 		// The cascade the fit mixin resolves: the TUI's drop order, as steps. A
 		// computed so the array reaching resolveDegrade() is not a reactive Proxy
 		// of component data.
-		dropCascadeSteps: () => dropCascade(PROCESSLIST_DROP_ORDER),
+		// VIRT is left out when the config hides it: a step that drops an
+		// already-hidden column frees nothing (the TUI removes it before its
+		// cascade for the same reason).
+		dropCascadeSteps() {
+			return dropCascade(PROCESSLIST_DROP_ORDER.filter((key) => !(this.disableVirtualMemory && key === "VIRT")));
+		},
+		// `[processlist] disable_virtual_memory`, published as payload metadata.
+		disableVirtualMemory() {
+			return this.payload?.disable_virtual_memory === true;
+		},
 		hiddenColumns() {
-			return resolveHiddenColumns(this.dropFlags);
+			return resolveHiddenColumns(this.dropFlags, this.disableVirtualMemory);
 		},
 		// The fixed columns still on screen, in display order. Command is not one
 		// of them -- it is the elastic tail, sized by the <colgroup>'s implicit

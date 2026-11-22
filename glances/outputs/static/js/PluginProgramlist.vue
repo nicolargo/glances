@@ -28,11 +28,11 @@
 				aggregation has no single pid (glances/plugins/programlist/model.py:
 				the engine sets `pid='_'`). No width cascade here: programlist's own
 				renderer never imports processlist's `_DROP_ORDER`/`_MIN_COMMAND_WIDTH`,
-				so every column below is unconditional -- no `shows()`/`v-if` per
-				column, unlike processlist's own template. -->
+				so every column below is unconditional, except VIRT, which
+				`[processlist] disable_virtual_memory` hides (v4 parity). -->
 				<th class="gl-header gl-num" v-bind="sortAttrs('CPU%')">{{ cpuLabel }}</th>
 				<th class="gl-header gl-num" v-bind="sortAttrs('MEM%')">MEM%</th>
-				<th class="gl-header gl-num" v-bind="sortAttrs('VIRT')">VIRT</th>
+				<th v-if="shows('VIRT')" class="gl-header gl-num" v-bind="sortAttrs('VIRT')">VIRT</th>
 				<th class="gl-header gl-num" v-bind="sortAttrs('RES')">RES</th>
 				<th class="gl-header gl-num" v-bind="sortAttrs('NPROCS')">NPROCS</th>
 				<th class="gl-header" v-bind="sortAttrs('USER')">USER</th>
@@ -61,7 +61,7 @@
 							formatPercent(item.memory_percent)
 						}}</span>
 					</td>
-					<td class="gl-num"><span>{{ formatProcessBytes(memField(item, 'vms')) }}</span></td>
+					<td v-if="shows('VIRT')" class="gl-num"><span>{{ formatProcessBytes(memField(item, 'vms')) }}</span></td>
 					<td class="gl-num"><span>{{ formatProcessBytes(memField(item, 'rss')) }}</span></td>
 					<td class="gl-num"><span>{{ fmt(item.nprocs) }}</span></td>
 					<td><span>{{ formatUsername(item.username) }}</span></td>
@@ -123,10 +123,19 @@ export default {
 	props: { ...PLUGIN_PROPS },
 	computed: {
 		TITLE: () => TITLE,
-		// Constant, unlike processlist's own `visibleFixedColumns`: there is no
-		// cascade to filter it. Command is not one of them -- it is the elastic
-		// tail, sized by the <colgroup>'s implicit column.
-		visibleFixedColumns: () => PROGRAM_FIXED_COL_KEYS,
+		// No cascade to filter it: only the config hides a column (VIRT), so
+		// its width leaves `--gl-fixed-cols` too. Command is not one of them --
+		// it is the elastic tail, sized by the <colgroup>'s implicit column.
+		visibleFixedColumns() {
+			return PROGRAM_FIXED_COL_KEYS.filter((key) => this.shows(key));
+		},
+	},
+	methods: {
+		// `[processlist] disable_virtual_memory`, read from this plugin's own
+		// payload metadata (programlist/model.py).
+		shows(column) {
+			return !(column === "VIRT" && this.payload?.disable_virtual_memory === true);
+		},
 	},
 };
 </script>

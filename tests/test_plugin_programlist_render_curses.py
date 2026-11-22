@@ -227,3 +227,16 @@ def test_render_nice_shows_windows_priority_class_as_a_label(fields, monkeypatch
     monkeypatch.setattr("glances.plugins.processlist.render_curses.WINDOWS", True)
     rows = render({"data": [_program(name="x", nice=32768)], "_levels": {}}, fields)
     assert rows[1].cells[NICE_COL].text.strip() == "AN"
+
+
+# ------------------------------------ `[processlist] disable_virtual_memory`
+
+
+def test_disable_virtual_memory_hides_virt_in_programlist(payload, fields):
+    full = render(payload, fields)
+    rows = render({**payload, "disable_virtual_memory": True}, fields)
+    labels = [c.text.strip() for c in rows[0].cells]
+    assert "VIRT" not in labels and "RES" in labels
+    assert {len(r.cells) for r in rows} == {len(full[0].cells) - 1}
+    # Absent or False: unchanged.
+    assert render({**payload, "disable_virtual_memory": False}, fields) == full

@@ -522,3 +522,26 @@ async def test_the_core_count_is_published_for_irix_mode(store, config):
     payload = store.get("processlist")
     assert payload["cpucore"] == (psutil.cpu_count(logical=True) or 1)
     assert "cpucore" not in payload["data"][0]
+
+
+# ------------------------------------ `[processlist] disable_virtual_memory`
+
+
+async def _api_payload(plugin, store):
+    with patch("glances.plugins.processlist.model.glances_processes.get_list", return_value=[_proc(**{})]):
+        await plugin.update()
+    return plugin.get_api_payload()
+
+
+async def test_disable_virtual_memory_defaults_to_false(store, config):
+    # `config` isolates ~/.config/glances: a developer's own conf cannot leak in.
+    payload = await _api_payload(PluginModel(store, config), store)
+    assert payload["disable_virtual_memory"] is False
+
+
+async def test_disable_virtual_memory_reaches_the_api_payload(tmp_path, monkeypatch, store):
+    config = _config_with(tmp_path, monkeypatch, "[processlist]\ndisable_virtual_memory=True\n")
+    payload = await _api_payload(PluginModel(store, config), store)
+    assert payload["disable_virtual_memory"] is True
+    # Display only: the collected data still carries the virtual size.
+    assert payload["data"][0]["memory_info"]

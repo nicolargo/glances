@@ -174,6 +174,16 @@ Columns display
 When the terminal is too narrow, the less important columns (``CPU``,
 ``VIRT``, ``TIME+``, ``RES``...) are automatically hidden.
 
+The ``VIRT`` column can be hidden permanently, in the processes and in the
+programs lists, with the ``disable_virtual_memory`` key (default: ``False``).
+The virtual memory size is still collected and available through the API and
+the exports:
+
+.. code-block:: ini
+
+    [processlist]
+    disable_virtual_memory=True
+
 Process filtering
 -----------------
 

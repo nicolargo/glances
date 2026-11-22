@@ -652,7 +652,7 @@ def _pid_width(items: list[dict[str, Any]]) -> int:
     return max(width, 4)
 
 
-def _visible_fixed_keys(available_width: int, pid_width: int) -> list[str]:
+def _visible_fixed_keys(available_width: int, pid_width: int, hide_virt: bool = False) -> list[str]:
     """Return the fixed-column keys that fit at ``available_width``.
 
     Drops columns in ``_DROP_ORDER`` (a→h) until the flexible ``Command``
@@ -660,6 +660,8 @@ def _visible_fixed_keys(available_width: int, pid_width: int) -> list[str]:
     columns are gone). ``available_width`` is the painted processlist width
     (``view["right_width"]``); ``pid_width`` is the dynamic PID column
     width. ``CPU%``/``MEM%``/``R/s``/``W/s`` are never dropped.
+    ``hide_virt`` (``[processlist] disable_virtual_memory``) removes ``VIRT``
+    BEFORE the cascade, so the width it frees goes to ``Command``.
     """
     widths = {
         "CPU%": _W_CPU,
@@ -676,7 +678,7 @@ def _visible_fixed_keys(available_width: int, pid_width: int) -> list[str]:
         "W/s": _W_IO,
         "CPU": _W_CPU_NUM,
     }
-    active = list(_FIXED_COL_KEYS)
+    active = [k for k in _FIXED_COL_KEYS if not (hide_virt and k == "VIRT")]
 
     def command_space() -> int:
         used = sum(widths[k] for k in active)
@@ -754,10 +756,15 @@ def render(
     raw_levels = payload.get("_levels") if isinstance(payload, dict) else None
     levels_index = raw_levels if isinstance(raw_levels, dict) else {}
 
-    # Responsive columns: which of the 13 fixed columns are visible. Absent
+    # Responsive columns: which of the 13 fixed columns are visible (minus VIRT
+    # when `disable_virtual_memory` is set). Absent
     # ``right_width`` (export / tests / non-int) → keep all 13 (byte-identical
     # to the historical output, locked by ``test_no_width_keeps_all_columns``).
-    active = _visible_fixed_keys(available, pid_width) if isinstance(available, int) else list(_FIXED_COL_KEYS)
+    hide_virt = bool(payload.get("disable_virtual_memory")) if isinstance(payload, dict) else False
+    if isinstance(available, int):
+        active = _visible_fixed_keys(available, pid_width, hide_virt)
+    else:
+        active = [k for k in _FIXED_COL_KEYS if not (hide_virt and k == "VIRT")]
     active_set = set(active)
 
     def _filter_fixed(cells: list[Cell]) -> list[Cell]:

@@ -2,10 +2,9 @@
 //
 // Pure: no DOM and no fetch, so `node --test` can load it.
 //
-// Unlike `containers_columns.js`, processlist has no DATA-driven hiding --
-// every one of its 13 fixed columns is always present in the payload
-// (processlist/render_curses.py has no `disable_stats`-style config
-// knob). Only the WIDTH-driven cascade in `drop_order.js` ever hides one.
+// Two families, as in `containers_columns.js`: DATA-driven (the one config
+// knob, `[processlist] disable_virtual_memory`, published in the payload as
+// `disable_virtual_memory`) and WIDTH-driven (the cascade in `drop_order.js`).
 
 import { droppedColumns } from "./drop_order.js";
 
@@ -19,10 +18,10 @@ import { droppedColumns } from "./drop_order.js";
 // copies; never edit one side alone.
 export const PROCESSLIST_DROP_ORDER = ["CPU", "VIRT", "TIME+", "RES", "USER", "PID", "THR", "S", "NI"];
 
-// This plugin has no data-driven hiding to union in (see the module comment
-// above), so the width cascade's own flags are the whole story -- unlike
-// containers_columns.js's hiddenColumns(), which also takes
-// `rows`/`disableStats`.
-export function hiddenColumns(flags) {
-	return droppedColumns(flags);
+// The union of both families: a column the config hides cannot come back when
+// the window widens.
+export function hiddenColumns(flags, disableVirtualMemory = false) {
+	const hidden = droppedColumns(flags);
+	if (disableVirtualMemory) hidden.add("VIRT");
+	return hidden;
 }
