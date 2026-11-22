@@ -173,6 +173,14 @@ class PluginModel(GlancesPluginBase[list]):
             "unit": "number",
             "internal": True,
         },
+        # `[processlist] disable_virtual_memory` (v4 parity), published so the
+        # TUI and the browser both hide the VIRT column. Display only:
+        # `memory_info.vms` is still collected and exported.
+        "disable_virtual_memory": {
+            "description": "Hide the VIRT column (`[processlist] disable_virtual_memory`).",
+            "unit": "boolean",
+            "internal": True,
+        },
     }
 
     def __init__(self, store: StatsStore, config: GlancesConfig) -> None:
@@ -183,6 +191,9 @@ class PluginModel(GlancesPluginBase[list]):
         # filter are exported. `[processlist] export` is the same config key
         # v4 uses; `programlist` reuses this SAME section (see its __init__).
         self._export_patterns: list[re.Pattern[str]] = self._compile_filter("export", section="processlist")
+        # Read once: both views (`programlist` too, as v4 shares the plugin) use
+        # the `[processlist]` section.
+        self._disable_virtual_memory: bool = bool(self.config.get("processlist", "disable_virtual_memory", False))
 
     # What the `e` block needs, and nothing else. `glances_processes`
     # accumulates the extended stats INTO the whole process dict, so
@@ -238,6 +249,7 @@ class PluginModel(GlancesPluginBase[list]):
         """
         super()._add_metadata()
         self._metadata["cpucore"] = _LOGICAL_CORES
+        self._metadata["disable_virtual_memory"] = self._disable_virtual_memory
         payload = getattr(glances_processes, "extended_process", None)
         pinned = getattr(glances_processes, "extended_pid", None)
         # The pid guard covers the cycle right after a pin, where the engine

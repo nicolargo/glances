@@ -133,6 +133,9 @@ def render(
 
     # v4's programlist says `CPU%/C` from ten cores up (`_cpu_header_msg`),
     # where processlist says `CPUi`.
+    # `[processlist] disable_virtual_memory` (v4 parity): VIRT is hidden here too.
+    hide_virt = bool(payload.get("disable_virtual_memory")) if isinstance(payload, dict) else False
+    fixed_keys = [k for k in _FIXED_COL_KEYS if not (hide_virt and k == "VIRT")]
     header_cells = [
         _header(
             key,
@@ -140,7 +143,7 @@ def render(
             ljust=(key == "USER"),
             text=irix_cpu_label(cores, "CPU%/C") if key == "CPU%" else None,
         )
-        for key in _FIXED_COL_KEYS
+        for key in fixed_keys
     ] + [
         _header("Command", len("Command")),
     ]
@@ -170,6 +173,7 @@ def render(
             _io_cell(r_rate, r_unknown, _W_IO),
             _io_cell(w_rate, w_unknown, _W_IO),
         ]
+        fixed_cells = [cell for cell, key in zip(fixed_cells, _FIXED_COL_KEYS) if key in fixed_keys]
         rows.append(Row(cells=fixed_cells + _command_cells(item, short_name, command_offset)))
 
     return rows

@@ -44,9 +44,9 @@ document donne l'inventaire ligne à ligne dont ils sortent.
 | Surface | Total | ✅ porté | ⚠️ partiel | ❌ absent | 🚫 retiré |
 |---|---:|---:|---:|---:|---:|
 | Options CLI | 86 | 71 | 0 | 0 | 15 |
-| Clés de configuration | 211 | 177 | 14 | 10 | 10 |
+| Clés de configuration | 211 | 178 | 14 | 9 | 10 |
 | Hotkeys TUI | 62 | 58 | 0 | 2 | 2 |
-| **Total** | **359** | **306** | **14** | **12** | **27** |
+| **Total** | **359** | **307** | **14** | **11** | **27** |
 
 Avant le recompte (2026-09-10, mêmes lignes recomptées par balayage de la colonne « Statut ») : 177 `✅`, 26 `⚠️`, 152 `❌`, 4 `🚫`. Le total est de 359 lignes et non 360 : une ligne de la partie 2 (le rappel barré de `[hddtemp] host/port`) ne porte pas de statut balisé.
 
@@ -54,7 +54,7 @@ Avant le recompte (2026-09-10, mêmes lignes recomptées par balayage de la colo
 
 * **129 lignes → `✅ porté`** : presque toute la CLI (mode client et browser, `-w`, alias courts `-p -B -V -c -u -t -0..-6`, `--stdout*`, `--fetch*`, `--issue`, `--process-*`, `--sort-processes`, `--diskio-*`, `--fs-free-space`, `--disable-*`…), 58 touches sur 62 (processus, bascules par plugin, types de données), la famille `_log`, la latence disque, les seuils per-CPU, `[serverlist]`, `[passwords]`, `[graph]` et les 17 sections d'exporteurs qui manquaient (24 modules d'export au total).
 * **23 lignes → `🚫 retiré (décision)`** (27 au total avec les 4 d'origine) : `--cached-time`, `-P`, `--sparkline` et la touche `S`, `--disable-check-update`, `--enable-process-extended` et la touche `e`, `--trace-malloc`, le prompt `--username`, le sens v4 de `--api-doc`, les 6 options SNMP, `[global] check_update` / `plugin_dir`, `[outputs] xmlrpc_allowed_hosts`, `[hddtemp]` et `[passwords] local_password_path` (chaque ligne cite sa décision : `NEWS.rst`, spec Phase 3, #3486).
-* **Les 12 `❌` qui restent** : `[outputs] left_menu` et `webui_root_path` ; `folder_<n>_<level>_action` ; `<type>_<label>_log` et `<type>_<label>_<level>_action` (sensors) ; `[processlist] sort_key`, `disable_stats` et `disable_virtual_memory` ; `[alert] disable` et `min_interval` ; les touches `w` et `x` (effacer les alertes terminées).
+* **Les 11 `❌` qui restent** : `[outputs] left_menu` et `webui_root_path` ; `folder_<n>_<level>_action` ; `<type>_<label>_log` et `<type>_<label>_<level>_action` (sensors) ; `[processlist] sort_key` et `disable_stats` ; `[alert] disable` et `min_interval` ; les touches `w` et `x` (effacer les alertes terminées).
 * **Les 14 `⚠️` qui restent** sont des clés renommées sans alias (seuils réseau, disque, fs, processlist, `cors_credentials`), les deux clés d'alerte à sémantique différente, `max_processes_display` (lue par la WebUI, côté TUI non vérifié) et deux sections d'exporteurs dont la liste de clés obligatoires diffère.
 
 **2026-09-10 — parity wave 1.** 13 lignes recomptées ici sont passées de
@@ -89,8 +89,9 @@ La liste du 2026-09-10 (processus interactifs, bascules par plugin, alias courts
    reconnue déclenche un WARNING au démarrage.
 3. **Actions d'alerte par dossier et par capteur** : `folder_<n>_<level>_action`
    et `<type>_<label>_<level>_action` ne se déclenchent pas.
-4. **`[processlist] sort_key`, `disable_stats` et `disable_virtual_memory`** ne
-   sont pas lus ; le tri se règle par `--sort-processes` ou au clavier.
+4. **`[processlist] sort_key` et `disable_stats`** ne sont pas lus ; le tri se
+   règle par `--sort-processes` ou au clavier. (`disable_virtual_memory` est
+   porté depuis : voir la ligne de la partie 3.)
 5. **Touches `w` et `x`** (effacer les alertes terminées) : absentes, l'historique
    d'alertes v5 est un tampon borné.
 6. **`[alert]`** : `disable` et `min_interval` n'ont pas d'équivalent dans `[alerts]`.
@@ -629,7 +630,7 @@ conservé pour l'historique.
 | `disable` | `glances/main.py:734` | ✅ porté | `glances/plugins/plugin/base_v5.py:166` | |
 | `sort_key` | `glances/plugins/processlist/__init__.py:244-248` | ❌ absent | — (aucune lecture de `[processlist] sort_key` dans `*_v5.py`) | Le tri v5 reste sur l'auto-tri de `glances_processes`. |
 | `disable_stats` | `glances/plugins/processlist/__init__.py:258-264` | ❌ absent | — | Toutes les statistiques par processus sont collectées. |
-| `disable_virtual_memory` | `glances/plugins/plugin/model.py:741-754` | ❌ absent | — | |
+| `disable_virtual_memory` | `glances/plugins/plugin/model.py:741-754` | ✅ porté | `glances/plugins/processlist/model.py:196` (lecture unique, publiée `:252`) ; `glances/plugins/processlist/render_curses.py:763-767` ; `glances/plugins/programlist/render_curses.py:136-138` ; `glances/outputs/static/js/processlist_columns.js:23-27` ; `glances/outputs/static/js/PluginProgramlist.vue:136-138` | Masque la colonne VIRT (TUI et WebUI, processlist et programlist, comme en v4) ; `memory_info.vms` reste collecté et exporté. |
 | `export` | `glances/plugins/processlist/__init__.py:249-252` | ✅ porté | `glances/plugins/processlist/model_v5.py:167` ; `glances/plugins/programlist/model_v5.py:142` ; overlay CLI `glances/main_v5.py:562` | |
 | `focus` | `glances/plugins/processlist/__init__.py:253-256` | ✅ porté | `glances/main.py:1352` | `[processlist] focus` lu à côté de `--process-focus`. |
 | `cpu_<level>` / `mem_<level>` | `glances/plugins/plugin/model.py:964` | ⚠️ partiel | champs v5 `cpu_percent` / `memory_percent`, défauts 50/70/90 (`glances/plugins/processlist/model_v5.py:101-118`) | **Clés renommées** : v5 attend `cpu_percent_careful` / `memory_percent_careful`. Les valeurs livrées coïncident avec les défauts, donc l'effet visible est nul tant que l'utilisateur ne les modifie pas. |
@@ -980,8 +981,8 @@ alors que son code bascule `disable_smart` ; v5 suit le code.
 La plupart des suites du 2026-09-10 sont faites (TUI interactif, options CLI, alias, famille `_log`,
 exporteurs, browser). Reste, par ordre de valeur :
 
-1. **Décider du sort des 12 `❌`** : porter ou retirer par décision écrite (`w`/`x`, `[alert] disable` et
-   `min_interval`, `[processlist] sort_key`/`disable_stats`/`disable_virtual_memory`, actions par dossier et par
+1. **Décider du sort des 11 `❌`** : porter ou retirer par décision écrite (`w`/`x`, `[alert] disable` et
+   `min_interval`, `[processlist] sort_key`/`disable_stats`, actions par dossier et par
    capteur, `left_menu`, `webui_root_path`).
 2. **Relire les 14 `⚠️`**, surtout `max_processes_display` côté TUI.
 3. **Rouvrir une fois les `✅` de 2026-09-10** (non recomptés ici) pour mettre à jour leurs `file:line`

@@ -42,3 +42,19 @@ test("the never-dropped columns survive every flag", () => {
 	}
 	assert.equal(hidden.size, PROCESSLIST_DROP_ORDER.length);
 });
+
+test("disable_virtual_memory hides VIRT and only VIRT", () => {
+	assert.deepEqual(hiddenColumns({}, true), new Set(["VIRT"]));
+});
+
+test("disable_virtual_memory off or absent hides nothing extra", () => {
+	assert.deepEqual(hiddenColumns({}, false), new Set());
+	assert.deepEqual(hiddenColumns({}), new Set());
+});
+
+test("the config's VIRT and the cascade's flags are unioned", () => {
+	const hidden = hiddenColumns({ "drop_TIME+": true }, true);
+	assert.deepEqual(hidden, new Set(["VIRT", "TIME+"]));
+	// A column the config hid cannot come back through a cascade flag set.
+	assert.ok(hiddenColumns({ drop_VIRT: false }, true).has("VIRT"));
+});

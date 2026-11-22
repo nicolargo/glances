@@ -1185,3 +1185,58 @@ def test_programlist_says_cpu_per_c_from_ten_cores_up():
     assert rows[1].cells[0].text.strip() == "20.0"
     payload["cpucore"] = 12
     assert render(payload, {}, view={"load_irix": True})[0].cells[0].text.strip() == "CPU%/C"
+
+
+# ------------------------------------ `[processlist] disable_virtual_memory`
+
+
+def _no_virt(payload):
+    return {**payload, "disable_virtual_memory": True}
+
+
+def test_disable_virtual_memory_false_is_byte_identical(payload, fields):
+    # The key's default is False: an explicit False must paint what an absent
+    # key paints, with and without a width.
+    explicit = {**payload, "disable_virtual_memory": False}
+    assert render(explicit, fields) == render(payload, fields)
+    assert render(explicit, fields, view={"right_width": 79}) == render(payload, fields, view={"right_width": 79})
+
+
+def test_disable_virtual_memory_removes_virt_keeps_res(payload, fields):
+    rows = render(_no_virt(payload), fields)
+    assert not _has_col(rows, "VIRT")
+    assert _has_col(rows, "RES")
+    # 120 MiB is the VIRT value of every fixture row; RES holds 32 MiB.
+    assert all("120M" not in c.text for r in rows for c in r.cells)
+    assert any("32.0M" in c.text for r in rows[1:] for c in r.cells)
+
+
+def test_disable_virtual_memory_keeps_header_and_rows_aligned(payload, fields):
+    rows = render(_no_virt(payload), fields)
+    full = render(payload, fields)
+    assert len(rows[0].cells) == len(full[0].cells) - 1
+    # Fixed columns: the header and every data row paint the same widths.
+    fixed = CMD_START - 1
+    header_widths = [len(c.text) for c in rows[0].cells[:fixed]]
+    assert all([len(c.text) for c in r.cells[:fixed]] == header_widths for r in rows[1:])
+    # Every column after VIRT moved one cell left, with its own content.
+    assert [c.text for c in rows[1].cells[VIRT_COL:]] == [c.text for c in full[1].cells[VIRT_COL + 1 :]]
+
+
+def test_disable_virtual_memory_frees_width_for_the_cascade(payload, fields):
+    # At 79 the plain table must drop CPU and VIRT; without VIRT the width it
+    # frees keeps the CPU core column (one column fewer dropped by the cascade).
+    plain = render(payload, fields, view={"right_width": 79})
+    hidden = render(_no_virt(payload), fields, view={"right_width": 79})
+    assert not _has_col(plain, "CPU") and not _has_col(plain, "VIRT")
+    assert _has_col(hidden, "CPU") and not _has_col(hidden, "VIRT")
+
+
+def test_disable_virtual_memory_summary_rows_follow_the_header(payload, fields):
+    view = {"filter_summary": _SUMMARY, "right_width": 400}
+    rows = render(_no_virt(payload), fields, view=view)
+    # The summary row paints the header's fixed columns, same widths, and never
+    # the VIRT total (32 MiB -> "32.0M").
+    fixed = CMD_START - 1
+    assert [len(c.text) for c in rows[-1].cells[:fixed]] == [len(c.text) for c in rows[0].cells[:fixed]]
+    assert "32.0M" not in _flat(rows)[-1]
