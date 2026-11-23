@@ -4161,8 +4161,8 @@ def test_the_help_overlay_renders_every_bound_key():
         if "hide" in spec or "sort" in spec or spec.get("group") == "TOGGLE VIEW"
     }
     # One row per bound key (24 SHOW/HIDE + 12 TOGGLE VIEW + 8 SORT
-    # PROCESSES), plus `h` itself.
-    assert len(rendered) == len(bound) + 1 == 45
+    # PROCESSES), plus `H` and `h` itself.
+    assert len(rendered) == len(bound) + 2 == 46
 
     joined = " ".join(rendered)
     for key, desc in bound.items():
@@ -4654,3 +4654,134 @@ def test_a_sort_key_posts_to_the_sort_route():
     locally: the sort is the server's, shared by every viewer."""
     payload = _run_render_probe("processlist", keys="m,a")
     assert payload["posts"] == ["api/5/processes/sort/memory_percent", "api/5/processes/sort/auto"]
+
+
+# ------------------------------------------------------- the LLM report
+
+
+_LLM_REPORT = (
+    "Summary: The backup job saturates the CPU.\n1. Overall health status: Degraded\n2. Root cause: the backup job."
+)
+
+
+def _llm_heading(age: str) -> str:
+    """The window's heading for the fixture's report (of another day: its date shows)."""
+    from datetime import datetime
+
+    stamp = datetime.fromisoformat("2026-01-02T10:04:05+00:00").astimezone().strftime("%Y-%m-%d %H:%M")
+    return f"Generated at {stamp}, {age} ago, by claude-haiku-4-5"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_alert_line_ends_with_the_llm_report_button():
+    """While the llm_reporter plugin is enabled (it is in /api/5/all), the
+    alert title ends with `· AI report`, beside its unchanged <h2>."""
+    payload = _run_render_probe("llm-idle")
+    assert _alert_title(payload) == "ALERTS  3 ongoing · 2 resolved", f"got {_alert_title(payload)!r}"
+    assert payload["alertLlmButton"] == "· AI report"
+    assert payload["llmWindow"] is None, "the window opens on a click only"
+    assert not any("llm_reporter" in path for path in payload["posts"]), "no request without a click"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_no_alert_line_ends_with_the_llm_report_button():
+    text = _run_render_probe("llm-idle-empty")["pluginText"]["alert"]
+    assert text.startswith("ALERT (no alert detected)"), f"got {text!r}"
+    assert text.endswith("· AI report"), f"got {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_no_llm_report_button_while_the_plugin_is_disabled():
+    assert _run_render_probe("default")["alertLlmButton"] is None
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_button_requests_a_report_and_opens_its_window():
+    """Inside min_interval, the server answers the previous report: the window
+    shows it with its time, age and model, and when a new one can be asked."""
+    payload = _run_render_probe("llm-idle", "click:llm")
+    assert payload["posts"] == ["api/5/llm_reporter/request"]
+    window = payload["llmWindow"]
+    assert window is not None, "the LLM report window did not open"
+    assert [line["text"] for line in window["lines"]] == [
+        _llm_heading("25 s"),
+        "A new report can be requested in 35 s.",
+    ]
+    assert "gl-header" in window["lines"][0]["className"]
+    assert window["reportText"] == _LLM_REPORT
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_h_requests_a_report_like_the_button():
+    """The TUI's `H`, in the browser: the same request, the same window."""
+    pressed = _run_render_probe("llm-idle", "H")
+    assert pressed["posts"] == ["api/5/llm_reporter/request"]
+    assert pressed["llmWindow"] is not None, "H did not open the window"
+    assert pressed["llmWindow"] == _run_render_probe("llm-idle", "click:llm")["llmWindow"]
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_h_closes_the_window_as_in_the_tui():
+    """Whichever opened it; closing asks for nothing."""
+    closed = _run_render_probe("llm-idle", "H,H")
+    assert closed["llmWindow"] is None
+    assert closed["posts"] == ["api/5/llm_reporter/request"]
+    assert _run_render_probe("llm-idle", "click:llm,H")["llmWindow"] is None
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_h_does_nothing_while_the_plugin_is_disabled():
+    payload = _run_render_probe("default", "H")
+    assert payload["llmWindow"] is None
+    assert not any("llm_reporter" in path for path in payload["posts"])
+    assert payload["userHidden"] == []
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_help_overlay_lists_h_as_the_tui_does():
+    """In MISCELLANEOUS, before `h`, with the TUI's description, whether or not
+    the plugin is on: like every other key, as in the TUI's help."""
+    from glances.outputs.glances_curses import Tui
+
+    expected = [f"H{Tui._HOTKEYS['H']['desc']}", "hShow / hide this help"]
+    for scenario in ("llm-idle", "default"):
+        rows = _run_render_probe(scenario, "h")["helpRows"]
+        assert rows[-2:] == expected, (scenario, rows[-2:])
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_window_shows_the_request_over_an_older_payload():
+    """/api/5/all still holds the state from before the request (revision 2):
+    the request's answer (revision 3) wins, and the old report is not shown."""
+    window = _run_render_probe("llm-stale", "click:llm")["llmWindow"]
+    assert [line["text"] for line in window["lines"]] == ["Generating the report with claude-haiku-4-5…"]
+    assert window["reportText"] is None
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_window_says_a_request_waits_for_the_startup():
+    window = _run_render_probe("llm-starting", "click:llm")["llmWindow"]
+    assert [line["text"] for line in window["lines"]] == ["Waiting for the end of Glances' startup…"]
+    assert window["reportText"] is None
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_window_puts_the_error_first_and_keeps_the_previous_report():
+    window = _run_render_probe("llm-error", "click:llm")["llmWindow"]
+    assert [line["text"] for line in window["lines"]] == [
+        "The LLM call failed: see the Glances log.",
+        _llm_heading("2 h"),
+        "A new report can be requested in 35 s.",
+    ]
+    assert "gl-level-warning" in window["lines"][0]["className"]
+    assert window["reportText"] == _LLM_REPORT
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_the_window_says_why_a_request_failed():
+    """A server answering an error: said first, over the state /api/5/all holds."""
+    window = _run_render_probe("llm-request-fails", "click:llm")["llmWindow"]
+    texts = [line["text"] for line in window["lines"]]
+    assert texts[0] == "The request failed: api/5/llm_reporter/request: HTTP 500"
+    assert "gl-level-warning" in window["lines"][0]["className"]
+    assert texts[1:] == [_llm_heading("25 s"), "A new report can be requested in 35 s."]

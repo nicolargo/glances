@@ -172,7 +172,7 @@ import { visiblePlugins, groupBySlot } from "./layout.js";
 import { PLUGINS } from "./plugins/index.js";
 import { resolveDegrade, sameFlags, TOP_CASCADE, HEADER_CASCADE } from "./degrade.js";
 import { FULL_QUICKLOOK_HIDDEN } from "./full_quicklook.js";
-import { hideTargets, toggleHidden, helpRows, viewFlag, sortKeyFor, startupHidden, HELP_KEY, HELP_DOC_URL } from "./hotkeys.js";
+import { hideTargets, toggleHidden, helpRows, viewFlag, sortKeyFor, startupHidden, HELP_KEY, HELP_DOC_URL, LLM_REPORT } from "./hotkeys.js";
 import { planRightColumn } from "./row_budget.js";
 import { ampsLineCount } from "./amps.js";
 import { extendedLines } from "./process_extended.js";
@@ -199,6 +199,12 @@ const HIDDEN_BY = {
 	hide_gpu: "gpu",
 	hide_quicklook: "quicklook",
 };
+
+// Read along with the registry's plugins from the same /api/5/all request: its
+// state goes to the alert block, whose `AI report` button and window
+// (PluginAlert.vue) follow it. Not in the registry, as it renders no block of
+// its own. Absent from /all when the plugin is disabled.
+const LLM_REPORTER_SPEC = { name: "llm_reporter", spec: { shape: "scalar", required: [] } };
 
 // The browser's own stacking threshold, not a TUI rule (spec D3). Kept next to
 // the media query that owns it -- test_webui_tokens.py pins the two
@@ -285,6 +291,12 @@ export default {
 			// An immediate poll, for a click that changes server state (the
 			// processlist pin) and should not wait for the next interval.
 			refreshNow: () => this.tick(),
+			// `H` (handleHotkey) toggles the alert block's AI report window:
+			// PluginAlert.vue hands its toggle up through this while mounted,
+			// and null when unmounted.
+			registerLlmReportToggle: (toggle) => {
+				this.llmReportToggle = toggle;
+			},
 		};
 	},
 	data() {
@@ -344,6 +356,8 @@ export default {
 			userHidden: [],
 			// The `h` overlay listing the keys, mirroring the TUI's.
 			showHelp: false,
+			// PluginAlert.vue's `toggleReport`, while it is mounted (provide()).
+			llmReportToggle: null,
 			// The server stopped answering at the transport level (`OfflineError`,
 			// api.js): not a bad response, no response at all. Drives the one
 			// overlay that replaces what used to be the same transport message
@@ -450,14 +464,15 @@ export default {
 		helpLevels() {
 			return ["ok", "careful", "warning", "critical"];
 		},
-		// helpRows() grouped in its own order, plus MISCELLANEOUS for `h`.
+		// helpRows() grouped in its own order, plus MISCELLANEOUS for `H` and `h`,
+		// in the TUI's order.
 		helpGroups() {
 			const groups = [];
 			for (const row of helpRows()) {
 				if (groups.at(-1)?.name !== row.group) groups.push({ name: row.group, rows: [] });
 				groups.at(-1).rows.push(row);
 			}
-			groups.push({ name: "MISCELLANEOUS", rows: [{ key: HELP_KEY, desc: "Show / hide this help" }] });
+			groups.push({ name: "MISCELLANEOUS", rows: [LLM_REPORT, { key: HELP_KEY, desc: "Show / hide this help" }] });
 			return groups;
 		},
 		// What the server reported, with this viewer's TOGGLE VIEW keys applied
@@ -642,7 +657,7 @@ export default {
 				window.__glancesShowHelp = this.showHelp;
 			};
 			window.__glancesHotkey = async (key) => {
-				this.handleHotkey(key);
+				await this.handleHotkey(key);
 				await this.$nextTick();
 				window.__glancesUserHidden = [...this.userHidden];
 				window.__glancesShowHelp = this.showHelp;
@@ -762,8 +777,8 @@ export default {
 			});
 		},
 		/**
-		 * Act on one SHOW/HIDE key. Returns true when the key was handled, so
-		 * the DOM listener knows whether to swallow it.
+		 * Act on one SHOW/HIDE key. Returns a truthy value when the key was
+		 * handled, so the DOM listener knows whether to swallow it.
 		 *
 		 * Split from the listener because it is the whole behaviour: the
 		 * listener only decides whether a keystroke is ours to read, and the
@@ -779,6 +794,12 @@ export default {
 			if (key === HELP_KEY) {
 				this.toggleHelp();
 				return true;
+			}
+			if (key === LLM_REPORT.key) {
+				// Falsy, so the key is not swallowed, while the plugin is off or
+				// the alert block is hidden. As it opens the window, the request's
+				// promise, which the render probe awaits.
+				return this.llmReportToggle ? this.llmReportToggle() : false;
 			}
 			const flag = viewFlag(key);
 			if (flag) {
@@ -864,7 +885,10 @@ export default {
 				// coupling the brief forbade, just in the direction nobody thought
 				// to look.
 				const ownEndpointPlugins = this.plugins.filter((plugin) => plugin.ownEndpoint);
-				const { results, errors, offline } = await fetchAll(this.plugins.filter((plugin) => !plugin.ownEndpoint));
+				const { results, errors, offline } = await fetchAll([
+					...this.plugins.filter((plugin) => !plugin.ownEndpoint),
+					LLM_REPORTER_SPEC,
+				]);
 				if (offline) {
 					// The server is gone. Return BEFORE touching `results` /
 					// `errors`: the last good frame stays on screen under the
@@ -925,7 +949,8 @@ export default {
 					const nextErrors = { ...this.errors };
 					delete nextErrors.alert;
 					this.errors = markRaw(nextErrors);
-					this.results = markRaw({ ...this.results, alert: { isInitializing, incidents } });
+					const llmReporter = this.results.llm_reporter ?? null;
+					this.results = markRaw({ ...this.results, alert: { isInitializing, incidents, llmReporter } });
 				} catch (e) {
 					this.errors = markRaw({ ...this.errors, alert: e.message });
 				}
