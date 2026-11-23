@@ -65,14 +65,6 @@ class Export(GlancesExportBase):
         logger.info("Connected to the MongoDB server")
         return client
 
-    def _redact(self, error: Exception) -> str:
-        """The error text, with the configured credentials masked."""
-        text = str(error)
-        for secret in (self.password, self.user):
-            if secret:
-                text = text.replace(secret, "***")
-        return text
-
     def export(self, name: str, columns: list[str], points: list[Any]) -> None:
         try:
             self.client[self.db][name].insert_one(dict(zip(columns, points)))

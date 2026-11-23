@@ -113,14 +113,6 @@ class Export(GlancesExportBase):
         logger.info("Stats will be exported to ClickHouse server: %s:%s", self.host, self.port)
         return client
 
-    def _redact(self, error: Exception) -> str:
-        """The error text, with the configured credentials masked."""
-        text = str(error)
-        for secret in (self.password, self.user):
-            if secret:
-                text = text.replace(secret, "***")
-        return text
-
     # ------------------------------------------------------------ rows
 
     def _table(self, payload: dict | list) -> tuple[list[str], list[list[Any]]] | None:

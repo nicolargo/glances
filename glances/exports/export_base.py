@@ -171,6 +171,18 @@ class GlancesExportBase(ABC):
         logger.debug("Load %s section from the Glances configuration file", section)
         return True
 
+    def _redact(self, error: Exception) -> str:
+        """The error text, with the configured credentials masked.
+
+        Exporters that authenticate store their credentials in ``user`` and
+        ``password`` (see load_conf); either may be unset.
+        """
+        text = str(error)
+        for secret in (getattr(self, "password", None), getattr(self, "user", None)):
+            if secret:
+                text = text.replace(secret, "***")
+        return text
+
     def is_excluded(self, field: str) -> bool:
         """True when `field` matches one of ``[export] exclude_fields``."""
         return any(re.fullmatch(pattern, field, re.I) for pattern in self.exclude_fields)
