@@ -89,7 +89,7 @@ You can also set the sort key in the UI:
 
 In the Web UI, the same shortcuts apply, and clicking a column header
 (``CPU%``, ``MEM%``, ``USER``, ``TIME+``, ``R/s``, ``W/s``, ``Command``, and the
-``CONTAINER``/``CPU%``/``MEM`` and ``Name``/``CPU%``/``MEM/MAX`` headers of the
+``CONTAINER``/``CPU%``/``MEM`` and ``Name``/``CPU%``/``MEM`` headers of the
 containers and VMs) sorts by that column. The sort key belongs to the server:
 the containers and the VMs follow it, and so does every Web UI and client
 (``-c``) connected to the same server. It can also be set through the API with

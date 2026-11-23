@@ -21,7 +21,7 @@ export const CONTAINERS_HEADER_SORT_KEY = {
 export const VMS_HEADER_SORT_KEY = {
 	VM: "name",
 	"CPU%": "cpu_percent",
-	"MEM/MAX": "memory_percent",
+	MEM: "memory_percent",
 };
 
 /**

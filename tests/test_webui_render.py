@@ -2614,24 +2614,25 @@ def test_a_truncated_amps_block_keeps_a_marker_line():
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
 def test_vms_renders_the_tui_columns_and_rows():
     """vms/render_curses.py:83-155. Engine shown (two engines), LOAD
-    shown (load_1min present), MEM and MAX in ONE cell, a missing value as
+    shown (load_1min present), MEM and /MAX in two cells, a missing value as
     `-` (spec divergence 5, `format.js` MISSING) -- never `_`.
     """
     payload = _run_render_probe("vms")
     assert payload["pluginHeaderCells"].get("vms") == [
         "Engine",
-        "Name",
+        "VM",
         "Status",
         "Core",
         "CPU%",
-        "MEM/MAX",
+        "MEM",
+        "/MAX",
         "LOAD 1/5/15min",
         "Release",
     ], f"got {payload['pluginHeaderCells'].get('vms')!r}"
-    rows = _table_rows(payload, "vms", 8)
+    rows = _table_rows(payload, "vms", 9)
     assert rows == [
-        ["virsh", "builder", "running", "4", "12.5%", "2.00G/4.00G", "0.5/0.7/1.2", "24.04"],
-        ["multipass", "sandbox", "stopped", "2", "-", "-/-", "0.0/0.0/0.0", "-"],
+        ["virsh", "builder", "running", "4", "12.5%", "2.00G", "/4.00G", "0.5/0.7/1.2", "24.04"],
+        ["multipass", "sandbox", "stopped", "2", "-", "-", "/-", "0.0/0.0/0.0", "-"],
     ], f"got {rows!r}"
 
 
@@ -2643,26 +2644,27 @@ def test_vms_hides_engine_and_load_when_the_data_makes_them_irrelevant():
     """
     payload = _run_render_probe("vms-one-engine")
     assert payload["pluginHeaderCells"].get("vms") == [
-        "Name",
+        "VM",
         "Status",
         "Core",
         "CPU%",
-        "MEM/MAX",
+        "MEM",
+        "/MAX",
         "Release",
     ], f"got {payload['pluginHeaderCells'].get('vms')!r}"
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
 def test_vms_colours_cpu_and_memory_from_levels_and_never_the_status():
-    """CPU% takes `cpu_time`'s tier, MEM/MAX takes `memory_percent`'s, and
+    """CPU% takes `cpu_time`'s tier, MEM takes `memory_percent`'s, and
     `status` keeps its own mapping -- the TUI never reads `_levels` for it
     (vms/render_curses.py `_status_role`). Tiers are observable only on
     the value <span> inside each <td> (`pluginValueClasses` holds each
     <td>'s OWN class -- see `_tier_classes` and
     `test_a_table_value_carries_its_tier_on_the_text_not_the_cell`), so this
     reads `pluginTableCells` like the fs/amps tier tests do. Row 0
-    (builder): engine=0, name=1, status=2, core=3, cpu%=4, mem/max=5,
-    load=6, release=7. `builder`'s `_levels` entry carries no `status`
+    (builder): engine=0, name=1, status=2, core=3, cpu%=4, mem=5,
+    /max=6, load=7, release=8. `builder`'s `_levels` entry carries no `status`
     field, so a `status` class here can only have come from the component's
     OWN `_STATUS_ROLE` mirror (G9-9A fix wave item 1), never from `_levels`.
     """
@@ -2679,12 +2681,12 @@ def test_vms_colours_cpu_and_memory_from_levels_and_never_the_status():
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
 def test_vms_gives_an_unmapped_status_no_colour():
     """`stopped` is not in vms's `_STATUS_ROLE` mirror (only running/
-    starting/restarting/delayed shutdown are), so row 1 (sandbox, cells[10])
+    starting/restarting/delayed shutdown are), so row 1 (sandbox, cells[11])
     must render with no tier class -- the TUI's `ColorRole.DEFAULT` paints
     nothing for an unclassified status, and the WebUI must match."""
     payload = _run_render_probe("vms")
     cells = payload["pluginTableCells"]["vms"]
-    assert _tier_classes(cells[10]["value"]) == set(), cells[10]
+    assert _tier_classes(cells[11]["value"]) == set(), cells[11]
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
@@ -4641,9 +4643,9 @@ def test_containers_underline_the_live_process_key():
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
 def test_vms_underline_the_live_process_key():
-    """vms/render_curses.py `_HEADER_SORT_FIELD`: Name <-> name."""
+    """vms/render_curses.py `_HEADER_SORT_FIELD`: VM <-> name."""
     payload = _run_render_probe("vms-sorted-live")
-    assert _sorted_headers(payload, "vms") == ["Name"]
+    assert _sorted_headers(payload, "vms") == ["VM"]
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")

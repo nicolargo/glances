@@ -17,10 +17,8 @@ mapping, untouched by ``_levels``.
 
 Columns: Engine (only with >1 distinct engine), VM (``max_name_size``),
 Status, Core, CPU% (``cpu_time`` — the per-second rate the base already
-computed; ``None`` on the first cycle → placeholder), MEM/MAX (glued into
-one cell — v4 underlines only the ``MEM`` sub-cell, here MEM and MAX share
-a single ``Cell`` so the underline (and, now, the ``memory_percent``
-colour) spans both; cosmetic, intentional simplification), LOAD 1/5/15min
+computed; ``None`` on the first cycle → placeholder), MEM and /MAX (two cells,
+like containers, so the columns line up between the two plugins), LOAD 1/5/15min
 (only when ``load_1min`` is not None on the first VM — v4 parity;
 coloured as one glued cell from the ``load_1min`` level), Release.
 
@@ -38,7 +36,7 @@ from glances.outputs.curses_renderer import _LEVEL_TO_ROLE, Cell, ColorRole, Row
 
 _DEFAULT_MAX_NAME_SIZE = 20
 _STATUS_WIDTH = 10
-_CORE_WIDTH = 6
+_CORE_WIDTH = 10  # same slot as containers' Uptime, so CPU%/MEM//MAX line up
 _CPU_WIDTH = 6
 _MEM_WIDTH = 7
 _LOAD_HEADER_WIDTH = 17
@@ -47,9 +45,9 @@ _ENGINE_MIN_WIDTH = 8
 # Header label -> the GLOBAL process sort key (view["sort_key"]),
 # processlist-aligned. Mirrors how sort_vm_stats maps
 # glances_processes.sort_key onto a vms field: name -> Name, memory_percent
-# -> MEM/MAX, everything else -> CPU%. Core and LOAD have no process-sort
+# -> MEM, everything else -> CPU%. Core and LOAD have no process-sort
 # equivalent and are never underlined.
-_HEADER_SORT_FIELD: dict[str, str] = {"VM": "name", "CPU%": "cpu_percent", "MEM/MAX": "memory_percent"}
+_HEADER_SORT_FIELD: dict[str, str] = {"VM": "name", "CPU%": "cpu_percent", "MEM": "memory_percent"}
 
 # v4 vm_alert(status) -> ColorRole. No INFO role in v5 -> DEFAULT (neutral).
 _STATUS_ROLE: dict[str, ColorRole] = {
@@ -103,9 +101,8 @@ def _build_header_row(
     cells.append(_header("Status", _STATUS_WIDTH, sort_key=sort_key))
     cells.append(_header("Core", _CORE_WIDTH, sort_key=sort_key))
     cells.append(_header("CPU%", _CPU_WIDTH, sort_key=sort_key))
-    mem_text = f"{'MEM':>{_MEM_WIDTH}}/{'MAX':<{_MEM_WIDTH}}"
-    mem_underline = bool(sort_key) and _HEADER_SORT_FIELD.get("MEM/MAX") == sort_key
-    cells.append(Cell(text=mem_text, color=ColorRole.HEADER, bold=True, underline=mem_underline))
+    cells.append(_header("MEM", _MEM_WIDTH, sort_key=sort_key))
+    cells.append(Cell(text=f"/{'MAX':<{_MEM_WIDTH}}", color=ColorRole.HEADER, bold=True))
     if show_load:
         cells.append(_header("LOAD 1/5/15min", _LOAD_HEADER_WIDTH, sort_key=sort_key))
     cells.append(_header("Release", len("Release")))
@@ -124,9 +121,9 @@ def _build_data_row(
     cells.append(Cell(text=_fmt(vm.get("cpu_count")).rjust(_CORE_WIDTH)))
     cpu_role, cpu_prom = _level_role(item_levels.get("cpu_time"))
     cells.append(Cell(text=_fmt_cpu(vm.get("cpu_time")).rjust(_CPU_WIDTH), color=cpu_role, prominent=cpu_prom))
-    mem_text = f"{auto_unit(vm.get('memory_usage')):>{_MEM_WIDTH}}/{auto_unit(vm.get('memory_total')):<{_MEM_WIDTH}}"
     mem_role, mem_prom = _level_role(item_levels.get("memory_percent"))
-    cells.append(Cell(text=mem_text, color=mem_role, prominent=mem_prom))
+    cells.append(Cell(text=f"{auto_unit(vm.get('memory_usage')):>{_MEM_WIDTH}}", color=mem_role, prominent=mem_prom))
+    cells.append(Cell(text=f"/{auto_unit(vm.get('memory_total')):<{_MEM_WIDTH}}"))
     if show_load:
         try:
             load_text = f"{vm['load_1min']:>5.1f}/{vm['load_5min']:>5.1f}/{vm['load_15min']:>5.1f}"
@@ -159,7 +156,9 @@ def render(
     levels = payload.get("_levels") if isinstance(payload.get("_levels"), dict) else {}
 
     show_engine = len({str(i.get("engine", "")) for i in items}) > 1
-    name_w = min(int(max_name_size), max((len(str(i.get("name", ""))) for i in items), default=max_name_size))
+    # Fixed at the configured cap (not the longest name) so the columns line
+    # up with the containers block, whose name column is usually that wide.
+    name_w = int(max_name_size)
     engine_w = 0
     if show_engine:
         engine_w = max(_ENGINE_MIN_WIDTH, max((len(str(i.get("engine", ""))) for i in items), default=0))

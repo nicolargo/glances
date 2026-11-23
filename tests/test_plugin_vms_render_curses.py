@@ -137,7 +137,7 @@ def test_sort_underline_cpu():
 def test_sort_underline_mem():
     rows = render(_payload([_vm()]), view={"sort_key": "memory_percent"})
     header = rows[0].cells
-    mem_cell = next(c for c in header if "MEM" in c.text and "MAX" in c.text)
+    mem_cell = next(c for c in header if c.text.strip() == "MEM")
     assert mem_cell.underline is True
 
 
@@ -205,8 +205,10 @@ def test_mem_cell_coloured_from_levels():
     payload = _payload([_vm(memory_usage=3000, memory_total=5000)])
     payload["_levels"] = {"vm-a": {"memory_percent": {"level": "warning", "prominent": False}}}
     rows = render(payload)
-    mem_cell = next(c for c in rows[1].cells if "/" in c.text)
-    assert mem_cell.color == ColorRole.WARNING
+    cells = rows[1].cells
+    max_idx = next(i for i, c in enumerate(cells) if c.text.startswith("/"))
+    assert cells[max_idx - 1].color == ColorRole.WARNING  # MEM cell
+    assert cells[max_idx].color == ColorRole.DEFAULT  # /MAX is never coloured
 
 
 def test_load_cell_coloured_from_levels():
