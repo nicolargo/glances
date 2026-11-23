@@ -216,6 +216,17 @@ def render(client: Any, schema: dict[str, Any]) -> str:
         "Keys: ``auto``, " + ", ".join(f"``{k}``" for k in sort_processes_stats_list) + ".",
         "",
     ]
+    lines += _title("Request an LLM report")
+    lines += [
+        "Ask the ``llm_reporter`` plugin, when it is enabled, for a new health report. The answer",
+        "is the plugin's state: the report itself arrives in ``/api/5/llm_reporter`` once the LLM",
+        "has written it. One call at a time, at most one every ``min_interval`` seconds:",
+        "",
+        ".. code-block:: bash",
+        "",
+        f"    # curl -X POST {API_URL}/llm_reporter/request",
+        "",
+    ]
     for name in plugins:
         lines += _plugin(client, name)
     return "\n".join(lines).rstrip() + "\n"

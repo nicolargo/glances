@@ -38,6 +38,7 @@ Route inventory:
 | ``/api/5/<plugin>/<field>/<pk_value>`` | GET | ``{field: value}`` of one collection item |
 | ``/api/5/<plugin>/<field>/value/<value>`` | GET | ``{value: [items whose field == value]}`` |
 | ``/api/5/processes/sort/<key>`` | POST | ``glances_processes.set_sort_key()`` |
+| ``/api/5/llm_reporter/request`` | POST | ``llm_reporter`` plugin's ``request_report()`` |
 
 A plugin that has registered but has not yet produced stats (scheduler
 cycle 0) returns ``200 null`` — not an error, just a transient. Clients
@@ -246,6 +247,31 @@ def _register_sort_route(router: APIRouter) -> None:
         return True
 
 
+def _register_llm_reporter_route(router: APIRouter) -> None:
+    """`POST /api/5/llm_reporter/request`: ask the llm_reporter plugin for a report.
+
+    The `H` key (WebUI and client TUI) and the WebUI's "AI report" button. Answers the
+    plugin's state after the request (`request_report()`): a report starts
+    unless one is under way or the last call started less than `min_interval`
+    seconds ago. 404 while the plugin is disabled.
+
+    Security posture: unlike the routes above, this one can COST something,
+    as each report is an LLM call the provider may bill. An unauthenticated
+    caller (Glances is unauthenticated by default) gains a report of stats it
+    can already read, and the plugin calls the LLM at most once per
+    `min_interval`, however often it is asked. Under `[outputs] password` this
+    route sits behind the same auth middleware as every other.
+    """
+
+    @router.post("/llm_reporter/request")
+    async def request_llm_report(request: Request) -> dict[str, Any]:
+        """Ask for a new LLM report; return the report state that follows."""
+        plugin = _plugins(request).get("llm_reporter")
+        if plugin is None:
+            raise HTTPException(status_code=404, detail="The llm_reporter plugin is disabled")
+        return plugin.request_report()
+
+
 def build_router() -> APIRouter:
     """Return an ``APIRouter`` carrying the v5 REST routes.
 
@@ -360,6 +386,7 @@ def build_router() -> APIRouter:
 
     _register_extended_process_routes(router)
     _register_sort_route(router)
+    _register_llm_reporter_route(router)
     _register_history_route(router)
 
     @router.get("/{plugin_name}/info")

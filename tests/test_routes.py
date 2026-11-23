@@ -1822,3 +1822,89 @@ def test_token_accepts_a_non_ascii_password(config_factory, store):
         r = client.post("/api/5/token", headers=_basic_header("nobody", "pässwörd"))
     assert r.status_code == 401
     assert r.headers["WWW-Authenticate"] == 'Basic realm="Glances"'
+
+
+# ------------------------------------------------- the LLM report request
+
+
+def _llm_reporter(store, config, reply="Summary: fine.\n1. Overall health status: OK"):
+    """The real plugin, past its startup, over a fake LLM that counts its calls."""
+    from glances.plugins.llm_reporter.model import PluginModel
+
+    plugin = PluginModel(store, config)  # no [llm_reporter] section: logs a configuration error
+    calls: list[str] = []
+    plugin._llm = lambda prompt: calls.append(prompt) or reply
+    plugin._started, plugin._ready = 0.0, True
+    return plugin, calls
+
+
+def test_the_llm_report_request_answers_the_plugins_state(config_factory, store):
+    """The WebUI's button and a client TUI's `H`: the answer is the state that follows the request."""
+    config = config_factory()
+    plugin, calls = _llm_reporter(store, config)
+    app = _make_app_with_plugins(config, store, plugins=[plugin])
+    with TestClient(app) as client:
+        first = client.post("/api/5/llm_reporter/request")
+        # One report at a time: a second request while it is under way starts nothing.
+        second = client.post("/api/5/llm_reporter/request")
+    assert first.status_code == 200
+    assert first.json()["state"] == "generating"
+    assert first.json()["revision"] == 1
+    assert second.json()["revision"] == 1
+    assert calls == []  # the call starts at the plugin's next tick, on the scheduler's loop
+
+
+def test_the_llm_report_request_reaches_the_llm_once_per_min_interval(config_factory, store):
+    config = config_factory()
+    plugin, calls = _llm_reporter(store, config)
+    asyncio.run(store.set("cpu", {"total": 5.0}))
+    asyncio.run(store.set("mem", {"percent": 30.0}))
+    app = _make_app_with_plugins(config, store, plugins=[plugin])
+    with TestClient(app) as client:
+        client.post("/api/5/llm_reporter/request")
+        asyncio.run(plugin.update())
+        plugin._thread.join(5)
+        asyncio.run(plugin.update())
+        assert client.get("/api/5/llm_reporter").json()["report"].startswith("Summary: fine.")
+        answer = client.post("/api/5/llm_reporter/request").json()
+    assert len(calls) == 1
+    assert answer["state"] == "idle"
+    assert answer["available_in"] == 60
+
+
+def test_the_llm_report_request_says_when_the_plugin_cannot_write_any(config_factory, store):
+    from glances.plugins.llm_reporter.model import _NOT_CONFIGURED, PluginModel
+
+    config = config_factory()
+    app = _make_app_with_plugins(config, store, plugins=[PluginModel(store, config)])
+    with TestClient(app) as client:
+        answer = client.post("/api/5/llm_reporter/request").json()
+    assert answer["state"] == "idle"
+    assert answer["error"] == _NOT_CONFIGURED
+
+
+def test_the_llm_report_request_is_404_while_the_plugin_is_disabled(config_factory, store):
+    with TestClient(_make_app_with_plugins(config_factory(), store)) as client:
+        response = client.post("/api/5/llm_reporter/request")
+    assert response.status_code == 404
+    assert response.json()["detail"] == "The llm_reporter plugin is disabled"
+
+
+def test_the_llm_report_request_is_not_a_field_route(config_factory, store):
+    """`/{plugin_name}/{field}` is GET only: `request` is not read as a field of the plugin."""
+    config = config_factory()
+    plugin, _ = _llm_reporter(store, config)
+    asyncio.run(plugin.update())
+    with TestClient(_make_app_with_plugins(config, store, plugins=[plugin])) as client:
+        assert client.get("/api/5/llm_reporter/request").status_code == 404
+        assert client.get("/api/5/llm_reporter/state").json() == {"state": "idle"}
+
+
+def test_the_llm_report_request_requires_auth_when_a_password_is_set(config_factory, store):
+    config = config_factory(password=hash_password("hunter2"))
+    plugin, _ = _llm_reporter(store, config)
+    with TestClient(_make_app_with_plugins(config, store, plugins=[plugin])) as client:
+        assert client.post("/api/5/llm_reporter/request").status_code == 401
+        response = client.post("/api/5/llm_reporter/request", headers=_basic_header("glances", "hunter2"))
+    assert response.status_code == 200
+    assert plugin.report_state()["state"] == "generating"
