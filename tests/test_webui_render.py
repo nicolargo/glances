@@ -2620,7 +2620,7 @@ def test_vms_renders_the_tui_columns_and_rows():
     payload = _run_render_probe("vms")
     assert payload["pluginHeaderCells"].get("vms") == [
         "Engine",
-        "Name",
+        "VM",
         "Status",
         "Core",
         "CPU%",
@@ -2644,7 +2644,7 @@ def test_vms_hides_engine_and_load_when_the_data_makes_them_irrelevant():
     """
     payload = _run_render_probe("vms-one-engine")
     assert payload["pluginHeaderCells"].get("vms") == [
-        "Name",
+        "VM",
         "Status",
         "Core",
         "CPU%",
@@ -4643,9 +4643,9 @@ def test_containers_underline_the_live_process_key():
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
 def test_vms_underline_the_live_process_key():
-    """vms/render_curses.py `_HEADER_SORT_FIELD`: Name <-> name."""
+    """vms/render_curses.py `_HEADER_SORT_FIELD`: VM <-> name."""
     payload = _run_render_probe("vms-sorted-live")
-    assert _sorted_headers(payload, "vms") == ["Name"]
+    assert _sorted_headers(payload, "vms") == ["VM"]
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
