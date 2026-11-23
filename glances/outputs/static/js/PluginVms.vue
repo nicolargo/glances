@@ -45,11 +45,10 @@
 					<td class="gl-num">
 						<span :class="cellClassFor(payload, item, 'cpu_time')">{{ formatPercent(item.cpu_time) }}</span>
 					</td>
-					<!-- ONE cell for MEM and MAX, both carrying the memory_percent
-					tier: the TUI glues them deliberately (renderer docstring). -->
 					<td class="gl-num">
-						<span v-history="{ plugin: 'vms', field: 'memory_usage', item: item.name }" :class="cellClassFor(payload, item, 'memory_percent')">{{ memText(item) }}</span>
+						<span v-history="{ plugin: 'vms', field: 'memory_usage', item: item.name }" :class="cellClassFor(payload, item, 'memory_percent')">{{ formatAutoUnit(item.memory_usage) }}</span>
 					</td>
+					<td><span>/{{ formatAutoUnit(item.memory_total) }}</span></td>
 					<td v-if="showLoad" class="gl-num">
 						<span :class="cellClassFor(payload, item, 'load_1min')">{{ loadText(item) }}</span>
 					</td>
