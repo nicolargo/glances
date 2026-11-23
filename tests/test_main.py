@@ -1593,3 +1593,25 @@ def test_no_mcp_path_flag_leaves_the_config_alone(config):
     config._merged.setdefault("outputs", {})["mcp_path"] = "/from-conf"
     apply_mcp_flags(build_parser().parse_args(["-s"]), config)
     assert config._merged["outputs"]["mcp_path"] == "/from-conf"
+
+
+@pytest.mark.parametrize("enabled", [False, True])
+def test_assemble_hands_the_llm_reporter_request_to_the_tui(config, monkeypatch, enabled):
+    """`H` asks the llm_reporter plugin of THIS scheduler for a report; None while it is disabled."""
+    captured = {}
+
+    class _FakeTui:
+        def __init__(self, **kwargs):
+            captured.update(kwargs)
+
+    monkeypatch.setattr("glances.outputs.glances_curses.Tui", _FakeTui)
+    if enabled:
+        config._merged.setdefault("llm_reporter", {})["disable"] = "False"
+    _, scheduler, _, _, _ = assemble(_tui_args(), config)
+    request = captured["request_llm_report"]
+    reporter = next((e.plugin for e in scheduler._entries if e.plugin.plugin_name == "llm_reporter"), None)
+    if enabled:
+        assert request.__self__ is reporter
+        assert request.__func__ is type(reporter).request_report
+    else:
+        assert reporter is None and request is None

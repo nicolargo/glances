@@ -1290,6 +1290,8 @@ def assemble(
         scheduler.register_exporter(exporter)
     # The TUI's `g` key asks the graph exporter for its charts (v4 parity).
     graph = next((e for e in exporters if e.export_name == "graph"), None)
+    # Its `H` key asks the llm_reporter plugin for a report, when it is enabled.
+    llm_reporter = next((p for p in plugins if p.plugin_name == "llm_reporter"), None)
 
     host = args.bind or config.get("outputs", "bind_address", _DEFAULT_BIND_ADDRESS)
     port = args.port or config.get("outputs", "port", _DEFAULT_PORT)
@@ -1387,6 +1389,7 @@ def assemble(
             refresh_interval=refresh,
             on_quit=lambda: os.kill(os.getpid(), signal.SIGINT),
             generate_graph=graph.request if graph is not None else None,
+            request_llm_report=llm_reporter.request_report if llm_reporter is not None else None,
             **tui_view_options(args),
         )
 
