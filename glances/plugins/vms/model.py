@@ -131,7 +131,7 @@ class PluginModel(GlancesPluginBase[list]):
         # binary is absent). No construction gating — matches v4 __init__.
         self.watchers: dict[str, VmsExtension] = {
             "multipass": MultipassVmExtension(),
-            "virsh": VirshVmExtension(),
+            "virsh": VirshVmExtension(self.config.get("vms", "virsh_extra_option", "")),
         }
         self._max_name_size = int(self.config.get("vms", "max_name_size", _DEFAULT_MAX_NAME_SIZE))
 

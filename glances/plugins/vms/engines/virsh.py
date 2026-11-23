@@ -10,6 +10,7 @@
 
 import os
 import re
+import shlex
 from functools import cache
 from subprocess import TimeoutExpired
 from subprocess import run as subprocess_run
@@ -17,7 +18,6 @@ from typing import Any
 
 from glances.globals import nativestr
 from glances.plugins.vms.engines import VmsExtension
-from glances.secure import secure_popen
 
 # Check if virsh binary exist
 # TODO: make this path configurable from the Glances configuration file
@@ -56,8 +56,13 @@ class VmExtension(VmsExtension):
 
     CONTAINER_ACTIVE_STATUS = ['running']
 
-    def __init__(self):
+    def __init__(self, extra_option=''):
         self.ext_name = "Virsh (Vm)"
+        # Extra options inserted after the virsh binary (ex: "-c qemu:///system")
+        self.extra_args = shlex.split(extra_option or '')
+
+    def _virsh_cmd(self, *args):
+        return [VIRSH_PATH, *self.extra_args, *args]
 
     @cache
     def update_version(self):
@@ -66,7 +71,7 @@ class VmExtension(VmsExtension):
         # Using library: libvirt 10.0.0
         # Using API: QEMU 10.0.0
         # Running hypervisor: QEMU 8.2.2
-        ret_cmd = secure_popen(f'{VIRSH_PATH} {VIRSH_VERSION_OPTIONS}')
+        ret_cmd = _run_virsh(self._virsh_cmd(VIRSH_VERSION_OPTIONS))
         try:
             ret = ret_cmd.splitlines()[3].split(':')[1].lstrip()
         except IndexError:
@@ -79,7 +84,7 @@ class VmExtension(VmsExtension):
         # ----------------------------------
         #  4    win11             paused
         #  -    Kali_Linux_2024   shut off
-        ret_cmd = secure_popen(f'{VIRSH_PATH} {VIRSH_INFO_OPTIONS}')
+        ret_cmd = _run_virsh(self._virsh_cmd(*VIRSH_INFO_OPTIONS.split()))
 
         try:
             # Ignore first two lines (header) and the last one (empty)
@@ -206,7 +211,7 @@ class VmExtension(VmsExtension):
         #   vm.mmu_flooded.sum=0
         #   vm.mmu_pte_write.sum=0
         #   vm.remote_tlb_flush_requests.sum=609455
-        ret_cmd = _run_virsh([VIRSH_PATH, *VIRSH_DOMAIN_STATS_ARGS, domain])
+        ret_cmd = _run_virsh(self._virsh_cmd(*VIRSH_DOMAIN_STATS_ARGS, domain))
 
         try:
             # Ignore first line (domain name already know) and last line (empty)
@@ -225,7 +230,7 @@ class VmExtension(VmsExtension):
     def update_title(self, domain):
         # ❯ virsh desc --title Kali_Linux_2024
         # Kali Linux 2024
-        ret_cmd = _run_virsh([VIRSH_PATH, *VIRSH_DOMAIN_TITLE_ARGS, domain])
+        ret_cmd = _run_virsh(self._virsh_cmd(*VIRSH_DOMAIN_TITLE_ARGS, domain))
 
         return ret_cmd.rstrip()
 
