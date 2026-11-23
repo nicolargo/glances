@@ -589,6 +589,7 @@ class TestIntelMemPercent:
         assert intel_backend.get_mem(card, None, self._meminfo(tmp_path)) is None
         assert intel_backend.get_mem(card, self._snapshot(), str(tmp_path / 'nope')) is None
 
+    @pytest.mark.skipif(not LINUX, reason="Intel GPU backend is Linux-only")
     def test_get_device_stats_mem_is_none_without_capacity(self):
         gpu = intel_backend.IntelGPU(INTEL_DRM_ROOT, INTEL_DISCRETE_PROC_ROOT)
         # Fixture proc root has no meminfo and the card has no resource file.
