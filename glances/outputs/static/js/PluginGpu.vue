@@ -123,14 +123,13 @@ export default {
 			});
 			return rows;
 		},
-		// v4 quirk, reproduced on purpose: multi mode shows NO temperature at
-		// all -- only the name, `proc` and the conditional `mem`. Summary mode
-		// shows all three. Do not "fix" this without changing the TUI first.
+		// Multi mode shows the name, `proc`, the conditional `mem` and the
+		// conditional temperature -- exactly as _multi_rows() does.
 		//
 		// #3631: a card reporting nothing still shows N/A -- hiding the cell
-		// per card would misalign heterogeneous rows. The whole column is
-		// dropped only when NO card reports memory, which keeps every row
-		// aligned and makes the plugin narrower.
+		// per card would misalign heterogeneous rows. The mem / temperature
+		// column is dropped only when NO card reports it, which keeps every
+		// row aligned and makes the plugin narrower.
 		//
 		// There is no header row, and the word "mem" is written INSIDE each
 		// memory cell -- both exactly as _multi_rows() does (it emits no
@@ -145,6 +144,14 @@ export default {
 			const cols = [{ field: "proc", format: (v) => gpuValue(v), numeric: true }];
 			if (this.cards.some((c) => c.mem != null)) {
 				cols.push({ field: "mem", format: (v) => `mem ${gpuValue(v)}`, numeric: true });
+			}
+			if (this.cards.some((c) => c.temperature != null)) {
+				const fahrenheit = !!this.serverArgs.fahrenheit;
+				cols.push({
+					field: "temperature",
+					format: (v) => gpuValue(typeof v === "number" && fahrenheit ? toFahrenheit(v) : v, fahrenheit ? "F" : "C"),
+					numeric: true,
+				});
 			}
 			return cols;
 		},

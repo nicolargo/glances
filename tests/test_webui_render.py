@@ -1193,9 +1193,9 @@ def test_gpu_one_card_renders_the_summary_block():
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
-def test_gpu_several_cards_render_one_row_each_without_temperature():
-    """v4 quirk reproduced on purpose: multi mode shows name + proc + mem, and
-    NO temperature -- unlike summary mode, which shows all three.
+def test_gpu_several_cards_render_one_row_each_with_temperature():
+    """TUI reference (`_multi_rows()`): multi mode shows name + proc + mem +
+    temperature, one row per card.
     """
     payload = _run_render_probe("gpu-three-cards")
     text = payload["pluginText"].get("gpu", "")
@@ -1204,7 +1204,21 @@ def test_gpu_several_cards_render_one_row_each_without_temperature():
     assert text.startswith("3 GeForce RTXGeForce"), f"title counts the cards: {text!r}"
     for expected in ("30%", "45%", "12%"):
         assert expected in text, f"expected every card's proc: {text!r}"
-    assert "55C" not in text, f"multi mode shows no temperature: {text!r}"
+    for expected in ("55C", "61C", "49C"):
+        assert expected in text, f"expected every card's temperature: {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_gpu_several_cards_temperature_honours_fahrenheit():
+    """Same three cards as `gpu-three-cards`; only the args fixture differs,
+    so the unit switch can only come from `--fahrenheit`.
+    """
+    payload = _run_render_probe("gpu-three-cards-fahrenheit")
+    text = payload["pluginText"].get("gpu", "")
+
+    for expected in ("131F", "142F", "120F"):
+        assert expected in text, f"expected every card's temperature in F: {text!r}"
+    assert "55C" not in text, f"no Celsius value with --fahrenheit: {text!r}"
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
@@ -1306,7 +1320,7 @@ def test_gpu_multi_card_value_cells_still_carry_gl_num():
     name_cells = [c for c in cells if "gl-name" in (c["value"] or "")]
     num_cells = [c for c in cells if "gl-num" in c["cell"]]
     assert len(name_cells) == 3, f"got {cells!r}"
-    assert len(num_cells) == 6, f"one proc + one mem cell per of 3 rows: {cells!r}"
+    assert len(num_cells) == 9, f"one proc + one mem + one temperature cell per of 3 rows: {cells!r}"
     assert all("gl-num" not in c["cell"] for c in name_cells), f"got {name_cells!r}"
 
 

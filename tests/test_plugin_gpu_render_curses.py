@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 
+from glances.outputs.curses_renderer import ColorRole
 from glances.plugins.gpu.model import PluginModel
 from glances.plugins.gpu.render_curses import render
 
@@ -97,11 +98,11 @@ def test_none_values_render_na():
 def test_multi_mode_none_values_render_na():
     # #3631: an unavailable metric must be displayed as N/A, not hidden — hiding
     # it drops a cell and misaligns the rows of heterogeneous cards.
-    cards = [_card("nvidia0", "Tesla", proc=30, mem=40), _card("intel0", "Intel", proc=None, mem=None)]
+    cards = [_card("nvidia0", "Tesla", proc=30, mem=40), _card("intel0", "Intel", proc=None, mem=None, temp=None)]
     rows = render(_payload(cards), FIELDS)
     assert "N/A" in _flat(rows)
-    # Every card row carries the same cell count: name + proc + mem.
-    assert [len(r.cells) for r in rows[1:]] == [3, 3]
+    # Every card row carries the same cell count: name + proc + mem + temperature.
+    assert [len(r.cells) for r in rows[1:]] == [4, 4]
 
 
 def test_multi_mode_mem_column_hidden_when_no_card_reports_it():
@@ -111,7 +112,38 @@ def test_multi_mode_mem_column_hidden_when_no_card_reports_it():
     rows = render(_payload(cards), FIELDS)
     flat = _flat(rows)
     assert "mem" not in flat
-    assert [len(r.cells) for r in rows[1:]] == [2, 2]
+    # name + proc + temperature.
+    assert [len(r.cells) for r in rows[1:]] == [3, 3]
+
+
+def test_multi_mode_shows_each_card_temperature():
+    cards = [_card("nvidia0", "Tesla", temp=74), _card("nvidia1", "Tesla", temp=52)]
+    rows = render(_payload(cards), FIELDS)
+    assert rows[1].cells[-1].text.strip() == "74C"
+    assert rows[2].cells[-1].text.strip() == "52C"
+
+
+def test_multi_mode_temperature_takes_its_own_level_colour():
+    cards = [_card("nvidia0", "Tesla", temp=74), _card("nvidia1", "Tesla", temp=52)]
+    levels = {"nvidia0": {"temperature": {"level": "warning"}}}
+    rows = render(_payload(cards, levels), FIELDS)
+    assert rows[1].cells[-1].color == ColorRole.WARNING
+    assert rows[2].cells[-1].color == ColorRole.DEFAULT
+
+
+def test_multi_mode_fahrenheit_temperature():
+    cards = [_card("nvidia0", "Tesla", temp=100), _card("nvidia1", "Tesla", temp=50)]
+    rows = render(_payload(cards), FIELDS, view={"fahrenheit": True})
+    assert rows[1].cells[-1].text.strip() == "212F"
+    assert rows[2].cells[-1].text.strip() == "122F"
+
+
+def test_multi_mode_temperature_column_hidden_when_no_card_reports_it():
+    cards = [_card("arm0", "Mali", temp=None), _card("arm1", "Mali", temp=None)]
+    rows = render(_payload(cards), FIELDS)
+    assert "N/A" not in _flat(rows)
+    # name + proc + mem.
+    assert [len(r.cells) for r in rows[1:]] == [3, 3]
 
 
 def test_schema_declares_the_tui_short_names():
