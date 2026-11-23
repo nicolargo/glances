@@ -193,3 +193,12 @@ class TestArgumentShape:
         assert call_kwargs.get('shell', False) is False
         assert argv[-1] == domain
         assert 'desc' in argv
+
+
+def test_virsh_extra_option_is_inserted_after_binary():
+    """virsh_extra_option is split and placed between the binary and the sub-command."""
+    from glances.plugins.vms.engines.virsh import VIRSH_PATH, VmExtension
+
+    ext = VmExtension('-c qemu:///system')
+    assert ext._virsh_cmd('domstats', 'vm1') == [VIRSH_PATH, '-c', 'qemu:///system', 'domstats', 'vm1']
+    assert VmExtension()._virsh_cmd('list') == [VIRSH_PATH, 'list']
