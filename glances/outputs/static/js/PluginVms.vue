@@ -1,5 +1,20 @@
 <template>
-	<CollectionBlock :title="TITLE" :payload="payload" :error="error" :hidden="!!payload && rows.length === 0">
+	<CollectionBlock
+		:title="TITLE"
+		:payload="payload"
+		:error="error"
+		table-class="gl-process-table"
+		:style="fixedColsStyle"
+		:hidden="!!payload && rows.length === 0"
+	>
+		<template #cols>
+			<!-- Same fixed column widths as containers (Status, Core in Uptime's
+			slot, CPU%, MEM, /MAX), so the two blocks line up. The last cell
+			(Release) is left out on purpose: it is the elastic tail. -->
+			<colgroup>
+				<col v-for="(width, index) in fixedWidths" :key="index" :style="colStyle(width)" />
+			</colgroup>
+		</template>
 		<template #head>
 			<tr>
 				<!-- The TUI's header literals (vms/render_curses.py:83-107), not
@@ -10,7 +25,8 @@
 				<th class="gl-header gl-num">Status</th>
 				<th class="gl-header gl-num">Core</th>
 				<th class="gl-header gl-num" v-bind="sortAttrs('CPU%')">CPU%</th>
-				<th class="gl-header gl-num" v-bind="sortAttrs('MEM/MAX')">MEM/MAX</th>
+				<th class="gl-header gl-num" v-bind="sortAttrs('MEM')">MEM</th>
+				<th class="gl-header">/MAX</th>
 				<th v-if="showLoad" class="gl-header gl-num">LOAD 1/5/15min</th>
 				<th class="gl-header">Release</th>
 			</tr>
@@ -51,9 +67,23 @@ import { levelClass } from "./levels.js";
 import { displayName } from "./rows.js";
 import CollectionBlock from "./CollectionBlock.vue";
 import { PLUGIN_PROPS } from "./plugin_props.js";
+import { COL_SEPARATOR } from "./process_widths.js";
 import { VMS_HEADER_SORT_KEY, sortHeadersMixin } from "./sort_headers.js";
 
 const TITLE = "VMS";
+
+// Character widths of the fixed columns, mirroring vms/render_curses.py
+// (_STATUS_WIDTH, _CORE_WIDTH, ...) and, for CPU%, containers' browser width
+// (7: the `%` the TUI omits). Release is the elastic tail, floored at 7.
+const ENGINE_WIDTH = 6;
+const STATUS_WIDTH = 10;
+const CORE_WIDTH = 10;
+const CPU_WIDTH = 7;
+const MEM_WIDTH = 7;
+const MAX_WIDTH = 8;
+const LOAD_WIDTH = 17;
+const RELEASE_MIN_WIDTH = 7;
+const DEFAULT_MAX_NAME_SIZE = 20;
 
 // vms/render_curses.py `_STATUS_ROLE`: this plugin's OWN status -> tier
 // map, mirroring that renderer (not v4 WebUI's `getStatusClass`, whose
@@ -116,9 +146,37 @@ export default {
 		showLoad() {
 			return this.allRows.length > 0 && this.allRows[0].load_1min !== null && this.allRows[0].load_1min !== undefined;
 		},
+		// Fixed at the configured cap (vms/render_curses.py), like containers'
+		// usual name column, so the blocks line up.
+		nameWidth() {
+			const cap = this.payload?.max_name_size;
+			return Number.isInteger(cap) && cap > 0 ? cap : DEFAULT_MAX_NAME_SIZE;
+		},
+		// Every column but the elastic Release tail.
+		fixedWidths() {
+			return [
+				...(this.showEngine ? [ENGINE_WIDTH] : []),
+				this.nameWidth,
+				STATUS_WIDTH,
+				CORE_WIDTH,
+				CPU_WIDTH,
+				MEM_WIDTH,
+				MAX_WIDTH,
+				...(this.showLoad ? [LOAD_WIDTH] : []),
+			];
+		},
+		fixedColsStyle() {
+			const widths = [...this.fixedWidths, RELEASE_MIN_WIDTH];
+			const total = widths.reduce((sum, width) => sum + width, 0) + COL_SEPARATOR * (widths.length - 1);
+			return { "--gl-fixed-cols": String(total) };
+		},
 	},
 	methods: {
 		cellClassFor,
+		formatAutoUnit,
+		colStyle(width) {
+			return { width: `calc(${width + COL_SEPARATOR} * var(--gl-col))` };
+		},
 		formatPercent,
 		nameOf(item) {
 			return displayName(item, "name");
@@ -128,9 +186,6 @@ export default {
 		},
 		// vms/render_curses.py `_fmt`: a null renders as the placeholder.
 		fmt: dashIfMissing,
-		memText(item) {
-			return `${formatAutoUnit(item.memory_usage)}/${formatAutoUnit(item.memory_total)}`;
-		},
 		// The TUI formats the three averages at one decimal and drops the whole
 		// cell if any is missing (`except (KeyError, TypeError)`); showLoad has
 		// already established that the engine publishes them.

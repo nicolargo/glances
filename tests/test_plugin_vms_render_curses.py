@@ -137,7 +137,7 @@ def test_sort_underline_cpu():
 def test_sort_underline_mem():
     rows = render(_payload([_vm()]), view={"sort_key": "memory_percent"})
     header = rows[0].cells
-    mem_cell = next(c for c in header if "MEM" in c.text and "MAX" in c.text)
+    mem_cell = next(c for c in header if c.text.strip() == "MEM")
     assert mem_cell.underline is True
 
 
