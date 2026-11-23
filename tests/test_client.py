@@ -109,6 +109,8 @@ class _FakeSession:
         self.down = False
         self.expired = False
         self.refuse_sort = False
+        # The answer of the llm_reporter request route; None: the plugin is disabled (404).
+        self.llm_state: dict[str, Any] | None = None
         self.token_body: Any = {"access_token": "tok", "token_type": "bearer"}
 
     def post(self, url, auth=None, headers=None, timeout=None, stream=False):
@@ -116,6 +118,8 @@ class _FakeSession:
         if "/processes/sort/" in url:
             # The shared sort route; `refuse_sort` plays an older v5 server.
             return _Response(404, {}) if self.refuse_sort else _Response(200, True)
+        if url.endswith("/api/5/llm_reporter/request"):
+            return _Response(404, {}) if self.llm_state is None else _Response(200, self.llm_state)
         if "/processes/extended/" in url:
             # The pin routes: 404 for a pid the server does not list, as it does.
             target = url.rsplit("/", 1)[1]
@@ -989,3 +993,73 @@ def test_remote_plugins_refuse_names_that_are_not_plugin_names(caplog):
     plugins = {p.plugin_name for p in client.remote_plugins(schema, _remote_store(), _config(), {"version"})}
     assert plugins == {"mem", "network", "processlist"}
     assert "ignored: not a plugin name" in caplog.text
+
+
+# ------------------------------------------------ the LLM report (H)
+
+
+def test_request_llm_report_posts_to_the_servers_route():
+    session = _FakeSession()
+    session.llm_state = {"state": "generating", "revision": 7}
+    assert _source(session).request_llm_report() == {"state": "generating", "revision": 7}
+    assert ("POST", "http://srv:61208/api/5/llm_reporter/request", None) in session.requests
+
+
+def test_request_llm_report_raises_not_found_while_the_servers_plugin_is_disabled():
+    from glances.client import NotFound
+
+    with pytest.raises(NotFound):
+        _source(_FakeSession()).request_llm_report()
+
+
+def test_client_mode_h_asks_the_server_and_follows_the_newer_state(monkeypatch):
+    session = _FakeSession()
+    session.llm_state = {"state": "generating", "model": "llama3.2", "revision": 5}
+    source = _source(session)
+    tui, popups = _client_tui(monkeypatch, source)
+    tui._request_llm_report = source.request_llm_report  # as `run_client` wires it
+    assert tui._handle_key(ord("H")) == "modal"
+    tui._run_pending(None)
+    assert popups == []
+    assert tui._view.show_llm_report
+    # The poll before the request still holds the older state: the answer wins.
+    asyncio.run(source.store.set("llm_reporter", {"state": "idle", "report": "old", "revision": 4}))
+    assert tui._llm_report_state()["state"] == "generating"
+    # Then the server's report arrives with the next poll.
+    asyncio.run(source.store.set("llm_reporter", {"state": "idle", "report": "new", "revision": 6}))
+    assert tui._llm_report_state()["report"] == "new"
+
+
+def test_client_mode_h_says_when_the_servers_plugin_is_disabled(monkeypatch):
+    source = _source(_FakeSession())
+    tui, popups = _client_tui(monkeypatch, source)
+    tui._request_llm_report = source.request_llm_report
+    tui._handle_key(ord("H"))
+    tui._run_pending(None)
+    assert popups == ["The AI report is disabled on the server."]
+    assert not tui._view.show_llm_report
+
+
+def test_client_mode_h_reports_an_unreachable_server(monkeypatch, caplog):
+    session = _FakeSession()
+    session.llm_state = {"state": "idle", "revision": 0}
+    source = _source(session)
+    tui, popups = _client_tui(monkeypatch, source)
+    tui._request_llm_report = source.request_llm_report
+
+    def down(*args, **kwargs):
+        # What requests says for a closed port: wider than any popup.
+        raise requests.ConnectionError(
+            "HTTPConnectionPool(host='localhost', port=61399): Max retries exceeded with url: "
+            "/api/5/llm_reporter/request (Caused by NewConnectionError('<urllib3.connection.HTTPConnection "
+            "object at 0x10f0c2d50>: Failed to establish a new connection: [Errno 61] Connection refused'))"
+        )
+
+    monkeypatch.setattr(session, "post", down)
+    with caplog.at_level(logging.WARNING, logger="glances.outputs.glances_curses"):
+        tui._handle_key(ord("H"))
+        tui._run_pending(None)
+    # A popup too wide for the terminal is not shown at all: the reason goes to the log.
+    assert popups == ["The AI report request to the server failed:\nsee the Glances log."]
+    assert "Connection refused" in caplog.text
+    assert not tui._view.show_llm_report

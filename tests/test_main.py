@@ -1615,3 +1615,25 @@ def test_assemble_hands_the_llm_reporter_request_to_the_tui(config, monkeypatch,
         assert request.__func__ is type(reporter).request_report
     else:
         assert reporter is None and request is None
+
+
+def test_run_client_hands_the_servers_llm_report_request_to_the_tui(config, monkeypatch):
+    """In client mode, `H` asks the SERVER, which holds the API key (`RemoteSource.request_llm_report`)."""
+    import glances.main as main_mod
+    from glances.client import RemoteError, RemoteSource
+
+    captured = {}
+
+    class _FakeTui:
+        def __init__(self, **kwargs):
+            captured.update(kwargs)
+
+    def unreachable(self):
+        raise RemoteError("unreachable")
+
+    monkeypatch.setattr("glances.outputs.glances_curses.Tui", _FakeTui)
+    monkeypatch.setattr(RemoteSource, "connect", unreachable)
+    monkeypatch.setattr(main_mod, "_serve_client", lambda *args: asyncio.sleep(0))
+    main_mod.run_client(build_parser().parse_args(["-c", "srv"]), config)
+    assert captured["request_llm_report"].__func__ is RemoteSource.request_llm_report
+    assert captured["request_llm_report"].__self__ is captured["remote"]

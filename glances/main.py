@@ -1638,6 +1638,8 @@ def open_client(
         # `e` pins on the server; `k`, `+` and `-` are refused (they would
         # act on this machine); the process filter applies locally.
         remote=source,
+        # `H` asks the server's llm_reporter plugin, which holds the API key.
+        request_llm_report=source.request_llm_report,
         **options,
     )
     exports = None
