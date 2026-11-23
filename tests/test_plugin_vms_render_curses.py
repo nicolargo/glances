@@ -48,7 +48,7 @@ def test_header_and_row_no_title():
     rows = render(_payload([_vm()]))
     assert "VMs" not in _flat([rows[0]])  # first row is the header, not a "VMs …" title
     header = _flat([rows[0]])
-    assert "Name" in header
+    assert "VM" in header
     assert "Status" in header
     assert "Core" in header
     assert "CPU%" in header
@@ -119,7 +119,7 @@ def test_name_truncated_to_max_name_size():
 def test_sort_underline_name():
     rows = render(_payload([_vm()]), view={"sort_key": "name"})
     header = rows[0].cells
-    name_cell = next(c for c in header if c.text.strip() == "Name")
+    name_cell = next(c for c in header if c.text.strip() == "VM")
     cpu_cell = next(c for c in header if c.text.strip() == "CPU%")
     assert name_cell.underline is True
     assert cpu_cell.underline is False
@@ -129,7 +129,7 @@ def test_sort_underline_cpu():
     rows = render(_payload([_vm()]), view={"sort_key": "cpu_percent"})
     header = rows[0].cells
     cpu_cell = next(c for c in header if c.text.strip() == "CPU%")
-    name_cell = next(c for c in header if c.text.strip() == "Name")
+    name_cell = next(c for c in header if c.text.strip() == "VM")
     assert cpu_cell.underline is True
     assert name_cell.underline is False
 
@@ -158,7 +158,7 @@ def test_row_budget_truncates_the_vm_list():
 
 def test_truncated_list_shows_a_counter_in_the_name_header():
     rows = render(_payload(_many_vms(12)), {}, view={"row_budget": {"vms": 3}})
-    assert "Name 3/12" in _flat([rows[0]])
+    assert "VM 3/12" in _flat([rows[0]])
 
 
 def test_untruncated_list_keeps_the_bare_header_label():

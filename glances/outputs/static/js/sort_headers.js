@@ -19,7 +19,7 @@ export const CONTAINERS_HEADER_SORT_KEY = {
 
 // vms/render_curses.py `_HEADER_SORT_FIELD`.
 export const VMS_HEADER_SORT_KEY = {
-	Name: "name",
+	VM: "name",
 	"CPU%": "cpu_percent",
 	"MEM/MAX": "memory_percent",
 };
