@@ -6,7 +6,7 @@
 				schema labels: the renderer hardcodes them too, and the vms schema
 				declares no short_name. -->
 				<th v-if="showEngine" class="gl-header">Engine</th>
-				<th class="gl-header" v-bind="sortAttrs('Name')">Name</th>
+				<th class="gl-header" v-bind="sortAttrs('VM')">VM</th>
 				<th class="gl-header gl-num">Status</th>
 				<th class="gl-header gl-num">Core</th>
 				<th class="gl-header gl-num" v-bind="sortAttrs('CPU%')">CPU%</th>

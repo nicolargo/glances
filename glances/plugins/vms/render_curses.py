@@ -15,7 +15,7 @@ are coloured from the payload's ``_levels`` (``EMITS_ALERTS = True``,
 port of v4 f8657a0a) — the status cell keeps its own ``_status_role``
 mapping, untouched by ``_levels``.
 
-Columns: Engine (only with >1 distinct engine), Name (``max_name_size``),
+Columns: Engine (only with >1 distinct engine), VM (``max_name_size``),
 Status, Core, CPU% (``cpu_time`` — the per-second rate the base already
 computed; ``None`` on the first cycle → placeholder), MEM/MAX (glued into
 one cell — v4 underlines only the ``MEM`` sub-cell, here MEM and MAX share
@@ -49,7 +49,7 @@ _ENGINE_MIN_WIDTH = 8
 # glances_processes.sort_key onto a vms field: name -> Name, memory_percent
 # -> MEM/MAX, everything else -> CPU%. Core and LOAD have no process-sort
 # equivalent and are never underlined.
-_HEADER_SORT_FIELD: dict[str, str] = {"Name": "name", "CPU%": "cpu_percent", "MEM/MAX": "memory_percent"}
+_HEADER_SORT_FIELD: dict[str, str] = {"VM": "name", "CPU%": "cpu_percent", "MEM/MAX": "memory_percent"}
 
 # v4 vm_alert(status) -> ColorRole. No INFO role in v5 -> DEFAULT (neutral).
 _STATUS_ROLE: dict[str, ColorRole] = {
@@ -74,6 +74,10 @@ def _fmt(value: Any) -> str:
     return str(value) if value is not None else "-"
 
 
+def _fmt_cpu(value: Any) -> str:
+    return f"{value:.1f}" if isinstance(value, (int, float)) else "-"
+
+
 def _header(label: str, width: int, *, ljust: bool = False, sort_key: str | None = None) -> Cell:
     text = label.ljust(width) if ljust else label.rjust(width)
     underline = bool(sort_key) and _HEADER_SORT_FIELD.get(label) == sort_key
@@ -87,14 +91,14 @@ def _build_header_row(
     name_w: int,
     show_load: bool,
     sort_key: str | None,
-    name_label: str = "Name",
+    name_label: str = "VM",
 ) -> Row:
     cells: list[Cell] = []
     if show_engine:
         cells.append(_header("Engine", engine_w, ljust=True, sort_key=sort_key))
     # The sort underline is resolved on the CANONICAL label: `name_label` may
     # carry a truncation counter ("Name 3/12"), which is not a table key.
-    name_underline = bool(sort_key) and _HEADER_SORT_FIELD.get("Name") == sort_key
+    name_underline = bool(sort_key) and _HEADER_SORT_FIELD.get("VM") == sort_key
     cells.append(Cell(text=name_label.ljust(name_w), color=ColorRole.HEADER, bold=True, underline=name_underline))
     cells.append(_header("Status", _STATUS_WIDTH, sort_key=sort_key))
     cells.append(_header("Core", _CORE_WIDTH, sort_key=sort_key))
@@ -119,7 +123,7 @@ def _build_data_row(
     cells.append(Cell(text=str(status or "")[:_STATUS_WIDTH].rjust(_STATUS_WIDTH), color=_status_role(status)))
     cells.append(Cell(text=_fmt(vm.get("cpu_count")).rjust(_CORE_WIDTH)))
     cpu_role, cpu_prom = _level_role(item_levels.get("cpu_time"))
-    cells.append(Cell(text=_fmt(vm.get("cpu_time")).rjust(_CPU_WIDTH), color=cpu_role, prominent=cpu_prom))
+    cells.append(Cell(text=_fmt_cpu(vm.get("cpu_time")).rjust(_CPU_WIDTH), color=cpu_role, prominent=cpu_prom))
     mem_text = f"{auto_unit(vm.get('memory_usage')):>{_MEM_WIDTH}}/{auto_unit(vm.get('memory_total')):<{_MEM_WIDTH}}"
     mem_role, mem_prom = _level_role(item_levels.get("memory_percent"))
     cells.append(Cell(text=mem_text, color=mem_role, prominent=mem_prom))
@@ -168,7 +172,7 @@ def render(
             return []
         items = items[:budget]
     truncated = len(items) < total
-    name_label = f"Name {len(items)}/{total}" if truncated else "Name"
+    name_label = f"VM {len(items)}/{total}" if truncated else "VM"
     name_w = max(name_w, len(name_label))
 
     header_row = _build_header_row(
