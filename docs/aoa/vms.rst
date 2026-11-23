@@ -39,6 +39,8 @@ Configuration file options:
     # 'Running', 'Paused', 'Starting' or 'Restarting'
     # Set the following key to True to display all VMs regarding their states
     all=False
+    # Extra options passed to virsh (ex: monitor the system QEMU/KVM VMs)
+    #virsh_extra_option=-c qemu:///system
 
 .. note::
 
