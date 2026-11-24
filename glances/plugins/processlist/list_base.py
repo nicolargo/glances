@@ -53,14 +53,11 @@ class ProcessListModelBase(GlancesPluginBase[list]):
         self._metadata["disable_virtual_memory"] = self._disable_virtual_memory
 
     def get_export(self) -> list[dict[str, Any]]:
-        """
-        Filtered export view (v4 parity, issue #794).
-
-        Empty (no columns at all) unless `[processlist] export` (or
-        `--export-process-filter`) is configured, in which case only items
-        whose `name` or `cmdline` matches one of the patterns are exported.
-        Never affects `get_stats()` / the REST API / the TUI.
-        """
+        """Filtered export view (v4 parity, issue #794)."""
+        # Empty (no columns at all) unless `[processlist] export` (or
+        # `--export-process-filter`) is configured, in which case only items
+        # whose `name` or `cmdline` matches one of the patterns are exported.
+        # Never affects `get_stats()` / the REST API / the TUI.
         if not self._export_patterns:
             return []
         return [item for item in super().get_export() if self._matches_export(item)]  # type: ignore[return-value]
