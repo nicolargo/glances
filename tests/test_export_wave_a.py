@@ -113,10 +113,11 @@ def test_opentsdb_sends_prefixed_points_with_tags_and_drains_on_exit(monkeypatch
 
 
 def test_opentsdb_names_cannot_carry_a_second_command(monkeypatch):
-    """Audit B-20, the exporter it missed: potsdb refuses a metric name outside
-    `[A-Za-z0-9_./-]` with an `assert`, so a space in a monitored name (a mount
-    point, a process) dropped the rest of the plugin's points, and under
-    `python -O` the name went out as it was, a newline ending the `put` line."""
+    """Audit B-20, the exporter it missed: OpenTSDB metric names are normalized."""
+    # potsdb refuses a metric name outside `[A-Za-z0-9_./-]` with an `assert`,
+    # so a space in a monitored name (a mount point, a process) dropped the
+    # rest of the plugin's points, and under `python -O` the name went out as
+    # it was, a newline ending the `put` line.
     from glances.exports.glances_opentsdb.export import Export, normalize
 
     assert normalize("glances.fs./mnt/my disk.percent") == "glances.fs./mnt/my_disk.percent"
