@@ -6,7 +6,8 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
-"""Shared base for the ``processlist`` and ``programlist`` plugin models.
+"""
+Shared base for the ``processlist`` and ``programlist`` plugin models.
 
 Both plugins read the list the process engine already built this cycle and
 share the ``[processlist]`` config section: the export filter (issue #794),
@@ -37,6 +38,7 @@ class ProcessListModelBase(GlancesPluginBase[list]):
     """Collection plugin over the process engine's current list."""
 
     def __init__(self, store: StatsStore, config: GlancesConfig) -> None:
+        """Read the `[processlist]` options shared by both views."""
         super().__init__(store, config)
         # v4 parity (issue #794): by default NOTHING is exported — a process
         # list can carry hundreds of columns and blow up flat-schema
@@ -53,7 +55,8 @@ class ProcessListModelBase(GlancesPluginBase[list]):
         self._metadata["disable_virtual_memory"] = self._disable_virtual_memory
 
     def get_export(self) -> list[dict[str, Any]]:
-        """Filtered export view (v4 parity, issue #794).
+        """
+        Filtered export view (v4 parity, issue #794).
 
         Empty (no columns at all) unless `[processlist] export` (or
         `--export-process-filter`) is configured, in which case only items
