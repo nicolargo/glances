@@ -6,14 +6,12 @@
 # SPDX-License-Identifier: LGPL-3.0-only
 #
 
-"""
-Shared base for the ``processlist`` and ``programlist`` plugin models.
+"""Shared base for the ``processlist`` and ``programlist`` plugin models."""
 
-Both plugins read the list the process engine already built this cycle and
-share the ``[processlist]`` config section: the export filter (issue #794),
-``disable_virtual_memory`` and the core count published for Irix mode. Only
-the engine call differs (per process or per program).
-"""
+# Both plugins read the list the process engine already built this cycle and
+# share the `[processlist]` config section: the export filter (issue #794),
+# `disable_virtual_memory` and the core count published for Irix mode. Only
+# the engine call differs (per process or per program).
 
 from __future__ import annotations
 
