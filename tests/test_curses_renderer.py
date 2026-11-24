@@ -384,38 +384,29 @@ def test_render_alert_block_empty_history_shows_initializing_during_warmup():
     assert "no alert detected" not in _line(rows[0])
 
 
-def test_format_alert_time_same_day_returns_hms_local():
-    """Same-day event → ``HH:MM:SS`` in local timezone."""
+def test_format_alert_time_same_day_includes_date_and_time():
+    """Same-day event → ``YY-MM-DD HH:MM:SS`` in local timezone."""
     from datetime import datetime
 
     from glances.outputs.curses_renderer import _format_alert_time
 
-    # UTC noon → local time (whatever the test machine TZ is).
     ts = "2026-05-15T12:00:00+00:00"
     now_utc = datetime(2026, 5, 15, 14, 0, 0, tzinfo=UTC)
     result = _format_alert_time(ts, now=now_utc)
-    # Must be exactly 8 chars HH:MM:SS — no date, no TZ suffix.
-    assert len(result) == 8
-    assert result[2] == ":" and result[5] == ":"
+    assert len(result) == 17
+    assert result[8] == " " and result[11] == ":" and result[14] == ":"
 
 
-def test_format_alert_time_other_day_returns_full_date_within_8_columns():
-    """Another day → `YY-MM-DD`, not the old 14-char `MM-DD HH:MM:SS`.
-
-    Approved divergence (design §6.2): the fixed grid gives TIME 8 columns and
-    the DURATION column now carries the age (`2d04h`), so the full timestamp
-    is redundant. The year is kept — `08-14` alone is ambiguous next to the
-    `HH:MM:SS` of the same-day rows, and `YY-MM-DD` reads in the same
-    descending order.
-    """
+def test_format_alert_time_other_day_includes_date_and_time():
+    """Another day → same ``YY-MM-DD HH:MM:SS`` form."""
     from datetime import datetime
 
     from glances.outputs.curses_renderer import _format_alert_time
 
     now_utc = datetime(2026, 8, 16, 12, 0, 0, tzinfo=UTC)
     result = _format_alert_time("2026-08-14T09:30:00+00:00", now=now_utc)
-    assert len(result) == 8
-    assert result == "26-08-14"
+    assert len(result) == 17
+    assert result[:8] in ("26-08-14", "26-08-13", "26-08-15")  # local TZ may shift the day
 
 
 def test_format_alert_time_naive_utc_is_handled():
@@ -427,8 +418,7 @@ def test_format_alert_time_naive_utc_is_handled():
     ts = "2026-05-15T12:00:00"  # no tz suffix
     now_utc = datetime(2026, 5, 15, 14, 0, 0, tzinfo=UTC)
     result = _format_alert_time(ts, now=now_utc)
-    # Same-day → 8 chars HH:MM:SS.
-    assert len(result) == 8
+    assert len(result) == 17
 
 
 def test_format_alert_time_malformed_falls_back():
@@ -689,20 +679,20 @@ _GRID_NOW = datetime(2026, 8, 16, 14, 5, 9, tzinfo=UTC)
 
 
 def test_render_alert_block_full_grid_columns_are_aligned():
-    """Every row lands TIME at 2, DURATION ending at 19, TARGET at 22."""
-    rows = render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=61)
+    """Every row lands TIME at 2, DURATION ending at 28, TARGET at 31."""
+    rows = render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=70)
     data = [_line(r) for r in rows[2:]]
     assert data, "expected data rows below the title and column header"
     for line in data:
         assert line[1] == " "
-        assert line[10:12] == "  "
-        assert line[20:22] == "  "
+        assert line[19:21] == "  "
+        assert line[29:31] == "  "
     assert len({len(line) for line in data}) == 1
 
 
 def test_render_alert_block_ongoing_rows_come_first():
     """§5.3 — a resolved incident must never push an ongoing one out of view."""
-    rows = render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=71)
+    rows = render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=80)
     data = [_line(r) for r in rows[2:]]
     assert "Cpu total" in data[0]
     assert "Containers nginx mem usage" in data[1]
@@ -909,24 +899,24 @@ def test_render_alert_block_title_degrades_instead_of_cutting_mid_word():
 
 def test_render_alert_block_drops_level_below_43_columns():
     """§6.3 first step — TARGET has a 12-column floor."""
-    wide = render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=43)
-    narrow = render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=42)
+    wide = render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=52)
+    narrow = render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=51)
     assert "CRITICAL" in _line(wide[2])
     assert "CRITICAL" not in _line(narrow[2])
 
 
 def test_render_alert_block_drops_duration_below_34_columns():
     """§6.3 second step."""
-    wide = render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=34)
-    narrow = render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=33)
-    assert _line(wide[2])[12:20].strip()
+    wide = render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=43)
+    narrow = render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=42)
+    assert _line(wide[2])[21:29].strip()
     assert "Cpu total" in _line(narrow[2])
-    assert len(_line(narrow[2])) <= 33
+    assert len(_line(narrow[2])) <= 42
 
 
 def test_render_alert_block_never_exceeds_the_given_width():
     """§11 — no emitted row may overflow the block at any tested width."""
-    for width in (96, 61, 43, 34, 30, 24):
+    for width in (105, 70, 52, 43, 39, 30):
         rows = render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=width)
         for row in rows:
             assert len(_line(row)) <= width, f"overflow at width={width}"
@@ -967,12 +957,12 @@ def test_render_alert_block_truncates_target_with_an_ellipsis():
         )
     ]
     ongoing = {("containers", "a-very-long-container-name", "memory_usage_percent"): "warning"}
-    rows = render_alert_block(history, limit=10, now=_GRID_NOW, ongoing=ongoing, width=71)
+    rows = render_alert_block(history, limit=10, now=_GRID_NOW, ongoing=ongoing, width=80)
     # cells: glyph, TIME, DURATION, STATE, TARGET, LEVEL
     target_cell = rows[2].cells[4]
     assert len(target_cell.text) == 30
     assert target_cell.text.endswith("…")
-    assert len(_line(rows[2])) == 71
+    assert len(_line(rows[2])) == 80
 
 
 def test_render_alert_block_ascii_truncation_uses_a_dot():
@@ -2692,7 +2682,7 @@ _TOP_ONGOING = {("cpu", None, "total"): "critical"}
 
 
 def test_alert_grid_top_column_sits_between_target_and_level():
-    rows = render_alert_block(_TOP_HISTORY, limit=10, now=_GRID_NOW, ongoing=_TOP_ONGOING, width=80)
+    rows = render_alert_block(_TOP_HISTORY, limit=10, now=_GRID_NOW, ongoing=_TOP_ONGOING, width=89)
     header = _line(rows[1])
     assert header.index("TARGET") < header.index("TOP PROCESSES") < header.index("LEVEL")
     data = rows[2]
@@ -2701,18 +2691,18 @@ def test_alert_grid_top_column_sits_between_target_and_level():
 
 
 def test_alert_grid_top_column_drops_first_when_narrow():
-    """76 is the threshold; 75 keeps every other column."""
-    wide = _line(render_alert_block(_TOP_HISTORY, limit=10, now=_GRID_NOW, ongoing=_TOP_ONGOING, width=76)[1])
-    narrow = _line(render_alert_block(_TOP_HISTORY, limit=10, now=_GRID_NOW, ongoing=_TOP_ONGOING, width=75)[1])
+    """85 is the threshold; 84 keeps every other column."""
+    wide = _line(render_alert_block(_TOP_HISTORY, limit=10, now=_GRID_NOW, ongoing=_TOP_ONGOING, width=85)[1])
+    narrow = _line(render_alert_block(_TOP_HISTORY, limit=10, now=_GRID_NOW, ongoing=_TOP_ONGOING, width=84)[1])
     assert "TOP PROCESSES" in wide
     assert "TOP PROCESSES" not in narrow
     assert "STATE" in narrow and "LEVEL" in narrow and "DURATION" in narrow
 
 
 def test_alert_grid_state_column_drops_before_level_and_duration():
-    """STATE is redundant with the glyph: 53 is its threshold, 52 drops it."""
-    with_state = render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=53)
-    without = render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=52)
+    """STATE is redundant with the glyph: 62 is its threshold, 61 drops it."""
+    with_state = render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=62)
+    without = render_alert_block(_GRID_HISTORY, limit=10, now=_GRID_NOW, ongoing=_GRID_ONGOING, width=61)
     assert "STATE" in _line(with_state[1])
     assert "STATE" not in _line(without[1])
     assert "LEVEL" in _line(without[1]) and "DURATION" in _line(without[1])
@@ -2752,11 +2742,11 @@ def test_alert_grid_truncates_a_long_top_with_the_ascii_ellipsis():
             top_sort="cpu_percent",
         ),
     ]
-    rows = render_alert_block(history, limit=10, now=_GRID_NOW, ongoing=_TOP_ONGOING, width=80, unicode_ok=False)
+    rows = render_alert_block(history, limit=10, now=_GRID_NOW, ongoing=_TOP_ONGOING, width=89, unicode_ok=False)
     top_cell = rows[2].cells[-2]
     # TOP is now the elastic column (it absorbs the slack TARGET used to take,
-    # design update: TOP repositioned) — at width=80 with a 9-char target that
-    # is 26, not a fixed 22 — and the joined top-3 text still overflows it.
+    # design update: TOP repositioned) — at width=89 with a 9-char target that
+    # is 35, not a fixed 22 — and the joined top-3 text still overflows it.
     assert len(top_cell.text) == 26
     assert top_cell.text.rstrip().endswith(".")
     assert top_cell.text.isascii()
@@ -2773,7 +2763,7 @@ def test_render_alert_block_forwards_ongoing_top():
         limit=10,
         now=_GRID_NOW,
         ongoing=_TOP_ONGOING,
-        width=80,
+        width=89,
         ongoing_top={("cpu", None, "total"): {"top": ["fresh"], "top_sort": "cpu_percent"}},
     )
     assert rows[2].cells[-2].text.strip() == "fresh"
@@ -2787,7 +2777,7 @@ def test_build_frame_passes_ongoing_top_to_the_alert_block():
         alerts_history=_TOP_HISTORY,
         alerts_ongoing=_TOP_ONGOING,
         alerts_ongoing_top={("cpu", None, "total"): {"top": ["fresh"], "top_sort": "cpu_percent"}},
-        view={"right_width": 80, "unicode": True},
+        view={"right_width": 89, "unicode": True},
     )
     alert_block = next(b for b in frame.right if b.name == "alert")
     assert any("fresh" in _line(row) for row in alert_block.rows)
@@ -2811,9 +2801,9 @@ def test_alert_grid_top_starts_right_after_target_at_wide_width():
 
 
 def test_alert_grid_top_width_boundary_at_76_matches_pair_arithmetic():
-    """width=76 is the exact TOP threshold; pair = 76 - 42 = 34, split as
+    """width=85 is the exact TOP threshold; pair = 85 - 51 = 34, split as
     TARGET floor (12) + TOP floor (22) — the worked example from the spec."""
-    rows = render_alert_block(_TOP_HISTORY, limit=10, now=_GRID_NOW, ongoing=_TOP_ONGOING, width=76)
+    rows = render_alert_block(_TOP_HISTORY, limit=10, now=_GRID_NOW, ongoing=_TOP_ONGOING, width=85)
     header = rows[1]
     assert [c.text.strip() for c in header.cells] == [
         "",
@@ -2827,8 +2817,8 @@ def test_alert_grid_top_width_boundary_at_76_matches_pair_arithmetic():
     target_cell, top_cell = rows[2].cells[4], rows[2].cells[5]
     assert len(target_cell.text) == _ALERT_MIN_TARGET == 12
     assert len(top_cell.text) == _ALERT_MIN_TOP == 22
-    assert len(target_cell.text) + len(top_cell.text) == 76 - 42
-    assert len(line := _line(rows[2])) == 76 and line  # exact width, no overflow
+    assert len(target_cell.text) + len(top_cell.text) == 85 - 51
+    assert len(line := _line(rows[2])) == 85 and line  # exact width, no overflow
 
 
 def test_alert_grid_differing_target_lengths_still_align():
@@ -2868,12 +2858,12 @@ def test_alert_grid_long_target_truncates_without_starving_top_below_its_floor()
         )
     ]
     ongoing = {("containers", "a-very-long-container-name", "memory_usage_percent"): "warning"}
-    rows = render_alert_block(history, limit=10, now=_GRID_NOW, ongoing=ongoing, width=76)
+    rows = render_alert_block(history, limit=10, now=_GRID_NOW, ongoing=ongoing, width=85)
     target_cell, top_cell = rows[2].cells[4], rows[2].cells[5]
     assert len(target_cell.text) == _ALERT_MIN_TARGET
     assert target_cell.text.endswith("…")
     assert len(top_cell.text) == _ALERT_MIN_TOP
-    assert len(_line(rows[2])) == 76
+    assert len(_line(rows[2])) == 85
 
 
 def test_percpu_keeps_its_labels_when_the_width_cascade_hides_quicklook():

@@ -489,33 +489,20 @@ def _align_multi_column_table(rows: list[Row]) -> list[Row]:
 
 def _format_alert_time(ts: str, now: datetime | None = None) -> str:
     """Convert an ISO-8601 timestamp (UTC, as emitted by `GlancesAlerts._build_event`)
-    to a short local-time string.
-
-    Same-day events: ``HH:MM:SS``. Events from any other day: ``YY-MM-DD``.
-    Both forms are exactly 8 columns, the width the alert grid gives the TIME
-    column — the full timestamp used to include the hour, but the grid's
-    DURATION column now carries the age, so it was redundant.
+    to a local ``YY-MM-DD HH:MM:SS`` string (17 columns, the TIME column width).
 
     Naive timestamps (no tz suffix) are assumed UTC — matches what
     ``_build_event`` produces. Unparseable input falls back to the raw
-    first 8 chars so the renderer can never crash on a malformed event.
+    first 17 chars so the renderer can never crash on a malformed event.
+    ``now`` is kept for signature compatibility; the date is always shown.
     """
     try:
         dt = datetime.fromisoformat(ts)
     except (ValueError, TypeError):
-        return str(ts)[:8]
+        return str(ts)[:_ALERT_W_TIME]
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=UTC)
-    local_dt = dt.astimezone()
-    now_local = (now or datetime.now(tz=UTC)).astimezone()
-    if local_dt.date() == now_local.date():
-        return local_dt.strftime("%H:%M:%S")
-    # Another day: `YY-MM-DD` fills the column exactly, and reads in the same
-    # descending order as the `HH:MM:SS` of the same-day rows — `MM-DD` alone
-    # was ambiguous about the year. The full timestamp used to be printed
-    # here, but the grid's DURATION column now carries the age (design §6.2),
-    # so the hour is redundant.
-    return local_dt.strftime("%y-%m-%d")
+    return dt.astimezone().strftime("%y-%m-%d %H:%M:%S")
 
 
 # Incident synthesis (`_derive_incidents` / `_incident_duration`, plus their
@@ -533,25 +520,28 @@ def _format_alert_time(ts: str, now: datetime | None = None) -> str:
 # column each to land the spec's offsets (TIME at 2, DURATION at 12,
 # TARGET at 22).
 _ALERT_W_GLYPH = 1
-_ALERT_W_TIME = 8
+_ALERT_W_TIME = 17
+# Growth of the TIME column vs. the original 8-column `HH:MM:SS` grid, which the
+# fixed-width arithmetic below was written against.
+_ALERT_W_TIME_EXTRA = _ALERT_W_TIME - 8
 _ALERT_W_DURATION = 8
 _ALERT_W_STATE = 8
 _ALERT_W_LEVEL = 8
 _ALERT_MIN_TARGET = 12
 # Block width at or above which the LEVEL / DURATION columns still fit
 # without starving TARGET below its floor.
-_ALERT_W_WITH_LEVEL = 31 + _ALERT_MIN_TARGET  # 43
-_ALERT_W_WITH_DURATION = 22 + _ALERT_MIN_TARGET  # 34
+_ALERT_W_WITH_LEVEL = 40 + _ALERT_MIN_TARGET  # 52
+_ALERT_W_WITH_DURATION = 31 + _ALERT_MIN_TARGET  # 43
 # STATE (ongoing / resolved) is redundant with the glyph, so it drops right
 # after TOP, before LEVEL and DURATION.
-_ALERT_W_WITH_STATE = _ALERT_W_WITH_LEVEL + _ALERT_W_STATE + 2  # 53
+_ALERT_W_WITH_STATE = _ALERT_W_WITH_LEVEL + _ALERT_W_STATE + 2  # 62
 # Floor of the TOP column, not a fixed width: TOP is the elastic column once
 # shown (TARGET takes its natural width instead), so this only bounds how far
 # TARGET is allowed to squeeze it.
 _ALERT_MIN_TOP = 22
 # TOP is the FIRST column to drop, so every threshold above is unchanged and
 # no terminal that renders the block correctly today changes behaviour.
-_ALERT_W_WITH_TOP = _ALERT_W_WITH_STATE + 1 + _ALERT_MIN_TOP  # 76
+_ALERT_W_WITH_TOP = _ALERT_W_WITH_STATE + 1 + _ALERT_MIN_TOP  # 85
 _ALERT_GLYPHS = {
     True: {True: "●", False: "*"},  # ongoing
     False: {True: "○", False: "-"},  # resolved
@@ -797,11 +787,11 @@ def render_alert_block(
         target_width = max(natural_target, _ALERT_MIN_TARGET)
         top_width = max((len(top_of(incident)) for incident in visible), default=0)
     elif show_top:
-        # The 42 fixed columns are GLYPH(1) + TIME(9) + DURATION(9) + STATE(8)
+        # The 42 fixed columns (+ TIME growth) are GLYPH(1) + TIME(9) + DURATION(9) + STATE(8)
         # + LEVEL(8) + 6 painter separators (design update: TOP repositioned). TARGET
         # keeps its natural width — floored, and capped so TOP never drops
         # below its own floor — and TOP absorbs whatever pair-width is left.
-        pair = width - 42
+        pair = width - (42 + _ALERT_W_TIME_EXTRA)
         target_width = max(_ALERT_MIN_TARGET, min(natural_target, pair - _ALERT_MIN_TOP))
         top_width = pair - target_width
     else:
@@ -812,7 +802,7 @@ def render_alert_block(
         elif show_duration:
             target_width = width - (_ALERT_W_WITH_DURATION - _ALERT_MIN_TARGET)
         else:
-            target_width = width - _ALERT_MIN_TARGET
+            target_width = width - _ALERT_MIN_TARGET - _ALERT_W_TIME_EXTRA
         top_width = 0
     target_width = max(0, target_width)
     top_width = max(0, top_width)
