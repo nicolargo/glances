@@ -364,26 +364,16 @@ export default {
 		levelTextOf(incident) {
 			return incident.level ? String(incident.level).toUpperCase() : "-";
 		},
-		// Same-day: HH:MM:SS (local). Any other day: YY-MM-DD. Mirrors
-		// _format_alert_time()'s two-form rule; unlike `duration`, this is not
-		// server-computed (the server sends only the ISO `begin`), so the
-		// browser renders it in the viewer's own local time.
+		// Always `YY-MM-DD HH:MM:SS` in the viewer's local time, like
+		// _format_alert_time(). Unlike `duration`, this is not server-computed
+		// (the server sends only the ISO `begin`).
 		timeOf(incident) {
 			if (!incident.begin) return "--:--:--";
 			const begin = new Date(incident.begin);
 			if (Number.isNaN(begin.getTime())) return "--:--:--";
-			const now = new Date();
-			const sameDay =
-				begin.getFullYear() === now.getFullYear() &&
-				begin.getMonth() === now.getMonth() &&
-				begin.getDate() === now.getDate();
-			if (sameDay) {
-				return begin.toTimeString().slice(0, 8);
-			}
-			const yy = String(begin.getFullYear()).slice(-2);
-			const mm = String(begin.getMonth() + 1).padStart(2, "0");
-			const dd = String(begin.getDate()).padStart(2, "0");
-			return `${yy}-${mm}-${dd}`;
+			const pad = (n) => String(n).padStart(2, "0");
+			const date = `${String(begin.getFullYear()).slice(-2)}-${pad(begin.getMonth() + 1)}-${pad(begin.getDate())}`;
+			return `${date} ${begin.toTimeString().slice(0, 8)}`;
 		},
 		// curses_renderer.py `_humanise_target`: only the plugin name is
 		// capitalised (its first letter only -- no acronym table, "gpu" stays

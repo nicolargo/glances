@@ -83,8 +83,8 @@ test("the WebUI widths only ever diverge from the terminal's for the `%` suffix"
 });
 
 test("every alert column is wide enough for its own worst case", () => {
-	// TIME: `HH:MM:SS`, `YY-MM-DD` and the `--:--:--` placeholder are all 8.
-	assert.equal(ALERT_COL_WIDTHS.TIME, 8);
+	// TIME: `YY-MM-DD HH:MM:SS` is 17 (the `--:--:--` placeholder fits).
+	assert.equal(ALERT_COL_WIDTHS.TIME, 17);
 	// DURATION: `_format_duration_compact` tops out at `{days}d{HH}h`, plus the
 	// `>` a partial incident carries -- and its own HEADER is 8 characters too,
 	// which is what actually sets the floor here.
