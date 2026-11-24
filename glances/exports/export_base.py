@@ -172,11 +172,9 @@ class GlancesExportBase(ABC):
         return True
 
     def _redact(self, error: Exception) -> str:
-        """The error text, with the configured credentials masked.
-
-        Exporters that authenticate store their credentials in ``user`` and
-        ``password`` (see load_conf); either may be unset.
-        """
+        """The error text, with the configured credentials masked."""
+        # Exporters that authenticate store their credentials in `user` and
+        # `password` (see load_conf); either may be unset.
         text = str(error)
         for secret in (getattr(self, "password", None), getattr(self, "user", None)):
             if secret:
