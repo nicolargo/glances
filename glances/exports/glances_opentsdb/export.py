@@ -15,6 +15,7 @@ configured `tags`. `potsdb` is imported when the exporter starts.
 
 from __future__ import annotations
 
+import re
 import sys
 from numbers import Number
 from typing import TYPE_CHECKING, Any
@@ -26,6 +27,19 @@ if TYPE_CHECKING:
     import argparse
 
     from glances.config import GlancesConfig
+
+
+# The telnet protocol is one `put <metric> <timestamp> <value> <tags>\n` per
+# point, and potsdb only checks the metric with an `assert`: a name drawn from
+# monitored data (a mount point, a process name) with a space in it raises
+# there, and with `python -O` it is sent as it is and can carry a second
+# command. These are the characters potsdb accepts (audit B-20).
+_UNSAFE_RE = re.compile(r"[^A-Za-z0-9_./-]")
+
+
+def normalize(name: str) -> str:
+    """An OpenTSDB metric name: `[A-Za-z0-9_./-]` only, anything else as `_`."""
+    return _UNSAFE_RE.sub("_", name)
 
 
 class Export(GlancesExportBase):
@@ -62,7 +76,7 @@ class Export(GlancesExportBase):
             if not isinstance(value, Number) or isinstance(value, bool):
                 continue
             try:
-                self.client.send(f"{self.prefix}.{name}.{column}", value, **self._tags)
+                self.client.send(normalize(f"{self.prefix}.{name}.{column}"), value, **self._tags)
             except Exception as e:
                 logger.warning("Cannot export %s stats to OpenTSDB (%s)", name, e)
                 return

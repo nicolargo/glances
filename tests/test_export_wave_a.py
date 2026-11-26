@@ -112,6 +112,26 @@ def test_opentsdb_sends_prefixed_points_with_tags_and_drains_on_exit(monkeypatch
     assert client.calls[-1][0] == "wait"
 
 
+def test_opentsdb_names_cannot_carry_a_second_command(monkeypatch):
+    """Audit B-20, the exporter it missed: OpenTSDB metric names are normalized."""
+    # potsdb refuses a metric name outside `[A-Za-z0-9_./-]` with an `assert`,
+    # so a space in a monitored name (a mount point, a process) dropped the
+    # rest of the plugin's points, and under `python -O` the name went out as
+    # it was, a newline ending the `put` line.
+    from glances.exports.glances_opentsdb.export import Export, normalize
+
+    assert normalize("glances.fs./mnt/my disk.percent") == "glances.fs./mnt/my_disk.percent"
+    assert normalize("glances.fs.x\nput evil 0 1 host=h\n.percent") == "glances.fs.x_put_evil_0_1_host_h_.percent"
+    assert normalize("glances.fakecollection.eth0.rx") == "glances.fakecollection.eth0.rx", "a sane name is untouched"
+
+    fake_module(monkeypatch, "potsdb", Client=_Recorder)
+    config = make_config({"opentsdb": {"host": "tsdb", "port": "4242"}})
+    Export(config).update(plugins(config))
+    names = [args[0] for method, args, _ in _Recorder.instances[0].calls if method == "send"]
+    assert names and all(re.fullmatch(r"[A-Za-z0-9_./-]+", name) for name in names)
+    assert normalize(f"glances.fakecollection.{HOSTILE_NAME}.rx") in names, "the hostile item is still exported"
+
+
 # ---------------------------------------------------------------- riemann
 
 
