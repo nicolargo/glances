@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"dependencies": {
-		"vue": "^3.5.45"
+		"vue": "^3.5.46"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
@@ -15,9 +15,9 @@
 		"html-webpack-plugin": "^5.6.8",
 		"style-loader": "^4.0.0",
 		"terser-webpack-plugin": "^5.6.1",
-		"typescript-eslint": "^8.72.2",
+		"typescript-eslint": "^8.73.0",
 		"vue-loader": "^17.4.2",
-		"webpack": "^5.112.2",
+		"webpack": "^5.113.0",
 		"webpack-cli": "^7.3.1",
 		"webpack-dev-server": "^6.1.0"
 	},
