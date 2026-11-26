@@ -33,7 +33,7 @@ import glob
 import os
 
 from glances.logger import logger
-from glances.plugins.npu.cards.npu import NPUStats
+from glances.plugins.npu.cards.npu import NPUStats, read_npu_file
 
 
 class AmdNPU:
@@ -72,10 +72,10 @@ class AmdNPU:
         stats = NPUStats()
 
         stats.npu_id = 'amd_1'
-        stats.freq_current = self._read_file(os.path.join(self.freq_folder, 'cur_freq'), as_int=True)
-        stats.freq_max = self._read_file(os.path.join(self.freq_folder, 'max_freq'), as_int=True)
+        stats.freq_current = read_npu_file(os.path.join(self.freq_folder, 'cur_freq'), as_int=True)
+        stats.freq_max = read_npu_file(os.path.join(self.freq_folder, 'max_freq'), as_int=True)
         stats.freq = int(stats.freq_current / stats.freq_max * 100)
-        stats.name = self._get_device_name(self._read_file(os.path.join(self.device_folder, '../../device')))
+        stats.name = self._get_device_name(read_npu_file(os.path.join(self.device_folder, '../../device')))
 
         # Return stats as a dictionary
         return stats.__dict__
@@ -93,18 +93,6 @@ class AmdNPU:
             paths = glob.glob(pattern)
             if paths:
                 return paths[0]
-        return None
-
-    def _read_file(self, path: str, as_int: bool = False) -> int | None:
-        """Safely read integer from file"""
-        try:
-            if os.path.exists(path):
-                with open(path) as f:
-                    if as_int:
-                        return int(f.read().strip())
-                    return f.read().strip()
-        except (OSError, ValueError) as e:
-            logger.error(f"NPU - Error reading file {path}: {e}")
         return None
 
     def _get_device_name(self, device_id: str) -> str:

@@ -30,7 +30,7 @@ import glob
 import os
 
 from glances.logger import logger
-from glances.plugins.npu.cards.npu import NPUStats
+from glances.plugins.npu.cards.npu import NPUStats, read_npu_file
 
 
 class IntelNPU:
@@ -66,42 +66,30 @@ class IntelNPU:
 
         stats.npu_id = 'intel_1'
         stats.freq_current = (
-            self._read_file(os.path.join(self.device_folder, 'npu_current_frequency_mhz'), as_int=True) * 1000000
+            read_npu_file(os.path.join(self.device_folder, 'npu_current_frequency_mhz'), as_int=True) * 1000000
         )  # Convert MHz to Hz
         stats.freq_max = (
-            self._read_file(os.path.join(self.device_folder, 'npu_max_frequency_mhz'), as_int=True) * 1000000
+            read_npu_file(os.path.join(self.device_folder, 'npu_max_frequency_mhz'), as_int=True) * 1000000
         )  # Convert MHz to Hz
         stats.freq = int(stats.freq_current / stats.freq_max * 100)
-        stats.name = self._get_device_name(self._read_file(os.path.join(self.device_folder, 'device')))
+        stats.name = self._get_device_name(read_npu_file(os.path.join(self.device_folder, 'device')))
 
         # Temperature
         temp_files = glob.glob(os.path.join(self.device_folder, 'hwmon/hwmon*/temp*_input'))
         if temp_files:
-            temp_value = self._read_file(temp_files[0], as_int=True)
+            temp_value = read_npu_file(temp_files[0], as_int=True)
             if temp_value:
                 stats.temperature = temp_value / 1000.0  # Convert milli-Celsius to Celsius
 
         # Power
         power_files = glob.glob(os.path.join(self.device_folder, 'hwmon/hwmon*/power*_input'))
         if power_files:
-            power_value = self._read_file(power_files[0], as_int=True)
+            power_value = read_npu_file(power_files[0], as_int=True)
             if power_value:
                 stats.power = power_value / 1000000.0  # Convert micro-Watts to Watts
 
         # Return stats as a dictionary
         return stats.__dict__
-
-    def _read_file(self, path: str, as_int: bool = False) -> int | None:
-        """Safely read integer from file"""
-        try:
-            if os.path.exists(path):
-                with open(path) as f:
-                    if as_int:
-                        return int(f.read().strip())
-                    return f.read().strip()
-        except (OSError, ValueError) as e:
-            logger.error(f"NPU - Error reading file {path}: {e}")
-        return None
 
     def _get_device_name(self, device_id: str) -> str:
         """Map Intel device ID to product name"""
