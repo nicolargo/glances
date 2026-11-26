@@ -551,10 +551,29 @@ def summarise(items: list[dict[str, Any]]) -> dict[str, float]:
     return totals
 
 
+def _total_cell(key: str, totals: dict[str, float]) -> Cell | None:
+    """The aggregate cell for a column that has a total, or None."""
+    if key == "CPU%":
+        text = _format_percent(totals["cpu_percent"], _W_CPU)
+    elif key == "MEM%":
+        text = _format_percent(totals["memory_percent"], _W_MEM)
+    elif key == "VIRT":
+        text = _format_bytes(totals["vms"], _W_VIRT)
+    elif key == "RES":
+        text = _format_bytes(totals["rss"], _W_RES)
+    elif key == "R/s":
+        text = _format_bytes(totals["read"], _W_IO)
+    elif key == "W/s":
+        text = _format_bytes(totals["write"], _W_IO)
+    else:
+        return None
+    return Cell(text=text, color=ColorRole.CAREFUL)
+
+
 def _summary_row(label: str, totals: dict[str, float], active: list[str], pid_width: int, note: str = "") -> Row:
     """One aggregate row, aligned to the columns still on screen."""
     cells: list[Cell] = []
-    blank = {
+    blank_widths = {
         "PID": pid_width,
         "USER": _W_USER,
         "THR": _W_THR,
@@ -566,20 +585,12 @@ def _summary_row(label: str, totals: dict[str, float], active: list[str], pid_wi
     for key in _FIXED_COL_KEYS:
         if key not in active:
             continue
-        if key == "CPU%":
-            cells.append(Cell(text=_format_percent(totals["cpu_percent"], _W_CPU), color=ColorRole.CAREFUL))
-        elif key == "MEM%":
-            cells.append(Cell(text=_format_percent(totals["memory_percent"], _W_MEM), color=ColorRole.CAREFUL))
-        elif key == "VIRT":
-            cells.append(Cell(text=_format_bytes(totals["vms"], _W_VIRT), color=ColorRole.CAREFUL))
-        elif key == "RES":
-            cells.append(Cell(text=_format_bytes(totals["rss"], _W_RES), color=ColorRole.CAREFUL))
-        elif key == "R/s":
-            cells.append(Cell(text=_format_bytes(totals["read"], _W_IO), color=ColorRole.CAREFUL))
-        elif key == "W/s":
-            cells.append(Cell(text=_format_bytes(totals["write"], _W_IO), color=ColorRole.CAREFUL))
+        total_cell = _total_cell(key, totals)
+        if total_cell is not None:
+            cells.append(total_cell)
         else:
-            cells.append(Cell(text=" " * blank.get(key, 1)))
+            blank_width = blank_widths.get(key, 1)
+            cells.append(Cell(text=" " * blank_width))
     cells.append(Cell(text=f"< {label}"))
     if note:
         cells.append(Cell(text=note))
