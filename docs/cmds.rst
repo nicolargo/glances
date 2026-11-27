@@ -449,6 +449,10 @@ The following commands (key pressed) are supported while in Glances
     Show/hide the help screen (scroll it with ``UP``/``DOWN``, ``j``/``k``,
     ``PAGE-UP``/``PAGE-DOWN`` and ``HOME``)
 
+``H``
+    Request an AI health report and show it in a window over the stats
+    (needs the ``llm_reporter`` plugin; ``H``, ``q`` or ``ESC`` close it)
+
 ``i``
     Sort processes by I/O rate
 

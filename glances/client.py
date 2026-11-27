@@ -466,6 +466,15 @@ class RemoteSource:
         """
         self.connection.post_json(f"/api/5/processes/sort/{key}")
 
+    def request_llm_report(self) -> Any:
+        """Ask the SERVER's llm_reporter plugin for a report; return its state. Synchronous.
+
+        The API key and the LLM calls stay on the server, which keeps the same
+        cooldown for every client and Web UI. Raises `NotFound` when the plugin
+        is disabled there, `RemoteError` otherwise.
+        """
+        return self.connection.post_json("/api/5/llm_reporter/request")
+
     def unpin_on_exit(self) -> None:
         """Leaving the client: drop the pin it set, or the server keeps paying for it. Never raises."""
         if self.pinned is None:

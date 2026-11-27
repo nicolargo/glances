@@ -104,6 +104,12 @@ export function viewFlag(key) {
 // `h`. Not a `hide` entry, so it is not part of the drift comparison.
 export const HELP_KEY = "h";
 
+// The TUI's `H` (its `llm_report` action, same description): opens and closes
+// the alert block's AI report window (PluginAlert.vue), requesting a report as
+// it opens. Like every key, listed in the help overlay whether or not its
+// plugin is on: a no-op while it is off.
+export const LLM_REPORT = { key: "H", desc: "Request an AI health report" };
+
 // The help overlay's documentation link, the TUI's `_HELP_DOC_URL`
 // (tests/test_webui_hotkeys_drift.py).
 export const HELP_DOC_URL = "https://glances.readthedocs.io/en/latest/cmds.html#interactive-commands";
