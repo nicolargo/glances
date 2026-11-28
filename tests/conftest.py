@@ -93,3 +93,72 @@ def config_with(tmp_path: Path, monkeypatch):
         return GlancesConfig()
 
     return _factory
+
+
+@pytest.fixture
+def redirecting_server():
+    """Two real HTTP servers on 127.0.0.1 (GHSA-jrpw-qg6j-vqv3).
+
+    `internal` stands for a service the attacker cannot reach: it answers
+    JSON to anything and records each path it serves. `attacker` answers
+    `/status` itself, as a Glances v5 server does, and redirects every other
+    request to `internal`: 302 for a GET, 307 for a POST.
+    Yields `(attacker_port, internal_hits)`.
+    """
+    import http.server
+    import json
+    import threading
+
+    hits: list[str] = []
+
+    class Internal(http.server.BaseHTTPRequestHandler):
+        def _answer(self) -> None:
+            hits.append(self.path)
+            body = json.dumps({"total": "INTERNAL-ONLY", "access_token": "tok"}).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        do_GET = do_POST = _answer
+
+        def log_message(self, *args) -> None:
+            pass
+
+    internal = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Internal)
+
+    class Attacker(http.server.BaseHTTPRequestHandler):
+        def _redirect(self, status: int) -> None:
+            self.send_response(status)
+            self.send_header("Location", f"http://127.0.0.1:{internal.server_port}{self.path}")
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+
+        def do_GET(self) -> None:
+            if self.path != "/status":
+                self._redirect(302)
+                return
+            body = b'{"status": "ok", "version": "5"}'
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        def do_POST(self) -> None:
+            self._redirect(307)
+
+        def log_message(self, *args) -> None:
+            pass
+
+    attacker = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Attacker)
+    threads = [threading.Thread(target=s.serve_forever, daemon=True) for s in (internal, attacker)]
+    for t in threads:
+        t.start()
+    try:
+        yield attacker.server_port, hits
+    finally:
+        for s in (internal, attacker):
+            s.shutdown()
+            s.server_close()

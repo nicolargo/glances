@@ -1536,7 +1536,9 @@ def run_browser(args: argparse.Namespace, config: GlancesConfig) -> int:
             password = poller.password_for(server)
             if password is None and server.status == PROTECTED:
                 password = _ask_browser_password(server, username)
-            error = open_client(args, config, server.target, username, password)
+            error = open_client(
+                args, config, server.target, username, password, follow_redirects=server.source == "static"
+            )
             if error is not None:
                 message = f"{server.alias or server.name}: {error}"
             elif password is not None:
@@ -1576,13 +1578,19 @@ def start_discovery(poller: Any, args: argparse.Namespace) -> Any:
 
 
 def open_client(
-    args: argparse.Namespace, config: GlancesConfig, target: str, username: str, password: str | None
+    args: argparse.Namespace,
+    config: GlancesConfig,
+    target: str,
+    username: str,
+    password: str | None,
+    follow_redirects: bool = True,
 ) -> str | None:
     """The client TUI on `target`, until the user quits it (`q`, ESC) or Ctrl-C.
 
     Returns why it could not open (a refused password, not a Glances v5
     server), or None. `-c` exits on that message; the browser shows it and
-    goes back to its list.
+    goes back to its list. The browser passes `follow_redirects=False` for a
+    discovered server: it must not pick the URL requested (GHSA-jrpw-qg6j-vqv3).
     """
     from glances.client import (
         DEFAULT_TIMEOUT,
@@ -1603,6 +1611,7 @@ def open_client(
         password=password,
         timeout=float(config.get("client", "timeout", DEFAULT_TIMEOUT)),
         verify=_client_ssl_verify(config),
+        follow_redirects=follow_redirects,
     )
     store = StatsStore()
     hidden = {cls.plugin_name for _name, cls in discover_plugin_classes() if not cls.DISPLAY_IN_TUI}

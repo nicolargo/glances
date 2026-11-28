@@ -113,7 +113,7 @@ class _FakeSession:
         self.llm_state: dict[str, Any] | None = None
         self.token_body: Any = {"access_token": "tok", "token_type": "bearer"}
 
-    def post(self, url, auth=None, headers=None, timeout=None, stream=False):
+    def post(self, url, auth=None, headers=None, timeout=None, stream=False, allow_redirects=True):
         self.requests.append(("POST", url, auth))
         if "/processes/sort/" in url:
             # The shared sort route; `refuse_sort` plays an older v5 server.
@@ -133,7 +133,7 @@ class _FakeSession:
             return _Response(200, self.token_body)
         return _Response(401)
 
-    def get(self, url, headers=None, timeout=None, stream=False):
+    def get(self, url, headers=None, timeout=None, stream=False, allow_redirects=True):
         self.requests.append(("GET", url, headers))
         if self.down:
             raise requests.ConnectionError("connection refused")
@@ -893,10 +893,10 @@ class _TestClientSession:
             body = ValueError
         return _Response(response.status_code, body)
 
-    def get(self, url: str, headers: dict | None = None, timeout: float | None = None, stream: bool = False):
+    def get(self, url: str, headers: dict | None = None, timeout: float | None = None, stream: bool = False, **_):
         return self._wrap(self._http.get(url, headers=headers))
 
-    def post(self, url: str, auth: Any = None, headers: dict | None = None, timeout=None, stream: bool = False):
+    def post(self, url: str, auth: Any = None, headers: dict | None = None, timeout=None, stream: bool = False, **_):
         return self._wrap(self._http.post(url, auth=auth, headers=headers))
 
 
@@ -1063,3 +1063,32 @@ def test_client_mode_h_reports_an_unreachable_server(monkeypatch, caplog):
     assert popups == ["The AI report request to the server failed:\nsee the Glances log."]
     assert "Connection refused" in caplog.text
     assert not tui._view.show_llm_report
+
+
+# ------------------------------------------- redirects (GHSA-jrpw-qg6j-vqv3)
+
+
+def test_a_redirect_is_followed_by_default(redirecting_server):
+    """`-c` and `[serverlist]` targets are the user's choice: a reverse proxy in front may redirect."""
+    port, hits = redirecting_server
+    conn = RemoteConnection(f"http://127.0.0.1:{port}")
+    assert conn.get_json("/api/5/cpu")["total"] == "INTERNAL-ONLY"
+    assert hits == ["/api/5/cpu"]
+
+
+def test_a_connection_that_does_not_follow_redirects_refuses_them(redirecting_server):
+    """A discovered server must not pick the URL the browser requests: the 3xx is refused, not read."""
+    port, hits = redirecting_server
+    conn = RemoteConnection(f"http://127.0.0.1:{port}", follow_redirects=False)
+    assert conn.get_json("/status")["version"] == "5", "a direct answer is still read"
+    with pytest.raises(NotAGlancesServer, match=r"redirect \(HTTP 302\)"):
+        conn.get_json("/api/5/cpu")
+    assert hits == []
+
+
+def test_a_connection_that_does_not_follow_redirects_refuses_them_on_the_token_route(redirecting_server):
+    port, hits = redirecting_server
+    conn = RemoteConnection(f"http://127.0.0.1:{port}", password="pw", follow_redirects=False)
+    with pytest.raises(NotAGlancesServer, match=r"redirect \(HTTP 307\)"):
+        conn.get_json("/status")
+    assert hits == []

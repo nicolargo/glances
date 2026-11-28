@@ -197,7 +197,12 @@ class ServersPoller:
         conn = self._connections.get(server.key)
         if conn is None:
             base_url = parse_target(server.target)[0]
-            conn = RemoteConnection(base_url, password=self.password_for(server), timeout=self._timeout)
+            conn = RemoteConnection(
+                base_url,
+                password=self.password_for(server),
+                timeout=self._timeout,
+                follow_redirects=server.source == "static",
+            )
             self._connections[server.key] = conn
         return conn
 

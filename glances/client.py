@@ -116,6 +116,7 @@ class RemoteConnection:
         password: str | None = None,
         timeout: float = DEFAULT_TIMEOUT,
         verify: bool | str = True,
+        follow_redirects: bool = True,
     ) -> None:
         self.base_url = base_url
         self._username = username
@@ -123,6 +124,9 @@ class RemoteConnection:
         self._timeout = timeout
         self._session = requests.Session()
         self._session.verify = verify
+        # A discovered server is untrusted: following its redirects would let it
+        # pick the URL requested, past `zeroconf._is_routable` (GHSA-jrpw-qg6j-vqv3).
+        self._follow_redirects = follow_redirects
         self._token: str | None = None
         self._auth_checked = False
         plain_http = base_url.startswith("http://")
@@ -137,11 +141,16 @@ class RemoteConnection:
         url = f"{self.base_url}/api/5/token"
         try:
             response = self._session.post(
-                url, auth=(self._username, self._password or ""), timeout=self._timeout, stream=True
+                url,
+                auth=(self._username, self._password or ""),
+                timeout=self._timeout,
+                stream=True,
+                allow_redirects=self._follow_redirects,
             )
         except requests.RequestException as e:
             self._auth_checked = False
             raise RemoteError(f"{self.base_url}: {e}") from e
+        self._refuse_redirect(response, url)
         if response.ok:
             answer = self._read_json(response, url)
             token = answer.get("access_token") if isinstance(answer, dict) else None
@@ -156,6 +165,12 @@ class RemoteConnection:
             raise AuthError(f"{self.base_url} refused the username or password")
         else:
             raise RemoteError(f"{url} answered HTTP {response.status_code}")
+
+    def _refuse_redirect(self, response: Any, url: str) -> None:
+        """A 3xx left unfollowed: `response.ok` is True for it, so refuse it here."""
+        if not self._follow_redirects and 300 <= response.status_code < 400:
+            response.close()
+            raise NotAGlancesServer(f"{url} answered a redirect (HTTP {response.status_code}), not followed")
 
     def _read_json(self, response: Any, url: str) -> Any:
         """The body as JSON: at most MAX_BODY_BYTES, within one deadline, whatever it holds.
@@ -200,9 +215,16 @@ class RemoteConnection:
         for attempt in (1, 2):
             headers = {"Authorization": f"Bearer {self._token}"} if self._token else {}
             try:
-                response = send(f"{self.base_url}{path}", headers=headers, timeout=self._timeout, stream=True)
+                response = send(
+                    f"{self.base_url}{path}",
+                    headers=headers,
+                    timeout=self._timeout,
+                    stream=True,
+                    allow_redirects=self._follow_redirects,
+                )
             except requests.RequestException as e:
                 raise RemoteError(f"{self.base_url}: {e}") from e
+            self._refuse_redirect(response, f"{self.base_url}{path}")
             if response.ok:
                 return self._read_json(response, f"{self.base_url}{path}")
             response.close()

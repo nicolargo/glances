@@ -73,7 +73,7 @@ class _Network:
         class _Session:
             verify = True
 
-            def post(self, url, auth=None, headers=None, timeout=None, stream=False):
+            def post(self, url, auth=None, headers=None, timeout=None, stream=False, allow_redirects=True):
                 network.sent.append((url, auth))
                 server = network.servers[base_url]
                 if server.password is None:
@@ -82,7 +82,7 @@ class _Network:
                     _Response(200, {"access_token": "tok"}) if auth and auth[1] == server.password else _Response(401)
                 )
 
-            def get(self, url, headers=None, timeout=None, stream=False):
+            def get(self, url, headers=None, timeout=None, stream=False, allow_redirects=True):
                 network.sent.append((url, headers))
                 server = network.servers[base_url]
                 if server.down:
@@ -408,6 +408,43 @@ def test_the_browser_keys():
     assert order_servers(servers, "list") == servers
 
 
+@pytest.mark.parametrize(
+    ("source", "status", "reached"), [("zeroconf", sl.UNSUPPORTED, False), ("static", sl.ONLINE, True)]
+)
+def test_only_a_static_server_may_redirect_the_poller(redirecting_server, source, status, reached):
+    """GHSA-jrpw-qg6j-vqv3: a Zeroconf announcer answers `/status` itself, then
+    redirects each column request to an internal service. It must reach nothing."""
+    port, hits = redirecting_server
+    entry = ServerEntry(name="127.0.0.1", port=port, source=source)
+    sl.ServersPoller([entry], _Config(), [Column("cpu", "total")]).poll_round()
+    assert entry.status == status
+    assert bool(hits) is reached
+    assert ("cpu:total" in entry.columns) is reached
+
+
+def test_run_browser_lets_only_a_static_server_redirect_the_client(monkeypatch):
+    """Opening a discovered server from the browser: its `RemoteConnection` refuses redirects too."""
+    import glances.main as main
+    from glances.outputs import browser_curses
+
+    static = ServerEntry(name="alpha", port=61208, status=sl.ONLINE)
+    found = ServerEntry(name="10.0.0.9", port=61208, status=sl.ONLINE, source="zeroconf")
+    poller = sl.ServersPoller([static, found], _Config(), [])
+    monkeypatch.setattr(sl, "build_poller", lambda config: poller)
+    monkeypatch.setattr(poller, "start", lambda interval: None)
+    picks = iter([static, found, None])
+    monkeypatch.setattr(browser_curses.BrowserTui, "select", lambda self, message=None: next(picks))
+    opened = []
+
+    def open_client(args, config, target, username, password, follow_redirects=True):
+        opened.append((target, follow_redirects))
+
+    monkeypatch.setattr(main, "open_client", open_client)
+    args = main.build_parser().parse_args(["--browser", "--disable-autodiscover"])
+    assert main.run_browser(args, _Config()) == 0
+    assert opened == [("alpha:61208", True), ("10.0.0.9:61208", False)]
+
+
 def test_run_browser_opens_servers_and_comes_back_to_the_list(monkeypatch):
     from glances import main
     from glances.outputs import browser_curses
@@ -429,7 +466,7 @@ def test_run_browser_opens_servers_and_comes_back_to_the_list(monkeypatch):
     monkeypatch.setattr(main.getpass, "getpass", lambda prompt: next(typed))
     opened = []
 
-    def open_client(args, config, target, username, password):
+    def open_client(args, config, target, username, password, follow_redirects=True):
         opened.append((target, username, password))
         return "refused the username or password" if password == "wrong" else None
 
