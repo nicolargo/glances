@@ -28,7 +28,7 @@ level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
 .in \\n[rst2man-indent\\n[rst2man-indent-level]]u
 ..
-.TH "GLANCES" "1" "Nov 21, 2026" "5.0.0b2" "Glances"
+.TH "GLANCES" "1" "Nov 28, 2026" "5.0.0b2" "Glances"
 .SH NAME
 glances \- An eye on your system
 .SH SYNOPSIS
@@ -556,6 +556,10 @@ Show/hide GPU stats
 .B \fBh\fP
 Show/hide the help screen (scroll it with \fBUP\fP/\fBDOWN\fP, \fBj\fP/\fBk\fP,
 \fBPAGE\-UP\fP/\fBPAGE\-DOWN\fP and \fBHOME\fP)
+.TP
+.B \fBH\fP
+Request an AI health report and show it in a window over the stats
+(needs the \fBllm_reporter\fP plugin; \fBH\fP, \fBq\fP or \fBESC\fP close it)
 .TP
 .B \fBi\fP
 Sort processes by I/O rate

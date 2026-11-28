@@ -22,31 +22,31 @@ TL;DR
     {'cpucore': 16,
      'ctx_switches': 0.0,
      'guest': 0.0,
-     'idle': 92.0,
+     'idle': 92.8,
      'interrupts': 0.0,
-     'iowait': 0.9,
+     'iowait': 1.6,
      'irq': 0.0,
      'nice': 0.0,
      'soft_interrupts': 0.0,
      'steal': 0.0,
      'syscalls': 0.0,
-     'system': 3.6,
-     'time_since_update': 0.38942165600019507,
-     'total': 8.0,
-     'user': 3.6}
+     'system': 2.8,
+     'time_since_update': 0.9812228270020569,
+     'total': 7.2,
+     'user': 2.8}
     >>> gl.cpu["total"]
-    8.0
+    7.2
     >>> gl.mem["used"]
-    7275937792
+    7062646784
     >>> gl.auto_unit(gl.mem["used"])
-    '6.78G'
+    '6.58G'
     >>> gl.network.keys()
     ['wlp0s20f3', 'tailscale0']
     >>> gl.network["wlp0s20f3"]
-    {'bytes_recv': 895.1870344143833,
-     'bytes_recv_cumul': 1941526508,
-     'bytes_sent': 917.4277060768525,
-     'bytes_sent_cumul': 76579990,
+    {'bytes_recv': 1369.2062086879355,
+     'bytes_recv_cumul': 4270742054,
+     'bytes_sent': 571.0495692993786,
+     'bytes_sent_cumul': 222560057,
      'bytes_speed_rate_per_sec': 0.0,
      'dropped_in': 0.0,
      'dropped_out': 0.0,
@@ -129,7 +129,7 @@ Glances amps
      'regex': True,
      'result': None,
      'result_float': None,
-     'timer': 0.43931031227111816}
+     'timer': 1.1539652347564697}
 
 Amps fields:
 
@@ -183,7 +183,7 @@ Glances core
 .. code-block:: python
 
     >>> gl.core
-    {'log': 16, 'phys': 10, 'time_since_update': 0.3948011560005398}
+    {'log': 16, 'phys': 10, 'time_since_update': 1.003720182001416}
 
 Core fields:
 
@@ -199,18 +199,18 @@ Glances cpu
     {'cpucore': 16,
      'ctx_switches': 0.0,
      'guest': 0.0,
-     'idle': 92.0,
+     'idle': 92.8,
      'interrupts': 0.0,
-     'iowait': 0.9,
+     'iowait': 1.6,
      'irq': 0.0,
      'nice': 0.0,
      'soft_interrupts': 0.0,
      'steal': 0.0,
      'syscalls': 0.0,
-     'system': 3.6,
-     'time_since_update': 0.38942165600019507,
-     'total': 8.0,
-     'user': 3.6}
+     'system': 2.8,
+     'time_since_update': 0.9812228270020569,
+     'total': 7.2,
+     'user': 2.8}
 
 Cpu fields:
 
@@ -253,18 +253,18 @@ Glances diskio
     >>> gl.diskio['nvme0n1']
     {'disk_name': 'nvme0n1',
      'hidden': False,
-     'read_bytes': 41592.543561726714,
-     'read_bytes_cumul': 31604888576,
-     'read_count': 2.5386073951249215,
-     'read_count_cumul': 2320977,
-     'read_latency': 0,
-     'read_time': 0.0,
-     'write_bytes': 863045.2789058293,
-     'write_bytes_cumul': 27843253248,
-     'write_count': 190.39555463436912,
-     'write_count_cumul': 3260379,
-     'write_latency': 0,
-     'write_time': 86.31265143424733}
+     'read_bytes': 32627.56853042126,
+     'read_bytes_cumul': 61118526464,
+     'read_count': 4.9785718582796115,
+     'read_count_cumul': 4462766,
+     'read_latency': 5,
+     'read_time': 27.880002406365822,
+     'write_bytes': 562825.5571497667,
+     'write_bytes_cumul': 53392274432,
+     'write_count': 4.9785718582796115,
+     'write_count_cumul': 5875604,
+     'write_latency': 9,
+     'write_time': 46.79857546782835}
 
 Diskio fields:
 
@@ -309,13 +309,13 @@ Glances fs
     ['/']
     >>> gl.fs['/']
     {'device_name': '/dev/mapper/ubuntu--vg-ubuntu--lv',
-     'free': 437069901824,
+     'free': 435863838720,
      'fs_type': 'ext4',
      'mnt_point': '/',
      'options': 'rw,relatime',
-     'percent': 54.1,
+     'percent': 54.2,
      'size': 1003736440832,
-     'used': 515604033536}
+     'used': 516810096640}
 
 Fs fields:
 
@@ -347,7 +347,7 @@ Glances gpu
      'gpu_id': 'intel0',
      'mem': None,
      'name': 'UHD Graphics',
-     'proc': 0,
+     'proc': 1,
      'temperature': None}
 
 Gpu fields:
@@ -374,10 +374,10 @@ Glances ip
 .. code-block:: python
 
     >>> gl.ip
-    {'address': '192.168.1.26',
+    {'address': '192.168.1.31',
      'mask': '255.255.255.0',
      'mask_cidr': 24,
-     'time_since_update': 0.3707135529984953}
+     'time_since_update': 0.8184524799944484}
 
 Ip fields:
 
@@ -395,10 +395,10 @@ Glances load
 
     >>> gl.load
     {'cpucore': 16,
-     'min1': 1.822265625,
-     'min15': 1.0771484375,
-     'min5': 1.20263671875,
-     'time_since_update': 0.37102851000054216}
+     'min1': 1.44775390625,
+     'min15': 1.009765625,
+     'min5': 1.22509765625,
+     'time_since_update': 0.8185004800034221}
 
 Load fields:
 
@@ -421,18 +421,18 @@ Glances mem
 .. code-block:: python
 
     >>> gl.mem
-    {'active': 4682395648,
-     'available': 8604135424,
-     'buffers': 198803456,
-     'cached': 8411090688,
-     'free': 1860702208,
-     'inactive': 7035326464,
-     'percent': 45.8,
-     'shared': 1683193856,
-     'slab': 806309888,
-     'time_since_update': 0.3623706359994685,
+    {'active': 4175380480,
+     'available': 8817426432,
+     'buffers': 312918016,
+     'cached': 6755233536,
+     'free': 2056323072,
+     'inactive': 7082876928,
+     'percent': 44.5,
+     'shared': 1117564928,
+     'slab': 1675554816,
+     'time_since_update': 0.7697641150007257,
      'total': 15880073216,
-     'used': 7275937792}
+     'used': 7062646784}
 
 Mem fields:
 
@@ -462,13 +462,13 @@ Glances memswap
 .. code-block:: python
 
     >>> gl.memswap
-    {'free': 2164785152,
-     'percent': 49.6,
-     'sin': 0.0,
+    {'free': 2940100608,
+     'percent': 31.5,
+     'sin': 5011.164338269173,
      'sout': 0.0,
-     'time_since_update': 0.3712467010009277,
+     'time_since_update': 0.8173749100023997,
      'total': 4294963200,
-     'used': 2130178048}
+     'used': 1354862592}
 
 Memswap fields:
 
@@ -494,10 +494,10 @@ Glances network
     >>> gl.network.keys()
     ['wlp0s20f3', 'tailscale0']
     >>> gl.network['wlp0s20f3']
-    {'bytes_recv': 895.1870344143833,
-     'bytes_recv_cumul': 1941526508,
-     'bytes_sent': 917.4277060768525,
-     'bytes_sent_cumul': 76579990,
+    {'bytes_recv': 1369.2062086879355,
+     'bytes_recv_cumul': 4270742054,
+     'bytes_sent': 571.0495692993786,
+     'bytes_sent_cumul': 222560057,
      'bytes_speed_rate_per_sec': 0.0,
      'dropped_in': 0.0,
      'dropped_out': 0.0,
@@ -537,9 +537,9 @@ Glances now
 .. code-block:: python
 
     >>> gl.now
-    {'custom': '2026-11-21 11:03:43 CET',
-     'iso': '2026-11-21T11:03:43+01:00',
-     'time_since_update': 0.3705626940009097}
+    {'custom': '2026-11-28 10:21:16 CET',
+     'iso': '2026-11-28T10:21:16+01:00',
+     'time_since_update': 0.8155975090048742}
 
 Now fields:
 
@@ -557,15 +557,15 @@ Glances percpu
     {'cpu_number': 0,
      'guest': 0.0,
      'guest_nice': 0.0,
-     'idle': 100.0,
+     'idle': 96.2,
      'iowait': 0.0,
      'irq': 0.0,
      'nice': 0.0,
      'softirq': 0.0,
      'steal': 0.0,
-     'system': 0.0,
-     'total': 0.0,
-     'user': 0.0}
+     'system': 1.9,
+     'total': 3.8,
+     'user': 1.9}
 
 Percpu fields:
 
@@ -609,7 +609,7 @@ Glances ports
      'port': 0,
      'refresh': 30,
      'rtt_warning': None,
-     'status': 0.005188,
+     'status': 0.017594,
      'timeout': 3}
 
 Ports fields:
@@ -634,11 +634,11 @@ Glances processcount
     {'auto_sort': True,
      'pid_max': 4194304,
      'running': 0,
-     'sleeping': 316,
+     'sleeping': 319,
      'sort_key': 'cpu_percent',
-     'thread': 1786,
-     'time_since_update': 0.3689254939999955,
-     'total': 475}
+     'thread': 1763,
+     'time_since_update': 0.7969542689970694,
+     'total': 477}
 
 Processcount fields:
 
@@ -656,72 +656,73 @@ Glances processlist
 .. code-block:: python
 
     >>> gl.processlist.keys()
-    [153553, 130, 90955, 145466, 92572, 91819, 92403, 152837, 92184, 131758, 132865,
-     3445, 7925, 92187, 91213, 8489, 132844, 144762, 152934, 152886, 153308, 10355,
-     131793, 4063, 153550, 3125, 91222, 8456, 91199, 132957, 103497, 3448, 3461,
-     4069, 7351, 152377, 8247, 8482, 13733, 7333, 631, 9567, 8256, 1, 8348, 7278,
-     9117, 92177, 143065, 143339, 3110, 143050, 7339, 3238, 9108, 8448, 3146,
-     132600, 143283, 50475, 676, 4076, 9424, 3482, 9180, 8561, 3092, 3404, 7337,
-     97777, 91196, 102518, 57083, 8198, 9162, 131414, 8195, 3242, 8149, 3138, 7332,
-     8265, 8201, 8217, 8163, 8559, 7837, 3366, 7457, 700, 3101, 4184, 3091, 3451,
-     8414, 7812, 8507, 671, 10838, 9153, 8150, 7847, 7045, 8184, 3367, 153546, 670,
-     4031, 7844, 8113, 3142, 8547, 8122, 9090, 8291, 8188, 152375, 102481, 8356,
-     3130, 4079, 153549, 3132, 102354, 3230, 8120, 4683, 3806, 8624, 8603, 7338,
-     3118, 8206, 8377, 152376, 8236, 8618, 3090, 3433, 8386, 8141, 8224, 8346, 8187,
-     8231, 8243, 8196, 8189, 105475, 4408, 8211, 8612, 7461, 91090, 8213, 7500,
-     7520, 9858, 8344, 3805, 3155, 4075, 3959, 3151, 3096, 7815, 2908, 4411, 7342,
-     7814, 4080, 4074, 7468, 4084, 2924, 3860, 7307, 3218, 9735, 3442, 3435, 2, 3,
-     4, 5, 6, 7, 8, 10, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 27, 28,
-     29, 30, 31, 33, 34, 35, 36, 37, 39, 40, 41, 42, 43, 45, 46, 47, 48, 49, 51, 52,
-     53, 54, 55, 57, 58, 59, 60, 61, 63, 64, 65, 66, 67, 69, 70, 71, 72, 73, 75, 76,
-     77, 78, 79, 81, 82, 83, 84, 85, 87, 88, 89, 90, 91, 93, 94, 95, 96, 97, 99,
-     100, 101, 102, 103, 105, 106, 107, 108, 109, 111, 112, 113, 114, 115, 116, 117,
-     119, 121, 122, 123, 124, 125, 126, 127, 133, 135, 136, 137, 138, 139, 140, 143,
-     144, 146, 147, 149, 150, 151, 152, 155, 157, 159, 160, 161, 179, 260, 262, 263,
-     264, 265, 266, 312, 313, 314, 475, 476, 477, 478, 486, 488, 514, 515, 518, 519,
-     522, 529, 530, 532, 550, 553, 554, 586, 696, 703, 704, 705, 724, 753, 833, 960,
-     992, 996, 998, 1055, 1056, 1057, 1058, 1148, 1149, 1150, 1152, 1153, 1154,
-     1156, 1157, 1158, 1159, 1160, 1161, 1162, 1163, 1164, 1165, 1167, 1168, 1203,
-     1602, 1611, 1636, 1747, 1885, 2201, 2202, 2203, 2204, 2205, 2206, 2207, 2208,
-     2209, 2210, 2211, 2212, 2213, 2214, 2215, 2216, 2217, 2218, 2219, 4142, 4237,
-     4238, 4239, 4240, 4241, 4242, 4243, 4244, 4245, 4246, 4247, 4248, 4249, 4250,
-     4251, 4252, 5196, 12784, 50252, 62682, 78015, 78223, 79639, 95118, 95653,
-     95660, 96147, 96552, 99656, 99674, 102096, 102099, 102103, 102109, 102112,
-     102116, 104492, 104679, 107586, 107630, 108343, 108837, 109009, 109043, 118399,
-     124620, 125409, 126474, 126475, 126544, 126672, 126675, 128056, 128057, 128119,
-     128856, 129220, 129221, 129295, 129297, 133866, 135792, 135793, 135794, 142583,
-     142633, 142948, 142951, 143062, 143571, 143819, 143823, 144440, 144674, 146576,
-     146587, 148538, 149148, 151968, 152082, 153290]
-    >>> gl.processlist[153553]
+    [831536, 130, 713185, 3138, 805840, 825641, 713550, 714319, 7925, 289229,
+     683819, 713506, 713500, 470171, 826968, 713450, 719886, 289435, 713458, 8489,
+     827117, 827203, 827197, 165014, 732945, 714747, 3125, 713431, 8456, 4063,
+     831533, 3448, 9567, 713428, 631, 8482, 778949, 657437, 661770, 289415, 4069,
+     657394, 7351, 3461, 1, 8163, 13733, 7333, 8256, 8247, 8149, 8448, 8377, 7339,
+     8291, 3110, 7278, 676, 226226, 9117, 826934, 8141, 3242, 3092, 4076, 804700,
+     9108, 9858, 3482, 3146, 226200, 9424, 732029, 8561, 8201, 8507, 826606, 8348,
+     465393, 7337, 3404, 8217, 3366, 7045, 8198, 9090, 7332, 143050, 9162, 7457,
+     675303, 7847, 8559, 9180, 250150, 8265, 8195, 700, 4184, 9153, 3132, 3805,
+     3101, 3091, 3806, 8206, 8414, 143065, 8624, 255897, 3130, 8346, 7837, 8184,
+     8150, 8603, 8236, 226215, 3367, 831529, 8188, 671, 713322, 8547, 226201, 7812,
+     3142, 8618, 8243, 10838, 8196, 8231, 8211, 8224, 8189, 470545, 8122, 8113,
+     8356, 8612, 8213, 8187, 8386, 826603, 7461, 4079, 4031, 670, 4683, 57083, 3090,
+     8344, 8120, 831532, 7500, 7844, 7520, 3118, 826605, 7338, 3451, 143283, 3433,
+     4408, 143339, 3860, 4075, 226272, 3096, 7342, 3155, 4074, 2924, 3151, 2908,
+     7814, 7815, 9735, 4080, 4084, 7307, 3435, 3442, 4411, 7468, 3218, 2, 3, 4, 5,
+     6, 7, 8, 10, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 27, 28, 29,
+     30, 31, 33, 34, 35, 36, 37, 39, 40, 41, 42, 43, 45, 46, 47, 48, 49, 51, 52, 53,
+     54, 55, 57, 58, 59, 60, 61, 63, 64, 65, 66, 67, 69, 70, 71, 72, 73, 75, 76, 77,
+     78, 79, 81, 82, 83, 84, 85, 87, 88, 89, 90, 91, 93, 94, 95, 96, 97, 99, 100,
+     101, 102, 103, 105, 106, 107, 108, 109, 111, 112, 113, 114, 115, 116, 117, 119,
+     121, 122, 123, 124, 125, 126, 127, 133, 135, 136, 137, 138, 139, 140, 143, 144,
+     146, 147, 149, 150, 151, 152, 155, 157, 159, 160, 161, 179, 260, 262, 263, 264,
+     265, 266, 312, 313, 314, 475, 476, 477, 478, 486, 488, 514, 515, 518, 519, 522,
+     529, 530, 532, 550, 553, 554, 586, 696, 703, 704, 705, 724, 753, 833, 960, 992,
+     996, 998, 1055, 1056, 1057, 1058, 1148, 1149, 1150, 1152, 1153, 1154, 1156,
+     1157, 1158, 1159, 1160, 1161, 1162, 1163, 1164, 1165, 1167, 1168, 1203, 1602,
+     1611, 1636, 1747, 1885, 2201, 2202, 2203, 2204, 2205, 2206, 2207, 2208, 2209,
+     2210, 2211, 2212, 2213, 2214, 2215, 2216, 2217, 2218, 2219, 4142, 4237, 4238,
+     4239, 4240, 4241, 4242, 4243, 4244, 4245, 4246, 4247, 4248, 4249, 4250, 4251,
+     4252, 5196, 143062, 412669, 475590, 657203, 657221, 661725, 698428, 720037,
+     726057, 731760, 739704, 744599, 746623, 769198, 778477, 781523, 781558, 782448,
+     783782, 791810, 792817, 793910, 794634, 795531, 802548, 803524, 804524, 804525,
+     806255, 811404, 812292, 819068, 819751, 819795, 820846, 820859, 820861, 821180,
+     825487, 825536, 825538, 825562, 825581, 825830, 825842, 826665, 826675, 826694,
+     826711, 826895, 826953, 827004, 827069, 827091, 827256, 827416, 830344, 830383,
+     830554, 830583, 831443]
+    >>> gl.processlist[831536]
     {'cmdline': ['/home/nicolargo/dev/glances/.venv/bin/python',
                  '-m',
                  'glances.api_doc',
                  '-C',
                  'conf/glances.conf'],
      'cpu_num': 4,
-     'cpu_percent': 70.5,
-     'cpu_times': {'children_system': 0.01,
+     'cpu_percent': 66.5,
+     'cpu_times': {'children_system': 0.03,
                    'children_user': 0.0,
                    'iowait': 0.0,
-                   'system': 0.25,
-                   'user': 0.33},
+                   'system': 0.57,
+                   'user': 0.81},
      'gids': {'effective': 1000, 'real': 1000, 'saved': 1000},
-     'io_counters': [16384, 303104, 16384, 303104, 1],
+     'io_counters': [36933632, 794624, 36933632, 794624, 1],
      'key': 'pid',
-     'memory_info': {'data': 126226432,
+     'memory_info': {'data': 125710336,
                      'dirty': 0,
                      'lib': 0,
-                     'rss': 91443200,
-                     'shared': 28073984,
+                     'rss': 89100288,
+                     'shared': 25690112,
                      'text': 31211520,
-                     'vms': 670072832},
-     'memory_percent': 0.5758361359937952,
+                     'vms': 669437952},
+     'memory_percent': 0.5610823501130134,
      'name': 'python',
      'nice': 0,
      'num_threads': 7,
-     'pid': 153553,
+     'pid': 831536,
      'status': 'S',
-     'time_since_update': 0.3700144290924072,
+     'time_since_update': 0.815732479095459,
      'username': 'nicolargo'}
 
 Processlist fields:
@@ -743,6 +744,7 @@ Processlist fields:
 * ``time_since_update``: Wall-clock interval since the previous engine refresh (seconds). (unit is *second*)
 * ``key``: Name of the primary key field (always \`\`pid\`\`). (unit is *string*)
 * ``cpucore``: Number of logical CPU cores (divisor of the Irix-mode CPU%). (unit is *number*)
+* ``disable_virtual_memory``: Hide the VIRT column (\`[processlist] disable\_virtual\_memory\`). (unit is *boolean*)
 
 Processlist limits:
 
@@ -799,155 +801,154 @@ Glances programlist
 .. code-block:: python
 
     >>> gl.programlist.keys()
-    ['python', 'irq/9-acpi', 'firefox', 'kworker/6:0-mm_percpu_wq',
-     'Isolated Web Co', 'WebExtensions', 'zed-editor', 'claude', 'multipassd',
-     'gnome-shell', 'Privileged Cont', 'dropbox', 'claude-agent-acp',
-     'Isolated Servic', 'Web Content', 'terminator', 'dockerd', 'uv', 'snapd',
-     'RDD Process', 'localsearch-3', 'Socket Process', 'python3', 'gjs',
-     'tailscaled', 'containerd', 'ollama', 'pipewire-pulse', 'glycin-svg',
-     'update-notifier', 'evolution-calendar-factory', 'snap', 'pipewire',
-     'systemd-journald', 'fwupd', 'evolution-alarm-notify', 'systemd',
-     'ibus-extension-gtk3', 'xdg-desktop-portal-gnome', 'Utility Process',
-     'sd_espeak-ng', 'polkitd', 'speech-dispatcher', 'wireplumber',
-     'NetworkManager', 'xdg-desktop-portal', 'snap-store', 'udisksd', 'bash',
-     'sd_dummy', 'dart:firmware-n', 'systemd-udevd', 'libvirtd',
-     'xdg-desktop-portal-gtk', 'colord', 'ibus-x11', 'gvfs-udisks2-volume-monitor',
-     'dbus-daemon', 'upowerd', 'gnome-keyring-daemon', 'forkserver', 'cups-browsed',
-     'gvfsd-http', 'gsd-media-keys', 'mutter-x11-frames', 'gsd-housekeeping',
-     'wpa_supplicant', 'evolution-source-registry', 'systemd-logind',
-     'gsd-disk-utility-notify', 'gsd-power', 'gsd-sharing',
-     'evolution-addressbook-factory', 'gvfsd', 'ModemManager',
-     'xdg-document-portal', 'systemd-resolved', 'iio-sensor-proxy', 'gdm3',
-     'bluetoothd', 'unattended-upgr', 'gvfsd-metadata', 'gcr-ssh-agent', 'Xwayland',
-     'systemd-timesyncd', 'ssh-agent', 'gsd-xsettings', 'dconf-service',
-     'gnome-session-service', 'gdm-session-worker', 'ibus-daemon', 'boltd', 'make',
-     'systemd-oomd', 'thermald', 'gvfsd-fuse', 'at-spi-bus-launcher',
-     'systemd-machined', 'ibus-engine-simple', 'at-spi2-registryd', 'gvfsd-trash',
-     'goa-daemon', 'gsd-color', 'bwrap', 'cupsd', 'ibus-portal', 'accounts-daemon',
-     'snmpd', 'sh', 'switcheroo-control', 'zed', 'rsyslogd', 'rtkit-daemon',
-     'cups-proxyd', 'gvfs-mtp-volume-monitor', 'gvfs-gphoto2-volume-monitor',
-     'mpris-proxy', 'smartd', 'gsd-print-notifications', 'gsd-usb-protection',
-     'gvfs-afc-volume-monitor', 'avahi-daemon', 'goa-identity-service',
-     'gnome-shell-calendar-server', 'gsd-smartcard', 'gsd-printer',
-     'gsd-a11y-settings', 'gsd-sound', 'gsd-wwan', 'gsd-keyboard', 'gsd-datetime',
-     'sleep', 'dnsmasq', 'gsd-rfkill', 'gvfs-goa-volume-monitor',
-     'xdg-permission-store', 'crashhelper', 'gsd-screensaver-proxy',
-     'gdm-wayland-session', 'gnome-session-init-worker',
-     'snapd-desktop-integration', 'ibus-memconf', 'virtlogd', 'cron', 'virtlockd',
-     'fsidd', 'rpcbind', 'gnome-session-ctl', 'rpc.mountd', 'rpc.idmapd',
-     'fusermount3', 'rpc.statd', 'nfsdcld', 'run-cups-browse', '(sd-pam)',
-     'user-session-helper', 'run-cupsd', 'kthreadd', 'pool_workqueue_release',
-     'kworker/R-rcu_gp', 'kworker/R-sync_wq', 'kworker/R-kvfree_rcu_reclaim',
-     'kworker/R-slub_flushwq', 'kworker/R-netns', 'kworker/0:0H-kblockd',
-     'kworker/R-mm_percpu_wq', 'ksoftirqd/0', 'rcu_preempt',
-     'rcu_exp_par_gp_kthread_worker/0', 'rcu_exp_gp_kthread_worker', 'migration/0',
-     'kprobe-optimizer', 'idle_inject/0', 'cpuhp/0', 'cpuhp/2', 'idle_inject/2',
-     'migration/2', 'ksoftirqd/2', 'kworker/2:0H-kblockd', 'cpuhp/4',
-     'idle_inject/4', 'migration/4', 'ksoftirqd/4', 'kworker/4:0H-kblockd',
-     'cpuhp/6', 'idle_inject/6', 'migration/6', 'ksoftirqd/6',
-     'kworker/6:0H-kblockd', 'cpuhp/8', 'idle_inject/8', 'migration/8',
-     'ksoftirqd/8', 'kworker/8:0H-kblockd', 'cpuhp/10', 'idle_inject/10',
-     'migration/10', 'ksoftirqd/10', 'kworker/10:0H-kblockd', 'cpuhp/12',
-     'idle_inject/12', 'migration/12', 'ksoftirqd/12', 'kworker/12:0H-kblockd',
-     'cpuhp/13', 'idle_inject/13', 'migration/13', 'ksoftirqd/13',
-     'kworker/13:0H-kblockd', 'cpuhp/14', 'idle_inject/14', 'migration/14',
-     'ksoftirqd/14', 'kworker/14:0H-kblockd', 'cpuhp/15', 'idle_inject/15',
-     'migration/15', 'ksoftirqd/15', 'kworker/15:0H-kblockd', 'cpuhp/1',
-     'idle_inject/1', 'migration/1', 'ksoftirqd/1', 'kworker/1:0H-kblockd',
-     'cpuhp/3', 'idle_inject/3', 'migration/3', 'ksoftirqd/3',
-     'kworker/3:0H-kblockd', 'cpuhp/5', 'idle_inject/5', 'migration/5',
-     'ksoftirqd/5', 'kworker/5:0H-kblockd', 'cpuhp/7', 'idle_inject/7',
-     'migration/7', 'ksoftirqd/7', 'kworker/7:0H-kblockd', 'cpuhp/9',
-     'idle_inject/9', 'migration/9', 'ksoftirqd/9', 'kworker/9:0H-kblockd',
-     'cpuhp/11', 'idle_inject/11', 'migration/11', 'ksoftirqd/11',
-     'kworker/11:0H-kblockd', 'kdevtmpfs', 'kworker/R-inet_frag_wq',
-     'rcu_tasks_kthread', 'rcu_tasks_rude_kthread', 'kauditd', 'khungtaskd',
-     'oom_reaper', 'kworker/R-writeback', 'kcompactd0', 'ksmd', 'khugepaged',
-     'kworker/R-kblockd', 'kworker/R-blkcg_punt_bio', 'kworker/R-kintegrityd',
-     'kworker/R-tpm_dev_wq', 'kworker/R-ata_sff', 'kworker/R-md_bitmap',
-     'kworker/R-md_llbitmap_io', 'kworker/R-md_llbitmap_unplug',
-     'kworker/R-edac-poller', 'kworker/R-devfreq_wq', 'watchdogd',
-     'kworker/R-quota_events_unbound', 'kswapd0', 'ecryptfs-kthread',
-     'kworker/R-kthrotld', 'irq/123-pciehp', 'irq/124-pciehp',
-     'kworker/R-acpi_thermal_pm', 'hwrng', 'kworker/R-hfi-updates', 'kworker/R-mld',
-     'kworker/R-ipv6_addrconf', 'kworker/R-kstrp', 'kworker/R-charger_manager',
-     'irq/178-VEN_04F3:00', 'spi0', 'kworker/R-nvme-wq', 'kworker/R-nvme-reset-wq',
-     'kworker/R-nvme-delete-wq', 'kworker/R-nvme-auth-wq',
-     'kworker/R-USBC000:00-con1', 'kworker/R-USBC000:00-con2',
-     'kworker/R-USBC000:00-con3', 'kworker/R-kdmflush/252:0',
-     'kworker/R-kcryptd_io-252:0-1', 'kworker/R-kcryptd-252:0-1',
-     'dmcrypt_write/252:0', 'kworker/2:1H-kblockd', 'kworker/R-kdmflush/252:1',
-     'kworker/0:1H-i915_cleanup', 'kworker/12:1H-i915_cleanup',
-     'kworker/11:1H-i915_cleanup', 'kworker/6:1H-kblockd', 'kworker/15:1H-kblockd',
-     'kworker/1:1H-kblockd', 'kworker/7:1H-i915_cleanup',
-     'kworker/10:1H-i915_cleanup', 'kworker/5:1H-kblockd', 'jbd2/dm-1-8',
+    ['python', 'irq/9-acpi', 'firefox', 'systemd-logind',
+     'kworker/4:2-mm_percpu_wq', 'kworker/u64:9-events_unbound', 'Isolated Web Co',
+     'WebExtensions', 'gnome-shell', 'Scratch', 'kworker/6:2-events', 'multipassd',
+     'Privileged Cont', 'WebKitWebProcess', 'RDD Process', 'dropbox', 'Web Content',
+     'terminator', 'gjs', 'Utility Process', 'snapd', 'Socket Process',
+     'localsearch-3', 'dockerd', 'uv', 'tailscaled', 'fwupd', 'forkserver',
+     'systemd-journald', 'evolution-calendar-factory', 'python3', 'cups-browsed',
+     'NetworkManager', 'WebKitNetworkProcess', 'ollama', 'cupsd', 'pipewire-pulse',
+     'containerd', 'systemd', 'snap', 'pipewire', 'evolution-alarm-notify',
+     'update-notifier', 'evolution-source-registry', 'snap-store', 'wireplumber',
+     'goa-daemon', 'polkitd', 'systemd-udevd', 'xdg-desktop-portal-gnome',
+     '(udev-worker)', 'gnome-shell-calendar-server', 'wpa_supplicant',
+     'dbus-daemon', 'libvirtd', 'sleep', 'xdg-desktop-portal',
+     'snapd-desktop-integration', 'colord', 'udisksd', 'gvfsd-recent',
+     'xdg-desktop-portal-gtk', 'zed', 'gvfs-udisks2-volume-monitor', 'gsd-power',
+     'Xwayland', 'glycin-image-rs', 'ibus-extension-gtk3', 'dart:firmware-n',
+     'gnome-keyring-daemon', 'upowerd', 'gsd-sharing', 'ModemManager',
+     'gdm-session-worker', 'gsd-media-keys', 'gvfsd-trash', 'speech-dispatcher',
+     'mutter-x11-frames', 'xdg-document-portal', 'rsyslogd',
+     'gnome-session-service', 'evolution-addressbook-factory', 'ibus-x11', 'bash',
+     'gsd-disk-utility-notify', 'gsd-housekeeping', 'systemd-resolved', 'gdm3',
+     'gsd-xsettings', 'switcheroo-control', 'iio-sensor-proxy', 'bluetoothd',
+     'cups-proxyd', 'gsd-print-notifications', 'gvfsd-metadata', 'sd_espeak-ng',
+     'gvfs-mtp-volume-monitor', 'gvfsd-wsdd', 'accounts-daemon', 'gsd-printer',
+     'gvfsd', 'ibus-daemon', 'dconf-service', 'gvfs-gphoto2-volume-monitor',
+     'gsd-usb-protection', 'gvfsd-dnssd', 'boltd', 'make', 'gsd-color',
+     'systemd-timesyncd', 'crashhelper', 'ibus-engine-simple', 'gvfsd-network',
+     'gcr-ssh-agent', 'systemd-machined', 'gvfs-afc-volume-monitor', 'gsd-wwan',
+     'ssh-agent', 'gsd-keyboard', 'gsd-sound', 'gsd-rfkill', 'gsd-smartcard',
+     'gsd-datetime', 'dnsmasq', 'at-spi2-registryd', 'at-spi-bus-launcher',
+     'ibus-portal', 'gvfs-goa-volume-monitor', 'gsd-screensaver-proxy',
+     'gsd-a11y-settings', 'goa-identity-service', 'bwrap', 'xdg-permission-store',
+     'snmpd', 'thermald', 'systemd-oomd', 'rtkit-daemon', 'gvfsd-http',
+     'avahi-daemon', 'ibus-memconf', 'sh', 'gdm-wayland-session', 'gvfsd-fuse',
+     'gnome-session-init-worker', 'smartd', 'mpris-proxy', 'unattended-upgr',
+     'sd_dummy', 'run-cups-browse', 'cron', 'uuidd', 'fsidd', 'virtlogd',
+     'rpc.idmapd', 'nfsdcld', 'virtlockd', 'rpcbind', 'gnome-session-ctl',
+     'user-session-helper', 'rpc.mountd', 'rpc.statd', '(sd-pam)', 'run-cupsd',
+     'fusermount3', 'kthreadd', 'pool_workqueue_release', 'kworker/R-rcu_gp',
+     'kworker/R-sync_wq', 'kworker/R-kvfree_rcu_reclaim', 'kworker/R-slub_flushwq',
+     'kworker/R-netns', 'kworker/0:0H-kblockd', 'kworker/R-mm_percpu_wq',
+     'ksoftirqd/0', 'rcu_preempt', 'rcu_exp_par_gp_kthread_worker/0',
+     'rcu_exp_gp_kthread_worker', 'migration/0', 'kprobe-optimizer',
+     'idle_inject/0', 'cpuhp/0', 'cpuhp/2', 'idle_inject/2', 'migration/2',
+     'ksoftirqd/2', 'kworker/2:0H-kblockd', 'cpuhp/4', 'idle_inject/4',
+     'migration/4', 'ksoftirqd/4', 'kworker/4:0H-kblockd', 'cpuhp/6',
+     'idle_inject/6', 'migration/6', 'ksoftirqd/6', 'kworker/6:0H-kblockd',
+     'cpuhp/8', 'idle_inject/8', 'migration/8', 'ksoftirqd/8',
+     'kworker/8:0H-kblockd', 'cpuhp/10', 'idle_inject/10', 'migration/10',
+     'ksoftirqd/10', 'kworker/10:0H-kblockd', 'cpuhp/12', 'idle_inject/12',
+     'migration/12', 'ksoftirqd/12', 'kworker/12:0H-kblockd', 'cpuhp/13',
+     'idle_inject/13', 'migration/13', 'ksoftirqd/13', 'kworker/13:0H-kblockd',
+     'cpuhp/14', 'idle_inject/14', 'migration/14', 'ksoftirqd/14',
+     'kworker/14:0H-kblockd', 'cpuhp/15', 'idle_inject/15', 'migration/15',
+     'ksoftirqd/15', 'kworker/15:0H-kblockd', 'cpuhp/1', 'idle_inject/1',
+     'migration/1', 'ksoftirqd/1', 'kworker/1:0H-kblockd', 'cpuhp/3',
+     'idle_inject/3', 'migration/3', 'ksoftirqd/3', 'kworker/3:0H-kblockd',
+     'cpuhp/5', 'idle_inject/5', 'migration/5', 'ksoftirqd/5',
+     'kworker/5:0H-kblockd', 'cpuhp/7', 'idle_inject/7', 'migration/7',
+     'ksoftirqd/7', 'kworker/7:0H-kblockd', 'cpuhp/9', 'idle_inject/9',
+     'migration/9', 'ksoftirqd/9', 'kworker/9:0H-kblockd', 'cpuhp/11',
+     'idle_inject/11', 'migration/11', 'ksoftirqd/11', 'kworker/11:0H-kblockd',
+     'kdevtmpfs', 'kworker/R-inet_frag_wq', 'rcu_tasks_kthread',
+     'rcu_tasks_rude_kthread', 'kauditd', 'khungtaskd', 'oom_reaper',
+     'kworker/R-writeback', 'kcompactd0', 'ksmd', 'khugepaged', 'kworker/R-kblockd',
+     'kworker/R-blkcg_punt_bio', 'kworker/R-kintegrityd', 'kworker/R-tpm_dev_wq',
+     'kworker/R-ata_sff', 'kworker/R-md_bitmap', 'kworker/R-md_llbitmap_io',
+     'kworker/R-md_llbitmap_unplug', 'kworker/R-edac-poller',
+     'kworker/R-devfreq_wq', 'watchdogd', 'kworker/R-quota_events_unbound',
+     'kswapd0', 'ecryptfs-kthread', 'kworker/R-kthrotld', 'irq/123-pciehp',
+     'irq/124-pciehp', 'kworker/R-acpi_thermal_pm', 'hwrng',
+     'kworker/R-hfi-updates', 'kworker/R-mld', 'kworker/R-ipv6_addrconf',
+     'kworker/R-kstrp', 'kworker/R-charger_manager', 'irq/178-VEN_04F3:00', 'spi0',
+     'kworker/R-nvme-wq', 'kworker/R-nvme-reset-wq', 'kworker/R-nvme-delete-wq',
+     'kworker/R-nvme-auth-wq', 'kworker/R-USBC000:00-con1',
+     'kworker/R-USBC000:00-con2', 'kworker/R-USBC000:00-con3',
+     'kworker/R-kdmflush/252:0', 'kworker/R-kcryptd_io-252:0-1',
+     'kworker/R-kcryptd-252:0-1', 'dmcrypt_write/252:0',
+     'kworker/2:1H-i915_cleanup', 'kworker/R-kdmflush/252:1',
+     'kworker/0:1H-kblockd', 'kworker/12:1H-kblockd', 'kworker/11:1H-kblockd',
+     'kworker/6:1H-i915_cleanup', 'kworker/15:1H-i915_cleanup',
+     'kworker/1:1H-i915_cleanup', 'kworker/7:1H-i915_cleanup',
+     'kworker/10:1H-kblockd', 'kworker/5:1H-kblockd', 'jbd2/dm-1-8',
      'kworker/R-ext4-rsv-conversion', 'kworker/4:1H-kblockd',
-     'kworker/14:1H-kblockd', 'kworker/8:1H-i915_cleanup', 'kworker/9:1H-kblockd',
-     'psimon', 'kworker/13:1H-i915_cleanup', 'kworker/3:1H-i915_cleanup',
-     'irq/16-processor_thermal_device_pci', 'kworker/R-ttm', 'kworker/R-cfg80211',
-     'jbd2/nvme0n1p2-8', 'card1-crtc0', 'card1-crtc1', 'card1-crtc2', 'card1-crtc3',
-     'irq/200-iwlwifi:default_queue', 'irq/201-iwlwifi:queue_1',
-     'irq/202-iwlwifi:queue_2', 'irq/203-iwlwifi:queue_3',
-     'irq/204-iwlwifi:queue_4', 'irq/205-iwlwifi:queue_5',
-     'irq/206-iwlwifi:queue_6', 'irq/207-iwlwifi:queue_7',
-     'irq/208-iwlwifi:queue_8', 'irq/209-iwlwifi:queue_9',
-     'irq/210-iwlwifi:queue_10', 'irq/211-iwlwifi:queue_11',
-     'irq/212-iwlwifi:queue_12', 'irq/213-iwlwifi:queue_13',
-     'irq/214-iwlwifi:queue_14', 'irq/215-iwlwifi:exception', 'kworker/R-rpciod',
-     'kworker/R-xprtiod', 'irq/217-mei_gsc', 'irq/218-mei_gsc',
-     'irq/197-cs35l41 IRQ1 Controller', 'irq/233-AudioDSP', 'spl_system_task',
-     'spl_delay_taskq', 'spl_dynamic_tas', 'spl_kmem_cache', 'zvol_tq-0',
-     'zvol_tq-1', 'zvol_tq-2', 'arc_prune', 'arc_evict', 'arc_flush', 'arc_reap',
-     'dbu_evict', 'dbuf_evict', 'z_vdev_file', 'l2arc_feed', 'lockd', 'nfsd',
-     'krfcommd', 'kworker/15:0-events', 'kworker/u64:2-events_unbound',
-     'kworker/9:0-cgroup_free', 'kworker/14:0-mm_percpu_wq',
-     'kworker/11:1-cgroup_free', 'kworker/u64:10-ishtp_unbound_0',
-     'kworker/10:1-kdmflush/252:0', 'kworker/u65:1-i915_flip',
-     'kworker/u64:12-kcryptd-252:0-1', 'kworker/1:2-events',
-     'kworker/6:1-cgroup_release', 'kworker/5:2-events',
-     'kworker/u64:5-kcryptd-252:0-1', 'kworker/u64:16-kcryptd-252:0-1',
-     'kworker/u64:21-kcryptd-252:0-1', 'kworker/u64:27-kcryptd-252:0-1',
-     'irq/198-mei_me', 'kworker/u64:28-kcryptd-252:0-1',
-     'kworker/13:0-mm_percpu_wq', 'kworker/12:2-mm_percpu_wq', 'kworker/9:1-events',
-     'kworker/7:1-i915-unordered', 'kworker/4:2-events',
-     'kworker/11:2-mm_percpu_wq', 'kworker/1:1-events', 'kworker/2:2-mm_percpu_wq',
-     'kworker/0:0-events', 'kworker/8:2-events', 'kworker/7:0-i915-unordered',
-     'kworker/u64:1-kcryptd-252:0-1', 'kworker/u64:3-kcryptd-252:0-1',
-     'kworker/14:2', 'kworker/15:2', 'kworker/3:2-mm_percpu_wq',
-     'kworker/u64:6-kcryptd-252:0-1', 'kworker/u64:7-kcryptd-252:0-1',
-     'kworker/12:1', 'kworker/6:2-events', 'kworker/u64:8-events_unbound',
-     'kworker/u64:9-kcryptd-252:0-1', 'kworker/13:2-events', 'kworker/8:3-events',
-     'kworker/3:1-events', 'kworker/u64:13-kcryptd-252:0-1',
-     'kworker/u64:14-kcryptd-252:0-1', 'kworker/u64:15-kcryptd-252:0-1',
-     'kworker/4:1', 'kworker/8:0-events', 'kworker/u65:2-hci0',
-     'kworker/u65:4-hci0', 'sd_espeak-ng-mb', 'kworker/2:1-events',
-     'kworker/5:1-events', 'kworker/0:2-kdmflush/252:0',
-     'kworker/u64:0-kcryptd-252:0-1', 'kworker/10:2-events',
-     'kworker/7:2-i915-unordered', 'kworker/11:0', 'kworker/3:0-mm_percpu_wq',
-     'kworker/u64:4', 'kworker/u65:0-rb_allocator', 'kworker/0:1', 'kworker/1:0']
+     'kworker/14:1H-i915_cleanup', 'kworker/8:1H-i915_cleanup',
+     'kworker/9:1H-kblockd', 'psimon', 'kworker/13:1H-i915_cleanup',
+     'kworker/3:1H-i915_cleanup', 'irq/16-processor_thermal_device_pci',
+     'kworker/R-ttm', 'kworker/R-cfg80211', 'jbd2/nvme0n1p2-8', 'card1-crtc0',
+     'card1-crtc1', 'card1-crtc2', 'card1-crtc3', 'irq/200-iwlwifi:default_queue',
+     'irq/201-iwlwifi:queue_1', 'irq/202-iwlwifi:queue_2',
+     'irq/203-iwlwifi:queue_3', 'irq/204-iwlwifi:queue_4',
+     'irq/205-iwlwifi:queue_5', 'irq/206-iwlwifi:queue_6',
+     'irq/207-iwlwifi:queue_7', 'irq/208-iwlwifi:queue_8',
+     'irq/209-iwlwifi:queue_9', 'irq/210-iwlwifi:queue_10',
+     'irq/211-iwlwifi:queue_11', 'irq/212-iwlwifi:queue_12',
+     'irq/213-iwlwifi:queue_13', 'irq/214-iwlwifi:queue_14',
+     'irq/215-iwlwifi:exception', 'kworker/R-rpciod', 'kworker/R-xprtiod',
+     'irq/217-mei_gsc', 'irq/218-mei_gsc', 'irq/197-cs35l41 IRQ1 Controller',
+     'irq/233-AudioDSP', 'spl_system_task', 'spl_delay_taskq', 'spl_dynamic_tas',
+     'spl_kmem_cache', 'zvol_tq-0', 'zvol_tq-1', 'zvol_tq-2', 'arc_prune',
+     'arc_evict', 'arc_flush', 'arc_reap', 'dbu_evict', 'dbuf_evict', 'z_vdev_file',
+     'l2arc_feed', 'lockd', 'nfsd', 'krfcommd', 'sd_espeak-ng-mb',
+     'kworker/14:2-mm_percpu_wq', 'kworker/5:2-mm_percpu_wq',
+     'kworker/u64:15-kcryptd-252:0-1', 'kworker/15:2-events',
+     'kworker/u64:8-kcryptd-252:0-1', 'kworker/13:1-mm_percpu_wq',
+     'kworker/3:2-mm_percpu_wq', 'irq/198-mei_me', 'kworker/u65:0-rb_allocator',
+     'kworker/11:2-mm_percpu_wq', 'kworker/u64:0-kcryptd-252:0-1',
+     'kworker/u64:4-kcryptd-252:0-1', 'kworker/0:2-events', 'kworker/3:0',
+     'kworker/5:1', 'kworker/u64:6-kcryptd-252:0-1', 'kworker/11:1',
+     'kworker/10:0-events', 'kworker/13:0-mm_percpu_wq', 'kworker/12:0-events',
+     'kworker/u64:10-kcryptd-252:0-1', 'kworker/10:2-mm_percpu_wq',
+     'kworker/u64:2-kcryptd-252:0-1', 'kworker/u64:5-kcryptd-252:0-1',
+     'kworker/u64:13-kcryptd-252:0-1', 'kworker/u64:14-kcryptd-252:0-1',
+     'kworker/15:1-events', 'kworker/0:0-events', 'kworker/8:0-events',
+     'kworker/2:1-cgroup_release', 'kworker/9:1-mm_percpu_wq', 'kworker/1:1-events',
+     'kworker/8:1-events', 'kworker/7:0-events', 'kworker/7:4-i915-unordered',
+     'kworker/6:0-mm_percpu_wq', 'kworker/2:0-cgroup_release',
+     'kworker/u65:2-rb_allocator', 'kworker/u64:1-kcryptd-252:0-1',
+     'kworker/12:2-events', 'kworker/1:0-events', 'kworker/9:0-mm_percpu_wq',
+     'kworker/u64:16-kcryptd-252:0-1', 'kworker/14:0', 'kworker/8:3-events',
+     'kworker/4:0', 'kworker/10:1-events', 'kworker/0:1-events', 'kworker/13:2',
+     'kworker/1:2-events', 'kworker/u65:1-rb_allocator', 'kworker/6:1',
+     'kworker/7:1-i915-unordered', 'kworker/5:0-mm_percpu_wq', 'kworker/8:2-events',
+     'kworker/u64:3-kcryptd-252:0-1', 'kworker/u65:3-rb_allocator',
+     'kworker/u64:7-kcryptd-252:0-1', 'kworker/2:2-mm_percpu_wq']
     >>> gl.programlist['python']
     {'cmdline': ['python'],
-     'cpu_percent': 70.5,
-     'cpu_times': {'children_system': 0.01,
+     'cpu_percent': 66.5,
+     'cpu_times': {'children_system': 0.03,
                    'children_user': 0.0,
                    'iowait': 0.0,
-                   'system': 0.25,
-                   'user': 0.33},
-     'io_counters': [16384, 303104, 16384, 303104, 1],
-     'memory_info': {'data': 126226432,
+                   'system': 0.57,
+                   'user': 0.81},
+     'io_counters': [36933632, 794624, 36933632, 794624, 1],
+     'memory_info': {'data': 125710336,
                      'dirty': 0,
                      'lib': 0,
-                     'rss': 91443200,
-                     'shared': 28073984,
+                     'rss': 89100288,
+                     'shared': 25690112,
                      'text': 31211520,
-                     'vms': 670072832},
-     'memory_percent': 0.5758361359937952,
+                     'vms': 669437952},
+     'memory_percent': 0.5610823501130134,
      'name': 'python',
      'nice': 0,
      'nprocs': 1,
      'num_threads': 7,
      'status': 'S',
-     'time_since_update': 0.3700144290924072,
+     'time_since_update': 0.815732479095459,
      'username': 'nicolargo'}
 
 Programlist fields:
@@ -966,6 +967,7 @@ Programlist fields:
 * ``io_counters``: Aggregated I/O counters (concatenated per-child blocks). (unit is *byte*)
 * ``time_since_update``: Wall-clock interval since the previous engine refresh (seconds). (unit is *second*)
 * ``cpucore``: Number of logical CPU cores (divisor of the Irix-mode CPU%). (unit is *number*)
+* ``disable_virtual_memory``: Hide the VIRT column (\`[processlist] disable\_virtual\_memory\`). (unit is *boolean*)
 
 Programlist limits:
 
@@ -981,7 +983,7 @@ Glances psutilversion
 .. code-block:: python
 
     >>> gl.psutilversion
-    {'time_since_update': 0.37801444199976686, 'version': '7.2.2'}
+    {'time_since_update': 0.812858151999535, 'version': '7.2.2'}
 
 Psutilversion fields:
 
@@ -994,36 +996,36 @@ Glances quicklook
 
     >>> gl.quicklook
     {'bar_char': '▪',
-     'cpu': 8.0,
+     'cpu': 5.2,
      'cpu_hz': 4475000000,
-     'cpu_hz_current': 984958250,
+     'cpu_hz_current': 695126687,
      'cpu_log_core': 16,
      'cpu_name': '13th Gen Intel(R) Core(TM) i7-13620H',
      'cpu_phys_core': 10,
-     'gpu_proc': 0.0,
-     'load': 6.7,
+     'gpu_proc': 0.5,
+     'load': 6.3,
      'max_cpu_display': 4,
-     'mem': 45.8,
-     'percpu': [{'cpu_number': 0, 'level': 'ok', 'total': 0.0},
+     'mem': 44.5,
+     'percpu': [{'cpu_number': 0, 'level': 'ok', 'total': 3.8},
                 {'cpu_number': 1, 'level': 'ok', 'total': 0.0},
-                {'cpu_number': 2, 'level': 'ok', 'total': 0.0},
+                {'cpu_number': 2, 'level': 'ok', 'total': 1.9},
                 {'cpu_number': 3, 'level': 'ok', 'total': 0.0},
-                {'cpu_number': 4, 'level': 'ok', 'total': 44.4},
-                {'cpu_number': 5, 'level': 'ok', 'total': 0.0},
-                {'cpu_number': 6, 'level': 'ok', 'total': 20.0},
-                {'cpu_number': 7, 'level': 'ok', 'total': 0.0},
+                {'cpu_number': 4, 'level': 'careful', 'total': 55.6},
+                {'cpu_number': 5, 'level': 'ok', 'total': 1.9},
+                {'cpu_number': 6, 'level': 'ok', 'total': 5.7},
+                {'cpu_number': 7, 'level': 'ok', 'total': 1.9},
                 {'cpu_number': 8, 'level': 'ok', 'total': 0.0},
                 {'cpu_number': 9, 'level': 'ok', 'total': 0.0},
-                {'cpu_number': 10, 'level': 'ok', 'total': 0.0},
+                {'cpu_number': 10, 'level': 'ok', 'total': 3.8},
                 {'cpu_number': 11, 'level': 'ok', 'total': 0.0},
-                {'cpu_number': 12, 'level': 'ok', 'total': 25.0},
-                {'cpu_number': 13, 'level': 'ok', 'total': 0.0},
-                {'cpu_number': 14, 'level': 'ok', 'total': 20.0},
-                {'cpu_number': 15, 'level': 'ok', 'total': 18.2}],
-     'percpu_other': {'level': 'ok', 'total': 1.5166666666666666},
+                {'cpu_number': 12, 'level': 'ok', 'total': 1.9},
+                {'cpu_number': 13, 'level': 'ok', 'total': 5.7},
+                {'cpu_number': 14, 'level': 'ok', 'total': 0.0},
+                {'cpu_number': 15, 'level': 'ok', 'total': 1.9}],
+     'percpu_other': {'level': 'ok', 'total': 1.1083333333333332},
      'stats_list': ['cpu', 'mem', 'load'],
-     'swap': 49.6,
-     'time_since_update': 0.3767531659996166}
+     'swap': 31.5,
+     'time_since_update': 0.8124930370031507}
 
 Quicklook fields:
 
@@ -1070,7 +1072,7 @@ Glances sensors
      'label': 'Ambient (mean)',
      'type': 'temperature_core',
      'unit': 'C',
-     'value': 39,
+     'value': 33,
      'warning': 0}
 
 Sensors fields:
@@ -1095,7 +1097,7 @@ Glances system
      'os_name': 'Linux',
      'os_version': '7.0.0-43-generic',
      'platform': '64bit',
-     'time_since_update': 0.2164504060001491}
+     'time_since_update': 0.4018429690040648}
 
 System fields:
 
@@ -1112,7 +1114,7 @@ Glances uptime
 .. code-block:: python
 
     >>> gl.uptime
-    {'seconds': 492769, 'time_since_update': 0.2166157089995977}
+    {'seconds': 1095017, 'time_since_update': 0.40252667700406164}
 
 Uptime fields:
 
@@ -1124,7 +1126,7 @@ Glances version
 .. code-block:: python
 
     >>> gl.version
-    {'time_since_update': 0.21683109500008868, 'version': '5.0.0b2'}
+    {'time_since_update': 0.40301509400160285, 'version': '5.0.0b2'}
 
 Version fields:
 
@@ -1138,7 +1140,7 @@ Glances wifi
     >>> gl.wifi.keys()
     ['wlp0s20f3']
     >>> gl.wifi['wlp0s20f3']
-    {'quality_level': -53.0, 'quality_link': 57.0, 'ssid': 'wlp0s20f3'}
+    {'quality_level': -65.0, 'quality_link': 45.0, 'ssid': 'wlp0s20f3'}
 
 Wifi fields:
 
@@ -1154,7 +1156,7 @@ Human-readable units, as the terminal interface shows them:
 .. code-block:: python
 
     >>> gl.auto_unit(gl.mem["used"])
-    '6.78G'
+    '6.58G'
 
 A percentage as a text bar:
 
@@ -1168,18 +1170,18 @@ The top processes (the API's own process is left out):
 .. code-block:: python
 
     >>> gl.top_process()
-    [{'cpu_percent': 13.4,
-      'memory_percent': 4.1609029316959045,
+    [{'cpu_percent': 2.5,
+      'memory_percent': 5.73968698759934,
       'name': 'firefox',
-      'pid': 90955},
-     {'cpu_percent': 0.0,
-      'memory_percent': 5.086548235723197,
+      'pid': 713185},
+     {'cpu_percent': 1.3,
+      'memory_percent': 0.03616225140709074,
+      'name': 'systemd-logind',
+      'pid': 3138},
+     {'cpu_percent': 1.2,
+      'memory_percent': 6.9205573113649805,
       'name': 'Isolated Web Co',
-      'pid': 92572},
-     {'cpu_percent': 0.0,
-      'memory_percent': 4.658249958537219,
-      'name': 'WebExtensions',
-      'pid': 91819}]
+      'pid': 713550}]
 
 Reference
 ---------
