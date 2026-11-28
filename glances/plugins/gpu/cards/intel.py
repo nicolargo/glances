@@ -227,7 +227,8 @@ def get_device_name(device_folder: str) -> str:
 
 
 def get_mem(device_folder: str, snapshot: dict | None, meminfo_path: str = '/proc/meminfo') -> int | None:
-    """Return the memory consumption in %, or None when it cannot be trusted.
+    """
+    Return the memory consumption in %, or None when it cannot be trusted.
 
     A card holding resident local memory (VRAM) is discrete: report it over
     the local aperture. Otherwise report system memory over MemTotal, which
@@ -250,7 +251,8 @@ def get_mem(device_folder: str, snapshot: dict | None, meminfo_path: str = '/pro
 
 
 def get_system_mem_capacity(meminfo_path: str = '/proc/meminfo') -> int | None:
-    """Return MemTotal in bytes, or None if unreadable.
+    """
+    Return MemTotal in bytes, or None if unreadable.
 
     Not arm.get_mem_capacity_bytes: it prefers CmaTotal, the ARM DMA pool,
     which is not where Intel GPU buffers come from.
@@ -262,7 +264,8 @@ def get_system_mem_capacity(meminfo_path: str = '/proc/meminfo') -> int | None:
 
 
 def get_local_mem_capacity(device_folder: str) -> int | None:
-    """Return the size in bytes of the card's local memory aperture, or None.
+    """
+    Return the size in bytes of the card's local memory aperture, or None.
 
     It is the largest prefetchable memory BAR. That equals the VRAM size only
     with resizable BAR enabled; otherwise it is smaller, and the caller must
