@@ -1169,6 +1169,14 @@ def attach_history(plugins: list[GlancesPluginBase], config: GlancesConfig, args
         plugin.history = history
 
 
+def attach_alerts(plugins: list[GlancesPluginBase], alerts: GlancesAlerts) -> None:
+    """Hand the alerts engine to every plugin with a ``set_alerts()`` method (``llm_reporter``)."""
+    for plugin in plugins:
+        set_alerts = getattr(plugin, "set_alerts", None)
+        if set_alerts is not None:
+            set_alerts(alerts)
+
+
 def tui_view_options(args: argparse.Namespace) -> dict[str, Any]:
     """The TUI's display options from the command line, shared by the local and the client TUI."""
     from glances.outputs.glances_curses import STARTUP_HIDE_KEYS
@@ -1270,6 +1278,7 @@ def assemble(
         logger.debug("Discovered %d v5 plugins: %s", len(plugins), ", ".join(p.plugin_name for p in plugins))
 
     attach_history(plugins, config, args)
+    attach_alerts(plugins, alerts)
 
     scheduler = AsyncScheduler(store, config, alerts=alerts)
     for plugin in plugins:
@@ -1281,6 +1290,8 @@ def assemble(
         scheduler.register_exporter(exporter)
     # The TUI's `g` key asks the graph exporter for its charts (v4 parity).
     graph = next((e for e in exporters if e.export_name == "graph"), None)
+    # Its `H` key asks the llm_reporter plugin for a report, when it is enabled.
+    llm_reporter = next((p for p in plugins if p.plugin_name == "llm_reporter"), None)
 
     host = args.bind or config.get("outputs", "bind_address", _DEFAULT_BIND_ADDRESS)
     port = args.port or config.get("outputs", "port", _DEFAULT_PORT)
@@ -1378,6 +1389,7 @@ def assemble(
             refresh_interval=refresh,
             on_quit=lambda: os.kill(os.getpid(), signal.SIGINT),
             generate_graph=graph.request if graph is not None else None,
+            request_llm_report=llm_reporter.request_report if llm_reporter is not None else None,
             **tui_view_options(args),
         )
 
@@ -1626,6 +1638,8 @@ def open_client(
         # `e` pins on the server; `k`, `+` and `-` are refused (they would
         # act on this machine); the process filter applies locally.
         remote=source,
+        # `H` asks the server's llm_reporter plugin, which holds the API key.
+        request_llm_report=source.request_llm_report,
         **options,
     )
     exports = None

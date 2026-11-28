@@ -273,8 +273,14 @@ const document = {
 	// each <style> tag via `document.querySelector("head")` -- without a
 	// head node it throws "Couldn't find a style target" before Vue ever
 	// gets to mount.
+	// PluginAlert.vue's windows listen for Escape while they are open; like
+	// every other event here, it never fires.
+	addEventListener: () => {},
+	removeEventListener: () => {},
 	querySelector: (selector) => {
 		if (selector === "head") return head;
+		// Overlays teleported to the page (PluginAlert.vue's LLM report window).
+		if (selector === "body") return body;
 		if (selector.startsWith("#")) return findById(body, selector.slice(1));
 		return null;
 	},
@@ -299,6 +305,7 @@ const {
 	ARGS_FIXTURES,
 	CONFIG_FIXTURES,
 	ALL_FIXTURES,
+	LLM_REQUEST_FIXTURES,
 	WIDTH_FIXTURES,
 	CONTENT_PER_NOTCH,
 	BLOCK_WIDTH_FIXTURES,
@@ -337,6 +344,13 @@ async function fakeFetch(url, init) {
 	const path = String(url);
 	if (init && init.method === "POST" && !serverDown) {
 		postedPaths.push(path);
+		// The LLM report request answers the plugin's state; `null` plays a server
+		// answering an error.
+		if (path.includes("api/5/llm_reporter/request") && scenario in LLM_REQUEST_FIXTURES) {
+			const answer = LLM_REQUEST_FIXTURES[scenario];
+			if (answer === null) return { ok: false, status: 500, json: async () => ({ detail: "boom" }) };
+			return { ok: true, status: 200, json: async () => answer };
+		}
 		return { ok: true, status: 200, json: async () => true };
 	}
 	// A stopped server answers NOTHING, so this rejects before any per-path
@@ -595,6 +609,25 @@ function collect() {
 			})),
 		),
 		browserText: (findDescendantByClass(appDiv, "gl-browser") || { textContent: "" }).textContent.replace(/\s+/g, " ").trim(),
+		// The `· AI report` button of the alert line: its text, or null.
+		alertLlmButton: (() => {
+			const span = findDescendantByClass(appDiv, "gl-alert-llm");
+			return span ? span.textContent.replace(/\s+/g, " ").trim() : null;
+		})(),
+		// The LLM report window, teleported to the page: its state lines and the
+		// report's own text (line breaks kept). null when it is not open.
+		llmWindow: (() => {
+			const panel = findDescendantByClass(body, "gl-llm-panel");
+			if (!panel) return null;
+			const report = findDescendantByClass(panel, "gl-llm-report-text");
+			return {
+				lines: findAllByClass(panel, "gl-llm-line").map((line) => ({
+					text: line.textContent,
+					className: line.className,
+				})),
+				reportText: report ? report.textContent : null,
+			};
+		})(),
 		// What that overlay showed after each attempt of the ladder script
 		// below -- null for the attempt that found the server back. [] for
 		// every scenario that does not run it.
@@ -1060,6 +1093,9 @@ setImmediate(async () => {
 		// same method the button's @click calls.
 		if (key === "click:hotkeys") {
 			if (sandbox.__glancesToggleHelp) await sandbox.__glancesToggleHelp();
+		} else if (key === "click:llm") {
+			// The alert line's `AI report` button.
+			if (sandbox.__glancesRequestLlmReport) await sandbox.__glancesRequestLlmReport();
 		} else if (sandbox.__glancesHotkey) {
 			await sandbox.__glancesHotkey(key);
 		}

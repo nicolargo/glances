@@ -227,6 +227,24 @@ def test_the_startup_flags_press_the_same_keys_in_both_surfaces():
     assert js == {flag: list(keys) for flag, keys in STARTUP_HIDE_KEYS.items()}
 
 
+def test_the_ai_report_key_is_the_tuis():
+    """`H` opens the AI report window in both surfaces, described the same way
+    in both help screens."""
+    (key,) = [key for key, spec in Tui._HOTKEYS.items() if spec.get("action") == "llm_report"]
+    script = f"""
+    import('{_MODULE.as_uri()}').then((m) => process.stdout.write(JSON.stringify(m.LLM_REPORT)));
+    """
+    result = subprocess.run(
+        ["node", "--no-warnings", "--input-type=module", "-e", script],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=30,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert json.loads(result.stdout) == {"key": key, "desc": Tui._HOTKEYS[key]["desc"]}
+
+
 def test_the_help_overlay_links_the_same_documentation():
     script = f"""
     import('{_MODULE.as_uri()}').then((m) => process.stdout.write(m.HELP_DOC_URL));

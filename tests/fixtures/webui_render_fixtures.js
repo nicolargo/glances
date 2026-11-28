@@ -297,6 +297,33 @@ const ALERT_INCIDENTS_UNREACHABLE_SCENARIOS = new Set(["alert-incidents-unreacha
 const ALERT_INCIDENTS_SCENARIOS = {
 	"alert-initializing": { is_initializing: true, incidents: [] },
 	"alert-empty": { is_initializing: false, incidents: [] },
+	"llm-idle-empty": { is_initializing: false, incidents: [] },
+};
+
+// The llm_reporter plugin's state in /api/5/all (`PluginModel._payload`). A
+// report of another day, so its time comes with its date whatever the clock.
+const LLM_IDLE = {
+	state: "idle",
+	report: "Summary: The backup job saturates the CPU.\n1. Overall health status: Degraded\n2. Root cause: the backup job.",
+	status: "degraded",
+	model: "claude-haiku-4-5",
+	generated_at: "2026-01-02T10:04:05+00:00",
+	age: 25,
+	available_in: 35,
+	error: null,
+	revision: 2,
+};
+
+// What `POST /api/5/llm_reporter/request` answers, per scenario; null: HTTP 500.
+const LLM_REQUEST_FIXTURES = {
+	// Inside min_interval: the previous report, unchanged.
+	"llm-idle": LLM_IDLE,
+	"llm-idle-empty": LLM_IDLE,
+	// The request starts a report while /all still holds the state from before it.
+	"llm-stale": { ...LLM_IDLE, state: "generating", revision: 3 },
+	"llm-starting": { ...LLM_IDLE, state: "starting", revision: 3 },
+	"llm-error": { ...LLM_IDLE, error: "The LLM call failed: see the Glances log.", age: 7200, revision: 4 },
+	"llm-request-fails": null,
 };
 
 // `/api/5/all` fixtures for the `mem` render-parity tests
@@ -1095,6 +1122,12 @@ const CONTAINERS_LONG_NAMES = {
 
 const ALL_FIXTURES = {
 	default: {},
+	"llm-idle": { llm_reporter: LLM_IDLE },
+	"llm-idle-empty": { llm_reporter: LLM_IDLE },
+	"llm-stale": { llm_reporter: LLM_IDLE },
+	"llm-starting": { llm_reporter: LLM_IDLE },
+	"llm-error": { llm_reporter: LLM_IDLE },
+	"llm-request-fails": { llm_reporter: LLM_IDLE },
 	"gpu-disabled": {},
 	"pluginslist-unreachable": {},
 	"mem-with-available": { mem: MEM_FIXTURE_WITH_AVAILABLE },
@@ -2072,6 +2105,7 @@ module.exports = {
 	ARGS_FIXTURES,
 	CONFIG_FIXTURES,
 	ALL_FIXTURES,
+	LLM_REQUEST_FIXTURES,
 	WIDTH_FIXTURES,
 	CONTENT_PER_NOTCH,
 	BLOCK_WIDTH_FIXTURES,

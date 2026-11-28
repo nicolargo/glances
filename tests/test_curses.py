@@ -5055,3 +5055,246 @@ def test_stop_after_counts_regular_paints(fake_store, fake_alerts, fake_config):
     assert tui._count_regular_paint() is False
     assert tui._count_regular_paint() is True
     assert _make_tui(tui_mod, fake_store, fake_alerts, fake_config)._count_regular_paint() is False
+
+
+# ------------------------------------------------------- the LLM report (H)
+
+
+def _llm_tui(monkeypatch, fake_store, fake_alerts, fake_config, request=None, stored=None):
+    """A TUI whose `H` calls `request`, over a store holding `stored` as the llm_reporter payload."""
+    from glances.outputs import glances_curses as tui_mod
+
+    fake_store.get.side_effect = lambda name, default=None: stored if name == "llm_reporter" else default
+    tui = _make_tui(tui_mod, fake_store, fake_alerts, fake_config, request_llm_report=request)
+    shown: list[str] = []
+    monkeypatch.setattr(tui_mod.Tui, "_popup_info", lambda self, stdscr, message: shown.append(message))
+    return tui_mod, tui, shown
+
+
+_IDLE_REPORT = {
+    "state": "idle",
+    "report": "Summary: The CPU is busy.\n1. Overall health status: Degraded",
+    "status": "degraded",
+    "model": "llama3.2",
+    "generated_at": "2026-11-20T10:04:05+00:00",
+    "age": 25,
+    "available_in": 35,
+    "error": None,
+    "revision": 2,
+}
+
+
+def test_h_is_a_modal_key_listed_in_the_help(monkeypatch, fake_store, fake_alerts, fake_config):
+    tui_mod, tui, _ = _llm_tui(monkeypatch, fake_store, fake_alerts, fake_config)
+    assert tui._handle_key(ord("H")) == "modal"
+    assert tui._pending == "llm_report"
+    assert tui_mod.Tui._HOTKEYS["H"]["group"] == "MISCELLANEOUS"
+    assert "Request an AI health report" in " ".join(str(row) for row in tui._help_lines())
+
+
+def test_h_without_the_plugin_says_how_to_enable_it(monkeypatch, fake_store, fake_alerts, fake_config):
+    _, tui, shown = _llm_tui(monkeypatch, fake_store, fake_alerts, fake_config)
+    tui._handle_key(ord("H"))
+    tui._run_pending(MagicMock())
+    assert shown and "disable=False in the [llm_reporter]" in shown[0]
+    assert not tui._view.show_llm_report
+
+
+def test_h_requests_a_report_and_opens_the_window(monkeypatch, fake_store, fake_alerts, fake_config):
+    asked = []
+    answer = {"state": "generating", "model": "llama3.2", "revision": 1}
+    _, tui, shown = _llm_tui(
+        monkeypatch, fake_store, fake_alerts, fake_config, request=lambda: asked.append(1) or answer
+    )
+    tui._llm_scroll = 7  # from a previous window
+    tui._handle_key(ord("H"))
+    tui._run_pending(MagicMock())
+    assert asked == [1]
+    assert shown == []
+    assert tui._view.show_llm_report
+    assert tui._llm_scroll == 0
+    assert tui._llm_report_state() == answer
+
+
+def test_the_window_holds_the_keys_until_it_is_closed(monkeypatch, fake_store, fake_alerts, fake_config):
+    _, tui, _ = _llm_tui(monkeypatch, fake_store, fake_alerts, fake_config, request=lambda: dict(_IDLE_REPORT))
+    for close in (ord("H"), ord("q"), 27):
+        tui._handle_key(ord("H"))
+        tui._run_pending(MagicMock())
+        percpu = tui._view.show_percpu
+        assert tui._handle_key(ord("1")) == "ignored"  # no stats key behind the window
+        assert tui._view.show_percpu == percpu
+        assert tui._handle_key(curses.KEY_DOWN) == "repaint"
+        assert tui._handle_key(curses.KEY_NPAGE) == "repaint"
+        assert tui._llm_scroll == 11
+        assert tui._handle_key(curses.KEY_HOME) == "repaint"
+        assert tui._llm_scroll == 0
+        assert tui._handle_key(curses.KEY_UP) == "repaint"
+        assert tui._llm_scroll == 0
+        # `q` and ESC close the window; they do not quit Glances.
+        assert tui._handle_key(close) == "repaint"
+        assert not tui._view.show_llm_report
+
+
+@pytest.mark.parametrize(
+    "stored_revision, shown",
+    [(None, "answer"), (1, "answer"), (2, "stored"), (3, "stored")],
+)
+def test_the_window_shows_the_newer_of_the_answer_and_the_store(
+    monkeypatch, fake_store, fake_alerts, fake_config, stored_revision, shown
+):
+    """The store lags a request by up to a refresh; on a tie, its copy is the live one."""
+    answer = {"state": "generating", "revision": 2}
+    stored = None if stored_revision is None else {"state": "idle", "revision": stored_revision}
+    _, tui, _ = _llm_tui(monkeypatch, fake_store, fake_alerts, fake_config, request=lambda: answer, stored=stored)
+    tui._handle_key(ord("H"))
+    tui._run_pending(MagicMock())
+    assert tui._llm_report_state() is (answer if shown == "answer" else stored)
+
+
+def _local_hms(iso: str) -> str:
+    from datetime import datetime
+
+    return datetime.fromisoformat(iso).astimezone().strftime("%H:%M:%S")
+
+
+def test_llm_report_lines_while_starting_or_generating_hide_the_previous_report():
+    from glances.outputs import glances_curses as tui_mod
+    from glances.outputs.curses_renderer import ColorRole
+
+    starting = {**_IDLE_REPORT, "state": "starting"}
+    generating = {**_IDLE_REPORT, "state": "generating"}
+    assert tui_mod.llm_report_lines(starting) == [("Waiting for the end of Glances' startup…", ColorRole.HEADER)]
+    assert tui_mod.llm_report_lines(generating) == [("Generating the report with llama3.2…", ColorRole.HEADER)]
+    assert tui_mod.llm_report_lines({**generating, "model": None}, unicode_ok=False) == [
+        ("Generating the report...", ColorRole.HEADER)
+    ]
+
+
+def test_llm_report_lines_give_the_report_its_time_age_and_model(monkeypatch):
+    from datetime import datetime
+
+    from glances.outputs import glances_curses as tui_mod
+    from glances.outputs.curses_renderer import ColorRole
+
+    today = datetime.now().astimezone().replace(microsecond=0).isoformat()
+    lines = tui_mod.llm_report_lines({**_IDLE_REPORT, "generated_at": today})
+    assert lines == [
+        (f"Generated at {_local_hms(today)}, 25 s ago, by llama3.2", ColorRole.HEADER),
+        ("A new report can be requested in 35 s.", ColorRole.DEFAULT),
+        ("", ColorRole.DEFAULT),
+        ("Summary: The CPU is busy.", ColorRole.DEFAULT),
+        ("1. Overall health status: Degraded", ColorRole.DEFAULT),
+    ]
+    # Another day: its date too.
+    past = "2026-01-02T10:04:05+00:00"
+    other_day = tui_mod.llm_report_lines({**_IDLE_REPORT, "generated_at": past, "available_in": 0})
+    stamp = datetime.fromisoformat(past).astimezone().strftime("%Y-%m-%d %H:%M")
+    assert other_day[0] == (f"Generated at {stamp}, 25 s ago, by llama3.2", ColorRole.HEADER)
+    assert other_day[1] == ("", ColorRole.DEFAULT)  # no cooldown line at 0
+
+
+def test_llm_report_lines_put_the_error_first_and_keep_the_previous_report():
+    from glances.outputs import glances_curses as tui_mod
+    from glances.outputs.curses_renderer import ColorRole
+
+    failed = {**_IDLE_REPORT, "error": "The LLM call failed: see the Glances log.", "age": 7200}
+    lines = tui_mod.llm_report_lines(failed)
+    assert lines[0] == ("The LLM call failed: see the Glances log.", ColorRole.WARNING)
+    assert lines[1][0].endswith(", 2 h ago, by llama3.2")
+    assert ("Summary: The CPU is busy.", ColorRole.DEFAULT) in lines
+    never = {**_IDLE_REPORT, "report": None, "generated_at": None, "age": None, "error": "The LLM reporter is off."}
+    assert tui_mod.llm_report_lines(never) == [
+        ("The LLM reporter is off.", ColorRole.WARNING),
+        ("A new report can be requested in 35 s.", ColorRole.DEFAULT),
+    ]
+
+
+@pytest.mark.parametrize("state", [None, {"state": "idle", "report": None, "available_in": 0, "revision": 0}])
+def test_llm_report_lines_without_any_report(state):
+    from glances.outputs import glances_curses as tui_mod
+    from glances.outputs.curses_renderer import ColorRole
+
+    assert tui_mod.llm_report_lines(state) == [("No report yet.", ColorRole.DEFAULT)]
+
+
+@pytest.mark.parametrize(
+    "seconds, text", [(0, "0 s"), (59, "59 s"), (60, "1 min"), (3599, "59 min"), (7200, "2 h"), (3 * 86400, "3 d")]
+)
+def test_llm_age_is_given_in_its_largest_unit(seconds, text):
+    from glances.outputs import glances_curses as tui_mod
+
+    assert tui_mod._llm_age(seconds) == text
+
+
+def _painted(win) -> str:
+    return " ".join(str(call) for call in win.addstr.call_args_list + win.addnstr.call_args_list)
+
+
+def test_the_window_is_a_box_over_the_stats(monkeypatch, fake_store, fake_alerts, fake_config):
+    _, tui, _ = _llm_tui(monkeypatch, fake_store, fake_alerts, fake_config, stored=dict(_IDLE_REPORT))
+    stdscr = MagicMock()
+    stdscr.getmaxyx.return_value = (30, 120)
+    tui._paint_llm_report(stdscr)
+    # Heading, cooldown, blank, two report lines: as tall as its text plus the border, 100 wide.
+    stdscr.derwin.assert_called_once_with(7, 100, 11, 10)
+    win = stdscr.derwin.return_value
+    win.erase.assert_called_once()
+    win.border.assert_called_once()
+    text = _painted(win)
+    assert "AI report · H/q/Esc to close" in text
+    assert "A new report can be requested in 35 s." in text
+    assert "Summary: The CPU is busy." in text
+    assert "to scroll" not in text  # no scroll footer: it all fits
+
+
+def test_the_window_wraps_and_scrolls_a_long_report(monkeypatch, fake_store, fake_alerts, fake_config):
+    report = "\n".join(f"Line {i} " + "word " * 30 for i in range(20))  # 20 lines, each wider than the box
+    stored = {**_IDLE_REPORT, "report": report, "available_in": 0}
+    _, tui, _ = _llm_tui(monkeypatch, fake_store, fake_alerts, fake_config, stored=stored)
+    stdscr = MagicMock()
+    stdscr.getmaxyx.return_value = (24, 80)
+    tui._llm_scroll = 1000  # clamped to the end
+    tui._paint_llm_report(stdscr)
+    height, width = stdscr.derwin.call_args.args[:2]
+    assert (height, width) == (22, 76)
+    win = stdscr.derwin.return_value
+    rows = [call.args for call in win.addstr.call_args_list]
+    assert all(len(args[2]) <= width - 4 for args in rows), "every line is wrapped to the box"
+    footer = [call.args[2] for call in win.addnstr.call_args_list if "/" in call.args[2] and "↑" in call.args[2]]
+    assert footer and footer[0].strip().startswith("↑ ")
+    total = int(footer[0].split("/")[1])
+    assert tui._llm_scroll == total - (height - 2)
+    assert "Line 19" in " ".join(args[2] for args in rows)
+
+
+def test_the_window_is_not_drawn_on_a_tiny_terminal(monkeypatch, fake_store, fake_alerts, fake_config):
+    _, tui, _ = _llm_tui(monkeypatch, fake_store, fake_alerts, fake_config, stored=dict(_IDLE_REPORT))
+    stdscr = MagicMock()
+    stdscr.getmaxyx.return_value = (24, 33)
+    tui._paint_llm_report(stdscr)
+    stdscr.derwin.assert_not_called()
+
+
+def test_the_window_neutralises_the_reports_control_characters(monkeypatch, fake_store, fake_alerts, fake_config):
+    stored = {**_IDLE_REPORT, "report": "Summary: \x1b[31mred\x07 alert"}
+    _, tui, _ = _llm_tui(monkeypatch, fake_store, fake_alerts, fake_config, stored=stored)
+    stdscr = MagicMock()
+    stdscr.getmaxyx.return_value = (30, 120)
+    tui._paint_llm_report(stdscr)
+    text = _painted(stdscr.derwin.return_value)
+    assert "\x1b" not in text and "\x07" not in text
+
+
+def test_repaint_paints_the_window_over_the_stats_frame(monkeypatch, fake_store, fake_alerts, fake_config):
+    tui_mod, tui, _ = _llm_tui(monkeypatch, fake_store, fake_alerts, fake_config, stored=dict(_IDLE_REPORT))
+    order = []
+    monkeypatch.setattr(tui_mod.os, "write", lambda fd, data: None)
+    monkeypatch.setattr(tui, "_paint", lambda stdscr, frame: order.append("stats"))
+    monkeypatch.setattr(tui, "_paint_llm_report", lambda stdscr: order.append("window"))
+    stdscr = MagicMock()
+    stdscr.getmaxyx.return_value = (24, 80)
+    tui._repaint(stdscr)
+    tui._view.show_llm_report = True
+    tui._repaint(stdscr)
+    assert order == ["stats", "stats", "window"]

@@ -12,10 +12,14 @@
 		across the TIME and DURATION headers. Only the states that PAINT a
 		grid get it: the ones that do not collapse to the single line below
 		instead, which already carries the bare `ALERT`. -->
-		<div v-if="hasGrid" class="gl-plugin-title">
+		<!-- Both lines end with `· AI report` while the llm_reporter plugin is
+		enabled: the button asks it for a report and opens the window that
+		follows it. Only it gives way, so the line keeps its one row. -->
+		<div v-if="hasGrid" class="gl-plugin-title gl-alert-line">
 			<h2 class="gl-header">
 				{{ "ALERTS  " }}<button type="button" class="gl-alert-link" aria-haspopup="dialog" @click="openAll">{{ titleCounts }}</button>
 			</h2>
+			<span v-if="llmReporter" class="gl-alert-llm"><span class="gl-header">·</span> <button type="button" class="gl-alert-link" aria-haspopup="dialog" @click="requestReport">AI report</button></span>
 		</div>
 		<!-- Every grid-less state is ONE glued line, `ALERT <state>`, not a
 		title line above a separate paragraph: that is what
@@ -31,8 +35,9 @@
 		zero while incidents still exist (row_budget.js's "header only"
 		step) -- that state renders the table with zero data rows, never
 		this collapse. -->
-		<p v-else class="gl-alert-collapse">
-			<span class="gl-header">{{ TITLE }}</span> <span :class="collapse.cls">{{ collapse.text }}</span>
+		<p v-else class="gl-alert-collapse gl-alert-line">
+			<span><span class="gl-header">{{ TITLE }}</span> <span :class="collapse.cls">{{ collapse.text }}</span></span>
+			<span v-if="llmReporter" class="gl-alert-llm"><span class="gl-header">·</span> <button type="button" class="gl-alert-link" aria-haspopup="dialog" @click="requestReport">AI report</button></span>
 		</p>
 		<table v-if="hasGrid" class="gl-table gl-process-table">
 			<colgroup>
@@ -121,6 +126,21 @@
 				</div>
 			</div>
 		</Teleport>
+		<!-- The LLM report window: what the plugin's state says (the TUI's
+		`llm_report_lines`, glances_curses.py), then the report, never while a
+		new one is being written. Follows the state until closed. -->
+		<Teleport v-if="showReport" to="body">
+			<div class="gl-alert-all" role="dialog" aria-modal="true" aria-label="AI report" @click="closeReport">
+				<div class="gl-alert-all-panel gl-llm-panel" @click.stop>
+					<div class="gl-alert-all-title">
+						<span class="gl-header">AI REPORT</span>
+						<button type="button" class="gl-alert-link" aria-label="Close" @click="closeReport">×</button>
+					</div>
+					<p v-for="(line, index) in llmLines" :key="index" class="gl-llm-line" :class="line.cls">{{ line.text }}</p>
+					<p v-if="llmReportText" class="gl-llm-report-text">{{ llmReportText }}</p>
+				</div>
+			</div>
+		</Teleport>
 	</article>
 </template>
 
@@ -133,6 +153,7 @@ import { droppedColumns } from "./drop_order.js";
 // uses -- never a literal copied by hand.
 import { ALERT_COL_WIDTHS, ALERT_MIN_TARGET, ALERT_MIN_TOP, COL_SEPARATOR } from "./process_widths.js";
 import { PLUGIN_PROPS } from "./plugin_props.js";
+import { postJson } from "./api.js";
 
 const TITLE = "ALERT";
 
@@ -142,6 +163,28 @@ const TITLE = "ALERT";
 // as "Sensors i915 0"). Closed list, grounded on the fields that can
 // actually raise an alert -- do not widen it without redoing that check.
 const GENERIC_FIELDS = new Set(["value", "percent"]);
+
+// `25 s`, `4 min`, `2 h`, `3 d`: how old a report is, in its largest unit
+// (glances_curses.py `_llm_age`).
+function llmAge(seconds) {
+	if (seconds < 60) return `${seconds} s`;
+	if (seconds < 3600) return `${Math.floor(seconds / 60)} min`;
+	if (seconds < 86400) return `${Math.floor(seconds / 3600)} h`;
+	return `${Math.floor(seconds / 86400)} d`;
+}
+
+// The viewer's local time of the stats a report describes: `HH:MM:SS`, with
+// the date when not today (glances_curses.py `_llm_time`). null when unknown.
+function llmTime(iso) {
+	if (!iso) return null;
+	const date = new Date(iso);
+	if (Number.isNaN(date.getTime())) return null;
+	const pad = (n) => String(n).padStart(2, "0");
+	const time = `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+	const now = new Date();
+	if (date.toDateString() === now.toDateString()) return `${time}:${pad(date.getSeconds())}`;
+	return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${time}`;
+}
 
 export default {
 	name: "PluginAlert",
@@ -153,16 +196,67 @@ export default {
 		// means no budget -- an environment without measurement must never
 		// hide stats (design 4.8).
 		rowBudget: { default: () => ({}) },
+		// Hands `toggleReport` to AppShell, whose `H` key calls it.
+		registerLlmReportToggle: { default: () => () => {} },
 	},
 	// `payload` is this block's own envelope ({isInitializing, incidents}),
 	// not the `{ data: [...] }` every other collection plugin gets: it is fed
 	// by /api/5/alert/incidents and validated against no registry `spec`.
 	props: { ...PLUGIN_PROPS },
 	data() {
-		return { showAll: false };
+		// `llmResponse`: the state the last request returned, shown until the
+		// payload carries a newer one (`llmState`); `llmRequestError`: why that
+		// request got no answer.
+		return { showAll: false, showReport: false, llmResponse: null, llmRequestError: null };
 	},
 	computed: {
 		TITLE: () => TITLE,
+		// The llm_reporter plugin's state, which AppShell adds to the payload
+		// from /api/5/all; null while the plugin is disabled (no button).
+		llmReporter() {
+			const state = this.payload && this.payload.llmReporter;
+			return state && typeof state === "object" ? state : null;
+		},
+		// The newer of the request's answer and the payload, by `revision`; the
+		// payload on a tie, as its age moves on. The payload lags a request by up
+		// to a refresh: without this, the window would show the state from before
+		// the request for that long.
+		llmState() {
+			const revision = (state) => (state && Number.isInteger(state.revision) ? state.revision : -1);
+			const response = this.llmResponse;
+			if (!this.llmReporter) return response;
+			return revision(response) > revision(this.llmReporter) ? response : this.llmReporter;
+		},
+		// The window's lines, as the TUI's `llm_report_lines` writes them.
+		llmLines() {
+			const lines = [];
+			if (this.llmRequestError) lines.push({ text: `The request failed: ${this.llmRequestError}`, cls: "gl-level-warning" });
+			const state = this.llmState;
+			if (!state) return lines.length ? lines : [{ text: "No report yet.", cls: "" }];
+			if (state.state === "starting") return [...lines, { text: "Waiting for the end of Glances' startup…", cls: "gl-header" }];
+			if (state.state === "generating") {
+				return [...lines, { text: `Generating the report${state.model ? ` with ${state.model}` : ""}…`, cls: "gl-header" }];
+			}
+			if (state.error) lines.push({ text: String(state.error), cls: "gl-level-warning" });
+			if (this.llmReportText) {
+				let heading = "Generated";
+				const when = llmTime(state.generated_at);
+				if (when) heading += ` at ${when}`;
+				if (Number.isInteger(state.age)) heading += `, ${llmAge(state.age)} ago`;
+				if (state.model) heading += `, by ${state.model}`;
+				lines.push({ text: heading, cls: "gl-header" });
+			}
+			if (Number.isInteger(state.available_in) && state.available_in > 0) {
+				lines.push({ text: `A new report can be requested in ${state.available_in} s.`, cls: "" });
+			}
+			return lines.length ? lines : [{ text: "No report yet.", cls: "" }];
+		},
+		// The report itself, while no new one is being written.
+		llmReportText() {
+			const state = this.llmState;
+			if (!state || state.state === "starting" || state.state === "generating") return null;
+			return typeof state.report === "string" && state.report ? state.report : null;
+		},
 		// The full incident list, unbudgeted. titleText's ongoing/resolved
 		// counts and the empty/table branches above must read THIS, not the
 		// budget-capped `rows` below -- otherwise a tight vertical budget would
@@ -295,10 +389,61 @@ export default {
 			this.fitBlock().catch(() => {});
 		},
 	},
+	mounted() {
+		// The render probe's fake document dispatches no events: it presses the
+		// AI report button through the method its @click calls.
+		if (typeof window !== "undefined") {
+			window.__glancesRequestLlmReport = async () => {
+				await this.requestReport();
+				await this.$nextTick();
+			};
+		}
+		this.registerLlmReportToggle(() => this.toggleReport());
+	},
 	beforeUnmount() {
+		this.registerLlmReportToggle(null);
 		if (this.showAll) this.closeAll();
+		if (this.showReport) this.closeReport();
+		if (typeof window !== "undefined") delete window.__glancesRequestLlmReport;
 	},
 	methods: {
+		// The `H` key (AppShell.vue): closes the window when open, as in the
+		// TUI, else requests a report as the button does. False while the
+		// plugin is off, so AppShell lets the key through.
+		toggleReport() {
+			if (this.showReport) {
+				this.closeReport();
+				return true;
+			}
+			if (!this.llmReporter) return false;
+			return this.requestReport();
+		},
+		// Ask the server for a report, then open the window on the state it
+		// answers. The server decides: a report under way or a recent call
+		// (`min_interval`) answers with the previous report and its age.
+		async requestReport() {
+			this.llmRequestError = null;
+			try {
+				const state = await postJson("api/5/llm_reporter/request");
+				this.llmResponse = state && typeof state === "object" ? state : null;
+			} catch (e) {
+				this.llmRequestError = e.message;
+			}
+			if (!this.showReport) {
+				this.showReport = true;
+				document.addEventListener("keydown", this.onReportKeydown);
+			}
+		},
+		closeReport() {
+			this.showReport = false;
+			document.removeEventListener("keydown", this.onReportKeydown);
+		},
+		onReportKeydown(event) {
+			if (event.key === "Escape") {
+				event.preventDefault();
+				this.closeReport();
+			}
+		},
 		openAll() {
 			this.showAll = true;
 			document.addEventListener("keydown", this.onKeydown);
@@ -427,5 +572,34 @@ export default {
  * for. Same `margin: 0` reason as `.gl-plugin-title h2` (css/glances.css). */
 .gl-alert-collapse {
 	margin: 0;
+}
+
+/* The title or the collapse line, and `· AI report` after it, on one row:
+ * only the button gives way, so the line never wraps out of its one row. */
+.gl-alert-line {
+	display: flex;
+	gap: var(--gl-col);
+}
+.gl-alert-line > :first-child {
+	flex: none;
+}
+.gl-alert-llm {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	min-width: 0;
+}
+/* The LLM report window: narrower than the alerts one, as it holds prose. */
+.gl-llm-panel {
+	width: min(100%, calc(100 * var(--gl-col)));
+}
+.gl-llm-line {
+	margin: 0;
+}
+/* The report, with the model's own line breaks (its numbered points). */
+.gl-llm-report-text {
+	margin: var(--gl-gap) 0 0;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
 }
 </style>

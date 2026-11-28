@@ -25,17 +25,19 @@ from __future__ import annotations
 import curses
 import logging
 import os
+import textwrap
 import threading
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field, replace
+from datetime import datetime
 from itertools import zip_longest
 from typing import TYPE_CHECKING, Any, ClassVar
 
 import psutil
 
 from glances import __version__
-from glances.client import RemoteError, RemoteSource
+from glances.client import NotFound, RemoteError, RemoteSource
 from glances.filter import GlancesFilter
 from glances.outputs.curses_renderer import (
     HEADER_SLOT_RIGHT,
@@ -147,6 +149,7 @@ class ViewState:
     - ``programs=False`` — process list shows threads, not the per-program
       aggregation (hotkey ``j``).
     - ``show_help=False`` — the help overlay is hidden (hotkey ``h``).
+    - ``show_llm_report=False`` — the LLM report window is closed (hotkey ``H``).
     - ``hidden_plugins=set()`` — nothing hidden by the user (SHOW/HIDE keys).
     - ``cursor_position=0`` — the process list's first row (UP / DOWN).
     - ``extended=False`` — no extended stats block (hotkey ``e``).
@@ -167,6 +170,7 @@ class ViewState:
     process_short_name: bool = True
     programs: bool = False
     show_help: bool = False
+    show_llm_report: bool = False
     hidden_plugins: set[str] = field(default_factory=set)
     # Process-selection cursor (2.X-b): an index into the order the process
     # block is CURRENTLY DRAWING, not into the store's list and not a pid.
@@ -211,6 +215,65 @@ class ViewState:
 def _safe_curses_wrapper(fn):
     """`curses.wrapper` wrapper — separated so tests can monkeypatch it."""
     curses.wrapper(fn)
+
+
+def _llm_age(seconds: int) -> str:
+    """``25 s``, ``4 min``, ``2 h``, ``3 d``: how old a report is, in its largest unit."""
+    if seconds < 60:
+        return f"{seconds} s"
+    if seconds < 3600:
+        return f"{seconds // 60} min"
+    if seconds < 86400:
+        return f"{seconds // 3600} h"
+    return f"{seconds // 86400} d"
+
+
+def _llm_time(iso: Any) -> str | None:
+    """The local time of the stats a report describes: ``HH:MM:SS``, with the date when not today."""
+    try:
+        when = datetime.fromisoformat(iso).astimezone()
+    except (TypeError, ValueError):
+        return None
+    return when.strftime("%H:%M:%S" if when.date() == datetime.now().astimezone().date() else "%Y-%m-%d %H:%M")
+
+
+def llm_report_lines(state: dict[str, Any] | None, unicode_ok: bool = True) -> list[tuple[str, ColorRole]]:
+    """The LLM report window's lines, unwrapped: what the plugin's state says, then the report.
+
+    ``state`` is the llm_reporter payload (`PluginModel._payload`). While a
+    report is being written, the previous one is not shown: it no longer
+    describes the system. Otherwise the report comes with its time and age,
+    after the error of the last request, if any.
+    """
+    dots = "…" if unicode_ok else "..."
+    if not isinstance(state, dict):
+        return [("No report yet.", ColorRole.DEFAULT)]
+    model = state.get("model")
+    if state.get("state") == "starting":
+        return [(f"Waiting for the end of Glances' startup{dots}", ColorRole.HEADER)]
+    if state.get("state") == "generating":
+        return [(f"Generating the report{f' with {model}' if model else ''}{dots}", ColorRole.HEADER)]
+    lines: list[tuple[str, ColorRole]] = []
+    if state.get("error"):
+        lines.append((str(state["error"]), ColorRole.WARNING))
+    report = state.get("report")
+    if isinstance(report, str) and report:
+        heading = "Generated"
+        when = _llm_time(state.get("generated_at"))
+        if when:
+            heading += f" at {when}"
+        if isinstance(state.get("age"), int):
+            heading += f", {_llm_age(state['age'])} ago"
+        if model:
+            heading += f", by {model}"
+        lines.append((heading, ColorRole.HEADER))
+    available_in = state.get("available_in")
+    if isinstance(available_in, int) and available_in > 0:
+        lines.append((f"A new report can be requested in {available_in} s.", ColorRole.DEFAULT))
+    if isinstance(report, str) and report:
+        lines.append(("", ColorRole.DEFAULT))
+        lines += [(line, ColorRole.DEFAULT) for line in report.splitlines()]
+    return lines or [("No report yet.", ColorRole.DEFAULT)]
 
 
 class Tui(threading.Thread):
@@ -319,6 +382,11 @@ class Tui(threading.Thread):
             "action": "generate_graph",
             "group": "MISCELLANEOUS",
             "desc": "Generate graphs (--export graph)",
+        },
+        "H": {
+            "action": "llm_report",
+            "group": "MISCELLANEOUS",
+            "desc": "Request an AI health report",
         },
         "k": {
             "action": "kill_process",
@@ -520,6 +588,7 @@ class Tui(threading.Thread):
         programs: bool = False,
         remote: RemoteSource | None = None,
         generate_graph: Callable[[], str] | None = None,
+        request_llm_report: Callable[[], Any] | None = None,
         disable_cursor: bool = False,
         arrow_keys_sort: bool = False,
     ) -> None:
@@ -541,6 +610,13 @@ class Tui(threading.Thread):
         self._client_filter = GlancesFilter()
         # `g` (v4 parity): the graph exporter's `request`, None when it is off.
         self._generate_graph = generate_graph
+        # `H`: asks the llm_reporter plugin for a report (`request_report`, or the
+        # server's in client mode) and returns its state. None when it is disabled.
+        self._request_llm_report = request_llm_report
+        # The state the last `H` returned, shown until the store holds a newer one
+        # (`_llm_report_state`); the window's vertical scroll.
+        self._llm_response: dict[str, Any] | None = None
+        self._llm_scroll = 0
         self.refresh_interval = refresh_interval
         # Fired once when the user quits the TUI via `q`/ESC, so the main
         # asyncio loop (uvicorn) can shut down too. Without this, closing
@@ -687,6 +763,9 @@ class Tui(threading.Thread):
         # closing only — q / ESC / h close the help instead of quitting.
         if self._view.show_help:
             return self._handle_help_key(key)
+        # The LLM report window too: closing and scrolling only.
+        if self._view.show_llm_report:
+            return self._handle_llm_report_key(key)
 
         if key == 27:  # ESC always quits (not a printable hotkey).
             return "quit"
@@ -730,7 +809,16 @@ class Tui(threading.Thread):
     # Verbs that need the terminal, so they are deferred to `_run_pending`
     # rather than executed in this pure function (design 5.4).
     _MODAL_VERBS = frozenset(
-        {"kill_process", "nice_increase", "nice_decrease", "extended", "edit_filter", "reset_minmax", "generate_graph"}
+        {
+            "kill_process",
+            "nice_increase",
+            "nice_decrease",
+            "extended",
+            "edit_filter",
+            "reset_minmax",
+            "generate_graph",
+            "llm_report",
+        }
     )
     # Of those, the ones that CHANGE the process. `e` only looks at it, which
     # is why it is allowed to look at Glances itself (`_selected_process`).
@@ -848,6 +936,70 @@ class Tui(threading.Thread):
             self._help_scroll = 0
             return "repaint"
         return "ignored"
+
+    def _handle_llm_report_key(self, key: int) -> str:
+        """Dispatch a keypress while the LLM report window is open.
+
+        Like the help overlay: ``H`` / ``q`` / ESC close it, the arrow, vim
+        and page keys scroll it (clamped in ``_paint_llm_report``).
+        """
+        if key in (ord("q"), 27, ord("H")):
+            self._view.show_llm_report = False
+            return "repaint"
+        steps = {
+            curses.KEY_DOWN: 1,
+            ord("j"): 1,
+            curses.KEY_UP: -1,
+            ord("k"): -1,
+            curses.KEY_NPAGE: self._HELP_PAGE_STEP,
+            curses.KEY_PPAGE: -self._HELP_PAGE_STEP,
+        }
+        if key in steps:
+            self._llm_scroll = max(0, self._llm_scroll + steps[key])
+            return "repaint"
+        if key == curses.KEY_HOME:
+            self._llm_scroll = 0
+            return "repaint"
+        return "ignored"
+
+    def _open_llm_report(self, stdscr) -> None:
+        """`H`: ask for a report, then open the window that follows it."""
+        if self._request_llm_report is None:
+            self._popup_info(
+                stdscr,
+                "The AI report is disabled.\n\nSet disable=False in the [llm_reporter]\nsection of glances.conf.",
+            )
+            return
+        try:
+            response = self._request_llm_report()
+        except NotFound:
+            self._popup_info(stdscr, "The AI report is disabled on the server.")
+            return
+        except RemoteError as e:
+            # The reason (an unreachable server, refused credentials...) can be wider
+            # than any popup, which is then not shown at all: it goes to the log.
+            logger.warning("TUI: the AI report request to the server failed: %s", e)
+            self._popup_info(stdscr, "The AI report request to the server failed:\nsee the Glances log.")
+            return
+        self._llm_response = response if isinstance(response, dict) else None
+        self._llm_scroll = 0
+        self._view.show_llm_report = True
+
+    def _llm_report_state(self) -> dict[str, Any] | None:
+        """The newer of the state `H` returned and the store's (by ``revision``); the store's on a tie.
+
+        The store lags a request by up to a refresh (the plugin publishes on its
+        tick, a client polls its server): without this, the window would show
+        the state from before the request for one refresh. On a tie, the store's
+        copy is the live one: its age moves on.
+        """
+        stored = self.store.get("llm_reporter")
+        candidates = [state for state in (stored, self._llm_response) if isinstance(state, dict)]
+        if not candidates:
+            return None
+        return max(
+            candidates, key=lambda state: state.get("revision") if isinstance(state.get("revision"), int) else -1
+        )
 
     # An escape sequence ncurses handed back unassembled, mapped to the key
     # it stands for. `\x1bOA` is what a terminal sends for Up in APPLICATION
@@ -1132,6 +1284,9 @@ class Tui(threading.Thread):
             return
         if verb == "edit_filter":
             self._edit_filter(stdscr)
+            return
+        if verb == "llm_report":
+            self._open_llm_report(stdscr)
             return
         if verb == "generate_graph":
             if self._generate_graph is None:
@@ -1556,6 +1711,8 @@ class Tui(threading.Thread):
             frame = self._build_fitted_frame(max_x, max_y)
             self._note_cursor_bound(frame)
             self._paint(stdscr, frame)
+            if self._view.show_llm_report:
+                self._paint_llm_report(stdscr)
         # ncurses emits a frame as many small writes and, when process rows
         # reorder, scrolls whole screen rows before repairing them: a terminal
         # drawing mid-frame shows ghost lines. Synchronized output makes it
@@ -2536,6 +2693,57 @@ class Tui(threading.Thread):
 
         if max_scroll > 0:
             self._paint_help_footer(stdscr, max_y - 1, max_x, start, body_h, total, max_scroll)
+
+    # The LLM report window: at most this wide, and not drawn at all narrower than
+    # the minimum (the stats stay alone on screen).
+    _LLM_REPORT_MAX_WIDTH = 100
+    _LLM_REPORT_MIN_WIDTH = 30
+
+    def _paint_llm_report(self, stdscr) -> None:
+        """Paint the LLM report window, centred over the stats frame just painted.
+
+        A bordered box as tall as its text, up to the terminal's height; the
+        text (state lines, then the report, wrapped) scrolls inside it, with
+        the help overlay's keys. Repainted on every refresh, so it follows the
+        state: "Generating…", then the report.
+        """
+        max_y, max_x = stdscr.getmaxyx()
+        width = min(max_x - 4, self._LLM_REPORT_MAX_WIDTH)
+        if width < self._LLM_REPORT_MIN_WIDTH or max_y < 5:
+            return
+        text_w = width - 4
+        rows = [
+            Row(cells=[Cell(text=part, color=role)])
+            for text, role in llm_report_lines(self._llm_report_state(), self._unicode)
+            for part in (textwrap.wrap(text, text_w, replace_whitespace=False) or [""])
+        ]
+        height = min(max_y - 2, len(rows) + 2)
+        body_h = height - 2
+        max_scroll = max(0, len(rows) - body_h)
+        self._llm_scroll = max(0, min(self._llm_scroll, max_scroll))
+        start = self._llm_scroll
+        try:
+            win = stdscr.derwin(height, width, (max_y - height) // 2, (max_x - width) // 2)
+            win.erase()
+            win.border()
+        except curses.error:  # pragma: no cover — terminal-dependent
+            return
+        title = f" AI report {'·' if self._unicode else '-'} H/q/Esc to close "
+        try:
+            win.addnstr(0, 2, title, width - 4, curses.A_BOLD if _STYLE["bold"] else 0)
+        except curses.error:
+            pass
+        for i, row in enumerate(rows[start : start + body_h]):
+            self._paint_row(win, row, 1 + i, 2, text_w)
+        if max_scroll > 0:
+            arrow = "↓" if start == 0 else "↑" if start >= max_scroll else "↑↓"
+            if not self._unicode:
+                arrow = "v" if start == 0 else "^" if start >= max_scroll else "^v"
+            footer = f" {arrow} {start + 1}-{min(start + body_h, len(rows))}/{len(rows)} "
+            try:
+                win.addnstr(height - 1, max(2, width - 2 - len(footer)), footer, width - 4)
+            except curses.error:
+                pass
 
     @staticmethod
     def _paint_help_footer(stdscr, y: int, max_x: int, start: int, body_h: int, total: int, max_scroll: int) -> None:

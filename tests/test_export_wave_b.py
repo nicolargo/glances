@@ -13,6 +13,7 @@ Each client library is faked: the tests assert on what reaches it.
 
 from __future__ import annotations
 
+import asyncio
 import importlib
 import json
 import logging
@@ -21,7 +22,15 @@ import types
 
 import pytest
 
-from tests.export_fakes import HOSTILE_NAME, fake_module, make_config, missing_module, plugins
+from glances.stats_store import StatsStore
+from tests.export_fakes import (
+    HOSTILE_NAME,
+    FakeCollectionPlugin,
+    fake_module,
+    make_config,
+    missing_module,
+    plugins,
+)
 
 # HOSTILE_NAME as one MQTT topic level: everything outside [A-Za-z0-9_-] is "_".
 HOSTILE_LEVEL = re.sub(r"[^A-Za-z0-9_-]", "_", HOSTILE_NAME)
@@ -224,6 +233,39 @@ def test_mqtt_per_plugin_publishes_one_nested_json_per_plugin(monkeypatch):
     assert (scalar["total"], scalar["label"], scalar["missing"]) == (12.5, "busy host", None)
     collection = published["t/box/fakecollection"]
     assert collection["eth0"]["rx"] == 10 and collection[HOSTILE_NAME]["rx"] == 20
+
+
+class _DottedCollectionPlugin(FakeCollectionPlugin):
+    """A VLAN next to its parent interface: the item key holds a dot."""
+
+    async def _grab_stats(self) -> list:
+        return [{"name": "eth0", "rx": 10}, {"name": "eth0.100", "rx": 20}]
+
+
+def _dotted_plugins(config):
+    plugin = _DottedCollectionPlugin(StatsStore(), config)
+    asyncio.run(plugin.update())
+    return [plugin]
+
+
+def test_mqtt_per_metric_keeps_a_dotted_item_key_on_one_topic_level(monkeypatch):
+    _fake_mqtt(monkeypatch)
+    exporter, config = _exporter("mqtt", {"devicename": "box"})
+    exporter.update(_dotted_plugins(config))
+    published = {args[0]: args[1] for args, _ in _Recorder.instances[0].sent("publish")}
+    assert published["glances/box/fakecollection/eth0/rx"] == 10
+    assert published["glances/box/fakecollection/eth0_100/rx"] == 20
+    assert all(topic.count("/") == 4 for topic in published), "the dot in eth0.100 is not a topic level"
+
+
+def test_mqtt_per_plugin_keeps_a_dotted_item_out_of_its_parent(monkeypatch):
+    _fake_mqtt(monkeypatch)
+    exporter, config = _exporter("mqtt", {"devicename": "box", "topic": "t", "topic_structure": "per-plugin"})
+    exporter.update(_dotted_plugins(config))
+    published = {args[0]: json.loads(args[1]) for args, _ in _Recorder.instances[0].sent("publish")}
+    collection = published["t/box/fakecollection"]
+    assert collection["eth0"]["rx"] == 10 and collection["eth0.100"]["rx"] == 20
+    assert "100" not in collection["eth0"], "the VLAN is not nested in its parent interface"
 
 
 def test_mqtt_rejects_an_unknown_topic_structure(monkeypatch):
