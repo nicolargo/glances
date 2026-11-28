@@ -102,6 +102,15 @@ class PluginModel(GlancesPluginBase[list]):
             "prominent": False,
             "default_thresholds": _TEMP_THRESHOLDS,
         },
+        "hide_temperature": {
+            "description": (
+                "Display hint: the temperature is not shown for this card "
+                "(already in sensors, or [gpu] hide_temperature)."
+            ),
+            "unit": "bool",
+            "internal": True,
+            "watched": False,
+        },
         "fan_speed": {
             "description": "GPU fan speed.",
             "unit": "percent",
@@ -113,6 +122,9 @@ class PluginModel(GlancesPluginBase[list]):
     def __init__(self, store: Any, config: Any) -> None:
         super().__init__(store, config)
         self._backends = _build_backends()
+        # Off (default): only the cards whose temperature the sensors plugin
+        # already shows hide it. On: every card hides it.
+        self._hide_temperature = self.config.get("gpu", "hide_temperature", False)
 
     def _collect(self) -> list:
         out: list[dict[str, Any]] = []
@@ -123,6 +135,10 @@ class PluginModel(GlancesPluginBase[list]):
                 logger.debug("gpu: %s collect failed: %s", type(backend).__name__, exc)
                 continue
             if cards:
+                # An unknown backend does not claim sensors coverage: keep its temperature.
+                hide = self._hide_temperature or getattr(backend, "TEMPERATURE_IN_SENSORS", False)
+                for card in cards:
+                    card["hide_temperature"] = hide
                 out.extend(cards)
         return out
 

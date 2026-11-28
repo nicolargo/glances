@@ -369,3 +369,44 @@ class TestIntelIdleAndPartialScan:
         devices = intel_backend.get_device_list(INTEL_DRM_ROOT)
         per_device = intel_backend.aggregate_fdinfo(str(proc), devices)
         assert next(iter(per_device.values()))['engine_total_ns'] == 9_500_000
+
+
+class _HwmonBackend(_FakeBackend):
+    # Stands for AmdGPU / IntelGPU: temperature read from hwmon, so the
+    # sensors plugin already shows it.
+    TEMPERATURE_IN_SENSORS = True
+
+
+@pytest.mark.asyncio
+async def test_cards_whose_temperature_is_in_sensors_hide_it(store, config):
+    p = PluginModel(store, config)
+    p._hide_temperature = False  # `config` may read the maintainer's own conf
+    p._backends = [_FakeBackend([_card("nvidia0", "A")]), _HwmonBackend([_card("intel0", "B")])]
+    out = await p._grab_stats()
+    assert {c["gpu_id"]: c["hide_temperature"] for c in out} == {"nvidia0": False, "intel0": True}
+    # The value itself is still collected (API, exports, thresholds).
+    assert all(c["temperature"] == 55 for c in out)
+
+
+@pytest.mark.asyncio
+async def test_hide_temperature_key_hides_it_for_every_card(store, tmp_path, monkeypatch):
+    monkeypatch.setattr(GlancesConfig, "SYSTEM_CONFIG_PATH", tmp_path / "etc" / "glances.conf")
+    conf = tmp_path / "glances.conf"
+    conf.write_text("[gpu]\nhide_temperature=True\n")
+    p = PluginModel(store, GlancesConfig(str(conf)))
+    p._backends = [_FakeBackend([_card("nvidia0", "A")]), _HwmonBackend([_card("intel0", "B")])]
+    out = await p._grab_stats()
+    assert [c["hide_temperature"] for c in out] == [True, True]
+
+
+def test_card_backends_declare_sensors_coverage():
+    # hwmon-backed vendors only: NVML/Tegra and the ARM SoC-zone fallback are
+    # not guaranteed to appear in psutil.sensors_temperatures().
+    from glances.plugins.gpu.cards.amd import AmdGPU
+    from glances.plugins.gpu.cards.arm import ArmGPU
+    from glances.plugins.gpu.cards.nvidia import NvidiaGPU
+
+    assert AmdGPU.TEMPERATURE_IN_SENSORS is True
+    assert IntelGPU.TEMPERATURE_IN_SENSORS is True
+    assert NvidiaGPU.TEMPERATURE_IN_SENSORS is False
+    assert ArmGPU.TEMPERATURE_IN_SENSORS is False

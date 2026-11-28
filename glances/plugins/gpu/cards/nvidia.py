@@ -44,6 +44,10 @@ else:
 class NvidiaGPU:
     """GPU card class."""
 
+    # True when the card temperature is also shown by the sensors plugin
+    # (psutil.sensors_temperatures()). Source here: NVML / Tegra sysfs, not hwmon.
+    TEMPERATURE_IN_SENSORS = False
+
     def __init__(self):
         """Init Nvidia GPU card class."""
         if not nvidia_gpu_enable:

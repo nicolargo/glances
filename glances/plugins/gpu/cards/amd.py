@@ -64,6 +64,10 @@ HWMON_TEMPERATURE_PATTERN = 'hwmon/hwmon[0-9]*/temp[0-9]_input'
 class AmdGPU:
     """GPU card class."""
 
+    # True when the card temperature is also shown by the sensors plugin
+    # (psutil.sensors_temperatures()). Source here: the amdgpu driver's hwmon node.
+    TEMPERATURE_IN_SENSORS = True
+
     def __init__(self, drm_root_folder: str = DRM_ROOT_FOLDER):
         """Init AMD  GPU card class."""
         self.drm_root_folder = drm_root_folder

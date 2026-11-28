@@ -1255,6 +1255,28 @@ def test_gpu_drops_the_memory_column_only_when_no_card_reports_it():
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_gpu_summary_drops_the_temperature_of_a_card_that_hides_it():
+    """`hide_temperature` (sensors already shows it): no temperature row."""
+    text = _run_render_probe("gpu-one-card-temp-hidden")["pluginText"].get("gpu", "")
+    assert "30%" in text and "40%" in text, f"proc/mem still render: {text!r}"
+    assert "55C" not in text and "temperature" not in text, f"temperature row must be gone: {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_gpu_drops_the_temperature_column_when_every_card_hides_it():
+    text = _run_render_probe("gpu-two-cards-temp-hidden")["pluginText"].get("gpu", "")
+    assert "30%" in text and "45%" in text, f"proc still renders: {text!r}"
+    assert "55C" not in text and "61C" not in text, f"temperature column must be gone: {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
+def test_gpu_keeps_the_temperature_column_when_one_card_shows_it():
+    text = _run_render_probe("gpu-mixed-temp-hidden")["pluginText"].get("gpu", "")
+    assert "61C" in text, f"the card that shows it keeps its temperature: {text!r}"
+    assert "55C" in text, f"the hidden card keeps its cell so rows stay aligned: {text!r}"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not available")
 def test_gpu_keeps_the_memory_cell_of_a_card_that_reports_nothing():
     """The other half of #3631, and the half the spec section 8.4 actually
     argues for: a card reporting no memory still shows `N/A`, because hiding
@@ -1334,16 +1356,22 @@ def test_gpu_value_column_floor_is_scoped_and_fits_its_widest_cell():
     numeric cells it targets still carry `gl-num` (asserted for real payload
     data by `test_gpu_multi_card_value_cells_still_carry_gl_num`).
 
-    8ch, not the TUI's 4-character `{:>3.0f}%`/`{:>4}` value width: the
-    `mem` column's `valueColumns()` format function prepends the literal
-    "mem " *inside* the `.gl-num` cell ("mem 100%" is 8 characters), and this
-    one selector floors both the `proc` and `mem` columns.
+    Each column is floored at its OWN widest value, in TUI columns: 4 for
+    `proc` ("100%", the TUI's `{:>3.0f}%`) and the temperature ("212F",
+    `{:>4}` "N/A"), 8 for `mem`, whose format function prepends the literal
+    "mem " inside the cell ("mem 100%"). A shared 8ch floor made the 4-char
+    columns twice as wide as their content. `--gl-col`, not `ch`: `ch` falls
+    back to 0.5em when the font stack's first families are absent.
     """
     source = (
         Path(__file__).resolve().parent.parent / "glances" / "outputs" / "static" / "js" / "PluginGpu.vue"
     ).read_text()
     assert ".gl-plugin table td.gl-num" in source, "the scoped rule must still exist"
-    assert "min-width: 8ch;" in source, f"expected an 8ch floor, source did not contain it verbatim: {source!r}"
+    assert "min-width: calc(var(--gl-gpu-chars) * var(--gl-col));" in source, f"per-column floor missing: {source!r}"
+    assert "min-width: 8ch;" not in source, "the shared 8ch floor (twice the proc/temp width) must be gone"
+    assert ":style=\"{ '--gl-gpu-chars': column.chars }\"" in source, "the floor must be fed per column"
+    assert 'field: "proc", format: (v) => gpuValue(v), numeric: true, chars: 4' in source
+    assert "numeric: true, chars: 8 }" in source, "mem ('mem 100%') floors at 8 columns"
     assert "min-width: 0;" not in source, "the previous round's zero floor (the jitter bug) must be gone"
 
 

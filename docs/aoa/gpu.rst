@@ -20,7 +20,8 @@ refresh time. It displays:
   first sample, or when ``/proc/*/fdinfo`` cannot be fully read, for example
   without permission to inspect other users' processes)
 - memory consumption (NVidia, AMD, and ARM when exposed by fdinfo)
-- temperature (if available)
+- temperature (if available, and not already displayed by the sensors
+  plugin)
 
 .. note::
     For ``panthor`` and ``panfrost``, per-engine sampling
@@ -43,6 +44,19 @@ per-GPU view and the mean view (above):
 .. note::
     You can also start Glances with the ``--meangpu`` option to display
     the mean view by default.
+
+The temperature of AMD and Intel cards is read from hwmon, so the
+:ref:`sensors <sensors>` plugin already displays it: the GPU plugin does not
+repeat it. NVIDIA (NVML, Tegra) and ARM cards keep their temperature in the GPU
+plugin. To hide it for every card:
+
+.. code-block:: ini
+
+    [gpu]
+    hide_temperature=True
+
+The temperature stays available in the API and in the exports, and its
+thresholds still apply.
 
 You can change the threshold limits in the configuration file:
 

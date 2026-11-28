@@ -15,8 +15,14 @@ Mirrors v4 `gpu.msg_curse()`:
     mem                40%
     temperature        55C
 
-Multi mode (>1 GPU, not meangpu): one row per GPU — `name[:9]  proc  mem N  temp`.
+Multi mode (>1 GPU, not meangpu): one row per GPU — `name[:9] proc mem N temp`.
 The `mem` / temperature column is dropped when no card reports it (narrower plugin).
+A card flagged `hide_temperature` (its temperature is already in the sensors
+plugin, or `[gpu] hide_temperature` is set) does not count as reporting one:
+the temperature row / column only appears for a card that shows it.
+Widths are the minimum that keeps rows aligned: the label / name column is as
+wide as its longest entry, and value cells carry no leading space -- the
+painter already separates adjacent cells with one.
 """
 
 from __future__ import annotations
@@ -57,6 +63,10 @@ def _build_header(cards: list[dict[str, Any]]) -> str:
     return cut if " " in header[: _HEADER_MAX + 1] else header[:_HEADER_MAX]
 
 
+def _shows_temperature(card: dict[str, Any]) -> bool:
+    return not card.get("hide_temperature")
+
+
 def _level_role(levels: dict[str, Any], gpu_id: Any, field: str) -> ColorRole:
     entry = levels.get(gpu_id, {})
     level = entry.get(field, {}).get("level") if isinstance(entry, dict) else None
@@ -71,34 +81,41 @@ def _summary_rows(
 ) -> list[Row]:
     is_multi = len(cards) > 1
     first_id = cards[0].get("gpu_id")
-    rows: list[Row] = []
+    # The schema holds ONE word per field; the "mean" suffix is the
+    # renderer's, composed here.
+    labels = {}
     for key in ("proc", "mem"):
-        # The schema holds ONE word per field; the "mean" suffix is the
-        # renderer's, composed here.
         word = field_label(fields_desc.get(key, {}), key, prefer_short=True)
-        label = f"{word} mean" if is_multi else word
-        rows.append(
-            Row(
-                cells=[
-                    Cell(text=f"{label:<13}"),
-                    Cell(text=_format_value(_mean(cards, key)), color=_level_role(levels, first_id, key)),
-                ]
-            )
-        )
-    temp = _mean(cards, "temperature")
-    if temp is not None and fahrenheit:
-        temp = to_fahrenheit(temp)
-    unit = "F" if fahrenheit else "C"
+        labels[key] = f"{word} mean" if is_multi else word
     # Only the non-mean form comes from the schema. v4 shortens the word in the
     # mean form ("temperature" -> "temp mean"), i.e. the two forms use
     # DIFFERENT words, and a schema holds one string per field — so the mean
     # form cannot be composed by suffixing and stays a literal here.
-    temp_word = field_label(fields_desc.get("temperature", {}), "temperature", prefer_short=True)
-    temp_label = "temp mean" if is_multi else temp_word
+    show_temp = any(_shows_temperature(card) for card in cards)
+    if show_temp:
+        temp_word = field_label(fields_desc.get("temperature", {}), "temperature", prefer_short=True)
+        labels["temperature"] = "temp mean" if is_multi else temp_word
+    width = max(len(label) for label in labels.values())
+    rows: list[Row] = []
+    for key in ("proc", "mem"):
+        rows.append(
+            Row(
+                cells=[
+                    Cell(text=f"{labels[key]:<{width}}"),
+                    Cell(text=_format_value(_mean(cards, key)), color=_level_role(levels, first_id, key)),
+                ]
+            )
+        )
+    if not show_temp:
+        return rows
+    temp = _mean(cards, "temperature")
+    if temp is not None and fahrenheit:
+        temp = to_fahrenheit(temp)
+    unit = "F" if fahrenheit else "C"
     rows.append(
         Row(
             cells=[
-                Cell(text=f"{temp_label:<13}"),
+                Cell(text=f"{labels['temperature']:<{width}}"),
                 Cell(text=_format_value(temp, unit), color=_level_role(levels, first_id, "temperature")),
             ]
         )
@@ -112,20 +129,22 @@ def _multi_rows(cards: list[dict[str, Any]], levels: dict[str, Any], fahrenheit:
     # temperature columns are dropped only when no card reports them: every row
     # stays aligned and the plugin gets narrower.
     show_mem = any(card.get("mem") is not None for card in cards)
-    show_temp = any(card.get("temperature") is not None for card in cards)
+    show_temp = any(_shows_temperature(card) and card.get("temperature") is not None for card in cards)
     unit = "F" if fahrenheit else "C"
+    names = [str(card.get("name") or "")[0:9] for card in cards]
+    name_width = max(len(name) for name in names)
     rows: list[Row] = []
-    for card in cards:
+    for card, name in zip(cards, names):
         gpu_id = card.get("gpu_id")
-        cells = [Cell(text="{:<7}".format(str(card.get("name") or "")[0:9]))]
-        cells.append(Cell(text=f" {_format_value(card.get('proc'))}", color=_level_role(levels, gpu_id, "proc")))
+        cells = [Cell(text=f"{name:<{name_width}}")]
+        cells.append(Cell(text=_format_value(card.get("proc")), color=_level_role(levels, gpu_id, "proc")))
         if show_mem:
-            cells.append(Cell(text=f" mem {_format_value(card.get('mem'))}", color=_level_role(levels, gpu_id, "mem")))
+            cells.append(Cell(text=f"mem {_format_value(card.get('mem'))}", color=_level_role(levels, gpu_id, "mem")))
         if show_temp:
             temp = card.get("temperature")
             if temp is not None and fahrenheit:
                 temp = to_fahrenheit(temp)
-            cells.append(Cell(text=f" {_format_value(temp, unit)}", color=_level_role(levels, gpu_id, "temperature")))
+            cells.append(Cell(text=_format_value(temp, unit), color=_level_role(levels, gpu_id, "temperature")))
         rows.append(Row(cells=cells))
     return rows
 

@@ -60,6 +60,10 @@ SUPPORTED_DRIVERS: set[str] = {'i915', 'xe'}
 class IntelGPU:
     """Intel GPU card class."""
 
+    # True when the card temperature is also shown by the sensors plugin
+    # (psutil.sensors_temperatures()). Source here: the i915/xe driver's hwmon node.
+    TEMPERATURE_IN_SENSORS = True
+
     def __init__(
         self,
         drm_root_folder: str = DRM_ROOT_FOLDER,

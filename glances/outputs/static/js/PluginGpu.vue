@@ -31,7 +31,7 @@
 					<!-- The tier goes on the <span>, not the <td>: a prominent badge's
 					background would otherwise fill the whole cell, 9ch floor and
 					padding included, instead of the value's text. -->
-					<td v-for="column in valueColumns" :key="column.field" class="gl-num">
+					<td v-for="column in valueColumns" :key="column.field" class="gl-num" :style="{ '--gl-gpu-chars': column.chars }">
 						<span v-history="{ plugin: 'gpu', field: column.field, item: card.gpu_id }" :class="cellClassFor(payload, card, column.field)">{{
 							column.format(card[column.field])
 						}}</span>
@@ -60,6 +60,13 @@ function mean(cards, key) {
 // Mirrors _format_value() in gpu/render_curses.py. gpu's missing marker is
 // "N/A", not the "-" every other v5 formatter uses, which is why this lives
 // here rather than in format.js.
+// Mirrors _shows_temperature() in gpu/render_curses.py: `hide_temperature`
+// is set by the model when the sensors plugin already shows the card's
+// temperature, or when `[gpu] hide_temperature` is on.
+function showsTemperature(card) {
+	return !card.hide_temperature;
+}
+
 function gpuValue(value, unit = "%") {
 	return typeof value === "number" ? `${Math.round(value)}${unit}` : "N/A";
 }
@@ -109,6 +116,7 @@ export default {
 				value: gpuValue(mean(cards, field)),
 			}));
 
+			if (!cards.some(showsTemperature)) return rows;
 			const fahrenheit = !!this.serverArgs.fahrenheit;
 			let temp = mean(cards, "temperature");
 			if (temp !== null && fahrenheit) temp = toFahrenheit(temp);
@@ -141,16 +149,18 @@ export default {
 		// call after the maintainer's smoke test found the uncapped name
 		// pushed every value column to the far edge of its 9ch floor.
 		valueColumns() {
-			const cols = [{ field: "proc", format: (v) => gpuValue(v), numeric: true }];
+			// `chars`: the column's widest possible value, its width floor.
+			const cols = [{ field: "proc", format: (v) => gpuValue(v), numeric: true, chars: 4 }];
 			if (this.cards.some((c) => c.mem != null)) {
-				cols.push({ field: "mem", format: (v) => `mem ${gpuValue(v)}`, numeric: true });
+				cols.push({ field: "mem", format: (v) => `mem ${gpuValue(v)}`, numeric: true, chars: 8 });
 			}
-			if (this.cards.some((c) => c.temperature != null)) {
+			if (this.cards.some((c) => showsTemperature(c) && c.temperature != null)) {
 				const fahrenheit = !!this.serverArgs.fahrenheit;
 				cols.push({
 					field: "temperature",
 					format: (v) => gpuValue(typeof v === "number" && fahrenheit ? toFahrenheit(v) : v, fahrenheit ? "F" : "C"),
 					numeric: true,
+					chars: 4,
 				});
 			}
 			return cols;
@@ -182,21 +192,15 @@ export default {
 	--gl-name-width: calc(9 * var(--gl-col));
 }
 /* The global `.gl-num` 9ch floor is wrong for THIS table: it is wider than
-   any value gpu ever renders, and with the name column no longer eating the
-   row's width () that slack pushed every value to the far
-   edge of a 9-character column. The previous round zeroed the floor
-   entirely, which overshot the other way -- with nothing to floor on, the
-   column resizes with the text every tick ("9%" -> "100%", or "mem 9%" ->
-   "mem 100%"), so the numbers jitter on refresh instead of the row growing
-   once and holding.
-   8ch is the actual worst case, not a guess: `valueColumns()` formats `proc`
-   as a bare `gpuValue()` ("100%", 4 characters -- matching the TUI's
-   `{:>3.0f}%` in render_curses.py `_format_value()`), but `mem`'s format
-   function prepends the literal "mem " *inside* the same `.gl-num` cell
-   ("mem 100%", 8 characters) -- this selector floors both columns, so it
-   must fit the wider of the two. Right-alignment and tabular-nums are
-   unchanged: only the width floor moves. */
+   any value gpu ever renders and pushed every value to the far edge of its
+   column. With no floor at all the column resizes with the text every tick
+   ("9%" -> "100%"), so the numbers jitter. Each column is therefore floored
+   at its own widest value, in TUI columns (`--gl-col`, never `ch`, whose
+   font-fallback value is 0.5em): 4 for `proc` ("100%") and the temperature
+   ("212F", "N/A"), 8 for `mem`, whose format writes the literal "mem "
+   inside the cell ("mem 100%"). `--gl-gpu-chars` comes from
+   `valueColumns()`. Right-alignment and tabular-nums are unchanged. */
 .gl-plugin table td.gl-num {
-	min-width: 8ch;
+	min-width: calc(var(--gl-gpu-chars) * var(--gl-col));
 }
 </style>

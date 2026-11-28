@@ -521,6 +521,32 @@ const GPU_MIXED_MEMORY = {
 	_levels: {},
 };
 
+// `hide_temperature` is the model's display hint (the sensors plugin already
+// shows the temperature, or `[gpu] hide_temperature`). One card hidden, then
+// two cards hidden; temperatures 55/61 are unique strings in the block.
+const GPU_ONE_CARD_TEMP_HIDDEN = {
+	_key: "gpu_id",
+	data: [{ gpu_id: 0, name: "Arc A370M", proc: 30, mem: 40, temperature: 55, hide_temperature: true }],
+	_levels: {},
+};
+const GPU_TWO_CARDS_TEMP_HIDDEN = {
+	_key: "gpu_id",
+	data: [
+		{ gpu_id: 0, name: "Arc A370M", proc: 30, mem: null, temperature: 55, hide_temperature: true },
+		{ gpu_id: 1, name: "Radeon RX 7900", proc: 45, mem: null, temperature: 61, hide_temperature: true },
+	],
+	_levels: {},
+};
+// Mixed: the NVIDIA card shows its temperature, so the column stays.
+const GPU_MIXED_TEMP_HIDDEN = {
+	_key: "gpu_id",
+	data: [
+		{ gpu_id: 0, name: "Arc A370M", proc: 30, mem: null, temperature: 55, hide_temperature: true },
+		{ gpu_id: 1, name: "RTX 4090", proc: 45, mem: null, temperature: 61, hide_temperature: false },
+	],
+	_levels: {},
+};
+
 // A gpu payload with no card at all -- the machine has no GPU, or every
 // backend failed. Design spec section 11: the plugin renders nothing beyond
 // its title.
@@ -1310,6 +1336,9 @@ const ALL_FIXTURES = {
 	"gpu-one-card": { gpu: GPU_ONE_CARD },
 	"gpu-three-cards": { gpu: GPU_THREE_CARDS },
 	"gpu-no-memory": { gpu: GPU_NO_MEMORY },
+	"gpu-one-card-temp-hidden": { gpu: GPU_ONE_CARD_TEMP_HIDDEN },
+	"gpu-two-cards-temp-hidden": { gpu: GPU_TWO_CARDS_TEMP_HIDDEN },
+	"gpu-mixed-temp-hidden": { gpu: GPU_MIXED_TEMP_HIDDEN },
 	"gpu-three-cards-mean": { gpu: GPU_THREE_CARDS },
 	"gpu-one-card-fahrenheit": { gpu: GPU_ONE_CARD },
 	"gpu-three-cards-fahrenheit": { gpu: GPU_THREE_CARDS },

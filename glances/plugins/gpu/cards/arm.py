@@ -71,6 +71,12 @@ MEM_UNITS: dict[str, int] = {
 class ArmGPU:
     """ARM GPU card class (msm, panfrost, panthor, v3d, lima, etnaviv)."""
 
+    # True when the card temperature is also shown by the sensors plugin
+    # (psutil.sensors_temperatures()). Source here: hwmon or, without one,
+    # the SoC thermal zone, which psutil skips whenever any hwmon sensor
+    # exists -- so it cannot be assumed visible in sensors.
+    TEMPERATURE_IN_SENSORS = False
+
     def __init__(
         self,
         drm_root_folder: str = DRM_ROOT_FOLDER,

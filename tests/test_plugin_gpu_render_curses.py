@@ -161,3 +161,75 @@ def test_schema_declares_the_tui_short_names():
     assert fields["proc"]["short_name"] == "proc"
     assert fields["mem"]["short_name"] == "mem"
     assert fields["temperature"]["short_name"] == "temperature"
+
+
+def _painted(row):
+    # The painter separates adjacent cells with exactly one space
+    # (curses_renderer.row_width), so this is the on-screen line.
+    return " ".join(c.text for c in row.cells)
+
+
+def test_multi_mode_cells_carry_no_leading_space():
+    # The painter already inserts one space between cells: a leading space in
+    # the cell text doubled every gap and widened the top-row block.
+    cards = [
+        _card("intel0", "UHD Graphics", proc=11, mem=None, temp=None),
+        _card("intel1", "Arc A370M", proc=0, mem=None, temp=52),
+    ]
+    rows = render(_payload(cards), FIELDS)
+    assert _painted(rows[1]) == "UHD Graph  11%  N/A"
+    assert _painted(rows[2]) == "Arc A370M   0%  52C"
+
+
+def test_multi_mode_name_column_fits_the_longest_name():
+    # Short names shrink the column; rows stay aligned whatever the lengths
+    # (the old fixed `{:<7}` misaligned an 8- or 9-character name).
+    cards = [_card("a", "Tesla", proc=5, temp=40), _card("b", "Radeon", proc=50, temp=60)]
+    rows = render(_payload(cards), FIELDS)
+    assert _painted(rows[1]) == "Tesla    5% mem  40%  40C"
+    assert _painted(rows[2]) == "Radeon  50% mem  40%  60C"
+    cards = [_card("a", "GT 1030X", proc=5), _card("b", "Arc A370M", proc=5)]
+    lines = [_painted(r) for r in render(_payload(cards), FIELDS)[1:]]
+    assert len({len(line) for line in lines}) == 1
+
+
+def test_summary_label_column_fits_the_longest_label():
+    rows = render(_payload([_card()]), FIELDS)
+    assert [_painted(r) for r in rows[1:]] == ["proc         30%", "mem          40%", "temperature  55C"]
+    cards = [_card("a", "Tesla", proc=20), _card("b", "Tesla", proc=40)]
+    rows = render(_payload(cards), FIELDS, view={"meangpu": True})
+    assert [_painted(r) for r in rows[1:]] == ["proc mean  30%", "mem mean   40%", "temp mean  55C"]
+
+
+def test_summary_drops_temperature_row_when_card_hides_it():
+    card = _card()
+    card["hide_temperature"] = True
+    rows = render(_payload([card]), FIELDS)
+    assert [_painted(r) for r in rows[1:]] == ["proc  30%", "mem   40%"]
+
+
+def test_summary_keeps_temperature_row_when_one_card_shows_it():
+    hidden = _card("intel0", "Arc", temp=50)
+    hidden["hide_temperature"] = True
+    rows = render(_payload([hidden, _card("nvidia0", "RTX", temp=70)]), FIELDS, view={"meangpu": True})
+    assert _painted(rows[-1]) == "temp mean  60C"
+
+
+def test_multi_mode_drops_temperature_column_when_every_card_hides_it():
+    cards = [
+        _card("intel0", "UHD Graphics", proc=11, mem=None, temp=None),
+        _card("intel1", "Arc A370M", proc=0, mem=None, temp=52),
+    ]
+    for card in cards:
+        card["hide_temperature"] = True
+    rows = render(_payload(cards), FIELDS)
+    assert [_painted(r) for r in rows[1:]] == ["UHD Graph  11%", "Arc A370M   0%"]
+
+
+def test_multi_mode_keeps_temperature_column_for_a_card_that_shows_it():
+    hidden = _card("intel0", "Arc", mem=None, temp=50)
+    hidden["hide_temperature"] = True
+    rows = render(_payload([hidden, _card("nvidia0", "RTX", mem=None, temp=70)]), FIELDS)
+    # Column kept for the NVIDIA card; the hidden card's cell keeps its value
+    # so the rows stay aligned.
+    assert [_painted(r) for r in rows[1:]] == ["Arc  30%  50C", "RTX  30%  70C"]
