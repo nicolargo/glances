@@ -30,29 +30,17 @@ trigger ``engine.update()``. Mirrors v4 contract.
 
 from __future__ import annotations
 
-import logging
-import re
 from typing import Any, ClassVar
 
-import psutil
-
-from glances.config import GlancesConfig
-from glances.plugins.plugin.base import GlancesPluginBase
+from glances.plugins.processlist.list_base import ProcessListModelBase
 from glances.processes import glances_processes
-from glances.stats_store import StatsStore
-
-logger = logging.getLogger(__name__)
-
-# The Irix-mode divisor (v4 `nb_log_core`). Read once: the core count of a
-# running host does not change under Glances.
-_LOGICAL_CORES: int = psutil.cpu_count(logical=True) or 1
 
 # Match v4 mem ladder: anything above 50% is noteworthy on a single process.
 _DEFAULT_CPU_THRESHOLDS = {"careful": 50.0, "warning": 70.0, "critical": 90.0}
 _DEFAULT_MEM_THRESHOLDS = {"careful": 50.0, "warning": 70.0, "critical": 90.0}
 
 
-class PluginModel(GlancesPluginBase[list]):
+class PluginModel(ProcessListModelBase):
     """Per-process plugin (collection)."""
 
     plugin_name: ClassVar[str] = "processlist"
@@ -183,18 +171,6 @@ class PluginModel(GlancesPluginBase[list]):
         },
     }
 
-    def __init__(self, store: StatsStore, config: GlancesConfig) -> None:
-        super().__init__(store, config)
-        # v4 parity (issue #794): by default NOTHING is exported — a process
-        # list can carry hundreds of columns and blow up flat-schema
-        # exporters (CSV/InfluxDB). Only items matching an operator-set
-        # filter are exported. `[processlist] export` is the same config key
-        # v4 uses; `programlist` reuses this SAME section (see its __init__).
-        self._export_patterns: list[re.Pattern[str]] = self._compile_filter("export", section="processlist")
-        # Read once: both views (`programlist` too, as v4 shares the plugin) use
-        # the `[processlist]` section.
-        self._disable_virtual_memory: bool = bool(self.config.get("processlist", "disable_virtual_memory", False))
-
     # What the `e` block needs, and nothing else. `glances_processes`
     # accumulates the extended stats INTO the whole process dict, so
     # publishing it whole would duplicate a dozen fields already in `data[]`
@@ -248,8 +224,6 @@ class PluginModel(GlancesPluginBase[list]):
         the signal.
         """
         super()._add_metadata()
-        self._metadata["cpucore"] = _LOGICAL_CORES
-        self._metadata["disable_virtual_memory"] = self._disable_virtual_memory
         payload = getattr(glances_processes, "extended_process", None)
         pinned = getattr(glances_processes, "extended_pid", None)
         # The pid guard covers the cycle right after a pin, where the engine
@@ -260,33 +234,5 @@ class PluginModel(GlancesPluginBase[list]):
             return
         self._metadata["extended"] = {k: payload[k] for k in self._EXTENDED_KEYS if k in payload}
 
-    def get_export(self) -> list[dict[str, Any]]:
-        """Filtered export view (v4 parity, issue #794).
-
-        Empty (no columns at all) unless `[processlist] export` (or
-        `--export-process-filter`) is configured, in which case only items
-        whose `name` or `cmdline` matches one of the patterns are exported.
-        Never affects `get_stats()` / the REST API / the TUI — those keep
-        showing the full process list.
-        """
-        if not self._export_patterns:
-            return []
-        return [item for item in super().get_export() if self._matches_export(item)]  # type: ignore[return-value]
-
-    def _matches_export(self, item: dict[str, Any]) -> bool:
-        name = str(item.get("name", ""))
-        cmdline = item.get("cmdline")
-        cmdline_str = " ".join(cmdline) if isinstance(cmdline, list) else str(cmdline or "")
-        return any(p.search(name) or p.search(cmdline_str) for p in self._export_patterns)
-
-    async def _grab_stats(self) -> list:
-        try:
-            raw = glances_processes.get_list()
-        except Exception as exc:  # noqa: BLE001 — engine is third-party-ish, guard widely
-            logger.debug("processlist: engine.get_list() failed: %s", exc)
-            return []
-        if not isinstance(raw, list):
-            return []
-        # The engine returns the live list (and its dicts); copy each entry
-        # so downstream consumers cannot mutate the engine's internal state.
-        return [dict(p) for p in raw if isinstance(p, dict)]
+    def _get_engine_list(self) -> Any:
+        return glances_processes.get_list()
