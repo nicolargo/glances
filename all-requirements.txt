@@ -979,9 +979,9 @@ ifaddr==0.2.0 \
     --hash=sha256:085e0305cfe6f16ab12d72e2024030f5d52674afad6911bb1eee207177b8a748 \
     --hash=sha256:cc0cbfcaabf765d44595825fb96a99bb12c79716b73b44330ea38ee2b0c4aed4
     # via zeroconf
-importlib-metadata==8.9.0 \
-    --hash=sha256:58850626cef4bd2df100378b0f2aea9724a7b92f10770d547725b047078f99ee \
-    --hash=sha256:e0f761b6ea91ced3b0844c14c9d955224d538105921f8e6754c00f6ca79fba7f
+importlib-metadata==10.2.0 \
+    --hash=sha256:9413a2029fd9ca5669d27f1386071bbfe3c7ebca0545692ec975088241fe1d79 \
+    --hash=sha256:c7a4bf1c7479601f6b8e437cfc14f4f77028ba62a8f34ae95cd93d9774dfba51
     # via
     #   litellm
     #   pygal
@@ -2123,9 +2123,9 @@ pysmart==1.4.3 \
     --hash=sha256:4a3e0bcdf45ae49b7a120300e20434e2fd2e5bb0fa68e0179acb3ab5fbcaae5e \
     --hash=sha256:64bcce7da044efe9e23f7a813ce748775abd4803a7fc9b9617f530a56853c179
     # via glances
-python-dateutil==2.9.0.post0 \
-    --hash=sha256:37dd54208da7e1cd875388217d5e00ebd4179249f90fb72437e91a35459a0ad3 \
-    --hash=sha256:a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427
+python-dateutil==4.0.0 \
+    --hash=sha256:a5e246f79eb80475e691bf93862cead98decd8a498cf53ba0516fcdc0f50dc1c \
+    --hash=sha256:d7295ff14fdc0f92f662100bfb6c551d160ca090f2939f1ec5b9794265c03f06
     # via
     #   botocore
     #   elasticsearch
