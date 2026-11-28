@@ -23,6 +23,7 @@ from glances.plugins.gpu.cards.arm import (
     get_device_list,
     get_device_name,
     get_mem_capacity_bytes,
+    get_temperature,
     parse_fdinfo,
 )
 
@@ -157,6 +158,46 @@ class TestArmMemCapacity:
     def test_meminfo_unreadable_returns_none(self, tmp_path):
         # Non-Linux / restricted container -> None -> caller keeps legacy path.
         assert get_mem_capacity_bytes(str(tmp_path / 'does-not-exist')) is None
+
+
+class TestArmSocTemperature:
+    """#3863: v3d (Raspberry Pi) has no hwmon; fall back to the SoC thermal zone."""
+
+    def _card(self, tmp_path):
+        device = tmp_path / 'drm' / 'card0' / 'device'
+        device.mkdir(parents=True)
+        return device.parent
+
+    def _zone(self, thermal_root, name, zone_type, temp):
+        zone = thermal_root / name
+        zone.mkdir(parents=True)
+        (zone / 'type').write_text(f'{zone_type}\n')
+        (zone / 'temp').write_text(f'{temp}\n')
+
+    def test_falls_back_to_cpu_thermal_zone(self, tmp_path):
+        card = self._card(tmp_path)
+        thermal = tmp_path / 'thermal'
+        self._zone(thermal, 'thermal_zone0', 'cpu-thermal', 59887)
+        assert get_temperature(str(card), thermal_root=str(thermal)) == 60
+
+    def test_hwmon_takes_precedence_over_soc_zone(self, tmp_path):
+        card = self._card(tmp_path)
+        hwmon = card / 'device' / 'hwmon' / 'hwmon0'
+        hwmon.mkdir(parents=True)
+        (hwmon / 'temp1_input').write_text('45000\n')
+        thermal = tmp_path / 'thermal'
+        self._zone(thermal, 'thermal_zone0', 'cpu-thermal', 59887)
+        assert get_temperature(str(card), thermal_root=str(thermal)) == 45
+
+    def test_ignores_unrelated_thermal_zones(self, tmp_path):
+        card = self._card(tmp_path)
+        thermal = tmp_path / 'thermal'
+        self._zone(thermal, 'thermal_zone0', 'battery', 30000)
+        assert get_temperature(str(card), thermal_root=str(thermal)) is None
+
+    def test_no_thermal_root(self, tmp_path):
+        card = self._card(tmp_path)
+        assert get_temperature(str(card), thermal_root=str(tmp_path / 'missing')) is None
 
 
 @pytest.mark.skipif(not LINUX, reason="ARM GPU backend is Linux-only")
