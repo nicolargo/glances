@@ -165,12 +165,10 @@ class Export(GlancesExportBase):
 
 
 def split_column(column: str, keyed: bool) -> list[str]:
-    """Split `eth0.rx` into `["eth0", "rx"]`.
-
-    A collection item is exported as `<item key>.<field>`: the item key itself
-    may hold dots (VLAN `eth0.100`, mount point `/mnt/v1.2`), field names never
-    do, so only the last dot separates them.
-    """
+    """Split `eth0.rx` into `["eth0", "rx"]`."""
+    # A collection item is exported as `<item key>.<field>`: the item key itself
+    # may hold dots (VLAN `eth0.100`, mount point `/mnt/v1.2`), field names never
+    # do, so only the last dot separates them.
     return column.rsplit(".", 1) if keyed else column.split(".")
 
 
