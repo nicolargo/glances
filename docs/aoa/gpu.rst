@@ -19,9 +19,16 @@ refresh time. It displays:
 - GPU usage (NVidia, AMD, ARM and Intel) or frequency (Intel fallback on the
   first sample, or when ``/proc/*/fdinfo`` cannot be fully read, for example
   without permission to inspect other users' processes)
-- memory consumption (NVidia, AMD, and ARM when exposed by fdinfo)
+- memory consumption (NVidia, AMD, ARM and Intel when exposed by fdinfo)
 - temperature (if available, and not already displayed by the sensors
   plugin)
+
+.. note::
+    For Intel, discrete GPUs are measured against the size of their
+    prefetchable PCI memory aperture, which equals the video memory only when
+    resizable BAR is enabled. Without it, the memory is not shown once the
+    resident memory exceeds the aperture. Integrated GPUs are measured
+    against the system memory. The ``xe`` driver is untested.
 
 .. note::
     For ``panthor`` and ``panfrost``, per-engine sampling

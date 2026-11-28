@@ -1,0 +1,29 @@
+pos:	0
+flags:	02100002
+mnt_id:	35
+ino:	1221
+drm-driver:	i915
+drm-client-id:	35
+drm-pdev:	0000:03:00.0
+drm-total-system0:	24 KiB
+drm-shared-system0:	0
+drm-active-system0:	0
+drm-resident-system0:	0
+drm-purgeable-system0:	0
+drm-total-local0:	0
+drm-shared-local0:	0
+drm-active-local0:	0
+drm-resident-local0:	0
+drm-purgeable-local0:	0
+drm-total-stolen-local0:	0
+drm-shared-stolen-local0:	0
+drm-active-stolen-local0:	0
+drm-resident-stolen-local0:	0
+drm-purgeable-stolen-local0:	0
+drm-engine-render:	0 ns
+drm-engine-copy:	0 ns
+drm-engine-video:	0 ns
+drm-engine-capacity-video:	2
+drm-engine-video-enhance:	0 ns
+drm-engine-capacity-video-enhance:	2
+drm-engine-compute:	0 ns

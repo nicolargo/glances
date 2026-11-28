@@ -25,6 +25,9 @@ from glances.stats_store import StatsStore
 INTEL_TEST_DATA_ROOT = './tests-data/plugins/gpu/intel'
 INTEL_DRM_ROOT = f'{INTEL_TEST_DATA_ROOT}/sys/class/drm'
 INTEL_PROC_ROOT = f'{INTEL_TEST_DATA_ROOT}/proc'
+# fdinfo captured from an Arc A310 (i915, discrete): local0 is its VRAM.
+INTEL_DISCRETE_PROC_ROOT = f'{INTEL_TEST_DATA_ROOT}/proc-discrete'
+INTEL_EMPTY_BUCKET = {'engine_total_ns': 0, 'mem_system_bytes': 0, 'mem_local_bytes': 0}
 # Fixture frequencies: 300 / 1450 MHz -> frequency fallback is 21 %.
 INTEL_FREQ_FALLBACK = 21
 
@@ -223,6 +226,53 @@ class TestIntelFdinfoParser:
         assert record is not None
         assert record['engine_total_ns'] == 0
 
+    def test_resident_memory_split_by_region_class(self):
+        text = (
+            "drm-driver:\ti915\n"
+            "drm-total-system0:\t900 KiB\n"
+            "drm-resident-system0:\t100 KiB\n"
+            "drm-shared-system0:\t50 KiB\n"
+            "drm-active-system0:\t60 KiB\n"
+            "drm-purgeable-system0:\t10 KiB\n"
+            "drm-total-local0:\t9000 KiB\n"
+            "drm-resident-local0:\t2 MiB\n"
+            "drm-resident-stolen-local0:\t777 KiB\n"
+        )
+        record = intel_backend.parse_fdinfo(text)
+        assert record is not None
+        # Only drm-resident-*: total/shared/active/purgeable and stolen-* are left out.
+        assert record['mem_system_bytes'] == 100 * 1024
+        assert record['mem_local_bytes'] == 2 * 1024 * 1024
+
+    def test_resident_memory_xe_vram_region_counts_as_local(self):
+        record = intel_backend.parse_fdinfo("drm-driver:\txe\ndrm-resident-vram0:\t64 KiB\n")
+        assert record is not None
+        assert record['mem_local_bytes'] == 64 * 1024
+        assert record['mem_system_bytes'] == 0
+
+    def test_resident_memory_default_unit_is_kib(self):
+        record = intel_backend.parse_fdinfo("drm-driver:\ti915\ndrm-resident-system0:\t8\n")
+        assert record is not None
+        assert record['mem_system_bytes'] == 8 * 1024
+
+    def test_resident_memory_unparseable_or_unknown_ignored(self):
+        text = (
+            "drm-driver:\ti915\n"
+            "drm-resident-system0:\tlots\n"
+            "drm-resident-local0:\t5 parsecs\n"
+            "drm-resident-mystery0:\t5 KiB\n"
+        )
+        record = intel_backend.parse_fdinfo(text)
+        assert record is not None
+        assert record['mem_system_bytes'] == 0
+        assert record['mem_local_bytes'] == 0
+
+    def test_no_memory_keys_is_zero(self):
+        record = intel_backend.parse_fdinfo("drm-driver:\ti915\ndrm-engine-render:\t1 ns\n")
+        assert record is not None
+        assert record['mem_system_bytes'] == 0
+        assert record['mem_local_bytes'] == 0
+
 
 @pytest.mark.skipif(not LINUX, reason="Intel GPU backend is Linux-only")
 class TestIntelBackendDiscovery:
@@ -298,6 +348,23 @@ class TestIntelAggregation:
         # Client 2: 1_000_000 + 500_000 = 1_500_000 ns
         assert bucket['engine_total_ns'] == 9_500_000
 
+    def test_aggregate_fdinfo_integrated_memory_is_system_only(self):
+        devices = intel_backend.get_device_list(INTEL_DRM_ROOT)
+        bucket = next(iter(intel_backend.aggregate_fdinfo(INTEL_PROC_ROOT, devices).values()))
+        # Client 42 holds 0 KiB, client 43 holds 512 KiB; no local memory regions.
+        assert bucket['mem_system_bytes'] == 512 * 1024
+        assert bucket['mem_local_bytes'] == 0
+
+    def test_aggregate_fdinfo_discrete_memory_counts_each_client_once(self):
+        devices = intel_backend.get_device_list(INTEL_DRM_ROOT)
+        per_device = intel_backend.aggregate_fdinfo(INTEL_DISCRETE_PROC_ROOT, devices)
+        assert len(per_device) == 1
+        bucket = next(iter(per_device.values()))
+        # Client 34 (4122156 KiB in local0) is held by two processes: counted once.
+        # Client 35 holds nothing resident.
+        assert bucket['mem_local_bytes'] == 4122156 * 1024
+        assert bucket['mem_system_bytes'] == 428 * 1024
+
 
 @pytest.mark.skipif(not LINUX, reason="Intel GPU backend is Linux-only")
 class TestIntelIdleAndPartialScan:
@@ -350,7 +417,7 @@ class TestIntelIdleAndPartialScan:
     def test_aggregate_complete_scan_zero_fills_idle_device(self, tmp_path):
         devices = intel_backend.get_device_list(INTEL_DRM_ROOT)
         per_device = intel_backend.aggregate_fdinfo(str(self._idle_proc(tmp_path)), devices)
-        assert per_device == {devices[0][0]: {'engine_total_ns': 0}}
+        assert per_device == {devices[0][0]: INTEL_EMPTY_BUCKET}
 
     def test_aggregate_skips_non_drm_fd(self, tmp_path):
         # The fdinfo of an fd not pointing into /dev/dri/ is never read.
@@ -358,7 +425,7 @@ class TestIntelIdleAndPartialScan:
         (proc / '42' / 'fdinfo' / '0').write_text('drm-driver:\ti915\ndrm-engine-render:\t7 ns\n')
         devices = intel_backend.get_device_list(INTEL_DRM_ROOT)
         per_device = intel_backend.aggregate_fdinfo(str(proc), devices)
-        assert per_device == {devices[0][0]: {'engine_total_ns': 0}}
+        assert per_device == {devices[0][0]: INTEL_EMPTY_BUCKET}
 
     def test_aggregate_counts_shared_client_once(self, tmp_path):
         # dup()/fork() expose one DRM client on several fds: count it once.
@@ -410,3 +477,120 @@ def test_card_backends_declare_sensors_coverage():
     assert IntelGPU.TEMPERATURE_IN_SENSORS is True
     assert NvidiaGPU.TEMPERATURE_IN_SENSORS is False
     assert ArmGPU.TEMPERATURE_IN_SENSORS is False
+
+
+# Contents of /sys/class/drm/card0/device/resource on an Arc A310 (resizable BAR on).
+ARC_A310_RESOURCE = """\
+0x00000000fb000000 0x00000000fbffffff 0x0000000000140204
+0x0000000000000000 0x0000000000000000 0x0000000000000000
+0x000000fe00000000 0x000000feffffffff 0x000000000014220c
+0x0000000000000000 0x0000000000000000 0x0000000000000000
+0x0000000000000000 0x0000000000000000 0x0000000000000000
+0x0000000000000000 0x0000000000000000 0x0000000000000000
+0x00000000fc000000 0x00000000fc1fffff 0x0000000000046200
+0x0000000000000000 0x0000000000000000 0x0000000000000000
+"""
+
+
+class TestIntelMemCapacity:
+    """Denominators for the Intel memory percentage."""
+
+    @staticmethod
+    def _card(tmp_path, resource: str | None):
+        device = tmp_path / 'card0' / 'device'
+        device.mkdir(parents=True)
+        if resource is not None:
+            (device / 'resource').write_text(resource)
+        return str(tmp_path / 'card0')
+
+    def test_local_capacity_is_the_prefetchable_bar(self, tmp_path):
+        card = self._card(tmp_path, ARC_A310_RESOURCE)
+        assert intel_backend.get_local_mem_capacity(card) == 4 * 1024**3
+
+    def test_local_capacity_without_resizable_bar_is_the_small_aperture(self, tmp_path):
+        resource = ARC_A310_RESOURCE.replace('0x000000feffffffff', '0x000000fe0fffffff')
+        card = self._card(tmp_path, resource)
+        assert intel_backend.get_local_mem_capacity(card) == 256 * 1024**2
+
+    def test_local_capacity_none_for_integrated_gpu(self, tmp_path):
+        # Registers only: a non-prefetchable BAR is not video memory.
+        card = self._card(tmp_path, '0x00000000fb000000 0x00000000fbffffff 0x0000000000140204\n')
+        assert intel_backend.get_local_mem_capacity(card) is None
+
+    def test_local_capacity_ignores_the_expansion_rom_line(self, tmp_path):
+        rom = '0x0000000100000000 0x00000001ffffffff 0x000000000014220c\n'
+        card = self._card(tmp_path, '0x0 0x0 0x0\n' * 6 + rom)
+        assert intel_backend.get_local_mem_capacity(card) is None
+
+    def test_local_capacity_none_when_unreadable_or_malformed(self, tmp_path):
+        assert intel_backend.get_local_mem_capacity(self._card(tmp_path / 'a', None)) is None
+        assert intel_backend.get_local_mem_capacity(self._card(tmp_path / 'b', 'garbage\n0x1 0x2\n')) is None
+
+    def test_system_capacity_is_mem_total_not_cma(self, tmp_path):
+        meminfo = tmp_path / 'meminfo'
+        meminfo.write_text('MemTotal:       65432100 kB\nCmaTotal:          16384 kB\n')
+        assert intel_backend.get_system_mem_capacity(str(meminfo)) == 65432100 * 1024
+
+    def test_system_capacity_none_when_missing_or_zero(self, tmp_path):
+        assert intel_backend.get_system_mem_capacity(str(tmp_path / 'nope')) is None
+        meminfo = tmp_path / 'meminfo'
+        meminfo.write_text('MemFree: 1 kB\n')
+        assert intel_backend.get_system_mem_capacity(str(meminfo)) is None
+
+
+class TestIntelMemPercent:
+    """Memory percentage from the aggregated resident bytes."""
+
+    GIB = 1024**3
+
+    @staticmethod
+    def _card(tmp_path, resource: str = ARC_A310_RESOURCE):
+        device = tmp_path / 'card0' / 'device'
+        device.mkdir(parents=True)
+        (device / 'resource').write_text(resource)
+        return str(tmp_path / 'card0')
+
+    @staticmethod
+    def _meminfo(tmp_path, kib: int = 64 * 1024**2):
+        path = tmp_path / 'meminfo'
+        path.write_text(f'MemTotal: {kib} kB\n')
+        return str(path)
+
+    def _snapshot(self, system=0, local=0):
+        return {'engine_total_ns': 0, 'mem_system_bytes': system, 'mem_local_bytes': local}
+
+    def test_discrete_is_local_resident_over_the_bar(self, tmp_path):
+        card, meminfo = self._card(tmp_path), self._meminfo(tmp_path)
+        snapshot = self._snapshot(system=self.GIB, local=self.GIB)
+        assert intel_backend.get_mem(card, snapshot, meminfo) == 25
+
+    def test_integrated_is_system_resident_over_mem_total(self, tmp_path):
+        card, meminfo = self._card(tmp_path, '0x0 0x0 0x0\n'), self._meminfo(tmp_path)
+        snapshot = self._snapshot(system=16 * self.GIB)
+        assert intel_backend.get_mem(card, snapshot, meminfo) == 25
+
+    def test_idle_discrete_reads_zero(self, tmp_path):
+        card, meminfo = self._card(tmp_path), self._meminfo(tmp_path)
+        assert intel_backend.get_mem(card, self._snapshot(), meminfo) == 0
+
+    def test_resident_above_the_bar_is_not_reported(self, tmp_path):
+        # Resizable BAR off: the 256 MiB aperture is smaller than the VRAM in use.
+        resource = ARC_A310_RESOURCE.replace('0x000000feffffffff', '0x000000fe0fffffff')
+        card, meminfo = self._card(tmp_path, resource), self._meminfo(tmp_path)
+        snapshot = self._snapshot(local=self.GIB)
+        assert intel_backend.get_mem(card, snapshot, meminfo) is None
+
+    def test_discrete_without_a_bar_is_not_reported(self, tmp_path):
+        card, meminfo = self._card(tmp_path, '0x0 0x0 0x0\n'), self._meminfo(tmp_path)
+        assert intel_backend.get_mem(card, self._snapshot(local=self.GIB), meminfo) is None
+
+    def test_no_scan_or_no_meminfo_is_not_reported(self, tmp_path):
+        card = self._card(tmp_path)
+        assert intel_backend.get_mem(card, None, self._meminfo(tmp_path)) is None
+        assert intel_backend.get_mem(card, self._snapshot(), str(tmp_path / 'nope')) is None
+
+    @pytest.mark.skipif(not LINUX, reason="Intel GPU backend is Linux-only")
+    def test_get_device_stats_mem_is_none_without_capacity(self):
+        gpu = intel_backend.IntelGPU(INTEL_DRM_ROOT, INTEL_DISCRETE_PROC_ROOT)
+        # Fixture proc root has no meminfo and the card has no resource file.
+        assert gpu.get_device_stats()[0]['mem'] is None
