@@ -22,7 +22,7 @@ and simply run:
 
 Glances should start (press 'q' or 'ESC' to exit):
 
-.. image:: _static/screenshot-wide.png
+.. image:: _static/glances-tui-with-alert.png
 
 It is also possible to display RAW (Python) stats directly to stdout using:
 
@@ -64,7 +64,7 @@ Use ``--stop-after <n>`` to stop after n refreshes.
 Server Mode (REST API and Web UI)
 ---------------------------------
 
-.. image:: _static/screenshot-web.png
+.. image:: _static/glances-webui-with-alert.png
 
 If you want to remotely monitor a machine called ``server``, from any
 device with a web browser, just run the server with the ``-s`` option
