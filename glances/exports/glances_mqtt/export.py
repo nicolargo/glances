@@ -33,6 +33,7 @@ if TYPE_CHECKING:
     import argparse
 
     from glances.config import GlancesConfig
+    from glances.plugins.plugin.base import GlancesPluginBase
 
 WHITELIST = "_-" + string.ascii_letters + string.digits
 
@@ -79,6 +80,9 @@ class Export(GlancesExportBase):
             logger.critical("topic_structure must be either 'per-metric' or 'per-plugin'.")
             sys.exit(2)
         self.availability_topic = "/".join([self.topic, self.devicename, "availability"])
+        # Plugin name -> primary key field name (None for scalar plugins).
+        # Refreshed every cycle by update(), like the Prometheus exporter.
+        self.keys_name: dict[str, str | None] = {}
         self.client = self.init()
 
     def init(self) -> Any:
@@ -129,14 +133,22 @@ class Export(GlancesExportBase):
         logger.info("Stats will be exported to the MQTT server %s:%s", self.host, self.port)
         return client
 
+    def update(self, plugins: list[GlancesPluginBase]) -> None:
+        """Refresh the primary-key map, then run the standard export cycle."""
+        self.keys_name = {plugin.plugin_name: getattr(plugin, "_primary_key", None) for plugin in plugins}
+        super().update(plugins)
+
     def export(self, name: str, columns: list[str], points: list[Any]) -> None:
+        keyed = self.keys_name.get(name) is not None
         try:
             if self.topic_structure == "per-metric":
                 for column, value in zip(columns, points):
-                    levels = [self.topic, self.devicename, name] + [whitelisted(part) for part in column.split(".")]
+                    parts = split_column(column, keyed)
+                    levels = [self.topic, self.devicename, name] + [whitelisted(part) for part in parts]
                     self.client.publish("/".join(levels), value)
             else:
-                self.client.publish("/".join([self.topic, self.devicename, name]), json_dumps(nest(columns, points)))
+                payload = json_dumps(nest(columns, points, keyed))
+                self.client.publish("/".join([self.topic, self.devicename, name]), payload)
         except Exception as e:
             logger.warning("Cannot export %s stats to MQTT (%s)", name, e)
         else:
@@ -152,11 +164,19 @@ class Export(GlancesExportBase):
         self.client.loop_stop()
 
 
-def nest(columns: list[str], points: list[Any]) -> dict[str, Any]:
+def split_column(column: str, keyed: bool) -> list[str]:
+    """Split `eth0.rx` into `["eth0", "rx"]`."""
+    # A collection item is exported as `<item key>.<field>`: the item key itself
+    # may hold dots (VLAN `eth0.100`, mount point `/mnt/v1.2`), field names never
+    # do, so only the last dot separates them.
+    return column.rsplit(".", 1) if keyed else column.split(".")
+
+
+def nest(columns: list[str], points: list[Any], keyed: bool) -> dict[str, Any]:
     """Turn `{"eth0.rx": 10}` into `{"eth0": {"rx": 10}}` (v4 per-plugin payload)."""
     output: dict[str, Any] = {}
     for column, value in zip(columns, points):
-        *parents, leaf = column.split(".")
+        *parents, leaf = split_column(column, keyed)
         level = output
         for parent in parents:
             level = level.setdefault(parent, {})
