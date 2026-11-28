@@ -1518,6 +1518,7 @@ all = [
     { name = "requests" },
     { name = "starlette" },
     { name = "statsd" },
+    { name = "tenacity" },
     { name = "uvicorn" },
     { name = "zeroconf" },
 ]
@@ -1564,6 +1565,7 @@ llm-anthropic = [
 ]
 llm-litellm = [
     { name = "litellm" },
+    { name = "tenacity" },
 ]
 llm-ollama = [
     { name = "openai" },
@@ -1663,6 +1665,7 @@ requires-dist = [
     { name = "shtab", marker = "sys_platform != 'win32'" },
     { name = "starlette", marker = "extra == 'web'", specifier = ">=0.49.1" },
     { name = "statsd", marker = "extra == 'export'" },
+    { name = "tenacity", marker = "extra == 'llm-litellm'" },
     { name = "uvicorn", marker = "extra == 'web'" },
     { name = "windows-curses", marker = "sys_platform == 'win32'" },
     { name = "zeroconf", marker = "extra == 'browser'" },
@@ -5215,6 +5218,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/27/29/05e9f50946f4cf2ed182726c60d9c0ae523bb3f180588c574dd9746de557/statsd-4.0.1.tar.gz", hash = "sha256:99763da81bfea8daf6b3d22d11aaccb01a8d0f52ea521daab37e758a4ca7d128", size = 27814, upload-time = "2022-11-06T14:17:36.194Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f4/d0/c9543b52c067a390ae6ae632d7fd1b97a35cdc8d69d40c0b7d334b326410/statsd-4.0.1-py2.py3-none-any.whl", hash = "sha256:c2676519927f7afade3723aca9ca8ea986ef5b059556a980a867721ca69df093", size = 13118, upload-time = "2022-11-06T14:17:34.258Z" },
+]
+
+[[package]]
+name = "tenacity"
+version = "9.2.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/82/9e/497c1c8ebe5a5b5d1d4a7511aea22c0bb1a97e3170d98abdef0e1b34265a/tenacity-9.2.1.tar.gz", hash = "sha256:a606b5c808d0cded4a359d5b9932d867ff2a6a6b64d37350260fd01bbdf83839", size = 58261, upload-time = "2026-10-07T12:13:01.633Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d6/26/1ff2b0721ac66a3ec5b1402b333110b352ab0a8724052ac279a7b82d40c4/tenacity-9.2.1-py3-none-any.whl", hash = "sha256:9e56f17539296baab7beabb08b92f6ee3d7be92d8be72d763360677c2ad6580e", size = 32310, upload-time = "2026-10-07T12:13:00.102Z" },
 ]
 
 [[package]]

@@ -93,7 +93,7 @@ graph = ["pygal"]
 # Optional LLM reporting providers
 llm-anthropic = ["anthropic"]
 # litellm>=1.100.4 fixes CVE-2026-114612.
-llm-litellm = ["litellm>=1.100.4"]
+llm-litellm = ["litellm>=1.100.4", "tenacity"]
 llm-ollama = ["openai"]  # Uses Ollama's OpenAI-compatible API
 llm-openai = ["openai"]
 mcp = ["mcp>=1.23.0,<3"]
