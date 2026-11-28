@@ -15,8 +15,8 @@ Mirrors v4 `gpu.msg_curse()`:
     mem                40%
     temperature        55C
 
-Multi mode (>1 GPU, not meangpu): one row per GPU — `name[:9]  proc  mem N`.
-The `mem` column is dropped when no card reports memory (narrower plugin).
+Multi mode (>1 GPU, not meangpu): one row per GPU — `name[:9]  proc  mem N  temp`.
+The `mem` / temperature column is dropped when no card reports it (narrower plugin).
 """
 
 from __future__ import annotations
@@ -106,12 +106,14 @@ def _summary_rows(
     return rows
 
 
-def _multi_rows(cards: list[dict[str, Any]], levels: dict[str, Any]) -> list[Row]:
+def _multi_rows(cards: list[dict[str, Any]], levels: dict[str, Any], fahrenheit: bool) -> list[Row]:
     # #3631: an unavailable sensor is displayed as N/A, not hidden — hiding it per
-    # card drops a cell and misaligns the rows of heterogeneous cards. The mem
-    # column is dropped only when no card reports it: every row stays aligned and
-    # the plugin gets narrower.
+    # card drops a cell and misaligns the rows of heterogeneous cards. The mem and
+    # temperature columns are dropped only when no card reports them: every row
+    # stays aligned and the plugin gets narrower.
     show_mem = any(card.get("mem") is not None for card in cards)
+    show_temp = any(card.get("temperature") is not None for card in cards)
+    unit = "F" if fahrenheit else "C"
     rows: list[Row] = []
     for card in cards:
         gpu_id = card.get("gpu_id")
@@ -119,6 +121,11 @@ def _multi_rows(cards: list[dict[str, Any]], levels: dict[str, Any]) -> list[Row
         cells.append(Cell(text=f" {_format_value(card.get('proc'))}", color=_level_role(levels, gpu_id, "proc")))
         if show_mem:
             cells.append(Cell(text=f" mem {_format_value(card.get('mem'))}", color=_level_role(levels, gpu_id, "mem")))
+        if show_temp:
+            temp = card.get("temperature")
+            if temp is not None and fahrenheit:
+                temp = to_fahrenheit(temp)
+            cells.append(Cell(text=f" {_format_value(temp, unit)}", color=_level_role(levels, gpu_id, "temperature")))
         rows.append(Row(cells=cells))
     return rows
 
@@ -138,5 +145,5 @@ def render(payload: dict[str, Any], fields_desc: dict[str, dict[str, Any]] | Non
     if len(cards) == 1 or view.get("meangpu"):
         rows.extend(_summary_rows(cards, levels, bool(view.get("fahrenheit")), fields_desc or {}))
     else:
-        rows.extend(_multi_rows(cards, levels))
+        rows.extend(_multi_rows(cards, levels, bool(view.get("fahrenheit"))))
     return rows
